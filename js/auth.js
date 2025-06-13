@@ -1,5 +1,5 @@
 // Auth and UI functionality
-import { supabase } from "./api/database";
+import { supabase } from "./api/database.js";
 import { 
   sanitizeInput, 
   validatePhoneNumber, 
@@ -7,7 +7,7 @@ import {
   secureStorage,
   rateLimiter,
   generateCSRFToken
-} from './utils/security';
+} from './utils/security.js';
 
 // Initialize CSRF token on page load
 const csrfToken = generateCSRFToken();

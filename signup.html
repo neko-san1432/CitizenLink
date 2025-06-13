@@ -1,268 +1,188 @@
-<!DOCTYPE html>
+<!DOCTYPE htm <link rel="stylesheet" href="./css/additional-styles.css">
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" 
-          content="default-src 'self';
-                   script-src 'self' https://cdnjs.cloudflare.com;
-                   style-src 'self' https://cdnjs.cloudflare.com;
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+                   script-src 'self' https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
+                   style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
                    img-src 'self' data: https:;
                    font-src 'self' https://cdnjs.cloudflare.com;
-                   connect-src 'self' https://lspscscjmfcywoakgrtf.supabase.co" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - CitizenLink</title>    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="../css/additional-styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-      .phone-input-group {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        overflow: hidden;
-      }
-      
-      .phone-prefix {
-        background: #f5f5f5;
-        padding: 8px 12px;
-        border-right: 1px solid #ddd;
-        color: #666;
-      }
-      
-      #phone {
-        border: none;
-        flex: 1;
-        padding: 8px;
-        outline: none;
-      }
-      
-      .phone-input-group:focus-within {
-        border-color: #007bff;
-      }
-      
-      .input-hint {
-        color: #666;
-        font-size: 0.8em;
-        margin-top: 4px;
-        display: block;
-      }
-      
-      .verification-section {
-        display: none;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #eee;
-      }
-
-      .verification-section.active {
-        display: block;
-      }
-
-      .resend-otp {
-        color: #007bff;
-        text-decoration: underline;
-        cursor: pointer;
-        margin-left: 10px;
-      }      /* OTP Modal Styles */      .otp-modal {
-        visibility: hidden;
-        opacity: 0;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        transition: visibility 0s linear 0.3s, opacity 0.3s;
-      }
-
-      .otp-modal.show {
-        visibility: visible;
-        opacity: 1;
-        transition-delay: 0s;
-      }
-
-      .otp-modal-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 400px;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: slideIn 0.3s ease-out;
-      }      @keyframes slideIn {
-        from {
-          transform: translate(-50%, calc(-50% - 20px));
-          opacity: 0;
-        }
-        to {
-          transform: translate(-50%, -50%);
-          opacity: 1;
-        }
-      }
-
-      .otp-input-group {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin: 1rem 0;
-      }
-
-      .otp-input {
-        width: 40px;
-        height: 40px;
-        text-align: center;
-        font-size: 1.2rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-
-      .otp-input:focus {
-        border-color: #007bff;
-        outline: none;
-      }
-
-      .timer {
-        text-align: center;
-        color: #666;
-        margin: 1rem 0;
-      }
-
-      .resend-button {
-        background: none;
-        border: none;
-        color: #007bff;
-        cursor: pointer;
-        padding: 0;
-        font: inherit;
-        text-decoration: underline;
-      }
-
-      .resend-button:disabled {
-        color: #666;
-        cursor: not-allowed;
-        text-decoration: none;
-      }
-
-      .verify-button {
-        width: 100%;
-        padding: 10px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        margin-top: 1rem;
-      }
-
-      .verify-button:hover {
-        background: #0056b3;
-      }
-
-      .verify-button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-    </style>
-</head>
-<body class="auth-page">
+                   frame-src https://www.google.com/recaptcha/;
+                   connect-src 'self' https://lspscscjmfcywoakgrtf.supabase.co https://www.google.com/recaptcha/"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - CitizenLink</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="./css/additional-styles.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <link rel="stylesheet" href="css/form.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Add reCAPTCHA script -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  </head>
+  <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-header">
-            <a href="index.html" class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <span>CitizenLink</span>
-            </a>
-        </div>
+      <div class="auth-header">
+        <a href="index.html" class="logo">
+          <i class="fas fa-shield-alt"></i>
+          <span>CitizenLink</span>
+        </a>
+      </div>
 
-        <div class="auth-content">
-            <div class="auth-card">
-                <div class="card-header">
-                    <h2>Create an Account</h2>
-                    <p>Sign up for a citizen account to submit and track complaints.</p>
-                </div>        
-                <br>        
-                <form id="signup-form">
-                    <div class="form-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <div class="phone-input-group">
-                            <span class="phone-prefix">+63</span>
-                            <input
-                                type="tel"
-                                id="phone"
-                                name="phone"
-                                placeholder="9XXXXXXXXX"
-                                pattern="[9][0-9]{9}"
-                                maxlength="10"
-                                required
-                            />
-                        </div>
-                        <small class="input-hint">Enter 10 digits starting with 9</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            placeholder="Create a password" 
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input 
-                            type="password" 
-                            id="confirmPassword" 
-                            name="confirmPassword" 
-                            placeholder="Confirm your password" 
-                            required
-                        >
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Continue</button>
-                      <div class="auth-footer">
-                        <p>Already have an account? <a href="login.html">Log in</a></p>
-                    </div>
-                </form>
+      <div class="auth-content">
+        <div class="auth-card">
+          <div class="card-header">
+            <h2>Create an Account</h2>
+            <p>Sign up for a citizen account to submit and track complaints.</p>
+          </div>
+          <br />
+          <form id="signup-form">
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                placeholder="Enter your full name"
+                required
+              />
             </div>
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <div class="phone-input-group" style="border: solid">
+                <span class="phone-prefix">+63</span>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="9XXXXXXXXX"
+                  pattern="[9][0-9]{9}"
+                  maxlength="10"
+                  required
+                />
+              </div>
+              <small class="input-hint">Enter 10 digits starting with 9</small>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a password"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+            <div class="form-group recaptcha-container">
+              <div
+                class="g-recaptcha"
+                data-sitekey="6Lfd4l8rAAAAAPrVRfM47ZZmBbnkIfaZL_EQCjMD"
+                data-callback="onRecaptchaComplete"
+                data-expired-callback="onRecaptchaExpired"
+              ></div>
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary btn-block needs-recaptcha"
+              disabled
+            >
+              Continue
+            </button>
+            <div class="auth-footer">
+              <p>Already have an account? <a href="login.html">Log in</a></p>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
-
     <!-- OTP Verification Modal -->
     <div class="otp-modal" id="otp-modal">
       <div class="otp-modal-content">
-        <h2>Verify Your Phone</h2>
-        <p>Enter the 6-digit code sent to your phone</p>
-        
-        <div class="otp-input-group">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+        <div class="otp-modal-header text-center">
+          <h2>Verify Your Phone</h2>
+          <p>Enter the 6-digit code sent to your phone</p>
         </div>
-        
-        <div class="timer" id="otp-timer">Code expires in: <span>30</span>s</div>
-        
-        <button class="verify-button" id="verify-otp" disabled>Verify Code</button>
-        
-        <div style="text-align: center; margin-top: 1rem;">
-          Didn't receive the code? 
-          <button class="resend-button" id="resend-otp" disabled>Resend Code</button>
+
+        <div class="otp-input-group">
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+          <input
+            type="text"
+            class="otp-input"
+            maxlength="1"
+            pattern="[0-9]"
+            inputmode="numeric"
+          />
+        </div>
+
+        <div class="timer text-center" id="otp-timer">
+          Code expires in: <span>30</span>s
+        </div>
+
+        <button class="verify-button" id="verify-otp" disabled>
+          Verify Code
+        </button>
+
+        <div class="text-center mt-1">
+          Didn't receive the code?
+          <button class="resend-button" id="resend-otp" disabled>
+            Resend Code
+          </button>
         </div>
       </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
-    <script src="js/auth.js"></script>
-</body>
+    <script type="module" src="js/recaptcha.js"></script>
+    <script type="module" src="js/auth.js"></script>
+  </body>
 </html>

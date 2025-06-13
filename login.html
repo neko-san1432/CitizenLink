@@ -5,158 +5,25 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self';
-                   script-src 'self' https://cdnjs.cloudflare.com;
-                   style-src 'self' https://cdnjs.cloudflare.com;
+                   script-src 'self' https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
+                   style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
                    img-src 'self' data: https:;
                    font-src 'self' https://cdnjs.cloudflare.com;
-                   connect-src 'self' https://lspscscjmfcywoakgrtf.supabase.co"
+                   frame-src https://www.google.com/recaptcha/;
+                   connect-src 'self' http://localhost:5500 https://lspscscjmfcywoakgrtf.supabase.co https://www.google.com/recaptcha/"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - CitizenLink</title>
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/styles.css" />
-    <link rel="stylesheet" href="../css/additional-styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      .phone-input-group {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        overflow: hidden;
-      }
-
-      .phone-prefix {
-        background: #f5f5f5;
-        padding: 8px 12px;
-        border-right: 1px solid #ddd;
-        color: #666;
-      }
-
-      #phone {
-        border: none;
-        flex: 1;
-        padding: 8px;
-        outline: none;
-      }
-
-      .phone-input-group:focus-within {
-        border-color: #007bff;
-      }
-      .input-hint {
-        color: #666;
-        font-size: 0.8em;
-        margin-top: 4px;
-        display: block;
-      } /* OTP Modal Styles */
-      .otp-modal {
-        opacity: 0;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease-in-out;
-        border: solid;
-        position: absolute;
-      }
-
-      .otp-modal.show {
-        visibility: visible;
-        opacity: 1;
-      }
-      .otp-modal-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 400p x;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.7);
-        opacity: 0;
-        transition: all 0.3s ease-in-out;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-      }
-
-      .otp-modal.show .otp-modal-content {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      } /* Remove the slideIn animation since we're using CSS transitions */
-
-      .otp-input-group {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin: 1rem 0;
-      }
-
-      .otp-input {
-        width: 40px;
-        height: 40px;
-        text-align: center;
-        font-size: 1.2rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-
-      .otp-input:focus {
-        border-color: #007bff;
-        outline: none;
-      }
-
-      .timer {
-        text-align: center;
-        color: #666;
-        margin: 1rem 0;
-      }
-
-      .resend-button {
-        background: none;
-        border: none;
-        color: #007bff;
-        cursor: pointer;
-        padding: 0;
-        font: inherit;
-        text-decoration: underline;
-      }
-
-      .resend-button:disabled {
-        color: #666;
-        cursor: not-allowed;
-        text-decoration: none;
-      }
-
-      .verify-button {
-        width: 100%;
-        padding: 10px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        margin-top: 1rem;
-      }
-
-      .verify-button:hover {
-        background: #0056b3;
-      }
-
-      .verify-button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-    </style>
+    <link rel="stylesheet" href="css/additional-styles.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <link rel="stylesheet" href="css/form.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   </head>
   <body class="auth-page">
     <!-- <div class="auth-container">
@@ -190,22 +57,24 @@
               <small class="input-hint">Enter 10 digits starting with 9</small>
             </div>
             <div class="form-group">
-              <label for="password">Password</label>
-              <input
+              <label for="password">Password</label>              <input
                 type="password"
                 id="password"
                 placeholder="Enter your password"
                 required
               />
             </div>
-            <button type="submit" class="btn btn-primary btn-block">
+            <div class="form-group recaptcha-container">
+              <div class="g-recaptcha"
+                data-sitekey="6Lfd4l8rAAAAAPrVRfM47ZZmBbnkIfaZL_EQCjMD"
+                data-callback="onRecaptchaComplete"
+                data-expired-callback="onRecaptchaExpired">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block needs-recaptcha" disabled>
               Log In
             </button>
-            <button
-              type="button"
-              id="request-otp"
-              class="btn btn-secondary btn-block"
-            >
+            <button type="button" id="request-otp" class="btn btn-secondary btn-block needs-recaptcha" disabled>
               Request OTP
             </button>
             <div class="auth-footer">
@@ -215,12 +84,13 @@
         </div>
       </div>
     </div> -->
-
     <!-- OTP Verification Modal -->
-    <div class="otp-modal" id="otp-modal" >
+    <div class="otp-modal" id="otp-modal">
       <div class="otp-modal-content">
-        <h2 style="border: solid black;">Verify Your Phone</h2>
-        <p>Enter the 6-digit code sent to your phone</p>
+        <div class="otp-modal-header text-center">
+          <h2>Verify Your Phone</h2>
+          <p>Enter the 6-digit code sent to your phone</p>
+        </div>
 
         <div class="otp-input-group">
           <input
@@ -267,7 +137,7 @@
           />
         </div>
 
-        <div class="timer" id="otp-timer">
+        <div class="timer text-center" id="otp-timer">
           Code expires in: <span>30</span>s
         </div>
 
@@ -275,18 +145,18 @@
           Verify Code
         </button>
 
-        <div style="text-align: center; margin-top: 1rem">
+        <div class="text-center mt-1">
           Didn't receive the code?
           <button class="resend-button" id="resend-otp" disabled>
             Resend Code
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- Toast Notification -->
+    </div>    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="js/auth.js"></script>
+    <!-- Scripts -->
+    <script type="module" src="js/recaptcha.js"></script>
+    <script type="module" src="js/auth.js"></script>
   </body>
 </html>
