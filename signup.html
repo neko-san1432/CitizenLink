@@ -63,6 +63,109 @@
         text-decoration: underline;
         cursor: pointer;
         margin-left: 10px;
+      }      /* OTP Modal Styles */      .otp-modal {
+        visibility: hidden;
+        opacity: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        transition: visibility 0s linear 0.3s, opacity 0.3s;
+      }
+
+      .otp-modal.show {
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0s;
+      }
+
+      .otp-modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: slideIn 0.3s ease-out;
+      }      @keyframes slideIn {
+        from {
+          transform: translate(-50%, calc(-50% - 20px));
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+      }
+
+      .otp-input-group {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 1rem 0;
+      }
+
+      .otp-input {
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        font-size: 1.2rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .otp-input:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+
+      .timer {
+        text-align: center;
+        color: #666;
+        margin: 1rem 0;
+      }
+
+      .resend-button {
+        background: none;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+        padding: 0;
+        font: inherit;
+        text-decoration: underline;
+      }
+
+      .resend-button:disabled {
+        color: #666;
+        cursor: not-allowed;
+        text-decoration: none;
+      }
+
+      .verify-button {
+        width: 100%;
+        padding: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+
+      .verify-button:hover {
+        background: #0056b3;
+      }
+
+      .verify-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
       }
     </style>
 </head>
@@ -124,28 +227,38 @@
                         >
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Continue</button>
-                    
-                    <div id="verification-section" class="verification-section">
-                        <div class="form-group">
-                            <label for="otp">Enter OTP</label>
-                            <input 
-                                type="text" 
-                                id="otp" 
-                                name="otp" 
-                                placeholder="Enter 6-digit OTP" 
-                                pattern="[0-9]{6}" 
-                                maxlength="6"
-                            >
-                            <small class="input-hint">OTP sent to your phone number <span id="resend-otp" class="resend-otp">Resend OTP</span></small>
-                        </div>
-                        <button type="button" id="verify-otp" class="btn btn-primary btn-block">Verify & Create Account</button>
-                    </div>
-                    <div class="auth-footer">
+                      <div class="auth-footer">
                         <p>Already have an account? <a href="login.html">Log in</a></p>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="otp-modal" id="otp-modal">
+      <div class="otp-modal-content">
+        <h2>Verify Your Phone</h2>
+        <p>Enter the 6-digit code sent to your phone</p>
+        
+        <div class="otp-input-group">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+        </div>
+        
+        <div class="timer" id="otp-timer">Code expires in: <span>30</span>s</div>
+        
+        <button class="verify-button" id="verify-otp" disabled>Verify Code</button>
+        
+        <div style="text-align: center; margin-top: 1rem;">
+          Didn't receive the code? 
+          <button class="resend-button" id="resend-otp" disabled>Resend Code</button>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast"></div>

@@ -1,5 +1,5 @@
-import { supabase } from "./api/database";
-import { secureStorage } from './utils/security';
+import { supabase } from "./api/database.js";
+import { secureStorage } from './utils/security.js';
 
 // Check authentication and role
 async function checkAuth() {

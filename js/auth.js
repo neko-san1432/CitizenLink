@@ -1,4 +1,4 @@
-// Tab switching functionality
+// Auth and UI functionality
 import { supabase } from "./api/database";
 import { 
   sanitizeInput, 
@@ -13,18 +13,22 @@ import {
 const csrfToken = generateCSRFToken();
 document.cookie = `csrf_token=${csrfToken}; SameSite=Strict; Secure`;
 
+// Initialize UI elements
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
+const otpModal = document.getElementById('otp-modal');
+const otpInputs = document.querySelectorAll('.otp-input');
+const otpTimer = document.getElementById('otp-timer');
+const verifyOtpButton = document.getElementById('verify-otp');
+const resendOtpButton = document.getElementById('resend-otp');
+const requestOtpButton = document.getElementById('request-otp');
 
+// Tab switching functionality
 tabButtons.forEach(button => {
   button.addEventListener('click', () => {
     const tabName = button.getAttribute('data-tab');
-    
-    // Update active tab button
     tabButtons.forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
-    
-    // Show corresponding tab content
     tabContents.forEach(content => {
       content.classList.remove('active');
       if (content.id === `${tabName}-tab`) {
@@ -39,52 +43,111 @@ function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.className = 'toast show';
-  
-  if (type === 'error') {
-    toast.classList.add('error');
-  } else {
-    toast.classList.add('success');
-  }
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
+  toast.classList.add(type === 'error' ? 'error' : 'success');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// Login form
+// OTP Modal Functions
+function showOtpModal() {
+  otpModal.classList.add('show');
+  otpInputs[0].focus();
+  startOtpTimer();
+}
+
+function hideOtpModal() {
+  otpModal.classList.remove('show');
+  otpInputs.forEach(input => input.value = '');
+  verifyOtpButton.disabled = true;
+}
+
+function startOtpTimer() {
+  resendOtpButton.disabled = true;
+  let countdown = 30;
+  const timerSpan = otpTimer.querySelector('span');
+  
+  const timer = setInterval(() => {
+    countdown--;
+    timerSpan.textContent = countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(timer);
+      resendOtpButton.disabled = false;
+      timerSpan.textContent = '0';
+    }
+  }, 1000);
+}
+
+// OTP Input Handling
+otpInputs.forEach((input, index) => {
+  input.addEventListener('keyup', (e) => {
+    const currentInput = e.target;
+    const nextInput = input.nextElementSibling;
+    const prevInput = input.previousElementSibling;
+
+    // Clear value if not a number
+    if (isNaN(currentInput.value)) {
+      currentInput.value = '';
+      return;
+    }
+
+    // Auto-focus next input
+    if (nextInput && currentInput.value !== '') {
+      nextInput.focus();
+    }
+
+    // Handle backspace
+    if (e.key === 'Backspace') {
+      if (prevInput) {
+        prevInput.focus();
+      }
+    }
+
+    // Enable verify button if all inputs are filled
+    const isComplete = Array.from(otpInputs).every(input => input.value.length === 1);
+    verifyOtpButton.disabled = !isComplete;
+  });
+
+  // Handle paste event
+  input.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').split('');
+    
+    otpInputs.forEach((input, index) => {
+      if (pastedData[index]) {
+        input.value = pastedData[index];
+        const isComplete = Array.from(otpInputs).every(input => input.value.length === 1);
+        verifyOtpButton.disabled = !isComplete;
+      }
+    });
+  });
+});
+
+// Login Form Handler
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     try {
-      // Rate limiting check
       if (!rateLimiter.isAllowed('login')) {
         showToast('Too many attempts. Please try again later.', 'error');
         return;
       }
 
       const phone = sanitizeInput(document.getElementById('phone').value);
-      const password = document.getElementById('password').value; // Don't sanitize password
+      const password = document.getElementById('password').value;
 
-      // Validate phone number
       if (!validatePhoneNumber(phone)) {
         showToast('Invalid phone number format', 'error');
         return;
       }
 
-      // Format phone number to include country code
       const formattedPhone = `+63${phone}`;
       
-      // First attempt to sign in with password
       const { data, error } = await supabase.auth.signInWithPassword({
         phone: formattedPhone,
         password: password,
-        options: {
-          headers: {
-            'X-CSRF-Token': csrfToken
-          }
-        }
+        options: { headers: { 'X-CSRF-Token': csrfToken } }
       });
 
       if (error) {
@@ -97,32 +160,25 @@ if (loginForm) {
       }
 
       if (data?.user) {
-        // Store session securely
         secureStorage.setItem('user_session', {
           id: data.user.id,
           phone: formattedPhone,
           timestamp: Date.now()
         });
 
-        // Request SMS verification
         const { error: otpError } = await supabase.auth.signInWithOtp({
           phone: formattedPhone
         });
 
         if (otpError) throw otpError;
 
-        // Store the session data temporarily
-        sessionStorage.setItem('pendingVerification', JSON.stringify({
+        secureStorage.setItem('pendingVerification', {
           phone: formattedPhone,
           type: 'login'
-        }));
+        });
 
         showToast('Please verify your login with the OTP sent to your phone.');
-        
-        // Show OTP verification section
-        document.getElementById('verification-section').classList.remove('hidden');
-        document.getElementById('verification-section').classList.add('active');
-        document.getElementById('login-section').classList.add('hidden');
+        showOtpModal();
       }
     } catch (error) {
       console.error('Login error:', error.message);
@@ -131,7 +187,7 @@ if (loginForm) {
   });
 }
 
-// Signup form
+// Signup Form Handler
 const signupForm = document.getElementById('signup-form');
 if (signupForm) {
   signupForm.addEventListener('submit', async (e) => {
@@ -143,7 +199,6 @@ if (signupForm) {
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
       
-      // Validate inputs
       if (!fullName || fullName.length < 2) {
         showToast('Please enter a valid full name', 'error');
         return;
@@ -161,37 +216,28 @@ if (signupForm) {
       }
       
       if (password !== confirmPassword) {
-        showToast('Passwords do not match. Please try again.', 'error');
+        showToast('Passwords do not match', 'error');
         return;
       }
 
-      // Format phone number to include country code
       const formattedPhone = `+63${phone}`;
 
-      // Request phone verification first
       const { error: otpError } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
-        options: {
-          shouldCreateUser: true
-        }
+        options: { shouldCreateUser: true }
       });
 
       if (otpError) throw otpError;
 
-      // Store signup data temporarily
-      sessionStorage.setItem('pendingVerification', JSON.stringify({
+      secureStorage.setItem('pendingVerification', {
         phone: formattedPhone,
         full_name: fullName,
         password: password,
         type: 'signup'
-      }));
+      });
 
       showToast('Please verify your phone number with the OTP sent to your phone.');
-        
-      // Show OTP verification section
-      document.getElementById('verification-section').classList.remove('hidden');
-      document.getElementById('verification-section').classList.add('active');
-      document.getElementById('signup-section').classList.add('hidden');
+      showOtpModal();
     } catch (error) {
       console.error('Signup error:', error.message);
       showToast(error.message || 'Failed to create account. Please try again.', 'error');
@@ -199,22 +245,21 @@ if (signupForm) {
   });
 }
 
-// Handle OTP verification
-const verifyOtpButton = document.getElementById('verify-otp');
+// OTP Verification Handler
 if (verifyOtpButton) {
   verifyOtpButton.addEventListener('click', async () => {
     try {
-      // Rate limiting check
       if (!rateLimiter.isAllowed('verify-otp')) {
         showToast('Too many attempts. Please try again later.', 'error');
         return;
       }
 
-      const otp = sanitizeInput(document.getElementById('otp').value);
+      const otp = Array.from(otpInputs).map(input => input.value).join('');
       const pendingData = secureStorage.getItem('pendingVerification');
       
       if (!pendingData) {
         showToast('Verification session expired. Please try again.', 'error');
+        hideOtpModal();
         return;
       }
 
@@ -229,29 +274,23 @@ if (verifyOtpButton) {
       if (error) throw error;
 
       if (type === 'signup') {
-        // For signup, we need to update the user's profile after verification
         const { error: updateError } = await supabase.auth.updateUser({
           password: password,
-          data: {
-            full_name: full_name
-          }
+          data: { full_name: full_name }
         });
 
         if (updateError) throw updateError;
       }
 
-      // Clear the pending verification data securely
       secureStorage.removeItem('pendingVerification');
 
       const successMessage = type === 'signup' 
         ? 'Account created successfully! Redirecting to login...'
-        : type === 'login-otp'
-        ? 'Login successful! Redirecting...'
-        : 'Login verified! Redirecting...';
+        : 'Login successful! Redirecting...';
 
       showToast(successMessage);
+      hideOtpModal();
       
-      // Redirect based on verification type
       setTimeout(() => {
         window.location.href = type === 'signup' ? 'login.html' : 'citizen/dashboard.html';
       }, 1500);
@@ -263,48 +302,29 @@ if (verifyOtpButton) {
   });
 }
 
-// Add resend OTP functionality
-const resendOtpButton = document.getElementById('resend-otp');
+// Resend OTP Handler
 if (resendOtpButton) {
   resendOtpButton.addEventListener('click', async () => {
     try {
-      const pendingData = JSON.parse(sessionStorage.getItem('pendingVerification'));
+      const pendingData = secureStorage.getItem('pendingVerification');
       
       if (!pendingData) {
         showToast('Verification session expired. Please try again.', 'error');
+        hideOtpModal();
         return;
       }
 
       const { phone, type } = pendingData;
 
-      // Request new OTP
       const { error } = await supabase.auth.signInWithOtp({
         phone,
-        options: {
-          shouldCreateUser: type === 'signup'
-        }
+        options: { shouldCreateUser: type === 'signup' }
       });
 
       if (error) throw error;
 
       showToast('New OTP has been sent to your phone.');
-      
-      // Disable resend button for 30 seconds
-      resendOtpButton.disabled = true;
-      let countdown = 30;
-      const originalText = resendOtpButton.textContent;
-      
-      const timer = setInterval(() => {
-        resendOtpButton.textContent = `Resend OTP (${countdown}s)`;
-        countdown--;
-        
-        if (countdown < 0) {
-          clearInterval(timer);
-          resendOtpButton.disabled = false;
-          resendOtpButton.textContent = originalText;
-        }
-      }, 1000);
-
+      startOtpTimer();
     } catch (error) {
       console.error('Resend OTP error:', error.message);
       showToast(error.message || 'Failed to resend OTP. Please try again.', 'error');
@@ -313,18 +333,16 @@ if (resendOtpButton) {
 }
 
 // Request OTP button handler
-const requestOtpButton = document.getElementById('request-otp');
 if (requestOtpButton) {
   requestOtpButton.addEventListener('click', async () => {
     try {
-      const phone = document.getElementById('phone').value;
-      
-      if (!phone) {
-        showToast('Please enter your phone number', 'error');
+      const phone = sanitizeInput(document.getElementById('phone').value);
+
+      if (!validatePhoneNumber(phone)) {
+        showToast('Please enter a valid phone number', 'error');
         return;
       }
 
-      // Format phone number
       const formattedPhone = `+63${phone}`;
 
       // Request OTP
@@ -335,17 +353,13 @@ if (requestOtpButton) {
       if (error) throw error;
 
       // Store the phone number for verification
-      sessionStorage.setItem('pendingVerification', JSON.stringify({
+      secureStorage.setItem('pendingVerification', {
         phone: formattedPhone,
         type: 'login-otp'
-      }));
+      });
 
-      showToast('OTP has been sent to your phone.');
-      
-      // Show verification section
-      document.getElementById('verification-section').classList.remove('hidden');
-      document.getElementById('verification-section').classList.add('active');
-      document.getElementById('login-form').classList.add('hidden');
+      showToast('OTP has been sent to your phone');
+      showOtpModal();
 
       // Disable the button for 30 seconds
       requestOtpButton.disabled = true;
@@ -366,84 +380,6 @@ if (requestOtpButton) {
     } catch (error) {
       console.error('Request OTP error:', error.message);
       showToast(error.message || 'Failed to send OTP. Please try again.', 'error');
-    }
-  });
-}
-
-// Handle successful authentication and role-based redirect
-async function handleLoginSuccess(user) {
-  try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('role, status')
-      .eq('user_id', user.id)
-      .single();
-
-    if (error) throw error;
-
-    if (profile.status !== 'active') {
-      showToast('Your account is not active. Please contact support.', 'error');
-      return;
-    }
-
-    // Store user data securely
-    secureStorage.setItem('user_session', {
-      id: user.id,
-      phone: user.phone,
-      role: profile.role,
-      timestamp: Date.now()
-    });
-
-    showToast('Login successful! Redirecting...');
-
-    // Role-based redirect
-    setTimeout(() => {
-      window.location.href = profile.role === 'lgu' 
-        ? '/lgu/dashboard.html'
-        : '/citizen/dashboard.html';
-    }, 1500);
-  } catch (error) {
-    console.error('Profile fetch error:', error);
-    showToast('Login error. Please try again.', 'error');
-  }
-}
-
-// Update login form handler
-if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    try {
-      const phone = sanitizeInput(document.getElementById('phone').value);
-      const password = document.getElementById('password').value;
-
-      if (!validatePhoneNumber(phone)) {
-        showToast('Invalid phone number format', 'error');
-        return;
-      }
-
-      const formattedPhone = `+63${phone}`;
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        phone: formattedPhone,
-        password: password
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          showToast('Invalid phone number or password', 'error');
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      if (data?.user) {
-        await handleLoginSuccess(data.user);
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      showToast(error.message || 'Failed to login. Please try again.', 'error');
     }
   });
 }
