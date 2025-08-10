@@ -4,17 +4,17 @@ if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
     // Check if it's a citizen login
-    if (phone === '+639123456789' && password === 'citizen01') {
+    if (email === 'citizen@example.com' && password === 'citizen01') {
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify({
-        username: phone,
+        username: email,
         type: 'citizen',
         name: 'John Citizen',
-        email: 'john@example.com'
+        email: email
       }));
       
       showToast('Login successful! Redirecting...');
@@ -24,10 +24,10 @@ if (loginForm) {
       }, 1000);
     }
     // Check if it's an LGU admin login
-    else if (phone === '+639876543210' && password === 'admin911') {
+    else if (email === 'admin@lgu.gov.ph' && password === 'admin911') {
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify({
-        username: phone,
+        username: email,
         type: 'lgu',
         name: 'Admin User',
         department: 'City Administration'
@@ -39,7 +39,7 @@ if (loginForm) {
         window.location.href = 'lgu/dashboard.html';
       }, 1000);
     } else {
-      showToast('Invalid phone number or password. Please try again.', 'error');
+      showToast('Invalid email or password. Please try again.', 'error');
     }
   });
 }
