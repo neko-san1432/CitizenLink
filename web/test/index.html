@@ -1,0 +1,78 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap Test - CitizenLink</title>
+    <!-- Bootstrap CSS -->
+    <link href="../css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-5 text-center">
+                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                        <h1 class="h3 fw-bold mb-3">Bootstrap 5.3.3 + Popper.js</h1>
+                        <p class="text-muted mb-4">Successfully loaded with all components including JavaScript functionality.</p>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-mobile-alt text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h5>Responsive</h5>
+                                    <small class="text-muted">Mobile-first design</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-puzzle-piece text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h5>Components</h5>
+                                    <small class="text-muted">Pre-built UI elements</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-rocket text-warning mb-2" style="font-size: 2rem;"></i>
+                                    <h5>Fast</h5>
+                                    <small class="text-muted">Optimized performance</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#testModal">
+                            Test Modal (Popper.js)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Modal -->
+    <div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testModalLabel">Bootstrap Modal Test</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This modal demonstrates that Bootstrap JavaScript and Popper.js are working correctly!</p>
+                    <p>Popper.js handles the positioning of dropdowns, tooltips, popovers, and modals.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="../js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

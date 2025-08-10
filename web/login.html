@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CitizenLink</title>
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom styles for overrides -->
+    <link rel="stylesheet" href="css/additional-styles.css">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <a href="index.html" class="text-decoration-none">
+                        <div class="d-inline-flex align-items-center mb-3">
+                            <i class="fas fa-shield-alt text-primary me-2" style="font-size: 2rem;"></i>
+                            <span class="h3 fw-bold text-dark mb-0">CitizenLink</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- General Login Form -->
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <h2 class="h4 fw-bold">Login</h2>
+                            <p class="text-muted">Enter your credentials to access your account.</p>
+                        </div>
+                        
+                        <form id="login-form">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                                <input type="tel" class="form-control form-control-lg" id="phone" placeholder="Enter your phone number" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-semibold">Password</label>
+                                <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Log In</button>
+                            
+                            <div class="text-center">
+                                <p class="mb-3">Don't have an account? <a href="signup.html" class="text-decoration-none">Sign up</a></p>
+                                <div class="alert alert-info">
+                                    <small class="fw-semibold d-block mb-2">Demo credentials:</small>
+                                    <small class="d-block">Citizen: <code>+639123456789</code> / <code>citizen01</code></small>
+                                    <small class="d-block">LGU Admin: <code>+639876543210</code> / <code>admin911</code></small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

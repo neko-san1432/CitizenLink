@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - CitizenLink</title>
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom styles for overrides -->
+    <link rel="stylesheet" href="css/additional-styles.css">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <a href="index.html" class="text-decoration-none">
+                        <div class="d-inline-flex align-items-center mb-3">
+                            <i class="fas fa-shield-alt text-primary me-2" style="font-size: 2rem;"></i>
+                            <span class="h3 fw-bold text-dark mb-0">CitizenLink</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Signup Form -->
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <h2 class="h4 fw-bold">Create an Account</h2>
+                            <p class="text-muted">Sign up for a citizen account to submit and track complaints.</p>
+                        </div>
+                        
+                        <form id="signup-form">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="fullName" class="form-label fw-semibold">Full Name</label>
+                                    <input type="text" class="form-control form-control-lg" id="fullName" name="fullName" placeholder="Enter your full name" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="email" class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Enter your email" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="username" class="form-label fw-semibold">Username</label>
+                                    <input type="text" class="form-control form-control-lg" id="username" name="username" placeholder="Choose a username" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label fw-semibold">Password</label>
+                                    <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="Create a password" required>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="confirmPassword" class="form-label fw-semibold">Confirm Password</label>
+                                    <input type="password" class="form-control form-control-lg" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Sign Up</button>
+                            
+                            <div class="text-center">
+                                <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none">Log in</a></p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

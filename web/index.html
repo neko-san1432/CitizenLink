@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink - Citizen Complaint Management System</title>
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom styles for overrides -->
+    <link rel="stylesheet" href="css/additional-styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+            <div class="container">
+                <div class="navbar-brand d-flex align-items-center">
+                    <i class="fas fa-shield-alt text-primary me-2"></i>
+                    <span class="fw-bold">CitizenLink</span>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#features">Features</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#how-it-works">How It Works</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact">Contact</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex">
+                        <a href="login.html" class="btn btn-outline-primary me-2">Log In</a>
+                        <a href="signup.html" class="btn btn-primary">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main style="margin-top: 76px;">
+            <section class="hero bg-light py-5">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h1 class="display-4 fw-bold mb-4">Modern Complaint Management for Citizens and Government</h1>
+                            <p class="lead mb-4">CitizenLink bridges the gap between citizens and local government units, making complaint submission, tracking, and resolution more efficient than ever.</p>
+                            <div class="d-flex flex-column flex-sm-row gap-3">
+                                <a href="signup.html" class="btn btn-primary btn-lg">
+                                    Get Started
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </a>
+                                <a href="login.html" class="btn btn-outline-primary btn-lg">Log In</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="text-center">
+                                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 200px;">
+                                    <i class="fas fa-shield-alt text-white" style="font-size: 4rem;"></i>
+                                </div>
+                                <h3 class="fw-bold">CitizenLink</h3>
+                                <p class="text-muted">Empowering citizens and government through digital transformation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="features" class="py-5">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <h2 class="display-5 fw-bold mb-3">Key Features</h2>
+                        <p class="lead text-muted">Our platform offers a comprehensive set of features designed to streamline the complaint management process.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-file-alt text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Easy Complaint Submission</h3>
+                                    <p class="text-muted">Submit complaints with a user-friendly form that guides you through the process.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-clock text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Real-time Tracking</h3>
+                                    <p class="text-muted">Track the status of your complaints in real-time with detailed updates.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-check-circle text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Efficient Resolution</h3>
+                                    <p class="text-muted">Complaints are automatically routed to the appropriate government unit for faster resolution.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-chart-line text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Comprehensive Dashboard</h3>
+                                    <p class="text-muted">View statistics and insights about your complaints and government performance.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Secure Authentication</h3>
+                                    <p class="text-muted">Your data is protected with secure login and account management.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-users text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Government Accountability</h3>
+                                    <p class="text-muted">Transparent tracking ensures government units are accountable for complaint resolution.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="how-it-works" class="how-it-works py-5">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+                        <p class="lead text-muted">Our platform simplifies the complaint process for both citizens and government units.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h3 class="fw-bold mb-4">For Citizens</h3>
+                            <ol class="process-steps list-group list-group-numbered">
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">1</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 1</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">2</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 2</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">3</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 3</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">4</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 4</span>
+                                </li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="fw-bold mb-4">For Government Units</h3>
+                            <ol class="process-steps list-group list-group-numbered">
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">1</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 1</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">2</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 2</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">3</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 3</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">4</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Step 4</span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="contact" class="contact py-5">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <h2 class="display-5 fw-bold mb-3">Contact Information</h2>
+                        <p class="lead text-muted">Find contact details for all government units in your area.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-map-marker-alt text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">City Hall</h3>
+                                    <p class="text-muted">
+                                        123 Main Street, City Center<br>
+                                        Phone: (123) 456-7890<br>
+                                        Email: cityhall@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-building text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Police Department (PNP)</h3>
+                                    <p class="text-muted">
+                                        456 Safety Road, City Center<br>
+                                        Emergency: 911<br>
+                                        Non-emergency: (123) 456-7891<br>
+                                        Email: police@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-fire text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Fire Department (BFP)</h3>
+                                    <p class="text-muted">
+                                        789 Flame Avenue, City Center<br>
+                                        Emergency: 911<br>
+                                        Office: (123) 456-7892<br>
+                                        Email: fire@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-question-circle text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Public Works (DPWH)</h3>
+                                    <p class="text-muted">
+                                        321 Construction Blvd, City Center<br>
+                                        Phone: (123) 456-7893<br>
+                                        Email: publicworks@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-recycle text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Waste Management</h3>
+                                    <p class="text-muted">
+                                        654 Recycling Way, City Center<br>
+                                        Phone: (123) 456-7894<br>
+                                        Email: waste@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-briefcase-medical text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h3 class="h5 fw-bold mb-3">Health Department</h3>
+                                    <p class="text-muted">
+                                        987 Wellness Street, City Center<br>
+                                        Phone: (123) 456-7895<br>
+                                        Email: health@example.gov
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-dark text-light py-4 mt-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-0">&copy; 2025 CitizenLink. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a href="#" class="text-light text-decoration-none me-3">Terms of Service</a>
+                        <a href="#" class="text-light text-decoration-none">Privacy Policy</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+</body>
+</html>
