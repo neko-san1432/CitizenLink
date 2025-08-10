@@ -3,70 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complaint Heatmap - CitizenLink</title>
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/additional-styles.css">
+    <title>Heatmap - CitizenLink</title>
+    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/web/css/styles.css">
+    <link rel="stylesheet" href="/web/css/additional-styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>CitizenLink</span>
-                    <span class="badge">LGU</span>
-                </div>
-                <button class="sidebar-close" id="sidebar-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="dashboard.html">
-                            <i class="fas fa-home"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="complaints.html">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Complaints</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="heatmap.html" class="active">
-                            <i class="fas fa-map-marked-alt"></i>
-                            <span>Heatmap</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="insights.html">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Insights</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-menu">
-                    <button class="user-menu-btn">
-                        <i class="fas fa-user"></i>
-                        <span id="user-name">Admin User</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="user-dropdown">
-                        <span class="dropdown-label">City Administration</span>
-                        <a href="#" id="logout-btn" class="text-danger">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Log out</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </aside>
+        <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
 
         <div class="main-content">
             <header class="dashboard-header">
@@ -238,8 +184,9 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script src="../js/data.js"></script>
-    <script src="../js/auth-check.js"></script>
-    <script src="../js/lgu-heatmap.js"></script>
+    <script src="/web/js/data.js"></script>
+    <script src="/web/js/auth-check.js"></script>
+    <script src="/web/js/sidebar-loader.js"></script>
+    <script src="/web/js/lgu-heatmap.js"></script>
 </body>
 </html>

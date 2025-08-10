@@ -1,55 +1,17 @@
-// Tab switching functionality
-const tabButtons = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-
-tabButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const tabName = button.getAttribute('data-tab');
-    
-    // Update active tab button
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    
-    // Show corresponding tab content
-    tabContents.forEach(content => {
-      content.classList.remove('active');
-      if (content.id === `${tabName}-tab`) {
-        content.classList.add('active');
-      }
-    });
-  });
-});
-
-// Toast notification function
-function showToast(message, type = 'success') {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = 'toast show';
-  
-  if (type === 'error') {
-    toast.classList.add('error');
-  } else {
-    toast.classList.add('success');
-  }
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
-
-// Citizen login form
-const citizenLoginForm = document.getElementById('citizen-login-form');
-if (citizenLoginForm) {
-  citizenLoginForm.addEventListener('submit', (e) => {
+// General login form handler
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const username = document.getElementById('citizen-username').value;
-    const password = document.getElementById('citizen-password').value;
+    const phone = document.getElementById('phone').value;
+    const password = document.getElementById('password').value;
     
-    if (username === 'citizen-user' && password === 'citizen01') {
+    // Check if it's a citizen login
+    if (phone === '+639123456789' && password === 'citizen01') {
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify({
-        username,
+        username: phone,
         type: 'citizen',
         name: 'John Citizen',
         email: 'john@example.com'
@@ -60,25 +22,12 @@ if (citizenLoginForm) {
       setTimeout(() => {
         window.location.href = 'citizen/dashboard.html';
       }, 1000);
-    } else {
-      showToast('Invalid username or password. Please try again.', 'error');
     }
-  });
-}
-
-// LGU login form
-const lguLoginForm = document.getElementById('lgu-login-form');
-if (lguLoginForm) {
-  lguLoginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const username = document.getElementById('lgu-username').value;
-    const password = document.getElementById('lgu-password').value;
-    
-    if (username === 'LGU-admin' && password === 'admin911') {
+    // Check if it's an LGU admin login
+    else if (phone === '+639876543210' && password === 'admin911') {
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify({
-        username,
+        username: phone,
         type: 'lgu',
         name: 'Admin User',
         department: 'City Administration'
@@ -90,9 +39,28 @@ if (lguLoginForm) {
         window.location.href = 'lgu/dashboard.html';
       }, 1000);
     } else {
-      showToast('Invalid username or password. Please try again.', 'error');
+      showToast('Invalid phone number or password. Please try again.', 'error');
     }
   });
+}
+
+// Toast notification function
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
+  
+  if (toastMessage) {
+    toastMessage.textContent = message;
+  }
+  
+  // Create Bootstrap toast instance and show it
+  const bsToast = new bootstrap.Toast(toast);
+  bsToast.show();
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    bsToast.hide();
+  }, 3000);
 }
 
 // Signup form
@@ -102,7 +70,7 @@ if (signupForm) {
     e.preventDefault();
     
     const fullName = document.getElementById('fullName').value;
-    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
@@ -112,18 +80,17 @@ if (signupForm) {
       return;
     }
     
-    // Store user in localStorage
-    localStorage.setItem('user', JSON.stringify({
-      username,
-      type: 'citizen',
-      name: fullName,
-      email
-    }));
+    // Store signup data in localStorage for OTP verification
+    localStorage.setItem('signup_phone', phone);
+    localStorage.setItem('signup_fullName', fullName);
+    localStorage.setItem('signup_username', username);
+    localStorage.setItem('signup_password', password);
     
-    showToast('Account created successfully! Redirecting...');
+    showToast('Account created! Please verify your phone number.', 'success');
     
     setTimeout(() => {
-      window.location.href = 'citizen/dashboard.html';
-    }, 1000);
+      // Redirect to OTP verification page
+      window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}`;
+    }, 1500);
   });
 }

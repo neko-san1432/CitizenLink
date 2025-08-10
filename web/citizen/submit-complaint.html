@@ -4,67 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Complaint - CitizenLink</title>
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/additional-styles.css">
+    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/web/css/styles.css">
+    <link rel="stylesheet" href="/web/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>CitizenLink</span>
-                </div>
-                <button class="sidebar-close" id="sidebar-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="dashboard.html">
-                            <i class="fas fa-home"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="submit-complaint.html" class="active">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Submit Complaint</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="my-complaints.html">
-                            <i class="fas fa-comment-alt"></i>
-                            <span>My Complaints</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="analytics.html">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-menu">
-                    <button class="user-menu-btn">
-                        <i class="fas fa-user"></i>
-                        <span id="user-name">John Citizen</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="user-dropdown">
-                        <a href="profile.html">Profile Settings</a>
-                        <a href="#" id="logout-btn" class="text-danger">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Log out</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </aside>
+        <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
 
         <div class="main-content">
             <header class="dashboard-header">
@@ -78,22 +25,22 @@
 
             <main class="dashboard-main">
                 <div class="page-header">
-                    <h2>Submit a Complaint</h2>
-                    <p class="text-muted">Fill out the form below to submit a new complaint.</p>
+                    <h2 class="mb-0">Submit a Complaint</h2>
+                    <p class="text-muted mb-0">Fill out the form below to submit a new complaint.</p>
                 </div>
 
                 <div class="card">
-                    <div class="card-content">
+                    <div class="card-body">
                         <form id="complaint-form">
-                            <div class="form-group">
-                                <label for="complaint-title">Complaint Title</label>
-                                <input type="text" id="complaint-title" name="title" placeholder="Enter a brief title for your complaint" required>
+                            <div class="mb-3">
+                                <label for="complaint-title" class="form-label">Complaint Title</label>
+                                <input type="text" class="form-control" id="complaint-title" name="title" placeholder="Enter a brief title for your complaint" required>
                             </div>
                             
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="complaint-type">Complaint Type</label>
-                                    <select id="complaint-type" name="type" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="complaint-type" class="form-label">Complaint Type</label>
+                                    <select class="form-select" id="complaint-type" name="type" required>
                                         <option value="" disabled selected>Select complaint type</option>
                                         <option value="infrastructure">Infrastructure</option>
                                         <option value="public_safety">Public Safety</option>
@@ -104,19 +51,19 @@
                                     </select>
                                 </div>
                                 
-                                <div class="form-group">
-                                    <label for="complaint-subcategory">Subcategory</label>
-                                    <select id="complaint-subcategory" name="subcategory" required>
+                                <div class="col-md-6 mb-3">
+                                    <label for="complaint-subcategory" class="form-label">Subcategory</label>
+                                    <select class="form-select" id="complaint-subcategory" name="subcategory" required>
                                         <option value="" disabled selected>Select subcategory</option>
                                         <!-- Options will be populated based on complaint type -->
                                     </select>
                                 </div>
                             </div>
                             
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="complaint-urgency">Urgency Level</label>
-                                    <select id="complaint-urgency" name="urgency" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="complaint-urgency" class="form-label">Urgency Level</label>
+                                    <select class="form-select" id="complaint-urgency" name="urgency" required>
                                         <option value="" disabled selected>Select urgency level</option>
                                         <option value="low">Low - Not time-sensitive</option>
                                         <option value="medium">Medium - Needs attention within a week</option>
@@ -125,9 +72,9 @@
                                     </select>
                                 </div>
                                 
-                                <div class="form-group">
-                                    <label for="suggested-unit">Suggested Government Unit</label>
-                                    <select id="suggested-unit" name="suggestedUnit" required>
+                                <div class="col-md-6 mb-3">
+                                    <label for="suggested-unit" class="form-label">Suggested Government Unit</label>
+                                    <select class="form-select" id="suggested-unit" name="suggestedUnit" required>
                                         <option value="" disabled selected>Select government unit</option>
                                         <option value="city_hall">City Hall</option>
                                         <option value="police">Police Department (PNP)</option>
@@ -139,24 +86,24 @@
                                 </div>
                             </div>
                             
-                            <div class="form-group">
-                                <label for="complaint-location">Location</label>
-                                <input type="text" id="complaint-location" name="location" placeholder="Enter the address or location of the issue" required>
+                            <div class="mb-3">
+                                <label for="complaint-location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="complaint-location" name="location" placeholder="Enter the address or location of the issue" required>
                             </div>
                             
-                            <div class="form-group">
-                                <label for="complaint-description">Description</label>
-                                <textarea id="complaint-description" name="description" rows="5" placeholder="Provide a detailed description of your complaint" required></textarea>
+                            <div class="mb-3">
+                                <label for="complaint-description" class="form-label">Description</label>
+                                <textarea class="form-control" id="complaint-description" name="description" rows="5" placeholder="Provide a detailed description of your complaint" required></textarea>
                             </div>
                             
-                            <div class="form-group">
-                                <label for="complaint-photo">Upload Photo (Optional)</label>
-                                <input type="file" id="complaint-photo" name="photo" accept="image/*">
-                                <p class="text-muted">Max file size: 5MB</p>
+                            <div class="mb-3">
+                                <label for="complaint-photo" class="form-label">Upload Photo (Optional)</label>
+                                <input type="file" class="form-control" id="complaint-photo" name="photo" accept="image/*">
+                                <p class="text-muted small">Max file size: 5MB</p>
                             </div>
                             
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-outline" id="cancel-btn">Cancel</button>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary" id="cancel-btn">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Submit Complaint</button>
                             </div>
                         </form>
@@ -168,8 +115,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script src="../js/data.js"></script>
-    <script src="../js/auth-check.js"></script>
-    <script src="../js/submit-complaint.js"></script>
+    <script src="/web/js/data.js"></script>
+    <script src="/web/js/auth-check.js"></script>
+    <script src="/web/js/sidebar-loader.js"></script>
+    <script src="/web/js/submit-complaint.js"></script>
 </body>
 </html>

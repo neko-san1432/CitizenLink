@@ -11,7 +11,7 @@
    > *make sure that the path of the terminal is in the directory you are cloning*
 
 `
-npm install dotenv express @supabase/supabase-js@2.54.0
+npm install dotenv express @supabase/supabase-js@2.54.0 helmet
 `
 </li>
 <li> Copy the <code>.env</code>

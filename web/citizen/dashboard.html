@@ -4,213 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Citizen Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/additional-styles.css">
+    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/web/css/styles.css">
+    <link rel="stylesheet" href="/web/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>CitizenLink</span>
-                </div>
-                <button class="sidebar-close" id="sidebar-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="dashboard.html" class="active">
-                            <i class="fas fa-home"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="submit-complaint.html">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Submit Complaint</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="my-complaints.html">
-                            <i class="fas fa-comment-alt"></i>
-                            <span>My Complaints</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="analytics.html">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-menu">
-                    <button class="user-menu-btn">
-                        <i class="fas fa-user"></i>
-                        <span id="user-name">John Citizen</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="user-dropdown">
-                        <a href="profile.html">Profile Settings</a>
-                        <a href="#" id="logout-btn" class="text-danger">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Log out</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </aside>
+        <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
 
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle" id="sidebar-toggle">
+                <button class="sidebar-toggle btn btn-outline-secondary" id="sidebar-toggle">
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name" class="fw-bold">John Citizen</span></span>
                 </div>
             </header>
 
             <main class="dashboard-main">
                 <div class="page-header">
                     <div>
-                        <h2>Dashboard</h2>
-                        <p class="text-muted">Overview of your complaints and their status.</p>
+                        <h2 class="mb-0">Dashboard</h2>
+                        <p class="text-muted mb-0">Stay updated with the latest news and announcements.</p>
                     </div>
-                    <a href="submit-complaint.html" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        New Complaint
+                    <a href="submit-complaint.html" class="btn btn-submit-complaint">
+                        <i class="fas fa-plus me-2"></i>
+                        Submit Complaint
                     </a>
                 </div>
 
-                <div class="stats-grid">
+                <!-- Quick Actions Section -->
+                <div class="stats-grid mb-4">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <h3>Total Complaints</h3>
-                            <i class="fas fa-file-alt"></i>
+                            <h3 class="mb-0">Quick Actions</h3>
+                            <i class="fas fa-bolt text-warning"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-value" id="total-complaints">0</div>
-                            <p class="text-muted">All complaints submitted</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>Pending</h3>
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="pending-complaints">0</div>
-                            <p class="text-muted">Awaiting assignment</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>In Progress</h3>
-                            <i class="fas fa-spinner"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="in-progress-complaints">0</div>
-                            <p class="text-muted">Being addressed</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>Resolved</h3>
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="resolved-complaints">0</div>
-                            <p class="text-muted">Successfully completed</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Complaint Overview</h3>
-                            <p class="text-muted">Distribution of your complaints by status</p>
-                        </div>
-                        <div class="card-content">
-                            <canvas id="complaints-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Response Time</h3>
-                            <p class="text-muted">Average time for your complaints to be addressed</p>
-                        </div>
-                        <div class="card-content">
-                            <div class="progress-container">
-                                <div class="progress-header">
-                                    <span>Average Response Time</span>
-                                    <span id="avg-response-time">0 hours</span>
-                                </div>
-                                <div class="progress">
-                                    <div class="progress-bar" id="response-time-progress" style="width: 0%"></div>
-                                </div>
-                                <div class="progress-labels">
-                                    <span>Faster</span>
-                                    <span>48 hours</span>
-                                </div>
+                            <div class="d-grid gap-2">
+                                <a href="submit-complaint.html" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-alt me-2"></i>
+                                    Report an Issue
+                                </a>
+                                <a href="my-complaints.html" class="btn btn-outline-info">
+                                    <i class="fas fa-list me-2"></i>
+                                    View My Reports
+                                </a>
+                                <a href="analytics.html" class="btn btn-outline-success">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Track Progress
+                                </a>
                             </div>
-                            <div class="progress-container">
-                                <div class="progress-header">
-                                    <span>Resolution Rate</span>
-                                    <span id="resolution-rate">0%</span>
-                                </div>
-                                <div class="progress">
-                                    <div class="progress-bar" id="resolution-rate-progress" style="width: 0%"></div>
-                                </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="mb-0">Emergency Contacts</h3>
+                            <i class="fas fa-phone text-danger"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="d-grid gap-2">
+                                <a href="tel:911" class="btn btn-outline-danger">
+                                    <i class="fas fa-phone me-2"></i>
+                                    Emergency: 911
+                                </a>
+                                <a href="tel:+639123456789" class="btn btn-outline-warning">
+                                    <i class="fas fa-building me-2"></i>
+                                    City Hall: +63 912 345 6789
+                                </a>
+                                <a href="tel:+639876543210" class="btn btn-outline-info">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Police: +63 987 654 3210
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="recent-complaints">
+                <!-- News Section -->
+                <div class="news-section">
+                    <div class="page-header">
+                        <h3 class="text-gradient">Latest News & Updates</h3>
+                        <p class="text-muted">Stay informed about your community</p>
+                    </div>
+                    
+                    <div class="news-grid" id="news-grid">
+                        <!-- News cards will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Community Updates -->
+                <div class="community-updates mt-4">
                     <div class="card">
-                        <div class="card-header">
-                            <h3>Recent Complaints</h3>
-                            <p class="text-muted">Your most recently submitted complaints</p>
+                        <div class="card-header bg-gradient text-white">
+                            <h3 class="mb-0">
+                                <i class="fas fa-users me-2"></i>
+                                Community Updates
+                            </h3>
                         </div>
-                        <div class="card-content">
-                            <div class="tabs">
-                                <div class="tab-buttons">
-                                    <button class="tab-btn active" data-tab="all">All</button>
-                                    <button class="tab-btn" data-tab="pending">Pending</button>
-                                    <button class="tab-btn" data-tab="in-progress">In Progress</button>
-                                    <button class="tab-btn" data-tab="resolved">Resolved</button>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-calendar-alt text-primary me-2"></i>Upcoming Events</h5>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <strong>City Council Meeting</strong><br>
+                                            <small class="text-muted">Every 1st Monday of the month at 6:00 PM</small>
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Community Clean-up Day</strong><br>
+                                            <small class="text-muted">Saturday, December 15, 2024 at 8:00 AM</small>
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Public Safety Forum</strong><br>
+                                            <small class="text-muted">Wednesday, December 20, 2024 at 7:00 PM</small>
+                                        </li>
+                                    </ul>
                                 </div>
-                                <div class="tab-content active" id="all-tab">
-                                    <div id="all-complaints-list" class="complaints-list">
-                                        <!-- Complaints will be loaded here -->
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-info-circle text-info me-2"></i>Important Notices</h5>
+                                    <div class="alert alert-info">
+                                        <strong>Water Maintenance</strong><br>
+                                        Scheduled maintenance on December 10-12, 2024. Expect temporary water interruptions.
                                     </div>
-                                </div>
-                                <div class="tab-content" id="pending-tab">
-                                    <div id="pending-complaints-list" class="complaints-list">
-                                        <!-- Pending complaints will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="in-progress-tab">
-                                    <div id="in-progress-complaints-list" class="complaints-list">
-                                        <!-- In progress complaints will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="resolved-tab">
-                                    <div id="resolved-complaints-list" class="complaints-list">
-                                        <!-- Resolved complaints will be loaded here -->
+                                    <div class="alert alert-warning">
+                                        <strong>Road Construction</strong><br>
+                                        Main Street construction project starting January 2025. Plan alternate routes.
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-footer">
-                            <a href="my-complaints.html" class="btn btn-outline btn-block">View All Complaints</a>
                         </div>
                     </div>
                 </div>
@@ -220,9 +144,17 @@
 
     <div id="toast" class="toast"></div>
 
+    <!-- Floating Action Button for Submit Complaint -->
+    <div class="fab-container">
+        <a href="submit-complaint.html" class="fab-button" title="Submit a new complaint">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../js/data.js"></script>
-    <script src="../js/auth-check.js"></script>
-    <script src="../js/citizen-dashboard.js"></script>
+    <script src="/web/js/data.js"></script>
+    <script src="/web/js/auth-check.js"></script>
+    <script src="/web/js/sidebar-loader.js"></script>
+    <script src="/web/js/citizen-dashboard.js"></script>
 </body>
 </html>
