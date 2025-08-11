@@ -199,7 +199,7 @@ function createComplaintMarker(complaint) {
         ${complaint.assignedUnit ? `<p><strong>Assigned to:</strong> ${governmentUnitNames[complaint.assignedUnit]}</p>` : ''}
       </div>
       <div class="tooltip-actions">
-        <a href="complaints.html?id=${complaint.id}" class="view-details-btn">View Details</a>
+        <a href="/lgu/complaints?id=${complaint.id}" class="view-details-btn">View Details</a>
       </div>
     </div>
   `;
@@ -223,7 +223,7 @@ function createComplaintMarker(complaint) {
       <p><strong>Status:</strong> ${complaint.status}</p>
       <p><strong>Urgency:</strong> ${complaint.urgency}</p>
       <p><strong>Description:</strong> ${complaint.description}</p>
-      <a href="complaints.html?id=${complaint.id}" class="popup-link">View Full Details</a>
+      <a href="/lgu/complaints?id=${complaint.id}" class="popup-link">View Full Details</a>
     </div>
   `);
   

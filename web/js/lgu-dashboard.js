@@ -225,7 +225,7 @@ function loadComplaintsIntoTab(tabId, complaints) {
           </div>
           <div class="complaint-actions">
               <span class="status-badge ${statusClass}">${complaint.status}</span>
-              <a href="complaints.html?id=${complaint.id}" class="btn btn-outline">
+              <a href="/lgu/complaints?id=${complaint.id}" class="btn btn-outline">
                   View Details
               </a>
           </div>

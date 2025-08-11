@@ -4,7 +4,7 @@ function checkAuth() {
   
   if (!user) {
     // Redirect to login page
-    window.location.href = '../login.html';
+    window.location.href = '/login';
     return null;
   }
   
@@ -12,12 +12,12 @@ function checkAuth() {
   const currentPath = window.location.pathname;
   
   if (user.type === 'citizen' && !currentPath.includes('/citizen/')) {
-    window.location.href = '../citizen/dashboard.html';
+    window.location.href = '/citizen/dashboard';
     return null;
   }
   
   if (user.type === 'lgu' && !currentPath.includes('/lgu/')) {
-    window.location.href = '../lgu/dashboard.html';
+    window.location.href = '/lgu/dashboard';
     return null;
   }
   
@@ -47,7 +47,7 @@ function setupLogout() {
       localStorage.removeItem('user');
       
       // Redirect to login page
-      window.location.href = '../login.html';
+      window.location.href = '/login';
     });
   }
 }

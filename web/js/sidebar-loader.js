@@ -102,7 +102,7 @@ class SidebarLoader {
                 </div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                        <li><a href="/citizen/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
                         <li><a href="#" onclick="history.back()"><i class="fas fa-arrow-left"></i><span>Go Back</span></a></li>
                     </ul>
                 </nav>
@@ -281,10 +281,10 @@ class SidebarLoader {
         // Clear user data
         localStorage.removeItem('user');
         localStorage.removeItem('otp_verified');
-        localStorage.removeItem('user_phone');
+        localStorage.removeItem('user_email');
         
         // Redirect to login page
-        window.location.href = '../login.html';
+        window.location.href = '/login';
     }
 }
 

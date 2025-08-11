@@ -226,6 +226,18 @@ app.get('/images/*', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Robots.txt route for SEO
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.sendFile(path.join(__dirname, 'robots.txt'));
+});
+
+// Sitemap route for SEO
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml');
+  res.sendFile(path.join(__dirname, 'sitemap.xml'));
+});
+
 // Catch-all for other static assets (fonts, etc.)
 app.get('/assets/*', (req, res) => {
   const filePath = path.join(__dirname, req.path);

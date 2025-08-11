@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup cancel button
     document.getElementById('cancel-btn').addEventListener('click', () => {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/citizen/dashboard';
     });
 });
 

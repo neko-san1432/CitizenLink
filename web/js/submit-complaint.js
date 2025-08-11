@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Setup cancel button
   document.getElementById('cancel-btn').addEventListener('click', () => {
-    window.location.href = 'dashboard.html';
+    window.location.href = '/citizen/dashboard';
   });
 });
 
@@ -118,7 +118,7 @@ function submitComplaint(formData) {
     
     // Redirect to dashboard after a short delay
     setTimeout(() => {
-      window.location.href = 'my-complaints.html?id=' + newComplaint.id;
+      window.location.href = '/citizen/complaints?id=' + newComplaint.id;
     }, 1500);
   } else {
     showToast('Failed to submit complaint. Please try again.', 'error');
