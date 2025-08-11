@@ -32,7 +32,9 @@ const subcategories = {
     'Bridge Issues', 
     'Sidewalk Problems', 
     'Street Lighting', 
-    'Public Building'
+    'Public Building',
+    'Traffic Control',
+    'Drainage Problems'
   ],
   [ComplaintType.PUBLIC_SAFETY]: [
     'Crime Report', 
@@ -135,6 +137,7 @@ const sampleComplaints = [
     assignedUnit: GovernmentUnit.PUBLIC_WORKS,
     createdAt: '2025-01-10T18:45:00',
     updatedAt: '2025-01-12T09:30:00',
+    coordinates: [6.75200, 125.35800],
     timeline: [
       {
         date: '2025-01-10T18:45:00',
@@ -168,6 +171,7 @@ const sampleComplaints = [
     createdAt: '2025-01-15T08:20:00',
     updatedAt: '2025-01-15T10:45:00',
     resolvedAt: '2025-01-16T14:30:00',
+    coordinates: [6.74850, 125.35500],
     timeline: [
       {
         date: '2025-01-15T08:20:00',
@@ -199,6 +203,7 @@ const sampleComplaints = [
     suggestedUnit: GovernmentUnit.CITY_HALL,
     createdAt: '2025-01-20T06:15:00',
     updatedAt: '2025-01-20T06:15:00',
+    coordinates: [6.74000, 125.34000],
     timeline: [
       {
         date: '2025-01-20T06:15:00',
@@ -221,6 +226,7 @@ const sampleComplaints = [
     assignedUnit: GovernmentUnit.PUBLIC_WORKS,
     createdAt: '2025-01-22T15:30:00',
     updatedAt: '2025-01-22T15:45:00',
+    coordinates: [6.75500, 125.36500],
     timeline: [
       {
         date: '2025-01-22T15:30:00',
@@ -254,6 +260,7 @@ const sampleComplaints = [
     createdAt: '2025-01-18T22:10:00',
     updatedAt: '2025-01-19T00:30:00',
     resolvedAt: '2025-01-21T10:15:00',
+    coordinates: [6.76000, 125.35000],
     timeline: [
       {
         date: '2025-01-18T22:10:00',
@@ -291,6 +298,7 @@ const sampleComplaints = [
     assignedUnit: GovernmentUnit.WASTE,
     createdAt: '2025-01-25T14:20:00',
     updatedAt: '2025-01-26T09:10:00',
+    coordinates: [6.73000, 125.34500],
     timeline: [
       {
         date: '2025-01-25T14:20:00',
@@ -322,9 +330,60 @@ const sampleComplaints = [
     suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
     createdAt: '2025-01-28T16:45:00',
     updatedAt: '2025-01-28T16:45:00',
+    coordinates: [6.73800, 125.33800],
     timeline: [
       {
         date: '2025-01-28T16:45:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      }
+    ]
+  },
+  {
+    id: 'CP009',
+    userId: 'citizen-user',
+    title: 'Traffic Light Malfunction',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Traffic Control',
+    description: 'The traffic light at the intersection of Main Street and Highway 26 is not working properly. It\'s causing traffic congestion and safety hazards.',
+    location: 'Intersection of Main Street and Highway 26',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    assignedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-01-29T08:15:00',
+    updatedAt: '2025-01-29T09:00:00',
+    coordinates: [6.74500, 125.36000],
+    timeline: [
+      {
+        date: '2025-01-29T08:15:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-01-29T09:00:00',
+        action: 'Assigned to Public Works Department',
+        actor: 'Admin User'
+      }
+    ]
+  },
+  {
+    id: 'CP010',
+    userId: 'other-user',
+    title: 'Street Flooding',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Drainage Problems',
+    description: 'Heavy rain caused flooding on Oak Street between 3rd and 4th Avenue. The drainage system seems to be blocked.',
+    location: 'Oak Street between 3rd and 4th Avenue',
+    urgency: 'medium',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-01-30T14:30:00',
+    updatedAt: '2025-01-30T14:30:00',
+    coordinates: [6.73500, 125.35000],
+    timeline: [
+      {
+        date: '2025-01-30T14:30:00',
         action: 'Complaint submitted',
         actor: 'Jane Smith'
       }

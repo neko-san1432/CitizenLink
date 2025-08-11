@@ -1812,3 +1812,179 @@ a:hover {
     margin-top: 1.5rem !important;
   }
 }
+
+/* ===== HEATMAP SPECIFIC STYLES ===== */
+
+/* Complaint tooltip styles */
+.complaint-tooltip-container .leaflet-tooltip {
+  background: white;
+  border: 2px solid var(--bs-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  max-width: 300px;
+}
+
+.complaint-tooltip {
+  padding: 12px;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tooltip-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.in_progress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.resolved {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.tooltip-content {
+  margin-bottom: 12px;
+}
+
+.tooltip-content p {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.tooltip-content strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.tooltip-actions {
+  text-align: center;
+}
+
+.view-details-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: var(--bs-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.view-details-btn:hover {
+  background-color: #1d4ed8;
+  color: white;
+  text-decoration: none;
+}
+
+/* Boundary label styles */
+.boundary-label .leaflet-tooltip {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Map popup styles */
+.map-popup {
+  padding: 8px;
+  max-width: 300px;
+}
+
+.map-popup h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.map-popup p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.map-popup strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.popup-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: var(--bs-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.popup-link:hover {
+  background-color: #1d4ed8;
+  color: white;
+  text-decoration: none;
+}
+
+/* Heatmap marker hover effects */
+.leaflet-marker-icon:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Responsive adjustments for tooltips */
+@media (max-width: 768px) {
+  .complaint-tooltip-container .leaflet-tooltip {
+    max-width: 250px;
+  }
+  
+  .tooltip-header h4 {
+    font-size: 13px;
+  }
+  
+  .tooltip-content p {
+    font-size: 11px;
+  }
+}

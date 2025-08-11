@@ -5,7 +5,7 @@ import helmet from 'helmet';
 
 // ES6 module compatibility
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__dirname); // Go up one level to get to the root
+const __dirname = path.dirname(__filename); // Get the directory of the current file
 
 const app = express();
 
@@ -115,93 +115,93 @@ app.use(express.urlencoded({ extended: true }));
 // ===== MAIN ROUTES =====
 // Home/Landing page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Authentication routes
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'login.html'));
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'signup.html'));
+  res.sendFile(path.join(__dirname, 'signup.html'));
 });
 
 app.get('/verify-otp', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'verify-otp.html'));
+  res.sendFile(path.join(__dirname, 'verify-otp.html'));
 });
 
 // ===== CITIZEN ROUTES =====
 app.get('/citizen', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'dashboard.html'));
 });
 
 app.get('/citizen/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'dashboard.html'));
 });
 
 app.get('/citizen/profile', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'profile.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'profile.html'));
 });
 
 app.get('/citizen/complaints', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'my-complaints.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'my-complaints.html'));
 });
 
 app.get('/citizen/submit-complaint', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'submit-complaint.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'submit-complaint.html'));
 });
 
 app.get('/citizen/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'citizen', 'analytics.html'));
+  res.sendFile(path.join(__dirname, 'citizen', 'analytics.html'));
 });
 
 // ===== LGU ROUTES =====
 app.get('/lgu', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'lgu', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'lgu', 'dashboard.html'));
 });
 
 app.get('/lgu/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'lgu', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'lgu', 'dashboard.html'));
 });
 
 app.get('/lgu/complaints', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'lgu', 'complaints.html'));
+  res.sendFile(path.join(__dirname, 'lgu', 'complaints.html'));
 });
 
 app.get('/lgu/heatmap', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'lgu', 'heatmap.html'));
+  res.sendFile(path.join(__dirname, 'lgu', 'heatmap.html'));
 });
 
 app.get('/lgu/insights', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web', 'lgu', 'insights.html'));
+  res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
 });
 
 // ===== STATIC ASSET ROUTES =====
 // CSS files
 app.get('/css/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   res.setHeader('Content-Type', 'text/css');
   res.sendFile(filePath);
 });
 
 // JavaScript files
 app.get('/js/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(filePath);
 });
 
 // Bootstrap CSS files
 app.get('/css/bootstrap/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   res.setHeader('Content-Type', 'text/css');
   res.sendFile(filePath);
 });
 
 // Bootstrap JavaScript files
 app.get('/js/bootstrap/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(filePath);
 });
@@ -209,7 +209,7 @@ app.get('/js/bootstrap/*', (req, res) => {
 // Font Awesome CDN (already handled by CSP)
 // Images and other assets
 app.get('/images/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   const ext = path.extname(filePath).toLowerCase();
   
   // Set appropriate MIME type based on file extension
@@ -228,7 +228,7 @@ app.get('/images/*', (req, res) => {
 
 // Catch-all for other static assets (fonts, etc.)
 app.get('/assets/*', (req, res) => {
-  const filePath = path.join(__dirname, 'web', req.path);
+  const filePath = path.join(__dirname, req.path);
   const ext = path.extname(filePath).toLowerCase();
   
   // Set appropriate MIME type based on file extension
