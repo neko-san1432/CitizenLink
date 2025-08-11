@@ -97,6 +97,12 @@ app.use((req, res, next) => {
   res.setHeader('X-Download-Options', 'noopen');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.setHeader('X-DNS-Prefetch-Control', 'off');
+
+  // Explicit Permissions-Policy header (meta tag is ignored by browsers)
+  res.setHeader(
+    'Permissions-Policy',
+    "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
+  );
   
   // Security headers for API endpoints
   if (req.path.startsWith('/api/')) {
@@ -130,6 +136,8 @@ app.get('/signup', (req, res) => {
 app.get('/verify-otp', (req, res) => {
   res.sendFile(path.join(__dirname, 'verify-otp.html'));
 });
+
+
 
 // ===== CITIZEN ROUTES =====
 app.get('/citizen', (req, res) => {
@@ -273,6 +281,8 @@ app.get('/api/health', (req, res) => {
     }
   });
 });
+
+
 
 // ===== ERROR HANDLING =====
 // Error handling for security violations
