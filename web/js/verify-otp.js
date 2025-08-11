@@ -20,7 +20,7 @@ class OTPVerifier {
         this.setupOTPInputs();
         this.setupFormSubmission();
         this.startCountdown();
-        this.loadPhoneNumber();
+        this.loadEmail();
     }
     
     setupOTPInputs() {
@@ -121,24 +121,24 @@ class OTPVerifier {
         this.countdown.style.display = 'none';
     }
     
-    loadPhoneNumber() {
-        // Get phone number from URL params or localStorage
+    loadEmail() {
+        // Get email from URL params or localStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const phone = urlParams.get('phone') || localStorage.getItem('signup_phone');
+        const email = urlParams.get('email') || localStorage.getItem('signup_email');
         
-        if (phone) {
-            this.otpInstruction.textContent = `Your code was sent to ${this.maskPhoneNumber(phone)}`;
+        if (email) {
+            this.otpInstruction.textContent = `Your code was sent to ${this.maskEmail(email)}`;
         }
     }
     
-    maskPhoneNumber(phone) {
-        // Mask phone number for privacy (e.g., +63 *** *** 1234)
-        if (phone.length >= 10) {
-            const last4 = phone.slice(-4);
-            const masked = phone.slice(0, -4).replace(/\d/g, '*');
-            return `${masked} ${last4}`;
+    maskEmail(email) {
+        // Mask email for privacy (e.g., j***@example.com)
+        const [username, domain] = email.split('@');
+        if (username.length > 2) {
+            const maskedUsername = username.charAt(0) + '*'.repeat(username.length - 2) + username.charAt(username.length - 1);
+            return `${maskedUsername}@${domain}`;
         }
-        return phone;
+        return email;
     }
     
     // ===== DUMMY OTP VERIFICATION =====
@@ -162,10 +162,10 @@ class OTPVerifier {
                 setTimeout(() => {
                     // Store verification status
                     localStorage.setItem('otp_verified', 'true');
-                    localStorage.setItem('user_phone', localStorage.getItem('signup_phone'));
+                    localStorage.setItem('user_email', localStorage.getItem('signup_email'));
                     
                     // Redirect to dashboard or login
-                    window.location.href = 'citizen/dashboard.html';
+                    window.location.href = '/citizen/dashboard';
                 }, 1500);
             } else {
                 this.showError('Invalid OTP. Please try again.');
@@ -267,16 +267,16 @@ When you're ready to integrate with real APIs, replace these functions:
 
 1. verifyOTP() - Replace with actual API call:
    - POST to /api/verify-otp
-   - Send phone number and OTP
+   - Send email and OTP
    - Handle real server response
 
 2. resendOTP() - Replace with actual API call:
    - POST to /api/resend-otp
-   - Send phone number
+   - Send email
    - Handle real server response
 
 3. Update error handling for real API responses
 4. Add proper authentication tokens
-5. Implement real phone number validation
+5. Implement real email validation
 6. Add rate limiting for OTP requests
 */

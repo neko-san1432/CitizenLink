@@ -20,7 +20,7 @@ if (loginForm) {
       showToast('Login successful! Redirecting...');
       
       setTimeout(() => {
-        window.location.href = 'citizen/dashboard.html';
+        window.location.href = '/citizen/dashboard';
       }, 1000);
     }
     // Check if it's an LGU admin login
@@ -36,7 +36,7 @@ if (loginForm) {
       showToast('Login successful! Redirecting...');
       
       setTimeout(() => {
-        window.location.href = 'lgu/dashboard.html';
+        window.location.href = '/lgu/dashboard';
       }, 1000);
     } else {
       showToast('Invalid email or password. Please try again.', 'error');
@@ -70,7 +70,7 @@ if (signupForm) {
     e.preventDefault();
     
     const fullName = document.getElementById('fullName').value;
-    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
@@ -80,17 +80,17 @@ if (signupForm) {
       return;
     }
     
-    // Store signup data in localStorage for OTP verification
-    localStorage.setItem('signup_phone', phone);
+    // Store signup data in localStorage for email verification
+    localStorage.setItem('signup_email', email);
     localStorage.setItem('signup_fullName', fullName);
     localStorage.setItem('signup_username', username);
     localStorage.setItem('signup_password', password);
     
-    showToast('Account created! Please verify your phone number.', 'success');
+    showToast('Account created! Please verify your email address.', 'success');
     
     setTimeout(() => {
       // Redirect to OTP verification page
-      window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}`;
+      window.location.href = `/verify-otp?email=${encodeURIComponent(email)}`;
     }, 1500);
   });
 }
