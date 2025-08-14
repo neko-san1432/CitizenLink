@@ -16,9 +16,8 @@
     <link rel="stylesheet" href="css/additional-styles.css">
 </head>
 <body class="bg-light">
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+    <div class="login-container">
+        <div class="login-form-container">
                 <!-- Header -->
                 <div class="text-center mb-4">
                     <a href="/" class="text-decoration-none">
@@ -59,7 +58,6 @@
                         </form>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 
@@ -76,6 +74,9 @@
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+    <!-- Supabase Configuration (non-module for global init) -->
+    <script src="js/supabase-config.js"></script>
+    <!-- Authentication Script -->
     <script src="js/auth.js"></script>
 </body>
 </html>

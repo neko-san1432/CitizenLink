@@ -388,21 +388,544 @@ const sampleComplaints = [
         actor: 'Jane Smith'
       }
     ]
+  },
+  {
+    id: 'CP011',
+    userId: 'citizen-user',
+    title: 'Broken Park Bench',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Public Amenities',
+    description: 'One of the park benches in Central Park is broken and unsafe to sit on. The wood is splintered and the metal frame is bent.',
+    location: 'Central Park, near the fountain',
+    urgency: 'low',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.CITY_HALL,
+    createdAt: '2025-02-01T09:20:00',
+    updatedAt: '2025-02-01T09:20:00',
+    coordinates: [6.75000, 125.34500],
+    timeline: [
+      {
+        date: '2025-02-01T09:20:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      }
+    ]
+  },
+  {
+    id: 'CP012',
+    userId: 'other-user',
+    title: 'Loud Music from Bar',
+    type: ComplaintType.NOISE,
+    subcategory: 'Commercial Noise',
+    description: 'The bar on Pine Street is playing extremely loud music until 2 AM, making it impossible to sleep. This has been happening every weekend.',
+    location: 'Pine Street Bar, 123 Pine Street',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.POLICE,
+    assignedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-02T23:45:00',
+    updatedAt: '2025-02-03T10:15:00',
+    coordinates: [6.74800, 125.35200],
+    timeline: [
+      {
+        date: '2025-02-02T23:45:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      },
+      {
+        date: '2025-02-03T10:15:00',
+        action: 'Assigned to Police Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-03T14:30:00',
+        action: 'Officer visited establishment, warning issued',
+        actor: 'Police Department'
+      }
+    ]
+  },
+  {
+    id: 'CP013',
+    userId: 'citizen-user',
+    title: 'Garbage Truck Spilled Waste',
+    type: ComplaintType.SANITATION,
+    subcategory: 'Garbage Collection',
+    description: 'The garbage truck spilled waste all over Elm Street while collecting trash. The street is now dirty and smells terrible.',
+    location: 'Elm Street between 2nd and 3rd Avenue',
+    urgency: 'medium',
+    status: ComplaintStatus.RESOLVED,
+    suggestedUnit: GovernmentUnit.WASTE,
+    assignedUnit: GovernmentUnit.WASTE,
+    createdAt: '2025-02-03T07:30:00',
+    updatedAt: '2025-02-03T08:00:00',
+    resolvedAt: '2025-02-03T10:45:00',
+    coordinates: [6.74200, 125.34800],
+    timeline: [
+      {
+        date: '2025-02-03T07:30:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-03T08:00:00',
+        action: 'Assigned to Waste Management',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-03T10:45:00',
+        action: 'Street cleaned and sanitized',
+        actor: 'Waste Management'
+      }
+    ]
+  },
+  {
+    id: 'CP014',
+    userId: 'other-user',
+    title: 'Fire Hydrant Leaking',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Water Infrastructure',
+    description: 'The fire hydrant on Maple Drive is leaking water continuously. This is wasting water and could cause damage to the road.',
+    location: 'Maple Drive, near 5th Avenue',
+    urgency: 'medium',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    assignedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-04T11:15:00',
+    updatedAt: '2025-02-04T12:00:00',
+    coordinates: [6.74500, 125.35500],
+    timeline: [
+      {
+        date: '2025-02-04T11:15:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      },
+      {
+        date: '2025-02-04T12:00:00',
+        action: 'Assigned to Public Works Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-04T15:30:00',
+        action: 'Technician dispatched for repair',
+        actor: 'Public Works Department'
+      }
+    ]
+  },
+  {
+    id: 'CP015',
+    userId: 'citizen-user',
+    title: 'Stray Dogs in Neighborhood',
+    type: ComplaintType.PUBLIC_SAFETY,
+    subcategory: 'Animal Control',
+    description: 'There are several stray dogs roaming around Oak Avenue that seem aggressive. They\'re scaring children and causing safety concerns.',
+    location: 'Oak Avenue between 7th and 8th Street',
+    urgency: 'high',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-05T08:45:00',
+    updatedAt: '2025-02-05T08:45:00',
+    coordinates: [6.75500, 125.34000],
+    timeline: [
+      {
+        date: '2025-02-05T08:45:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      }
+    ]
+  },
+  {
+    id: 'CP016',
+    userId: 'other-user',
+    title: 'Broken Street Sign',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Traffic Control',
+    description: 'The stop sign at the intersection of Birch Street and 4th Avenue is bent and barely visible. This is a traffic safety hazard.',
+    location: 'Intersection of Birch Street and 4th Avenue',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    assignedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-06T13:20:00',
+    updatedAt: '2025-02-06T14:00:00',
+    coordinates: [6.73800, 125.36500],
+    timeline: [
+      {
+        date: '2025-02-06T13:20:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      },
+      {
+        date: '2025-02-06T14:00:00',
+        action: 'Assigned to Public Works Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-06T16:45:00',
+        action: 'Temporary stop sign installed',
+        actor: 'Public Works Department'
+      }
+    ]
+  },
+  {
+    id: 'CP017',
+    userId: 'citizen-user',
+    title: 'Overflowing Sewer',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Sewer Problems',
+    description: 'The sewer on Cedar Avenue is overflowing and sewage is backing up into the street. This is a health hazard and needs immediate attention.',
+    location: 'Cedar Avenue near 6th Street',
+    urgency: 'emergency',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    assignedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-07T06:30:00',
+    updatedAt: '2025-02-07T07:00:00',
+    coordinates: [6.74850, 125.35500],
+    timeline: [
+      {
+        date: '2025-02-07T06:30:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-07T07:00:00',
+        action: 'Assigned to Public Works Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-07T08:15:00',
+        action: 'Emergency crew dispatched',
+        actor: 'Public Works Department'
+      }
+    ]
+  },
+  {
+    id: 'CP018',
+    userId: 'other-user',
+    title: 'Abandoned Vehicle',
+    type: ComplaintType.PUBLIC_SAFETY,
+    subcategory: 'Abandoned Property',
+    description: 'There\'s an abandoned car parked on Willow Lane that hasn\'t moved in over a month. It\'s taking up parking space and looks suspicious.',
+    location: 'Willow Lane, near 3rd Street',
+    urgency: 'low',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-08T10:15:00',
+    updatedAt: '2025-02-08T10:15:00',
+    coordinates: [6.73000, 125.34500],
+    timeline: [
+      {
+        date: '2025-02-08T10:15:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      }
+    ]
+  },
+  {
+    id: 'CP019',
+    userId: 'citizen-user',
+    title: 'Broken Playground Equipment',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Public Amenities',
+    description: 'The swing set in Riverside Park is broken. One of the swings is hanging by only one chain, making it dangerous for children.',
+    location: 'Riverside Park, near the river',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.CITY_HALL,
+    assignedUnit: GovernmentUnit.CITY_HALL,
+    createdAt: '2025-02-09T14:30:00',
+    updatedAt: '2025-02-09T15:00:00',
+    coordinates: [6.76000, 125.34000],
+    timeline: [
+      {
+        date: '2025-02-09T14:30:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-09T15:00:00',
+        action: 'Assigned to City Hall',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-09T16:30:00',
+        action: 'Equipment marked as unsafe, repair scheduled',
+        actor: 'City Hall'
+      }
+    ]
+  },
+  {
+    id: 'CP020',
+    userId: 'other-user',
+    title: 'Street Vendor Without Permit',
+    type: ComplaintType.PUBLIC_SAFETY,
+    subcategory: 'Illegal Activity',
+    description: 'There\'s a street vendor selling food on Main Street without a permit. The food safety is questionable and they\'re blocking pedestrian traffic.',
+    location: 'Main Street, near the bus stop',
+    urgency: 'medium',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-10T12:00:00',
+    updatedAt: '2025-02-10T12:00:00',
+    coordinates: [6.75200, 125.35800],
+    timeline: [
+      {
+        date: '2025-02-10T12:00:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      }
+    ]
+  },
+  {
+    id: 'CP021',
+    userId: 'citizen-user',
+    title: 'Broken Street Drain',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Drainage Problems',
+    description: 'The street drain on Pine Street is clogged and water is pooling on the road after rain. This could cause flooding during heavy storms.',
+    location: 'Pine Street between 1st and 2nd Avenue',
+    urgency: 'medium',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-11T09:30:00',
+    updatedAt: '2025-02-11T09:30:00',
+    coordinates: [6.74800, 125.35200],
+    timeline: [
+      {
+        date: '2025-02-11T09:30:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      }
+    ]
+  },
+  {
+    id: 'CP022',
+    userId: 'other-user',
+    title: 'Loud Construction at Night',
+    type: ComplaintType.NOISE,
+    subcategory: 'Construction Noise',
+    description: 'Construction work is happening at the new building site on Oak Avenue during prohibited hours. The noise is disturbing residents trying to sleep.',
+    location: 'New building site, Oak Avenue',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.POLICE,
+    assignedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-12T02:15:00',
+    updatedAt: '2025-02-12T08:00:00',
+    coordinates: [6.75500, 125.34000],
+    timeline: [
+      {
+        date: '2025-02-12T02:15:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      },
+      {
+        date: '2025-02-12T08:00:00',
+        action: 'Assigned to Police Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-12T10:30:00',
+        action: 'Warning issued to construction company',
+        actor: 'Police Department'
+      }
+    ]
+  },
+  {
+    id: 'CP023',
+    userId: 'citizen-user',
+    title: 'Missing Manhole Cover',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Road Safety',
+    description: 'A manhole cover is missing on Elm Street near the intersection with 4th Avenue. This is a serious safety hazard for vehicles and pedestrians.',
+    location: 'Elm Street near 4th Avenue intersection',
+    urgency: 'emergency',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    assignedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-13T07:45:00',
+    updatedAt: '2025-02-13T08:00:00',
+    coordinates: [6.74200, 125.34800],
+    timeline: [
+      {
+        date: '2025-02-13T07:45:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-13T08:00:00',
+        action: 'Assigned to Public Works Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-13T08:30:00',
+        action: 'Emergency crew dispatched to secure area',
+        actor: 'Public Works Department'
+      }
+    ]
+  },
+  {
+    id: 'CP024',
+    userId: 'other-user',
+    title: 'Overflowing Trash Bins',
+    type: ComplaintType.SANITATION,
+    subcategory: 'Garbage Collection',
+    description: 'The public trash bins in Central Park are overflowing and garbage is scattered around. This is creating an unsightly and unsanitary condition.',
+    location: 'Central Park, near the fountain',
+    urgency: 'medium',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.WASTE,
+    createdAt: '2025-02-14T11:20:00',
+    updatedAt: '2025-02-14T11:20:00',
+    coordinates: [6.75000, 125.34500],
+    timeline: [
+      {
+        date: '2025-02-14T11:20:00',
+        action: 'Complaint submitted',
+        actor: 'Jane Smith'
+      }
+    ]
+  },
+  {
+    id: 'CP025',
+    userId: 'citizen-user',
+    title: 'Broken Street Light',
+    type: ComplaintType.INFRASTRUCTURE,
+    subcategory: 'Street Lighting',
+    description: 'The street light on my street has been out for over a week. It\'s very dark at night and makes walking unsafe.',
+    location: 'My street, near my house',
+    urgency: 'medium',
+    status: ComplaintStatus.PENDING,
+    suggestedUnit: GovernmentUnit.PUBLIC_WORKS,
+    createdAt: '2025-02-15T18:30:00',
+    updatedAt: '2025-02-15T18:30:00',
+    coordinates: [6.74800, 125.35000],
+    timeline: [
+      {
+        date: '2025-02-15T18:30:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      }
+    ]
+  },
+  {
+    id: 'CP026',
+    userId: 'citizen-user',
+    title: 'Loud Neighbors',
+    type: ComplaintType.NOISE,
+    subcategory: 'Residential Noise',
+    description: 'My neighbors are playing very loud music late at night, making it impossible to sleep. This has been happening every weekend.',
+    location: 'My neighborhood',
+    urgency: 'high',
+    status: ComplaintStatus.IN_PROGRESS,
+    suggestedUnit: GovernmentUnit.POLICE,
+    assignedUnit: GovernmentUnit.POLICE,
+    createdAt: '2025-02-16T23:15:00',
+    updatedAt: '2025-02-17T09:00:00',
+    coordinates: [6.74500, 125.34800],
+    timeline: [
+      {
+        date: '2025-02-16T23:15:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-17T09:00:00',
+        action: 'Assigned to Police Department',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-17T14:30:00',
+        action: 'Officer visited and issued warning',
+        actor: 'Police Department'
+      }
+    ]
+  },
+  {
+    id: 'CP027',
+    userId: 'citizen-user',
+    title: 'Garbage Not Collected',
+    type: ComplaintType.SANITATION,
+    subcategory: 'Garbage Collection',
+    description: 'My garbage hasn\'t been collected for two weeks. The bins are overflowing and attracting pests.',
+    location: 'My house',
+    urgency: 'high',
+    status: ComplaintStatus.RESOLVED,
+    suggestedUnit: GovernmentUnit.WASTE,
+    assignedUnit: GovernmentUnit.WASTE,
+    createdAt: '2025-02-18T07:00:00',
+    updatedAt: '2025-02-18T08:00:00',
+    resolvedAt: '2025-02-18T10:30:00',
+    coordinates: [6.74200, 125.34500],
+    timeline: [
+      {
+        date: '2025-02-18T07:00:00',
+        action: 'Complaint submitted',
+        actor: 'John Citizen'
+      },
+      {
+        date: '2025-02-18T08:00:00',
+        action: 'Assigned to Waste Management',
+        actor: 'Admin User'
+      },
+      {
+        date: '2025-02-18T10:30:00',
+        action: 'Garbage collected and area cleaned',
+        actor: 'Waste Management'
+      }
+    ]
   }
 ];
 
-// Initialize complaints in localStorage if not already present
+// Initialize complaints in sessionStorage if not already present
 function initializeComplaints() {
-  if (!localStorage.getItem('complaints')) {
-    localStorage.setItem('complaints', JSON.stringify(sampleComplaints));
+  if (!sessionStorage.getItem('complaints')) {
+    console.log('Initializing complaints in sessionStorage...'); // Debug log
+    sessionStorage.setItem('complaints', JSON.stringify(sampleComplaints));
+    console.log('Complaints initialized:', sampleComplaints.length, 'complaints'); // Debug log
+  } else {
+    console.log('Complaints already exist in sessionStorage'); // Debug log
   }
 }
 
 // Get all complaints
 function getComplaints() {
   initializeComplaints();
-  return JSON.parse(localStorage.getItem('complaints')) || [];
+  const complaints = JSON.parse(sessionStorage.getItem('complaints')) || [];
+  console.log('Retrieved complaints from sessionStorage:', complaints.length, 'complaints'); // Debug log
+  return complaints;
 }
+
+// Refresh complaints data (useful for testing)
+function refreshComplaints() {
+  console.log('Refreshing complaints data...'); // Debug log
+  sessionStorage.removeItem('complaints');
+  initializeComplaints();
+  return getComplaints();
+}
+
+// Make functions available globally
+window.refreshComplaints = refreshComplaints;
+window.getComplaints = getComplaints;
+window.getComplaintById = getComplaintById;
+window.getComplaintsByUserId = getComplaintsByUserId;
+window.addComplaint = addComplaint;
+window.updateComplaint = updateComplaint;
+window.deleteComplaint = deleteComplaint;
+
+// Test function to verify data is working
+window.testComplaints = function() {
+  console.log('Testing complaints data...'); // Debug log
+  const complaints = getComplaints();
+  console.log('Total complaints:', complaints.length); // Debug log
+  console.log('First few complaints:', complaints.slice(0, 3)); // Debug log
+  
+  const citizenComplaints = getComplaintsByUserId('citizen-user');
+  console.log('Citizen complaints:', citizenComplaints.length); // Debug log
+  console.log('Citizen complaint IDs:', citizenComplaints.map(c => c.id)); // Debug log
+  
+  return complaints;
+};
 
 // Get complaint by ID
 function getComplaintById(id) {
@@ -413,7 +936,14 @@ function getComplaintById(id) {
 // Get complaints by user ID
 function getComplaintsByUserId(userId) {
   const complaints = getComplaints();
-  return complaints.filter(complaint => complaint.userId === userId);
+  console.log('getComplaintsByUserId called with userId:', userId); // Debug log
+  console.log('Total complaints available:', complaints.length); // Debug log
+  
+  const userComplaints = complaints.filter(complaint => complaint.userId === userId);
+  console.log('Filtered complaints for user:', userComplaints.length); // Debug log
+  console.log('User complaints found:', userComplaints); // Debug log
+  
+  return userComplaints;
 }
 
 // Add new complaint
@@ -442,8 +972,8 @@ function addComplaint(complaint) {
   // Add to complaints array
   complaints.push(newComplaint);
   
-  // Save to localStorage
-  localStorage.setItem('complaints', JSON.stringify(complaints));
+  // Save to sessionStorage
+  sessionStorage.setItem('complaints', JSON.stringify(complaints));
   
   return newComplaint;
 }
@@ -495,7 +1025,7 @@ function updateComplaint(id, updates) {
     }
     
     complaints[index] = updatedComplaint;
-    localStorage.setItem('complaints', JSON.stringify(complaints));
+    sessionStorage.setItem('complaints', JSON.stringify(complaints));
     
     return updatedComplaint;
   }

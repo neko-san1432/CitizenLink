@@ -6,14 +6,17 @@
     <meta name="description" content="Complaints Management - Government portal for reviewing, assigning, and resolving citizen complaints. Filter by status, type, urgency, and date for efficient complaint handling.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>Complaints Management - CitizenLink</title>
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/additional-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
+
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
         <div class="main-content">
             <header class="dashboard-header">
@@ -203,9 +206,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script src="js/data.js"></script>
-    <script src="js/auth-check.js"></script>
-    <script src="js/sidebar-loader.js"></script>
-    <script src="js/lgu-complaints.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/lgu-complaints.js"></script>
 </body>
 </html>

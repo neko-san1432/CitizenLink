@@ -3,300 +3,252 @@
  * Handles loading and managing modular sidebars for Citizen and LGU dashboards
  */
 
+// Sidebar Loader for CitizenLink
+// Dynamically loads sidebar based on user type and sets up functionality
+
 class SidebarLoader {
     constructor() {
-        this.sidebarContainer = null;
-        this.currentUserType = null;
-        this.currentPage = null;
-        this.init().catch(error => {
-            console.error('Error initializing SidebarLoader:', error);
-        });
+        this.userType = null;
+        this.sidebarLoaded = false;
+        this.functionalitySetup = false;
+        this.maxRetries = 10;
+        this.retryCount = 0;
+        this.retryInterval = 100; // 100ms between retries
+        
+        console.log('SidebarLoader initialized');
+        this.init();
     }
 
     async init() {
-        // Find the sidebar container
-        this.sidebarContainer = document.querySelector('.dashboard-container');
-        if (!this.sidebarContainer) {
-            console.warn('Sidebar container not found');
-            return;
-        }
-
-        // Determine current page and user type
-        this.detectCurrentPage();
-        this.detectUserType();
-        
-        // Load appropriate sidebar and wait for it to complete
-        await this.loadSidebar();
-        
-        // Setup sidebar functionality after sidebar is loaded
-        this.setupSidebarFunctionality();
-    }
-
-    detectCurrentPage() {
-        // Extract current page from URL or data attribute
-        const path = window.location.pathname;
-        if (path.includes('citizen/')) {
-            this.currentPage = path.split('citizen/')[1]?.replace('.html', '') || 'dashboard';
-        } else if (path.includes('lgu/')) {
-            this.currentPage = path.split('lgu/')[1]?.replace('.html', '') || 'dashboard';
-        } else {
-            this.currentPage = 'dashboard';
-        }
-    }
-
-    detectUserType() {
-        // Check localStorage for user type
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.type === 'lgu' || user.type === 'admin') {
-            this.currentUserType = 'lgu';
-        } else {
-            this.currentUserType = 'citizen';
-        }
-
-        // Fallback: detect from URL path
-        if (!this.currentUserType) {
-            if (window.location.pathname.includes('lgu/')) {
-                this.currentUserType = 'lgu';
-            } else if (window.location.pathname.includes('citizen/')) {
-                this.currentUserType = 'citizen';
+        try {
+            console.log('Starting sidebar initialization...');
+            
+            // Check if user is authenticated
+            const user = this.getUserFromStorage();
+            if (!user) {
+                console.log('No user found in sidebar loader');
+                // Don't redirect immediately, let the page handle it
+                return;
             }
+
+            this.userType = user.role || user.type || 'citizen';
+            console.log('User type detected:', this.userType);
+
+            // Load sidebar HTML
+            await this.loadSidebar();
+            
+            // Setup functionality after sidebar is loaded
+            this.setupSidebarFunctionality();
+            
+        } catch (error) {
+            console.error('Error initializing sidebar:', error);
+        }
+    }
+
+    getUserFromStorage() {
+        try {
+            const userData = sessionStorage.getItem('user');
+            if (userData) {
+                return JSON.parse(userData);
+            }
+            return null;
+        } catch (error) {
+            console.error('Error reading user from storage:', error);
+            return null;
         }
     }
 
     async loadSidebar() {
         try {
-            const sidebarPath = `../components/${this.currentUserType}-sidebar.html`;
-            const response = await fetch(sidebarPath);
+            console.log('Loading sidebar for user type:', this.userType);
             
-            if (!response.ok) {
-                throw new Error(`Failed to load sidebar: ${response.status}`);
+            // Determine sidebar file based on user type
+            let sidebarFile = 'citizen-sidebar.html';
+            if (this.userType === 'lgu_admin') {
+                sidebarFile = 'lgu-sidebar.html';
             }
-
+            
+            console.log('Loading sidebar file:', sidebarFile);
+            
+            // Fetch sidebar HTML
+            const response = await fetch(`/components/${sidebarFile}`);
+            if (!response.ok) {
+                throw new Error(`Failed to load sidebar: ${response.status} ${response.statusText}`);
+            }
+            
             const sidebarHTML = await response.text();
+            console.log('Sidebar HTML loaded, length:', sidebarHTML.length);
             
-            // Insert sidebar at the beginning of the container
-            this.sidebarContainer.insertAdjacentHTML('afterbegin', sidebarHTML);
+            // Insert sidebar into DOM
+            const sidebarContainer = document.createElement('div');
+            sidebarContainer.innerHTML = sidebarHTML;
+            const sidebar = sidebarContainer.firstElementChild;
             
-            // Update active state
-            this.updateActiveState();
+            if (!sidebar) {
+                throw new Error('No sidebar element found in loaded HTML');
+            }
             
-            // Update user information
-            this.updateUserInfo();
+            // Insert sidebar at the beginning of dashboard-container
+            const dashboardContainer = document.querySelector('.dashboard-container');
+            if (!dashboardContainer) {
+                throw new Error('Dashboard container not found');
+            }
+            
+            dashboardContainer.insertBefore(sidebar, dashboardContainer.firstChild);
+            console.log('Sidebar inserted into DOM');
+            
+            // Mark sidebar as loaded
+            this.sidebarLoaded = true;
+            
+            // Wait a bit for DOM to settle
+            await new Promise(resolve => setTimeout(resolve, 50));
             
         } catch (error) {
             console.error('Error loading sidebar:', error);
-            this.loadFallbackSidebar();
-        }
-    }
-
-    loadFallbackSidebar() {
-        // Fallback: create a basic sidebar if loading fails
-        const fallbackHTML = `
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <div class="logo">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>CitizenLink</span>
-                        ${this.currentUserType === 'lgu' ? '<span class="badge">LGU</span>' : ''}
-                    </div>
-                </div>
-                <nav class="sidebar-nav">
-                    <ul>
-                        <li><a href="/citizen/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-                        <li><a href="#" onclick="history.back()"><i class="fas fa-arrow-left"></i><span>Go Back</span></a></li>
-                    </ul>
-                </nav>
-            </aside>
-        `;
-        
-        this.sidebarContainer.insertAdjacentHTML('afterbegin', fallbackHTML);
-    }
-
-    updateActiveState() {
-        // Remove all active classes
-        const allLinks = document.querySelectorAll('.sidebar-nav a');
-        allLinks.forEach(link => link.classList.remove('active'));
-        
-        // Add active class to current page
-        const currentLink = document.querySelector(`[data-page="${this.currentPage}"]`);
-        if (currentLink) {
-            currentLink.classList.add('active');
-        }
-    }
-
-    updateUserInfo() {
-        // Update user name in sidebar
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userNameElement = document.getElementById('user-name');
-        
-        if (userNameElement && user.name) {
-            userNameElement.textContent = user.name;
+            throw error;
         }
     }
 
     setupSidebarFunctionality() {
-        // Wait a bit to ensure DOM elements are fully available
-        setTimeout(() => {
-            console.log('Setting up sidebar functionality...');
+        console.log('Setting up sidebar functionality...');
+        
+        // Wait for sidebar to be available
+        this.waitForSidebar(() => {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
             
-            // Setup sidebar toggle functionality
-            this.setupSidebarToggle();
+            if (!sidebar) {
+                console.error('Sidebar element not found in setupSidebarFunctionality');
+                return;
+            }
             
-            // Setup user menu functionality
-            this.setupUserMenu();
+            // Ensure sidebar starts closed by default
+            sidebar.classList.remove('open');
             
-            // Setup logout functionality
-            this.setupLogout();
+            // Set active page based on current URL
+            this.setActivePage();
+            
+            // Sidebar toggle functionality
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    console.log('Sidebar toggle clicked');
+                    sidebar.classList.toggle('open');
+                    if (sidebarOverlay) {
+                        sidebarOverlay.classList.toggle('active');
+                    }
+                });
+            }
+            
+            // Close sidebar when clicking overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+            
+            // Close sidebar when clicking close button
+            const sidebarClose = document.getElementById('sidebar-close');
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    if (sidebarOverlay) {
+                        sidebarOverlay.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Close sidebar when clicking outside (for mobile)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                        if (sidebarOverlay) {
+                            sidebarOverlay.classList.remove('active');
+                        }
+                    }
+                }
+            });
             
             console.log('Sidebar functionality setup complete');
-        }, 100);
+        });
     }
 
-    setupSidebarToggle() {
-        console.log('Setting up sidebar toggle...');
-        
-        // Handle sidebar toggle button
-        const toggleBtn = document.getElementById('sidebar-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const closeBtn = document.getElementById('sidebar-close');
-        const mainContent = document.querySelector('.main-content');
-        
-        console.log('Found elements:', {
-            toggleBtn: !!toggleBtn,
-            sidebar: !!sidebar,
-            closeBtn: !!closeBtn,
-            mainContent: !!mainContent
-        });
-        
-        // Early return if essential elements are missing
-        if (!sidebar) {
-            console.warn('Sidebar element not found in setupSidebarToggle');
-            return;
-        }
-        
-        // Create overlay for mobile
-        let overlay = document.querySelector('.sidebar-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'sidebar-overlay';
-            document.body.appendChild(overlay);
-        }
-        
-        // Helper function to safely toggle main content
-        const safeToggleMainContent = (action) => {
-            if (mainContent) {
-                if (action === 'add') {
-                    mainContent.classList.add('sidebar-open');
-                } else if (action === 'remove') {
-                    mainContent.classList.remove('sidebar-open');
-                } else if (action === 'toggle') {
-                    mainContent.classList.toggle('sidebar-open');
-                }
+    waitForSidebar(callback) {
+        const checkSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                console.log('Sidebar found, executing callback');
+                callback();
+            } else if (this.retryCount < this.maxRetries) {
+                this.retryCount++;
+                console.log(`Sidebar not found, retrying... (${this.retryCount}/${this.maxRetries})`);
+                setTimeout(checkSidebar, this.retryInterval);
             } else {
-                console.warn('mainContent element not found when trying to', action);
+                console.error('Sidebar not found after maximum retries');
             }
         };
         
-        if (toggleBtn && sidebar) {
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('open');
-                safeToggleMainContent('toggle');
-                overlay.classList.toggle('active');
-            });
-        }
+        checkSidebar();
+    }
+
+    setActivePage() {
+        console.log('Setting active page...');
+        const currentPath = window.location.pathname;
+        console.log('Current path:', currentPath);
         
-        if (closeBtn && sidebar) {
-            closeBtn.addEventListener('click', () => {
-                sidebar.classList.remove('open');
-                safeToggleMainContent('remove');
-                overlay.classList.remove('active');
-            });
-        }
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+        console.log('Found sidebar links:', sidebarLinks.length);
         
-        // Close sidebar when clicking overlay
-        if (overlay) {
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('open');
-                safeToggleMainContent('remove');
-                overlay.classList.remove('active');
-            });
-        }
-        
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) {
-                // On desktop, always show sidebar
-                sidebar.classList.add('open');
-                safeToggleMainContent('add');
-                overlay.classList.remove('active');
-            } else {
-                // On mobile, hide sidebar by default
-                sidebar.classList.remove('open');
-                safeToggleMainContent('remove');
-                overlay.classList.remove('active');
+        sidebarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            console.log('Checking link:', href, 'against current path:', currentPath);
+            
+            // Remove any existing active class
+            link.classList.remove('active');
+            
+            // Check if this link matches the current page
+            if (href === currentPath) {
+                console.log('Setting active for:', href);
+                link.classList.add('active');
+            } else if (currentPath.includes('/citizen/') && href.includes('/citizen/')) {
+                // Handle citizen pages
+                if (currentPath.includes('dashboard') && href.includes('dashboard')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('submit-complaint') && href.includes('submit-complaint')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('my-complaints') && href.includes('my-complaints')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('profile') && href.includes('profile')) {
+                    link.classList.add('active');
+                }
+            } else if (currentPath.includes('/lgu/') && href.includes('/lgu/')) {
+                // Handle LGU pages
+                if (currentPath.includes('dashboard') && href.includes('dashboard')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('complaints') && href.includes('complaints')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('heatmap') && href.includes('heatmap')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('insights') && href.includes('insights')) {
+                    link.classList.add('active');
+                }
             }
         });
-        
-        // Initialize sidebar state based on screen size
-        if (window.innerWidth > 768) {
-            sidebar.classList.add('open');
-            safeToggleMainContent('add');
-        }
-        
-        console.log('Sidebar toggle setup complete');
-    }
-
-    setupUserMenu() {
-        // Handle user menu dropdown
-        const userMenuBtn = document.querySelector('.user-menu-btn');
-        const userDropdown = document.querySelector('.user-dropdown');
-        
-        if (userMenuBtn && userDropdown) {
-            userMenuBtn.addEventListener('click', () => {
-                userDropdown.classList.toggle('show');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userDropdown.classList.remove('show');
-                }
-            });
-        }
-    }
-
-    setupLogout() {
-        // Handle logout functionality
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleLogout();
-            });
-        }
-    }
-
-    handleLogout() {
-        // Clear user data
-        localStorage.removeItem('user');
-        localStorage.removeItem('otp_verified');
-        localStorage.removeItem('user_email');
-        
-        // Redirect to login page
-        window.location.href = '/login';
     }
 }
 
 // Auto-initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize on dashboard pages
-    if (document.querySelector('.dashboard-container')) {
-        new SidebarLoader();
-    }
+    console.log('DOM loaded, initializing SidebarLoader');
+    new SidebarLoader();
 });
 
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = SidebarLoader;
+// Also try to initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    console.log('DOM still loading, waiting for DOMContentLoaded');
+} else {
+    console.log('DOM already loaded, initializing SidebarLoader immediately');
+    new SidebarLoader();
 }

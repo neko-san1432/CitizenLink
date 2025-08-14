@@ -6,22 +6,37 @@
     <meta name="description" content="LGU Dashboard - Government portal for managing citizen complaints. Monitor complaint status, track performance metrics, and ensure efficient resolution of community issues.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>LGU Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/web/css/styles.css">
-    <link rel="stylesheet" href="/web/css/additional-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
 
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle" id="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/dashboard" class="logo-link">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
                 <div class="header-right">
-                    <span class="welcome-text">LGU Admin Portal</span>
+                    <button class="btn btn-primary me-3" id="add-article-btn">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Article
+                    </button>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">LGU Admin</span></span>
                 </div>
             </header>
 
@@ -144,6 +159,9 @@
                         <div class="card-header">
                             <h3>Recent Complaints</h3>
                             <p class="text-muted">Most recently submitted complaints</p>
+                            <button id="refresh-complaints" class="btn btn-sm btn-outline" style="margin-left: auto;">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
                         </div>
                         <div class="card-content">
                             <div class="tabs">
@@ -176,7 +194,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="/lgu/complaints" class="btn btn-outline btn-block">View All Complaints</a>
+                            <a href="/admin-complaints" class="btn btn-outline btn-block">View All Complaints</a>
                         </div>
                     </div>
                 </div>
@@ -184,12 +202,82 @@
         </div>
     </div>
 
+    <!-- Add Article Modal -->
+    <div class="modal fade" id="addArticleModal" tabindex="-1" aria-labelledby="addArticleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addArticleModalLabel">Add New Article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-article-form">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="article-title" class="form-label">Article Title *</label>
+                                    <input type="text" class="form-control" id="article-title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="article-category" class="form-label">Category *</label>
+                                    <select class="form-select" id="article-category" required>
+                                        <option value="">Select category</option>
+                                        <option value="Public Safety">Public Safety</option>
+                                        <option value="Infrastructure">Infrastructure</option>
+                                        <option value="Environment">Environment</option>
+                                        <option value="Health">Health</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Education">Education</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="article-excerpt" class="form-label">Article Excerpt *</label>
+                            <textarea class="form-control" id="article-excerpt" rows="3" placeholder="Brief summary of the article..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="article-content" class="form-label">Full Article Content *</label>
+                            <textarea class="form-control" id="article-content" rows="10" placeholder="Write the full article content here..." required></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="article-author" class="form-label">Author *</label>
+                                    <input type="text" class="form-control" id="article-author" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="article-read-time" class="form-label">Estimated Read Time</label>
+                                    <input type="text" class="form-control" id="article-read-time" placeholder="e.g., 5 min read">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="publish-article">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Publish Article
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/auth-check.js"></script>
-    <script src="js/sidebar-loader.js"></script>
-    <script src="js/lgu-dashboard.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/lgu-dashboard.js"></script>
 </body>
 </html>

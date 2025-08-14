@@ -1,15 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Get user
     const user = checkAuth();
-    if (!user) return;
+    if (!user) {
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+    } else {
+        // Setup profile form
+        setupProfileForm(user);
 
-    // Setup profile form
-    setupProfileForm(user);
-
-    // Setup cancel button
-    document.getElementById('cancel-btn').addEventListener('click', () => {
-        window.location.href = '/citizen/dashboard';
-    });
+        // Setup cancel button
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            window.location.href = '/dashboard';
+        });
+    }
 });
 
 function setupProfileForm(user) {
@@ -61,7 +64,7 @@ function setupProfileForm(user) {
         
         // Update user data in localStorage
         const updatedUser = { ...user, ...formData };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        sessionStorage.setItem('user', JSON.stringify(updatedUser));
         
         showToast('Profile updated successfully');
         

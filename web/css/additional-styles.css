@@ -4,6 +4,331 @@
   --bs-primary-rgb: 37, 99, 235;
 }
 
+/* ===== LOGIN/SIGNUP PAGE CENTERING FIXES ===== */
+.login-container,
+.signup-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-form-container,
+.signup-form-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+/* Ensure the card is centered within the container */
+.login-container .card,
+.signup-container .card {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Ensure form labels and inputs are left-aligned */
+.login-container .form-label,
+.signup-container .form-label {
+  text-align: left;
+  display: block;
+}
+
+.login-container .form-control,
+.signup-container .form-control {
+  text-align: left;
+}
+
+/* ===== MODAL CENTERING FIXES ===== */
+.modal {
+  display: none;
+}
+
+.modal.show {
+  display: block !important;
+}
+
+/* ===== TOAST VISIBILITY FIXES ===== */
+.toast-container {
+  z-index: 9999 !important;
+}
+
+.toast {
+  z-index: 10000 !important;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.bg-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.toast.bg-success {
+  background-color: #198754 !important;
+  color: white !important;
+}
+
+.toast-header {
+  background-color: inherit !important;
+  color: inherit !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toast-header .btn-close {
+  filter: invert(1);
+}
+
+/* Force modal centering - override Bootstrap's positioning */
+.modal-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  max-width: 800px !important;
+  width: 90% !important;
+  max-height: 90vh !important;
+}
+
+/* Ensure modal is centered on all screen sizes */
+@media (max-width: 576px) {
+  .modal-dialog {
+    width: 95% !important;
+    max-height: 95vh !important;
+  }
+}
+
+@media (min-width: 576px) {
+  .modal-dialog {
+    width: 90% !important;
+    max-width: 800px !important;
+  }
+}
+
+/* Modal backdrop positioning */
+.modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1040 !important;
+}
+
+/* Modal content positioning */
+.modal-content {
+  position: relative !important;
+  z-index: 1050 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+}
+
+/* Modal header styling */
+.modal-header {
+  background: #0d6efd !important;
+  color: white !important;
+  border-bottom: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1.5rem !important;
+}
+
+.modal-title {
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+/* Modal body styling */
+.modal-body {
+  padding: 2rem !important;
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+}
+
+/* Modal footer styling */
+.modal-footer {
+  border-top: 1px solid #e9ecef !important;
+  padding: 1.5rem !important;
+  justify-content: center !important;
+  gap: 1rem !important;
+}
+
+/* ===== DASHBOARD LAYOUT FIXES ===== */
+/* Force Community Updates sections to stack vertically */
+.community-updates .row {
+  display: block !important;
+}
+
+.community-updates .col-12 {
+  width: 100% !important;
+  float: none !important;
+  display: block !important;
+}
+
+.community-updates .col-md-6 {
+  width: 100% !important;
+  float: none !important;
+  display: block !important;
+}
+
+  /* Force the new section structure to stack vertically */
+.events-section,
+.notices-section {
+  width: 100% !important;
+  display: block !important;
+  float: none !important;
+  clear: both !important;
+  flex: none !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+}
+
+/* Ensure proper spacing between sections */
+.events-section {
+  margin-bottom: 2rem !important;
+}
+
+.notices-section {
+  margin-top: 0 !important;
+}
+
+/* Override any flexbox or grid that might be applied to parent containers */
+.community-updates .card-body {
+  display: block !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+}
+
+.community-updates .card {
+  display: block !important;
+}
+
+/* ===== NUCLEAR OPTION: FORCE EVERYTHING TO STACK ===== */
+/* Override ALL possible layout systems for Community Updates */
+.community-updates,
+.community-updates *,
+.community-updates .card,
+.community-updates .card *,
+.community-updates .card-body,
+.community-updates .card-body * {
+  display: block !important;
+  width: 100% !important;
+  float: none !important;
+  clear: both !important;
+  flex: none !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto !important;
+}
+
+/* Force specific sections to stack with proper spacing */
+.events-section {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 2rem !important;
+  clear: both !important;
+}
+
+.notices-section {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 0 !important;
+  clear: both !important;
+}
+
+/* Override any Bootstrap or external CSS that might interfere */
+.community-updates .row,
+.community-updates .col,
+.community-updates .col-*,
+.community-updates [class*="col-"] {
+  display: block !important;
+  width: 100% !important;
+  float: none !important;
+  clear: both !important;
+  flex: none !important;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  background: var(--bs-primary);
+  color: white;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 1rem 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  justify-content: center;
+}
+
+/* Ensure modals are properly centered on all screen sizes */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 1rem auto !important;
+    width: 95%;
+    position: absolute !important;
+    top: 50%;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+  }
+  
+  .modal-body {
+    max-height: 60vh;
+  }
+}
+
+/* Additional modal centering for larger screens */
+@media (min-width: 769px) {
+  .modal-dialog {
+    position: absolute !important;
+    top: 50%;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+  }
+}
+
+/* Ensure modal backdrop is properly positioned */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Override any Bootstrap modal positioning issues */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: translate(-50%, -50%) !important;
+}
+
 /* Override Bootstrap's text-primary class with higher specificity */
 .text-primary {
   color: var(--bs-primary) !important;
@@ -2083,4 +2408,1149 @@ a:hover {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
+}
+
+/* Terms and Privacy Policy Modal Styles */
+.terms-content h6,
+.privacy-content h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #0d6efd;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.terms-content h6:first-child,
+.privacy-content h6:first-child {
+    margin-top: 0;
+}
+
+.terms-content ul,
+.privacy-content ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.terms-content li,
+.privacy-content li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.terms-content p,
+.privacy-content p {
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    text-align: justify;
+}
+
+.terms-content .alert,
+.privacy-content .alert {
+    border-radius: 0.5rem;
+    border-left: 4px solid;
+}
+
+.terms-content .alert-info {
+    border-left-color: #0dcaf0;
+    background-color: #f8f9fa;
+}
+
+.privacy-content .alert-warning {
+    border-left-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+/* Modal customization */
+#termsModal .modal-content,
+#privacyModal .modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#termsModal .modal-header,
+#privacyModal .modal-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    color: white;
+    border-radius: 1rem 1rem 0 0;
+    border-bottom: none;
+}
+
+#termsModal .modal-title,
+#privacyModal .modal-title {
+    font-weight: 600;
+}
+
+#termsModal .modal-body,
+#privacyModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+#termsModal .modal-footer,
+#privacyModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 2rem;
+}
+
+/* Terms checkbox styling */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-label a {
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.form-check-label a:hover {
+    color: #0b5ed7;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #termsModal .modal-body,
+    #privacyModal .modal-body {
+        padding: 1.5rem;
+        max-height: 60vh;
+    }
+    
+    #termsModal .modal-footer,
+    #privacyModal .modal-footer {
+        padding: 1rem 1.5rem;
+    }
+    
+    .terms-content h6,
+    .privacy-content h6 {
+        font-size: 1rem;
+    }
+}
+
+/* Fallback modal styles for when Bootstrap is not available */
+.modal.show {
+    display: block !important;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
+}
+
+/* Ensure modal content is visible */
+.modal-content {
+    position: relative;
+    z-index: 1055;
+}
+
+/* Add backdrop when modal is manually shown */
+.modal.show::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+}
+
+/* Additional styles for modals and forms */
+
+/* Modal styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1050;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-dialog {
+  position: relative;
+  width: auto;
+  margin: 1.75rem auto;
+  max-width: 800px;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  outline: 0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.modal-title {
+  margin-bottom: 0;
+  line-height: 1.5;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.btn-close {
+  box-sizing: content-box;
+  width: 1em;
+  height: 1em;
+  padding: 0.25em 0.25em;
+  color: #000;
+  background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 7.586 14.293.293a1 1 0 111.414 1.414L9.414 9l6.293 6.293a1 1 0 01-1.414 1.414L8 10.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 9 .293 2.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+  border: 0;
+  border-radius: 0.375rem;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  opacity: 0.75;
+}
+
+/* Terms and Privacy content styling */
+.terms-content,
+.privacy-content {
+  line-height: 1.6;
+}
+
+.terms-content h6,
+.privacy-content h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #0d6efd;
+}
+
+.terms-content p,
+.privacy-content p {
+  margin-bottom: 1rem;
+}
+
+.terms-content ul,
+.privacy-content ul {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.terms-content li,
+.privacy-content li {
+  margin-bottom: 0.5rem;
+}
+
+/* Alert styling */
+.alert {
+  position: relative;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+}
+
+.alert-info {
+  color: #055160;
+  background-color: #cff4fc;
+  border-color: #b6effb;
+}
+
+.alert-warning {
+  color: #664d03;
+  background-color: #fff3cd;
+  border-color: #ffecb5;
+}
+
+/* Button styling */
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  color: #fff;
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Fallback modal display for when Bootstrap fails */
+.modal.fallback-show {
+  display: block !important;
+}
+
+.modal.fallback-show .modal-dialog {
+  transform: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+  
+  .modal-body {
+    max-height: 60vh;
+  }
+}
+
+/* Ensure modals are above other content */
+.modal {
+  z-index: 9999 !important;
+}
+
+/* Additional modal visibility styles */
+.modal.show {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.modal.show .modal-dialog {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Ensure modal backdrop is visible */
+.modal.show::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+/* Modal dialog positioning */
+.modal-dialog {
+  position: relative;
+  z-index: 9999;
+  margin: 1.75rem auto;
+  max-width: 800px;
+  width: 90%;
+}
+
+/* Modal content visibility */
+.modal-content {
+  position: relative;
+  z-index: 10000;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Backdrop styling */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+/* Animation for modal appearance */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal.show {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Ensure form elements are properly styled */
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.form-check-input {
+  margin-top: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.form-check-label {
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* Link styling within form labels */
+.form-check-label a {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.form-check-label a:hover {
+  color: #0a58ca;
+  text-decoration: none;
+}
+
+/* Recent Complaints Header */
+.recent-complaints .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recent-complaints .card-header h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.recent-complaints .card-header p {
+  margin: 0;
+  flex: 1;
+}
+
+.recent-complaints .card-header button {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Refresh Button */
+#refresh-complaints {
+  transition: all 0.2s ease;
+}
+
+#refresh-complaints:hover {
+  transform: none; /* Remove container rotation */
+}
+
+#refresh-complaints:hover i {
+  transform: rotate(180deg); /* Only rotate the icon */
+  transition: transform 0.3s ease;
+}
+
+#refresh-complaints:active i {
+  transform: rotate(360deg);
+}
+
+/* Toast Messages */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success {
+  background: #10b981;
+}
+
+.toast-error {
+  background: #ef4444;
+}
+
+.toast-info {
+  background: #3b82f6;
+}
+
+/* Citizen Dashboard Recent Complaints */
+.recent-complaints {
+  margin-bottom: 2rem;
+}
+
+.recent-complaints h3 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.complaints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.complaint-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.complaint-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.complaint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.complaint-title {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-in-progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-resolved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.complaint-details {
+  margin-bottom: 1.5rem;
+}
+
+.complaint-details > div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.complaint-details i {
+  margin-right: 0.5rem;
+  width: 16px;
+  color: #9ca3af;
+}
+
+.complaint-actions {
+  text-align: right;
+}
+
+.empty-complaints-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-complaints-state i {
+  color: #d1d5db;
+}
+
+.empty-complaints-state h5 {
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.empty-complaints-state p {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+/* Toast Messages */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success {
+  background: #10b981;
+}
+
+.toast-error {
+  background: #ef4444;
+}
+
+.toast-info {
+  background: #3b82f6;
+}
+
+/* News Page Styles */
+.news-controls {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.news-container {
+  min-height: 400px;
+}
+
+/* News Cards */
+.news-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.news-card .news-image {
+  background: #0d6efd;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+}
+
+.news-card .news-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 200px;
+  position: relative;
+}
+
+.news-card .news-date {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.news-card .news-tag {
+  display: inline-block;
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.news-card .news-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-card .news-excerpt {
+  color: #6c757d;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 0;
+  min-height: 4.8em;
+}
+
+.news-card .news-meta {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+/* Override any conflicting news-read-more styles */
+.news-container .news-card .news-read-more,
+.news-card .news-read-more {
+  background: #0d6efd !important;
+  border: 1px solid #0d6efd !important;
+  color: white !important;
+  font-weight: 500;
+  padding: 8px 16px !important;
+  text-align: center !important;
+  transition: all 0.2s ease;
+  margin-top: auto;
+  cursor: pointer;
+  display: block !important;
+  width: 100%;
+  text-decoration: none !important;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.news-container .news-card .news-read-more:hover,
+.news-card .news-read-more:hover {
+  background: #0a58ca !important;
+  border-color: #0a58ca !important;
+  color: white !important;
+  text-decoration: none !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.news-container .news-card .news-read-more i,
+.news-card .news-read-more i {
+  margin-left: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.news-container .news-card .news-read-more:hover i,
+.news-card .news-read-more:hover i {
+  transform: translateX(4px);
+}
+
+/* News Modal */
+.news-article {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.news-article .article-header {
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+
+.news-article .article-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.news-article .badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.news-article h4 {
+  color: #212529;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.news-article .lead {
+  font-size: 1.125rem;
+  color: #495057;
+  margin-bottom: 1.5rem;
+}
+
+.news-article ul, .news-article ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.news-article li {
+  margin-bottom: 0.5rem;
+}
+
+.news-article .article-footer {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 2rem;
+}
+
+/* Load More Button */
+#load-more-container {
+  margin-top: 2rem;
+}
+
+#load-more-news {
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+}
+
+/* No Results */
+#no-results {
+  color: #6c757d;
+}
+
+#no-results i {
+  opacity: 0.5;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .news-controls .row {
+    gap: 1rem;
+  }
+  
+  .news-controls .col-md-6 {
+    margin-bottom: 1rem;
+  }
+  
+  .news-card .news-content {
+    padding: 1rem;
+  }
+  
+  .news-card .news-title {
+    font-size: 1.125rem;
+  }
+  
+  .news-card .news-excerpt {
+    -webkit-line-clamp: 2;
+  }
+}
+
+/* Category-specific badge colors */
+.badge.bg-primary { background-color: #0d6efd !important; }
+.badge.bg-success { background-color: #198754 !important; }
+.badge.bg-info { background-color: #0dcaf0 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.badge.bg-secondary { background-color: #6c757d !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
+
+/* Force the Read Full Article button to be visible and styled */
+.news-card .news-read-more,
+.news-container .news-card .news-read-more,
+button.news-read-more {
+  background: #0d6efd !important;
+  border: 2px solid #0d6efd !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  margin-top: 15px !important;
+  cursor: pointer !important;
+  display: block !important;
+  width: 100% !important;
+  text-decoration: none !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.news-card .news-read-more:hover,
+.news-container .news-card .news-read-more:hover,
+button.news-read-more:hover {
+  background: #0a58ca !important;
+  border-color: #0a58ca !important;
+  color: white !important;
+  text-decoration: none !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px rgba(13, 110, 253, 0.4) !important;
+}
+
+/* Header Layout and Branding */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.brand-logo i {
+  font-size: 1.5rem;
+  color: #0d6efd;
+}
+
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0d6efd;
+  letter-spacing: 0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background: #f8f9fa;
+  color: #0d6efd;
+}
+
+.welcome-text {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.welcome-text span {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-link:hover {
+  text-decoration: none;
+}
+
+/* Additional Modal Centering Overrides */
+.modal.fade .modal-dialog {
+  transition: none !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.modal.show .modal-dialog {
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Override any Bootstrap modal positioning */
+.modal-dialog.modal-lg {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
+/* Ensure modal is above everything */
+.modal {
+  z-index: 1055 !important;
+}
+
+/* Force modal backdrop to be behind modal */
+.modal-backdrop.show {
+  opacity: 0.5 !important;
+  z-index: 1054 !important;
+}
+
+/* Add Article Modal Styling */
+#addArticleModal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+#addArticleModal .modal-header {
+  background: #0d6efd;
+  color: white;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 1.5rem;
+}
+
+#addArticleModal .modal-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+#addArticleModal .modal-body {
+  padding: 2rem;
+}
+
+#addArticleModal .form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+#addArticleModal .form-control,
+#addArticleModal .form-select {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#addArticleModal .form-control:focus,
+#addArticleModal .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  outline: none;
+}
+
+#addArticleModal .form-control::placeholder {
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+#addArticleModal .modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1.5rem;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+#addArticleModal .btn-primary {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+#addArticleModal .btn-primary:hover {
+  background: #0a58ca;
+  border-color: #0a58ca;
+}
+
+#addArticleModal .btn-secondary {
+  background: #6c757d;
+  border-color: #6c757d;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+#addArticleModal .btn-secondary:hover {
+  background: #5a6268;
+  border-color: #5a6268;
+}
+
+/* Required field indicator */
+#addArticleModal .form-label::after {
+  content: " *";
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Character count for textareas */
+#addArticleModal .form-control[rows] {
+  resize: vertical;
+  min-height: 100px;
+}
+
+#addArticleModal .form-control[rows="3"] {
+  min-height: 80px;
 }

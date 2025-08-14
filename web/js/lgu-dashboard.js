@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!user) return;
   
   const complaints = getComplaints();
+  console.log('Loaded complaints:', complaints); // Debug log
   
   // Update stats
   updateStats(complaints);
@@ -16,7 +17,167 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Setup tab switching
   setupTabs();
+  
+  // Setup refresh button
+  setupRefreshButton();
+
+  // Setup Add Article functionality
+  setupAddArticle();
 });
+
+// Setup refresh button
+function setupRefreshButton() {
+  const refreshButton = document.getElementById('refresh-complaints');
+  if (refreshButton) {
+    refreshButton.addEventListener('click', () => {
+      console.log('Refresh button clicked'); // Debug log
+      const refreshedComplaints = refreshComplaints();
+      console.log('Refreshed complaints:', refreshedComplaints); // Debug log
+      
+      // Update dashboard with refreshed data
+      updateStats(refreshedComplaints);
+      initializeCharts(refreshedComplaints);
+      loadRecentComplaints(refreshedComplaints);
+      
+      // Show success message
+      showToast('Complaints data refreshed successfully!', 'success');
+    });
+  }
+}
+
+// Setup Add Article functionality
+function setupAddArticle() {
+  const addArticleBtn = document.getElementById('add-article-btn');
+  const addArticleModal = document.getElementById('addArticleModal');
+  const publishArticleBtn = document.getElementById('publish-article');
+  const addArticleForm = document.getElementById('add-article-form');
+
+  if (addArticleBtn) {
+    addArticleBtn.addEventListener('click', () => {
+      // Show the modal
+      const modal = new bootstrap.Modal(addArticleModal);
+      modal.show();
+    });
+  }
+
+  if (publishArticleBtn) {
+    publishArticleBtn.addEventListener('click', () => {
+      publishArticle();
+    });
+  }
+
+  // Auto-fill author field with current user
+  const authorField = document.getElementById('article-author');
+  if (authorField) {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (user && user.name) {
+      authorField.value = user.name;
+    }
+  }
+}
+
+// Publish new article
+function publishArticle() {
+  const title = document.getElementById('article-title').value;
+  const category = document.getElementById('article-category').value;
+  const excerpt = document.getElementById('article-excerpt').value;
+  const content = document.getElementById('article-content').value;
+  const author = document.getElementById('article-author').value;
+  const readTime = document.getElementById('article-read-time').value || '5 min read';
+
+  // Validate required fields
+  if (!title || !category || !excerpt || !content || !author) {
+    showToast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  // Create new article object
+  const newArticle = {
+    id: Date.now(), // Generate unique ID
+    title: title,
+    excerpt: excerpt,
+    content: formatArticleContent(content, category),
+    date: new Date().toISOString().split('T')[0],
+    category: category,
+    icon: getCategoryIcon(category),
+    author: author,
+    readTime: readTime
+  };
+
+  // Add to news data (you would typically save this to a database)
+  addNewsArticle(newArticle);
+
+  // Show success message
+  showToast('Article published successfully!', 'success');
+
+  // Close modal and reset form
+  const modal = bootstrap.Modal.getInstance(document.getElementById('addArticleModal'));
+  modal.hide();
+  addArticleForm.reset();
+
+  // Auto-fill author again
+  const authorField = document.getElementById('article-author');
+  if (authorField) {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (user && user.name) {
+      authorField.value = user.name;
+    }
+  }
+}
+
+// Format article content for display
+function formatArticleContent(content, category) {
+  return `
+    <div class="news-article">
+      <div class="article-header mb-4">
+        <div class="article-meta">
+          <span class="badge bg-primary">${category}</span>
+          <span class="text-muted ms-2">${new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}</span>
+        </div>
+      </div>
+      
+      <p class="lead">${content.split('\n')[0]}</p>
+      
+      ${content.split('\n').slice(1).map(paragraph => 
+        paragraph.trim() ? `<p>${paragraph}</p>` : ''
+      ).join('')}
+      
+      <div class="article-footer mt-4 pt-3 border-top">
+        <small class="text-muted">For more information, contact the ${category} Department</small>
+      </div>
+    </div>
+  `;
+}
+
+// Get category icon
+function getCategoryIcon(category) {
+  const iconMap = {
+    'Public Safety': 'fas fa-shield-alt',
+    'Infrastructure': 'fas fa-road',
+    'Environment': 'fas fa-leaf',
+    'Health': 'fas fa-heartbeat',
+    'Technology': 'fas fa-laptop',
+    'Education': 'fas fa-graduation-cap'
+  };
+  return iconMap[category] || 'fas fa-newspaper';
+}
+
+// Add news article to data (mock function - replace with actual API call)
+function addNewsArticle(article) {
+  console.log('New article created:', article);
+  
+  // In a real application, you would:
+  // 1. Send this to your backend API
+  // 2. Save to database
+  // 3. Update the news feed
+  
+  // For now, we'll just log it and show a success message
+  showToast(`Article "${article.title}" has been published!`, 'success');
+}
 
 // Update dashboard stats
 function updateStats(complaints) {
@@ -225,9 +386,6 @@ function loadComplaintsIntoTab(tabId, complaints) {
           </div>
           <div class="complaint-actions">
               <span class="status-badge ${statusClass}">${complaint.status}</span>
-              <a href="/lgu/complaints?id=${complaint.id}" class="btn btn-outline">
-                  View Details
-              </a>
           </div>
       `;
       
@@ -257,4 +415,37 @@ function setupTabs() {
           });
       });
   });
+}
+
+// Format date for display
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  }
+}
+
+// Show toast message
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toast');
+  if (toast) {
+    toast.textContent = message;
+    toast.className = `toast toast-${type} show`;
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
 }

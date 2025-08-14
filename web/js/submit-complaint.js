@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Setup cancel button
   document.getElementById('cancel-btn').addEventListener('click', () => {
-    window.location.href = '/citizen/dashboard';
+    window.location.href = '/dashboard';
   });
 });
 
@@ -22,8 +22,12 @@ function checkAuth() {
 }
 
 const subcategories = {
-  "Noise Complaint": ["Loud Music", "Construction Noise", "Barking Dogs"],
-  "Property Maintenance": ["Graffiti", "Broken Windows", "Unkempt Yard"]
+  "infrastructure": ["Road Damage", "Bridge Issues", "Sidewalk Problems", "Street Lighting", "Public Building", "Traffic Control", "Drainage Problems", "Public Amenities", "Sewer Problems", "Road Safety", "Water Infrastructure"],
+  "public_safety": ["Crime Report", "Traffic Violation", "Suspicious Activity", "Abandoned Vehicle", "Public Disturbance", "Animal Control", "Abandoned Property", "Illegal Activity"],
+  "sanitation": ["Garbage Collection", "Illegal Dumping", "Sewage Issues", "Public Restroom", "Pest Control"],
+  "utilities": ["Water Supply", "Electricity Issues", "Gas Leaks", "Internet/Telecom", "Drainage Problems"],
+  "noise": ["Construction Noise", "Traffic Noise", "Loud Music", "Industrial Noise", "Nighttime Disturbance", "Commercial Noise", "Residential Noise"],
+  "other": ["General Inquiry", "Feedback", "Suggestion", "Commendation", "Other"]
 };
 
 function showToast(message, type = 'success') {
@@ -33,13 +37,13 @@ function showToast(message, type = 'success') {
 
 function addComplaint(complaintData) {
   // Replace with actual complaint submission logic (e.g., saving to localStorage or an API)
-  const complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+  const complaints = JSON.parse(sessionStorage.getItem('complaints') || '[]');
   const newComplaint = {
     id: Date.now(), // Generate a unique ID
     ...complaintData
   };
   complaints.push(newComplaint);
-  localStorage.setItem('complaints', JSON.stringify(complaints));
+  sessionStorage.setItem('complaints', JSON.stringify(complaints));
   return newComplaint;
 }
 
@@ -78,7 +82,7 @@ function setupComplaintForm(user) {
       title: document.getElementById('complaint-title').value,
       type: document.getElementById('complaint-type').value,
       subcategory: document.getElementById('complaint-subcategory').options[document.getElementById('complaint-subcategory').selectedIndex].text,
-      urgency: document.getElementById('complaint-urgency').value,
+      urgency: 'medium', // Default urgency level
       location: document.getElementById('complaint-location').value,
       description: document.getElementById('complaint-description').value,
       suggestedUnit: document.getElementById('suggested-unit').value
@@ -116,9 +120,11 @@ function submitComplaint(formData) {
   if (newComplaint) {
     showToast('Complaint submitted successfully!');
     
-    // Redirect to dashboard after a short delay
+    showToast('Complaint submitted successfully!');
+    
+    // Redirect to complaints page after a short delay
     setTimeout(() => {
-      window.location.href = '/citizen/complaints?id=' + newComplaint.id;
+      window.location.href = '/complaints?id=' + newComplaint.id;
     }, 1500);
   } else {
     showToast('Failed to submit complaint. Please try again.', 'error');

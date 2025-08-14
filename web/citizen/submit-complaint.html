@@ -6,14 +6,17 @@
     <meta name="description" content="Submit Complaint - Report community issues and infrastructure problems. Easy-to-use form for submitting complaints with photo uploads and location tracking.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>Submit Complaint - CitizenLink</title>
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/additional-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
+
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
         <div class="main-content">
             <header class="dashboard-header">
@@ -64,17 +67,6 @@
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="complaint-urgency" class="form-label">Urgency Level</label>
-                                    <select class="form-select" id="complaint-urgency" name="urgency" required>
-                                        <option value="" disabled selected>Select urgency level</option>
-                                        <option value="low">Low - Not time-sensitive</option>
-                                        <option value="medium">Medium - Needs attention within a week</option>
-                                        <option value="high">High - Needs immediate attention</option>
-                                        <option value="emergency">Emergency - Safety hazard</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
                                     <label for="suggested-unit" class="form-label">Suggested Government Unit</label>
                                     <select class="form-select" id="suggested-unit" name="suggestedUnit" required>
                                         <option value="" disabled selected>Select government unit</option>
@@ -117,9 +109,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script src="js/data.js"></script>
-    <script src="js/auth-check.js"></script>
-    <script src="js/sidebar-loader.js"></script>
-    <script src="js/submit-complaint.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/submit-complaint.js"></script>
 </body>
 </html>

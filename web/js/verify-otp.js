@@ -122,9 +122,9 @@ class OTPVerifier {
     }
     
     loadEmail() {
-        // Get email from URL params or localStorage
+        // Get email from URL params or sessionStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const email = urlParams.get('email') || localStorage.getItem('signup_email');
+        const email = urlParams.get('email') || sessionStorage.getItem('signup_email');
         
         if (email) {
             this.otpInstruction.textContent = `Your code was sent to ${this.maskEmail(email)}`;
@@ -160,12 +160,12 @@ class OTPVerifier {
                 
                 // Simulate redirect after success
                 setTimeout(() => {
-                    // Store verification status
-                    localStorage.setItem('otp_verified', 'true');
-                    localStorage.setItem('user_email', localStorage.getItem('signup_email'));
+                                    // Store verification status
+                sessionStorage.setItem('otp_verified', 'true');
+                sessionStorage.setItem('user_email', sessionStorage.getItem('signup_email'));
                     
-                    // Redirect to dashboard or login
-                    window.location.href = '/citizen/dashboard';
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard';
                 }, 1500);
             } else {
                 this.showError('Invalid OTP. Please try again.');

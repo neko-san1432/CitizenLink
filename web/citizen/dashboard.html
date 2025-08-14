@@ -6,22 +6,33 @@
     <meta name="description" content="Citizen Dashboard - Manage your complaints, submit new issues, and track resolution progress. Stay updated with community news and emergency contacts.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>Citizen Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/web/css/styles.css">
-    <link rel="stylesheet" href="/web/css/additional-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
 
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle btn btn-outline-secondary" id="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/dashboard" class="logo-link">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name" class="fw-bold">John Citizen</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
                 </div>
             </header>
 
@@ -31,109 +42,98 @@
                         <h2 class="mb-0">Dashboard</h2>
                         <p class="text-muted mb-0">Stay updated with the latest news and announcements.</p>
                     </div>
-                    <a href="/citizen/submit-complaint" class="btn btn-submit-complaint">
-                        <i class="fas fa-plus me-2"></i>
-                        Submit Complaint
+                    <a href="/submit-complaint" class="btn btn-submit-complaint">
+                        <i class="fas fa-plus"></i>
+                        Submit a Complaint
                     </a>
                 </div>
 
-                <!-- Quick Actions Section -->
-                <div class="stats-grid mb-4">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3 class="mb-0">Quick Actions</h3>
-                            <i class="fas fa-bolt text-warning"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="d-grid gap-2">
-                                <a href="/citizen/submit-complaint" class="btn btn-outline-primary">
-                                    <i class="fas fa-file-alt me-2"></i>
-                                    Report an Issue
-                                </a>
-                                <a href="/citizen/complaints" class="btn btn-outline-info">
-                                    <i class="fas fa-list me-2"></i>
-                                    View My Reports
-                                </a>
-
-                            </div>
-                        </div>
+                <div class="quick-actions">
+                    <a href="/submit-complaint" class="btn btn-outline-primary">
+                        <i class="fas fa-plus-circle"></i>
+                        New Complaint
+                    </a>
+                    <a href="/complaints" class="btn btn-outline-info">
+                        <i class="fas fa-list"></i>
+                        View All
+                    </a>
+                </div>
+                
+                <!-- Recent Complaints Section -->
+                <div class="recent-complaints">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Recent Complaints</h3>
+                        <button id="refresh-complaints" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3 class="mb-0">Emergency Contacts</h3>
-                            <i class="fas fa-phone text-danger"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="d-grid gap-2">
-                                <a href="tel:911" class="btn btn-outline-danger">
-                                    <i class="fas fa-phone me-2"></i>
-                                    Emergency: 911
-                                </a>
-                                <a href="tel:+639123456789" class="btn btn-outline-warning">
-                                    <i class="fas fa-building me-2"></i>
-                                    City Hall: +63 912 345 6789
-                                </a>
-                                <a href="tel:+639876543210" class="btn btn-outline-info">
-                                    <i class="fas fa-shield-alt me-2"></i>
-                                    Police: +63 987 654 3210
-                                </a>
-                            </div>
-                        </div>
+                    <div class="complaints-grid" id="recent-complaints-grid">
+                        <!-- Complaints will be loaded here -->
                     </div>
                 </div>
+                
+                <!-- Floating Action Button -->
+                <a href="/submit-complaint" class="fab-button" title="Submit a new complaint">
+                    <i class="fas fa-plus"></i>
+                </a>
 
                 <!-- News Section -->
                 <div class="news-section">
-                    <div class="page-header">
-                        <h3 class="text-gradient">Latest News & Updates</h3>
-                        <p class="text-muted">Stay informed about your community</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Latest News & Updates</h3>
+                        <a href="/news" class="btn btn-sm btn-outline-primary">
+                            View All News
+                            <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                    
                     <div class="news-grid" id="news-grid">
-                        <!-- News cards will be loaded here -->
+                        <!-- News will be loaded here -->
                     </div>
                 </div>
 
-                <!-- Community Updates -->
-                <div class="community-updates mt-4">
-                    <div class="card">
-                        <div class="card-header bg-gradient text-white">
-                            <h3 class="mb-0">
-                                <i class="fas fa-users me-2"></i>
-                                Community Updates
-                            </h3>
+                <!-- Community Updates - Using inline styles to force vertical stacking -->
+                <div style="margin-top: 2rem; padding: 1.5rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                    <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 1.5rem; margin: -1.5rem -1.5rem 1.5rem -1.5rem; border-radius: 0.75rem 0.75rem 0 0;">
+                        <h3 style="margin: 0; color: white;">
+                            <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
+                            Community Updates
+                        </h3>
+                    </div>
+                    
+                    <!-- Upcoming Events Section -->
+                    <div style="margin-bottom: 2rem; padding: 0; display: block; width: 100%;">
+                        <h5 style="color: #2563eb; font-weight: 600; margin-bottom: 1rem;">
+                            <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>Upcoming Events
+                        </h5>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            <li style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
+                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">City Council Meeting</strong>
+                                <small style="color: #6b7280;">Every 1st Monday of the month at 6:00 PM</small>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
+                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">Community Clean-up Day</strong>
+                                <small style="color: #6b7280;">Saturday, December 15, 2024 at 8:00 AM</small>
+                            </li>
+                            <li style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">Public Safety Forum</strong>
+                                <small style="color: #6b7280;">Wednesday, December 20, 2024 at 7:00 PM</small>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Important Notices Section -->
+                    <div style="margin-top: 0; padding: 0; display: block; width: 100%;">
+                        <h5 style="color: #0891b2; font-weight: 600; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>Important Notices
+                        </h5>
+                        <div style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background-color: #e0f2fe; border: 1px solid #0284c7; color: #0c4a6e;">
+                            <strong>Water Maintenance</strong><br>
+                            Scheduled maintenance on December 10-12, 2024. Expect temporary water interruptions.
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5><i class="fas fa-calendar-alt text-primary me-2"></i>Upcoming Events</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <strong>City Council Meeting</strong><br>
-                                            <small class="text-muted">Every 1st Monday of the month at 6:00 PM</small>
-                                        </li>
-                                        <li class="mb-2">
-                                            <strong>Community Clean-up Day</strong><br>
-                                            <small class="text-muted">Saturday, December 15, 2024 at 8:00 AM</small>
-                                        </li>
-                                        <li class="mb-2">
-                                            <strong>Public Safety Forum</strong><br>
-                                            <small class="text-muted">Wednesday, December 20, 2024 at 7:00 PM</small>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5><i class="fas fa-info-circle text-info me-2"></i>Important Notices</h5>
-                                    <div class="alert alert-info">
-                                        <strong>Water Maintenance</strong><br>
-                                        Scheduled maintenance on December 10-12, 2024. Expect temporary water interruptions.
-                                    </div>
-                                    <div class="alert alert-warning">
-                                        <strong>Road Construction</strong><br>
-                                        Main Street construction project starting January 2025. Plan alternate routes.
-                                    </div>
-                                </div>
-                            </div>
+                        <div style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0; background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e;">
+                            <strong>Road Construction</strong><br>
+                            Main Street construction project starting January 2025. Plan alternate routes.
                         </div>
                     </div>
                 </div>
@@ -141,19 +141,35 @@
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
-
-    <!-- Floating Action Button for Submit Complaint -->
-    <div class="fab-container">
-        <a href="/citizen/submit-complaint" class="fab-button" title="Submit a new complaint">
-            <i class="fas fa-plus"></i>
-        </a>
+    <!-- News Detail Modal -->
+    <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newsModalLabel">News Article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="newsModalBody">
+                    <!-- News content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="share-news">
+                        <i class="fas fa-share"></i>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <div id="toast" class="toast"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/auth-check.js"></script>
-    <script src="js/sidebar-loader.js"></script>
-    <script src="js/citizen-dashboard.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/js/citizen-dashboard.js"></script>
 </body>
 </html>

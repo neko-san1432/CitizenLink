@@ -432,7 +432,7 @@ function showComplaintDetails(complaintId) {
       backBtn.className = 'btn btn-outline back-btn';
       backBtn.textContent = 'Back to List';
       backBtn.addEventListener('click', () => {
-        window.location.href = '/lgu/complaints';
+        window.location.href = '/admin-complaints';
       });
       
       modalFooter.prepend(backBtn);
@@ -460,7 +460,7 @@ function setupSaveButton() {
     
     // If viewing from URL, go back to list
     if (window.location.search.includes('id=')) {
-      window.location.href = '/lgu/complaints';
+      window.location.href = '/admin-complaints';
     }
   });
 }
@@ -476,7 +476,7 @@ function setupModalClose() {
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
-        window.location.href = '/lgu/complaints';
+        window.location.href = '/admin-complaints';
       }
     });
   });
@@ -488,7 +488,7 @@ function setupModalClose() {
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
-        window.location.href = '/lgu/complaints';
+        window.location.href = '/admin-complaints';
       }
     }
   });

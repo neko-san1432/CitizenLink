@@ -6,14 +6,17 @@
     <meta name="description" content="My Complaints - Track and manage all your submitted complaints. View status updates, filter by date and status, and monitor resolution progress.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>My Complaints - CitizenLink</title>
-    <link rel="stylesheet" href="/web/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/web/css/styles.css">
-    <link rel="stylesheet" href="/web/css/additional-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
+
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
         <div class="main-content">
             <header class="dashboard-header">
@@ -31,9 +34,9 @@
                         <h2>My Complaints</h2>
                         <p class="text-muted">View and track all your submitted complaints.</p>
                     </div>
-                    <a href="/citizen/submit-complaint" class="btn btn-primary">
+                    <a href="/submit-complaint" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
-                        New Complaint
+                        Submit a Complaint
                     </a>
                 </div>
 
@@ -67,7 +70,7 @@
                         <i class="fas fa-file-alt"></i>
                         <h3>No complaints found</h3>
                         <p>You haven't submitted any complaints yet or none match your filters.</p>
-                        <a href="/citizen/submit-complaint" class="btn btn-primary">Submit a Complaint</a>
+                        <a href="/submit-complaint" class="btn btn-primary">Submit a Complaint</a>
                     </div>
                 </div>
 
@@ -146,9 +149,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script src="js/data.js"></script>
-    <script src="js/auth-check.js"></script>
-    <script src="js/sidebar-loader.js"></script>
-    <script src="js/my-complaints.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/my-complaints.js"></script>
 </body>
 </html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Latest News and Updates - Stay informed about community developments, public safety initiatives, and city improvements. Read detailed articles about local government activities.">
+    <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
+    <title>Latest News & Updates - CitizenLink</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/additional-styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
+
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <div class="main-content">
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/dashboard" class="logo-link">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
+                </div>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="page-header">
+                    <h2 class="mb-0">Latest News & Updates</h2>
+                    <p class="text-muted mb-0">Stay informed about community developments and government initiatives</p>
+                </div>
+
+                <!-- News Filter and Search -->
+                <div class="news-controls mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="news-search" placeholder="Search news articles...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2 justify-content-md-end">
+                                <select class="form-select" id="category-filter" style="max-width: 200px;">
+                                    <option value="">All Categories</option>
+                                    <option value="Public Safety">Public Safety</option>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="Environment">Environment</option>
+                                    <option value="Health">Health</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Education">Education</option>
+                                </select>
+                                <button class="btn btn-outline-secondary" id="refresh-news">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News Grid -->
+                <div class="news-container">
+                    <div class="row" id="news-grid">
+                        <!-- News articles will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="text-center mt-4" id="load-more-container" style="display: none;">
+                    <button class="btn btn-primary" id="load-more-news">
+                        <i class="fas fa-plus"></i>
+                        Load More Articles
+                    </button>
+                </div>
+
+                <!-- No Results Message -->
+                <div class="text-center py-5" id="no-results" style="display: none;">
+                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No news articles found</h5>
+                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- News Detail Modal -->
+    <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newsModalLabel">News Article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="newsModalBody">
+                    <!-- News content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="share-news">
+                        <i class="fas fa-share"></i>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/js/data.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/sidebar-loader.js"></script>
+    <script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/js/news.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
             <i class="fas fa-shield-alt"></i>
@@ -11,27 +11,32 @@
     <nav class="sidebar-nav">
         <ul>
             <li>
-                <a href="/citizen/dashboard" data-page="dashboard">
+                <a href="/dashboard" data-page="dashboard">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="/citizen/submit-complaint" data-page="submit-complaint">
-                    <i class="fas fa-file-alt"></i>
+                <a href="/submit-complaint" data-page="submit-complaint">
+                    <i class="fas fa-plus-circle"></i>
                     <span>Submit Complaint</span>
                 </a>
             </li>
             <li>
-                <a href="/citizen/complaints" data-page="my-complaints">
-                    <i class="fas fa-comment-alt"></i>
+                <a href="/news" data-page="news">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News & Updates</span>
+                </a>
+            </li>
+            <li>
+                <a href="/my-complaints" data-page="my-complaints">
+                    <i class="fas fa-list"></i>
                     <span>My Complaints</span>
                 </a>
             </li>
-
             <li>
-                <a href="/citizen/profile" data-page="profile">
-                    <i class="fas fa-user-cog"></i>
+                <a href="/profile" data-page="profile">
+                    <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
             </li>
@@ -45,7 +50,7 @@
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="user-dropdown">
-                <a href="/citizen/profile">Profile Settings</a>
+                <a href="/profile">Profile Settings</a>
                 <a href="#" id="logout-btn" class="text-danger">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Log out</span>

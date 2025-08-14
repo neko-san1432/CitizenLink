@@ -2,12 +2,16 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
+import { existsSync } from 'fs';
 
 // ES6 module compatibility
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // Get the directory of the current file
 
 const app = express();
+
+// Development mode - more permissive CSP for development
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Use Helmet to set secure headers - implementing all 7 major security headers
 app.use(helmet({
@@ -18,24 +22,36 @@ app.use(helmet({
       scriptSrc: [
         "'self'", 
         "'unsafe-inline'", // Needed for inline scripts
-        "https://cdnjs.cloudflare.com" // Font Awesome CDN
+        "'unsafe-eval'", // Needed for Bootstrap
+        "https://cdnjs.cloudflare.com", // Font Awesome CDN
+        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+        "https://citizenlink-abwi.onrender.com", // External domain
+        ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []) // More permissive in development
       ],
+      scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
       styleSrc: [
         "'self'", 
         "'unsafe-inline'", // Needed for inline styles
-        "https://cdnjs.cloudflare.com" // Font Awesome CDN
+        "https://cdnjs.cloudflare.com", // Font Awesome CDN
+        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+        ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []) // More permissive in development
       ],
       fontSrc: [
         "'self'",
-        "https://cdnjs.cloudflare.com" // Font Awesome fonts
+        "https://cdnjs.cloudflare.com", // Font Awesome fonts
+        "https://cdn.jsdelivr.net", // Additional fonts
+        ...(isDevelopment ? ["https:"] : []) // More permissive in development
       ],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+      connectSrc: [
+        "'self'", 
+        "https://citizenlink-abwi.onrender.com", // External domain
+        ...(isDevelopment ? ["https:"] : []) // More permissive in development
+      ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
-      frameAncestors: ["'self'"], // Prevents clickjacking
-      upgradeInsecureRequests: []
+      frameAncestors: ["'self'"] // Prevents clickjacking
     }
   },
   
@@ -50,12 +66,12 @@ app.use(helmet({
   // 4. X-XSS-Protection (XSS protection for older browsers)
   xssFilter: true,
   
-  // 5. Strict-Transport-Security (HSTS)
-  hsts: { 
-    maxAge: 31536000, // 1 year
-    includeSubDomains: true,
-    preload: true
-  },
+  // 5. Strict-Transport-Security (HSTS) - Disabled for HTTP development
+  // hsts: { 
+  //   maxAge: 31536000, // 1 year
+  //   includeSubDomains: true,
+  //   preload: true
+  // },
   
   // 6. Referrer-Policy
   referrerPolicy: { 
@@ -97,12 +113,39 @@ app.use((req, res, next) => {
   res.setHeader('X-Download-Options', 'noopen');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.setHeader('X-DNS-Prefetch-Control', 'off');
+  
+  // Explicitly prevent HTTPS upgrades
+  res.setHeader('Upgrade-Insecure-Requests', '0');
 
   // Explicit Permissions-Policy header (meta tag is ignored by browsers)
   res.setHeader(
     'Permissions-Policy',
     "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
   );
+  
+  // Development mode - more permissive CSP
+  if (isDevelopment) {
+    // Override CSP for development to be more permissive
+    const devCSP = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+      "script-src-attr 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https:",
+      "font-src 'self' https:",
+      "img-src 'self' data: https:",
+      "connect-src 'self' https:",
+      "object-src 'none'",
+      "media-src 'self'",
+      "frame-src 'none'",
+      "frame-ancestors 'self'"
+    ].join('; ');
+    
+    res.setHeader('Content-Security-Policy', devCSP);
+    console.log('🔧 Development mode: Using permissive CSP');
+    console.log('📋 CSP:', devCSP);
+  } else {
+    console.log('🚀 Production mode: Using strict CSP');
+  }
   
   // Security headers for API endpoints
   if (req.path.startsWith('/api/')) {
@@ -117,6 +160,65 @@ app.use(express.json());
 
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
+
+// ===== SUPABASE CLIENT CONFIGURATION (must come BEFORE generic /js/* static route) =====
+// Serve client-side Supabase configuration with proper credentials from server-side db.js
+app.get('/js/supabase-config.js', async (req, res) => {
+  try {
+    // Import the server-side config to get credentials
+    const { supabaseConfig } = await import('./auth-db/db.js');
+
+    const configScript = `
+// Client-side Supabase configuration (served by server.js)
+const SUPABASE_URL = '${supabaseConfig.url}';
+const SUPABASE_ANON_KEY = '${supabaseConfig.anonKey}';
+
+let supabaseClient = null;
+
+async function initializeSupabaseClient() {
+  try {
+    if (typeof window.supabase !== 'undefined') {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('Supabase client initialized');
+      return supabaseClient;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js';
+    script.onload = () => {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('Supabase loaded from CDN and initialized');
+      window.dispatchEvent(new CustomEvent('supabaseReady'));
+    };
+    script.onerror = () => {
+      console.error('Failed to load Supabase from CDN');
+    };
+    document.head.appendChild(script);
+  } catch (error) {
+    console.error('Error initializing Supabase client:', error);
+  }
+}
+
+function getSupabaseClient() {
+  return supabaseClient;
+}
+
+window.initializeSupabaseClient = initializeSupabaseClient;
+window.getSupabaseClient = getSupabaseClient;
+window.SUPABASE_URL = SUPABASE_URL;
+window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
+
+if (typeof document !== 'undefined') {
+  initializeSupabaseClient();
+}
+    `;
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(configScript);
+  } catch (error) {
+    console.error('Error serving Supabase config:', error);
+    res.status(500).json({ error: 'Failed to load Supabase configuration' });
+  }
+});
 
 // ===== MAIN ROUTES =====
 // Home/Landing page
@@ -135,6 +237,11 @@ app.get('/signup', (req, res) => {
 
 app.get('/verify-otp', (req, res) => {
   res.sendFile(path.join(__dirname, 'verify-otp.html'));
+});
+
+// Test page for debugging modals
+app.get('/test-modals', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-modals.html'));
 });
 
 
@@ -160,8 +267,9 @@ app.get('/citizen/submit-complaint', (req, res) => {
   res.sendFile(path.join(__dirname, 'citizen', 'submit-complaint.html'));
 });
 
-app.get('/citizen/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'citizen', 'analytics.html'));
+// News page route
+app.get('/news', (req, res) => {
+  res.sendFile(path.join(__dirname, 'news.html'));
 });
 
 // ===== LGU ROUTES =====
@@ -185,87 +293,137 @@ app.get('/lgu/insights', (req, res) => {
   res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
 });
 
-// ===== STATIC ASSET ROUTES =====
+// ===== NEW ROUTES WITHOUT FOLDER NAMES =====
+// Citizen routes without folder names
+app.get('/dashboard', (req, res) => {
+  const filePath = path.join(__dirname, 'citizen', 'dashboard.html');
+  console.log('Dashboard route accessed, serving file:', filePath);
+  console.log('__dirname:', __dirname);
+  console.log('File exists check:', existsSync(filePath));
+  
+  // Check if file exists before sending
+  if (!existsSync(filePath)) {
+    console.error('Dashboard file not found:', filePath);
+    return res.status(404).send('Dashboard file not found');
+  }
+  
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error sending dashboard file:', err);
+      res.status(500).send('Error loading dashboard');
+    }
+  });
+});
+
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'citizen', 'profile.html'));
+});
+
+app.get('/complaints', (req, res) => {
+  res.sendFile(path.join(__dirname, 'citizen', 'my-complaints.html'));
+});
+
+app.get('/my-complaints', (req, res) => {
+  res.sendFile(path.join(__dirname, 'citizen', 'my-complaints.html'));
+});
+
+app.get('/submit-complaint', (req, res) => {
+  res.sendFile(path.join(__dirname, 'citizen', 'submit-complaint.html'));
+});
+
+// LGU routes without folder names
+app.get('/admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'dashboard.html'));
+});
+
+app.get('/lgu-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'dashboard.html'));
+});
+
+app.get('/admin-complaints', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'complaints.html'));
+});
+
+app.get('/lgu-complaints', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'complaints.html'));
+});
+
+app.get('/admin-heatmap', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'heatmap.html'));
+});
+
+app.get('/lgu-heatmap', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'heatmap.html'));
+});
+
+app.get('/admin-insights', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
+});
+
+app.get('/lgu-insights', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
+});
+
+// ===== COMPONENT ROUTES =====
+// Serve sidebar components
+app.get('/components/:filename(*)', (req, res) => {
+  const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const filePath = path.join(__dirname, relativePath);
+  
+  // Only serve HTML component files
+  if (!req.params.filename.endsWith('.html')) {
+    return res.status(404).send('Not an HTML component file');
+  }
+  
+  res.setHeader('Content-Type', 'text/html');
+  res.sendFile(filePath);
+});
+
+// ===== STATIC ASSET ROUTES (moved to end to avoid conflicts) =====
 // CSS files
 app.get('/css/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
+  const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const filePath = path.join(__dirname, relativePath);
   res.setHeader('Content-Type', 'text/css');
   res.sendFile(filePath);
 });
 
-// JavaScript files
-app.get('/js/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
+// JavaScript files - more specific to avoid conflicts
+app.get('/js/:filename(*)', (req, res) => {
+  // Ensure we resolve a relative path (Windows-safe). Absolute req.path would break path.join
+  const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const filePath = path.join(__dirname, relativePath);
+  
+  // Only serve actual JavaScript files
+  if (!req.params.filename.endsWith('.js')) {
+    return res.status(404).send('Not a JavaScript file');
+  }
+  
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(filePath);
 });
 
 // Bootstrap CSS files
 app.get('/css/bootstrap/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
+  const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const filePath = path.join(__dirname, relativePath);
   res.setHeader('Content-Type', 'text/css');
   res.sendFile(filePath);
 });
 
 // Bootstrap JavaScript files
 app.get('/js/bootstrap/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
+  const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const filePath = path.join(__dirname, relativePath);
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(filePath);
 });
 
-// Font Awesome CDN (already handled by CSP)
-// Images and other assets
-app.get('/images/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
-  const ext = path.extname(filePath).toLowerCase();
-  
-  // Set appropriate MIME type based on file extension
-  const mimeTypes = {
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon'
-  };
-  
-  res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-  res.sendFile(filePath);
-});
+// ===== SUPABASE CLIENT CONFIGURATION =====
+// This route is already defined above - removing duplicate
 
-// Robots.txt route for SEO
-app.get('/robots.txt', (req, res) => {
-  res.setHeader('Content-Type', 'text/plain');
-  res.sendFile(path.join(__dirname, 'robots.txt'));
-});
-
-// Sitemap route for SEO
-app.get('/sitemap.xml', (req, res) => {
-  res.setHeader('Content-Type', 'application/xml');
-  res.sendFile(path.join(__dirname, 'sitemap.xml'));
-});
-
-// Catch-all for other static assets (fonts, etc.)
-app.get('/assets/*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
-  const ext = path.extname(filePath).toLowerCase();
-  
-  // Set appropriate MIME type based on file extension
-  const mimeTypes = {
-    '.woff': 'font/woff',
-    '.woff2': 'font/woff2',
-    '.ttf': 'font/ttf',
-    '.eot': 'application/vnd.ms-fontobject',
-    '.otf': 'font/otf',
-    '.pdf': 'application/pdf',
-    '.zip': 'application/zip',
-    '.txt': 'text/plain'
-  };
-  
-  res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-  res.sendFile(filePath);
-});
+// ===== SUPABASE CLIENT CONFIGURATION =====
+// This route is already defined above - removing duplicate
 
 // ===== API ROUTES =====
 app.get('/api/health', (req, res) => {
@@ -275,8 +433,9 @@ app.get('/api/health', (req, res) => {
     security: 'enabled',
     routes: {
       main: ['/', '/login', '/signup'],
-      citizen: ['/citizen', '/citizen/dashboard', '/citizen/profile', '/citizen/complaints', '/citizen/submit-complaint', '/citizen/analytics'],
-      lgu: ['/lgu', '/lgu/dashboard', '/lgu/complaints', '/lgu/heatmap', '/lgu/insights'],
+      citizen: ['/citizen', '/citizen/dashboard', '/citizen/profile', '/citizen/complaints', '/citizen/submit-complaint'],
+      lgu: ['/lgu', '/lgu/dashboard', '/lgu/complaints', '/lgu/heatmap', '/lgu/heatmap', '/lgu/insights'],
+      newRoutes: ['/dashboard', '/profile', '/complaints', '/submit-complaint', '/admin-dashboard', '/admin-complaints', '/admin-heatmap', '/admin-insights'],
       assets: ['/css/*', '/js/*', '/css/bootstrap/*', '/js/bootstrap/*', '/images/*', '/assets/*']
     }
   });
@@ -295,10 +454,10 @@ app.use((err, req, res, next) => {
   }
 });
 
-// 404 handler - redirect to home page
+// 404 handler - show error instead of redirecting
 app.use((req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.path}`);
-  res.redirect('/');
+  res.status(404).send(`Route not found: ${req.path}`);
 });
 
 // ===== SERVER STARTUP =====
@@ -319,6 +478,7 @@ app.listen(PORT, () => {
   console.log(`   • Main: /, /login, /signup, /verify-otp`);
   console.log(`   • Citizen: /citizen/*`);
   console.log(`   • LGU: /lgu/*`);
+  console.log(`   • New Routes: /dashboard, /profile, /complaints, /submit-complaint, /admin-dashboard, /admin-complaints, /admin-heatmap, /admin-insights`);
   console.log(`   • API: /api/health`);
 });
 

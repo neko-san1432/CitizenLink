@@ -1,8 +1,11 @@
 // Check if user is logged in
 function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  console.log('checkAuth() called');
+  const user = JSON.parse(sessionStorage.getItem('user'));
+  console.log('User from sessionStorage:', user);
   
   if (!user) {
+    console.log('No user found, redirecting to login');
     // Redirect to login page
     window.location.href = '/login';
     return null;
@@ -10,17 +13,22 @@ function checkAuth() {
   
   // Check if on the correct platform
   const currentPath = window.location.pathname;
+  console.log('Current path:', currentPath);
+  console.log('User type:', user.type);
   
-  if (user.type === 'citizen' && !currentPath.includes('/citizen/')) {
-    window.location.href = '/citizen/dashboard';
+  if (user.type === 'citizen' && !currentPath.includes('/citizen/') && !currentPath.includes('/dashboard') && !currentPath.includes('/profile') && !currentPath.includes('/complaints') && !currentPath.includes('/submit-complaint') && !currentPath.includes('/analytics') && !currentPath.includes('/news')) {
+    console.log('Citizen user on unauthorized path, redirecting to dashboard');
+    window.location.href = '/dashboard';
     return null;
   }
   
-  if (user.type === 'lgu' && !currentPath.includes('/lgu/')) {
-    window.location.href = '/lgu/dashboard';
+  if (user.type === 'lgu' && !currentPath.includes('/lgu/') && !currentPath.includes('/admin-dashboard') && !currentPath.includes('/admin-complaints') && !currentPath.includes('/admin-heatmap') && !currentPath.includes('/admin-insights')) {
+    console.log('LGU user on unauthorized path, redirecting to admin dashboard');
+    window.location.href = '/admin-dashboard';
     return null;
   }
   
+  console.log('User authorized for current path');
   return user;
 }
 
@@ -44,7 +52,7 @@ function setupLogout() {
       e.preventDefault();
       
       // Clear user from localStorage
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
       
       // Redirect to login page
       window.location.href = '/login';
