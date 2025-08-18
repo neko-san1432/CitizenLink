@@ -20,11 +20,19 @@
 
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle" id="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/dashboard" class="logo-link">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">Loading...</span></span>
                 </div>
             </header>
 
@@ -148,10 +156,12 @@
     </div>
 
     <div id="toast" class="toast"></div>
-
-    <script src="/js/data.js"></script>
-    <script src="/js/auth-check.js"></script>
-    <script src="/js/sidebar-loader.js"></script>
-    <script src="/js/my-complaints.js"></script>
+    <script src="../js/supabase-bridge.js"></script>
+    <script src="../js/supabase-init.js"></script>
+    <script src="../js/user-utils.js"></script>
+    <script src="../js/data-management.js"></script>
+    <script src="../js/auth-check.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/my-complaints.js"></script>
 </body>
 </html>

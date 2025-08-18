@@ -1,4 +1,15 @@
 // Check if user is logged in
+let supabase = null;
+// Use shared Supabase manager instead of duplicating initialization code
+async function initializeAuthSupabase() {
+  try {
+    // Use the shared manager to get Supabase client
+    supabase = await window.supabaseManager.initialize();
+    checkExistingSession();
+  } catch (error) {
+    console.error("Error initializing Supabase:", error);
+  }
+}
 function checkAuth() {
   console.log('checkAuth() called');
   const user = JSON.parse(sessionStorage.getItem('user'));
@@ -22,9 +33,9 @@ function checkAuth() {
     return null;
   }
   
-  if (user.type === 'lgu' && !currentPath.includes('/lgu/') && !currentPath.includes('/admin-dashboard') && !currentPath.includes('/admin-complaints') && !currentPath.includes('/admin-heatmap') && !currentPath.includes('/admin-insights')) {
-    console.log('LGU user on unauthorized path, redirecting to admin dashboard');
-    window.location.href = '/admin-dashboard';
+  if (user.type === 'lgu' && !currentPath.includes('/lgu/')) {
+    console.log('LGU user on unauthorized path, redirecting to LGU dashboard');
+    window.location.href = '/lgu/dashboard';
     return null;
   }
   

@@ -57,13 +57,7 @@
                             <option value="noise">Noise</option>
                             <option value="other">Other</option>
                         </select>
-                        <select id="urgency-filter">
-                            <option value="all">All Urgency</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="emergency">Emergency</option>
-                        </select>
+
                         <select id="date-filter">
                             <option value="all">All Time</option>
                             <option value="today">Today</option>
@@ -83,7 +77,7 @@
                                 <th>Type</th>
                                 <th>Location</th>
                                 <th>Date</th>
-                                <th>Urgency</th>
+
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -136,10 +130,7 @@
                         <span class="detail-label">Subcategory:</span>
                         <span id="detail-subcategory">Road Damage</span>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Urgency:</span>
-                        <span id="detail-urgency">High</span>
-                    </div>
+
                     <div class="detail-item">
                         <span class="detail-label">Location:</span>
                         <span id="detail-location">123 Main Street</span>
@@ -205,10 +196,11 @@
     </div>
 
     <div id="toast" class="toast"></div>
-
-    <script src="/js/data.js"></script>
-    <script src="/js/auth-check.js"></script>
-    <script src="/js/sidebar-loader.js"></script>
-    <script src="/js/lgu-complaints.js"></script>
+    <script src="../js/supabase-bridge.js"></script>
+    <script src="../js/supabase-init.js"></script>
+    <script src="../js/data-management.js"></script>
+    <script src="../js/auth-check.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/lgu-complaints.js"></script>
 </body>
 </html>

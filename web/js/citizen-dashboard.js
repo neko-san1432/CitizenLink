@@ -1,39 +1,53 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get user
-  const user = checkAuth();
-  console.log('Auth check returned user:', user); // Debug log
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize user data using shared utilities
+  const user = await window.userUtils.initializeUserData();
+  if (!user) return;
   
-  if (!user) {
-    console.log('No user found, creating mock user for testing...'); // Debug log
-    // Create a mock user for testing purposes
-    const mockUser = {
-      username: 'citizen-user',
-      name: 'John Citizen',
-      type: 'citizen'
-    };
-    sessionStorage.setItem('user', JSON.stringify(mockUser));
-    console.log('Mock user created:', mockUser); // Debug log
-    
-    // Use the mock user
-    loadRecentComplaints(mockUser);
-    loadNews();
-    updateUserInfo(mockUser);
-    setupRefreshButton();
-    return;
+  console.log('User data loaded:', user);
+  
+  // Update dashboard with user-specific data
+  updateDashboardWithUserData(user);
+  
+  // Setup other dashboard functionality
+  await setupDashboard();
+});
+
+// Update dashboard with user-specific data
+function updateDashboardWithUserData(user) {
+  // Update welcome message
+  const welcomeElement = document.querySelector('.welcome-text');
+  if (welcomeElement) {
+    welcomeElement.innerHTML = `Welcome, <span id="header-user-name">${user.name}</span>`;
   }
   
-  // Load recent complaints for the citizen
-  loadRecentComplaints(user);
+  // Update page title or other user-specific elements
+  const pageTitle = document.querySelector('.page-header h1');
+  if (pageTitle) {
+    pageTitle.textContent = `Welcome back, ${user.name}!`;
+  }
   
-  // Load news content
-  loadNews();
-  
-  // Setup user info
-  updateUserInfo(user);
-  
-  // Setup refresh button
-  setupRefreshButton();
-});
+  console.log(`Dashboard updated for user: ${user.name} (${user.email})`);
+}
+
+// Setup dashboard functionality
+async function setupDashboard() {
+  try {
+    // Get user data
+    const user = await window.userUtils.initializeUserData();
+    if (!user) return;
+    
+    // Load user-specific data
+    await loadRecentComplaints(user);
+    await loadNews();
+    
+    // Setup refresh button
+    setupRefreshButton();
+    
+    console.log('Dashboard setup complete');
+  } catch (error) {
+    console.error('Error setting up dashboard:', error);
+  }
+}
 
 // Setup refresh button
 function setupRefreshButton() {
@@ -68,69 +82,86 @@ function showRefreshMessage() {
 }
 
 // Load recent complaints for the citizen
-function loadRecentComplaints(user) {
+async function loadRecentComplaints(user) {
   const complaintsGrid = document.getElementById('recent-complaints-grid');
   if (!complaintsGrid) return;
   
   console.log('Loading recent complaints for user:', user); // Debug log
   
-  // Get complaints for this user
-  let userComplaints = getComplaintsByUserId(user.username || 'citizen-user');
-  console.log('Found complaints for user:', userComplaints.length); // Debug log
-  
-  // If no complaints found, try to get complaints for 'citizen-user' as fallback
-  if (userComplaints.length === 0) {
-    console.log('No complaints found for user, trying fallback...'); // Debug log
-    userComplaints = getComplaintsByUserId('citizen-user');
-    console.log('Fallback complaints found:', userComplaints.length); // Debug log
-  }
-  
-  // Sort by date (newest first) and take the first 3
-  const recentComplaints = userComplaints
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 3);
-  
-  console.log('Recent complaints to display:', recentComplaints); // Debug log
-  
-  // Clear existing content
-  complaintsGrid.innerHTML = '';
-  
-  if (recentComplaints.length === 0) {
-    // Show empty state
-    const emptyState = document.createElement('div');
-    emptyState.className = 'empty-complaints-state';
-    emptyState.innerHTML = `
-      <div class="text-center py-4">
-        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-        <h5 class="text-muted">No complaints yet</h5>
-        <p class="text-muted mb-3">You haven't submitted any complaints yet.</p>
-        <a href="/submit-complaint" class="btn btn-primary">
-          <i class="fas fa-plus"></i>
-          Submit Your First Complaint
+  try {
+    // Get complaints for this user from Supabase
+    let userComplaints = [];
+    
+    if (window.getComplaints) {
+      const allComplaints = await window.getComplaints();
+      // Filter by user ID
+      userComplaints = allComplaints.filter(complaint => complaint.user_id === user.username);
+    }
+    
+    console.log('Found complaints for user:', userComplaints.length); // Debug log
+    
+    // Sort by date (newest first) and take the first 3
+    const recentComplaints = userComplaints
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
+      .slice(0, 3);
+    
+    console.log('Recent complaints to display:', recentComplaints); // Debug log
+    
+    // Clear existing content
+    complaintsGrid.innerHTML = '';
+    
+    if (recentComplaints.length === 0) {
+      // Show empty state
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-complaints-state';
+      emptyState.innerHTML = `
+        <div class="text-center py-4">
+          <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">No complaints yet</h5>
+          <p class="text-muted mb-3">You haven't submitted any complaints yet.</p>
+          <a href="/submit-complaint" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Submit Your First Complaint
+          </a>
+        </div>
+      `;
+      complaintsGrid.appendChild(emptyState);
+      return;
+    }
+    
+    // Create complaint cards
+    recentComplaints.forEach(complaint => {
+      const complaintCard = createComplaintCard(complaint);
+      complaintsGrid.appendChild(complaintCard);
+    });
+    
+    // Add "View All" link if there are more complaints
+    if (userComplaints.length > 3) {
+      const viewAllLink = document.createElement('div');
+      viewAllLink.className = 'text-center mt-3';
+      viewAllLink.innerHTML = `
+        <a href="/complaints" class="btn btn-outline-primary">
+          <i class="fas fa-list"></i>
+          View All ${userComplaints.length} Complaints
         </a>
+      `;
+      complaintsGrid.appendChild(viewAllLink);
+    }
+  } catch (error) {
+    console.error('Error loading complaints:', error);
+    
+    // Show error state
+    const errorState = document.createElement('div');
+    errorState.className = 'error-complaints-state';
+    errorState.innerHTML = `
+      <div class="text-center py-4">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+        <h5 class="text-warning">Error loading complaints</h5>
+        <p class="text-muted mb-3">Unable to load your complaints. Please try again later.</p>
       </div>
     `;
-    complaintsGrid.appendChild(emptyState);
-    return;
-  }
-  
-  // Create complaint cards
-  recentComplaints.forEach(complaint => {
-    const complaintCard = createComplaintCard(complaint);
-    complaintsGrid.appendChild(complaintCard);
-  });
-  
-  // Add "View All" link if there are more complaints
-  if (userComplaints.length > 3) {
-    const viewAllLink = document.createElement('div');
-    viewAllLink.className = 'text-center mt-3';
-    viewAllLink.innerHTML = `
-      <a href="/complaints" class="btn btn-outline-primary">
-        <i class="fas fa-list"></i>
-        View All ${userComplaints.length} Complaints
-      </a>
-    `;
-    complaintsGrid.appendChild(viewAllLink);
+    complaintsGrid.innerHTML = '';
+    complaintsGrid.appendChild(errorState);
   }
 }
 
@@ -159,17 +190,25 @@ function createComplaintCard(complaint) {
       statusText = 'Pending';
   }
   
-  const formattedDate = formatDate(complaint.createdAt);
+  // Handle different date field names
+  const dateField = complaint.created_at || complaint.createdAt;
+  const formattedDate = dateField ? formatDate(dateField) : 'No date';
+  
+  // Handle different location field names
+  const location = complaint.location || 'Location not specified';
+  
+  // Handle different type field names
+  const type = complaint.type || 'General';
   
   card.innerHTML = `
     <div class="complaint-header">
-      <div class="complaint-title">${complaint.title}</div>
+      <div class="complaint-title">${complaint.title || 'Untitled Complaint'}</div>
       <span class="status-badge ${statusClass}">${statusText}</span>
     </div>
     <div class="complaint-details">
       <div class="complaint-location">
         <i class="fas fa-map-marker-alt"></i>
-        ${complaint.location}
+        ${location}
       </div>
       <div class="complaint-date">
         <i class="fas fa-calendar"></i>
@@ -177,7 +216,7 @@ function createComplaintCard(complaint) {
       </div>
       <div class="complaint-type">
         <i class="fas fa-tag"></i>
-        ${complaint.type}
+        ${type}
       </div>
     </div>
     <div class="complaint-actions">
@@ -191,70 +230,52 @@ function createComplaintCard(complaint) {
 }
 
 // Load news content
-function loadNews() {
+async function loadNews() {
   const newsGrid = document.getElementById('news-grid');
   if (!newsGrid) return;
   
-  // Sample news data - in a real app, this would come from an API
-  const newsData = [
-    {
-      id: 1,
-      title: "New Public Safety Initiative Launched",
-      excerpt: "The city has launched a comprehensive public safety program focusing on community policing and emergency response improvements.",
-      date: "2024-12-01",
-      category: "Public Safety",
-      icon: "fas fa-shield-alt"
-    },
-    {
-      id: 2,
-      title: "Infrastructure Development Project Announced",
-      excerpt: "Major road improvements and bridge repairs scheduled to begin in Q1 2025, improving connectivity across the city.",
-      date: "2024-11-28",
-      category: "Infrastructure",
-      icon: "fas fa-road"
-    },
-    {
-      id: 3,
-      title: "Environmental Protection Measures",
-      excerpt: "New recycling programs and green energy initiatives to be implemented city-wide, promoting sustainability.",
-      date: "2024-11-25",
-      category: "Environment",
-      icon: "fas fa-leaf"
-    },
-    {
-      id: 4,
-      title: "Community Health Services Expansion",
-      excerpt: "Additional health clinics and vaccination centers opening in underserved neighborhoods.",
-      date: "2024-11-22",
-      category: "Health",
-      icon: "fas fa-heartbeat"
-    },
-    {
-      id: 5,
-      title: "Digital Services Modernization",
-      excerpt: "City services going digital with new online portals for permits, payments, and information requests.",
-      date: "2024-11-20",
-      category: "Technology",
-      icon: "fas fa-laptop"
-    },
-    {
-      id: 6,
-      title: "Youth Development Programs",
-      excerpt: "New after-school programs and youth centers opening to support young people's development and education.",
-      date: "2024-11-18",
-      category: "Education",
-      icon: "fas fa-graduation-cap"
+  try {
+    // Get live news data from Supabase
+    const newsData = await window.getNews();
+    
+    // Clear existing content
+    newsGrid.innerHTML = '';
+    
+    if (!newsData || newsData.length === 0) {
+      // Show "No data available yet" message
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-news-state';
+      emptyState.innerHTML = `
+        <div class="text-center py-4">
+          <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">No news available yet</h5>
+          <p class="text-muted mb-3">There are no news articles published at the moment.</p>
+        </div>
+      `;
+      newsGrid.appendChild(emptyState);
+      return;
     }
-  ];
-  
-  // Clear existing content
-  newsGrid.innerHTML = '';
-  
-  // Create news cards
-  newsData.forEach(news => {
-    const newsCard = createNewsCard(news);
-    newsGrid.appendChild(newsCard);
-  });
+    
+    // Create news cards
+    newsData.forEach(news => {
+      const newsCard = createNewsCard(news);
+      newsGrid.appendChild(newsCard);
+    });
+  } catch (error) {
+    console.error('Error loading news:', error);
+    
+    // Show error state
+    const errorState = document.createElement('div');
+    errorState.className = 'error-news-state';
+    errorState.innerHTML = `
+      <div class="text-center py-4">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+        <h5 class="text-warning">Error loading news</h5>
+        <p class="text-muted mb-3">Unable to load news articles. Please try again later.</p>
+      </div>
+    `;
+    newsGrid.appendChild(errorState);
+  }
 }
 
 // Create a news card element
@@ -262,17 +283,25 @@ function createNewsCard(news) {
   const card = document.createElement('div');
   card.className = 'news-card';
   
-  const formattedDate = formatDate(news.date);
+  // Handle different date field names and format date
+  const dateField = news.date || news.created_at || news.published_at;
+  const formattedDate = dateField ? formatDate(dateField) : 'No date';
+  
+  // Handle different category field names
+  const category = news.category || 'General';
+  
+  // Handle different icon field names
+  const icon = news.icon || 'fas fa-newspaper';
   
   card.innerHTML = `
     <div class="news-image">
-      <i class="${news.icon}"></i>
+      <i class="${icon}"></i>
     </div>
     <div class="news-content">
       <div class="news-date">${formattedDate}</div>
-      <div class="news-tag">${news.category}</div>
-      <h4 class="news-title">${news.title}</h4>
-      <p class="news-excerpt">${news.excerpt}</p>
+      <div class="news-tag">${category}</div>
+      <h4 class="news-title">${news.title || 'Untitled'}</h4>
+      <p class="news-excerpt">${news.excerpt || 'No excerpt available'}</p>
       <button class="news-read-more" onclick="showNewsDetails(${news.id})">
         Read Full Article
         <i class="fas fa-arrow-right"></i>

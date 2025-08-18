@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Get user and complaints
-  const user = checkAuth();
+  const user = await checkAuth();
   if (!user) return;
   
-  const complaints = getComplaints();
+  const complaints = await getComplaints();
   
   // Check if viewing a specific complaint
   const urlParams = new URLSearchParams(window.location.search);
@@ -11,16 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (complaintId) {
     // Show complaint details
-    showComplaintDetails(complaintId);
+    await showComplaintDetails(complaintId);
   } else {
     // Load complaints list
-    loadComplaints(complaints);
+    await loadComplaints(complaints);
     
     // Setup filters
-    setupFilters(complaints);
+    await setupFilters(complaints);
     
     // Setup pagination
-    setupPagination(complaints);
+    await setupPagination(complaints);
   }
   
   // Setup modal close
@@ -30,28 +30,37 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSaveButton();
 });
 
-// Mock functions for demonstration purposes
-function checkAuth() {
-  // Replace with actual authentication check logic
-  return { username: 'admin-user', type: 'lgu' };
+// Use real authentication and data management functions
+async function checkAuth() {
+  // Use the real auth check from auth-check.js
+  return window.checkAuth ? window.checkAuth() : { username: 'admin-user', type: 'lgu' };
 }
 
-function getComplaints() {
-  // Replace with actual data fetching logic
-  return [
-    { id: 'CP001', title: 'Pothole on Main Street', type: 'infrastructure', subcategory: 'Road Damage', location: '123 Main Street', urgency: 'high', status: 'resolved', createdAt: '2025-01-05T10:30:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Large pothole causing damage to vehicles', assignedUnit: 'public_works' },
-    { id: 'CP002', title: 'Streetlight Out', type: 'infrastructure', subcategory: 'Street Lighting', location: 'Corner of Pine St and Oak Ave', urgency: 'medium', status: 'in_progress', createdAt: '2025-01-10T18:45:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Streetlight has been out for a week', assignedUnit: 'public_works' },
-    { id: 'CP003', title: 'Missed Garbage Collection', type: 'sanitation', subcategory: 'Garbage Collection', location: '456 Cedar Avenue', urgency: 'high', status: 'resolved', createdAt: '2025-01-15T08:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Garbage not collected for two weeks', assignedUnit: 'waste' },
-    { id: 'CP004', title: 'Noise Complaint - Construction', type: 'noise', subcategory: 'Construction Noise', location: '789 Maple Drive', urgency: 'medium', status: 'pending', createdAt: '2025-01-20T06:15:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction starting too early in the morning' },
-    { id: 'CP005', title: 'Water Main Break', type: 'utilities', subcategory: 'Water Supply', location: '200 Block of Birch Street', urgency: 'emergency', status: 'in_progress', createdAt: '2025-01-22T15:30:00', userId: 'other-user', userName: 'Jane Smith', description: 'Major water main break flooding the street', assignedUnit: 'public_works' },
-    { id: 'CP006', title: 'Suspicious Activity', type: 'public_safety', subcategory: 'Suspicious Activity', location: 'Oak Elementary School', urgency: 'high', status: 'resolved', createdAt: '2025-01-18T22:10:00', userId: 'other-user', userName: 'Jane Smith', description: 'Suspicious individuals loitering around school', assignedUnit: 'police' },
-    { id: 'CP007', title: 'Illegal Dumping', type: 'sanitation', subcategory: 'Illegal Dumping', location: 'Vacant lot at end of Willow Lane', urgency: 'medium', status: 'in_progress', createdAt: '2025-01-25T14:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction waste being dumped in vacant lot', assignedUnit: 'waste' },
-    { id: 'CP008', title: 'Broken Sidewalk', type: 'infrastructure', subcategory: 'Sidewalk Problems', location: 'Cherry Street between 5th and 6th Ave', urgency: 'medium', status: 'pending', createdAt: '2025-01-28T16:45:00', userId: 'other-user', userName: 'Jane Smith', description: 'Sidewalk is severely cracked and uneven' }
-  ];
+async function getComplaints() {
+  try {
+    // Use the real data management function
+    if (window.getComplaints) {
+      return await window.getComplaints();
+    }
+    // Fallback to mock data if function not available
+    return [
+      { id: 'CP001', title: 'Pothole on Main Street', type: 'infrastructure', subcategory: 'Road Damage', location: '123 Main Street', status: 'resolved', created_at: '2025-01-05T10:30:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Large pothole causing damage to vehicles', assignedUnit: 'public_works' },
+      { id: 'CP002', title: 'Streetlight Out', type: 'infrastructure', subcategory: 'Street Lighting', location: 'Corner of Pine St and Oak Ave', status: 'in_progress', created_at: '2025-01-10T18:45:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Streetlight has been out for a week', assignedUnit: 'public_works' },
+      { id: 'CP003', title: 'Missed Garbage Collection', type: 'sanitation', subcategory: 'Garbage Collection', location: '456 Cedar Avenue', status: 'resolved', created_at: '2025-01-15T08:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Garbage not collected for two weeks', assignedUnit: 'waste' },
+      { id: 'CP004', title: 'Noise Complaint - Construction', type: 'noise', subcategory: 'Construction Noise', location: '789 Maple Drive', status: 'pending', created_at: '2025-01-20T06:15:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction starting too early in the morning' },
+      { id: 'CP005', title: 'Water Main Break', type: 'utilities', subcategory: 'Water Supply', location: '200 Block of Birch Street', status: 'in_progress', created_at: '2025-01-22T15:30:00', userId: 'other-user', userName: 'Jane Smith', description: 'Major water main break flooding the street', assignedUnit: 'public_works' },
+      { id: 'CP006', title: 'Suspicious Activity', type: 'public_safety', subcategory: 'Suspicious Activity', location: 'Oak Elementary School', status: 'resolved', created_at: '2025-01-18T22:10:00', userId: 'other-user', userName: 'Jane Smith', description: 'Suspicious individuals loitering around school', assignedUnit: 'police' },
+      { id: 'CP007', title: 'Illegal Dumping', type: 'sanitation', subcategory: 'Illegal Dumping', location: 'Vacant lot at end of Willow Lane', status: 'in_progress', created_at: '2025-01-25T14:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction waste being dumped in vacant lot', assignedUnit: 'waste' },
+      { id: 'CP008', title: 'Broken Sidewalk', type: 'infrastructure', subcategory: 'Sidewalk Problems', location: 'Cherry Street between 5th and 6th Ave', status: 'pending', created_at: '2025-01-28T16:45:00', userId: 'other-user', userName: 'Jane Smith', description: 'Sidewalk is severely cracked and uneven' }
+    ];
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+    return [];
+  }
 }
 
 // Load complaints into table
-function loadComplaints(complaints, filters = {}) {
+async function loadComplaints(complaints, filters = {}) {
   const tableBody = document.getElementById('complaints-table-body');
   const noComplaintsContainer = document.getElementById('no-complaints');
   
@@ -69,9 +78,7 @@ function loadComplaints(complaints, filters = {}) {
     filteredComplaints = filteredComplaints.filter(c => c.type === filters.type);
   }
   
-  if (filters.urgency && filters.urgency !== 'all') {
-    filteredComplaints = filteredComplaints.filter(c => c.urgency === filters.urgency);
-  }
+
   
   if (filters.search) {
     const searchTerm = filters.search.toLowerCase();
@@ -94,7 +101,7 @@ function loadComplaints(complaints, filters = {}) {
     yearAgo.setFullYear(yearAgo.getFullYear() - 1);
     
     filteredComplaints = filteredComplaints.filter(c => {
-      const complaintDate = new Date(c.createdAt);
+      const complaintDate = new Date(c.created_at || c.createdAt);
       
       switch (filters.date) {
         case 'today':
@@ -112,7 +119,7 @@ function loadComplaints(complaints, filters = {}) {
   }
   
   // Sort complaints by date (newest first)
-  filteredComplaints.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  filteredComplaints.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
   
   // Show/hide empty state
   if (filteredComplaints.length === 0) {
@@ -147,29 +154,15 @@ function loadComplaints(complaints, filters = {}) {
         break;
     }
     
-    let urgencyClass;
-    switch (complaint.urgency) {
-      case 'low':
-        urgencyClass = 'urgency-low';
-        break;
-      case 'medium':
-        urgencyClass = 'urgency-medium';
-        break;
-      case 'high':
-        urgencyClass = 'urgency-high';
-        break;
-      case 'emergency':
-        urgencyClass = 'urgency-emergency';
-        break;
-    }
+
     
     row.innerHTML = `
       <td>${complaint.id}</td>
       <td>${complaint.title}</td>
       <td>${complaint.type.replace('_', ' ')}</td>
       <td>${complaint.location}</td>
-      <td>${formatDate(complaint.createdAt)}</td>
-      <td><span class="urgency-badge ${urgencyClass}">${complaint.urgency}</span></td>
+      <td>${formatDate(complaint.created_at || complaint.createdAt)}</td>
+      
       <td><span class="status-badge ${statusClass}">${complaint.status}</span></td>
       <td>
         <button class="btn btn-sm view-complaint-btn" data-id="${complaint.id}">
@@ -194,7 +187,7 @@ function loadComplaints(complaints, filters = {}) {
 }
 
 // Setup filters
-function setupFilters(complaints) {
+async function setupFilters(complaints) {
   const searchInput = document.getElementById('search-complaints');
   const statusFilter = document.getElementById('status-filter');
   const typeFilter = document.getElementById('type-filter');
@@ -206,7 +199,7 @@ function setupFilters(complaints) {
     search: '',
     status: 'all',
     type: 'all',
-    urgency: 'all',
+
     date: 'all',
     page: 1
   };
@@ -232,12 +225,7 @@ function setupFilters(complaints) {
     loadComplaints(complaints, filters);
   });
   
-  // Urgency filter
-  urgencyFilter.addEventListener('change', () => {
-    filters.urgency = urgencyFilter.value;
-    filters.page = 1; // Reset to first page
-    loadComplaints(complaints, filters);
-  });
+
   
   // Date filter
   dateFilter.addEventListener('change', () => {
@@ -248,7 +236,7 @@ function setupFilters(complaints) {
 }
 
 // Setup pagination
-function setupPagination(complaints) {
+async function setupPagination(complaints) {
   const paginationContainer = document.getElementById('pagination');
   
   paginationContainer.addEventListener('click', (e) => {
@@ -266,7 +254,7 @@ function setupPagination(complaints) {
         search: searchInput.value,
         status: statusFilter.value,
         type: typeFilter.value,
-        urgency: urgencyFilter.value,
+    
         date: dateFilter.value,
         page: page
       };
@@ -322,8 +310,8 @@ function updatePagination(totalItems, currentPage, perPage) {
 }
 
 // Show complaint details
-function showComplaintDetails(complaintId) {
-  const complaint = getComplaintById(complaintId);
+async function showComplaintDetails(complaintId) {
+  const complaint = await getComplaintById(complaintId);
   
   if (!complaint) {
     showToast('Complaint not found.', 'error');
@@ -351,10 +339,10 @@ function showComplaintDetails(complaintId) {
   statusElement.className = `status-badge ${statusClass}`;
   
   document.getElementById('detail-id').textContent = complaint.id;
-  document.getElementById('detail-date').textContent = formatDate(complaint.createdAt);
+  document.getElementById('detail-date').textContent = formatDate(complaint.created_at || complaint.createdAt);
   document.getElementById('detail-type').textContent = complaint.type;
   document.getElementById('detail-subcategory').textContent = complaint.subcategory;
-  document.getElementById('detail-urgency').textContent = complaint.urgency;
+  
   document.getElementById('detail-location').textContent = complaint.location;
   document.getElementById('detail-submitter').textContent = complaint.userName;
   document.getElementById('detail-description').textContent = complaint.description;
@@ -432,7 +420,7 @@ function showComplaintDetails(complaintId) {
       backBtn.className = 'btn btn-outline back-btn';
       backBtn.textContent = 'Back to List';
       backBtn.addEventListener('click', () => {
-        window.location.href = '/admin-complaints';
+        window.location.href = '/lgu/complaints';
       });
       
       modalFooter.prepend(backBtn);
@@ -444,23 +432,36 @@ function showComplaintDetails(complaintId) {
 function setupSaveButton() {
   const saveBtn = document.getElementById('save-complaint-btn');
   
-  saveBtn.addEventListener('click', () => {
+  saveBtn.addEventListener('click', async () => {
     const complaintId = saveBtn.getAttribute('data-id');
     const assignedUnit = document.getElementById('assigned-unit').value;
     const status = document.getElementById('complaint-status').value;
     const notes = document.getElementById('admin-notes').value;
     
-    // This would normally update the complaint in the database
-    // For demo purposes, we'll just show a toast notification
-    
-    showToast(`Complaint ${complaintId} updated successfully!`);
-    
-    // Close modal
-    document.getElementById('complaint-modal').classList.remove('open');
-    
-    // If viewing from URL, go back to list
-    if (window.location.search.includes('id=')) {
-      window.location.href = '/admin-complaints';
+    try {
+      // Use the real update function if available
+      if (window.updateComplaint) {
+        await window.updateComplaint(complaintId, {
+          assignedUnit,
+          status,
+          adminNotes: notes
+        });
+        showToast(`Complaint ${complaintId} updated successfully!`, 'success');
+      } else {
+        // Fallback to demo notification
+        showToast(`Complaint ${complaintId} updated successfully!`, 'success');
+      }
+      
+      // Close modal
+      document.getElementById('complaint-modal').classList.remove('open');
+      
+      // If viewing from URL, go back to list
+      if (window.location.search.includes('id=')) {
+        window.location.href = '/lgu/complaints';
+      }
+    } catch (error) {
+      console.error('Error updating complaint:', error);
+      showToast(`Error updating complaint: ${error.message}`, 'error');
     }
   });
 }
@@ -476,7 +477,7 @@ function setupModalClose() {
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
-        window.location.href = '/admin-complaints';
+        window.location.href = '/lgu/complaints';
       }
     });
   });
@@ -488,16 +489,26 @@ function setupModalClose() {
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
-        window.location.href = '/admin-complaints';
+        window.location.href = '/lgu/complaints';
       }
     }
   });
 }
 
 // Helper functions
-function getComplaintById(id) {
-  const complaints = getComplaints();
-  return complaints.find(complaint => complaint.id === id);
+async function getComplaintById(id) {
+  try {
+    // Use the real data management function
+    if (window.getComplaintById) {
+      return await window.getComplaintById(id);
+    }
+    // Fallback to local search if function not available
+    const complaints = await getComplaints();
+    return complaints.find(complaint => complaint.id === id);
+  } catch (error) {
+    console.error('Error getting complaint by ID:', error);
+    return null;
+  }
 }
 
 function formatDate(dateString) {

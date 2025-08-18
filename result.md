@@ -1,0 +1,9 @@
+| schemaname | tablename  | policyname               | permissive | roles    | cmd    | qual                                                                                                                                                                                                                                                   |
+| ---------- | ---------- | ------------------------ | ---------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| public     | complaints | complaints_select_policy | PERMISSIVE | {public} | SELECT | ((EXISTS ( SELECT 1
+   FROM auth.users
+  WHERE ((users.id = ( SELECT auth.uid() AS uid)) AND ((users.raw_user_meta_data ->> 'type'::text) = ANY (ARRAY['lgu'::text, 'lgu_admin'::text, 'admin'::text]))))) OR (( SELECT auth.uid() AS uid) = user_id)) |
+| public     | complaints | complaints_insert_policy | PERMISSIVE | {public} | INSERT | null                                                                                                                                                                                                                                                   |
+| public     | complaints | complaints_update_policy | PERMISSIVE | {public} | UPDATE | ((EXISTS ( SELECT 1
+   FROM auth.users
+  WHERE ((users.id = ( SELECT auth.uid() AS uid)) AND ((users.raw_user_meta_data ->> 'type'::text) = ANY (ARRAY['lgu'::text, 'lgu_admin'::text, 'admin'::text]))))) OR (( SELECT auth.uid() AS uid) = user_id)) |

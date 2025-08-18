@@ -1,10 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get user
-  const user = checkAuth();
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize user data using shared utilities
+  const user = await window.userUtils.initializeUserData();
   if (!user) return;
   
   // Get complaints
-  const complaints = getComplaintsByUserId(user.username);
+  const complaints = await getComplaintsByUserId(user.username);
   
   // Check if viewing a specific complaint
   const urlParams = new URLSearchParams(window.location.search);
@@ -384,19 +384,41 @@ function setupModalClose() {
   });
 }
 
-// Mock functions for demonstration purposes.  Replace with actual implementations.
-function checkAuth() {
-    // Replace with actual authentication check logic
-    return { username: 'testuser' };
+// Authentication and data fetching functions
+async function checkAuth() {
+    try {
+        // Check if user is authenticated
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        if (!user.id) {
+            console.log('No authenticated user found');
+            return null;
+        }
+        return { username: user.email, id: user.id };
+    } catch (error) {
+        console.error('Error checking auth:', error);
+        return null;
+    }
 }
 
-function getComplaintsByUserId(userId) {
-    // Replace with actual data fetching logic
-    return [
-        { id: '1', title: 'Pothole Complaint', description: 'Large pothole on Main St', location: 'Main St', status: 'pending', createdAt: '2024-01-20', type: 'Road Maintenance', subcategory: 'Pothole', urgency: 'High', assignedUnit: 'roads', timeline: [{ action: 'Complaint submitted', date: '2024-01-20T10:00:00', actor: 'testuser' }] },
-        { id: '2', title: 'Noise Complaint', description: 'Loud music at night', location: 'Apartment Building', status: 'in_progress', createdAt: '2024-02-15', type: 'Noise Violation', subcategory: 'Loud Music', urgency: 'Medium', assignedUnit: 'police', timeline: [{ action: 'Complaint submitted', date: '2024-02-15T22:00:00', actor: 'testuser' }, { action: 'Assigned to officer', date: '2024-02-16T08:00:00', actor: 'admin' }] },
-        { id: '3', title: 'Trash Complaint', description: 'Uncollected trash', location: 'Residential Area', status: 'resolved', createdAt: '2023-12-01', type: 'Sanitation', subcategory: 'Trash Collection', urgency: 'Low', assignedUnit: 'sanitation', timeline: [{ action: 'Complaint submitted', date: '2023-12-01T14:00:00', actor: 'testuser' }, { action: 'Trash collected', date: '2023-12-02T12:00:00', actor: 'worker' }, { action: 'Complaint resolved', date: '2023-12-02T12:30:00', actor: 'admin' }] }
-    ];
+async function getComplaintsByUserId(userId) {
+    try {
+        // Use the global complaints function if available
+        if (window.getComplaints) {
+            const allComplaints = await window.getComplaints();
+            // Filter by user ID
+            return allComplaints.filter(complaint => complaint.user_id === userId);
+        }
+        
+        // Fallback to mock data
+        return [
+            { id: '1', title: 'Pothole Complaint', description: 'Large pothole on Main St', location: 'Main St', status: 'pending', created_at: '2024-01-20', type: 'Road Maintenance', subcategory: 'Pothole', urgency: 'High', assigned_unit: 'roads', timeline: [{ action: 'Complaint submitted', date: '2024-01-20T10:00:00', actor: 'testuser' }] },
+            { id: '2', title: 'Noise Complaint', description: 'Loud music at night', location: 'Apartment Building', status: 'in_progress', created_at: '2024-02-15', type: 'Noise Violation', subcategory: 'Loud Music', urgency: 'Medium', assigned_unit: 'police', timeline: [{ action: 'Complaint submitted', date: '2024-02-15T22:00:00', actor: 'testuser' }, { action: 'Assigned to officer', date: '2024-02-16T08:00:00', actor: 'admin' }] },
+            { id: '3', title: 'Trash Complaint', description: 'Uncollected trash', location: 'Residential Area', status: 'resolved', created_at: '2023-12-01', type: 'Sanitation', subcategory: 'Trash Collection', urgency: 'Low', assigned_unit: 'sanitation', timeline: [{ action: 'Complaint submitted', date: '2023-12-01T14:00:00', actor: 'testuser' }, { action: 'Trash collected', date: '2023-12-02T12:00:00', actor: 'worker' }, { action: 'Complaint resolved', date: '2023-12-02T12:30:00', actor: 'admin' }] }
+        ];
+    } catch (error) {
+        console.error('Error fetching complaints:', error);
+        return [];
+    }
 }
 
 const ComplaintStatus = {

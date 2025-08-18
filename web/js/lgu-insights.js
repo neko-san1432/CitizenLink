@@ -1,6 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Get user and complaints
-  const user = checkAuth();
+  const user = await checkAuth();
   if (!user) return;
   
   // Initialize charts
@@ -10,10 +10,27 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDateRangeFilter();
 });
 
-// Mock functions for demonstration purposes
-function checkAuth() {
-  // Replace with actual authentication check logic
-  return { username: 'admin-user', type: 'lgu' };
+// Authentication function
+async function checkAuth() {
+  try {
+    // Check if user is authenticated
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    if (!user.id) {
+      console.log('No authenticated user found');
+      return null;
+    }
+    
+    // Check if user is LGU type
+    if (user.type !== 'lgu' && user.role !== 'lgu' && user.role !== 'admin') {
+      console.log('User not authorized for LGU insights');
+      return null;
+    }
+    
+    return { username: user.email, type: user.type || user.role };
+  } catch (error) {
+    console.error('Error checking auth:', error);
+    return null;
+  }
 }
 
 // Initialize charts

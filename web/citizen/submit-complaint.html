@@ -20,11 +20,19 @@
 
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle" id="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/dashboard" class="logo-link">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">Loading...</span></span>
                 </div>
             </header>
 
@@ -86,6 +94,26 @@
                             </div>
                             
                             <div class="mb-3">
+                                <label class="form-label">Location Coordinates (for Heatmap)</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="latitude" class="form-label small">Latitude</label>
+                                        <input type="number" class="form-control" id="latitude" name="latitude" step="any" placeholder="e.g., 14.5995" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="longitude" class="form-label small">Longitude</label>
+                                        <input type="number" class="form-control" id="longitude" name="longitude" step="any" placeholder="e.g., 120.9842" readonly>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="get-location-btn">
+                                        <i class="fas fa-location-arrow"></i> Get Current Location
+                                    </button>
+                                    <small class="text-muted ms-2">Click to automatically get your current location coordinates</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
                                 <label for="complaint-description" class="form-label">Description</label>
                                 <textarea class="form-control" id="complaint-description" name="description" rows="5" placeholder="Provide a detailed description of your complaint" required></textarea>
                             </div>
@@ -108,10 +136,12 @@
     </div>
 
     <div id="toast" class="toast"></div>
-
-    <script src="/js/data.js"></script>
-    <script src="/js/auth-check.js"></script>
-    <script src="/js/sidebar-loader.js"></script>
-    <script src="/js/submit-complaint.js"></script>
+    <script src="../js/supabase-bridge.js"></script>
+    <script src="../js/supabase-init.js"></script>
+    <script src="../js/user-utils.js"></script>
+    <script src="../js/data-management.js"></script>
+    <script src="../js/auth-check.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/submit-complaint.js"></script>
 </body>
 </html>

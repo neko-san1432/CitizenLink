@@ -10,6 +10,11 @@ const __dirname = path.dirname(__filename); // Get the directory of the current 
 
 const app = express();
 
+// ===== SIMPLE TEST ROUTE (at the very beginning) =====
+app.get('/ping', (req, res) => {
+  res.json({ message: 'pong', timestamp: new Date().toISOString() });
+});
+
 // Development mode - more permissive CSP for development
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -163,59 +168,46 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== SUPABASE CLIENT CONFIGURATION (must come BEFORE generic /js/* static route) =====
 // Serve client-side Supabase configuration with proper credentials from server-side db.js
-app.get('/js/supabase-config.js', async (req, res) => {
+app.get('./js/supabase-bridge.js', async (req, res) => {
+  console.log('🔗 Serving supabase-bridge.js...');
   try {
     // Import the server-side config to get credentials
-    const { supabaseConfig } = await import('./auth-db/db.js');
+    console.log('📦 Attempting to import from ./db/db.js...');
+    const { supabaseConfig } = await import('./db/db.js');
+    console.log('✅ Successfully imported supabaseConfig:', { 
+      url: supabaseConfig.url ? 'URL exists' : 'URL missing',
+      anonKey: supabaseConfig.anonKey ? 'Key exists' : 'Key missing'
+    });
 
-    const configScript = `
-// Client-side Supabase configuration (served by server.js)
-const SUPABASE_URL = '${supabaseConfig.url}';
-const SUPABASE_ANON_KEY = '${supabaseConfig.anonKey}';
-
-let supabaseClient = null;
-
-async function initializeSupabaseClient() {
-  try {
-    if (typeof window.supabase !== 'undefined') {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('Supabase client initialized');
-      return supabaseClient;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js';
-    script.onload = () => {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('Supabase loaded from CDN and initialized');
-      window.dispatchEvent(new CustomEvent('supabaseReady'));
-    };
-    script.onerror = () => {
-      console.error('Failed to load Supabase from CDN');
-    };
-    document.head.appendChild(script);
-  } catch (error) {
-    console.error('Error initializing Supabase client:', error);
-  }
-}
-
-function getSupabaseClient() {
-  return supabaseClient;
-}
-
-window.initializeSupabaseClient = initializeSupabaseClient;
-window.getSupabaseClient = getSupabaseClient;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
-
-if (typeof document !== 'undefined') {
-  initializeSupabaseClient();
-}
-    `;
-
+    console.log('📤 Sending JavaScript response...');
     res.setHeader('Content-Type', 'application/javascript');
-    res.send(configScript);
+
+    console.log('✅ JavaScript response sent successfully');
   } catch (error) {
     console.error('Error serving Supabase config:', error);
+    // Return JavaScript even on error to avoid MIME type issues
+    res.setHeader('Content-Type', 'application/javascript');
+    res.status(500).send(`
+      console.error('Failed to load Supabase configuration: ${error.message}');
+      // Provide fallback or error handling
+      window.supabaseBridgeError = '${error.message}';
+    `);
+  }
+});
+
+// ===== SUPABASE API ENDPOINT =====
+// API endpoint to get Supabase configuration (for the bridge)
+app.get('/api/supabase-bridge', async (req, res) => {
+  try {
+    // Import the server-side config to get credentials
+    const { supabaseConfig } = await import('./db/db.js');
+    
+    res.json({
+      url: supabaseConfig.url,
+      anonKey: supabaseConfig.anonKey
+    });
+  } catch (error) {
+    console.error('Error serving Supabase API config:', error);
     res.status(500).json({ error: 'Failed to load Supabase configuration' });
   }
 });
@@ -293,6 +285,40 @@ app.get('/lgu/insights', (req, res) => {
   res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
 });
 
+
+
+app.get('/lgu/news', (req, res) => {
+  console.log('🔗 News management route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'news.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu/notices', (req, res) => {
+  console.log('🔗 Notices route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'notices.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu/events', (req, res) => {
+  console.log('🔗 Events route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'events.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu/profile', (req, res) => {
+  console.log('🔗 LGU profile route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'profile.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', filePath);
+  res.sendFile(filePath);
+});
+
 // ===== NEW ROUTES WITHOUT FOLDER NAMES =====
 // Citizen routes without folder names
 app.get('/dashboard', (req, res) => {
@@ -364,6 +390,53 @@ app.get('/lgu-insights', (req, res) => {
   res.sendFile(path.join(__dirname, 'lgu', 'insights.html'));
 });
 
+
+
+app.get('/lgu-news', (req, res) => {
+  console.log('🔗 Legacy news route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'news.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu-notices', (req, res) => {
+  console.log('🔗 Legacy notices route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'notices.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu-events', (req, res) => {
+  console.log('🔗 Legacy events route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'events.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+app.get('/lgu-profile', (req, res) => {
+  console.log('🔗 Legacy profile route accessed:', req.path);
+  const filePath = path.join(__dirname, 'lgu', 'profile.html');
+  console.log('📁 Serving file:', filePath);
+  console.log('📂 File exists:', existsSync(filePath));
+  res.sendFile(filePath);
+});
+
+// ===== BRIDGE TEST ROUTE =====
+app.get('/bridge-test', (req, res) => {
+  console.log('🔗 Bridge test route accessed!');
+  console.log('__dirname:', __dirname);
+  console.log('File path:', path.join(__dirname, 'bridge-test.html'));
+  res.sendFile(path.join(__dirname, 'bridge-test.html'));
+});
+
+// Simple test route
+app.get('/test-route', (req, res) => {
+  res.json({ message: 'Test route works!', timestamp: new Date().toISOString() });
+});
+
 // ===== COMPONENT ROUTES =====
 // Serve sidebar components
 app.get('/components/:filename(*)', (req, res) => {
@@ -377,6 +450,51 @@ app.get('/components/:filename(*)', (req, res) => {
   
   res.setHeader('Content-Type', 'text/html');
   res.sendFile(filePath);
+});
+
+// Debug route to see all available routes
+app.get('/debug-routes', (req, res) => {
+    const routes = [];
+    app._router.stack.forEach(middleware => {
+        if (middleware.route) {
+            routes.push({
+                path: middleware.route.path,
+                methods: Object.keys(middleware.route.methods)
+            });
+        }
+    });
+    res.json({ routes, __dirname, currentDir: process.cwd() });
+});
+
+// Serve border locations JSON file
+app.get('/lgu/border_locations.json', (req, res) => {
+    console.log('🗺️ Border locations JSON requested:', req.path);
+    const filePath = path.join(__dirname, 'lgu', 'border_locations.json');
+    console.log('📁 Serving border file:', filePath);
+    console.log('📂 File exists:', existsSync(filePath));
+    
+    if (existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/json');
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: 'Border locations file not found' });
+    }
+});
+
+// Serve any JSON files from LGU folder
+app.get('/lgu/*.json', (req, res) => {
+    console.log('📄 JSON file requested:', req.path);
+    const fileName = req.path.split('/').pop();
+    const filePath = path.join(__dirname, 'lgu', fileName);
+    console.log('📁 Serving JSON file:', filePath);
+    console.log('📂 File exists:', existsSync(filePath));
+    
+    if (existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/json');
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: `JSON file ${fileName} not found` });
+    }
 });
 
 // ===== STATIC ASSET ROUTES (moved to end to avoid conflicts) =====
@@ -453,6 +571,15 @@ app.use((err, req, res, next) => {
     next(err);
   }
 });
+
+// ===== STATIC FILE SERVING =====
+// Serve static HTML files
+// app.get('/*.html', (req, res) => {
+//   const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+//   const filePath = path.join(__dirname, relativePath);
+//   res.setHeader('Content-Type', 'text/html');
+//   res.sendFile(filePath);
+// });
 
 // 404 handler - show error instead of redirecting
 app.use((req, res) => {

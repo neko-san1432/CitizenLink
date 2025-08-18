@@ -1,548 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta
-      name="description"
-      content="Sign up for CitizenLink - Create your citizen account to submit and track complaints. Join our digital transformation platform for better government-citizen communication."
-    />
-    <meta
-      name="permissions-policy"
-      content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()"
-    />
-    <title>Sign Up - CitizenLink</title>
-    <!-- Bootstrap CSS -->
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="css/styles.css" />
-    <!-- Custom styles for overrides -->
-    <link rel="stylesheet" href="css/additional-styles.css" />
-  </head>
-  <body class="bg-light">
-    <div class="signup-container">
-      <div class="signup-form-container">
-          <!-- Header -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description"
+    content="Sign up for CitizenLink - Create your citizen account to submit and track complaints. Join our digital transformation platform for better government-citizen communication." />
+  <meta name="permissions-policy"
+    content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()" />
+  <title>Sign Up - CitizenLink</title>
+  <!-- Bootstrap CSS -->
+  <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Custom styles for overrides -->
+  <link rel="stylesheet" href="css/additional-styles.css" />
+</head>
+
+<body class="bg-light">
+  <div class="signup-container">
+    <div class="signup-form-container">
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <a href="/" class="text-decoration-none">
+          <div class="d-inline-flex align-items-center mb-3">
+            <i class="fas fa-shield-alt text-primary me-2" style="font-size: 2rem"></i>
+            <span class="h3 fw-bold text-dark mb-0">CitizenLink</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Signup Form -->
+      <div class="card border-0 shadow">
+        <div class="card-body p-3 p-md-4 p-lg-5">
           <div class="text-center mb-4">
-            <a href="/" class="text-decoration-none">
-              <div class="d-inline-flex align-items-center mb-3">
-                <i
-                  class="fas fa-shield-alt text-primary me-2"
-                  style="font-size: 2rem"
-                ></i>
-                <span class="h3 fw-bold text-dark mb-0">CitizenLink</span>
+            <h2 class="h4 fw-bold">Create an Account</h2>
+            <p class="text-muted">
+              Sign up for a citizen account to submit and track complaints.
+            </p>
+          </div>
+
+          <form id="signup-form">
+            <div class="row">
+              <div class="col-12 mb-3">
+                <label for="fullName" class="form-label fw-semibold">Full Name</label>
+                <input type="text" class="form-control form-control-lg" id="fullName" name="fullName"
+                  placeholder="Enter your full name" required />
               </div>
-            </a>
-          </div>
-
-          <!-- Signup Form -->
-          <div class="card border-0 shadow">
-            <div class="card-body p-3 p-md-4 p-lg-5">
-              <div class="text-center mb-4">
-                <h2 class="h4 fw-bold">Create an Account</h2>
-                                <p class="text-muted">
-                  Sign up for a citizen account to submit and track complaints.
-                </p>
+              <div class="col-12 mb-3">
+                <label for="email" class="form-label fw-semibold">Email Address</label>
+                <input type="email" class="form-control form-control-lg" id="email" name="email"
+                  placeholder="Enter your email address" required />
               </div>
-
-              <form id="signup-form">
-                <div class="row">
-                  <div class="col-12 mb-3">
-                    <label for="fullName" class="form-label fw-semibold"
-                      >Full Name</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control form-control-lg"
-                      id="fullName"
-                      name="fullName"
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-                  <div class="col-12 mb-3">
-                    <label for="email" class="form-label fw-semibold"
-                      >Email Address</label
-                    >
-                    <input
-                      type="email"
-                      class="form-control form-control-lg"
-                      id="email"
-                      name="email"
-                      placeholder="Enter your email address"
-                      required
-                    />
-                  </div>
-                  <div class="col-12 mb-3">
-                    <label for="username" class="form-label fw-semibold"
-                      >Username</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control form-control-lg"
-                      id="username"
-                      name="username"
-                      placeholder="Choose a username"
-                      required
-                    />
-                  </div>
-                  <div class="col-12 mb-3">
-                    <label for="phone" class="form-label fw-semibold"
-                      >Phone Number</label
-                    >
-                    <input
-                      type="tel"
-                      class="form-control form-control-lg"
-                      id="phone"
-                      name="phone"
-                      placeholder="Enter your phone number"
-                      required
-                    />
-                  </div>
-                  <div class="col-12 col-md-6 mb-3">
-                    <label for="password" class="form-label fw-semibold"
-                      >Password</label
-                    >
-                    <input
-                      type="password"
-                      class="form-control form-control-lg"
-                      id="password"
-                      name="password"
-                      placeholder="Create a password"
-                      required
-                    />
-                  </div>
-                  <div class="col-12 col-md-6 mb-4">
-                    <label for="confirmPassword" class="form-label fw-semibold"
-                      >Confirm Password</label
-                    >
-                    <input
-                      type="password"
-                      class="form-control form-control-lg"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      placeholder="Confirm your password"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <!-- Terms and Agreement Section -->
-                <div class="mb-3">
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="termsAgreement"
-                      required
-                    />
-                    <label class="form-check-label" for="termsAgreement">
-                      I agree to the
-                      <a
-                        href="#"
-                        data-bs-toggle="modal"
-                        data-bs-target="#termsModal"
-                        class="text-decoration-none"
-                        >Terms of Service</a
-                      >
-                      and
-                      <a
-                        href="#"
-                        data-bs-toggle="modal"
-                        data-bs-target="#privacyModal"
-                        class="text-decoration-none"
-                        >Privacy Policy</a
-                      >
-                    </label>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
-                  Sign Up 
-                </button>
-
-                <div class="text-center">
-                  <p class="mb-0">
-                    Already have an account?
-                    <a href="/login" class="text-decoration-none">Log in</a>
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div
-        id="toast"
-        class="toast"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="toast-header">
-          <strong class="me-auto" id="toast-title">Notification</strong>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-          ></button>
-        </div>
-        <div class="toast-body" id="toast-message"></div>
-      </div>
-    </div>
-
-    <!-- Terms of Service Modal -->
-    <div
-      class="modal fade"
-      id="termsModal"
-      tabindex="-1"
-      aria-labelledby="termsModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="termsModalLabel">
-              <i class="fas fa-file-contract text-primary me-2"></i>
-              Terms of Service
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div class="terms-content">
-              <h6 class="fw-bold text-primary">1. Acceptance of Terms</h6>
-              <p>
-                By accessing and using CitizenLink, you accept and agree to be
-                bound by the terms and provisions of this agreement. If you do
-                not agree to these terms, please do not use our service.
-              </p>
-
-              <h6 class="fw-bold text-primary">2. Service Description</h6>
-              <p>
-                CitizenLink is a digital platform designed to facilitate
-                communication between citizens and local government units (LGUs)
-                for submitting, tracking, and managing complaints and service
-                requests.
-              </p>
-
-              <h6 class="fw-bold text-primary">3. User Responsibilities</h6>
-              <ul>
-                <li>
-                  Provide accurate, truthful, and complete information when
-                  submitting complaints
-                </li>
-                <li>
-                  Use the platform for legitimate complaints and service
-                  requests only
-                </li>
-                <li>
-                  Respect the privacy and rights of other users and government
-                  personnel
-                </li>
-                <li>
-                  Follow all applicable local, national, and international laws
-                  and regulations
-                </li>
-                <li>
-                  Maintain the security and confidentiality of your account
-                  credentials
-                </li>
-                <li>
-                  Report any suspicious or inappropriate activities immediately
-                </li>
-              </ul>
-
-              <h6 class="fw-bold text-primary">4. Prohibited Activities</h6>
-              <p>Users are strictly prohibited from:</p>
-              <ul>
-                <li>Submitting false, misleading, or fraudulent complaints</li>
-                <li>
-                  Using the platform for harassment, defamation, or personal
-                  attacks
-                </li>
-                <li>
-                  Attempting to gain unauthorized access to the system or other
-                  users' accounts
-                </li>
-                <li>
-                  Uploading malicious content, viruses, or inappropriate
-                  materials
-                </li>
-                <li>
-                  Violating intellectual property rights or copyright laws
-                </li>
-              </ul>
-
-              <h6 class="fw-bold text-primary">5. Platform Usage Guidelines</h6>
-              <ul>
-                <li>Complaints should be specific, factual, and actionable</li>
-                <li>
-                  Include relevant details such as location, time, and
-                  supporting evidence when possible
-                </li>
-                <li>
-                  Use appropriate language and maintain professional
-                  communication
-                </li>
-                <li>
-                  Follow up on complaints through the platform rather than
-                  creating duplicate submissions
-                </li>
-              </ul>
-
-              <h6 class="fw-bold text-primary">
-                6. Privacy and Data Protection
-              </h6>
-              <p>
-                Your personal information will be handled according to our
-                Privacy Policy and in compliance with applicable data protection
-                laws, including the Data Privacy Act of 2012 (Republic Act No.
-                10173).
-              </p>
-
-              <h6 class="fw-bold text-primary">7. Service Availability</h6>
-              <p>
-                CitizenLink is provided "as is" and "as available." We strive to
-                maintain high service availability but cannot guarantee
-                uninterrupted access due to maintenance, technical issues, or
-                other factors beyond our control.
-              </p>
-
-              <h6 class="fw-bold text-primary">8. Limitation of Liability</h6>
-              <p>
-                CitizenLink and its operators shall not be liable for any
-                indirect, incidental, special, consequential, or punitive
-                damages arising from your use of the service.
-              </p>
-
-              <h6 class="fw-bold text-primary">9. Account Termination</h6>
-              <p>
-                We reserve the right to suspend or terminate accounts that
-                violate these terms, engage in fraudulent activities, or misuse
-                the platform. Users may also request account deletion at any
-                time.
-              </p>
-
-              <h6 class="fw-bold text-primary">10. Changes to Terms</h6>
-              <p>
-                These terms may be updated periodically. Users will be notified
-                of significant changes, and continued use of the platform
-                constitutes acceptance of the updated terms.
-              </p>
-
-              <h6 class="fw-bold text-primary">11. Contact Information</h6>
-              <p>
-                For questions about these terms or to report violations, please
-                contact our support team through the platform or at
-                support@citizenlink.gov.ph
-              </p>
-
-              <div class="alert alert-info mt-3">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Note:</strong> These terms are effective as of the date
-                of your registration and apply to all users of the CitizenLink
-                platform.
+              <div class="col-12 mb-3">
+                <label for="username" class="form-label fw-semibold">Username</label>
+                <input type="text" class="form-control form-control-lg" id="username" name="username"
+                  placeholder="Choose a username" required />
+              </div>
+              <div class="col-12 mb-3">
+                <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                <input type="tel" class="form-control form-control-lg" id="phone" name="phone"
+                  placeholder="Enter your phone number" required />
+              </div>
+              <div class="col-12 col-md-6 mb-3">
+                <label for="password" class="form-label fw-semibold">Password</label>
+                <input type="password" class="form-control form-control-lg" id="password" name="password"
+                  placeholder="Create a password" required />
+              </div>
+              <div class="col-12 col-md-6 mb-4">
+                <label for="confirmPassword" class="form-label fw-semibold">Confirm Password</label>
+                <input type="password" class="form-control form-control-lg" id="confirmPassword" name="confirmPassword"
+                  placeholder="Confirm your password" required />
               </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-dismiss="modal"
-            >
-              <i class="fas fa-check me-2"></i>
-              I Understand
+
+            <!-- Terms and Agreement Section -->
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="termsAgreement" required />
+                <label class="form-check-label" for="termsAgreement">
+                  I agree to the
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-decoration-none">Terms of
+                    Service</a>
+                  and
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-decoration-none">Privacy
+                    Policy</a>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+              Sign Up
             </button>
-          </div>
+
+            <div class="text-center">
+              <p class="mb-0">
+                Already have an account?
+                <a href="/login" class="text-decoration-none">Log in</a>
+              </p>
+            </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
+  </div>
 
-    <!-- Privacy Policy Modal -->
-    <div
-      class="modal fade"
-      id="privacyModal"
-      tabindex="-1"
-      aria-labelledby="privacyModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="privacyModalLabel">
-              <i class="fas fa-shield-alt text-primary me-2"></i>
-              Privacy Policy
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div class="privacy-content">
-              <h6 class="fw-bold text-primary">1. Information We Collect</h6>
-              <p>We collect the following types of information:</p>
-              <ul>
-                <li>
-                  <strong>Personal Information:</strong> Name, email address,
-                  phone number, and username
-                </li>
-                <li>
-                  <strong>Complaint Data:</strong> Details of complaints,
-                  location information, and supporting documents
-                </li>
-                <li>
-                  <strong>Usage Data:</strong> Login times, pages visited, and
-                  interaction patterns
-                </li>
-                <li>
-                  <strong>Technical Data:</strong> IP address, browser type, and
-                  device information
-                </li>
-              </ul>
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto" id="toast-title">Notification</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="toast-body" id="toast-message"></div>
+    </div>
+  </div>
 
-              <h6 class="fw-bold text-primary">
-                2. How We Use Your Information
-              </h6>
-              <p>Your information is used to:</p>
-              <ul>
-                <li>Process and track your complaints and service requests</li>
-                <li>
-                  Communicate with you about the status of your submissions
-                </li>
-                <li>Improve our services and user experience</li>
-                <li>Ensure platform security and prevent fraud</li>
-                <li>Comply with legal and regulatory requirements</li>
-              </ul>
+  <!-- Terms of Service Modal -->
+  <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="termsModalLabel">
+            <i class="fas fa-file-contract text-primary me-2"></i>
+            Terms of Service
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="terms-content">
+            <h6 class="fw-bold text-primary">1. Acceptance of Terms</h6>
+            <p>
+              By accessing and using CitizenLink, you accept and agree to be
+              bound by the terms and provisions of this agreement. If you do
+              not agree to these terms, please do not use our service.
+            </p>
 
-              <h6 class="fw-bold text-primary">3. Information Sharing</h6>
-              <p>We may share your information with:</p>
-              <ul>
-                <li>
-                  <strong>Local Government Units:</strong> To process and
-                  address your complaints
-                </li>
-                <li>
-                  <strong>Service Providers:</strong> For technical support and
-                  platform maintenance
-                </li>
-                <li>
-                  <strong>Legal Authorities:</strong> When required by law or to
-                  protect rights and safety
-                </li>
-              </ul>
-              <p>
-                <strong
-                  >We do not sell, rent, or trade your personal information to
-                  third parties.</strong
-                >
-              </p>
+            <h6 class="fw-bold text-primary">2. Service Description</h6>
+            <p>
+              CitizenLink is a digital platform designed to facilitate
+              communication between citizens and local government units (LGUs)
+              for submitting, tracking, and managing complaints and service
+              requests.
+            </p>
 
-              <h6 class="fw-bold text-primary">4. Data Security</h6>
-              <p>
-                We implement appropriate security measures to protect your
-                information:
-              </p>
-              <ul>
-                <li>Encryption of data in transit and at rest</li>
-                <li>Regular security audits and updates</li>
-                <li>Access controls and authentication requirements</li>
-                <li>Secure data centers and infrastructure</li>
-              </ul>
+            <h6 class="fw-bold text-primary">3. User Responsibilities</h6>
+            <ul>
+              <li>
+                Provide accurate, truthful, and complete information when
+                submitting complaints
+              </li>
+              <li>
+                Use the platform for legitimate complaints and service
+                requests only
+              </li>
+              <li>
+                Respect the privacy and rights of other users and government
+                personnel
+              </li>
+              <li>
+                Follow all applicable local, national, and international laws
+                and regulations
+              </li>
+              <li>
+                Maintain the security and confidentiality of your account
+                credentials
+              </li>
+              <li>
+                Report any suspicious or inappropriate activities immediately
+              </li>
+            </ul>
 
-              <h6 class="fw-bold text-primary">5. Data Retention</h6>
-              <p>We retain your information for as long as necessary to:</p>
-              <ul>
-                <li>Provide our services and maintain your account</li>
-                <li>Comply with legal and regulatory requirements</li>
-                <li>Resolve disputes and enforce agreements</li>
-              </ul>
+            <h6 class="fw-bold text-primary">4. Prohibited Activities</h6>
+            <p>Users are strictly prohibited from:</p>
+            <ul>
+              <li>Submitting false, misleading, or fraudulent complaints</li>
+              <li>
+                Using the platform for harassment, defamation, or personal
+                attacks
+              </li>
+              <li>
+                Attempting to gain unauthorized access to the system or other
+                users' accounts
+              </li>
+              <li>
+                Uploading malicious content, viruses, or inappropriate
+                materials
+              </li>
+              <li>
+                Violating intellectual property rights or copyright laws
+              </li>
+            </ul>
 
-              <h6 class="fw-bold text-primary">6. Your Rights</h6>
-              <p>You have the right to:</p>
-              <ul>
-                <li>Access and review your personal information</li>
-                <li>Request corrections to inaccurate data</li>
-                <li>Request deletion of your account and data</li>
-                <li>Opt out of non-essential communications</li>
-                <li>File a complaint with the National Privacy Commission</li>
-              </ul>
+            <h6 class="fw-bold text-primary">5. Platform Usage Guidelines</h6>
+            <ul>
+              <li>Complaints should be specific, factual, and actionable</li>
+              <li>
+                Include relevant details such as location, time, and
+                supporting evidence when possible
+              </li>
+              <li>
+                Use appropriate language and maintain professional
+                communication
+              </li>
+              <li>
+                Follow up on complaints through the platform rather than
+                creating duplicate submissions
+              </li>
+            </ul>
 
-              <h6 class="fw-bold text-primary">7. Cookies and Tracking</h6>
-              <p>
-                We use essential cookies to maintain your session and improve
-                platform functionality. We do not use tracking cookies for
-                advertising purposes.
-              </p>
+            <h6 class="fw-bold text-primary">
+              6. Privacy and Data Protection
+            </h6>
+            <p>
+              Your personal information will be handled according to our
+              Privacy Policy and in compliance with applicable data protection
+              laws, including the Data Privacy Act of 2012 (Republic Act No.
+              10173).
+            </p>
 
-              <h6 class="fw-bold text-primary">8. Children's Privacy</h6>
-              <p>
-                CitizenLink is not intended for users under 18 years of age. We
-                do not knowingly collect personal information from children.
-              </p>
+            <h6 class="fw-bold text-primary">7. Service Availability</h6>
+            <p>
+              CitizenLink is provided "as is" and "as available." We strive to
+              maintain high service availability but cannot guarantee
+              uninterrupted access due to maintenance, technical issues, or
+              other factors beyond our control.
+            </p>
 
-              <h6 class="fw-bold text-primary">9. International Transfers</h6>
-              <p>
-                Your data is primarily stored and processed within the
-                Philippines. Any international transfers comply with applicable
-                data protection laws.
-              </p>
+            <h6 class="fw-bold text-primary">8. Limitation of Liability</h6>
+            <p>
+              CitizenLink and its operators shall not be liable for any
+              indirect, incidental, special, consequential, or punitive
+              damages arising from your use of the service.
+            </p>
 
-              <h6 class="fw-bold text-primary">10. Updates to This Policy</h6>
-              <p>
-                We may update this privacy policy periodically. Significant
-                changes will be communicated through the platform or via email.
-              </p>
+            <h6 class="fw-bold text-primary">9. Account Termination</h6>
+            <p>
+              We reserve the right to suspend or terminate accounts that
+              violate these terms, engage in fraudulent activities, or misuse
+              the platform. Users may also request account deletion at any
+              time.
+            </p>
 
-              <div class="alert alert-warning mt-3">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Important:</strong> By using CitizenLink, you
-                acknowledge that you have read, understood, and agree to this
-                Privacy Policy.
-              </div>
+            <h6 class="fw-bold text-primary">10. Changes to Terms</h6>
+            <p>
+              These terms may be updated periodically. Users will be notified
+              of significant changes, and continued use of the platform
+              constitutes acceptance of the updated terms.
+            </p>
+
+            <h6 class="fw-bold text-primary">11. Contact Information</h6>
+            <p>
+              For questions about these terms or to report violations, please
+              contact our support team through the platform or at
+              support@citizenlink.gov.ph
+            </p>
+
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Note:</strong> These terms are effective as of the date
+              of your registration and apply to all users of the CitizenLink
+              platform.
             </div>
           </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-dismiss="modal"
-            >
-              <i class="fas fa-check me-2"></i>
-              I Understand
-            </button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+            <i class="fas fa-check me-2"></i>
+            I Understand
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+  <!-- Privacy Policy Modal -->
+  <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="privacyModalLabel">
+            <i class="fas fa-shield-alt text-primary me-2"></i>
+            Privacy Policy
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="privacy-content">
+            <h6 class="fw-bold text-primary">1. Information We Collect</h6>
+            <p>We collect the following types of information:</p>
+            <ul>
+              <li>
+                <strong>Personal Information:</strong> Name, email address,
+                phone number, and username
+              </li>
+              <li>
+                <strong>Complaint Data:</strong> Details of complaints,
+                location information, and supporting documents
+              </li>
+              <li>
+                <strong>Usage Data:</strong> Login times, pages visited, and
+                interaction patterns
+              </li>
+              <li>
+                <strong>Technical Data:</strong> IP address, browser type, and
+                device information
+              </li>
+            </ul>
 
-    <!-- Supabase client config served by server.js (must load BEFORE auth.js) -->
-    <script src="/js/supabase-config.js"></script>
+            <h6 class="fw-bold text-primary">
+              2. How We Use Your Information
+            </h6>
+            <p>Your information is used to:</p>
+            <ul>
+              <li>Process and track your complaints and service requests</li>
+              <li>
+                Communicate with you about the status of your submissions
+              </li>
+              <li>Improve our services and user experience</li>
+              <li>Ensure platform security and prevent fraud</li>
+              <li>Comply with legal and regulatory requirements</li>
+            </ul>
 
-    <!-- Authentication Script (non-module to access globals) -->
-    <script src="js/auth.js"></script>
-  </body>
+            <h6 class="fw-bold text-primary">3. Information Sharing</h6>
+            <p>We may share your information with:</p>
+            <ul>
+              <li>
+                <strong>Local Government Units:</strong> To process and
+                address your complaints
+              </li>
+              <li>
+                <strong>Service Providers:</strong> For technical support and
+                platform maintenance
+              </li>
+              <li>
+                <strong>Legal Authorities:</strong> When required by law or to
+                protect rights and safety
+              </li>
+            </ul>
+            <p>
+              <strong>We do not sell, rent, or trade your personal information to
+                third parties.</strong>
+            </p>
+
+            <h6 class="fw-bold text-primary">4. Data Security</h6>
+            <p>
+              We implement appropriate security measures to protect your
+              information:
+            </p>
+            <ul>
+              <li>Encryption of data in transit and at rest</li>
+              <li>Regular security audits and updates</li>
+              <li>Access controls and authentication requirements</li>
+              <li>Secure data centers and infrastructure</li>
+            </ul>
+
+            <h6 class="fw-bold text-primary">5. Data Retention</h6>
+            <p>We retain your information for as long as necessary to:</p>
+            <ul>
+              <li>Provide our services and maintain your account</li>
+              <li>Comply with legal and regulatory requirements</li>
+              <li>Resolve disputes and enforce agreements</li>
+            </ul>
+
+            <h6 class="fw-bold text-primary">6. Your Rights</h6>
+            <p>You have the right to:</p>
+            <ul>
+              <li>Access and review your personal information</li>
+              <li>Request corrections to inaccurate data</li>
+              <li>Request deletion of your account and data</li>
+              <li>Opt out of non-essential communications</li>
+              <li>File a complaint with the National Privacy Commission</li>
+            </ul>
+
+            <h6 class="fw-bold text-primary">7. Cookies and Tracking</h6>
+            <p>
+              We use essential cookies to maintain your session and improve
+              platform functionality. We do not use tracking cookies for
+              advertising purposes.
+            </p>
+
+            <h6 class="fw-bold text-primary">8. Children's Privacy</h6>
+            <p>
+              CitizenLink is not intended for users under 18 years of age. We
+              do not knowingly collect personal information from children.
+            </p>
+
+            <h6 class="fw-bold text-primary">9. International Transfers</h6>
+            <p>
+              Your data is primarily stored and processed within the
+              Philippines. Any international transfers comply with applicable
+              data protection laws.
+            </p>
+
+            <h6 class="fw-bold text-primary">10. Updates to This Policy</h6>
+            <p>
+              We may update this privacy policy periodically. Significant
+              changes will be communicated through the platform or via email.
+            </p>
+
+            <div class="alert alert-warning mt-3">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>Important:</strong> By using CitizenLink, you
+              acknowledge that you have read, understood, and agree to this
+              Privacy Policy.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+            <i class="fas fa-check me-2"></i>
+            I Understand
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="./js/bootstrap/bootstrap.bundle.min.js"></script>
+
+  <!-- Supabase client config served by server.js (must load BEFORE auth.js) -->
+  <script src="./js/supabase-bridge.js"></script>
+
+  <!-- Shared Supabase Manager -->
+  <script src="./js/supabase-init.js"></script>
+
+  <!-- Authentication Script (non-module to access globals) -->
+  <script src="./js/auth.js"></script>
+</body>
+
 </html>

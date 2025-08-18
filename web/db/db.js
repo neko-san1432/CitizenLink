@@ -1,25 +1,30 @@
 // Server-side Supabase configuration
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ 
+  path: path.join( ".env"),
+  override: true,
+ });
 
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
+const supabaseAnonKey = process.env.SUPABASE_KEY;
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+  throw new Error(
+    "Missing Supabase environment variables. Please check your .env file."
+  );
 }
 
 // Create Supabase client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 // Export the configured client
@@ -33,5 +38,5 @@ export function getSupabaseClient() {
 // Export credentials for client-side use (if needed)
 export const supabaseConfig = {
   url: supabaseUrl,
-  anonKey: supabaseAnonKey
+  anonKey: supabaseAnonKey,
 };

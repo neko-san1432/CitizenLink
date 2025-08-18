@@ -51,6 +51,7 @@
                             <option value="quarter">This Quarter</option>
                             <option value="year">This Year</option>
                         </select>
+                        
                     </div>
                 </div>
 
@@ -109,6 +110,10 @@
                                 <div class="density-item">
                                     <div class="density-color low"></div>
                                     <span>Low (<10 complaints)</span>
+                                </div>
+                                <div class="density-item">
+                                    <div class="density-color boundary"></div>
+                                    <span>City Boundary</span>
                                 </div>
                             </div>
                         </div>
@@ -181,17 +186,31 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Cluster Statistics Section -->
+                <div class="card cluster-stats-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-sitemap"></i> K-Means Clustering Analysis</h3>
+                        <p class="text-muted">Geographic clustering of complaints for resource allocation</p>
+                    </div>
+                    <div class="card-content">
+                        <div id="cluster-statistics">
+                            <!-- Cluster statistics will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
 
     <div id="toast" class="toast"></div>
-
+    <script src="../js/supabase-bridge.js"></script>
+    <script src="../js/supabase-init.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script src="/js/data.js"></script>
-    <script src="/js/auth-check.js"></script>
-    <script src="/js/sidebar-loader.js"></script>
-    <script src="/js/lgu-heatmap.js"></script>
+    <script src="../js/data-management.js"></script>
+    <script src="../js/auth-check.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/lgu-heatmap.js"></script>
 </body>
 </html>

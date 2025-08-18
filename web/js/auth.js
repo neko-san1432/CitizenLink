@@ -1,49 +1,12 @@
-// Use global Supabase configuration
-// Initialize Supabase client for browser (provided by supabase-config.js)
+// Use shared Supabase manager instead of duplicating initialization code
 let supabase = null;
-// Temporary toggle: disable Supabase to test UI with mock auth
-const ENABLE_SUPABASE = false;
 
-// Initialize Supabase configuration
+// Initialize Supabase configuration using shared manager
 async function initializeAuthSupabase() {
   try {
-    if (!ENABLE_SUPABASE) {
-      console.log("Supabase disabled (mock mode). Skipping initialization.");
-      return;
-    }
-    // Prevent multiple initializations
-    if (supabase) {
-      console.log("Supabase already initialized, skipping...");
-      return;
-    }
-
-    // Wait for Supabase to be ready
-    if (window.getSupabaseClient && window.getSupabaseClient()) {
-      supabase = window.getSupabaseClient();
-      console.log("Supabase client obtained from global config");
-      checkExistingSession();
-    } else {
-      // Listen for Supabase ready event (only once)
-      if (!window.supabaseReadyListenerAdded) {
-        window.addEventListener("supabaseReady", () => {
-          if (!supabase) {
-            supabase = window.getSupabaseClient();
-            console.log("Supabase ready event received, client obtained");
-            checkExistingSession();
-          }
-        });
-        window.supabaseReadyListenerAdded = true;
-      }
-
-      // Also try to initialize if not already done
-      if (window.initializeSupabaseClient && !window.supabaseInitializing) {
-        window.supabaseInitializing = true;
-        await window.initializeSupabaseClient();
-        window.supabaseInitializing = false;
-      }
-    }
-
-    console.log("Supabase initialization completed");
+    // Use the shared manager to get Supabase client
+    supabase = await window.supabaseManager.initialize();
+    checkExistingSession();
   } catch (error) {
     console.error("Error initializing Supabase:", error);
   }
@@ -54,22 +17,26 @@ async function checkExistingSession() {
   try {
     // Prevent multiple calls
     if (window.sessionCheckInProgress) {
-      console.log("Session check already in progress, skipping...");
+      console.log('Session check already in progress, skipping...');
       return;
     }
 
-    if (!ENABLE_SUPABASE || !supabase) {
-      console.log("Supabase not yet initialized, waiting...");
+    if (!supabase) {
+      console.log('Supabase not initialized yet, skipping session check...');
       return;
     }
 
+    console.log('Checking existing Supabase session...');
     window.sessionCheckInProgress = true;
 
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    
+    console.log('Supabase session result:', session ? 'Found session' : 'No session');
+    
     if (session) {
-      console.log("Existing session found:", session.user.email);
+      console.log('User from session:', session.user.email, 'Role:', session.user.user_metadata?.role);
       // Redirect based on user role
       redirectBasedOnRole(session.user);
     }
@@ -83,29 +50,22 @@ async function checkExistingSession() {
 
 // Redirect user based on their role
 function redirectBasedOnRole(user) {
-  // Check user metadata for role, or use email to determine
-  const email = user.email;
-  if (email === "admin@lgu.gov.ph") {
-    window.location.href = "/admin-dashboard";
+  // Check user metadata for role
+  const userRole = user.role || user.user_metadata?.role;
+  
+  console.log('Redirecting user based on role:', userRole);
+  
+  if (userRole === "lgu" || userRole === "admin") {
+    console.log('Redirecting LGU user to /lgu/dashboard');
+    window.location.href = "/lgu/dashboard";
   } else {
+    console.log('Redirecting citizen user to /dashboard');
     window.location.href = "/dashboard";
   }
 }
 
 // Initialize Supabase when the script loads
-console.log("Starting Supabase initialization...");
-console.log("Window getSupabaseClient available:", typeof window.getSupabaseClient);
-console.log("Window initializeSupabaseClient available:", typeof window.initializeSupabaseClient);
-
-// Wait a bit for Supabase to load, then initialize
-setTimeout(() => {
-  console.log("Delayed Supabase initialization...");
-  console.log("Window getSupabaseClient available:", typeof window.getSupabaseClient);
-  console.log("Window initializeSupabaseClient available:", typeof window.initializeSupabaseClient);
-  initializeAuthSupabase();
-}, 1000);
-
-// Also try immediate initialization
+// Only initialize once to prevent conflicts
 initializeAuthSupabase();
 
 // Logout function
@@ -159,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (user) {
     try {
       const userData = JSON.parse(user);
-      console.log("User already logged in:", userData);
 
       // Check if we're on a page that requires authentication
       const currentPath = window.location.pathname;
@@ -168,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (authRequiredPages.includes(currentPath)) {
         // Redirect to appropriate dashboard
         if (userData.type === "lgu") {
-          window.location.href = "/admin-dashboard";
+          window.location.href = "/lgu/dashboard";
         } else {
           window.location.href = "/dashboard";
         }
@@ -195,46 +154,37 @@ if (loginForm) {
     submitBtn.disabled = true;
 
     try {
-      if (!ENABLE_SUPABASE) {
-        console.log("Supabase not available, using mock login...");
-        // Fallback to mock login system
-        if (email === "citizen@example.com" && password === "citizen01") {
-          sessionStorage.setItem(
-            "user",
-            JSON.stringify({
-              username: email,
-              type: "citizen",
-              name: "John Citizen",
-              email: email,
-            })
-          );
+      if (supabase) {
+        // Supabase authentication
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
 
-          showToast("Login successful! Redirecting...");
-          setTimeout(() => {
-            window.location.href = "/dashboard";
-          }, 1000);
+        if (error) {
+          showToast(`Login failed: ${error.message}`, "error");
           return;
-        } else if (email === "admin@lgu.gov.ph" && password === "admin911") {
-          sessionStorage.setItem(
-            "user",
-            JSON.stringify({
-              username: email,
-              type: "lgu",
-              name: "Admin User",
-              department: "City Administration",
-            })
-          );
+        }
 
-          showToast("Login successful! Redirecting...");
+        if (data && data.user) {
+          // Store user data in session
+          const userData = {
+            id: data.user.id,
+            email: data.user.email,
+            type: data.user.user_metadata?.role || "citizen",
+            role: data.user.user_metadata?.role || "citizen",
+            name: data.user.user_metadata?.name || data.user.email
+          };
+          
+          sessionStorage.setItem("user", JSON.stringify(userData));
+          showToast("Login successful! Redirecting...", "success");
+          
           setTimeout(() => {
-            window.location.href = "/admin-dashboard";
+            redirectBasedOnRole(userData);
           }, 1000);
-          return;
-        } else {
-          showToast("Invalid email or password. Please try again.", "error");
         }
       } else {
-        console.log('Supabase mode enabled, but temporarily disabled for UI test.');
+        showToast("Authentication service not available. Please contact administrator.", "error");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -249,7 +199,6 @@ if (loginForm) {
 
 // Toast notification function
 function showToast(message, type = "success") {
-  console.log(`Toast [${type}]:`, message);
 
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toast-message");
@@ -286,7 +235,6 @@ function showToast(message, type = "success") {
       );
 
       bsToast.show();
-      console.log("Bootstrap toast shown successfully");
       return;
     } catch (error) {
       console.error("Error showing Bootstrap toast:", error);
@@ -294,7 +242,6 @@ function showToast(message, type = "success") {
   }
 
   // Fallback alert
-  console.log("Using fallback alert");
   if (type === "error") {
     alert(`❌ Error: ${message}`);
   } else {
@@ -303,41 +250,57 @@ function showToast(message, type = "success") {
 }
 
 // Signup form
-console.log("Looking for signup form...");
 const signupForm = document.getElementById("signup-form");
-console.log("Signup form found:", signupForm);
 
 if (signupForm) {
-  console.log("Adding submit event listener to signup form...");
   signupForm.addEventListener("submit", async (e) => {
-    console.log("Signup form submitted!");
     e.preventDefault();
 
-    const fullName = document.getElementById("fullName").value;
-    const email = document.getElementById("email").value;
-    const username = document.getElementById("username").value;
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const username = document.getElementById("username").value.trim();
     const phoneInput = document.getElementById("phone").value;
     const phone = phoneInput.trim().replace(/[\s-]/g, '');
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
 
+    // Validate full name
+    if (!fullName || fullName.length < 2) {
+      showToast("Please enter a valid full name (at least 2 characters).", "error");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+
+    // Validate username
+    if (!username || username.length < 3) {
+      showToast("Username must be at least 3 characters long.", "error");
+      return;
+    }
+
+    // Username can only contain letters, numbers, and underscores
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      showToast("Username can only contain letters, numbers, and underscores.", "error");
+      return;
+    }
+
     if (password !== confirmPassword) {
-      console.log('Password validation failed - passwords do not match');
       showToast("Passwords do not match. Please try again.", "error");
       return;
     }
 
     // Validate phone number format (Philippine format)
-    console.log('Phone number to validate:', `"${phone}"`, 'Length:', phone.length);
-    console.log('Phone number characters:', Array.from(phone).map(c => c.charCodeAt(0)));
-    
     // Allow either +63XXXXXXXXXX or 0XXXXXXXXXX (10 digits after the prefix)
     const phoneRegex = /^(\+63|0)\d{10}$/;
     const isValid = phoneRegex.test(phone);
-    console.log('Phone regex test result:', isValid);
     
     if (!isValid) {
-      console.log('Phone validation failed - invalid format:', phone);
       showToast(
         "Please enter a valid Philippine phone number (e.g., +639123456789 or 09123456789)",
         "error"
@@ -347,17 +310,17 @@ if (signupForm) {
 
     // Check if terms are agreed to
     const termsAgreement = document.getElementById("termsAgreement");
-    console.log('Terms agreement checkbox found:', termsAgreement);
-    console.log('Terms agreement checked:', termsAgreement ? termsAgreement.checked : 'checkbox not found');
     
     if (!termsAgreement || !termsAgreement.checked) {
-      console.log('Terms agreement validation failed');
       showToast(
         "Please agree to the Terms of Service and Privacy Policy to continue.",
         "error"
       );
       return;
     }
+
+    // Check if username and email are already taken
+    
 
     // Show loading state
     const submitBtn = signupForm.querySelector('button[type="submit"]');
@@ -366,59 +329,32 @@ if (signupForm) {
     submitBtn.disabled = true;
 
     try {
-      if (!ENABLE_SUPABASE) {
-        console.log("Supabase disabled, using mock signup...");
-        // Fallback to mock signup system
-        showToast(
-          "Account created! Please verify your email address.",
-          "success"
-        );
-
-        // Store signup data for email verification
-        sessionStorage.setItem("signup_email", email);
-        sessionStorage.setItem("signup_fullName", fullName);
-        sessionStorage.setItem("signup_username", username);
-        sessionStorage.setItem("signup_phone", phone);
-
-        setTimeout(() => {
-          window.location.href = "/login?verify=1";
-        }, 1200);
-        return;
-      }
-
-      if (supabase && typeof supabase.auth !== "undefined") {
-        console.log("Attempting Supabase signup...");
+      if (supabase) {
+        // Supabase signup
         const { data, error } = await supabase.auth.signUp({
           email: email,
           password: password,
           options: {
-            // Where Supabase should redirect after the user clicks the email link
             emailRedirectTo: `${window.location.origin}/login?verified=1`,
             data: {
               name: fullName,
               username: username,
               phone: phone,
-              role: "citizen",
-            },
+              role: "lgu",
+            },  
           },
         });
 
+        if (error) {
+          showToast(`Signup failed: ${error.message}`, "error");
+          return;
+        }
+
         if (data && data.user) {
-          console.log("Supabase signup successful:", data.user);
-          console.log("User email confirmed:", data.user.email_confirmed_at);
-          console.log("User needs email confirmation:", data.user.email_confirmed_at === null);
-          
-          if (data.user.email_confirmed_at === null) {
-            showToast(
-              "Account created! Please check your email and click the verification link.",
-              "success"
-            );
-          } else {
-            showToast(
-              "Account created and email already verified! You can now log in.",
-              "success"
-            );
-          }
+          showToast(
+            "Account created! Please check your email and click the verification link.",
+            "success"
+          );
 
           // Store signup data for email verification
           sessionStorage.setItem("signup_email", email);
@@ -428,16 +364,11 @@ if (signupForm) {
           sessionStorage.setItem("signup_user_id", data.user.id);
 
           setTimeout(() => {
-            // Redirect to login with instruction to verify email
             window.location.href = "/login?verify=1";
           }, 1200);
-          return;
         }
-
-        if (error) {
-          console.error("Supabase signup error:", error);
-          showToast(`Signup failed: ${error.message}`, "error");
-        }
+      } else {
+        showToast("Authentication service not available. Please contact administrator.", "error");
       }
     } catch (error) {
       console.error("Signup error:", error);
@@ -450,15 +381,75 @@ if (signupForm) {
   });
 }
 
+// Add real-time validation functions
+window.checkUsernameAvailability = async function(username) {
+  if (!username || username.length < 3) {
+    return { available: false, message: "Username must be at least 3 characters" };
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    return { available: false, message: "Username can only contain letters, numbers, and underscores" };
+  }
+
+  try {
+    if (supabase) {
+      const { data: existing, error } = await supabase
+        .from('users')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+      if (existing) {
+        return { available: false, message: "Username is already taken" };
+      } else {
+        return { available: true, message: "Username is available" };
+      }
+    }
+  } catch (error) {
+    return { available: false, message: "Unable to check username availability" };
+  }
+
+  return { available: true, message: "Username is available" };
+};
+
+window.checkEmailAvailability = async function(email) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { available: false, message: "Please enter a valid email address" };
+  }
+
+  try {
+    if (supabase) {
+      const { data: existing, error } = await supabase
+        .from('users')
+        .select('email, email_confirmed_at')
+        .eq('email', email)
+        .single();
+
+      if (existing) {
+        if (existing.email_confirmed_at) {
+          return { available: false, message: "Email is already registered and verified" };
+        } else {
+          return { available: false, message: "Email is registered but not verified" };
+        }
+      } else {
+        return { available: true, message: "Email is available" };
+      }
+    }
+  } catch (error) {
+    return { available: false, message: "Unable to check email availability" };
+  }
+
+  return { available: true, message: "Email is available" };
+};
+
 // Initialize modals and ensure they work properly
 document.addEventListener("DOMContentLoaded", () => {
-  // Debug: Check if modals exist
+  // Check if modals exist
   const termsModal = document.getElementById("termsModal");
   const privacyModal = document.getElementById("privacyModal");
 
   // Check if Bootstrap is loaded
   if (typeof bootstrap === "undefined") {
-    console.error("Bootstrap is not loaded! Check the script path.");
     // Try to load Bootstrap dynamically as fallback
     const script = document.createElement("script");
     script.src =
@@ -467,7 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeModals();
     };
     script.onerror = () => {
-      console.error("Failed to load Bootstrap dynamically");
+      // Bootstrap loading failed
     };
     document.head.appendChild(script);
   } else {
@@ -478,14 +469,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize Bootstrap modals
     let termsBsModal, privacyBsModal;
 
-    console.log("Terms modal element:", termsModal);
-    console.log("Privacy modal element:", privacyModal);
-    console.log("Bootstrap available:", typeof bootstrap !== "undefined");
-
     if (termsModal && typeof bootstrap !== "undefined") {
       try {
         termsBsModal = new bootstrap.Modal(termsModal);
-        console.log("Terms modal initialized successfully");
       } catch (error) {
         console.error("Error initializing terms modal:", error);
       }
@@ -494,7 +480,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (privacyModal && typeof bootstrap !== "undefined") {
       try {
         privacyBsModal = new bootstrap.Modal(privacyModal);
-        console.log("Privacy modal initialized successfully");
       } catch (error) {
         console.error("Error initializing privacy modal:", error);
       }
@@ -508,18 +493,12 @@ document.addEventListener("DOMContentLoaded", () => {
       '[data-bs-target="#privacyModal"]'
     );
 
-    console.log("Found terms links:", termsLinks.length);
-    console.log("Found privacy links:", privacyLinks.length);
-
     termsLinks.forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        console.log("Terms link clicked");
         if (termsBsModal) {
-          console.log("Using Bootstrap modal");
           termsBsModal.show();
         } else if (termsModal) {
-          console.log("Using fallback modal");
           // Fallback to manual show
           termsModal.style.display = "block";
           termsModal.classList.add("show");
@@ -532,12 +511,9 @@ document.addEventListener("DOMContentLoaded", () => {
     privacyLinks.forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        console.log("Privacy link clicked");
         if (privacyBsModal) {
-          console.log("Using Bootstrap modal");
           privacyBsModal.show();
         } else if (privacyModal) {
-          console.log("Using fallback modal");
           // Fallback to manual show
           privacyModal.style.display = "block";
           privacyModal.classList.add("show");

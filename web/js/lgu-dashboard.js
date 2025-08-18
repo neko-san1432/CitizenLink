@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup Add Article functionality
   setupAddArticle();
+  
+  // Setup Add Notice functionality
+  setupAddNotice();
+  
+  // Setup Add Event functionality
+  setupAddEvent();
 });
 
 // Setup refresh button

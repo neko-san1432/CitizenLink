@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Profile Settings - Manage your CitizenLink account information, change password, and customize notification preferences for complaint updates.">
+    <meta name="description" content="LGU Profile Settings - Manage your government administrator account settings and preferences.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
-    <title>Profile - CitizenLink</title>
+    <title>LGU Profile Settings - CitizenLink</title>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
@@ -25,7 +25,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="brand-logo">
-                        <a href="/dashboard" class="logo-link">
+                        <a href="/lgu/dashboard" class="logo-link">
                             <i class="fas fa-shield-alt text-primary me-2"></i>
                             <span class="brand-text">CitizenLink</span>
                         </a>
@@ -38,8 +38,8 @@
 
             <main class="dashboard-main">
                 <div class="page-header">
-                    <h2 id="profile-title">Profile Settings</h2>
-                    <p class="text-muted">Manage your account settings and preferences.</p>
+                    <h2 id="profile-title">LGU Profile Settings</h2>
+                    <p class="text-muted">Manage your government administrator account settings and preferences.</p>
                 </div>
 
                 <div class="card">
@@ -58,13 +58,28 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="department">Department/Unit</label>
+                                <input type="text" id="department" name="department" placeholder="Enter your department or unit">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="position">Position/Title</label>
+                                <input type="text" id="position" name="position" placeholder="Enter your position or title">
+                            </div>
+
+                            <div class="form-group">
                                 <label for="phone">Phone Number</label>
                                 <input type="tel" id="phone" name="phone" placeholder="Enter your phone number">
                             </div>
 
                             <div class="form-group">
-                                <label for="address">Address</label>
-                                <textarea id="address" name="address" rows="3" placeholder="Enter your address"></textarea>
+                                <label for="office-address">Office Address</label>
+                                <textarea id="office-address" name="officeAddress" rows="3" placeholder="Enter your office address"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="office-hours">Office Hours</label>
+                                <input type="text" id="office-hours" name="officeHours" placeholder="e.g., Monday-Friday 8:00 AM - 5:00 PM">
                             </div>
 
                             <h3 class="section-title">Change Password</h3>
@@ -89,15 +104,45 @@
                             <div class="form-group">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="email-notifications" name="emailNotifications" checked>
-                                    Receive email notifications
+                                    Receive email notifications for new complaints
                                 </label>
                             </div>
 
                             <div class="form-group">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="sms-notifications" name="smsNotifications" checked>
-                                    Receive SMS notifications
+                                    Receive SMS notifications for urgent complaints
                                 </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="dashboard-notifications" name="dashboardNotifications" checked>
+                                    Show notifications on dashboard
+                                </label>
+                            </div>
+
+                            <h3 class="section-title">System Preferences</h3>
+
+                            <div class="form-group">
+                                <label for="default-view">Default Dashboard View</label>
+                                <select id="default-view" name="defaultView">
+                                    <option value="overview">Overview</option>
+                                    <option value="complaints">Complaints</option>
+                                    <option value="heatmap">Heatmap</option>
+                                    <option value="insights">Insights</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="refresh-interval">Auto-refresh Interval</label>
+                                <select id="refresh-interval" name="refreshInterval">
+                                    <option value="30">30 seconds</option>
+                                    <option value="60">1 minute</option>
+                                    <option value="300">5 minutes</option>
+                                    <option value="600">10 minutes</option>
+                                    <option value="0">Manual refresh only</option>
+                                </select>
                             </div>
 
                             <div class="form-actions">
@@ -118,6 +163,6 @@
     <script src="../js/data-management.js"></script>
     <script src="../js/auth-check.js"></script>
     <script src="../js/sidebar-loader.js"></script>
-    <script src="../js/profile.js"></script>
+    <script src="../js/lgu-profile.js"></script>
 </body>
 </html>

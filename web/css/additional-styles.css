@@ -1117,6 +1117,10 @@ i.fab.text-primary {
   background: linear-gradient(135deg, #059669, #10b981);
 }
 
+.density-color.boundary {
+  background: linear-gradient(135deg, #2E86AB, #3B9AC6);
+}
+
 .density-item span {
   font-weight: 500;
   color: #374151;
@@ -3553,4 +3557,197 @@ button.news-read-more:hover {
 
 #addArticleModal .form-control[rows="3"] {
   min-height: 80px;
+}
+
+/* ============================================================================
+   CLUSTER STATISTICS STYLING
+   ============================================================================ */
+
+.cluster-stats-card {
+  margin-top: 2rem;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.cluster-stats-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 1.5rem;
+  border: none;
+}
+
+.cluster-stats-card .card-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.cluster-stats-card .card-header p {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+}
+
+.cluster-stats-card .card-content {
+  padding: 2rem;
+}
+
+#cluster-statistics .stat-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#cluster-statistics .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#cluster-statistics .stat-card h4 {
+  color: #0d6efd;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+#cluster-statistics .stat-card p {
+  color: #6c757d;
+  margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+}
+
+/* Cluster tooltip styling */
+.cluster-tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Cluster popup styling */
+.cluster-popup {
+  min-width: 250px;
+}
+
+.cluster-popup h4 {
+  color: #0d6efd;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.cluster-popup h5 {
+  color: #495057;
+  margin: 1rem 0 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.cluster-popup ul {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+}
+
+.cluster-popup li {
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.cluster-popup button {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Cluster marker colors */
+.cluster-marker-small {
+  background-color: #00ff00;
+}
+
+.cluster-marker-medium {
+  background-color: #ffff00;
+}
+
+.cluster-marker-large {
+  background-color: #ff8000;
+}
+
+.cluster-marker-very-large {
+  background-color: #ff0000;
+}
+
+/* Clustering button styling */
+#cluster-analysis-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#cluster-analysis-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+#cluster-analysis-btn:disabled {
+  opacity: 0.7;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#cluster-analysis-btn i {
+  margin-right: 0.5rem;
+}
+
+/* ===== BOUNDARY STYLING ===== */
+
+/* Boundary toggle button styling */
+.btn-outline-secondary {
+  border-color: #2E86AB;
+  color: #2E86AB;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #2E86AB;
+  border-color: #2E86AB;
+  color: white;
+}
+
+/* Legend styling for boundary */
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 3px;
+}
+
+/* Test marker popup styling */
+.complaint-popup h6 {
+  color: #2E86AB;
+  margin-bottom: 10px;
+}
+
+.complaint-popup p {
+  margin-bottom: 5px;
+}
+
+.complaint-popup .badge {
+  font-size: 0.8em;
 }

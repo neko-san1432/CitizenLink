@@ -7,7 +7,7 @@ import * as Popper from '@popperjs/core';
 
 /**
  * --------------------------------------------------------------------------
- * Bootstrap dom/data.js
+ * Bootstrap dom/data-management.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */

@@ -31,40 +31,20 @@
  * - title: complaint title
  * - type: complaint category
  * - subcategory: specific complaint type
- * - urgency: priority level (low, medium, high, critical)
+
  * - location: complaint location
  * - description: detailed description
  * - status: current status (pending, in_progress, resolved, rejected)
  * - assignedUnit: government unit assigned
- * - createdAt: timestamp when created
- * - updatedAt: timestamp when last updated
- * - resolvedAt: timestamp when resolved
+ * - created_at: timestamp when created
+ * - updated_at: timestamp when last updated
+ * - resolved_at: timestamp when resolved
  * - adminNotes: internal notes from administrators
  * - citizenFeedback: feedback from citizen after resolution
  */
 
-// Mock complaints data - REPLACE WITH API CALLS
-const complaintsData = [
-  {
-    id: 'CP001',
-    userId: 'citizen-001',
-    userName: 'John Doe',
-    title: 'Pothole on Main Street',
-    type: 'infrastructure',
-    subcategory: 'Road Damage',
-    urgency: 'high',
-    location: 'Main Street, Downtown Area',
-    description: 'Large pothole causing traffic issues and vehicle damage',
-    status: 'in_progress',
-    assignedUnit: 'public_works',
-    createdAt: '2024-12-01T08:00:00Z',
-    updatedAt: '2024-12-02T14:30:00Z',
-    resolvedAt: null,
-    adminNotes: 'Work crew scheduled for December 3rd',
-    citizenFeedback: null
-  }
-  // Add more mock data as needed
-];
+// Live complaints data from Supabase
+let complaintsData = [];
 
 /**
  * COMPLAINTS API FUNCTIONS
@@ -79,47 +59,114 @@ const complaintsData = [
  * - GET /api/complaints/status/:status - Get complaints by status
  */
 
-// Get all complaints - REPLACE WITH API CALL
-export function getComplaints() {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/complaints');
-  // return await response.json();
-  
-  return complaintsData;
+// Get all complaints from Supabase
+async function getComplaints() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('complaints')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching complaints:', error);
+      return [];
+    }
+
+    // Update local cache
+    complaintsData = data || [];
+    return complaintsData;
+  } catch (error) {
+    console.error('Error in getComplaints:', error);
+    return [];
+  }
 }
 
-// Get complaint by ID - REPLACE WITH API CALL
-export function getComplaintById(id) {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/complaints/${id}`);
-  // return await response.json();
-  
-  return complaintsData.find(complaint => complaint.id === id);
+// Get complaint by ID from Supabase
+async function getComplaintById(id) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('complaints')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching complaint:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getComplaintById:', error);
+    return null;
+  }
 }
 
-// Create new complaint - REPLACE WITH API CALL
-export async function createComplaint(complaintData) {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/complaints', {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     'Authorization': `Bearer ${getAuthToken()}`
-  //   },
-  //   body: JSON.stringify(complaintData)
-  // });
-  // return await response.json();
-  
-  const newComplaint = {
-    id: `CP${Date.now()}`,
-    ...complaintData,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: 'pending'
-  };
-  
-  complaintsData.push(newComplaint);
-  return newComplaint;
+// Create new complaint in Supabase
+async function createComplaint(complaintData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('complaints')
+      .insert([{
+        ...complaintData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: 'pending'
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating complaint:', error);
+      throw error;
+    }
+
+    // Update local cache
+      complaintsData.unshift(data);
+  return data;
+} catch (error) {
+  console.error('Error in createComplaint:', error);
+  throw error;
+}
+}
+
+// Update complaint in Supabase
+async function updateComplaint(id, updateData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('complaints')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating complaint:', error);
+      throw error;
+    }
+
+    // Update local cache
+    const index = complaintsData.findIndex(c => c.id === id);
+    if (index !== -1) {
+      complaintsData[index] = data;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateComplaint:', error);
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -138,42 +185,20 @@ export async function createComplaint(complaintData) {
  * - category: news category
  * - icon: FontAwesome icon class
  * - author: author name
- * - readTime: estimated reading time
+ * - read_time: estimated reading time
  * - status: publication status (draft, published, archived)
  * - featured: boolean for featured articles
  * - tags: array of tags for categorization
- * - imageUrl: optional image URL
- * - createdAt: timestamp when created
- * - updatedAt: timestamp when last updated
- * - publishedAt: timestamp when published
- * - viewCount: number of views
- * - isActive: boolean for active/inactive status
+ * - image_url: optional image URL
+ * - created_at: timestamp when created
+ * - updated_at: timestamp when last updated
+ * - published_at: timestamp when published
+ * - view_count: number of views
+ * - is_active: boolean for active/inactive status
  */
 
-// Mock news data - REPLACE WITH API CALLS
-const newsData = [
-  {
-    id: 1,
-    title: "New Public Safety Initiative Launched",
-    excerpt: "The city has launched a comprehensive public safety program focusing on community policing and emergency response improvements.",
-    content: `<div class="news-article">...</div>`,
-    date: "2024-12-01",
-    category: "Public Safety",
-    icon: "fas fa-shield-alt",
-    author: "City Communications Office",
-    readTime: "5 min read",
-    status: "published",
-    featured: true,
-    tags: ["public safety", "community", "police"],
-    imageUrl: null,
-    createdAt: "2024-12-01T09:00:00Z",
-    updatedAt: "2024-12-01T09:00:00Z",
-    publishedAt: "2024-12-01T09:00:00Z",
-    viewCount: 0,
-    isActive: true
-  }
-  // Add more mock data as needed
-];
+// Live news data from Supabase
+let newsData = [];
 
 /**
  * NEWS API FUNCTIONS
@@ -190,44 +215,66 @@ const newsData = [
  * - PUT /api/news/:id/archive - Archive article
  */
 
-// Get all news - REPLACE WITH API CALL
-export function getNews() {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/news?status=published&isActive=true');
-  // return await response.json();
-  
-  return newsData.filter(article => article.status === 'published' && article.isActive);
+// Get all news from Supabase
+async function getNews() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('news_data')
+      .select('*')
+      .eq('status', 'published')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching news:', error);
+      return [];
+    }
+
+    // Update local cache
+    newsData = data || [];
+    return newsData;
+  } catch (error) {
+    console.error('Error in getNews:', error);
+    return [];
+  }
 }
 
-// Create new article - REPLACE WITH API CALL
-export async function createNewsArticle(articleData) {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/news', {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     'Authorization': `Bearer ${getAuthToken()}`
-  //   },
-  //   body: JSON.stringify(articleData)
-  // });
-  // return await response.json();
-  
-  const newArticle = {
-    id: Date.now(),
-    ...articleData,
-    status: 'published',
-    featured: false,
-    tags: [],
-    imageUrl: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    publishedAt: new Date().toISOString(),
-    viewCount: 0,
-    isActive: true
-  };
-  
-  newsData.push(newArticle);
-  return newArticle;
+// Create new article in Supabase
+async function createNewsArticle(articleData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('news_data')
+      .insert([{
+        ...articleData,
+        status: 'published',
+        featured: false,
+        tags: [],
+        image_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        published_at: new Date().toISOString(),
+        view_count: 0,
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating news article:', error);
+      throw error;
+    }
+
+    // Add to local cache
+    newsData.unshift(data);
+    return data;
+  } catch (error) {
+    console.error('Error in createNewsArticle:', error);
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -241,45 +288,24 @@ export async function createNewsArticle(articleData) {
  * - id: unique identifier (auto-increment)
  * - title: event title
  * - description: event description
- * - date: event date and time
+ * - event_date: event date and time
  * - location: event location
  * - category: event category
  * - organizer: organizing entity
- * - contactInfo: contact information
- * - registrationRequired: boolean for registration
- * - maxAttendees: maximum number of attendees
- * - currentAttendees: current number of registered attendees
+ * - contact_info: contact information
+ * - registration_required: boolean for registration
+ * - max_attendees: maximum number of attendees
+ * - current_attendees: current number of registered attendees
  * - status: event status (upcoming, ongoing, completed, cancelled)
- * - imageUrl: event image URL
+ * - image_url: event image URL
  * - tags: array of event tags
- * - createdAt: timestamp when created
- * - updatedAt: timestamp when last updated
- * - isActive: boolean for active/inactive status
+ * - created_at: timestamp when created
+ * - updated_at: timestamp when last updated
+ * - is_active: boolean for active/inactive status
  */
 
-// Mock events data - REPLACE WITH API CALLS
-const eventsData = [
-  {
-    id: 1,
-    title: "Community Health Fair",
-    description: "Annual health fair with free screenings and health information",
-    date: "2024-12-15T09:00:00Z",
-    location: "City Hall Plaza",
-    category: "Health",
-    organizer: "Health Department",
-    contactInfo: "health@city.gov",
-    registrationRequired: false,
-    maxAttendees: null,
-    currentAttendees: 0,
-    status: "upcoming",
-    imageUrl: null,
-    tags: ["health", "community", "free"],
-    createdAt: "2024-12-01T10:00:00Z",
-    updatedAt: "2024-12-01T10:00:00Z",
-    isActive: true
-  }
-  // Add more mock data as needed
-];
+// Events data will be fetched from Supabase
+let eventsData = [];
 
 /**
  * EVENTS API FUNCTIONS
@@ -296,18 +322,32 @@ const eventsData = [
  * - DELETE /api/events/:id/register - Cancel registration
  */
 
-// Get upcoming events - REPLACE WITH API CALL
-export function getUpcomingEvents() {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/events?status=upcoming&isActive=true');
-  // return await response.json();
-  
-  const now = new Date();
-  return eventsData.filter(event => 
-    event.status === 'upcoming' && 
-    event.isActive && 
-    new Date(event.date) > now
-  );
+// Get upcoming events from Supabase
+async function getUpcomingEvents() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('upcoming_events_data')
+      .select('*')
+      .eq('status', 'upcoming')
+      .eq('is_active', true)
+      .gte('event_date', now)
+      .order('event_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching upcoming events:', error);
+      return [];
+    }
+
+    // Update local cache
+    eventsData = data || [];
+    return eventsData;
+  } catch (error) {
+    console.error('Error in getUpcomingEvents:', error);
+    return [];
+  }
 }
 
 // ============================================================================
@@ -323,43 +363,22 @@ export function getUpcomingEvents() {
  * - content: notice content
  * - priority: priority level (low, medium, high, critical)
  * - category: notice category
- * - startDate: when notice becomes active
- * - endDate: when notice expires
- * - isUrgent: boolean for urgent notices
- * - requiresAction: boolean if citizen action required
- * - actionRequired: description of required action
- * - contactInfo: contact information for questions
+ * - start_date: when notice becomes active
+ * - end_date: when notice expires
+ * - is_urgent: boolean for urgent notices
+ * - requires_action: boolean if citizen action required
+ * - action_required: description of required action
+ * - contact_info: contact information for questions
  * - status: notice status (active, inactive, expired)
- * - createdAt: timestamp when created
- * - updatedAt: timestamp when last updated
- * - isActive: boolean for active/inactive status
- * - viewCount: number of views
- * - acknowledgmentRequired: boolean if acknowledgment needed
+ * - created_at: timestamp when created
+ * - updated_at: timestamp when last updated
+ * - is_active: boolean for active/inactive status
+ * - view_count: number of views
+ * - acknowledgment_required: boolean if acknowledgment needed
  */
 
-// Mock notices data - REPLACE WITH API CALLS
-const noticesData = [
-  {
-    id: 1,
-    title: "Water Main Maintenance",
-    content: "Scheduled water main maintenance in downtown area from 10 PM to 6 AM",
-    priority: "high",
-    category: "Infrastructure",
-    startDate: "2024-12-01T00:00:00Z",
-    endDate: "2024-12-02T00:00:00Z",
-    isUrgent: true,
-    requiresAction: false,
-    actionRequired: null,
-    contactInfo: "water@city.gov",
-    status: "active",
-    createdAt: "2024-12-01T08:00:00Z",
-    updatedAt: "2024-12-01T08:00:00Z",
-    isActive: true,
-    viewCount: 0,
-    acknowledgmentRequired: false
-  }
-  // Add more mock data as needed
-];
+// Notices data will be fetched from Supabase
+let noticesData = [];
 
 /**
  * IMPORTANT NOTICES API FUNCTIONS
@@ -377,19 +396,141 @@ const noticesData = [
  * - PUT /api/notices/:id/expire - Mark notice as expired
  */
 
-// Get active notices - REPLACE WITH API CALL
-export function getActiveNotices() {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/notices?status=active&isActive=true');
-  // return await response.json();
-  
-  const now = new Date();
-  return noticesData.filter(notice => 
-    notice.status === 'active' && 
-    notice.isActive &&
-    new Date(notice.startDate) <= now &&
-    new Date(notice.endDate) >= now
-  );
+// Get active notices from Supabase
+async function getActiveNotices() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('important_notice_data')
+      .select('*')
+      .eq('status', 'active')
+      .eq('is_active', true)
+      .lte('start_date', now)
+      .gte('end_date', now)
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching active notices:', error);
+      return [];
+    }
+
+    // Update local cache
+    noticesData = data || [];
+    return noticesData;
+  } catch (error) {
+    console.error('Error in getActiveNotices:', error);
+    return [];
+  }
+}
+
+// ============================================================================
+// ADDITIONAL SUPABASE FUNCTIONS FOR EVENTS AND NOTICES
+// ============================================================================
+
+// Get all events from Supabase
+async function getAllEvents() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('upcoming_events_data')
+      .select('*')
+      .eq('is_active', true)
+      .order('event_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching all events:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAllEvents:', error);
+    return [];
+  }
+}
+
+// Get events by category from Supabase
+async function getEventsByCategory(category) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('upcoming_events_data')
+      .select('*')
+      .eq('category', category)
+      .eq('is_active', true)
+      .order('event_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching events by category:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getEventsByCategory:', error);
+    return [];
+  }
+}
+
+// Get urgent notices from Supabase
+async function getUrgentNotices() {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('important_notice_data')
+      .select('*')
+      .eq('is_urgent', true)
+      .eq('is_active', true)
+      .eq('status', 'active')
+      .lte('start_date', now)
+      .gte('end_date', now)
+      .order('priority', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching urgent notices:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getUrgentNotices:', error);
+    return [];
+  }
+}
+
+// Get notices by category from Supabase
+async function getNoticesByCategory(category) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('important_notice_data')
+      .select('*')
+      .eq('category', category)
+      .eq('is_active', true)
+      .eq('status', 'active')
+      .lte('start_date', now)
+      .gte('end_date', now)
+      .order('priority', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching notices by category:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getNoticesByCategory:', error);
+    return [];
+  }
 }
 
 // ============================================================================
@@ -445,7 +586,7 @@ export function getActiveNotices() {
  */
 
 // Format date for display
-export function formatDate(dateString) {
+function formatDate(dateString) {
   const date = new Date(dateString);
   const options = { 
     year: 'numeric', 
@@ -456,7 +597,7 @@ export function formatDate(dateString) {
 }
 
 // Get priority color for notices
-export function getPriorityColor(priority) {
+function getPriorityColor(priority) {
   const colorMap = {
     'critical': '#dc3545', // Red
     'high': '#fd7e14',     // Orange
@@ -467,7 +608,7 @@ export function getPriorityColor(priority) {
 }
 
 // Get category icon
-export function getCategoryIcon(category) {
+function getCategoryIcon(category) {
   const iconMap = {
     'Public Safety': 'fas fa-shield-alt',
     'Infrastructure': 'fas fa-road',
@@ -490,23 +631,25 @@ export function getCategoryIcon(category) {
  * Backend Integration: Implement proper caching and refresh strategies
  */
 
-// Refresh all data
-export async function refreshAllData() {
+// Refresh all data from Supabase
+async function refreshAllData() {
   try {
-    // TODO: Implement proper data refresh strategy
-    // const complaints = await getComplaints();
-    // const news = await getNews();
-    // const events = await getUpcomingEvents();
-    // const notices = await getActiveNotices();
+    // Fetch all data from Supabase
+    const [complaints, news, events, notices] = await Promise.all([
+      getComplaints(),
+      getNews(),
+      getUpcomingEvents(),
+      getActiveNotices()
+    ]);
     
-    // Update local storage or state management
-    // localStorage.setItem('lastDataRefresh', new Date().toISOString());
+    // Update local storage with refresh timestamp
+    localStorage.setItem('lastDataRefresh', new Date().toISOString());
     
     return {
-      complaints: getComplaints(),
-      news: getNews(),
-      events: getUpcomingEvents(),
-      notices: getActiveNotices()
+      complaints,
+      news,
+      events,
+      notices
     };
   } catch (error) {
     console.error('Error refreshing data:', error);
@@ -515,7 +658,7 @@ export async function refreshAllData() {
 }
 
 // Check if data needs refresh
-export function shouldRefreshData() {
+function shouldRefreshData() {
   const lastRefresh = localStorage.getItem('lastDataRefresh');
   if (!lastRefresh) return true;
   
@@ -539,7 +682,7 @@ export function shouldRefreshData() {
  */
 
 // Handle API errors
-export function handleApiError(error, context) {
+function handleApiError(error, context) {
   console.error(`API Error in ${context}:`, error);
   
   // TODO: Implement proper error logging
@@ -556,7 +699,7 @@ export function handleApiError(error, context) {
 }
 
 // Log data operations
-export function logDataOperation(operation, data, userId) {
+function logDataOperation(operation, data, userId) {
   // TODO: Implement proper logging
   // - Log to backend audit trail
   // - Track user actions for security
@@ -571,19 +714,197 @@ export function logDataOperation(operation, data, userId) {
 }
 
 // ============================================================================
-// EXPORT ALL FUNCTIONS
+// CRUD FUNCTIONS FOR LGU CONTENT MANAGEMENT
 // ============================================================================
 
-export {
-  // Complaints
-  complaintsData,
+// News CRUD functions
+async function updateNewsArticle(id, updateData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('news_data')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating news article:', error);
+      throw error;
+    }
+
+    // Update local cache
+    const index = newsData.findIndex(article => article.id === id);
+    if (index !== -1) {
+      newsData[index] = { ...newsData[index], ...data };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateNewsArticle:', error);
+    throw error;
+  }
+}
+
+// Events CRUD functions
+async function createEvent(eventData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('upcoming_events_data')
+      .insert([eventData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating event:', error);
+      throw error;
+    }
+
+    // Add to local cache
+    eventsData.push(data);
+    
+    return data;
+  } catch (error) {
+    console.error('Error in createEvent:', error);
+    throw error;
+  }
+}
+
+async function updateEvent(id, updateData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('upcoming_events_data')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating event:', error);
+      throw error;
+    }
+
+    // Update local cache
+    const index = eventsData.findIndex(event => event.id === id);
+    if (index !== -1) {
+      eventsData[index] = { ...eventsData[index], ...data };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateEvent:', error);
+    throw error;
+  }
+}
+
+// Notices CRUD functions
+async function createNotice(noticeData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('important_notice_data')
+      .insert([noticeData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating notice:', error);
+      throw error;
+    }
+
+    // Add to local cache
+    noticesData.push(data);
+    
+    return data;
+  } catch (error) {
+    console.error('Error in createNotice:', error);
+    throw error;
+  }
+}
+
+async function updateNotice(id, updateData) {
+  try {
+    const supabase = await window.supabaseManager.initialize();
+    
+    const { data, error } = await supabase
+      .from('important_notice_data')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating notice:', error);
+      throw error;
+    }
+
+    // Update local cache
+    const index = noticesData.findIndex(notice => notice.id === id);
+    if (index !== -1) {
+      noticesData[index] = { ...noticesData[index], ...data };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateNotice:', error);
+    throw error;
+  }
+}
+
+
+
+// ============================================================================
+// MAKE FUNCTIONS AVAILABLE GLOBALLY
+// ============================================================================
+
+// Make functions available globally for use in other scripts
+if (typeof window !== 'undefined') {
+  // Complaints functions
+  window.getComplaints = getComplaints;
+  window.getComplaintById = getComplaintById;
+  window.createComplaint = createComplaint;
+  window.updateComplaint = updateComplaint;
   
-  // News
-  newsData,
+  // News functions
+  window.getNews = getNews;
+  window.createNewsArticle = createNewsArticle;
+  window.updateNewsArticle = updateNewsArticle;
   
-  // Events
-  eventsData,
+  // Events functions
+  window.getUpcomingEvents = getUpcomingEvents;
+  window.getAllEvents = getAllEvents;
+  window.getEventsByCategory = getEventsByCategory;
+  window.createEvent = createEvent;
+  window.updateEvent = updateEvent;
   
-  // Notices
-  noticesData
-};
+  // Notices functions
+  window.getActiveNotices = getActiveNotices;
+  window.getUrgentNotices = getUrgentNotices;
+  window.getNoticesByCategory = getNoticesByCategory;
+  window.createNotice = createNotice;
+  window.updateNotice = updateNotice;
+  
+  // Utility functions
+  window.refreshAllData = refreshAllData;
+  window.shouldRefreshData = shouldRefreshData;
+  window.formatDate = formatDate;
+  window.getPriorityColor = getPriorityColor;
+  window.getCategoryIcon = getCategoryIcon;
+  
+  console.log('Data management functions made available globally');
+}

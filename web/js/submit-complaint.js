@@ -1,10 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get user
-  const user = checkAuth();
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize user data using shared utilities
+  const user = await window.userUtils.initializeUserData();
   if (!user) return;
   
   // Setup form
-  setupComplaintForm(user);
+  setupComplaintForm();
   
   // Setup cancel button
   document.getElementById('cancel-btn').addEventListener('click', () => {
@@ -12,13 +12,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Mock functions and data that would normally be imported
-function checkAuth() {
-  // Replace with actual authentication logic
-  return {
-    username: 'testuser',
-    name: 'Test User'
-  };
+// Authentication function
+async function checkAuth() {
+  try {
+    // Check if user is authenticated
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    if (!user.id) {
+      console.log('No authenticated user found');
+      return null;
+    }
+    return {
+      username: user.email,
+      name: user.name
+    };
+  } catch (error) {
+    console.error('Error checking auth:', error);
+    return null;
+  }
 }
 
 const subcategories = {
@@ -35,23 +45,15 @@ function showToast(message, type = 'success') {
   console.log(`Toast: ${message} (Type: ${type})`);
 }
 
-function addComplaint(complaintData) {
-  // Replace with actual complaint submission logic (e.g., saving to localStorage or an API)
-  const complaints = JSON.parse(sessionStorage.getItem('complaints') || '[]');
-  const newComplaint = {
-    id: Date.now(), // Generate a unique ID
-    ...complaintData
-  };
-  complaints.push(newComplaint);
-  sessionStorage.setItem('complaints', JSON.stringify(complaints));
-  return newComplaint;
-}
-
 // Setup complaint form
-function setupComplaintForm(user) {
+function setupComplaintForm() {
   const complaintForm = document.getElementById('complaint-form');
   const complaintType = document.getElementById('complaint-type');
   const complaintSubcategory = document.getElementById('complaint-subcategory');
+  const getLocationBtn = document.getElementById('get-location-btn');
+  
+  // Setup location coordinates functionality
+  setupLocationCoordinates(getLocationBtn);
   
   // Populate subcategories based on selected complaint type
   complaintType.addEventListener('change', () => {
@@ -72,21 +74,43 @@ function setupComplaintForm(user) {
   });
   
   // Handle form submission
-  complaintForm.addEventListener('submit', (e) => {
+  complaintForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // Get user data
+    const user = await checkAuth();
+    if (!user) {
+      showToast('Please log in to submit a complaint.', 'error');
+      return;
+    }
     
     // Get form data
     const formData = {
-      userId: user.username,
-      userName: user.name,
+      user_id: user.username,
+      user_name: user.name,
       title: document.getElementById('complaint-title').value,
       type: document.getElementById('complaint-type').value,
       subcategory: document.getElementById('complaint-subcategory').options[document.getElementById('complaint-subcategory').selectedIndex].text,
-      urgency: 'medium', // Default urgency level
+  
       location: document.getElementById('complaint-location').value,
+      latitude: parseFloat(document.getElementById('latitude').value) || null,
+      longitude: parseFloat(document.getElementById('longitude').value) || null,
       description: document.getElementById('complaint-description').value,
-      suggestedUnit: document.getElementById('suggested-unit').value
+      suggested_unit: document.getElementById('suggested-unit').value,
+      status: 'pending'
     };
+    
+    // Validate coordinates if provided
+    if (formData.latitude && formData.longitude) {
+      if (formData.latitude < -90 || formData.latitude > 90) {
+        showToast('Invalid latitude value. Must be between -90 and 90.', 'error');
+        return;
+      }
+      if (formData.longitude < -180 || formData.longitude > 180) {
+        showToast('Invalid longitude value. Must be between -180 and 180.', 'error');
+        return;
+      }
+    }
     
     // Handle photo upload if provided
     const photoInput = document.getElementById('complaint-photo');
@@ -99,7 +123,7 @@ function setupComplaintForm(user) {
         return;
       }
       
-      // Convert to base64 for storage in localStorage
+      // Convert to base64 for storage in Supabase
       const reader = new FileReader();
       reader.onload = function(event) {
         formData.photo = event.target.result;
@@ -112,21 +136,90 @@ function setupComplaintForm(user) {
   });
 }
 
-// Submit complaint to localStorage
-function submitComplaint(formData) {
-  // Add complaint to localStorage
-  const newComplaint = addComplaint(formData);
+// Setup location coordinates functionality
+function setupLocationCoordinates(getLocationBtn) {
+  if (!getLocationBtn) return;
   
-  if (newComplaint) {
-    showToast('Complaint submitted successfully!');
-    
-    showToast('Complaint submitted successfully!');
-    
-    // Redirect to complaints page after a short delay
-    setTimeout(() => {
-      window.location.href = '/complaints?id=' + newComplaint.id;
-    }, 1500);
-  } else {
-    showToast('Failed to submit complaint. Please try again.', 'error');
+  getLocationBtn.addEventListener('click', () => {
+    if (navigator.geolocation) {
+      getLocationBtn.disabled = true;
+      getLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting Location...';
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          document.getElementById('latitude').value = latitude.toFixed(6);
+          document.getElementById('longitude').value = longitude.toFixed(6);
+          
+          getLocationBtn.innerHTML = '<i class="fas fa-check"></i> Location Captured';
+          getLocationBtn.classList.remove('btn-outline-primary');
+          getLocationBtn.classList.add('btn-success');
+          
+          showToast('Location coordinates captured successfully!', 'success');
+          
+          // Reset button after 3 seconds
+          setTimeout(() => {
+            getLocationBtn.disabled = false;
+            getLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Get Current Location';
+            getLocationBtn.classList.remove('btn-success');
+            getLocationBtn.classList.add('btn-outline-primary');
+          }, 3000);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          getLocationBtn.disabled = false;
+          getLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Get Current Location';
+          
+          let errorMessage = 'Unable to get your location.';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied. Please enable location permissions.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out.';
+              break;
+          }
+          
+          showToast(errorMessage, 'error');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      showToast('Geolocation is not supported by this browser.', 'error');
+    }
+  });
+}
+
+// Submit complaint to Supabase
+async function submitComplaint(formData) {
+  try {
+    // Submit complaint using the global function from data-management.js
+    if (window.createComplaint) {
+      const newComplaint = await window.createComplaint(formData);
+      
+      if (newComplaint) {
+        showToast('Complaint submitted successfully!', 'success');
+        
+        // Redirect to complaints page after a short delay
+        setTimeout(() => {
+          window.location.href = '/my-complaints?id=' + newComplaint.id;
+        }, 1500);
+      } else {
+        showToast('Failed to submit complaint. Please try again.', 'error');
+      }
+    } else {
+      showToast('Complaint system not available. Please try again later.', 'error');
+    }
+  } catch (error) {
+    console.error('Error submitting complaint:', error);
+    showToast('Error submitting complaint: ' + error.message, 'error');
   }
 }
