@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('LGU Events Management initialized');
+    
     
     // Initialize user data
     const user = await window.userUtils?.initializeUserData();
@@ -53,6 +53,14 @@ function setupEventListeners() {
             await saveEvent();
         });
     }
+
+    // Prevent default form submission (avoid reload on Enter key)
+    const eventForm = document.getElementById('create-event-form');
+    if (eventForm) {
+        eventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    }
     
     // Search functionality
     const searchInput = document.getElementById('events-search');
@@ -98,7 +106,7 @@ function setupEventListeners() {
 // Load events data
 async function loadEventsData() {
     try {
-        console.log('Loading events data...');
+        
         
         // Show loading state
         showLoadingState();
@@ -675,7 +683,7 @@ function createMockEvent(eventData) {
 
 function updateMockEvent(eventId, eventData) {
     // In a real app, this would update the database
-    console.log('Mock update:', eventId, eventData);
+    
     return true;
 }
 

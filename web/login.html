@@ -43,17 +43,17 @@
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label fw-semibold">Password</label>
-                                <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter your password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter your password" required>
+                                    <button class="btn btn-outline-secondary password-toggle" type="button" data-target="password" aria-label="Show password">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Log In</button>
                             
                             <div class="text-center">
                                 <p class="mb-3">Don't have an account? <a href="/signup" class="text-decoration-none">Sign up</a></p>
-                                <div class="alert alert-info">
-                                    <small class="fw-semibold d-block mb-2">Demo credentials:</small>
-                                    <small class="d-block">Citizen: <code>citizen@example.com</code> / <code>citizen01</code></small>
-                                    <small class="d-block">LGU Admin: <code>admin@lgu.gov.ph</code> / <code>admin911</code></small>
-                                </div>
                             </div>
                         </form>
                     </div>
@@ -80,5 +80,6 @@
     <script src="/js/supabase-init.js"></script>
     <!-- Authentication Script -->
     <script src="js/auth.js"></script>
+    <script src="js/password-toggle.js"></script>
 </body>
 </html>

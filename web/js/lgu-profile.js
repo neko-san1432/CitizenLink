@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('LGU Profile Management initialized');
+    
     
     // Initialize user data
     const user = await window.userUtils?.initializeUserData();
@@ -38,8 +38,25 @@ function setupEventListeners() {
         });
     }
     
+    // Hook form submit on LGU profile page
+    const submitForm = document.getElementById('profile-form');
+    if (submitForm) {
+        submitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveProfile();
+        });
+    }
+
+    // Optional cancel button
+    const cancelBtn = document.getElementById('cancel-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            window.location.href = '/lgu/dashboard';
+        });
+    }
+
     // Form field change listeners for real-time validation
-    const form = document.getElementById('lgu-profile-form');
+    const form = document.getElementById('profile-form');
     if (form) {
         const requiredFields = form.querySelectorAll('[required]');
         requiredFields.forEach(field => {
@@ -53,7 +70,7 @@ function setupEventListeners() {
 // Load profile data
 async function loadProfileData() {
     try {
-        console.log('Loading LGU profile data...');
+        
         
         // Show loading state
         showLoadingState();
@@ -77,7 +94,7 @@ async function loadProfileData() {
                     profileData = { ...user, ...supabaseProfile };
                 }
             } catch (error) {
-                console.warn('Could not fetch Supabase profile, using session data:', error);
+                
             }
         }
         
@@ -96,7 +113,7 @@ async function loadProfileData() {
 
 // Populate profile form
 function populateProfileForm(profileData) {
-    const form = document.getElementById('lgu-profile-form');
+    const form = document.getElementById('profile-form');
     if (!form) return;
     
     // Basic user info (read-only)
@@ -177,13 +194,13 @@ function populateProfileForm(profileData) {
         themeField.value = profileData.theme || 'light';
     }
     
-    console.log('Profile form populated with data:', profileData);
+    
 }
 
 // Save profile
 async function saveProfile() {
     try {
-        const form = document.getElementById('lgu-profile-form');
+        const form = document.getElementById('profile-form');
         if (!form) return;
         
         // Validate form
@@ -253,7 +270,7 @@ async function saveProfile() {
 
 // Validate form
 function validateForm() {
-    const form = document.getElementById('lgu-profile-form');
+    const form = document.getElementById('profile-form');
     if (!form) return false;
     
     let isValid = true;
@@ -335,7 +352,7 @@ function hideFieldError(field) {
 
 // Reset profile form
 function resetProfileForm() {
-    const form = document.getElementById('lgu-profile-form');
+    const form = document.getElementById('profile-form');
     if (!form) return;
     
     // Reset form to original values
@@ -376,7 +393,11 @@ function hideLoadingState() {
 
 // Show saving state
 function showSavingState() {
-    const saveBtn = document.getElementById('save-profile-btn');
+    let saveBtn = document.getElementById('save-profile-btn');
+    if (!saveBtn) {
+        const form = document.getElementById('profile-form');
+        saveBtn = form ? form.querySelector('button[type="submit"]') : null;
+    }
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = `
@@ -388,7 +409,11 @@ function showSavingState() {
 
 // Hide saving state
 function hideSavingState() {
-    const saveBtn = document.getElementById('save-profile-btn');
+    let saveBtn = document.getElementById('save-profile-btn');
+    if (!saveBtn) {
+        const form = document.getElementById('profile-form');
+        saveBtn = form ? form.querySelector('button[type="submit"]') : null;
+    }
     if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = 'Save Changes';
@@ -398,7 +423,7 @@ function hideSavingState() {
 // Mock functions (fallback when Supabase functions aren't available)
 function updateMockLGUProfile(userId, profileData) {
     // In a real app, this would update the database
-    console.log('Mock update LGU profile:', userId, profileData);
+    
     return {
         id: userId,
         ...profileData,

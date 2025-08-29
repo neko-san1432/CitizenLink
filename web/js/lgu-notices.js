@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('LGU Notices Management initialized');
+    
     
     // Initialize user data
     const user = await window.userUtils?.initializeUserData();
@@ -53,6 +53,14 @@ function setupEventListeners() {
             await saveNotice();
         });
     }
+
+    // Prevent default form submission (avoid reload on Enter key)
+    const noticeForm = document.getElementById('create-notice-form');
+    if (noticeForm) {
+        noticeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    }
     
     // Search functionality
     const searchInput = document.getElementById('notices-search');
@@ -98,7 +106,7 @@ function setupEventListeners() {
 // Load notices data
 async function loadNoticesData() {
     try {
-        console.log('Loading notices data...');
+        
         
         // Show loading state
         showLoadingState();
@@ -638,7 +646,7 @@ function createMockNotice(noticeData) {
 
 function updateMockNotice(noticeId, noticeData) {
     // In a real app, this would update the database
-    console.log('Mock update:', noticeId, noticeData);
+    
     return true;
 }
 

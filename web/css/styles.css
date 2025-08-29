@@ -182,6 +182,35 @@
   margin-bottom: 2rem;
 }
 
+/* Tabs behavior for LGU dashboard Recent Complaints */
+.tabs {
+  width: 100%;
+}
+.tabs .tab-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.tabs .tab-btn {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tabs .tab-btn.active {
+  background: var(--primary-lighter);
+  border-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+.tabs .tab-content {
+  display: none;
+}
+.tabs .tab-content.active {
+  display: block;
+}
+
 .recent-complaints h3 {
   margin: 0;
   padding: 1.5rem 1.5rem 1rem 1.5rem;

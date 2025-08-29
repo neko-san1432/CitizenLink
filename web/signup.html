@@ -66,13 +66,23 @@
               </div>
               <div class="col-12 col-md-6 mb-3">
                 <label for="password" class="form-label fw-semibold">Password</label>
-                <input type="password" class="form-control form-control-lg" id="password" name="password"
-                  placeholder="Create a password" required />
+                <div class="input-group">
+                  <input type="password" class="form-control form-control-lg" id="password" name="password"
+                    placeholder="Create a password" required />
+                  <button class="btn btn-outline-secondary password-toggle" type="button" data-target="password" aria-label="Show password">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
               <div class="col-12 col-md-6 mb-4">
                 <label for="confirmPassword" class="form-label fw-semibold">Confirm Password</label>
-                <input type="password" class="form-control form-control-lg" id="confirmPassword" name="confirmPassword"
-                  placeholder="Confirm your password" required />
+                <div class="input-group">
+                  <input type="password" class="form-control form-control-lg" id="confirmPassword" name="confirmPassword"
+                    placeholder="Confirm your password" required />
+                  <button class="btn btn-outline-secondary password-toggle" type="button" data-target="confirmPassword" aria-label="Show password">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -431,6 +441,7 @@
 
   <!-- Authentication Script (non-module to access globals) -->
   <script src="./js/auth.js"></script>
+  <script src="./js/password-toggle.js"></script>
 </body>
 
 </html>

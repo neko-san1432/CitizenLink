@@ -3,12 +3,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import { existsSync } from 'fs';
+import { getSupabaseServiceClient } from './db/db.js';
 
 // ES6 module compatibility
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // Get the directory of the current file
 
 const app = express();
+
+// ===== IN-MEMORY STATE (development scaffolding) =====
+// Simple in-memory store for officer locations (for demo/testing)
+// Structure: { [officerId: string]: { lat: number, lng: number, updatedAt: string } }
+const officerLocations = Object.create(null);
 
 // ===== SIMPLE TEST ROUTE (at the very beginning) =====
 app.get('/ping', (req, res) => {
@@ -86,7 +92,7 @@ app.use(helmet({
   // 7. Permissions-Policy (formerly Feature-Policy)
   permissionsPolicy: {
     features: {
-      geolocation: ['none'],
+      geolocation: ['self'],
       camera: ['none'],
       microphone: ['none'],
       payment: ['none'],
@@ -125,7 +131,7 @@ app.use((req, res, next) => {
   // Explicit Permissions-Policy header (meta tag is ignored by browsers)
   res.setHeader(
     'Permissions-Policy',
-    "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
+    "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
   );
   
   // Development mode - more permissive CSP
@@ -212,6 +218,401 @@ app.get('/api/supabase-bridge', async (req, res) => {
   }
 });
 
+// ===== ADMIN APPOINTMENT API =====
+// Superadmin appoint LGU admin for a department
+app.post('/api/appoint/admin', async (req, res) => {
+  try {
+    const { userId, department } = req.body || {};
+    if (!userId || !department) {
+      return res.status(400).json({ error: 'userId and department are required' });
+    }
+    const sb = getSupabaseServiceClient();
+    const role = `lgu-admin-${String(department).toLowerCase()}`;
+
+    const { error: updErr } = await sb.auth.admin.updateUserById(userId, {
+      user_metadata: { role }
+    });
+    if (updErr) return res.status(500).json({ error: updErr.message });
+
+    // optional audit
+    await sb.from('department_admins').insert([{ user_id: userId, department_id: null, is_active: true }]);
+    return res.json({ ok: true, role });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// LGU admin appoint officer/staff for a department
+app.post('/api/appoint/officer', async (req, res) => {
+  try {
+    const { userId, department } = req.body || {};
+    if (!userId || !department) {
+      return res.status(400).json({ error: 'userId and department are required' });
+    }
+    const sb = getSupabaseServiceClient();
+    const role = `lgu-${String(department).toLowerCase()}`;
+
+    const { error: updErr } = await sb.auth.admin.updateUserById(userId, {
+      user_metadata: { role }
+    });
+    if (updErr) return res.status(500).json({ error: updErr.message });
+    return res.json({ ok: true, role });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// List LGU officers by department (role = lgu-<dept>)
+app.get('/api/officers', async (req, res) => {
+  try {
+    const { department } = req.query;
+    if (!department) return res.status(400).json({ error: 'department is required' });
+    const sb = getSupabaseServiceClient();
+    const rolePrefix = `lgu-${String(department).toLowerCase()}`;
+    // List users by role from auth
+    const { data, error } = await sb.auth.admin.listUsers();
+    if (error) return res.status(500).json({ error: error.message });
+    const officers = (data?.users || []).filter(u => (u.user_metadata?.role || '').toLowerCase() === rolePrefix)
+      .map(u => ({ id: u.id, email: u.email, role: u.user_metadata?.role }));
+    return res.json({ officers });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== MULTI-DEPARTMENT COLLABORATION API =====
+// Helper: resolve department string to id (by name or code)
+async function resolveDepartmentId(sb, department) {
+  const deptStr = String(department).trim();
+  let q = sb.from('departments').select('id').limit(1);
+  // Try case-insensitive name, then code
+  let { data, error } = await q.ilike('name', deptStr);
+  if (error) throw error;
+  if (data && data.length) return data[0].id;
+  ({ data, error } = await sb.from('departments').select('id').ilike('code', deptStr).limit(1));
+  if (error) throw error;
+  return data && data.length ? data[0].id : null;
+}
+
+// Add department involvement to a complaint (owner or collaborator)
+app.post('/api/complaints/:id/departments', async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+    const { department, role = 'collaborator' } = req.body || {};
+    if (!complaintId || !department) return res.status(400).json({ error: 'complaintId and department are required' });
+    const sb = getSupabaseServiceClient();
+    const departmentId = await resolveDepartmentId(sb, department);
+    if (!departmentId) return res.status(400).json({ error: 'Department not found' });
+
+    const { data, error } = await sb.from('complaint_departments').insert([
+      { complaint_id: complaintId, department_id: departmentId, role: role, status: 'pending' }
+    ]).select();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true, row: data?.[0] });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Request help from multiple departments for a complaint
+app.post('/api/complaints/:id/request_help', async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+    const { departments } = req.body || {};
+    if (!complaintId || !Array.isArray(departments) || departments.length === 0) {
+      return res.status(400).json({ error: 'complaintId and departments[] are required' });
+    }
+    const sb = getSupabaseServiceClient();
+    // Resolve all departments (codes or names)
+    const resolved = [];
+    for (const d of departments) {
+      const id = await resolveDepartmentId(sb, d);
+      if (id) resolved.push(id);
+    }
+    if (!resolved.length) return res.status(400).json({ error: 'No valid departments found' });
+    const rows = resolved.map(deptId => ({ complaint_id: complaintId, department_id: deptId, role: 'collaborator', status: 'pending' }));
+    const { data, error } = await sb.from('complaint_departments').insert(rows).select();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true, items: data || [] });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// List departments (id, name, code)
+app.get('/api/departments', async (req, res) => {
+  try {
+    const sb = getSupabaseServiceClient();
+    const { data, error } = await sb.from('departments').select('id, name, code, is_active').order('name');
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ departments: data || [] });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// List roles (computed) combining role type and departments
+app.get('/api/roles', async (req, res) => {
+  try {
+    const sb = getSupabaseServiceClient();
+    const { data, error } = await sb.from('departments').select('name, code, is_active');
+    if (error) return res.status(500).json({ error: error.message });
+    const depts = (data || []).filter(d => d.is_active !== false);
+    const roles = [
+      { role: 'superadmin', type: 'superadmin', department: null },
+      { role: 'citizen', type: 'citizen', department: null },
+      ...depts.flatMap(d => ([
+        { role: `lgu-admin-${String(d.code || d.name).toLowerCase()}`, type: 'lgu_admin', department: d.name },
+        { role: `lgu-${String(d.code || d.name).toLowerCase()}`, type: 'lgu_staff', department: d.name }
+      ]))
+    ];
+    return res.json({ roles });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// List queue for a department, joining complaint summary
+app.get('/api/department-queue', async (req, res) => {
+  try {
+    const { department } = req.query;
+    if (!department) return res.status(400).json({ error: 'department is required' });
+    console.log('🧭 [API] /api/department-queue param department =', department);
+    const sb = getSupabaseServiceClient();
+    const departmentId = await resolveDepartmentId(sb, department);
+    console.log('🧭 [API] resolved departmentId =', departmentId);
+    if (!departmentId) return res.status(400).json({ error: 'Department not found', department });
+    // Step 1: fetch department involvement rows without FK-based joins
+    const { data: cdRows, error: cdErr } = await sb
+      .from('complaint_departments')
+      .select('id, role, status, assigned_officer_id, complaint_id, updated_at')
+      .eq('department_id', departmentId)
+      .order('updated_at', { ascending: false });
+    if (cdErr) {
+      console.error('❌ [API] department-queue complaint_departments error:', cdErr);
+      return res.status(500).json({ error: cdErr.message });
+    }
+
+    const complaintIds = (cdRows || []).map(r => r.complaint_id).filter(Boolean);
+    if (!complaintIds.length) {
+      console.log('📦 [API] department-queue rows = 0');
+      return res.json({ items: [] });
+    }
+
+    // Step 2: fetch complaints in bulk
+    const { data: complaints, error: cErr } = await sb
+      .from('complaints')
+      .select('id, title, status, priority, created_at, type')
+      .in('id', complaintIds);
+    if (cErr) {
+      console.error('❌ [API] department-queue complaints fetch error:', cErr);
+      return res.status(500).json({ error: cErr.message });
+    }
+    const complaintById = new Map((complaints || []).map(c => [c.id, c]));
+    const items = (cdRows || []).map(r => ({
+      id: r.id,
+      role: r.role,
+      status: r.status,
+      assigned_officer_id: r.assigned_officer_id,
+      complaint: complaintById.get(r.complaint_id) || null
+    }));
+    console.log('📦 [API] department-queue rows =', items.length);
+    return res.json({ items });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Update status of a department involvement row
+app.post('/api/complaint_departments/:id/status', async (req, res) => {
+  try {
+    const cdId = req.params.id;
+    const { status, reason } = req.body || {};
+    const allowed = ['pending','accepted','in_progress','resolved','rejected'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: 'invalid status' });
+    const sb = getSupabaseServiceClient();
+    const payload = reason && status === 'rejected' ? { status, notes: reason } : { status };
+    const { error } = await sb.from('complaint_departments').update(payload).eq('id', cdId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Assign officer on a department involvement row
+app.post('/api/complaint_departments/:id/assign_officer', async (req, res) => {
+  try {
+    const cdId = req.params.id;
+    const { officerId } = req.body || {};
+    if (!officerId) return res.status(400).json({ error: 'officerId is required' });
+    const sb = getSupabaseServiceClient();
+    const { error } = await sb.from('complaint_departments').update({ assigned_officer_id: officerId, status: 'in_progress' }).eq('id', cdId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// List assignments for a specific officer (assigned_officer_id)
+app.get('/api/officer-assignments', async (req, res) => {
+  try {
+    const { officerId } = req.query;
+    if (!officerId) return res.status(400).json({ error: 'officerId is required' });
+    const sb = getSupabaseServiceClient();
+
+    // Fetch department involvement rows for this officer
+    const { data: cdRows, error: cdErr } = await sb
+      .from('complaint_departments')
+      .select('id, role, status, complaint_id, updated_at')
+      .eq('assigned_officer_id', officerId)
+      .order('updated_at', { ascending: false });
+    if (cdErr) return res.status(500).json({ error: cdErr.message });
+
+    const complaintIds = (cdRows || []).map(r => r.complaint_id).filter(Boolean);
+    if (!complaintIds.length) return res.json({ items: [] });
+
+    const { data: complaints, error: cErr } = await sb
+      .from('complaints')
+      .select('id, title, status, priority, created_at, type')
+      .in('id', complaintIds);
+    if (cErr) return res.status(500).json({ error: cErr.message });
+
+    const byId = new Map((complaints || []).map(c => [c.id, c]));
+    const items = (cdRows || []).map(r => ({
+      id: r.id,
+      status: r.status,
+      role: r.role,
+      updated_at: r.updated_at,
+      complaint: byId.get(r.complaint_id) || null
+    }));
+    return res.json({ items });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Officer starts working on an assignment
+app.post('/api/complaint_departments/:id/start', async (req, res) => {
+  try {
+    const cdId = req.params.id;
+    const sb = getSupabaseServiceClient();
+    const { error } = await sb
+      .from('complaint_departments')
+      .update({ status: 'in_progress' })
+      .eq('id', cdId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Officer completes an assignment (optional proofUrl saved into notes)
+app.post('/api/complaint_departments/:id/complete', async (req, res) => {
+  try {
+    const cdId = req.params.id;
+    const { proofUrl } = req.body || {};
+    const sb = getSupabaseServiceClient();
+
+    // Append proofUrl to notes if provided (keep schema simple)
+    let notesAppend = null;
+    if (proofUrl) {
+      notesAppend = `Proof: ${proofUrl}`;
+    }
+
+    const updatePayload = notesAppend ? { status: 'resolved', notes: notesAppend } : { status: 'resolved' };
+    const { error } = await sb
+      .from('complaint_departments')
+      .update(updatePayload)
+      .eq('id', cdId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== OFFICER LOCATION (scaffold) =====
+// Update officer location (expects { officerId, lat, lng })
+app.post('/api/officer-location', async (req, res) => {
+  try {
+    const { officerId, lat, lng } = req.body || {};
+    if (!officerId || typeof lat !== 'number' || typeof lng !== 'number') {
+      return res.status(400).json({ error: 'officerId, lat, lng are required' });
+    }
+    officerLocations[officerId] = { lat, lng, updatedAt: new Date().toISOString() };
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Get a single officer location
+app.get('/api/officer-location', async (req, res) => {
+  const { officerId } = req.query;
+  if (!officerId) return res.status(400).json({ error: 'officerId is required' });
+  return res.json({ location: officerLocations[officerId] || null });
+});
+
+// (Optional) Get all known officer locations
+app.get('/api/officer-locations', async (req, res) => {
+  return res.json({ locations: officerLocations });
+});
+
+// Get all users (for admin dropdown)
+app.get('/api/users', async (req, res) => {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      console.error('[/api/users] Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    // Optional role filter (e.g., ?role=citizen)
+    const roleFilter = String(req.query.role || '').toLowerCase();
+    let filtered = users || [];
+    if (roleFilter) {
+      filtered = filtered.filter(u => {
+        const r = String(u.user_metadata?.role || 'citizen').toLowerCase();
+        return r === roleFilter;
+      });
+    }
+    return res.json({ users: filtered });
+  } catch (error) {
+    console.error('[/api/users] Exception:', error);
+    return res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Update user role
+app.post('/api/update-role', async (req, res) => {
+  try {
+    const { userId, newRole } = req.body;
+    
+    if (!userId || !newRole) {
+      return res.status(400).json({ error: 'userId and newRole are required' });
+    }
+    
+    const supabase = getSupabaseServiceClient();
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { role: newRole }
+    });
+    
+    if (error) {
+      console.error('[/api/update-role] Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    return res.json({ success: true, message: `Role updated to ${newRole}` });
+  } catch (error) {
+    console.error('[/api/update-role] Exception:', error);
+    return res.status(500).json({ error: 'Failed to update role' });
+  }
+});
+
 // ===== MAIN ROUTES =====
 // Home/Landing page
 app.get('/', (req, res) => {
@@ -262,6 +663,26 @@ app.get('/citizen/submit-complaint', (req, res) => {
 // News page route
 app.get('/news', (req, res) => {
   res.sendFile(path.join(__dirname, 'news.html'));
+});
+
+// Serve new admin pages
+app.get('/superadmin/appointments.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'superadmin', 'appointments.html'));
+});
+app.get('/superadmin/appointments', (req, res) => {
+  res.sendFile(path.join(__dirname, 'superadmin', 'appointments.html'));
+});
+app.get('/lgu/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'admin.html'));
+});
+app.get('/lgu/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'admin.html'));
+});
+app.get('/lgu/officer.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'officer.html'));
+});
+app.get('/lgu/officer', (req, res) => {
+  res.sendFile(path.join(__dirname, 'lgu', 'officer.html'));
 });
 
 // ===== LGU ROUTES =====
@@ -549,6 +970,7 @@ app.get('/api/health', (req, res) => {
     status: 'healthy', 
     timestamp: new Date().toISOString(),
     security: 'enabled',
+    features: { officerLocation: true },
     routes: {
       main: ['/', '/login', '/signup'],
       citizen: ['/citizen', '/citizen/dashboard', '/citizen/profile', '/citizen/complaints', '/citizen/submit-complaint'],

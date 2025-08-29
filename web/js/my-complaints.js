@@ -125,22 +125,13 @@ function loadComplaints(complaints, filters = {}) {
       </div>
       <div class="complaint-actions">
         <span class="status-badge ${statusClass}">${complaint.status}</span>
-        <button class="btn btn-outline view-complaint-btn" data-id="${complaint.id}">
-          View Details
-        </button>
       </div>
     `;
     
     complaintsContainer.appendChild(complaintItem);
   });
   
-  // Add event listeners to view buttons
-  document.querySelectorAll('.view-complaint-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const complaintId = button.getAttribute('data-id');
-      showComplaintDetails(complaintId);
-    });
-  });
+  // No view buttons on citizen dashboard complaints list
   
   // Update pagination
   updatePagination(filteredComplaints.length, page, perPage);
@@ -390,7 +381,7 @@ async function checkAuth() {
         // Check if user is authenticated
         const user = JSON.parse(sessionStorage.getItem('user') || '{}');
         if (!user.id) {
-            console.log('No authenticated user found');
+            
             return null;
         }
         return { username: user.email, id: user.id };

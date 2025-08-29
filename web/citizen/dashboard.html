@@ -65,7 +65,7 @@
                         <h3 class="mb-0">Recent Complaints</h3>
                         <button id="refresh-complaints" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-sync-alt"></i>
-                            Refresh
+                            Refresh All
                         </button>
                     </div>
                     <div class="complaints-grid" id="recent-complaints-grid">
@@ -93,12 +93,18 @@
                 </div>
 
                 <!-- Community Updates - Using inline styles to force vertical stacking -->
-                <div style="margin-top: 2rem; padding: 1.5rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                <div class="community-updates-section" style="margin-top: 2rem; padding: 1.5rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
                     <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 1.5rem; margin: -1.5rem -1.5rem 1.5rem -1.5rem; border-radius: 0.75rem 0.75rem 0 0;">
-                        <h3 style="margin: 0; color: white;">
-                            <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
-                            Community Updates
-                        </h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 style="margin: 0; color: white;">
+                                <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
+                                Community Updates
+                            </h3>
+                            <button id="retry-events" class="btn btn-sm btn-outline-light" style="display: none;">
+                                <i class="fas fa-redo"></i>
+                                Retry
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Upcoming Events Section -->
@@ -107,36 +113,28 @@
                             <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>Upcoming Events
                         </h5>
                         <ul style="list-style: none; padding: 0; margin: 0;">
-                            <li style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
-                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">City Council Meeting</strong>
-                                <small style="color: #6b7280;">Every 1st Monday of the month at 6:00 PM</small>
-                            </li>
-                            <li style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
-                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">Community Clean-up Day</strong>
-                                <small style="color: #6b7280;">Saturday, December 15, 2024 at 8:00 AM</small>
-                            </li>
-                            <li style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
-                                <strong style="color: #111827; display: block; margin-bottom: 0.25rem;">Public Safety Forum</strong>
-                                <small style="color: #6b7280;">Wednesday, December 20, 2024 at 7:00 PM</small>
-                            </li>
+                            <!-- Events will be loaded here from Supabase -->
                         </ul>
                     </div>
                     
                     <!-- Important Notices Section -->
-                    <div style="margin-top: 0; padding: 0; display: block; width: 100%;">
-                        <h5 style="color: #0891b2; font-weight: 600; margin-bottom: 1rem;">
-                            <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>Important Notices
-                        </h5>
-                        <div style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background-color: #e0f2fe; border: 1px solid #0284c7; color: #0c4a6e;">
-                            <strong>Water Maintenance</strong><br>
-                            Scheduled maintenance on December 10-12, 2024. Expect temporary water interruptions.
+                    <div class="important-notices-section" style="margin-top: 0; padding: 0; display: block; width: 100%;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 style="color: #0891b2; font-weight: 600; margin-bottom: 1rem;">
+                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>Important Notices
+                            </h5>
+                            <button id="retry-notices" class="btn btn-sm btn-outline-primary" style="display: none;">
+                                <i class="fas fa-redo"></i>
+                                Retry
+                            </button>
                         </div>
-                        <div style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0; background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e;">
-                            <strong>Road Construction</strong><br>
-                            Main Street construction project starting January 2025. Plan alternate routes.
+                        <div>
+                            <!-- Notices will be loaded here from Supabase -->
                         </div>
                     </div>
                 </div>
+                
+
             </main>
         </div>
     </div>
@@ -165,6 +163,7 @@
 
     <div id="toast" class="toast"></div>
     <script src="../js/supabase-bridge.js"></script>
+    <script src="../js/debug-logger.js"></script>
     <script src="../js/supabase-init.js"></script>
     <script src="../js/user-utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

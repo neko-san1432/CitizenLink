@@ -18,9 +18,112 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize analytics
   initializeAnalytics();
   
+  // Wire UI controls for panels and fullscreen
+  initializeLayoutControls();
+  
   // Run initial clustering as part of map initialization/update flow
   try { updateHeatmap(); } catch (_) {}
 });
+
+function initializeLayoutControls() {
+  const leftPanel = document.getElementById('left-panel');
+  const rightPanel = document.getElementById('right-panel');
+  const mapCard = document.getElementById('map-card');
+  const toggleFilters = document.getElementById('toggle-filters');
+  const toggleInsights = document.getElementById('toggle-insights');
+  const toggleFullscreen = document.getElementById('toggle-fullscreen');
+  const closeLeft = document.getElementById('close-left-panel');
+  const closeRight = document.getElementById('close-right-panel');
+
+  const invalidateMapSize = () => { try { if (window.complaintMap) window.complaintMap.invalidateSize(); } catch (_) {} };
+
+  if (toggleFilters && leftPanel) {
+    toggleFilters.addEventListener('click', () => {
+      leftPanel.classList.toggle('open');
+      setTimeout(invalidateMapSize, 300);
+    });
+  }
+  if (toggleInsights && rightPanel) {
+    toggleInsights.addEventListener('click', () => {
+      rightPanel.classList.toggle('open');
+      setTimeout(invalidateMapSize, 300);
+    });
+  }
+  if (closeLeft && leftPanel) {
+    closeLeft.addEventListener('click', () => { leftPanel.classList.remove('open'); setTimeout(invalidateMapSize, 300); });
+  }
+  if (closeRight && rightPanel) {
+    closeRight.addEventListener('click', () => { rightPanel.classList.remove('open'); setTimeout(invalidateMapSize, 300); });
+  }
+  if (toggleFullscreen && mapCard) {
+    toggleFullscreen.addEventListener('click', () => {
+      mapCard.classList.toggle('map-fullscreen');
+      // Swap icon
+      try {
+        const i = toggleFullscreen.querySelector('i');
+        if (i) i.className = mapCard.classList.contains('map-fullscreen') ? 'fas fa-compress' : 'fas fa-expand';
+      } catch (_) {}
+      setTimeout(invalidateMapSize, 50);
+    });
+  }
+}
+
+// Override addAdvancedFilters to mount into the left panel container
+function addAdvancedFilters() {
+  const container = document.getElementById('advanced-filters-container');
+  if (!container) return;
+
+  const advancedFiltersContainer = document.createElement('div');
+  advancedFiltersContainer.className = 'advanced-filters';
+
+  // Status filter
+  const statusFilter = document.createElement('select');
+  statusFilter.id = 'status-filter';
+  statusFilter.className = 'filter-select';
+  statusFilter.innerHTML = `
+    <option value="all">All Statuses</option>
+    <option value="pending">Pending</option>
+    <option value="in_progress">In Progress</option>
+    <option value="resolved">Resolved</option>
+  `;
+
+  // Date range filters (from/to)
+  const fromLabel = document.createElement('label');
+  fromLabel.textContent = 'From:';
+  fromLabel.className = 'filter-label';
+  fromLabel.setAttribute('for', 'date-from');
+
+  const dateFrom = document.createElement('input');
+  dateFrom.type = 'date';
+  dateFrom.id = 'date-from';
+  dateFrom.className = 'filter-select';
+  dateFrom.placeholder = 'From';
+  dateFrom.setAttribute('aria-label', 'Start date');
+
+  const toLabel = document.createElement('label');
+  toLabel.textContent = 'To:';
+  toLabel.className = 'filter-label';
+  toLabel.setAttribute('for', 'date-to');
+
+  const dateTo = document.createElement('input');
+  dateTo.type = 'date';
+  dateTo.id = 'date-to';
+  dateTo.className = 'filter-select';
+  dateTo.placeholder = 'To';
+  dateTo.setAttribute('aria-label', 'End date');
+  
+  advancedFiltersContainer.appendChild(statusFilter);
+  advancedFiltersContainer.appendChild(fromLabel);
+  advancedFiltersContainer.appendChild(dateFrom);
+  advancedFiltersContainer.appendChild(toLabel);
+  advancedFiltersContainer.appendChild(dateTo);
+  container.appendChild(advancedFiltersContainer);
+  
+  // Add event listeners
+  statusFilter.addEventListener('change', updateHeatmap);
+  dateFrom.addEventListener('change', updateHeatmap);
+  dateTo.addEventListener('change', updateHeatmap);
+}
 
 // Authentication function
 async function checkAuth() {
@@ -28,13 +131,13 @@ async function checkAuth() {
     // Check if user is authenticated
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     if (!user.id) {
-      console.log('No authenticated user found');
+      
       return null;
     }
     
     // Check if user is LGU type
     if (user.type !== 'lgu' && user.role !== 'lgu' && user.role !== 'admin') {
-      console.log('User not authorized for LGU heatmap');
+      
       return null;
     }
     
@@ -62,67 +165,128 @@ async function initializeMap() {
     // Add status legend to the top-right
     addStatusLegend(map);
     
-    // Load real Digos city boundary from JSON file
+    // Try to load barangay boundaries overlay from optional sources
     try {
-      const response = await fetch('/lgu/border_locations.json');
+      // A) If a global GeoJSON variable is provided elsewhere
+      if (typeof window.json_BarangayClassification_4 !== 'undefined') {
+        const brgyLayer = L.geoJSON(window.json_BarangayClassification_4, {
+          style: { color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0 }
+        }).addTo(map);
+        window.brgyLayer = brgyLayer;
+      } else {
+        // B) Load from our barangay boundaries JSON (array of { name, geojson })
+        try {
+          const resp = await fetch('/lgu/brgy_boundaries_locatlon.json');
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data)) {
+              const polygons = [];
+              data.forEach(entry => {
+                try {
+                  if (!entry || !entry.geojson || !entry.geojson.coordinates) return;
+                  const name = entry.name || 'Barangay';
+                  const gj = entry.geojson;
+                  const style = { color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0 };
+
+                  // Coordinates in our files are [lat, lon]; build Leaflet polygons directly
+                  if (gj.type === 'Polygon') {
+                    const rings = gj.coordinates.map(ring => ring.map(coord => [coord[0], coord[1]]));
+                    const poly = L.polygon(rings, style).bindTooltip(name, { sticky: true });
+                    polygons.push(poly);
+                  } else if (gj.type === 'MultiPolygon') {
+                    const multi = gj.coordinates.map(polygon => polygon.map(ring => ring.map(coord => [coord[0], coord[1]])));
+                    const poly = L.polygon(multi, style).bindTooltip(name, { sticky: true });
+                    polygons.push(poly);
+                  }
+                } catch (_) { /* skip problematic entry */ }
+              });
+              if (polygons.length) {
+                const brgyLayer = L.layerGroup(polygons).addTo(map);
+                window.brgyLayer = brgyLayer;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+    
+    // Load barangay boundaries and use them to define the municipal area
+    try {
+      const response = await fetch('/lgu/brgy_boundaries_locatlon.json');
       const data = await response.json();
       
-      if (data && data[0] && data[0].geojson) {
-        const geojson = data[0].geojson;
-        
-        // Create the boundary polygon from real coordinates
-        const boundary = L.polygon(geojson.coordinates[0], {
-          color: '#2E86AB',        // Blue border
-          weight: 3,               // Border thickness
-          opacity: 0.8,            // Border opacity
-          fillColor: '#2E86AB',    // Fill color
-          fillOpacity: 0.1         // Very transparent fill
+      if (data && Array.isArray(data) && data.length > 0) {
+        // Create a combined boundary from all barangay boundaries
+        const allCoordinates = [];
+        data.forEach(entry => {
+          if (entry.geojson && entry.geojson.coordinates) {
+            if (entry.geojson.type === 'Polygon') {
+              allCoordinates.push(entry.geojson.coordinates[0]);
+            } else if (entry.geojson.type === 'MultiPolygon') {
+              entry.geojson.coordinates.forEach(polygon => {
+                allCoordinates.push(polygon[0]);
+              });
+            }
+          }
         });
         
-        // Add boundary to map
-        boundary.addTo(map);
-        
-        // Fit and restrict map to the boundary bounds
-        const bounds = boundary.getBounds();
-        map.fitBounds(bounds);
-        map.setMaxBounds(bounds.pad(0.05));
-        map.options.minZoom = map.getZoom();
-        
-        // Create a mask to visually clip outside the boundary
-        try {
-          const world = [
-            [90, -360], [90, 360],
-            [-90, 360], [-90, -360]
-          ];
-          const maskCoords = [world, geojson.coordinates[0]];
-          const mask = L.polygon(maskCoords, {
-            stroke: false,
-            fillColor: '#ffffff',
-            fillOpacity: 0.85,
-            interactive: false
+        if (allCoordinates.length > 0) {
+          // Create a combined boundary polygon from all barangay coordinates
+          const combinedBoundary = L.polygon(allCoordinates, {
+            color: '#2E86AB',        // Blue border
+            weight: 3,               // Border thickness
+            opacity: 0.8,            // Border opacity
+            fillColor: '#2E86AB',    // Fill color
+            fillOpacity: 0.1         // Very transparent fill
           });
-          mask.addTo(map);
-          // Bring boundary on top of mask
-          boundary.bringToFront();
-        } catch (_) {
-          // If mask creation fails, continue without visual crop
+          
+          // Add boundary to map
+          combinedBoundary.addTo(map);
+          
+          // Fit and restrict map to the combined boundary bounds
+          const bounds = combinedBoundary.getBounds();
+          map.fitBounds(bounds);
+          map.setMaxBounds(bounds.pad(0.05));
+          map.options.minZoom = map.getZoom();
+          
+          // Create a mask to visually clip outside the boundary
+          try {
+            const world = [
+              [90, -360], [90, 360],
+              [-90, 360], [-90, -360]
+            ];
+            const maskCoords = [world, ...allCoordinates];
+            const mask = L.polygon(maskCoords, {
+              stroke: false,
+              fillColor: '#ffffff',
+              fillOpacity: 0.85,
+              interactive: false
+            });
+            mask.addTo(map);
+            // Bring boundary on top of mask
+            combinedBoundary.bringToFront();
+          } catch (_) {
+            // If mask creation fails, continue without visual crop
+          }
+          
+          
+          
+          // Store boundary reference for toggle functionality
+          window.boundaryLayer = combinedBoundary;
+          
+          // Add boundary toggle button to controls
+          addBoundaryToggleButton();
+        } else {
+          
+          createFallbackBoundary(map);
         }
-        
-        console.log('✅ Real Digos city boundary loaded successfully');
-        
-        // Store boundary reference for toggle functionality
-        window.boundaryLayer = boundary;
-        
-        // Add boundary toggle button to controls
-        addBoundaryToggleButton();
-        
       } else {
-        console.warn('⚠️ Could not parse boundary data, using fallback');
+        
         createFallbackBoundary(map);
       }
     } catch (error) {
-      console.error('❌ Error loading boundary data:', error);
-      console.log('🔄 Using fallback boundary');
+      console.error('❌ Error loading barangay boundary data:', error);
+      
       createFallbackBoundary(map);
     }
     
@@ -137,8 +301,8 @@ async function initializeMap() {
     // Filter complaints to only show those inside the city boundary
     const complaintsInsideBoundary = filterComplaintsInsideBoundary(complaintsWithCoordinates, window.boundaryLayer);
     
-    console.log(`📊 Total complaints with coordinates: ${complaintsWithCoordinates.length}`);
-    console.log(`🏙️ Complaints inside city boundary: ${complaintsInsideBoundary.length}`);
+    
+    
     
     if (complaintsInsideBoundary.length === 0) {
       // Show "No complaints inside city boundary" message
@@ -227,10 +391,10 @@ async function initializeMap() {
     try {
       updateStatistics(complaintsInsideBoundary);
     } catch (e) {
-      console.warn('Statistics update skipped:', e);
+      
     }
     
-    console.log(`Heatmap initialized with ${complaintsInsideBoundary.length} complaints inside city boundary`);
+    
   } catch (error) {
     console.error('Error initializing map:', error);
     
@@ -298,6 +462,10 @@ function addMapControls(map) {
     "Complaints": window.markerLayer || L.layerGroup([]),
     "Heatmap": window.heatLayer || L.layerGroup([])
   };
+  // Add barangay boundaries overlay if available
+  if (window.brgyLayer) {
+    overlayMaps["Barangay Boundaries"] = window.brgyLayer;
+  }
   
   try { L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map); } catch (_) {}
 }
@@ -426,6 +594,25 @@ function getComplaintWeight(complaint) {
   }
   
   return weight;
+}
+
+// Normalize statuses to canonical values for consistent analytics
+function normalizeStatus(status) {
+  const s = (status || '').toString().toLowerCase().trim().replace(/\s+/g, '_').replace(/-/g, '_');
+  if (s === 'inprogress') return 'in_progress';
+  if (['pending', 'in_progress', 'resolved'].includes(s)) return s;
+  return 'pending';
+}
+
+// Compute a stable area key from latitude/longitude using a simple grid
+// This lets us bucket nearby complaints into the same "hotspot area"
+function getAreaKey(lat, lon, gridSizeDegrees = 0.01) { // ≈1.1km at equator
+  const latNum = parseFloat(lat);
+  const lonNum = parseFloat(lon);
+  if (Number.isNaN(latNum) || Number.isNaN(lonNum)) return 'Unknown Area';
+  const latCell = Math.floor(latNum / gridSizeDegrees) * gridSizeDegrees;
+  const lonCell = Math.floor(lonNum / gridSizeDegrees) * gridSizeDegrees;
+  return `Zone ${latCell.toFixed(2)}, ${lonCell.toFixed(2)}`;
 }
 
 // Government unit names mapping
@@ -905,14 +1092,13 @@ function updateHotspotList(complaints) {
   const hotspotList = document.getElementById('hotspot-list');
   if (!hotspotList) return;
   
-  // Group complaints by area (simplified - using coordinates as areas)
+  // Group complaints by grid area using latitude/longitude
   const areaComplaints = {};
   complaints.forEach(complaint => {
-    if (complaint.coordinates) {
-      const area = getAreaFromCoordinates(complaint.coordinates);
-      if (!areaComplaints[area]) {
-        areaComplaints[area] = [];
-      }
+    const { latitude, longitude } = complaint;
+    if (latitude && longitude) {
+      const area = getAreaKey(latitude, longitude);
+      if (!areaComplaints[area]) areaComplaints[area] = [];
       areaComplaints[area].push(complaint);
     }
   });
@@ -940,19 +1126,13 @@ function updatePriorityAreas(complaints) {
   const areaPriority = {};
   
   complaints.forEach(complaint => {
-    if (complaint.coordinates && complaint.status !== 'resolved') {
-      const area = getAreaFromCoordinates(complaint.coordinates);
-      if (!areaPriority[area]) {
-        areaPriority[area] = { score: 0, complaints: [] };
-      }
-      
-             let score = 1;
-       
-       // Increase score for pending complaints
-       if (complaint.status === 'pending') score = 3;
-       else if (complaint.status === 'in_progress') score = 2;
-       
-       areaPriority[area].score += score;
+    const status = normalizeStatus(complaint.status);
+    const { latitude, longitude } = complaint;
+    if (latitude && longitude && status !== 'resolved') {
+      const area = getAreaKey(latitude, longitude);
+      if (!areaPriority[area]) areaPriority[area] = { score: 0, complaints: [] };
+      let score = status === 'pending' ? 3 : status === 'in_progress' ? 2 : 1;
+      areaPriority[area].score += score;
       areaPriority[area].complaints.push(complaint);
     }
   });
@@ -985,18 +1165,13 @@ function updateResourceAllocation(complaints) {
   const areaResources = {};
   
   complaints.forEach(complaint => {
-    if (complaint.coordinates) {
-      const area = getAreaFromCoordinates(complaint.coordinates);
-      if (!areaResources[area]) {
-        areaResources[area] = { complaints: 0, priority: 0 };
-      }
-      
+    const status = normalizeStatus(complaint.status);
+    const { latitude, longitude } = complaint;
+    if (latitude && longitude) {
+      const area = getAreaKey(latitude, longitude);
+      if (!areaResources[area]) areaResources[area] = { complaints: 0, priority: 0 };
       areaResources[area].complaints++;
-      
-             // Increase priority for pending complaints
-       if (complaint.status === 'pending') areaResources[area].priority += 3;
-       else if (complaint.status === 'in_progress') areaResources[area].priority += 2;
-       else areaResources[area].priority += 1;
+      areaResources[area].priority += status === 'pending' ? 3 : status === 'in_progress' ? 2 : 1;
     }
   });
   
@@ -1005,7 +1180,7 @@ function updateResourceAllocation(complaints) {
   
   // Update resource allocation
   resourceAllocation.innerHTML = Object.entries(areaResources).map(([area, data]) => {
-    const percentage = Math.round((data.priority / totalPriority) * 100);
+    const percentage = Math.round((data.priority / (totalPriority || 1)) * 100);
     
     return `
       <div class="resource-item">
@@ -1154,7 +1329,7 @@ async function updateHeatmap() {
     // Update statistics
     updateStatistics(complaintsInsideBoundary);
     
-    console.log(`Heatmap updated with ${complaintsInsideBoundary.length} complaints inside city boundary and ${clusters.length} clusters`);
+    
   } catch (error) {
     console.error('Error updating heatmap:', error);
   }
@@ -1469,7 +1644,7 @@ function updateClusterStatistics(clusters) {
 // View all complaints in a specific cluster
 function viewClusterComplaints(clusterIndex) {
   // This function can be used to filter the complaints table or show detailed view
-  console.log(`Viewing complaints for cluster ${clusterIndex}`);
+  
   
   // You can implement filtering logic here
   // For example, highlight complaints on the map or filter the complaints table
@@ -1562,10 +1737,10 @@ function toggleBoundary() {
   if (window.boundaryLayer) {
     if (window.complaintMap && window.complaintMap.hasLayer(window.boundaryLayer)) {
       window.complaintMap.removeLayer(window.boundaryLayer);
-      console.log('Boundary hidden');
+      
     } else if (window.complaintMap) {
       window.complaintMap.addLayer(window.boundaryLayer);
-      console.log('Boundary shown');
+      
     }
   }
 }
@@ -1604,7 +1779,7 @@ function createFallbackBoundary(map) {
   
   boundary.addTo(map);
   map.fitBounds(boundary.getBounds());
-  console.log('🔄 Fallback boundary created');
+  
   
   // Store boundary reference for toggle functionality
   window.boundaryLayer = boundary;
@@ -1616,7 +1791,7 @@ function createFallbackBoundary(map) {
 // Filter complaints to only show those inside the city boundary
 function filterComplaintsInsideBoundary(complaints, boundaryLayer) {
   if (!boundaryLayer) {
-    console.warn('⚠️ No boundary layer available, showing all complaints');
+    
     return complaints;
   }
   
@@ -1629,7 +1804,7 @@ function filterComplaintsInsideBoundary(complaints, boundaryLayer) {
       // Check if point is inside the boundary polygon
       return boundaryPolygon.getBounds().contains(point);
     } catch (error) {
-      console.warn(`⚠️ Error checking complaint ${complaint.id} location:`, error);
+      
       return false;
     }
   });

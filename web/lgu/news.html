@@ -3,234 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LGU News Management - Create and manage news articles and announcements for the community.">
-    <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
-    <title>LGU News Management - CitizenLink</title>
-    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/additional-styles.css">
+    <title>News Management - LGU Admin Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/additional-styles.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
-
-        <!-- Sidebar overlay for mobile -->
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-        <div class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebar-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="brand-logo">
-                        <a href="/lgu/dashboard" class="logo-link">
-                            <i class="fas fa-shield-alt text-primary me-2"></i>
-                            <span class="brand-text">CitizenLink</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">Loading...</span></span>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-content">
+                    <h1>News Management</h1>
+                    <p>Create, edit, and manage news articles and announcements</p>
                 </div>
             </header>
 
-            <main class="dashboard-main">
-                <div class="page-header">
-                    <h2>News Management</h2>
-                    <p class="text-muted">Create and manage news articles and announcements for the community.</p>
-                </div>
+            <!-- Sidebar Overlay -->
+            <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons mb-4">
-                    <button class="btn btn-primary" id="create-news-btn">
-                        <i class="fas fa-plus me-2"></i>Create News Article
-                    </button>
-                    <button class="btn btn-outline-secondary" id="refresh-news-btn">
-                        <i class="fas fa-sync-alt me-2"></i>Refresh
-                    </button>
-                </div>
-
-                <!-- News Filter and Search -->
-                <div class="news-controls mb-4">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <select class="form-select" id="category-filter">
-                                <option value="">All Categories</option>
-                                <option value="Public Safety">Public Safety</option>
-                                <option value="Infrastructure">Infrastructure</option>
-                                <option value="Environment">Environment</option>
-                                <option value="Health">Health</option>
-                                <option value="Technology">Technology</option>
-                                <option value="Education">Education</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="form-select" id="status-filter">
-                                <option value="">All Status</option>
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="news-search" placeholder="Search news articles...">
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <div class="search-section">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search news articles..." id="news-search">
                         </div>
                     </div>
-                </div>
-
-                <!-- News Grid -->
-                <div class="news-container">
-                    <div class="row" id="news-grid">
-                        <!-- News articles will be loaded here -->
-                    </div>
-                    
-                    <!-- Load More Button -->
-                    <div class="text-center mt-4">
-                        <button class="btn btn-primary" id="load-more-news">
-                            <i class="fas fa-plus me-2"></i>Load More News
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="add-news-btn">
+                            <i class="fas fa-plus"></i>
+                            Add News Article
                         </button>
                     </div>
                 </div>
 
-                <!-- No News Message -->
-                <div id="no-news-message" class="text-center py-5" style="display: none;">
-                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No news articles found</h5>
-                    <p class="text-muted">Create your first news article to get started.</p>
-                    <button class="btn btn-primary" id="create-first-news">
-                        <i class="fas fa-plus me-2"></i>Create First Article
-                    </button>
+                <!-- News Articles List -->
+                <div class="news-container">
+                    <div class="news-grid" id="news-grid">
+                        <!-- News articles will be loaded here -->
+                    </div>
                 </div>
-            </main>
-        </div>
-    </div>
 
-    <!-- News Detail Modal -->
-    <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="newsModalLabel">News Article</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="newsModalBody">
-                    <!-- News content will be loaded here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="share-news">
-                        <i class="fas fa-share me-2"></i>Share
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- No News State -->
+                <div id="no-news" class="empty-state" style="display: none;">
+                    <div class="empty-state-content">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <h3>No News Articles Found</h3>
+                        <p class="empty-state-description">Start creating news articles to keep citizens informed.</p>
+                        <div class="empty-state-actions">
+                            <button class="btn btn-primary" onclick="showAddNewsModal()">
+                                <i class="fas fa-plus"></i>
+                                Create First Article
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- Create/Edit News Modal -->
-    <div class="modal fade" id="createNewsModal" tabindex="-1" aria-labelledby="createNewsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+    <!-- Add/Edit News Modal -->
+    <div class="modal" id="news-modal" style="display: none;">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="createNewsModalLabel">Create News Article</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h3 id="news-modal-title">Add News Article</h3>
+                    <button class="modal-close" id="news-modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <form id="create-news-form">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="form-group mb-3">
-                                    <label for="news-title">Title *</label>
-                                    <input type="text" class="form-control" id="news-title" name="title" required>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-excerpt">Excerpt *</label>
-                                    <textarea class="form-control" id="news-excerpt" name="excerpt" rows="3" required placeholder="Brief summary of the article..."></textarea>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-content">Content *</label>
-                                    <textarea class="form-control" id="news-content" name="content" rows="10" required placeholder="Full article content..."></textarea>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="news-category">Category *</label>
-                                    <select class="form-select" id="news-category" name="category" required>
-                                        <option value="">Select Category</option>
-                                        <option value="Public Safety">Public Safety</option>
-                                        <option value="Infrastructure">Infrastructure</option>
-                                        <option value="Environment">Environment</option>
-                                        <option value="Health">Health</option>
-                                        <option value="Technology">Technology</option>
-                                        <option value="Education">Education</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-icon">Icon</label>
-                                    <input type="text" class="form-control" id="news-icon" name="icon" placeholder="fas fa-newspaper">
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-author">Author *</label>
-                                    <input type="text" class="form-control" id="news-author" name="author" required>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-read-time">Reading Time</label>
-                                    <input type="text" class="form-control" id="news-read-time" name="read_time" placeholder="5 min read">
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-status">Status *</label>
-                                    <select class="form-select" id="news-status" name="status" required>
-                                        <option value="draft">Draft</option>
-                                        <option value="published">Published</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-featured">Featured Article</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="news-featured" name="featured">
-                                        <label class="form-check-label" for="news-featured">
-                                            Mark as featured
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-tags">Tags</label>
-                                    <input type="text" class="form-control" id="news-tags" name="tags" placeholder="tag1, tag2, tag3">
-                                    <small class="text-muted">Separate tags with commas</small>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="news-image">Image URL</label>
-                                    <input type="url" class="form-control" id="news-image" name="image_url" placeholder="https://example.com/image.jpg">
-                                </div>
-                            </div>
+                    <form id="news-form">
+                        <div class="form-group">
+                            <label for="news-title">Title</label>
+                            <input type="text" id="news-title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="news-category">Category</label>
+                            <select id="news-category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="announcement">Announcement</option>
+                                <option value="event">Event</option>
+                                <option value="update">Update</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="news-content">Content</label>
+                            <textarea id="news-content" name="content" rows="6" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="news-image">Image (Optional)</label>
+                            <input type="file" id="news-image" name="image" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="news-publish-date">Publish Date</label>
+                            <input type="datetime-local" id="news-publish-date" name="publishDate" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="save-news-btn">
-                        <i class="fas fa-save me-2"></i>Save Article
-                    </button>
+                    <button class="btn btn-outline" onclick="closeNewsModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveNews()">Save Article</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <!-- Scripts -->
     <script src="../js/supabase-bridge.js"></script>
     <script src="../js/supabase-init.js"></script>
-    <script src="../js/user-utils.js"></script>
     <script src="../js/data-management.js"></script>
     <script src="../js/auth-check.js"></script>
     <script src="../js/sidebar-loader.js"></script>

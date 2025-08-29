@@ -14,31 +14,49 @@ class SidebarLoader {
     this.maxRetries = 10;
     this.retryCount = 0;
     this.retryInterval = 100; // 100ms between retries
+    this._refreshTimer = null; // debounce timer for refresh
 
-    console.log("SidebarLoader initialized");
+    // Check if sidebar already exists
+    if (document.getElementById('sidebar')) {
+      console.log("SidebarLoader: Sidebar already exists, skipping initialization");
+      this.sidebarLoaded = true;
+      this.setupSidebarFunctionality();
+      return;
+    }
+    
     this.init();
   }
 
   async init() {
     try {
-      console.log("Starting sidebar initialization...");
+      console.log("SidebarLoader: Initializing...");
 
       // Check if user is authenticated
       const user = this.getUserFromStorage();
       if (!user) {
-        console.log("No user found in sidebar loader");
-        // Don't redirect immediately, let the page handle it
-        return;
+        console.log("SidebarLoader: No user found, trying to determine user type from URL");
+        // Try to determine user type from current URL
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/lgu/')) {
+          this.userType = "lgu";
+        } else if (currentPath.includes('/citizen/')) {
+          this.userType = "citizen";
+        } else {
+          this.userType = "lgu"; // Default to LGU for complaints page
+        }
+        console.log("SidebarLoader: Determined user type from URL:", this.userType);
+      } else {
+        this.userType = user.role || user.type || "lgu";
+        console.log("SidebarLoader: User type from storage:", this.userType);
       }
-
-      this.userType = user.role || user.type || "citizen";
-      console.log("User type detected:", this.userType);
 
       // Load sidebar HTML
       await this.loadSidebar();
 
       // Setup functionality after sidebar is loaded
       this.setupSidebarFunctionality();
+      
+      console.log("SidebarLoader: Initialization complete");
     } catch (error) {
       console.error("Error initializing sidebar:", error);
     }
@@ -59,22 +77,35 @@ class SidebarLoader {
 
   async loadSidebar() {
     try {
-      console.log("Loading sidebar for user type:", this.userType);
+      console.log("SidebarLoader: Loading sidebar...");
 
-      // Determine sidebar file based on user type
+      // Check if sidebar already exists to prevent duplicate loading
+      if (document.getElementById('sidebar')) {
+        console.log("SidebarLoader: Sidebar already exists, skipping load");
+        this.sidebarLoaded = true;
+        return;
+      }
+
+      // Determine sidebar file based on role/type (supports lgu-admin-<dept> and lgu-<dept>)
       let sidebarFile = "citizen-sidebar.html";
-      if (
-        this.userType === "lgu" ||
-        this.userType === "lgu_admin" ||
-        this.userType === "admin"
-      ) {
+      const roleStr = String(this.userType || "").toLowerCase();
+      const isSuperadmin = roleStr === "superadmin";
+      const isLguRole = (
+        roleStr === "lgu" ||
+        roleStr === "lgu_admin" ||
+        roleStr === "admin" ||
+        roleStr.startsWith("lgu-") ||
+        roleStr.startsWith("lgu_admin") ||
+        roleStr.startsWith("lgu-admin")
+      );
+      if (isLguRole && !isSuperadmin) {
         sidebarFile = "lgu-sidebar.html";
       }
 
-      console.log("Loading sidebar file:", sidebarFile);
+      console.log("SidebarLoader: Using sidebar file:", sidebarFile);
 
       // Fetch sidebar HTML
-      const response = await fetch(`/components/${sidebarFile}`);
+      const response = await fetch(`../components/${sidebarFile}`);
       if (!response.ok) {
         throw new Error(
           `Failed to load sidebar: ${response.status} ${response.statusText}`
@@ -82,7 +113,7 @@ class SidebarLoader {
       }
 
       const sidebarHTML = await response.text();
-      console.log("Sidebar HTML loaded, length:", sidebarHTML.length);
+      
 
       // Insert sidebar into DOM
       const sidebarContainer = document.createElement("div");
@@ -100,10 +131,15 @@ class SidebarLoader {
       }
 
       dashboardContainer.insertBefore(sidebar, dashboardContainer.firstChild);
-      console.log("Sidebar inserted into DOM");
+      
 
       // Mark sidebar as loaded
       this.sidebarLoaded = true;
+
+      // Open by default on desktop widths
+      if (window.innerWidth > 992) {
+        sidebar.classList.add("open");
+      }
 
       // Wait a bit for DOM to settle
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -117,8 +153,6 @@ class SidebarLoader {
   }
 
   setupSidebarFunctionality() {
-    console.log("Setting up sidebar functionality...");
-
     // Wait for sidebar to be available
     this.waitForSidebar(() => {
       const sidebar = document.getElementById("sidebar");
@@ -136,10 +170,13 @@ class SidebarLoader {
       // Set active page based on current URL
       this.setActivePage();
 
-      // Sidebar toggle functionality
+      // Remove existing event listeners to prevent duplicates
       if (sidebarToggle) {
-        sidebarToggle.addEventListener("click", () => {
-          console.log("Sidebar toggle clicked");
+        const newToggle = sidebarToggle.cloneNode(true);
+        sidebarToggle.parentNode.replaceChild(newToggle, sidebarToggle);
+        
+        // Add new event listener
+        newToggle.addEventListener("click", () => {
           sidebar.classList.toggle("open");
           if (sidebarOverlay) {
             sidebarOverlay.classList.toggle("active");
@@ -181,15 +218,34 @@ class SidebarLoader {
         }
       });
 
-      console.log("Sidebar functionality setup complete");
+      
     });
+  }
+
+  // Debounced refresh entry point used by visibility/focus listeners
+  requestThrottledRefresh() {
+    if (this._refreshTimer) {
+      clearTimeout(this._refreshTimer);
+    }
+    this._refreshTimer = setTimeout(() => {
+      try {
+        // If sidebar not yet loaded, try load then refresh
+        if (!this.sidebarLoaded) {
+          this.loadSidebar().then(() => this.refreshSidebarForPage());
+        } else {
+          this.refreshSidebarForPage();
+        }
+      } catch (_) {
+        // swallow errors to avoid breaking global listeners
+      }
+    }, 200);
   }
 
   waitForSidebar(callback) {
     const checkSidebar = () => {
       const sidebar = document.getElementById("sidebar");
       if (sidebar) {
-        console.log("Sidebar found, executing callback");
+        
         callback();
       } else if (this.retryCount < this.maxRetries) {
         this.retryCount++;
@@ -206,23 +262,23 @@ class SidebarLoader {
   }
 
   setActivePage() {
-    console.log("Setting active page...");
+    
     const currentPath = window.location.pathname;
-    console.log("Current path:", currentPath);
+    
 
     const sidebarLinks = document.querySelectorAll(".sidebar-nav a");
-    console.log("Found sidebar links:", sidebarLinks.length);
+    
 
     sidebarLinks.forEach((link) => {
       const href = link.getAttribute("href");
-      console.log("Checking link:", href, "against current path:", currentPath);
+      
 
       // Remove any existing active class
       link.classList.remove("active");
 
       // Check if this link matches the current page
       if (href === currentPath) {
-        console.log("Setting active for:", href);
+        
         link.classList.add("active");
       } else if (
         currentPath.includes("/citizen/") &&
@@ -272,10 +328,10 @@ class SidebarLoader {
   }
 
   updateSidebarUserName() {
-    console.log("Updating sidebar user name...");
+    
     const user = this.getUserFromStorage();
     if (!user) {
-      console.log("No user found for sidebar name update");
+      
       return;
     }
 
@@ -284,7 +340,7 @@ class SidebarLoader {
     if (userNameElement) {
       const displayName = user.name || user.userName || user.email || "User";
       userNameElement.textContent = displayName;
-      console.log("Updated sidebar user name to:", displayName);
+      
     }
 
     // Setup logout functionality
@@ -292,13 +348,13 @@ class SidebarLoader {
   }
 
   setupLogoutFunctionality() {
-    console.log("Setting up logout functionality...");
+    
     const logoutBtn = document.getElementById("logout-btn");
 
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async (e) => {
         e.preventDefault();
-        console.log("Logout button clicked");
+        
 
         try {
           // Clear session storage
@@ -318,9 +374,9 @@ class SidebarLoader {
         }
       });
 
-      console.log("Logout functionality setup complete");
+      
     } else {
-      console.log("Logout button not found in sidebar");
+      
     }
 
     // Make this method available globally for other scripts to call
@@ -328,28 +384,73 @@ class SidebarLoader {
       window.refreshSidebarUserName = () => {
         this.updateSidebarUserName();
       };
+      
+      // Add method to refresh sidebar functionality
+      window.refreshSidebar = () => {
+        console.log("Refreshing sidebar functionality...");
+        this.setupSidebarFunctionality();
+      };
+    }
+  }
+  
+  // Method to refresh sidebar when navigating back to a page
+  refreshSidebarForPage() {
+    console.log("Refreshing sidebar for current page...");
+    
+    // Update active page
+    this.setActivePage();
+    
+    // Update user name
+    this.updateSidebarUserName();
+    
+    // Ensure sidebar is properly closed
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) {
+      sidebar.classList.remove("open");
+    }
+    
+    const overlay = document.getElementById("sidebar-overlay");
+    if (overlay) {
+      overlay.classList.remove("active");
     }
   }
 }
 
 // Auto-initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM loaded, initializing SidebarLoader");
-  window.sidebarLoader = new SidebarLoader();
+  // Only create one instance globally
+  if (!window.sidebarLoader) {
+    window.sidebarLoader = new SidebarLoader();
+  }
 });
 
 // Listen for user data updates
 window.addEventListener("storage", (e) => {
   if (e.key === "user" && window.sidebarLoader) {
-    console.log("User data updated, refreshing sidebar user name");
     window.sidebarLoader.updateSidebarUserName();
+  }
+});
+
+// Listen for page visibility changes (when navigating back to a page)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && window.sidebarLoader) {
+    window.sidebarLoader.requestThrottledRefresh();
+  }
+});
+
+// Listen for page focus (when navigating back to a page)
+window.addEventListener("focus", () => {
+  if (window.sidebarLoader) {
+    window.sidebarLoader.requestThrottledRefresh();
   }
 });
 
 // Also try to initialize if DOM is already loaded
 if (document.readyState === "loading") {
-  console.log("DOM still loading, waiting for DOMContentLoaded");
+  // DOM is still loading, wait for DOMContentLoaded
 } else {
-  console.log("DOM already loaded, initializing SidebarLoader immediately");
-  new SidebarLoader();
+  // DOM is already loaded, create instance if none exists
+  if (!window.sidebarLoader) {
+    window.sidebarLoader = new SidebarLoader();
+  }
 }

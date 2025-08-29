@@ -7,16 +7,72 @@ async function initializeAuthSupabase() {
     supabase = await window.supabaseManager.initialize();
     checkExistingSession();
   } catch (error) {
-    console.error("Error initializing Supabase:", error);
+    // Error initializing Supabase
   }
 }
+
+// Check existing Supabase session
+async function checkExistingSession() {
+  try {
+    if (!supabase) {
+      return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    
+    if (session) {
+      // Update sessionStorage with fresh session data
+      const userData = {
+        id: session.user.id,
+        email: session.user.email,
+        type: session.user.user_metadata?.role || "citizen",
+        role: session.user.user_metadata?.role || "citizen",
+        name: session.user.user_metadata?.name || session.user.email
+      };
+      sessionStorage.setItem("user", JSON.stringify(userData));
+      
+      // Check if we're on the correct page for this user
+      const currentPath = window.location.pathname;
+      const userRole = String(userData.role || "").toLowerCase();
+      
+      // Check for LGU roles (lgu-admin-<dept> or lgu-<dept>)
+      const isLguRole = (
+        userRole === "lgu" ||
+        userRole === "lgu_admin" ||
+        userRole === "admin" ||
+        userRole.startsWith("lgu-") ||
+        userRole.startsWith("lgu_admin") ||
+        userRole.startsWith("lgu-admin")
+      );
+      
+      if (isLguRole && !currentPath.includes('/lgu/')) {
+        window.location.href = "/lgu/dashboard";
+        return;
+      } else if (userRole === "citizen" && !currentPath.includes('/citizen/') && !currentPath.includes('/dashboard') && !currentPath.includes('/profile') && !currentPath.includes('/complaints') && !currentPath.includes('/submit-complaint') && !currentPath.includes('/analytics') && !currentPath.includes('/news')) {
+        window.location.href = "/dashboard";
+        return;
+      }
+    } else {
+      // No valid session, clear storage and redirect to login
+      sessionStorage.removeItem("user");
+      window.location.href = "/login";
+      return;
+    }
+  } catch (error) {
+    // On error, clear storage and redirect to login
+    sessionStorage.removeItem("user");
+    window.location.href = "/login";
+    return;
+  }
+}
+
 function checkAuth() {
-  console.log('checkAuth() called');
+  // First check if we have a user in sessionStorage
   const user = JSON.parse(sessionStorage.getItem('user'));
-  console.log('User from sessionStorage:', user);
   
   if (!user) {
-    console.log('No user found, redirecting to login');
     // Redirect to login page
     window.location.href = '/login';
     return null;
@@ -24,22 +80,28 @@ function checkAuth() {
   
   // Check if on the correct platform
   const currentPath = window.location.pathname;
-  console.log('Current path:', currentPath);
-  console.log('User type:', user.type);
+  const userRole = String(user.role || user.type || "").toLowerCase();
   
-  if (user.type === 'citizen' && !currentPath.includes('/citizen/') && !currentPath.includes('/dashboard') && !currentPath.includes('/profile') && !currentPath.includes('/complaints') && !currentPath.includes('/submit-complaint') && !currentPath.includes('/analytics') && !currentPath.includes('/news')) {
-    console.log('Citizen user on unauthorized path, redirecting to dashboard');
+  if (userRole === 'citizen' && !currentPath.includes('/citizen/') && !currentPath.includes('/dashboard') && !currentPath.includes('/profile') && !currentPath.includes('/complaints') && !currentPath.includes('/submit-complaint') && !currentPath.includes('/analytics') && !currentPath.includes('/news')) {
     window.location.href = '/dashboard';
     return null;
   }
   
-  if (user.type === 'lgu' && !currentPath.includes('/lgu/')) {
-    console.log('LGU user on unauthorized path, redirecting to LGU dashboard');
+  // Check for LGU roles (lgu-admin-<dept> or lgu-<dept>)
+  const isLguRole = (
+    userRole === "lgu" ||
+    userRole === "lgu_admin" ||
+    userRole === "admin" ||
+    userRole.startsWith("lgu-") ||
+    userRole.startsWith("lgu_admin") ||
+    userRole.startsWith("lgu-admin")
+  );
+  
+  if (isLguRole && !currentPath.includes('/lgu/')) {
     window.location.href = '/lgu/dashboard';
     return null;
   }
   
-  console.log('User authorized for current path');
   return user;
 }
 
@@ -160,7 +222,11 @@ function showToast(message, type = 'success') {
 }
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize Supabase first
+  await initializeAuthSupabase();
+  
+  // Then check authentication
   const user = checkAuth();
   
   if (user) {
@@ -170,3 +236,4 @@ document.addEventListener('DOMContentLoaded', () => {
     setupUserMenu();
   }
 });
+

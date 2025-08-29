@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Submit Complaint - Report community issues and infrastructure problems. Easy-to-use form for submitting complaints with photo uploads and location tracking.">
-    <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
+    
     <title>Submit Complaint - CitizenLink</title>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -74,43 +74,53 @@
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="suggested-unit" class="form-label">Suggested Government Unit</label>
-                                    <select class="form-select" id="suggested-unit" name="suggestedUnit" required>
-                                        <option value="" disabled selected>Select government unit</option>
-                                        <option value="city_hall">City Hall</option>
-                                        <option value="police">Police Department (PNP)</option>
-                                        <option value="fire">Fire Department (BFP)</option>
-                                        <option value="public_works">Public Works (DPWH)</option>
-                                        <option value="waste">Waste Management</option>
-                                        <option value="health">Health Department</option>
-                                    </select>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Suggested Government Unit(s)</label>
+                                    <div class="row" id="suggested-units">
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="city_hall" id="unit-city-hall">
+                                                <label class="form-check-label" for="unit-city-hall">City Hall</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="police" id="unit-police">
+                                                <label class="form-check-label" for="unit-police">Police Department (PNP)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="fire" id="unit-fire">
+                                                <label class="form-check-label" for="unit-fire">Fire Department (BFP)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="public_works" id="unit-public-works">
+                                                <label class="form-check-label" for="unit-public-works">Public Works (DPWH)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="waste" id="unit-waste">
+                                                <label class="form-check-label" for="unit-waste">Waste Management</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="health" id="unit-health">
+                                                <label class="form-check-label" for="unit-health">Health Department</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Select one or more units to notify.</small>
                                 </div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="complaint-location" class="form-label">Location</label>
                                 <input type="text" class="form-control" id="complaint-location" name="location" placeholder="Enter the address or location of the issue" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Location Coordinates (for Heatmap)</label>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="latitude" class="form-label small">Latitude</label>
-                                        <input type="number" class="form-control" id="latitude" name="latitude" step="any" placeholder="e.g., 14.5995" readonly>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="longitude" class="form-label small">Longitude</label>
-                                        <input type="number" class="form-control" id="longitude" name="longitude" step="any" placeholder="e.g., 120.9842" readonly>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" id="get-location-btn">
-                                        <i class="fas fa-location-arrow"></i> Get Current Location
-                                    </button>
-                                    <small class="text-muted ms-2">Click to automatically get your current location coordinates</small>
-                                </div>
                             </div>
                             
                             <div class="mb-3">

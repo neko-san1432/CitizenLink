@@ -12,6 +12,7 @@ dotenv.config({
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
@@ -40,3 +41,13 @@ export const supabaseConfig = {
   url: supabaseUrl,
   anonKey: supabaseAnonKey,
 };
+
+// Create and export a service client (admin) if a service key is configured
+export function getSupabaseServiceClient() {
+  if (!supabaseServiceKey) {
+    throw new Error("SUPABASE_SERVICE_KEY is not set. Admin operations are unavailable.");
+  }
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}

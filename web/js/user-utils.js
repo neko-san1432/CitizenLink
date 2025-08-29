@@ -1,3 +1,71 @@
+// Role utilities for LGU departmental roles
+// Expected role formats:
+//  - superadmin
+//  - lgu-admin-<department>
+//  - lgu-<department>
+
+function isSuperAdmin(userOrAssignments) {
+  if (!userOrAssignments) return false;
+  if (Array.isArray(userOrAssignments)) {
+    return userOrAssignments.some(r => r.role === 'superadmin');
+  }
+  return (
+    userOrAssignments.role === 'superadmin' ||
+    userOrAssignments.user_metadata?.role === 'superadmin'
+  );
+}
+
+function isLguAdminOf(userOrAssignments, department) {
+  if (!department) return false;
+  const roleNeedle = `lgu-admin-${String(department).toLowerCase()}`;
+  if (Array.isArray(userOrAssignments)) {
+    return userOrAssignments.some(r => String(r.role).toLowerCase() === roleNeedle);
+  }
+  const role = (userOrAssignments.role || userOrAssignments.user_metadata?.role || '').toLowerCase();
+  return role === roleNeedle;
+}
+
+function isLguStaffOf(userOrAssignments, department) {
+  if (!department) return false;
+  const roleNeedle = `lgu-${String(department).toLowerCase()}`;
+  if (Array.isArray(userOrAssignments)) {
+    return userOrAssignments.some(r => String(r.role).toLowerCase() === roleNeedle);
+  }
+  const role = (userOrAssignments.role || userOrAssignments.user_metadata?.role || '').toLowerCase();
+  return role === roleNeedle;
+}
+
+function buildDeptRole(department, isAdmin = false) {
+  const base = String(department).toLowerCase();
+  return isAdmin ? `lgu-admin-${base}` : `lgu-${base}`;
+}
+
+// Appointment helper using public.department_admins
+// Requires RLS/edge function or service key on server; client insert assumes permissive setup for demo
+async function appointLguAdmin({ supabase, userId, department, assignedBy }) {
+  if (!supabase) throw new Error('Supabase client required');
+  const deptRole = buildDeptRole(department, true);
+
+  // Update the user's role metadata
+  const { error: metaError } = await supabase.auth.updateUser({
+    data: { role: deptRole }
+  });
+  if (metaError) throw metaError;
+
+  // Optional: track in department_admins table for auditing
+  try {
+    await supabase.from('department_admins').insert([
+      {
+        user_id: userId,
+        department_id: null, // If you have departments table IDs, pass it instead
+        assigned_by: assignedBy || null,
+        is_active: true
+      }
+    ]);
+  } catch (_) {}
+
+  return deptRole;
+}
 // User utilities for CitizenLink
 // This file provides common functions for getting and displaying user information
 
@@ -16,7 +84,7 @@ async function getCurrentUser() {
     }
     
     if (!user) {
-      console.log('No user found');
+      
       return null;
     }
     
@@ -72,7 +140,7 @@ async function updateUserProfile(profileData) {
       }
     }
     
-    console.log('Profile updated successfully');
+    
     return data.user;
     
   } catch (error) {
@@ -86,7 +154,7 @@ function updateHeaderWithUserName(user) {
   const headerUserName = document.getElementById('header-user-name');
   if (headerUserName && user) {
     headerUserName.textContent = user.name;
-    console.log('Updated header with user name:', user.name);
+    
   }
   
   // Also refresh sidebar user name if sidebar loader is available
@@ -101,7 +169,7 @@ async function initializeUserData() {
     const user = await getCurrentUser();
     
     if (!user) {
-      console.log('No authenticated user, redirecting to login');
+      
       window.location.href = '/login';
       return null;
     }
@@ -216,7 +284,7 @@ async function updateLGUProfile(userId, profileData) {
     const updatedUser = { ...currentUser, ...profileData };
     sessionStorage.setItem('user', JSON.stringify(updatedUser));
     
-    console.log('LGU profile updated successfully');
+    
     return updatedUser;
     
   } catch (error) {
@@ -235,6 +303,15 @@ window.userUtils = {
   logoutUser,
   getLGUProfile,
   updateLGUProfile
+};
+
+// Expose Role utilities globally
+window.RoleUtils = {
+	isSuperAdmin,
+	isLguAdminOf,
+	isLguStaffOf,
+	buildDeptRole,
+	appointLguAdmin
 };
 
 // Make LGU profile functions available globally

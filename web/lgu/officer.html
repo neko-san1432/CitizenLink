@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LGU Officer - My Assignments</title>
+    <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <h1 class="h3">My Assigned Complaints</h1>
+            <span id="assignment-badge" class="badge bg-primary">0</span>
+        </div>
+        <div id="list" class="mt-3"></div>
+    </div>
+
+    <script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/js/debug-logger.js"></script>
+    <script src="/js/supabase-bridge.js"></script>
+    <script>
+    (async function(){
+        const list = document.getElementById('list');
+        const badge = document.getElementById('assignment-badge');
+        let currentOfficerId = null;
+
+        async function loadAssignments() {
+            if (!currentOfficerId) return;
+            const res = await fetch(`/api/officer-assignments?officerId=${encodeURIComponent(currentOfficerId)}`);
+            if (!res.ok) {
+                const j = await res.json().catch(()=>({error:'Failed'}));
+                list.textContent = j.error || 'Failed to load assignments';
+                return;
+            }
+            const { items } = await res.json();
+            const data = Array.isArray(items) ? items : [];
+            badge.textContent = data.length;
+
+            if (!data.length) {
+                list.textContent = 'No assignments yet';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'table table-sm table-striped';
+            table.innerHTML = '<thead><tr><th>CD Row</th><th>Title</th><th>Status</th><th>Priority</th><th>Created</th><th>Actions</th></tr></thead>';
+            const tbody = document.createElement('tbody');
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const comp = row.complaint || {};
+                tr.innerHTML = `<td>${row.id}</td><td>${comp.title || comp.id}</td><td>${row.status || comp.status}</td><td>${comp.priority || ''}</td><td>${comp.created_at ? new Date(comp.created_at).toLocaleString() : ''}</td>`;
+                const actionsTd = document.createElement('td');
+                actionsTd.innerHTML = `
+                  <button class="btn btn-sm btn-outline-primary" data-start="${row.id}">Start</button>
+                  <div class="input-group input-group-sm mt-1">
+                    <input type="text" class="form-control" placeholder="Proof URL (optional)" data-proof="${row.id}">
+                    <button class="btn btn-outline-success" data-complete="${row.id}">Complete</button>
+                  </div>`;
+                tr.appendChild(actionsTd);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            list.innerHTML = '';
+            list.appendChild(table);
+
+            // Wire actions
+            list.querySelectorAll('button[data-start]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-start');
+                    const r = await fetch(`/api/complaint_departments/${id}/start`, { method: 'POST' });
+                    if (r.ok) loadAssignments();
+                    else alert('Failed to start task');
+                });
+            });
+            list.querySelectorAll('button[data-complete]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-complete');
+                    const proof = list.querySelector(`input[data-proof="${id}"]`)?.value || '';
+                    const r = await fetch(`/api/complaint_departments/${id}/complete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proofUrl: proof }) });
+                    if (r.ok) loadAssignments();
+                    else alert('Failed to complete task');
+                });
+            });
+        }
+
+        try {
+            const sb = await window.supabaseManager.initialize();
+            const userJson = sessionStorage.getItem('user');
+            const user = userJson ? JSON.parse(userJson) : null;
+            if (!user) {
+                list.textContent = 'Not signed in';
+                return;
+            }
+            // Role guard: only lgu-<dept> or superadmin (superadmin for testing)
+            const { data: { user: fullUser } } = await sb.auth.getUser();
+            const role = (fullUser?.user_metadata?.role || '').toLowerCase();
+            if (role === 'superadmin') {
+                window.location.href = '/superadmin/appointments';
+                return;
+            }
+            if (!role.startsWith('lgu-')) {
+                window.location.href = '/login';
+                return;
+            }
+            currentOfficerId = user.id;
+            await loadAssignments();
+            // Poll every 20s to simulate notifications
+            setInterval(loadAssignments, 20000);
+        } catch (e) {
+            list.textContent = 'Failed to load assignments';
+        }
+    })();
+    </script>
+</body>
+</html>
+
+

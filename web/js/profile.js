@@ -81,7 +81,7 @@ function setupProfileForm(user) {
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
                 
-                console.log('Profile updated successfully for user:', updatedUser.email);
+                
             }
             
         } catch (error) {

@@ -18,11 +18,12 @@ async function checkAuth() {
     // Check if user is authenticated
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     if (!user.id) {
-      console.log('No authenticated user found');
+      
       return null;
     }
     return {
-      username: user.email,
+      id: user.id,
+      email: user.email,
       name: user.name
     };
   } catch (error) {
@@ -42,7 +43,7 @@ const subcategories = {
 
 function showToast(message, type = 'success') {
   // Replace with actual toast notification implementation
-  console.log(`Toast: ${message} (Type: ${type})`);
+  
 }
 
 // Setup complaint form
@@ -50,10 +51,9 @@ function setupComplaintForm() {
   const complaintForm = document.getElementById('complaint-form');
   const complaintType = document.getElementById('complaint-type');
   const complaintSubcategory = document.getElementById('complaint-subcategory');
-  const getLocationBtn = document.getElementById('get-location-btn');
   
-  // Setup location coordinates functionality
-  setupLocationCoordinates(getLocationBtn);
+  // Attempt to capture location automatically in background
+  captureGeoLocationInBackground();
   
   // Populate subcategories based on selected complaint type
   complaintType.addEventListener('change', () => {
@@ -85,23 +85,28 @@ function setupComplaintForm() {
     }
     
     // Get form data
+    // Gather selected units (multiple)
+    const selectedUnits = Array.from(document.querySelectorAll('#suggested-units input[type="checkbox"]:checked')).map(cb => cb.value);
+
     const formData = {
-      user_id: user.username,
+      user_id: user.id,
       user_name: user.name,
       title: document.getElementById('complaint-title').value,
       type: document.getElementById('complaint-type').value,
       subcategory: document.getElementById('complaint-subcategory').options[document.getElementById('complaint-subcategory').selectedIndex].text,
-  
       location: document.getElementById('complaint-location').value,
-      latitude: parseFloat(document.getElementById('latitude').value) || null,
-      longitude: parseFloat(document.getElementById('longitude').value) || null,
+      latitude: window.__geo?.lat ?? null,
+      longitude: window.__geo?.lng ?? null,
+      location_accuracy: window.__geo?.accuracy ?? null,
+      location_timestamp: window.__geo?.ts ?? null,
+      location_source: window.__geo?.source ?? 'gps',
       description: document.getElementById('complaint-description').value,
-      suggested_unit: document.getElementById('suggested-unit').value,
+      suggested_units: selectedUnits,
       status: 'pending'
     };
     
     // Validate coordinates if provided
-    if (formData.latitude && formData.longitude) {
+    if (formData.latitude != null && formData.longitude != null) {
       if (formData.latitude < -90 || formData.latitude > 90) {
         showToast('Invalid latitude value. Must be between -90 and 90.', 'error');
         return;
@@ -137,87 +142,117 @@ function setupComplaintForm() {
 }
 
 // Setup location coordinates functionality
-function setupLocationCoordinates(getLocationBtn) {
-  if (!getLocationBtn) return;
-  
-  getLocationBtn.addEventListener('click', () => {
-    if (navigator.geolocation) {
-      getLocationBtn.disabled = true;
-      getLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting Location...';
-      
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          document.getElementById('latitude').value = latitude.toFixed(6);
-          document.getElementById('longitude').value = longitude.toFixed(6);
-          
-          getLocationBtn.innerHTML = '<i class="fas fa-check"></i> Location Captured';
-          getLocationBtn.classList.remove('btn-outline-primary');
-          getLocationBtn.classList.add('btn-success');
-          
-          showToast('Location coordinates captured successfully!', 'success');
-          
-          // Reset button after 3 seconds
-          setTimeout(() => {
-            getLocationBtn.disabled = false;
-            getLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Get Current Location';
-            getLocationBtn.classList.remove('btn-success');
-            getLocationBtn.classList.add('btn-outline-primary');
-          }, 3000);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          getLocationBtn.disabled = false;
-          getLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Get Current Location';
-          
-          let errorMessage = 'Unable to get your location.';
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied. Please enable location permissions.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information unavailable.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Location request timed out.';
-              break;
-          }
-          
-          showToast(errorMessage, 'error');
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      showToast('Geolocation is not supported by this browser.', 'error');
+function captureGeoLocationInBackground() {
+  if (!('geolocation' in navigator)) {
+    showGeoUnavailableNote('Could not access geolocation in this browser. You can still submit without it.');
+    return;
+  }
+  // Request high-accuracy once, fill hidden fields silently
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      window.__geo = {
+        lat: Number(latitude.toFixed(6)),
+        lng: Number(longitude.toFixed(6)),
+        accuracy: Number((accuracy ?? 0).toFixed(0)),
+        ts: new Date().toISOString(),
+        source: 'gps'
+      };
+    },
+    (err) => {
+      // Silent failure: user denied or unavailable; form can still submit without coords
+      if (err && err.code === err.PERMISSION_DENIED) {
+        showGeoUnavailableNote('Location permission denied. You can still submit without coordinates.');
+      } else {
+        showGeoUnavailableNote('Unable to get your location. You can still submit without coordinates.');
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 120000
     }
-  });
+  );
+}
+
+// Show a subtle inline note below the Location field when geo is unavailable
+function showGeoUnavailableNote(message) {
+  const locationInput = document.getElementById('complaint-location');
+  if (!locationInput) return;
+  // Avoid duplicates
+  const existing = document.getElementById('geo-note');
+  if (existing) return;
+  const note = document.createElement('small');
+  note.id = 'geo-note';
+  note.className = 'text-muted';
+  note.style.display = 'block';
+  note.style.marginTop = '0.25rem';
+  note.textContent = message;
+  locationInput.insertAdjacentElement('afterend', note);
 }
 
 // Submit complaint to Supabase
 async function submitComplaint(formData) {
   try {
-    // Submit complaint using the global function from data-management.js
+    // Prefer existing global function if available
     if (window.createComplaint) {
       const newComplaint = await window.createComplaint(formData);
-      
-      if (newComplaint) {
-        showToast('Complaint submitted successfully!', 'success');
-        
-        // Redirect to complaints page after a short delay
-        setTimeout(() => {
-          window.location.href = '/my-complaints?id=' + newComplaint.id;
-        }, 1500);
-      } else {
+      if (!newComplaint) {
         showToast('Failed to submit complaint. Please try again.', 'error');
+        return;
       }
-    } else {
-      showToast('Complaint system not available. Please try again later.', 'error');
+      showToast('Complaint submitted successfully!', 'success');
+      setTimeout(() => {
+        window.location.href = '/my-complaints?id=' + newComplaint.id;
+      }, 1500);
+      return;
     }
+
+    // Fallback: Insert directly via Supabase
+    if (!window.supabaseManager || !window.supabaseManager.initialize) {
+      showToast('Complaint system not available. Please try again later.', 'error');
+      return;
+    }
+
+    const supabase = await window.supabaseManager.initialize();
+
+    // Only send valid columns
+    const payload = {
+      user_id: formData.user_id,
+      user_name: formData.user_name,
+      title: formData.title,
+      type: formData.type,
+      subcategory: formData.subcategory || null,
+      location: formData.location,
+      description: formData.description,
+      status: formData.status || 'pending',
+      assigned_unit: null,
+      // Store as JSON array in a text/jsonb column if available; fallback to comma-separated
+      suggested_unit: Array.isArray(formData.suggested_units) ? formData.suggested_units.join(',') : (formData.suggested_units || null),
+      citizen_feedback: null,
+      is_active: true,
+      latitude: formData.latitude ?? null,
+      longitude: formData.longitude ?? null,
+      location_accuracy: formData.location_accuracy ?? null,
+      location_timestamp: formData.location_timestamp ?? null,
+      location_source: formData.location_source ?? 'gps'
+    };
+
+    const { data, error } = await supabase
+      .from('complaints')
+      .insert([payload])
+      .select('id')
+      .single();
+
+    if (error) {
+      showToast('Failed to submit complaint: ' + error.message, 'error');
+      return;
+    }
+
+    showToast('Complaint submitted successfully!', 'success');
+    setTimeout(() => {
+      window.location.href = '/my-complaints?id=' + data.id;
+    }, 1500);
   } catch (error) {
     console.error('Error submitting complaint:', error);
     showToast('Error submitting complaint: ' + error.message, 'error');

@@ -6,62 +6,27 @@ async function initializeAuthSupabase() {
   try {
     // Use the shared manager to get Supabase client
     supabase = await window.supabaseManager.initialize();
-    checkExistingSession();
   } catch (error) {
-    console.error("Error initializing Supabase:", error);
-  }
-}
-
-// Check if user is already logged in
-async function checkExistingSession() {
-  try {
-    // Prevent multiple calls
-    if (window.sessionCheckInProgress) {
-      console.log('Session check already in progress, skipping...');
-      return;
-    }
-
-    if (!supabase) {
-      console.log('Supabase not initialized yet, skipping session check...');
-      return;
-    }
-
-    console.log('Checking existing Supabase session...');
-    window.sessionCheckInProgress = true;
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    
-    console.log('Supabase session result:', session ? 'Found session' : 'No session');
-    
-    if (session) {
-      console.log('User from session:', session.user.email, 'Role:', session.user.user_metadata?.role);
-      // Redirect based on user role
-      redirectBasedOnRole(session.user);
-    }
-
-    window.sessionCheckInProgress = false;
-  } catch (error) {
-    console.error("Error checking session:", error);
-    window.sessionCheckInProgress = false;
+    // Error initializing Supabase
   }
 }
 
 // Redirect user based on their role
 function redirectBasedOnRole(user) {
   // Check user metadata for role
-  const userRole = user.role || user.user_metadata?.role;
-  
-  console.log('Redirecting user based on role:', userRole);
-  
-  if (userRole === "lgu" || userRole === "admin") {
-    console.log('Redirecting LGU user to /lgu/dashboard');
-    window.location.href = "/lgu/dashboard";
-  } else {
-    console.log('Redirecting citizen user to /dashboard');
-    window.location.href = "/dashboard";
+  const userRole = String(user.role || user.user_metadata?.role || "").toLowerCase();
+  if (userRole === "superadmin") {
+    window.location.href = "/superadmin/appointments";
+    return;
   }
+  const isLgu = (
+    userRole === "lgu" ||
+    userRole === "lgu_admin" ||
+    userRole === "admin" ||
+    userRole.startsWith("lgu-") ||
+    userRole.startsWith("lgu-admin-")
+  );
+  window.location.href = isLgu ? "/lgu/dashboard" : "/dashboard";
 }
 
 // Initialize Supabase when the script loads
@@ -74,7 +39,7 @@ window.logout = async function () {
     if (supabase) {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("Supabase logout error:", error);
+        // Supabase logout error
       }
     }
 
@@ -89,7 +54,6 @@ window.logout = async function () {
     // Redirect to login page
     window.location.href = "/login";
   } catch (error) {
-    console.error("Logout error:", error);
     // Force redirect even if there's an error
     window.location.href = "/login";
   }
@@ -97,7 +61,6 @@ window.logout = async function () {
 
 // Check authentication status on page load
 document.addEventListener("DOMContentLoaded", () => {
-  // Check if user is already logged in
   // Show toast if returning from email verification
   try {
     const url = new URL(window.location.href);
@@ -115,6 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   } catch (_) {}
 
+  // Check if user is already logged in and redirect if on login/signup pages
   const user = sessionStorage.getItem("user");
   if (user) {
     try {
@@ -122,18 +86,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Check if we're on a page that requires authentication
       const currentPath = window.location.pathname;
-  const authRequiredPages = ["/login", "/signup"];
+      const authRequiredPages = ["/login", "/signup"];
 
       if (authRequiredPages.includes(currentPath)) {
         // Redirect to appropriate dashboard
-        if (userData.type === "lgu") {
-          window.location.href = "/lgu/dashboard";
-        } else {
-          window.location.href = "/dashboard";
+        const rawRole = String(userData.role || userData.type || "").toLowerCase();
+        if (rawRole === "superadmin") {
+          window.location.href = "/superadmin/appointments";
+          return;
         }
+        const isLgu = (
+          rawRole === "lgu" ||
+          rawRole === "lgu_admin" ||
+          rawRole === "admin" ||
+          rawRole.startsWith("lgu-") ||
+          rawRole.startsWith("lgu-admin-")
+        );
+        window.location.href = isLgu ? "/lgu/dashboard" : "/dashboard";
       }
     } catch (error) {
-      console.error("Error parsing user data:", error);
       sessionStorage.removeItem("user");
     }
   }
@@ -161,7 +132,20 @@ if (loginForm) {
           password: password
         });
 
+        // Verbose error logging to diagnose auth 500s
         if (error) {
+          try {
+            console.error(
+              "Auth signInWithPassword failed",
+              {
+                status: error.status,
+                code: error.code,
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+              }
+            );
+          } catch (_) {}
           showToast(`Login failed: ${error.message}`, "error");
           return;
         }
@@ -187,7 +171,6 @@ if (loginForm) {
         showToast("Authentication service not available. Please contact administrator.", "error");
       }
     } catch (error) {
-      console.error("Login error:", error);
       showToast("An error occurred during login. Please try again.", "error");
     } finally {
       // Reset button state
@@ -237,15 +220,15 @@ function showToast(message, type = "success") {
       bsToast.show();
       return;
     } catch (error) {
-      console.error("Error showing Bootstrap toast:", error);
+      // Error showing Bootstrap toast
     }
   }
 
-  // Fallback alert
+  // Fallback toast
   if (type === "error") {
-    alert(`❌ Error: ${message}`);
+    // Show error message
   } else {
-    alert(`✅ ${message}`);
+    // Show success message
   }
 }
 
@@ -340,7 +323,7 @@ if (signupForm) {
               name: fullName,
               username: username,
               phone: phone,
-              role: "lgu",
+              role: "citizen",
             },  
           },
         });
@@ -371,7 +354,6 @@ if (signupForm) {
         showToast("Authentication service not available. Please contact administrator.", "error");
       }
     } catch (error) {
-      console.error("Signup error:", error);
       showToast("An error occurred during signup. Please try again.", "error");
     } finally {
       // Reset button state
@@ -473,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         termsBsModal = new bootstrap.Modal(termsModal);
       } catch (error) {
-        console.error("Error initializing terms modal:", error);
+        // Error initializing terms modal
       }
     }
 
@@ -481,7 +463,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         privacyBsModal = new bootstrap.Modal(privacyModal);
       } catch (error) {
-        console.error("Error initializing privacy modal:", error);
+        // Error initializing privacy modal
       }
     }
 

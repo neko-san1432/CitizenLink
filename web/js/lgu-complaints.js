@@ -3,7 +3,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = await checkAuth();
   if (!user) return;
   
-  const complaints = await getComplaints();
+  // Preload officers for the admin's department (if admin)
+  let officersForDept = [];
+  try {
+    const role = String((user.role || user.type || '')).toLowerCase();
+    const deptFromRole = role.startsWith('lgu-admin-') ? role.replace('lgu-admin-', '')
+                        : role.startsWith('lgu-') ? role.replace('lgu-', '')
+                        : null;
+    if (deptFromRole) {
+      const res = await fetch(`/api/officers?department=${encodeURIComponent(deptFromRole)}`);
+      const json = await res.json();
+      if (res.ok && Array.isArray(json.officers)) {
+        officersForDept = json.officers;
+      }
+    }
+  } catch (_) {}
+
+  const complaints = await getComplaintsForLGU();
   
   // Check if viewing a specific complaint
   const urlParams = new URLSearchParams(window.location.search);
@@ -28,21 +44,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Setup save button
   setupSaveButton();
+
+  // Load departments into help section
+  setupHelpRequests();
+
+  // Populate officer dropdown in the modal when it opens (if present)
+  const assignedOfficerSelect = document.getElementById('assigned-officer');
+  if (assignedOfficerSelect) {
+    assignedOfficerSelect.innerHTML = '<option value="">Select Officer</option>';
+    officersForDept.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.email || o.id;
+      assignedOfficerSelect.appendChild(opt);
+    });
+  }
 });
 
 // Use real authentication and data management functions
 async function checkAuth() {
   // Use the real auth check from auth-check.js
-  return window.checkAuth ? window.checkAuth() : { username: 'admin-user', type: 'lgu' };
+  return window.userUtils ? await window.userUtils.initializeUserData() : { username: 'admin-user', type: 'lgu' };
 }
 
-async function getComplaints() {
+async function getComplaintsForLGU() {
   try {
-    // Use the real data management function
+    // Use the real data management function from data-management.js
     if (window.getComplaints) {
+      console.log('Using real getComplaints function from data-management.js');
       return await window.getComplaints();
     }
     // Fallback to mock data if function not available
+    console.log('Using mock data fallback - getComplaints function not found');
     return [
       { id: 'CP001', title: 'Pothole on Main Street', type: 'infrastructure', subcategory: 'Road Damage', location: '123 Main Street', status: 'resolved', created_at: '2025-01-05T10:30:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Large pothole causing damage to vehicles', assignedUnit: 'public_works' },
       { id: 'CP002', title: 'Streetlight Out', type: 'infrastructure', subcategory: 'Street Lighting', location: 'Corner of Pine St and Oak Ave', status: 'in_progress', created_at: '2025-01-10T18:45:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Streetlight has been out for a week', assignedUnit: 'public_works' },
@@ -71,11 +104,11 @@ async function loadComplaints(complaints, filters = {}) {
   let filteredComplaints = [...complaints];
   
   if (filters.status && filters.status !== 'all') {
-    filteredComplaints = filteredComplaints.filter(c => c.status === filters.status);
+    filteredComplaints = filteredComplaints.filter(c => normalizeStatus(c.status) === normalizeStatus(filters.status));
   }
   
   if (filters.type && filters.type !== 'all') {
-    filteredComplaints = filteredComplaints.filter(c => c.type === filters.type);
+    filteredComplaints = filteredComplaints.filter(c => (c.type || '').toString() === filters.type);
   }
   
 
@@ -118,8 +151,27 @@ async function loadComplaints(complaints, filters = {}) {
     });
   }
   
-  // Sort complaints by date (newest first)
-  filteredComplaints.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+  // Sorting
+  const sortMode = filters.sort || 'newest';
+  const getDate = c => new Date(c.created_at || c.createdAt || c.created_at);
+  const statusOrder = { pending: 0, in_progress: 1, resolved: 2 };
+  filteredComplaints.sort((a, b) => {
+    switch (sortMode) {
+      case 'oldest':
+        return getDate(a) - getDate(b);
+      case 'status':
+        return (statusOrder[normalizeStatus(a.status)] ?? 99) - (statusOrder[normalizeStatus(b.status)] ?? 99);
+      case 'type':
+        return (a.type || '').localeCompare(b.type || '');
+      case 'title-asc':
+        return (a.title || '').localeCompare(b.title || '');
+      case 'title-desc':
+        return (b.title || '').localeCompare(a.title || '');
+      case 'newest':
+      default:
+        return getDate(b) - getDate(a);
+    }
+  });
   
   // Show/hide empty state
   if (filteredComplaints.length === 0) {
@@ -142,7 +194,7 @@ async function loadComplaints(complaints, filters = {}) {
     const row = document.createElement('tr');
     
     let statusClass;
-    switch (complaint.status) {
+    switch (normalizeStatus(complaint.status)) {
       case 'pending':
         statusClass = 'status-pending';
         break;
@@ -159,11 +211,11 @@ async function loadComplaints(complaints, filters = {}) {
     row.innerHTML = `
       <td>${complaint.id}</td>
       <td>${complaint.title}</td>
-      <td>${complaint.type.replace('_', ' ')}</td>
+      <td>${(complaint.type || '').replace(/_/g, ' ')}</td>
       <td>${complaint.location}</td>
       <td>${formatDate(complaint.created_at || complaint.createdAt)}</td>
       
-      <td><span class="status-badge ${statusClass}">${complaint.status}</span></td>
+      <td><span class="status-badge ${statusClass}">${normalizeStatus(complaint.status).replace('_',' ').toUpperCase()}</span></td>
       <td>
         <button class="btn btn-sm view-complaint-btn" data-id="${complaint.id}">
           <i class="fas fa-eye"></i> View
@@ -176,9 +228,14 @@ async function loadComplaints(complaints, filters = {}) {
   
   // Add event listeners to view buttons
   document.querySelectorAll('.view-complaint-btn').forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       const complaintId = button.getAttribute('data-id');
-      showComplaintDetails(complaintId);
+      console.log('View button clicked for complaint ID:', complaintId);
+      try {
+        await showComplaintDetails(complaintId);
+      } catch (error) {
+        console.error('Error showing complaint details:', error);
+      }
     });
   });
   
@@ -186,11 +243,20 @@ async function loadComplaints(complaints, filters = {}) {
   updatePagination(filteredComplaints.length, page, perPage);
 }
 
+// Normalize statuses to canonical keys (pending, in_progress, resolved)
+function normalizeStatus(status) {
+  const s = (status || '').toString().toLowerCase().trim().replace(/\s+/g, '_').replace(/-/g, '_');
+  if (s === 'inprogress') return 'in_progress';
+  if (['pending', 'in_progress', 'resolved'].includes(s)) return s;
+  return 'pending';
+}
+
 // Setup filters
 async function setupFilters(complaints) {
   const searchInput = document.getElementById('search-complaints');
   const statusFilter = document.getElementById('status-filter');
   const typeFilter = document.getElementById('type-filter');
+  const sortFilter = document.getElementById('sort-filter');
   const urgencyFilter = document.getElementById('urgency-filter');
   const dateFilter = document.getElementById('date-filter');
   
@@ -199,6 +265,7 @@ async function setupFilters(complaints) {
     search: '',
     status: 'all',
     type: 'all',
+    sort: 'newest',
 
     date: 'all',
     page: 1
@@ -225,6 +292,13 @@ async function setupFilters(complaints) {
     loadComplaints(complaints, filters);
   });
   
+  // Sort filter
+  sortFilter.addEventListener('change', () => {
+    filters.sort = sortFilter.value;
+    filters.page = 1;
+    loadComplaints(complaints, filters);
+  });
+  
 
   
   // Date filter
@@ -247,6 +321,7 @@ async function setupPagination(complaints) {
       const searchInput = document.getElementById('search-complaints');
       const statusFilter = document.getElementById('status-filter');
       const typeFilter = document.getElementById('type-filter');
+      const sortFilter = document.getElementById('sort-filter');
       const urgencyFilter = document.getElementById('urgency-filter');
       const dateFilter = document.getElementById('date-filter');
       
@@ -254,6 +329,7 @@ async function setupPagination(complaints) {
         search: searchInput.value,
         status: statusFilter.value,
         type: typeFilter.value,
+        sort: sortFilter ? sortFilter.value : 'newest',
     
         date: dateFilter.value,
         page: page
@@ -311,15 +387,26 @@ function updatePagination(totalItems, currentPage, perPage) {
 
 // Show complaint details
 async function showComplaintDetails(complaintId) {
-  const complaint = await getComplaintById(complaintId);
+  console.log('showComplaintDetails called with ID:', complaintId);
+  
+  const complaint = await getComplaintByIdForLGU(complaintId);
+  console.log('Retrieved complaint:', complaint);
   
   if (!complaint) {
+    console.error('Complaint not found for ID:', complaintId);
     showToast('Complaint not found.', 'error');
     return;
   }
   
   // Populate modal with complaint details
-  document.getElementById('modal-title').textContent = complaint.title;
+  console.log('Populating modal with complaint data...');
+  
+  const modalTitle = document.getElementById('modal-title');
+  if (modalTitle) {
+    modalTitle.textContent = complaint.title;
+  } else {
+    console.error('Modal title element not found');
+  }
   
   let statusClass;
   switch (complaint.status) {
@@ -335,29 +422,49 @@ async function showComplaintDetails(complaintId) {
   }
   
   const statusElement = document.getElementById('detail-status');
-  statusElement.textContent = complaint.status;
-  statusElement.className = `status-badge ${statusClass}`;
+  if (statusElement) {
+    statusElement.textContent = complaint.status;
+    statusElement.className = `status-badge ${statusClass}`;
+  } else {
+    console.error('Status element not found');
+  }
   
-  document.getElementById('detail-id').textContent = complaint.id;
-  document.getElementById('detail-date').textContent = formatDate(complaint.created_at || complaint.createdAt);
-  document.getElementById('detail-type').textContent = complaint.type;
-  document.getElementById('detail-subcategory').textContent = complaint.subcategory;
+  const detailId = document.getElementById('detail-id');
+  if (detailId) detailId.textContent = complaint.id;
   
-  document.getElementById('detail-location').textContent = complaint.location;
-  document.getElementById('detail-submitter').textContent = complaint.userName;
-  document.getElementById('detail-description').textContent = complaint.description;
+  const detailDate = document.getElementById('detail-date');
+  if (detailDate) detailDate.textContent = formatDateTime(complaint.created_at || complaint.createdAt);
+  
+  const detailType = document.getElementById('detail-type');
+  if (detailType) detailType.textContent = complaint.type;
+  
+  const detailSubcategory = document.getElementById('detail-subcategory');
+  if (detailSubcategory) detailSubcategory.textContent = complaint.subcategory;
+  
+  const detailLocation = document.getElementById('detail-location');
+  if (detailLocation) detailLocation.textContent = complaint.location;
+  
+  const detailSubmitter = document.getElementById('detail-submitter');
+  if (detailSubmitter) detailSubmitter.textContent = complaint.userName;
+  
+  const detailDescription = document.getElementById('detail-description');
+  if (detailDescription) detailDescription.textContent = complaint.description;
   
   // Set current values in form
   const assignedUnitSelect = document.getElementById('assigned-unit');
   const statusSelect = document.getElementById('complaint-status');
   
-  if (complaint.assignedUnit) {
-    assignedUnitSelect.value = complaint.assignedUnit;
-  } else {
-    assignedUnitSelect.value = '';
+  if (assignedUnitSelect) {
+    if (complaint.assignedUnit) {
+      assignedUnitSelect.value = complaint.assignedUnit;
+    } else {
+      assignedUnitSelect.value = '';
+    }
   }
   
-  statusSelect.value = complaint.status;
+  if (statusSelect) {
+    statusSelect.value = complaint.status;
+  }
   
   // Handle photo
   const photoSection = document.getElementById('photo-section');
@@ -405,10 +512,25 @@ async function showComplaintDetails(complaintId) {
   
   // Store complaint ID for save button
   document.getElementById('save-complaint-btn').setAttribute('data-id', complaint.id);
+  // Store also CD row id if available via query param (optional enhancement)
+  
+  // Initialize map with complaint location
+  initializeComplaintMap(complaint);
   
   // Show modal
   const modal = document.getElementById('complaint-modal');
-  modal.classList.add('open');
+  if (modal) {
+    console.log('Modal found, showing modal');
+    modal.style.display = 'block';
+    
+    // Small delay to ensure modal is fully rendered before initializing map
+    setTimeout(() => {
+      console.log('Modal displayed successfully, map should initialize now');
+    }, 200);
+    
+  } else {
+    console.error('Modal element not found!');
+  }
   
   // If viewing from URL, add back button
   if (window.location.search.includes('id=')) {
@@ -434,26 +556,30 @@ function setupSaveButton() {
   
   saveBtn.addEventListener('click', async () => {
     const complaintId = saveBtn.getAttribute('data-id');
-    const assignedUnit = document.getElementById('assigned-unit').value;
+    const assignedUnitEl = document.getElementById('assigned-unit');
+    const assignedUnit = assignedUnitEl ? assignedUnitEl.value : '';
+    const assignedOfficer = document.getElementById('assigned-officer') ? document.getElementById('assigned-officer').value : '';
     const status = document.getElementById('complaint-status').value;
     const notes = document.getElementById('admin-notes').value;
     
     try {
-      // Use the real update function if available
+      // Update complaint basic fields if API available
       if (window.updateComplaint) {
         await window.updateComplaint(complaintId, {
           assignedUnit,
           status,
           adminNotes: notes
         });
-        showToast(`Complaint ${complaintId} updated successfully!`, 'success');
-      } else {
-        // Fallback to demo notification
-        showToast(`Complaint ${complaintId} updated successfully!`, 'success');
       }
+
+      // If an officer was selected and there is a department involvement row, try to assign via backend API
+      // Note: Without the complaint_department row id, we cannot target a specific row here.
+      // This UI focuses on selecting officer; assignment per row happens in admin dashboard queue.
+      // We simply notify success for the metadata update.
+      showToast(`Complaint ${complaintId} updated successfully!`, 'success');
       
       // Close modal
-      document.getElementById('complaint-modal').classList.remove('open');
+      document.getElementById('complaint-modal').style.display = 'none';
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
@@ -466,6 +592,65 @@ function setupSaveButton() {
   });
 }
 
+// Load departments and wire help requests sender
+async function setupHelpRequests() {
+  try {
+    const container = document.getElementById('help-departments');
+    const sendBtn = document.getElementById('send-help-requests');
+    const result = document.getElementById('help-request-result');
+    if (!container || !sendBtn) return;
+
+    // Determine current admin's department to exclude it from the list
+    let deptFromRole = null;
+    try {
+      const sb = await window.supabaseManager.initialize();
+      const { data: { user } } = await sb.auth.getUser();
+      const role = (user?.user_metadata?.role || '').toLowerCase();
+      deptFromRole = role.startsWith('lgu-admin-') ? role.replace('lgu-admin-', '')
+                   : role.startsWith('lgu-') ? role.replace('lgu-', '')
+                   : null;
+    } catch (_) {}
+
+    // Fetch departments
+    const res = await fetch('/api/departments');
+    const json = await res.json();
+    const depts = Array.isArray(json.departments) ? json.departments : [];
+    container.innerHTML = '';
+    depts.forEach(d => {
+      // Exclude current admin's own department (match by code or name)
+      const codeLc = String(d.code || '').toLowerCase();
+      const nameLc = String(d.name || '').toLowerCase();
+      if (deptFromRole && (codeLc === deptFromRole || nameLc === deptFromRole)) return;
+      const id = `help-dept-${(d.code || d.name).toLowerCase()}`;
+      const wrap = document.createElement('label');
+      wrap.style.display = 'flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '6px';
+      wrap.innerHTML = `<input type="checkbox" value="${d.code || d.name}" id="${id}"><span>${d.name} (${d.code})</span>`;
+      container.appendChild(wrap);
+    });
+
+    // Wire send button
+    sendBtn.addEventListener('click', async () => {
+      try {
+        result.textContent = 'Sending...';
+        // Determine active complaint from modal
+        const complaintId = document.getElementById('save-complaint-btn').getAttribute('data-id');
+        if (!complaintId) { result.textContent = 'Open a complaint first'; return; }
+        const selected = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+        if (!selected.length) { result.textContent = 'Select at least one department'; return; }
+        const r = await fetch(`/api/complaints/${encodeURIComponent(complaintId)}/request_help`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ departments: selected })
+        });
+        const j = await r.json();
+        result.textContent = r.ok ? `Requests sent: ${(j.items||[]).length}` : (j.error || 'Failed');
+      } catch (e) {
+        result.textContent = 'Failed to send requests';
+      }
+    });
+  } catch (_) {}
+}
+
 // Setup modal close
 function setupModalClose() {
   const modal = document.getElementById('complaint-modal');
@@ -473,7 +658,14 @@ function setupModalClose() {
   
   closeButtons.forEach(button => {
     button.addEventListener('click', () => {
-      modal.classList.remove('open');
+      // Clean up map before closing modal
+      if (currentMap) {
+        console.log('Cleaning up map on modal close');
+        currentMap.remove();
+        currentMap = null;
+      }
+      
+      modal.style.display = 'none';
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
@@ -485,7 +677,14 @@ function setupModalClose() {
   // Close modal when clicking outside
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.remove('open');
+      // Clean up map before closing modal
+      if (currentMap) {
+        console.log('Cleaning up map on modal close');
+        currentMap.remove();
+        currentMap = null;
+      }
+      
+      modal.style.display = 'none';
       
       // If viewing from URL, go back to list
       if (window.location.search.includes('id=')) {
@@ -496,15 +695,30 @@ function setupModalClose() {
 }
 
 // Helper functions
-async function getComplaintById(id) {
+async function getComplaintByIdForLGU(id) {
+  console.log('getComplaintByIdForLGU called with ID:', id);
   try {
-    // Use the real data management function
+    // Use the real data management function from data-management.js
     if (window.getComplaintById) {
+      console.log('Using real getComplaintById function from data-management.js');
       return await window.getComplaintById(id);
     }
     // Fallback to local search if function not available
-    const complaints = await getComplaints();
-    return complaints.find(complaint => complaint.id === id);
+    console.log('Using local mock data fallback - getComplaintById function not found');
+    // Get complaints directly from the mock data to avoid recursion
+    const mockComplaints = [
+      { id: 'CP001', title: 'Pothole on Main Street', type: 'infrastructure', subcategory: 'Road Damage', location: '123 Main Street', status: 'resolved', created_at: '2025-01-05T10:30:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Large pothole causing damage to vehicles', assignedUnit: 'public_works' },
+      { id: 'CP002', title: 'Streetlight Out', type: 'infrastructure', subcategory: 'Street Lighting', location: 'Corner of Pine St and Oak Ave', status: 'in_progress', created_at: '2025-01-10T18:45:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Streetlight has been out for a week', assignedUnit: 'public_works' },
+      { id: 'CP003', title: 'Missed Garbage Collection', type: 'sanitation', subcategory: 'Garbage Collection', location: '456 Cedar Avenue', status: 'resolved', created_at: '2025-01-15T08:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Garbage not collected for two weeks', assignedUnit: 'waste' },
+      { id: 'CP004', title: 'Noise Complaint - Construction', type: 'noise', subcategory: 'Construction Noise', location: '789 Maple Drive', status: 'pending', created_at: '2025-01-20T06:15:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction starting too early in the morning' },
+      { id: 'CP005', title: 'Water Main Break', type: 'utilities', subcategory: 'Water Supply', location: '200 Block of Birch Street', status: 'in_progress', created_at: '2025-01-22T15:30:00', userId: 'other-user', userName: 'Jane Smith', description: 'Major water main break flooding the street', assignedUnit: 'public_works' },
+      { id: 'CP006', title: 'Suspicious Activity', type: 'public_safety', subcategory: 'Suspicious Activity', location: 'Oak Elementary School', status: 'resolved', created_at: '2025-01-18T22:10:00', userId: 'other-user', userName: 'Jane Smith', description: 'Suspicious individuals loitering around school', assignedUnit: 'police' },
+      { id: 'CP007', title: 'Illegal Dumping', type: 'sanitation', subcategory: 'Illegal Dumping', location: 'Vacant lot at end of Willow Lane', status: 'in_progress', created_at: '2025-01-25T14:20:00', userId: 'citizen-user', userName: 'John Citizen', description: 'Construction waste being dumped in vacant lot', assignedUnit: 'waste' },
+      { id: 'CP008', title: 'Broken Sidewalk', type: 'infrastructure', subcategory: 'Sidewalk Problems', location: 'Cherry Street between 5th and 6th Ave', status: 'pending', created_at: '2025-01-28T16:45:00', userId: 'other-user', userName: 'Jane Smith', description: 'Sidewalk is severely cracked and uneven' }
+    ];
+    const foundComplaint = mockComplaints.find(complaint => complaint.id === id);
+    console.log('Found complaint:', foundComplaint);
+    return foundComplaint;
   } catch (error) {
     console.error('Error getting complaint by ID:', error);
     return null;
@@ -579,4 +793,368 @@ function showToast(message, type = 'success') {
   setTimeout(() => {
     toast.classList.remove('show');
   }, 3000);
+}
+
+// Global variable to store the current map instance
+let currentMap = null;
+
+// Initialize complaint location map
+function initializeComplaintMap(complaint) {
+  console.log('Initializing map for complaint:', complaint);
+  
+  const mapContainer = document.getElementById('complaint-map');
+  const mapLoading = document.getElementById('map-loading');
+  const coordinatesSpan = document.getElementById('map-coordinates');
+  const boundarySpan = document.getElementById('boundary-scope');
+  
+  if (!mapContainer) {
+    console.error('Map container not found');
+    return;
+  }
+  
+  // Destroy previous map if it exists
+  if (currentMap) {
+    console.log('Destroying previous map');
+    currentMap.remove();
+    currentMap = null;
+  }
+  
+  // Clear previous map and add loading message back
+  mapContainer.innerHTML = '<div id="map-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 14px; z-index: 1000;">Initializing map...</div>';
+  
+  // Check if complaint has coordinates
+  if (complaint.latitude && complaint.longitude) {
+    const lat = parseFloat(complaint.latitude);
+    const lng = parseFloat(complaint.longitude);
+    
+    // Update coordinates display
+    coordinatesSpan.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      try {
+        // Create map
+        const map = L.map('complaint-map', {
+          zoomControl: true,
+          attributionControl: false
+        }).setView([lat, lng], 14);
+        
+        // Store the map instance globally
+        currentMap = map;
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add complaint marker
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(`<b>Complaint Location</b><br>${complaint.location || 'Location not specified'}`);
+        
+        // Force map refresh
+        map.invalidateSize();
+        
+        // Remove the loading message since map is now visible
+        const loadingMessage = mapContainer.querySelector('#map-loading');
+        if (loadingMessage) {
+          loadingMessage.remove();
+        }
+        
+        // Try to fetch barangay boundary data
+        fetchBarangayBoundary(lat, lng, map, complaint, boundarySpan);
+        
+        console.log('Map initialized successfully');
+        
+      } catch (error) {
+        console.error('Error creating map:', error);
+        mapContainer.innerHTML = `
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #666;">
+            <div>Error loading map</div>
+            <div style="font-size: 12px; margin-top: 5px;">${error.message}</div>
+          </div>
+        `;
+      }
+    }, 100);
+    
+  } else {
+    // No coordinates available
+    mapContainer.innerHTML = `
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #666;">
+        <i class="fas fa-map-marker-alt" style="font-size: 2rem; margin-bottom: 10px; color: #ccc;"></i>
+        <div>No location coordinates available</div>
+        <div style="font-size: 12px; margin-top: 5px;">This complaint was submitted without GPS coordinates</div>
+      </div>
+    `;
+    
+    coordinatesSpan.textContent = 'Not available';
+    boundarySpan.textContent = 'Cannot determine without coordinates';
+    
+    console.log('No coordinates available for map');
+  }
+}
+
+// Fetch barangay boundary data
+async function fetchBarangayBoundary(lat, lng, map, complaint, boundarySpan) {
+  try {
+    console.log('Fetching barangay boundary for coordinates:', lat, lng);
+    
+    // Try to get barangay name from complaint location or use reverse geocoding
+    let barangayName = extractBarangayFromLocation(complaint.location);
+    
+    if (!barangayName) {
+      // Try reverse geocoding to get barangay name
+      barangayName = await getBarangayFromCoordinates(lat, lng);
+    }
+    
+    if (barangayName) {
+      // Try to fetch boundary from OpenStreetMap Nominatim or other sources
+      const boundaryData = await getBarangayBoundaryData(barangayName);
+      
+              if (boundaryData) {
+          // Draw the actual barangay boundary
+          const boundaryPolygon = L.polygon(boundaryData.coordinates, {
+            color: '#0d6efd',
+            fillColor: '#0d6efd',
+            fillOpacity: 0.1,
+            weight: 2
+          }).addTo(map);
+          
+          // Add barangay boundary label
+          const boundaryLabel = L.tooltip({
+            permanent: true,
+            direction: 'center',
+            className: 'barangay-boundary-label'
+          })
+          .setContent(`Barangay ${boundaryData.name}`)
+          .setLatLng(boundaryData.center);
+          
+          boundaryPolygon.bindTooltip(boundaryLabel);
+          
+          // Update boundary scope display
+          boundarySpan.textContent = `Barangay ${boundaryData.name} administrative boundary`;
+          
+          // Fit map to show both marker and boundary
+          map.fitBounds(boundaryPolygon.getBounds(), { padding: [20, 20] });
+          
+          console.log('Barangay boundary displayed successfully');
+        } else {
+          // Fallback: show approximate barangay area
+          showApproximateBarangayArea(lat, lng, map, barangayName, boundarySpan);
+          
+          // Ensure map is properly sized after adding boundary
+          map.invalidateSize();
+        }
+    } else {
+      // No barangay info available, show default view
+      showDefaultMapView(lat, lng, map, boundarySpan);
+    }
+    
+  } catch (error) {
+    console.error('Error fetching barangay boundary:', error);
+    // Fallback to default view
+    showDefaultMapView(lat, lng, map, boundarySpan);
+  }
+}
+
+// Extract barangay name from location string
+function extractBarangayFromLocation(location) {
+  if (!location) return null;
+  
+  // Common barangay patterns in Philippine addresses
+  const barangayPatterns = [
+    /barangay\s+(\w+)/i,
+    /brgy\.?\s*(\w+)/i,
+    /zone\s+(\d+)/i,
+    /purok\s+(\w+)/i
+  ];
+  
+  for (const pattern of barangayPatterns) {
+    const match = location.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  return null;
+}
+
+// Get barangay name from coordinates using reverse geocoding
+async function getBarangayFromCoordinates(lat, lng) {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
+    const data = await response.json();
+    
+    if (data.address) {
+      // Look for barangay in address components
+      return data.address.suburb || data.address.neighbourhood || data.address.city_district;
+    }
+  } catch (error) {
+    console.error('Reverse geocoding error:', error);
+  }
+  
+  return null;
+}
+
+// Get barangay boundary data (placeholder - you'll need to implement this)
+async function getBarangayBoundaryData(barangayName) {
+  // This is where you would fetch actual barangay boundary data
+  // Options:
+  // 1. From your Supabase database if you have GIS data
+  // 2. From a government GIS service
+  // 3. From OpenStreetMap if the data exists
+  
+  console.log('Attempting to fetch boundary data for:', barangayName);
+  
+  // For now, return null to trigger fallback
+  // You can implement this based on your data source
+  return null;
+}
+
+// Show approximate barangay area when exact boundary isn't available
+function showApproximateBarangayArea(lat, lng, map, barangayName, boundarySpan) {
+  // Create an approximate circular area representing barangay
+  const approximateArea = L.circle([lat, lng], {
+    color: '#0d6efd',
+    fillColor: '#0d6efd',
+    fillOpacity: 0.1,
+    radius: 1000 // 1km radius as approximation
+  }).addTo(map);
+  
+  // Add label
+  const areaLabel = L.tooltip({
+    permanent: true,
+    direction: 'center',
+    className: 'barangay-approximate-label'
+  })
+  .setContent(`Approximate Barangay ${barangayName} Area`)
+  .setLatLng([lat, lng]);
+  
+  approximateArea.bindTooltip(areaLabel);
+  
+  // Update boundary scope display
+  boundarySpan.textContent = `Approximate Barangay ${barangayName} area (1km radius)`;
+  
+  // Fit map to show area
+  map.fitBounds(approximateArea.getBounds(), { padding: [20, 20] });
+}
+
+// Show default map view when no boundary data is available
+function showDefaultMapView(lat, lng, map, boundarySpan) {
+  // Show a simple marker with location info
+  boundarySpan.textContent = 'Location coordinates available, but barangay boundary data not accessible';
+  
+  // Fit map to show marker
+  map.setView([lat, lng], 16);
+}
+
+// Clear all filters function
+function clearAllFilters() {
+  console.log('Clearing all filters');
+  
+  // Clear search input
+  const searchInput = document.querySelector('input[type="search"]');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+  
+  // Reset status filter
+  const statusFilter = document.querySelector('select[name="status"]');
+  if (statusFilter) {
+    statusFilter.value = 'all';
+  }
+  
+  // Reset type filter
+  const typeFilter = document.querySelector('select[name="type"]');
+  if (typeFilter) {
+    typeFilter.value = 'all';
+  }
+  
+  // Reset time filter
+  const timeFilter = document.querySelector('select[name="time"]');
+  if (timeFilter) {
+    timeFilter.value = 'all';
+  }
+  
+  // Refresh complaints with cleared filters
+  refreshComplaints();
+  
+  // Show success message
+  showToast('All filters cleared successfully!', 'success');
+}
+
+// Refresh complaints function
+function refreshComplaints() {
+  console.log('Refreshing complaints');
+  
+  // Reload the page to refresh complaints
+  window.location.reload();
+}
+
+// Debug functions for sidebar testing
+function testSidebar() {
+  const debugOutput = document.getElementById('debug-output');
+  debugOutput.innerHTML = '<strong>Testing Sidebar Loader...</strong><br>';
+  
+  if (window.sidebarLoader) {
+    debugOutput.innerHTML += '✅ SidebarLoader instance found<br>';
+    debugOutput.innerHTML += `User type: ${window.sidebarLoader.userType}<br>`;
+    debugOutput.innerHTML += `Sidebar loaded: ${window.sidebarLoader.sidebarLoaded}<br>`;
+  } else {
+    debugOutput.innerHTML += '❌ SidebarLoader instance not found<br>';
+  }
+  
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    debugOutput.innerHTML += '✅ Sidebar element found in DOM<br>';
+    debugOutput.innerHTML += `Sidebar classes: ${sidebar.className}<br>`;
+  } else {
+    debugOutput.innerHTML += '❌ Sidebar element not found in DOM<br>';
+  }
+  
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  if (sidebarToggle) {
+    debugOutput.innerHTML += '✅ Sidebar toggle button found<br>';
+  } else {
+    debugOutput.innerHTML += '❌ Sidebar toggle button not found<br>';
+  }
+}
+
+function manualLoadSidebar() {
+  const debugOutput = document.getElementById('debug-output');
+  debugOutput.innerHTML = '<strong>Manually loading sidebar...</strong><br>';
+  
+  if (window.sidebarLoader) {
+    try {
+      window.sidebarLoader.init();
+      debugOutput.innerHTML += '✅ Manual sidebar initialization completed<br>';
+    } catch (error) {
+      debugOutput.innerHTML += `❌ Error: ${error.message}<br>`;
+    }
+  } else {
+    debugOutput.innerHTML += '❌ SidebarLoader not available<br>';
+  }
+}
+
+function checkUserData() {
+  const debugOutput = document.getElementById('debug-output');
+  debugOutput.innerHTML = '<strong>Checking user data...</strong><br>';
+  
+  const userData = sessionStorage.getItem('user');
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      debugOutput.innerHTML += '✅ User data found in sessionStorage<br>';
+      debugOutput.innerHTML += `User ID: ${user.id}<br>`;
+      debugOutput.innerHTML += `User Role: ${user.role}<br>`;
+      debugOutput.innerHTML += `User Type: ${user.type}<br>`;
+      debugOutput.innerHTML += `User Name: ${user.name}<br>`;
+    } catch (error) {
+      debugOutput.innerHTML += `❌ Error parsing user data: ${error.message}<br>`;
+    }
+  } else {
+    debugOutput.innerHTML += '❌ No user data in sessionStorage<br>';
+  }
+  
+  // Check current path
+  debugOutput.innerHTML += `Current path: ${window.location.pathname}<br>`;
 }

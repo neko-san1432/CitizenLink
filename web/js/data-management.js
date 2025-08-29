@@ -62,23 +62,35 @@ let complaintsData = [];
 // Get all complaints from Supabase
 async function getComplaints() {
   try {
-    const supabase = await window.supabaseManager.initialize();
+    console.log('🔍 getComplaints: Starting to fetch complaints...');
     
+    const supabase = await window.supabaseManager.initialize();
+    console.log('🔍 getComplaints: Supabase initialized');
+    
+    // First check if complaints table exists by trying to query it
     const { data, error } = await supabase
       .from('complaints')
       .select('*')
       .order('created_at', { ascending: false });
 
+    console.log('🔍 getComplaints: Query result - data:', data, 'error:', error);
+
     if (error) {
-      console.error('Error fetching complaints:', error);
+      console.error('❌ Error fetching complaints:', error);
+      if (error.code === '42P01') {
+        console.log('❌ Table does not exist');
+        return [];
+      }
       return [];
     }
 
+    console.log('✅ getComplaints: Successfully fetched complaints, count:', data?.length);
+    
     // Update local cache
     complaintsData = data || [];
     return complaintsData;
   } catch (error) {
-    console.error('Error in getComplaints:', error);
+    console.error('❌ Error in getComplaints:', error);
     return [];
   }
 }
@@ -218,8 +230,21 @@ let newsData = [];
 // Get all news from Supabase
 async function getNews() {
   try {
+    
     const supabase = await window.supabaseManager.initialize();
     
+    // First try to get all news to see what's available
+    const { data: allNews, error: allError } = await supabase
+      .from('news_data')
+      .select('*');
+    
+    if (allError) {
+      console.error('❌ Error fetching all news:', allError);
+    } else {
+      
+    }
+    
+    // Now get published news
     const { data, error } = await supabase
       .from('news_data')
       .select('*')
@@ -228,15 +253,17 @@ async function getNews() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching news:', error);
+      console.error('❌ Error fetching published news:', error);
       return [];
     }
 
+    
+    
     // Update local cache
     newsData = data || [];
     return newsData;
   } catch (error) {
-    console.error('Error in getNews:', error);
+    console.error('❌ Error in getNews:', error);
     return [];
   }
 }
@@ -325,27 +352,50 @@ let eventsData = [];
 // Get upcoming events from Supabase
 async function getUpcomingEvents() {
   try {
+    
     const supabase = await window.supabaseManager.initialize();
     
-    const now = new Date().toISOString();
+    const now = new Date();
+    // Only show events from today onwards, up to the next 12 months
+    const startOfTodayISO = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const twelveMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 12, 1).toISOString();
+    
+    
+    
+    
+    // First try to get all events to see what's available
+    const { data: allEvents, error: allError } = await supabase
+      .from('upcoming_events_data')
+      .select('*')
+      .eq('is_active', true);
+    
+    if (allError) {
+      console.error('❌ Error fetching all events:', allError);
+    } else {
+      
+    }
+    
+    // Get events from past 3 months to future 6 months (more inclusive)
     const { data, error } = await supabase
       .from('upcoming_events_data')
       .select('*')
-      .eq('status', 'upcoming')
       .eq('is_active', true)
-      .gte('event_date', now)
+      .gte('event_date', startOfTodayISO)
+      .lte('event_date', twelveMonthsAhead)
       .order('event_date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching upcoming events:', error);
+      console.error('❌ Error fetching upcoming events:', error);
       return [];
     }
 
+    
+    
     // Update local cache
     eventsData = data || [];
     return eventsData;
   } catch (error) {
-    console.error('Error in getUpcomingEvents:', error);
+    console.error('❌ Error in getUpcomingEvents:', error);
     return [];
   }
 }
@@ -399,29 +449,44 @@ let noticesData = [];
 // Get active notices from Supabase
 async function getActiveNotices() {
   try {
+    
     const supabase = await window.supabaseManager.initialize();
     
     const now = new Date().toISOString();
+    
+    
+    // First try to get all notices to see what's available
+    const { data: allNotices, error: allError } = await supabase
+      .from('important_notice_data')
+      .select('*')
+      .eq('is_active', true);
+    
+    if (allError) {
+      console.error('❌ Error fetching all notices:', allError);
+    } else {
+      
+    }
+    
+    // Now get active notices with less restrictive filtering
     const { data, error } = await supabase
       .from('important_notice_data')
       .select('*')
-      .eq('status', 'active')
       .eq('is_active', true)
-      .lte('start_date', now)
-      .gte('end_date', now)
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching active notices:', error);
+      console.error('❌ Error fetching active notices:', error);
       return [];
     }
 
+    
+    
     // Update local cache
     noticesData = data || [];
     return noticesData;
   } catch (error) {
-    console.error('Error in getActiveNotices:', error);
+    console.error('❌ Error in getActiveNotices:', error);
     return [];
   }
 }
@@ -906,5 +971,5 @@ if (typeof window !== 'undefined') {
   window.getPriorityColor = getPriorityColor;
   window.getCategoryIcon = getCategoryIcon;
   
-  console.log('Data management functions made available globally');
+  
 }

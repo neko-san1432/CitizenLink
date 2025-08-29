@@ -1,44 +1,109 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get user and complaints
+document.addEventListener('DOMContentLoaded', async () => {
+  // Get user and complaints scoped to LGU department
   const user = checkAuth();
   if (!user) return;
-  
-  const complaints = getComplaints();
-  console.log('Loaded complaints:', complaints); // Debug log
-  
+
+  const role = String(user.role || user.type || '').toLowerCase();
+  const isLgu = role.startsWith('lgu-') || role.startsWith('lgu_admin') || role.startsWith('lgu-admin') || role === 'lgu' || role === 'admin';
+  const deptFromRole = role.startsWith('lgu-admin-') ? role.replace('lgu-admin-', '')
+                      : role.startsWith('lgu-') ? role.replace('lgu-', '')
+                      : null;
+
+  let complaints = [];
+  try {
+    if (isLgu && deptFromRole) {
+      // Prefer server API that already scopes by department and uses service key
+      console.log('[LGU] Fetching department queue for dept:', deptFromRole);
+      const res = await fetch(`/api/department-queue?department=${encodeURIComponent(deptFromRole)}`);
+      console.log('[LGU] /api/department-queue status:', res.status);
+      if (res.ok) {
+        const json = await res.json();
+        console.log('[LGU] /api/department-queue items length:', (json.items||[]).length);
+        const items = Array.isArray(json.items) ? json.items : [];
+        // Map department-queue items to complaint-like objects for the dashboard
+        const mapped = items.map(it => ({
+          id: it.complaint?.id || it.id,
+          title: it.complaint?.title || `Complaint ${it.complaint?.id || it.id}`,
+          status: it.status || it.complaint?.status || 'pending',
+          type: it.role || it.complaint?.type || 'General',
+          createdAt: it.complaint?.created_at || it.updated_at,
+          updatedAt: it.updated_at,
+          assignedUnit: deptFromRole
+        }));
+        complaints = normalizeComplaints(mapped);
+      }
+    }
+  } catch (_) {
+    // Fall back silently
+  }
+
+  // Fallback to all complaints if API not available or role not LGU
+  if (!complaints.length) {
+    console.log('[LGU] Falling back to window.getComplaints()');
+    const complaintsRaw = await (window.getComplaints ? window.getComplaints() : []);
+    console.log('[LGU] getComplaints count:', Array.isArray(complaintsRaw) ? complaintsRaw.length : 0);
+    complaints = normalizeComplaints(complaintsRaw);
+  }
+
   // Update stats
   updateStats(complaints);
-  
+
   // Initialize charts
   initializeCharts(complaints);
-  
+
   // Load recent complaints
   loadRecentComplaints(complaints);
-  
+
   // Setup tab switching
   setupTabs();
-  
+
   // Setup refresh button
   setupRefreshButton();
 
   // Setup Add Article functionality
   setupAddArticle();
-  
+
   // Setup Add Notice functionality
   setupAddNotice();
-  
+
   // Setup Add Event functionality
   setupAddEvent();
 });
+
+// Normalize complaint records from database into consistent shape
+function normalizeComplaints(records) {
+  if (!Array.isArray(records)) return [];
+  return records.map(r => ({
+    // Preserve original
+    ...r,
+    // Normalized fields
+    id: r.id,
+    title: r.title || r.subject || 'Untitled',
+    status: normalizeStatus(r.status),
+    type: r.type || r.category || 'General',
+    createdAt: r.createdAt || r.created_at,
+    updatedAt: r.updatedAt || r.updated_at || r.resolved_at || r.closed_at || r.created_at,
+    assignedUnit: r.assignedUnit || r.assigned_unit || r.department || null,
+  }));
+}
+
+function normalizeStatus(status) {
+  const s = (status || '').toString().toLowerCase().trim().replace(/\s+/g, '_').replace(/-/g, '_');
+  if (s === 'inprogress') return 'in_progress';
+  if (['pending', 'in_progress', 'resolved'].includes(s)) return s;
+  // Default unknown statuses to pending for grouping
+  return 'pending';
+}
 
 // Setup refresh button
 function setupRefreshButton() {
   const refreshButton = document.getElementById('refresh-complaints');
   if (refreshButton) {
-    refreshButton.addEventListener('click', () => {
-      console.log('Refresh button clicked'); // Debug log
-      const refreshedComplaints = refreshComplaints();
-      console.log('Refreshed complaints:', refreshedComplaints); // Debug log
+    refreshButton.addEventListener('click', async () => {
+      // Debug log
+      const refreshedRaw = await (window.getComplaints ? window.getComplaints() : []);
+      const refreshedComplaints = normalizeComplaints(refreshedRaw);
+      // Debug log
       
       // Update dashboard with refreshed data
       updateStats(refreshedComplaints);
@@ -49,6 +114,26 @@ function setupRefreshButton() {
       showToast('Complaints data refreshed successfully!', 'success');
     });
   }
+}
+
+// Safe no-op: Add Notice setup (UI not present yet)
+function setupAddNotice() {
+  const addNoticeBtn = document.getElementById('add-notice-btn');
+  if (!addNoticeBtn) return; // No UI, exit quietly
+  addNoticeBtn.addEventListener('click', () => {
+    
+    showToast('Add Notice UI not implemented yet.', 'info');
+  });
+}
+
+// Safe no-op: Add Event setup (UI not present yet)
+function setupAddEvent() {
+  const addEventBtn = document.getElementById('add-event-btn');
+  if (!addEventBtn) return; // No UI, exit quietly
+  addEventBtn.addEventListener('click', () => {
+    
+    showToast('Add Event UI not implemented yet.', 'info');
+  });
 }
 
 // Setup Add Article functionality
@@ -174,7 +259,7 @@ function getCategoryIcon(category) {
 
 // Add news article to data (mock function - replace with actual API call)
 function addNewsArticle(article) {
-  console.log('New article created:', article);
+  
   
   // In a real application, you would:
   // 1. Send this to your backend API
@@ -189,7 +274,7 @@ function addNewsArticle(article) {
 function updateStats(complaints) {
   const totalComplaints = complaints.length;
   const pendingComplaints = complaints.filter(c => c.status === 'pending').length;
-  const inProgressComplaints = complaints.filter(c => c.status === 'in_progress').length;
+  const inProgressComplaints = complaints.filter(c => c.status === 'in_progress' || c.status === 'inprogress' || c.status === 'in-progress').length;
   const resolvedComplaints = complaints.filter(c => c.status === 'resolved').length;
   
   // Update DOM elements
@@ -229,7 +314,7 @@ function initializeCharts(complaints) {
   // Complaint status chart
   const statusCtx = document.getElementById('complaints-chart').getContext('2d');
   const pendingCount = complaints.filter(c => c.status === 'pending').length;
-  const inProgressCount = complaints.filter(c => c.status === 'in_progress').length;
+  const inProgressCount = complaints.filter(c => c.status === 'in_progress' || c.status === 'inprogress' || c.status === 'in-progress').length;
   const resolvedCount = complaints.filter(c => c.status === 'resolved').length;
   
   new Chart(statusCtx, {
@@ -256,7 +341,8 @@ function initializeCharts(complaints) {
   const typesCtx = document.getElementById('complaint-types-chart').getContext('2d');
   const complaintTypes = {};
   complaints.forEach(complaint => {
-      complaintTypes[complaint.type] = (complaintTypes[complaint.type] || 0) + 1;
+      const key = (complaint.type || 'General').toString();
+      complaintTypes[key] = (complaintTypes[key] || 0) + 1;
   });
   
   new Chart(typesCtx, {
@@ -333,7 +419,7 @@ function calculateDepartmentStats(complaints) {
 function loadRecentComplaints(complaints) {
   // Sort complaints by date (newest first)
   const sortedComplaints = [...complaints].sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
+      new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
   );
   
   // Get the first 5 complaints

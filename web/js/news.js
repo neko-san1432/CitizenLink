@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('News page loaded, checking authentication...');
+  
   
   // Get user
   const user = await checkAuth();
-  console.log('Auth check returned user:', user);
+  
   
   if (!user) {
-    console.log('No user found, redirecting to login...');
+    
     window.location.href = '/login';
     return;
   }
@@ -55,7 +55,7 @@ async function loadNews() {
     newsGrid.appendChild(newsCard);
   });
   
-    console.log(`Loaded ${newsData.length} news articles`);
+    
   } catch (error) {
     console.error('Error loading news:', error);
     
@@ -83,7 +83,7 @@ async function loadNews() {
 
 // Create a news card element
 function createNewsCard(news) {
-  console.log('Creating news card for:', news.title);
+  
   
   const col = document.createElement('div');
   col.className = 'col-md-6 col-lg-4 mb-4';
@@ -132,8 +132,8 @@ function createNewsCard(news) {
   
   col.innerHTML = cardHTML;
   
-  console.log('News card HTML created:', cardHTML);
-  console.log('News card element created:', col);
+  
+  
   
   return col;
 }
@@ -143,7 +143,7 @@ window.showNewsDetails = showNewsDetails;
 
 // Show news details in modal
 async function showNewsDetails(newsId) {
-  console.log('showNewsDetails called with ID:', newsId);
+  
   
   try {
     // Get the specific news article from Supabase
@@ -156,7 +156,7 @@ async function showNewsDetails(newsId) {
     return;
   }
   
-  console.log('Found news:', news);
+  
   
   const modal = document.getElementById('newsModal');
   const modalTitle = document.getElementById('newsModalLabel');
@@ -198,13 +198,13 @@ async function showNewsDetails(newsId) {
       </div>
     `;
   
-  console.log('Modal content set, attempting to show modal...');
+  
   
   try {
     // Show modal using Bootstrap
     const bootstrapModal = new bootstrap.Modal(modal);
     bootstrapModal.show();
-    console.log('Modal shown successfully');
+    
   } catch (error) {
     console.error('Error showing modal:', error);
     // Fallback: show content in alert for debugging
