@@ -144,7 +144,7 @@ app.use((req, res, next) => {
       "style-src 'self' 'unsafe-inline' https:",
       "font-src 'self' https:",
       "img-src 'self' data: https:",
-      "connect-src 'self' https:",
+      "connect-src 'self' https://citizenlink-abwi.onrender.com https://cnffzzptgkfqgcslwmfo.supabase.co",
       "object-src 'none'",
       "media-src 'self'",
       "frame-src 'none'",
