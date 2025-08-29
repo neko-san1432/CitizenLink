@@ -31,7 +31,6 @@ class SupabaseBridge {
             // Initialize Supabase client
             
             await this.initializeSupabaseClient();
-            console.log("Supabase initialized successfully",this.credentials);
         } catch (error) {
             console.error('❌ Error initializing Supabase bridge:', error);
             throw error;
