@@ -40,12 +40,15 @@ function initializeLayoutControls() {
   if (toggleFilters && leftPanel) {
     toggleFilters.addEventListener('click', () => {
       leftPanel.classList.toggle('open');
+      // Close the opposite panel if open
+      if (rightPanel) rightPanel.classList.remove('open');
       setTimeout(invalidateMapSize, 300);
     });
   }
   if (toggleInsights && rightPanel) {
     toggleInsights.addEventListener('click', () => {
       rightPanel.classList.toggle('open');
+      if (leftPanel) leftPanel.classList.remove('open');
       setTimeout(invalidateMapSize, 300);
     });
   }
@@ -55,13 +58,45 @@ function initializeLayoutControls() {
   if (closeRight && rightPanel) {
     closeRight.addEventListener('click', () => { rightPanel.classList.remove('open'); setTimeout(invalidateMapSize, 300); });
   }
+  // Fullscreen helpers using the Fullscreen API
+  const enterFullscreen = (element) => {
+    try {
+      if (element.requestFullscreen) return element.requestFullscreen();
+      if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+      if (element.msRequestFullscreen) return element.msRequestFullscreen();
+    } catch (_) {}
+  };
+  const exitFullscreen = () => {
+    try {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+      if (document.msExitFullscreen) return document.msExitFullscreen();
+    } catch (_) {}
+  };
+  const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+
   if (toggleFullscreen && mapCard) {
-    toggleFullscreen.addEventListener('click', () => {
-      mapCard.classList.toggle('map-fullscreen');
-      // Swap icon
+    toggleFullscreen.addEventListener('click', async () => {
+      if (!isFullscreen()) {
+        mapCard.classList.add('map-fullscreen');
+        await enterFullscreen(mapCard);
+      } else {
+        await exitFullscreen();
+        mapCard.classList.remove('map-fullscreen');
+      }
       try {
         const i = toggleFullscreen.querySelector('i');
-        if (i) i.className = mapCard.classList.contains('map-fullscreen') ? 'fas fa-compress' : 'fas fa-expand';
+        if (i) i.className = isFullscreen() ? 'fas fa-compress' : 'fas fa-expand';
+      } catch (_) {}
+      setTimeout(invalidateMapSize, 50);
+    });
+
+    // Sync UI when user exits via Esc
+    document.addEventListener('fullscreenchange', () => {
+      try {
+        if (!isFullscreen()) mapCard.classList.remove('map-fullscreen');
+        const i = toggleFullscreen.querySelector('i');
+        if (i) i.className = isFullscreen() ? 'fas fa-compress' : 'fas fa-expand';
       } catch (_) {}
       setTimeout(invalidateMapSize, 50);
     });
@@ -125,23 +160,20 @@ function addAdvancedFilters() {
   dateTo.addEventListener('change', updateHeatmap);
 }
 
-// Authentication function
+// Authentication function (delegate to global if available; accept lgu-* roles)
 async function checkAuth() {
   try {
-    // Check if user is authenticated
-    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-    if (!user.id) {
-      
-      return null;
+    if (window.checkAuth && window.checkAuth !== checkAuth) {
+      return await window.checkAuth();
     }
-    
-    // Check if user is LGU type
-    if (user.type !== 'lgu' && user.role !== 'lgu' && user.role !== 'admin') {
-      
-      return null;
-    }
-    
-    return { username: user.email, type: user.type || user.role };
+    const stored = sessionStorage.getItem('user');
+    if (!stored) return null;
+    const user = JSON.parse(stored);
+    if (!user || !user.id) return null;
+    const role = String(user.role || user.type || '').toLowerCase();
+    const isLgu = role === 'lgu' || role === 'admin' || role.startsWith('lgu-') || role.startsWith('lgu_admin') || role.startsWith('lgu-admin');
+    if (!isLgu) return null;
+    return { username: user.email, role, type: user.type || user.role };
   } catch (error) {
     console.error('Error checking auth:', error);
     return null;
@@ -153,15 +185,37 @@ async function initializeMap() {
   try {
     // Create map centered on Digos City, Philippines (based on the image coordinates)
     // Move zoom control away from sidebar (to top-right)
-    const map = L.map('complaint-map', { zoomControl: false }).setView([6.75, 125.35], 12);
-    
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    const map = L.map('complaint-map', {
+      zoomControl: false,
+      preferCanvas: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      dragging: true
+    }).setView([6.75, 125.35], 12);
+    // Expose globally
+    window.complaintMap = map;
 
-    // Add zoom control to top-right to avoid sidebar overlap
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    // Base layers (themes)
+    const baseLayers = {
+      'Standard': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }),
+      'Standard Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO'
+      }),
+      'Terrain': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap'
+      }),
+      'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri'
+      })
+    };
+    baseLayers['Standard'].addTo(map);
+
+    // Add zoom control to top-left
+    L.control.zoom({ position: 'topleft' }).addTo(map);
     // Add status legend to the top-right
     addStatusLegend(map);
     
@@ -245,29 +299,46 @@ async function initializeMap() {
           
           // Fit and restrict map to the combined boundary bounds
           const bounds = combinedBoundary.getBounds();
-          map.fitBounds(bounds);
-          map.setMaxBounds(bounds.pad(0.05));
-          map.options.minZoom = map.getZoom();
-          
-          // Create a mask to visually clip outside the boundary
+          // Fit as tightly as possible after layout stabilizes
+          const applyTightFit = () => {
+            try {
+              map.invalidateSize();
+              map.fitBounds(bounds, { padding: [0, 0], animate: false });
+              map.setMaxBounds(bounds.pad(0.02));
+              map.options.minZoom = Math.max(map.getZoom(), 12);
+            } catch (_) {}
+          };
+          // Run now and after a tick
+          applyTightFit();
+          setTimeout(applyTightFit, 50);
+          // Also refit on resize
+          map.on('resize', applyTightFit);
+
+          // Create a clean mask to hide everything outside the boundary
+          // Use a dedicated pane to avoid tile seam artifacts
           try {
+            if (!map.getPane('mask-pane')) {
+              map.createPane('mask-pane');
+              const mp = map.getPane('mask-pane');
+              mp.style.zIndex = 399; // above tiles(200), below overlays(400)
+              mp.style.pointerEvents = 'none'; // don't block map interactions
+            }
             const world = [
               [90, -360], [90, 360],
               [-90, 360], [-90, -360]
             ];
             const maskCoords = [world, ...allCoordinates];
             const mask = L.polygon(maskCoords, {
+              pane: 'mask-pane',
               stroke: false,
               fillColor: '#ffffff',
-              fillOpacity: 0.85,
+              fillOpacity: 1,
               interactive: false
             });
             mask.addTo(map);
-            // Bring boundary on top of mask
+            // Keep boundary on top
             combinedBoundary.bringToFront();
-          } catch (_) {
-            // If mask creation fails, continue without visual crop
-          }
+          } catch (_) {}
           
           
           
@@ -343,6 +414,8 @@ async function initializeMap() {
         1.0: 'red'
       }
     }).addTo(map);
+    // Ensure map size is correct after load
+    setTimeout(() => { try { map.invalidateSize(); } catch(_){} }, 100);
     
     // Prepare markers (we will add/remove them as a layer based on zoom level)
     const complaintMarkers = [];
@@ -803,7 +876,8 @@ function refreshData() {
 
 // Setup export functionality
 function setupExportFeatures() {
-  const pageHeader = document.querySelector('.page-header');
+  const mountPoint = document.querySelector('.page-header') || document.querySelector('.floating-controls');
+  if (!mountPoint) return;
   
   const exportContainer = document.createElement('div');
   exportContainer.className = 'export-container';
@@ -814,7 +888,7 @@ function setupExportFeatures() {
   exportButton.title = 'Export heatmap data and statistics';
   
   exportContainer.appendChild(exportButton);
-  pageHeader.appendChild(exportContainer);
+  mountPoint.appendChild(exportContainer);
   
   // Add event listener
   exportButton.addEventListener('click', showExportOptions);
@@ -1029,7 +1103,11 @@ function updateStatistics(complaints) {
   const totalComplaints = complaints.length;
   const pendingComplaints = complaints.filter(c => c.status === 'pending').length;
   const resolvedComplaints = complaints.filter(c => c.status === 'resolved').length;
-  const avgResponseTime = calculateAverageResponseTime(complaints);
+  const inProgressComplaints = complaints.filter(c => c.status === 'in_progress').length;
+  const avgResponseTime = (typeof calculateAverageResponseTime === 'function') ? calculateAverageResponseTime(complaints) : 0;
+  
+  // Update overlay statistics
+  updateOverlayStatistics(totalComplaints, pendingComplaints, inProgressComplaints, resolvedComplaints);
   
   // Update hotspot list with real data
   updateHotspotList(complaints);
@@ -1041,22 +1119,205 @@ function updateStatistics(complaints) {
   updateResourceAllocation(complaints);
 }
 
-// Calculate average response time
-function calculateAverageResponseTime(complaints) {
-  const resolvedComplaints = complaints.filter(c => c.status === 'resolved' && (c.resolved_at || c.resolvedAt));
+// Update overlay statistics
+function updateOverlayStatistics(total, pending, inProgress, resolved) {
+  const totalEl = document.getElementById('total-complaints');
+  const pendingEl = document.getElementById('pending-complaints');
+  const inProgressEl = document.getElementById('in-progress-complaints');
+  const resolvedEl = document.getElementById('resolved-complaints');
   
-  if (resolvedComplaints.length === 0) return 'N/A';
+  if (totalEl) totalEl.textContent = total;
+  if (pendingEl) pendingEl.textContent = pending;
+  if (inProgressEl) inProgressEl.textContent = inProgress;
+  if (resolvedEl) resolvedEl.textContent = resolved;
+}
+
+// Add CSS styles for overlay panels
+function addOverlayStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .overlay-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .overlay-panel {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      min-width: 250px;
+      max-width: 300px;
+    }
+    
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 8px 8px 0 0;
+    }
+    
+    .overlay-header h6 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .overlay-toggle {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .overlay-toggle:hover {
+      background: rgba(0, 0, 0, 0.1);
+      color: #333;
+    }
+    
+    .overlay-content {
+      padding: 16px;
+      display: block;
+    }
+    
+    .filter-group {
+      margin-bottom: 12px;
+    }
+    
+    .filter-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    
+    .overlay-select, .overlay-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+    }
+    
+    .overlay-select:focus, .overlay-input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+    
+    .overlay-btn {
+      width: 100%;
+      padding: 8px 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .overlay-btn:hover {
+      background: #0056b3;
+    }
+    
+    .overlay-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .stat-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .fullscreen-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .fullscreen-toggle-btn:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.1);
+    }
+    
+    .no-data-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+    }
+    
+    .no-data-message i {
+      color: #6c757d;
+      margin-bottom: 20px;
+    }
+    
+    .no-data-message h3 {
+      color: #495057;
+      margin-bottom: 16px;
+    }
+    
+    .no-data-message p {
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+  `;
   
-  const totalTime = resolvedComplaints.reduce((total, complaint) => {
-    const created = new Date(complaint.created_at || complaint.createdAt);
-    const resolved = new Date(complaint.resolved_at || complaint.resolvedAt);
-    return total + (resolved - created);
-  }, 0);
-  
-  const avgTimeMs = totalTime / resolvedComplaints.length;
-  const avgTimeDays = avgTimeMs / (1000 * 60 * 60 * 24);
-  
-  return avgTimeDays.toFixed(1) + ' days';
+  document.head.appendChild(style);
 }
 
 // Update markers on the map

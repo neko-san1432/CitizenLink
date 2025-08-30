@@ -8,12 +8,22 @@ Sitemap: https://citizenlink-abwi.onrender.com/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
 Disallow: /private/
+Disallow: /_next/
+Disallow: /node_modules/
 
 # Allow important pages
 Allow: /login
 Allow: /signup
 Allow: /citizen/
 Allow: /lgu/
+Allow: /news
+Allow: /about
 
-# Crawl delay (optional)
-Crawl-delay: 1
+# Allow CSS, JS, and images for proper rendering
+Allow: /css/
+Allow: /js/
+Allow: /images/
+Allow: /favicon.ico
+
+# Remove crawl delay to allow faster indexing
+# Crawl-delay: 1

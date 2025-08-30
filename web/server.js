@@ -27,72 +27,97 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 // Use Helmet to set secure headers - implementing all 7 major security headers
 app.use(
   helmet({
-    // 1. Content Security Policy (CSP)
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'", // Needed for inline scripts
-          "'unsafe-eval'", // Needed for Bootstrap
-          "https://cdnjs.cloudflare.com", // Font Awesome CDN
-          "https://cdn.jsdelivr.net", // Chart.js and other CDNs
-          "https://citizenlink-abwi.onrender.com", // External domain
+  // 1. Content Security Policy (CSP)
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", // Needed for inline scripts
+        "'unsafe-eval'", // Needed for Bootstrap
+        "https://cdnjs.cloudflare.com", // Font Awesome CDN
+        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+          "https://unpkg.com", // Leaflet and plugins
+        "https://citizenlink-abwi.onrender.com", // External domain
+          ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []), // More permissive in development
+      ],
+      scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", // Needed for inline styles
+        "https://cdnjs.cloudflare.com", // Font Awesome CDN
+        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+          "https://unpkg.com", // Leaflet CSS
           ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []), // More permissive in development
         ],
-        scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
-        styleSrc: [
+        // Explicit element directives for broader browser support
+        scriptSrcElem: [
           "'self'",
-          "'unsafe-inline'", // Needed for inline styles
-          "https://cdnjs.cloudflare.com", // Font Awesome CDN
-          "https://cdn.jsdelivr.net", // Chart.js and other CDNs
-          ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []), // More permissive in development
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "https://cdnjs.cloudflare.com",
+          "https://cdn.jsdelivr.net",
+          "https://unpkg.com",
+          ...(isDevelopment ? ["https:"] : []),
         ],
-        fontSrc: [
+        styleSrcElem: [
           "'self'",
-          "https://cdnjs.cloudflare.com", // Font Awesome fonts
-          "https://cdn.jsdelivr.net", // Additional fonts
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+          "https://cdn.jsdelivr.net",
+          "https://unpkg.com",
+          ...(isDevelopment ? ["https:"] : []),
+      ],
+      fontSrc: [
+        "'self'",
+        "https://cdnjs.cloudflare.com", // Font Awesome fonts
+        "https://cdn.jsdelivr.net", // Additional fonts
           ...(isDevelopment ? ["https:"] : []), // More permissive in development
-        ],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: [
-          "'self'",
-          "https://citizenlink-abwi.onrender.com", // External domain
+      ],
+        imgSrc: ["'self'", "data:", "https:", "https://*.tile.openstreetmap.org", "https://server.arcgisonline.com", "https://*.opentopomap.org"],
+      connectSrc: [
+        "'self'", 
+        "https://citizenlink-abwi.onrender.com", // External domain
+          // Allow Supabase project domains (HTTPS + WSS) in all environments
+          "https://*.supabase.co",
+          "wss://*.supabase.co",
+          "https://*.supabase.in",
+          "wss://*.supabase.in",
           ...(isDevelopment ? ["https:"] : []), // More permissive in development
-        ],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
+      ],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
         frameAncestors: ["'self'"], // Prevents clickjacking
       },
-    },
-
-    // 2. X-Frame-Options (Clickjacking protection)
-    frameguard: {
+  },
+  
+  // 2. X-Frame-Options (Clickjacking protection)
+  frameguard: { 
       action: "sameorigin",
-    },
-
-    // 3. X-Content-Type-Options (MIME type sniffing protection)
-    noSniff: true,
-
-    // 4. X-XSS-Protection (XSS protection for older browsers)
-    xssFilter: true,
-
-    // 5. Strict-Transport-Security (HSTS) - Disabled for HTTP development
-    // hsts: {
-    //   maxAge: 31536000, // 1 year
-    //   includeSubDomains: true,
-    //   preload: true
-    // },
-
-    // 6. Referrer-Policy
-    referrerPolicy: {
+  },
+  
+  // 3. X-Content-Type-Options (MIME type sniffing protection)
+  noSniff: true,
+  
+  // 4. X-XSS-Protection (XSS protection for older browsers)
+  xssFilter: true,
+  
+  // 5. Strict-Transport-Security (HSTS) - Disabled for HTTP development
+  // hsts: { 
+  //   maxAge: 31536000, // 1 year
+  //   includeSubDomains: true,
+  //   preload: true
+  // },
+  
+  // 6. Referrer-Policy
+  referrerPolicy: { 
       policy: "strict-origin-when-cross-origin",
-    },
-
-    // 7. Permissions-Policy (formerly Feature-Policy)
-    permissionsPolicy: {
-      features: {
+  },
+  
+  // 7. Permissions-Policy (formerly Feature-Policy)
+  permissionsPolicy: {
+    features: {
         geolocation: ["self"],
         camera: ["none"],
         microphone: ["none"],
@@ -104,17 +129,17 @@ app.use(
         ambientLightSensor: ["none"],
         autoplay: ["none"],
         encryptedMedia: ["none"],
-        fullscreen: ["none"],
+        fullscreen: ["self"],
         pictureInPicture: ["none"],
         syncXhr: ["none"],
       },
-    },
-
-    // Additional security headers
-    hidePoweredBy: true, // Removes X-Powered-By header
-    ieNoOpen: true, // Prevents IE from executing downloads
-    noCache: false, // Allow caching for better performance
-    dnsPrefetchControl: {
+  },
+  
+  // Additional security headers
+  hidePoweredBy: true, // Removes X-Powered-By header
+  ieNoOpen: true, // Prevents IE from executing downloads
+  noCache: false, // Allow caching for better performance
+  dnsPrefetchControl: {
       allow: false, // Disable DNS prefetching for security
     },
   })
@@ -126,25 +151,25 @@ app.use((req, res, next) => {
   res.setHeader("X-Download-Options", "noopen");
   res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
   res.setHeader("X-DNS-Prefetch-Control", "off");
-
+  
   // Explicitly prevent HTTPS upgrades
   res.setHeader("Upgrade-Insecure-Requests", "0");
 
   // Explicit Permissions-Policy header (meta tag is ignored by browsers)
   res.setHeader(
     "Permissions-Policy",
-    "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
+    "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
   );
-
+  
   // Development mode - more permissive CSP
   // Dev CSP: wide open, easier debugging
-  const devCSP = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-    "style-src 'self' 'unsafe-inline' https:",
-    "font-src 'self' https:",
-    "img-src 'self' data: https:",
-    "connect-src 'self' https:",
+    const devCSP = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+      "style-src 'self' 'unsafe-inline' https:",
+      "font-src 'self' https:",
+    "img-src 'self' data: https: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org",
+      "connect-src 'self' https:",
     "object-src 'none'",
     "media-src 'self'",
     "frame-src 'none'",
@@ -154,27 +179,44 @@ app.use((req, res, next) => {
   // Prod CSP: stricter, only allow known origins
   const prodCSP = [
     "default-src 'self'",
-    "script-src 'self'",
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-    "img-src 'self' data:",
-    `connect-src 'self' https://citizenlink-abwi.onrender.com https://lspscscjmfcywoakgrtf.supabase.co wss://lspscscjmfcywoakgrtf.supabase.co`,
-    "object-src 'none'",
-    "media-src 'self'",
-    "frame-src 'none'",
-    "frame-ancestors 'self'",
-  ].join("; ");
+  
+    // Scripts from your server + jsdelivr + cdnjs + unpkg (any file under these domains)
+    "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+    // Explicit element directive for some browsers
+    "script-src-elem 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+  
+    // Styles from your server + cdnjs + unpkg
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+    // Explicit element directive for stylesheets
+    "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+  
+    // Fonts from your server + cdnjs + Google Fonts
+    "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
+  
+    // Images from your server + data URIs + map tile servers
+    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org",
+  
+    // API connections: your backend + ANY Supabase project (HTTPS + WSS for realtime)
+    "connect-src 'self' https://citizenlink-abwi.onrender.com https://*.supabase.co wss://*.supabase.co https://*.supabase.in wss://*.supabase.in",
+  
+      "object-src 'none'",
+      "media-src 'self'",
+      "frame-src 'none'",
+      "frame-ancestors 'self'"
+    ].join('; ');
+    
+
 
   res.setHeader(
     "Content-Security-Policy",
     process.env.NODE_ENV === "development" ? devCSP : prodCSP
   );
-
+  
   // Security headers for API endpoints
   if (req.path.startsWith("/api/")) {
     res.setHeader("X-API-Version", "1.0");
   }
-
+  
   next();
 });
 
@@ -219,7 +261,7 @@ app.get("/api/supabase-bridge", async (req, res) => {
   try {
     // Import the server-side config to get credentials
     const { supabaseConfig } = await import("./db/db.js");
-
+    
     res.json({
       url: supabaseConfig.url,
       anonKey: supabaseConfig.anonKey,
@@ -849,13 +891,13 @@ app.get("/dashboard", (req, res) => {
   console.log("Dashboard route accessed, serving file:", filePath);
   console.log("__dirname:", __dirname);
   console.log("File exists check:", existsSync(filePath));
-
+  
   // Check if file exists before sending
   if (!existsSync(filePath)) {
     console.error("Dashboard file not found:", filePath);
     return res.status(404).send("Dashboard file not found");
   }
-
+  
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error("Error sending dashboard file:", err);
@@ -966,28 +1008,28 @@ app.get("/test-route", (req, res) => {
 app.get("/components/:filename(*)", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-
+  
   // Only serve HTML component files
   if (!req.params.filename.endsWith(".html")) {
     return res.status(404).send("Not an HTML component file");
   }
-
+  
   res.setHeader("Content-Type", "text/html");
   res.sendFile(filePath);
 });
 
 // Debug route to see all available routes
 app.get("/debug-routes", (req, res) => {
-  const routes = [];
+    const routes = [];
   app._router.stack.forEach((middleware) => {
-    if (middleware.route) {
-      routes.push({
-        path: middleware.route.path,
+        if (middleware.route) {
+            routes.push({
+                path: middleware.route.path,
         methods: Object.keys(middleware.route.methods),
-      });
-    }
-  });
-  res.json({ routes, __dirname, currentDir: process.cwd() });
+            });
+        }
+    });
+    res.json({ routes, __dirname, currentDir: process.cwd() });
 });
 
 // Serve border locations JSON file
@@ -996,13 +1038,13 @@ app.get("/lgu/border_locations.json", (req, res) => {
   const filePath = path.join(__dirname, "lgu", "border_locations.json");
   console.log("📁 Serving border file:", filePath);
   console.log("📂 File exists:", existsSync(filePath));
-
-  if (existsSync(filePath)) {
+    
+    if (existsSync(filePath)) {
     res.setHeader("Content-Type", "application/json");
-    res.sendFile(filePath);
-  } else {
+        res.sendFile(filePath);
+    } else {
     res.status(404).json({ error: "Border locations file not found" });
-  }
+    }
 });
 
 // Serve any JSON files from LGU folder
@@ -1012,13 +1054,13 @@ app.get("/lgu/*.json", (req, res) => {
   const filePath = path.join(__dirname, "lgu", fileName);
   console.log("📁 Serving JSON file:", filePath);
   console.log("📂 File exists:", existsSync(filePath));
-
-  if (existsSync(filePath)) {
+    
+    if (existsSync(filePath)) {
     res.setHeader("Content-Type", "application/json");
-    res.sendFile(filePath);
-  } else {
-    res.status(404).json({ error: `JSON file ${fileName} not found` });
-  }
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: `JSON file ${fileName} not found` });
+    }
 });
 
 // ===== STATIC ASSET ROUTES (moved to end to avoid conflicts) =====
@@ -1035,12 +1077,12 @@ app.get("/js/:filename(*)", (req, res) => {
   // Ensure we resolve a relative path (Windows-safe). Absolute req.path would break path.join
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-
+  
   // Only serve actual JavaScript files
   if (!req.params.filename.endsWith(".js")) {
     return res.status(404).send("Not a JavaScript file");
   }
-
+  
   res.setHeader("Content-Type", "application/javascript");
   res.sendFile(filePath);
 });
@@ -1069,7 +1111,7 @@ app.get("/js/bootstrap/*", (req, res) => {
 
 // ===== API ROUTES =====
 app.get("/api/health", (req, res) => {
-  res.json({
+  res.json({ 
     status: "healthy",
     timestamp: new Date().toISOString(),
     security: "enabled",

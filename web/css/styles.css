@@ -1,3 +1,7 @@
+.heatmap-page, .heatmap-page body, .heatmap-page .dashboard-container, .heatmap-page .main-content, .heatmap-page .dashboard-main {
+  overflow: hidden;
+}
+
 /* Bootstrap CSS is imported directly in HTML files */
 
 /* ===== COLOR THEME VARIABLES ===== */
@@ -98,6 +102,9 @@
 .dashboard-main {
   padding: 2rem;
   margin-top: 1rem; /* Add spacing to prevent header overlap */
+  position: relative; /* allow overlay panels */
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
@@ -1124,13 +1131,104 @@ textarea.form-control {
 
 /* ===== MAP STYLES ===== */
 .map-card {
-  margin-bottom: 2rem;
+  height: calc(100vh - 72px); /* header height */
+  margin: 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-card .card-content {
+  flex: 1 1 auto;
+  display: flex;
+  height: 100%;
 }
 
 .map-container {
-  height: 500px;
+  height: 100%;
   width: 100%;
   border-radius: 0.5rem;
+}
+
+/* Fullscreen map state */
+.map-card.map-fullscreen {
+  position: fixed;
+  top: 0; /* no dashboard header on heatmap */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  z-index: 700; /* under side panels */
+  border-radius: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* If any header is present, push map below it only when not fullscreen */
+body:not(.map-fullscreen-active) .dashboard-main {
+  margin-top: 1rem;
+}
+
+/* Ensure fullscreen children fill the viewport */
+#map-card.map-fullscreen .card-content,
+#map-card.map-fullscreen #complaint-map {
+  height: 100vh !important;
+}
+
+/* Remove default padding on the heatmap page to allow the map to fill */
+.dashboard-main.no-padding {
+  padding: 0;
+}
+.dashboard-main.no-padding .map-card,
+.dashboard-main.no-padding .map-container {
+  width: 100%;
+}
+
+/* Overlay side panels for Filters and Insights */
+.side-panel {
+  position: fixed;
+  top: 120px; /* below header + controls */
+  bottom: 24px;
+  width: 320px;
+  background: var(--background-light);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 1000; /* above map and controls */
+  overflow: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.side-panel .side-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.side-panel .side-panel-content {
+  padding: 1rem;
+}
+
+.side-panel-left {
+  left: 24px;
+  transform: translateX(-110%);
+}
+
+.side-panel-right {
+  right: 24px;
+  transform: translateX(110%);
+}
+
+.side-panel.open {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ===== FILTER SELECT STYLES ===== */

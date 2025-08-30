@@ -155,17 +155,16 @@ function showToast(message, type = 'success') {
     }
 }
 
-// Check auth function (if not already available)
+// Check auth function (avoid recursive self-calls)
 async function checkAuth() {
-    // Check if checkAuth function exists globally
-    if (window.checkAuth) {
+    // If a different global checkAuth is available (e.g., from auth-check.js), use it
+    if (window.checkAuth && window.checkAuth !== checkAuth) {
         return await window.checkAuth();
-        } else {
-        // Fallback auth check
-        const userData = sessionStorage.getItem('user');
-        if (userData) {
-            return JSON.parse(userData);
-        }
-        return null;
     }
+    // Fallback auth check from sessionStorage
+    const userData = sessionStorage.getItem('user');
+    if (userData) {
+        return JSON.parse(userData);
+    }
+    return null;
 }
