@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import helmet from "helmet";
+import compression from "compression";
 import { existsSync } from "fs";
 import { getSupabaseServiceClient } from "./db/db.js";
 
@@ -74,7 +75,7 @@ app.use(
         "https://cdn.jsdelivr.net", // Additional fonts
           ...(isDevelopment ? ["https:"] : []), // More permissive in development
       ],
-        imgSrc: ["'self'", "data:", "https:", "https://*.tile.openstreetmap.org", "https://server.arcgisonline.com", "https://*.opentopomap.org"],
+        imgSrc: ["'self'", "data:", "https:", "https://*.tile.openstreetmap.org", "https://server.arcgisonline.com", "https://*.opentopomap.org", "https://tiles.stadiamaps.com", "https://api.mapbox.com", "https://*.tiles.mapbox.com", "https://*.basemaps.cartocdn.com"],
       connectSrc: [
         "'self'", 
         "https://citizenlink-abwi.onrender.com", // External domain
@@ -145,6 +146,21 @@ app.use(
   })
 );
 
+// ===== COMPRESSION MIDDLEWARE =====
+// Enable gzip compression for better bandwidth efficiency
+app.use(compression({
+  level: 6, // Compression level (1-9, 6 is good balance of speed vs compression)
+  threshold: 1024, // Only compress files larger than 1KB
+  filter: (req, res) => {
+    // Don't compress if client doesn't support it or explicitly disabled
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use default compression filter which handles most cases
+    return compression.filter(req, res);
+  }
+}));
+
 // Custom middleware to add additional security headers
 app.use((req, res, next) => {
   // Additional custom security headers
@@ -168,7 +184,7 @@ app.use((req, res, next) => {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
       "style-src 'self' 'unsafe-inline' https:",
       "font-src 'self' https:",
-    "img-src 'self' data: https: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org",
+    "img-src 'self' data: https: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com",
       "connect-src 'self' https:",
     "object-src 'none'",
     "media-src 'self'",
@@ -193,8 +209,8 @@ app.use((req, res, next) => {
     // Fonts from your server + cdnjs + Google Fonts
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
   
-    // Images from your server + data URIs + map tile servers
-    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org",
+    // Images from your server + data URIs + map tile servers + unpkg (Leaflet icons)
+    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com https://unpkg.com",
   
     // API connections: your backend + ANY Supabase project (HTTPS + WSS for realtime)
     "connect-src 'self' https://citizenlink-abwi.onrender.com https://*.supabase.co wss://*.supabase.co https://*.supabase.in wss://*.supabase.in",
@@ -337,6 +353,40 @@ app.get("/api/officers", async (req, res) => {
       .filter((u) => (u.user_metadata?.role || "").toLowerCase() === rolePrefix)
       .map((u) => ({ id: u.id, email: u.email, role: u.user_metadata?.role }));
     return res.json({ officers });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== COMPLAINTS LIST API (used by heatmap) =====
+// Returns complaints with optional filters and pagination
+app.get("/api/complaints", async (req, res) => {
+  try {
+    const sb = getSupabaseServiceClient();
+
+    // Query params
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 100); // large default to surface all
+    const status = req.query.status;
+    const type = req.query.type;
+    const user_id = req.query.user_id;
+
+    const offset = (page - 1) * limit;
+
+    let query = sb
+      .from("complaints")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status && status !== "all") query = query.eq("status", status);
+    if (type && type !== "all") query = query.eq("type", type);
+    if (user_id) query = query.eq("user_id", user_id);
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+
+    return res.json({ complaints: data || [], page, limit });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
@@ -1068,7 +1118,12 @@ app.get("/lgu/*.json", (req, res) => {
 app.get("/css/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
+  
+  // Set caching headers for CSS files
   res.setHeader("Content-Type", "text/css");
+  res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+  res.setHeader("ETag", `"${Date.now()}"`);
+  
   res.sendFile(filePath);
 });
 
@@ -1083,7 +1138,11 @@ app.get("/js/:filename(*)", (req, res) => {
     return res.status(404).send("Not a JavaScript file");
   }
   
+  // Set caching headers for JavaScript files
   res.setHeader("Content-Type", "application/javascript");
+  res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+  res.setHeader("ETag", `"${Date.now()}"`);
+  
   res.sendFile(filePath);
 });
 
@@ -1091,7 +1150,12 @@ app.get("/js/:filename(*)", (req, res) => {
 app.get("/css/bootstrap/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
+  
+  // Set caching headers for Bootstrap CSS files
   res.setHeader("Content-Type", "text/css");
+  res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+  res.setHeader("ETag", `"${Date.now()}"`);
+  
   res.sendFile(filePath);
 });
 
@@ -1099,7 +1163,12 @@ app.get("/css/bootstrap/*", (req, res) => {
 app.get("/js/bootstrap/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
+  
+  // Set caching headers for Bootstrap JS files
   res.setHeader("Content-Type", "application/javascript");
+  res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+  res.setHeader("ETag", `"${Date.now()}"`);
+  
   res.sendFile(filePath);
 });
 
@@ -1115,7 +1184,8 @@ app.get("/api/health", (req, res) => {
     status: "healthy",
     timestamp: new Date().toISOString(),
     security: "enabled",
-    features: { officerLocation: true },
+    compression: "enabled",
+    features: { officerLocation: true, compression: true, caching: true },
     routes: {
       main: ["/", "/login", "/signup"],
       citizen: [
@@ -1186,7 +1256,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 CitizenLink server running on port ${PORT}`);
   console.log(`🔒 Security headers implemented successfully!`);
-  console.log(`📋 Implemented security headers:`);
+  console.log(`📦 Compression middleware enabled!`);
+  console.log(`📋 Implemented features:`);
   console.log(`   1. Content Security Policy (CSP)`);
   console.log(`   2. X-Frame-Options (Clickjacking protection)`);
   console.log(`   3. X-Content-Type-Options (MIME sniffing protection)`);
@@ -1194,6 +1265,8 @@ app.listen(PORT, () => {
   console.log(`   5. Strict-Transport-Security (HSTS)`);
   console.log(`   6. Referrer-Policy`);
   console.log(`   7. Permissions-Policy (Feature restrictions)`);
+  console.log(`   8. Gzip Compression (Level 6)`);
+  console.log(`   9. Static Asset Caching (1 year)`);
   console.log(`\n🌐 Server accessible at: http://localhost:${PORT}`);
   console.log(`📁 Routes configured:`);
   console.log(`   • Main: /, /login, /signup, /verify-otp`);

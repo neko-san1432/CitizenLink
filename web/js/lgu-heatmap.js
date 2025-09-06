@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = await checkAuth();
   if (!user) return;
   
+  // Store user globally for access in marker creation
+  window.currentUser = user;
+  
   // Initialize map
   await initializeMap();
   
@@ -14,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Setup export functionality
   setupExportFeatures();
+  
+  // Setup button event listeners
+  setupButtonEventListeners();
   
   // Initialize analytics
   initializeAnalytics();
@@ -27,36 +33,80 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializeLayoutControls() {
   const leftPanel = document.getElementById('left-panel');
-  const rightPanel = document.getElementById('right-panel');
+  const insightsPanel = document.getElementById('insights-panel');
   const mapCard = document.getElementById('map-card');
   const toggleFilters = document.getElementById('toggle-filters');
   const toggleInsights = document.getElementById('toggle-insights');
   const toggleFullscreen = document.getElementById('toggle-fullscreen');
   const closeLeft = document.getElementById('close-left-panel');
-  const closeRight = document.getElementById('close-right-panel');
+  const closeInsights = document.getElementById('close-insights');
 
-  const invalidateMapSize = () => { try { if (window.complaintMap) window.complaintMap.invalidateSize(); } catch (_) {} };
+  const invalidateMapSize = () => { 
+    try { 
+      if (window.complaintMap) {
+        window.complaintMap.invalidateSize();
+        // Force a resize event to ensure proper sizing
+        setTimeout(() => {
+          try {
+            window.complaintMap.invalidateSize();
+          } catch (_) {}
+        }, 50);
+      }
+    } catch (_) {} 
+  };
+
+  const setButtonActive = (btn, isActive) => {
+    if (!btn) return;
+    try {
+      btn.classList.toggle('active', !!isActive);
+      btn.setAttribute('aria-pressed', !!isActive);
+    } catch (_) {}
+  };
+
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+
+  const syncActiveButtons = () => {
+    setButtonActive(toggleFilters, !!(leftPanel && leftPanel.classList.contains('open')));
+    setButtonActive(toggleInsights, !!(insightsPanel && insightsPanel.classList.contains('open')));
+    setButtonActive(toggleFullscreen, isFs());
+  };
 
   if (toggleFilters && leftPanel) {
-    toggleFilters.addEventListener('click', () => {
+    toggleFilters.addEventListener('click', (e) => {
+      e.preventDefault();
       leftPanel.classList.toggle('open');
-      // Close the opposite panel if open
-      if (rightPanel) rightPanel.classList.remove('open');
+      if (insightsPanel) insightsPanel.classList.remove('open');
+      setButtonActive(toggleFilters, leftPanel.classList.contains('open'));
+      setButtonActive(toggleInsights, false);
       setTimeout(invalidateMapSize, 300);
     });
   }
-  if (toggleInsights && rightPanel) {
-    toggleInsights.addEventListener('click', () => {
-      rightPanel.classList.toggle('open');
+  if (toggleInsights && insightsPanel) {
+    console.log('✅ Insights button and panel found, setting up event listener');
+    toggleInsights.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('🔍 Insights button clicked!');
+      console.log('🔍 Panel element:', insightsPanel);
+      console.log('🔍 Current classes:', insightsPanel.className);
+      insightsPanel.classList.toggle('open');
+      console.log('🔍 After toggle, classes:', insightsPanel.className);
+      console.log('🔍 Panel computed style height:', window.getComputedStyle(insightsPanel).height);
+      console.log('🔍 Panel computed style max-height:', window.getComputedStyle(insightsPanel).maxHeight);
       if (leftPanel) leftPanel.classList.remove('open');
+      setButtonActive(toggleInsights, insightsPanel.classList.contains('open'));
+      setButtonActive(toggleFilters, false);
       setTimeout(invalidateMapSize, 300);
     });
+  } else {
+    console.log('❌ Missing elements:');
+    console.log('❌ toggleInsights:', toggleInsights);
+    console.log('❌ insightsPanel:', insightsPanel);
   }
   if (closeLeft && leftPanel) {
-    closeLeft.addEventListener('click', () => { leftPanel.classList.remove('open'); setTimeout(invalidateMapSize, 300); });
+    closeLeft.addEventListener('click', () => { leftPanel.classList.remove('open'); setButtonActive(toggleFilters, false); setTimeout(invalidateMapSize, 300); });
   }
-  if (closeRight && rightPanel) {
-    closeRight.addEventListener('click', () => { rightPanel.classList.remove('open'); setTimeout(invalidateMapSize, 300); });
+  if (closeInsights && insightsPanel) {
+    closeInsights.addEventListener('click', () => { insightsPanel.classList.remove('open'); setButtonActive(toggleInsights, false); setTimeout(invalidateMapSize, 300); });
   }
   // Fullscreen helpers using the Fullscreen API
   const enterFullscreen = (element) => {
@@ -73,11 +123,11 @@ function initializeLayoutControls() {
       if (document.msExitFullscreen) return document.msExitFullscreen();
     } catch (_) {}
   };
-  const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
 
   if (toggleFullscreen && mapCard) {
-    toggleFullscreen.addEventListener('click', async () => {
-      if (!isFullscreen()) {
+    toggleFullscreen.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!isFs()) {
         mapCard.classList.add('map-fullscreen');
         await enterFullscreen(mapCard);
       } else {
@@ -86,79 +136,42 @@ function initializeLayoutControls() {
       }
       try {
         const i = toggleFullscreen.querySelector('i');
-        if (i) i.className = isFullscreen() ? 'fas fa-compress' : 'fas fa-expand';
+        if (i) i.className = isFs() ? 'fas fa-compress' : 'fas fa-expand';
       } catch (_) {}
+      setButtonActive(toggleFullscreen, isFs());
       setTimeout(invalidateMapSize, 50);
     });
 
     // Sync UI when user exits via Esc
     document.addEventListener('fullscreenchange', () => {
       try {
-        if (!isFullscreen()) mapCard.classList.remove('map-fullscreen');
+        if (!isFs()) mapCard.classList.remove('map-fullscreen');
         const i = toggleFullscreen.querySelector('i');
-        if (i) i.className = isFullscreen() ? 'fas fa-compress' : 'fas fa-expand';
+        if (i) i.className = isFs() ? 'fas fa-compress' : 'fas fa-expand';
       } catch (_) {}
+      setButtonActive(toggleFullscreen, isFs());
       setTimeout(invalidateMapSize, 50);
     });
   }
+
+  // Close panels and clear active state when clicking outside
+  document.addEventListener('click', (evt) => {
+    const fc = document.querySelector('.floating-controls');
+    const clickedInsideControls = fc && fc.contains(evt.target);
+    const clickedInsidePanels = (leftPanel && leftPanel.contains(evt.target)) || (insightsPanel && insightsPanel.contains(evt.target));
+    if (!clickedInsideControls && !clickedInsidePanels) {
+      if (leftPanel) leftPanel.classList.remove('open');
+      if (insightsPanel) insightsPanel.classList.remove('open');
+      setButtonActive(toggleFilters, false);
+      setButtonActive(toggleInsights, false);
+    }
+  });
+
+  // Initialize button states on load
+  syncActiveButtons();
 }
 
-// Override addAdvancedFilters to mount into the left panel container
-function addAdvancedFilters() {
-  const container = document.getElementById('advanced-filters-container');
-  if (!container) return;
-
-  const advancedFiltersContainer = document.createElement('div');
-  advancedFiltersContainer.className = 'advanced-filters';
-
-  // Status filter
-  const statusFilter = document.createElement('select');
-  statusFilter.id = 'status-filter';
-  statusFilter.className = 'filter-select';
-  statusFilter.innerHTML = `
-    <option value="all">All Statuses</option>
-    <option value="pending">Pending</option>
-    <option value="in_progress">In Progress</option>
-    <option value="resolved">Resolved</option>
-  `;
-
-  // Date range filters (from/to)
-  const fromLabel = document.createElement('label');
-  fromLabel.textContent = 'From:';
-  fromLabel.className = 'filter-label';
-  fromLabel.setAttribute('for', 'date-from');
-
-  const dateFrom = document.createElement('input');
-  dateFrom.type = 'date';
-  dateFrom.id = 'date-from';
-  dateFrom.className = 'filter-select';
-  dateFrom.placeholder = 'From';
-  dateFrom.setAttribute('aria-label', 'Start date');
-
-  const toLabel = document.createElement('label');
-  toLabel.textContent = 'To:';
-  toLabel.className = 'filter-label';
-  toLabel.setAttribute('for', 'date-to');
-
-  const dateTo = document.createElement('input');
-  dateTo.type = 'date';
-  dateTo.id = 'date-to';
-  dateTo.className = 'filter-select';
-  dateTo.placeholder = 'To';
-  dateTo.setAttribute('aria-label', 'End date');
-  
-  advancedFiltersContainer.appendChild(statusFilter);
-  advancedFiltersContainer.appendChild(fromLabel);
-  advancedFiltersContainer.appendChild(dateFrom);
-  advancedFiltersContainer.appendChild(toLabel);
-  advancedFiltersContainer.appendChild(dateTo);
-  container.appendChild(advancedFiltersContainer);
-  
-  // Add event listeners
-  statusFilter.addEventListener('change', updateHeatmap);
-  dateFrom.addEventListener('change', updateHeatmap);
-  dateTo.addEventListener('change', updateHeatmap);
-}
+// Advanced filters are now handled in the main setupFilters function
 
 // Authentication function (delegate to global if available; accept lgu-* roles)
 async function checkAuth() {
@@ -183,6 +196,21 @@ async function checkAuth() {
 // Initialize map
 async function initializeMap() {
   try {
+    // Ensure map container exists and has dimensions
+    const mapContainer = document.getElementById('complaint-map');
+    if (!mapContainer) {
+      console.error('Map container not found');
+      return;
+    }
+    
+    // Check if container has dimensions
+    const rect = mapContainer.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      console.warn('Map container has no dimensions, waiting...');
+      setTimeout(() => initializeMap(), 100);
+      return;
+    }
+    
     // Create map centered on Digos City, Philippines (based on the image coordinates)
     // Move zoom control away from sidebar (to top-right)
     const map = L.map('complaint-map', {
@@ -192,10 +220,33 @@ async function initializeMap() {
       doubleClickZoom: true,
       boxZoom: true,
       keyboard: true,
-      dragging: true
+      dragging: true,
+      worldCopyJump: false,  // Prevent map from jumping to other world copies
+      maxBounds: [[6.5, 125.0], [7.0, 125.7]], // Constrain to Digos City area
+      minZoom: 10,
+      maxZoom: 18
     }).setView([6.75, 125.35], 12);
     // Expose globally
     window.complaintMap = map;
+    
+    // Ensure proper map sizing on initialization (multiple passes)
+    const safeInvalidate = () => { try { map.invalidateSize(); } catch (_) {} };
+    setTimeout(safeInvalidate, 50);
+    setTimeout(safeInvalidate, 150);
+    setTimeout(safeInvalidate, 300);
+
+    // Observe container size changes to keep Leaflet in sync
+    try {
+      const containerEl = document.getElementById('complaint-map');
+      if (containerEl && window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          safeInvalidate();
+        });
+        ro.observe(containerEl);
+        // keep reference to prevent GC
+        window._heatmapResizeObserver = ro;
+      }
+    } catch (_) {}
 
     // Base layers (themes)
     const baseLayers = {
@@ -219,14 +270,55 @@ async function initializeMap() {
     // Add status legend to the top-right
     addStatusLegend(map);
     
+    // Mount our custom floating controls as a Leaflet control so it stacks with others
+    try {
+      const controlsEl = document.querySelector('#complaint-map .floating-controls');
+      if (controlsEl) {
+        const FloatingControls = L.Control.extend({
+          options: { position: 'bottomright' },
+          onAdd: function() {
+            return controlsEl;
+          }
+        });
+        new FloatingControls().addTo(map);
+      }
+    } catch (_) {}
+    
     // Try to load barangay boundaries overlay from optional sources
     try {
+      // Ensure an interactive pane for barangays exists (above tiles/markers)
+      try {
+        if (!map.getPane('brgy-pane')) {
+          map.createPane('brgy-pane');
+          const bp = map.getPane('brgy-pane');
+          bp.style.zIndex = 401; // above overlays(400) so hover is reliable
+          bp.style.pointerEvents = 'auto';
+        }
+      } catch (_) {}
       // A) If a global GeoJSON variable is provided elsewhere
       if (typeof window.json_BarangayClassification_4 !== 'undefined') {
+        const defaultBrgyStyle = { pane: 'brgy-pane', color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0, interactive: true };
+        const hoverBrgyStyle = { pane: 'brgy-pane', color: '#2563eb', weight: 3, opacity: 1, fillOpacity: 0.08, interactive: true };
         const brgyLayer = L.geoJSON(window.json_BarangayClassification_4, {
-          style: { color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0 }
+          style: defaultBrgyStyle
         }).addTo(map);
         window.brgyLayer = brgyLayer;
+        try {
+          window._brgyPolygons = window._brgyPolygons || [];
+          brgyLayer.eachLayer(layer => {
+            try {
+              const name = (layer && layer.feature && (layer.feature.properties?.name || layer.feature.properties?.barangay || layer.feature.properties?.Name)) || 'Barangay';
+              const latlngs = layer.getLatLngs();
+              // Hover functionality disabled
+              // try {
+              //   layer.bindTooltip(name, { sticky: true, direction: 'center', className: 'brgy-label' });
+              //   layer.on('mouseover', () => { try { layer.setStyle(hoverBrgyStyle); layer.bringToFront(); layer.openTooltip(); } catch(_){} });
+              //   layer.on('mouseout', () => { try { brgyLayer.resetStyle(layer); layer.closeTooltip(); } catch(_){} });
+              // } catch(_) {}
+              window._brgyPolygons.push({ name, latlngs });
+            } catch (_) {}
+          });
+        } catch (_) {}
       } else {
         // B) Load from our barangay boundaries JSON (array of { name, geojson })
         try {
@@ -235,22 +327,39 @@ async function initializeMap() {
             const data = await resp.json();
             if (Array.isArray(data)) {
               const polygons = [];
+              const defaultBrgyStyle = { pane: 'brgy-pane', color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0, interactive: true };
+              const hoverBrgyStyle = { pane: 'brgy-pane', color: '#2563eb', weight: 3, opacity: 1, fillOpacity: 0.08, interactive: true };
+              window._brgyPolygons = window._brgyPolygons || [];
               data.forEach(entry => {
                 try {
                   if (!entry || !entry.geojson || !entry.geojson.coordinates) return;
                   const name = entry.name || 'Barangay';
                   const gj = entry.geojson;
-                  const style = { color: '#666', weight: 1, opacity: 0.8, fillOpacity: 0 };
+                  const style = defaultBrgyStyle;
 
                   // Coordinates in our files are [lat, lon]; build Leaflet polygons directly
                   if (gj.type === 'Polygon') {
                     const rings = gj.coordinates.map(ring => ring.map(coord => [coord[0], coord[1]]));
-                    const poly = L.polygon(rings, style).bindTooltip(name, { sticky: true });
+                    const poly = L.polygon(rings, style);
+                    // Hover functionality disabled
+                    // try {
+                    //   poly.bindTooltip(name, { sticky: true, direction: 'center', className: 'brgy-label' });
+                    //   poly.on('mouseover', () => { try { poly.setStyle(hoverBrgyStyle); poly.bringToFront(); poly.openTooltip(); } catch(_){} });
+                    //   poly.on('mouseout', () => { try { poly.setStyle(defaultBrgyStyle); poly.closeTooltip(); } catch(_){} });
+                    // } catch(_) {}
                     polygons.push(poly);
+                    try { window._brgyPolygons.push({ name, latlngs: poly.getLatLngs() }); } catch (_) {}
                   } else if (gj.type === 'MultiPolygon') {
                     const multi = gj.coordinates.map(polygon => polygon.map(ring => ring.map(coord => [coord[0], coord[1]])));
-                    const poly = L.polygon(multi, style).bindTooltip(name, { sticky: true });
+                    const poly = L.polygon(multi, style);
+                    // Hover functionality disabled
+                    // try {
+                    //   poly.bindTooltip(name, { sticky: true, direction: 'center', className: 'brgy-label' });
+                    //   poly.on('mouseover', () => { try { poly.setStyle(hoverBrgyStyle); poly.bringToFront(); poly.openTooltip(); } catch(_){} });
+                    //   poly.on('mouseout', () => { try { poly.setStyle(defaultBrgyStyle); poly.closeTooltip(); } catch(_){} });
+                    // } catch(_) {}
                     polygons.push(poly);
+                    try { window._brgyPolygons.push({ name, latlngs: poly.getLatLngs() }); } catch (_) {}
                   }
                 } catch (_) { /* skip problematic entry */ }
               });
@@ -361,8 +470,8 @@ async function initializeMap() {
       createFallbackBoundary(map);
     }
     
-    // Get complaints data from Supabase
-    const complaints = await window.getComplaints();
+    // Get complaints data from backend API
+    const complaints = await fetchComplaints();
     
     // Filter complaints that have coordinates and are inside the city boundary
     const complaintsWithCoordinates = complaints.filter(complaint => 
@@ -415,7 +524,17 @@ async function initializeMap() {
       }
     }).addTo(map);
     // Ensure map size is correct after load
-    setTimeout(() => { try { map.invalidateSize(); } catch(_){} }, 100);
+    setTimeout(() => { 
+      try { 
+        map.invalidateSize(); 
+        // Additional size validation
+        setTimeout(() => {
+          try {
+            map.invalidateSize();
+          } catch(_) {}
+        }, 200);
+      } catch(_){} 
+    }, 100);
     
     // Prepare markers (we will add/remove them as a layer based on zoom level)
     const complaintMarkers = [];
@@ -427,7 +546,7 @@ async function initializeMap() {
     window.markerLayer = markerLayer;
 
     // Add/remove marker layer based on zoom level
-    const MARKER_VISIBILITY_ZOOM = 14;
+    const MARKER_VISIBILITY_ZOOM = 10; // Lowered from 14 to make markers visible at lower zoom levels
     const applyMarkerLayerVisibility = () => {
       const shouldShowMarkers = map.getZoom() >= MARKER_VISIBILITY_ZOOM;
       const currentMarkerLayer = window.markerLayer;
@@ -449,6 +568,15 @@ async function initializeMap() {
     
     // Show/hide marker layer on zoom
     map.on('zoomend', applyMarkerLayerVisibility);
+    
+    // Add window resize listener to handle size changes
+    window.addEventListener('resize', () => {
+      setTimeout(() => {
+        try {
+          map.invalidateSize();
+        } catch (_) {}
+      }, 100);
+    });
     
     // Store map reference globally for filter updates
     window.complaintMap = map;
@@ -479,7 +607,7 @@ async function initializeMap() {
         <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
         <h3 class="text-warning">Error loading heatmap</h3>
         <p class="text-muted mb-4">Unable to load complaint data for the heatmap.</p>
-        <button class="btn btn-outline-warning" onclick="location.reload()">
+        <button class="btn btn-outline-warning" data-action="reload-page">
           <i class="fas fa-redo"></i> Try Again
         </button>
       </div>
@@ -525,7 +653,20 @@ function addMapControls(map) {
   } catch (_) {}
   
   // Add layer control
+  const mapboxToken = (window.MAPBOX_TOKEN || localStorage.getItem('MAPBOX_TOKEN') || '').trim();
   const baseMaps = {
+    "Standard Light": mapboxToken
+      ? L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/256/{z}/{x}/{y}?access_token=${mapboxToken}`, {
+          attribution: '© Mapbox © OpenStreetMap',
+          tileSize: 256,
+        })
+      : L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap © CARTO' }),
+    "Standard Dark": mapboxToken
+      ? L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/256/{z}/{x}/{y}?access_token=${mapboxToken}`, {
+          attribution: '© Mapbox © OpenStreetMap',
+          tileSize: 256,
+        })
+      : L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap © CARTO' }),
     "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
     "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
     "Terrain": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png')
@@ -540,7 +681,25 @@ function addMapControls(map) {
     overlayMaps["Barangay Boundaries"] = window.brgyLayer;
   }
   
-  try { L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map); } catch (_) {}
+  try {
+    const layersControl = L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
+    const setMapThemeBackground = (layerOrName) => {
+      try {
+        let isDark = false;
+        if (layerOrName && typeof layerOrName === 'object' && layerOrName.getAttribution) {
+          isDark = layerOrName === baseMaps['Standard Dark'];
+        } else {
+          const name = String(layerOrName || '').toLowerCase();
+          isDark = name.includes('dark');
+        }
+        document.body.classList.toggle('map-dark', !!isDark);
+      } catch (_) {}
+    };
+    // Initialize based on which base layer is currently on the map
+    const currentBaseKey = Object.keys(baseMaps).find(k => map.hasLayer(baseMaps[k]));
+    setMapThemeBackground(currentBaseKey || '');
+    map.on('baselayerchange', (e) => setMapThemeBackground(e && (e.layer || e.name)));
+  } catch (_) {}
 }
 
 // Add a status legend control (top-right)
@@ -564,9 +723,15 @@ function addStatusLegend(map) {
         <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#3b82f6; border:1px solid #fff"></span>
         <span>In Progress</span>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
         <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#10b981; border:1px solid #fff"></span>
         <span>Resolved</span>
+      </div>
+      <div style="font-weight:600; margin:6px 0 4px;">Complaint Density</div>
+      <div style="width:160px; height:10px; background: linear-gradient(90deg, blue 0%, lime 40%, yellow 70%, red 100%); border-radius:4px; border:1px solid #eee;"></div>
+      <div style="display:flex; justify-content:space-between; color:#666; margin-top:4px;">
+        <span>Low</span>
+        <span>High</span>
       </div>
     `;
     return div;
@@ -603,7 +768,22 @@ function createComplaintMarker(complaint) {
     fillOpacity: 0.8
   });
   
+  // Get current user's department for access control
+  const user = window.currentUser || null;
+  const userDept = user?.type?.replace('lgu-admin-', '').replace('lgu-', '') || null;
+  const complaintAssignedUnit = complaint.assigned_unit || complaint.assignedUnit;
+  const isAssignedToUserDept = userDept && complaintAssignedUnit && 
+    (complaintAssignedUnit === userDept || complaintAssignedUnit.includes(userDept));
+  
   // Create detailed tooltip content
+  const tooltipActionsHtml = isAssignedToUserDept ? 
+    `<div class="tooltip-actions">
+      <a href="/lgu/complaints?id=${complaint.id}" class="view-details-btn">View Details</a>
+    </div>` : 
+    `<div class="tooltip-actions">
+      <span class="text-muted">Not assigned to your department</span>
+    </div>`;
+  
   const tooltipContent = `
     <div class="complaint-tooltip">
       <div class="tooltip-header">
@@ -618,9 +798,7 @@ function createComplaintMarker(complaint) {
         ${complaint.suggested_unit ? `<p><strong>Assigned to:</strong> ${governmentUnitNames[complaint.suggested_unit] || complaint.suggested_unit}</p>` : ''}
         ${complaint.user_name ? `<p><strong>Complainant:</strong> ${complaint.user_name}</p>` : ''}
       </div>
-      <div class="tooltip-actions">
-        <a href="/lgu/complaints?id=${complaint.id}" class="view-details-btn">View Details</a>
-      </div>
+      ${tooltipActionsHtml}
     </div>
   `;
   
@@ -632,7 +810,12 @@ function createComplaintMarker(complaint) {
     maxWidth: 300
   });
   
-  // Add popup with complaint details
+  // Create popup content with conditional access
+  const popupActionsHtml = isAssignedToUserDept ? 
+    `<a href="/lgu/complaints?id=${complaint.id}" class="popup-link">View Full Details</a>` : 
+    `<span class="text-muted">Not assigned to your department</span>`;
+  
+  // Add popup with complaint details - ensure it appears above all layers
   marker.bindPopup(`
     <div class="map-popup">
       <h3>${complaint.title || 'Untitled Complaint'}</h3>
@@ -645,11 +828,63 @@ function createComplaintMarker(complaint) {
        <p><strong>Description:</strong> ${complaint.description || 'No description provided'}</p>
       <p><strong>Submitted:</strong> ${formatDate(complaint.created_at || complaint.createdAt) || 'Date not available'}</p>
       ${complaint.user_name ? `<p><strong>Complainant:</strong> ${complaint.user_name}</p>` : ''}
-      <a href="/lgu/complaints?id=${complaint.id}" class="popup-link">View Full Details</a>
+      ${popupActionsHtml}
     </div>
-  `);
+  `, {
+    className: 'complaint-popup-high-z',
+    maxWidth: 300,
+    autoPan: true,
+    keepInView: true
+  });
+  
+  // Open/close popup on hover
+  try {
+    marker.on('mouseover', () => { try { marker.openPopup(); } catch (_) {} });
+    marker.on('mouseout', () => { try { marker.closePopup(); } catch (_) {} });
+  } catch (_) {}
   
   return marker;
+}
+
+// Check if a point lies inside a Leaflet polygon/multipolygon latlngs structure
+function pointInPolygonLeaflet(point, latlngs) {
+  // latlngs can be Array of LatLngs (Polygon rings) or Array of Arrays (MultiPolygon)
+  const containsPointInRing = (ring) => {
+    try {
+      const poly = L.polygon(ring);
+      return poly.getBounds().contains(point) && L.Polyline.prototype.isInside ? L.Polyline.prototype.isInside.call(poly, point) : rayCasting(point, ring);
+    } catch (_) {
+      return rayCasting(point, ring);
+    }
+  };
+  if (!Array.isArray(latlngs) || latlngs.length === 0) return false;
+  // MultiPolygon: array of polygons (each polygon can have holes: array of rings)
+  if (Array.isArray(latlngs[0])) {
+    for (const geom of latlngs) {
+      // geom may be polygon (array of rings) or a ring itself
+      if (Array.isArray(geom[0])) {
+        // First ring is outer boundary
+        if (containsPointInRing(geom[0])) return true;
+      } else if (containsPointInRing(geom)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return containsPointInRing(latlngs);
+}
+
+// Simple ray-casting point-in-polygon for array of LatLngs
+function rayCasting(point, ring) {
+  const x = point.lat, y = point.lng;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i].lat, yi = ring[i].lng;
+    const xj = ring[j].lat, yj = ring[j].lng;
+    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-12) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
 }
 
 // Calculate complaint weight for heatmap intensity
@@ -683,6 +918,20 @@ function getAreaKey(lat, lon, gridSizeDegrees = 0.01) { // ≈1.1km at equator
   const latNum = parseFloat(lat);
   const lonNum = parseFloat(lon);
   if (Number.isNaN(latNum) || Number.isNaN(lonNum)) return 'Unknown Area';
+  // Prefer barangay name if point lies inside any barangay polygon
+  try {
+    if (Array.isArray(window._brgyPolygons) && window._brgyPolygons.length) {
+      const point = L.latLng(latNum, lonNum);
+      for (const poly of window._brgyPolygons) {
+        try {
+          if (pointInPolygonLeaflet(point, poly.latlngs)) {
+            return poly.name;
+          }
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+  // Fallback to grid-based zone label
   const latCell = Math.floor(latNum / gridSizeDegrees) * gridSizeDegrees;
   const lonCell = Math.floor(lonNum / gridSizeDegrees) * gridSizeDegrees;
   return `Zone ${latCell.toFixed(2)}, ${lonCell.toFixed(2)}`;
@@ -761,9 +1010,10 @@ function addSearchFilter() {
   searchButton.addEventListener('click', updateHeatmap);
 }
 
-// Add advanced filters
+// Add advanced filters to the left panel container
 function addAdvancedFilters() {
-  const filterButtons = document.querySelector('.filter-buttons');
+  const container = document.getElementById('advanced-filters-container');
+  if (!container) return;
   
   const advancedFiltersContainer = document.createElement('div');
   advancedFiltersContainer.className = 'advanced-filters';
@@ -809,7 +1059,7 @@ function addAdvancedFilters() {
   advancedFiltersContainer.appendChild(dateFrom);
   advancedFiltersContainer.appendChild(toLabel);
   advancedFiltersContainer.appendChild(dateTo);
-  filterButtons.appendChild(advancedFiltersContainer);
+  container.appendChild(advancedFiltersContainer);
   
   // Add event listeners
   statusFilter.addEventListener('change', updateHeatmap);
@@ -835,8 +1085,8 @@ function setupRealTimeUpdates() {
   // Auto-refresh every 5 minutes
   setInterval(refreshData, 5 * 60 * 1000);
   
-  // Add loading indicator
-  addLoadingIndicator();
+  // Optional: loading indicator (disabled per UX feedback)
+  // addLoadingIndicator();
 }
 
 // Add loading indicator
@@ -896,30 +1146,7 @@ function setupExportFeatures() {
 
 // Setup clustering analysis button
 function setupClusteringButton() {
-  const clusterBtn = document.getElementById('cluster-analysis-btn');
-  if (clusterBtn) {
-    clusterBtn.addEventListener('click', async () => {
-      try {
-        // Show loading state
-        clusterBtn.disabled = true;
-        clusterBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-        
-        // Run clustering analysis
-        await updateHeatmapWithClustering();
-        
-        // Show success message
-        showToast('Clustering analysis completed successfully!', 'success');
-        
-      } catch (error) {
-        console.error('Error running clustering analysis:', error);
-        showToast('Failed to run clustering analysis', 'error');
-      } finally {
-        // Restore button state
-        clusterBtn.disabled = false;
-        clusterBtn.innerHTML = '<i class="fas fa-sitemap"></i> Run Clustering Analysis';
-      }
-    });
-  }
+  // Clustering feature disabled per request
 }
 
 // Show export options
@@ -988,14 +1215,15 @@ function showExportOptions() {
 }
 
 // Export data
-function exportData() {
+async function exportData() {
   const format = document.getElementById('export-format').value;
   const startDate = document.getElementById('export-start-date').value;
   const endDate = document.getElementById('export-end-date').value;
   
   // Get filtered data
-  const complaints = getComplaints().filter(complaint => {
-    const complaintDate = new Date(complaint.createdAt);
+  const allComplaints = await fetchComplaints();
+  const complaints = allComplaints.filter(complaint => {
+    const complaintDate = new Date(complaint.created_at || complaint.createdAt);
     const start = new Date(startDate);
     const end = new Date(endDate);
     return complaintDate >= start && complaintDate <= end;
@@ -1069,32 +1297,30 @@ function initializeAnalytics() {
 
 // Add analytics dashboard
 function addAnalyticsDashboard() {
-  const statsGrid = document.querySelector('.stats-grid');
+  const quickStats = document.querySelector('.quick-stats');
+  
+  if (!quickStats) {
+    console.warn('Quick stats container not found, skipping analytics dashboard');
+    return;
+  }
   
   const analyticsCard = document.createElement('div');
-  analyticsCard.className = 'stat-card analytics-card';
+  analyticsCard.className = 'stat-item analytics-item';
   analyticsCard.innerHTML = `
-    <div class="stat-header">
-      <h3>Trend Analysis</h3>
-      <i class="fas fa-chart-line"></i>
-    </div>
-    <div class="stat-content">
+    <span class="stat-label">Trend Analysis</span>
+    <span class="stat-value">
       <div class="trend-item">
-        <span class="trend-label">Weekly Trend</span>
+        <span class="trend-label">Weekly</span>
         <span class="trend-value positive">+12%</span>
       </div>
       <div class="trend-item">
-        <span class="trend-label">Monthly Trend</span>
+        <span class="trend-label">Monthly</span>
         <span class="trend-value negative">-5%</span>
       </div>
-      <div class="trend-item">
-        <span class="trend-label">Response Time</span>
-        <span class="trend-value">2.3 days</span>
-      </div>
-    </div>
+    </span>
   `;
   
-  statsGrid.appendChild(analyticsCard);
+  quickStats.appendChild(analyticsCard);
 }
 
 // Update statistics
@@ -1115,8 +1341,10 @@ function updateStatistics(complaints) {
   // Update priority areas
   updatePriorityAreas(complaints);
   
-  // Update resource allocation
-  updateResourceAllocation(complaints);
+  // Update enhanced insights panel
+  updateEnhancedInsights(complaints);
+  
+  // Remove resource allocation per request
 }
 
 // Update overlay statistics
@@ -1338,7 +1566,7 @@ function updateMarkers(complaintsWithCoordinates) {
     
     // Set initial opacity based on zoom
     const currentZoom = window.complaintMap.getZoom();
-    if (currentZoom >= 14) {
+    if (currentZoom >= 10) { // Lowered from 14 to match MARKER_VISIBILITY_ZOOM
       marker.setOpacity(1);
     } else {
       marker.setOpacity(0);
@@ -1417,48 +1645,193 @@ function updatePriorityAreas(complaints) {
   }).join('');
 }
 
-// Update resource allocation
-function updateResourceAllocation(complaints) {
-  const resourceAllocation = document.querySelector('.resource-allocation');
-  if (!resourceAllocation) return;
+// Enhanced insights panel updates
+function updateEnhancedInsights(complaints) {
+  console.log('Updating enhanced insights with', complaints.length, 'complaints');
   
-  // Calculate resource allocation based on complaint volume and priority
-  const areaResources = {};
+  // Update quick stats
+  updateQuickStats(complaints);
+  
+  // Update hotspot analysis
+  updateHotspotAnalysis(complaints);
+  
+  // Update priority analysis
+  updatePriorityAnalysis(complaints);
+  
+  // Update trend analysis
+  updateTrendAnalysis(complaints);
+  
+  // Update department performance
+  updateDepartmentPerformance(complaints);
+}
+
+// Calculate average response time for complaints
+function calculateAverageResponseTime(complaints) {
+  if (!complaints || complaints.length === 0) return 0;
+  
+  const resolvedComplaints = complaints.filter(c => 
+    c.status === 'resolved' && 
+    c.created_at && 
+    c.resolved_at
+  );
+  
+  if (resolvedComplaints.length === 0) return 0;
+  
+  const totalResponseTime = resolvedComplaints.reduce((total, complaint) => {
+    const createdDate = new Date(complaint.created_at);
+    const resolvedDate = new Date(complaint.resolved_at);
+    const responseTime = resolvedDate.getTime() - createdDate.getTime();
+    return total + responseTime;
+  }, 0);
+  
+  const avgResponseTimeMs = totalResponseTime / resolvedComplaints.length;
+  const avgResponseTimeDays = avgResponseTimeMs / (1000 * 60 * 60 * 24);
+  
+  return Math.round(avgResponseTimeDays * 10) / 10; // Round to 1 decimal place
+}
+
+// Update quick stats section
+function updateQuickStats(complaints) {
+  const totalComplaints = complaints.length;
+  const activeAreas = new Set(complaints.map(c => c.location || 'Unknown')).size;
+  const avgResponseTime = calculateAverageResponseTime(complaints);
+  
+  const totalEl = document.getElementById('total-complaints-count');
+  const areasEl = document.getElementById('active-areas-count');
+  const responseEl = document.getElementById('avg-response-time');
+  
+  if (totalEl) totalEl.textContent = totalComplaints;
+  if (areasEl) areasEl.textContent = activeAreas;
+  if (responseEl) responseEl.textContent = avgResponseTime > 0 ? `${avgResponseTime.toFixed(1)}d` : 'N/A';
+}
+
+// Update hotspot analysis with visual bars
+function updateHotspotAnalysis(complaints) {
+  const hotspotData = calculateHotspotData(complaints);
+  const hotspotFill = document.querySelector('.hotspot-fill');
+  const hotspotLabel = document.querySelector('.hotspot-label');
+  
+  if (hotspotFill && hotspotLabel && hotspotData.length > 0) {
+    const maxComplaints = Math.max(...hotspotData.map(h => h.count));
+    const totalComplaints = hotspotData.reduce((sum, h) => sum + h.count, 0);
+    
+    // Update the main hotspot bar
+    const intensity = Math.min(100, (totalComplaints / maxComplaints) * 100);
+    hotspotFill.style.width = `${intensity}%`;
+    hotspotLabel.textContent = `${hotspotData.length} hotspot areas identified`;
+  } else if (hotspotFill && hotspotLabel) {
+    hotspotFill.style.width = '0%';
+    hotspotLabel.textContent = 'No hotspots identified';
+  }
+}
+
+// Update priority analysis with visual bars
+function updatePriorityAnalysis(complaints) {
+  const highPriority = complaints.filter(c => c.priority === 'high' || c.status === 'pending').length;
+  const mediumPriority = complaints.filter(c => c.priority === 'medium' || c.status === 'in_progress').length;
+  const lowPriority = complaints.filter(c => c.priority === 'low' || c.status === 'resolved').length;
+  
+  const total = highPriority + mediumPriority + lowPriority;
+  
+  // Update counts
+  const highCountEl = document.getElementById('high-priority-count');
+  const mediumCountEl = document.getElementById('medium-priority-count');
+  const lowCountEl = document.getElementById('low-priority-count');
+  
+  if (highCountEl) highCountEl.textContent = highPriority;
+  if (mediumCountEl) mediumCountEl.textContent = mediumPriority;
+  if (lowCountEl) lowCountEl.textContent = lowPriority;
+  
+  // Update bars
+  const highBar = document.querySelector('.priority-fill.high');
+  const mediumBar = document.querySelector('.priority-fill.medium');
+  const lowBar = document.querySelector('.priority-fill.low');
+  
+  if (total > 0) {
+    if (highBar) highBar.style.width = `${(highPriority / total) * 100}%`;
+    if (mediumBar) mediumBar.style.width = `${(mediumPriority / total) * 100}%`;
+    if (lowBar) lowBar.style.width = `${(lowPriority / total) * 100}%`;
+  } else {
+    if (highBar) highBar.style.width = '0%';
+    if (mediumBar) mediumBar.style.width = '0%';
+    if (lowBar) lowBar.style.width = '0%';
+  }
+}
+
+// Update trend analysis
+function updateTrendAnalysis(complaints) {
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const weeklyComplaints = complaints.filter(c => {
+    const complaintDate = new Date(c.created_at || c.timestamp);
+    return complaintDate >= oneWeekAgo;
+  }).length;
+  
+  const avgResolutionTime = calculateAverageResolutionTime(complaints);
+  
+  const weeklyEl = document.getElementById('weekly-trend');
+  const resolutionEl = document.getElementById('resolution-trend');
+  
+  if (weeklyEl) weeklyEl.textContent = weeklyComplaints;
+  if (resolutionEl) resolutionEl.textContent = avgResolutionTime > 0 ? `${avgResolutionTime.toFixed(1)}h` : 'N/A';
+}
+
+// Update department performance
+function updateDepartmentPerformance(complaints) {
+  const resolvedComplaints = complaints.filter(c => c.status === 'resolved').length;
+  const totalComplaints = complaints.length;
+  const performancePercentage = totalComplaints > 0 ? (resolvedComplaints / totalComplaints) * 100 : 0;
+  
+  const deptBar = document.getElementById('dept-performance-bar');
+  const deptValue = document.getElementById('dept-performance-value');
+  
+  if (deptBar) deptBar.style.width = `${performancePercentage}%`;
+  if (deptValue) deptValue.textContent = `${performancePercentage.toFixed(1)}%`;
+}
+
+// Calculate hotspot data
+function calculateHotspotData(complaints) {
+  const locationCounts = {};
   
   complaints.forEach(complaint => {
-    const status = normalizeStatus(complaint.status);
-    const { latitude, longitude } = complaint;
-    if (latitude && longitude) {
-      const area = getAreaKey(latitude, longitude);
-      if (!areaResources[area]) areaResources[area] = { complaints: 0, priority: 0 };
-      areaResources[area].complaints++;
-      areaResources[area].priority += status === 'pending' ? 3 : status === 'in_progress' ? 2 : 1;
-    }
+    const location = complaint.location || 'Unknown';
+    locationCounts[location] = (locationCounts[location] || 0) + 1;
   });
   
-  // Calculate resource percentage (simplified)
-  const totalPriority = Object.values(areaResources).reduce((sum, data) => sum + data.priority, 0);
+  return Object.entries(locationCounts)
+    .map(([area, count]) => ({ area, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// Calculate average resolution time
+function calculateAverageResolutionTime(complaints) {
+  const resolutionTimes = complaints
+    .filter(c => c.status === 'resolved' && c.resolved_at)
+    .map(c => {
+      const resolved = new Date(c.resolved_at);
+      const created = new Date(c.created_at || c.timestamp);
+      return (resolved - created) / (1000 * 60 * 60); // hours
+    })
+    .filter(time => time > 0);
   
-  // Update resource allocation
-  resourceAllocation.innerHTML = Object.entries(areaResources).map(([area, data]) => {
-    const percentage = Math.round((data.priority / (totalPriority || 1)) * 100);
-    
-    return `
-      <div class="resource-item">
-        <span class="resource-name">${area}</span>
-        <div class="resource-bar-container">
-          <div class="resource-bar" style="width: ${percentage}%"></div>
-        </div>
-        <span class="resource-percentage">${percentage}%</span>
-      </div>
-    `;
-  }).join('');
+  return resolutionTimes.length > 0 ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length : 0;
+}
+
+// Update resource allocation
+function updateResourceAllocation(complaints) {
+  // Feature removed per request
 }
 
 // Setup filters
 function setupFilters() {
   const heatmapFilter = document.getElementById('heatmap-filter');
   const timeFilter = document.getElementById('time-filter');
+  
+  if (!heatmapFilter || !timeFilter) {
+    console.warn('Filter elements not found');
+    return;
+  }
   
   // Add event listeners
   heatmapFilter.addEventListener('change', updateHeatmap);
@@ -1490,8 +1863,8 @@ async function updateHeatmap() {
     const toDate = dateToEl && dateToEl.value ? new Date(dateToEl.value) : null;
     const searchTerm = searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '';
     
-    // Get complaints from Supabase
-    const complaints = await window.getComplaints();
+    // Get complaints from backend API
+    const complaints = await fetchComplaints();
     
     // Apply filters
     let filteredComplaints = complaints.filter(complaint => {
@@ -1560,11 +1933,7 @@ async function updateHeatmap() {
       try { window.heatLayer.setLatLngs(heatmapData); } catch (_) {}
     }
     
-    // Perform K-Means clustering on complaints inside boundary
-    const clusters = kMeansClustering(complaintsInsideBoundary, 5);
-    
-    // Display clusters
-    displayClusters(clusters);
+    // K-Means clustering and cluster display removed per request
     
     // Update markers layer
     if (window.markerLayer) {
@@ -1572,7 +1941,7 @@ async function updateHeatmap() {
     }
     const newMarkers = complaintsInsideBoundary.map(c => createComplaintMarker(c));
     window.markerLayer = L.layerGroup(newMarkers);
-    const MARKER_VISIBILITY_ZOOM = 14;
+    const MARKER_VISIBILITY_ZOOM = 10; // Lowered from 14 to make markers visible at lower zoom levels
     const shouldShowMarkers = window.complaintMap && window.complaintMap.getZoom() >= MARKER_VISIBILITY_ZOOM;
     const heatOnMap = window.heatLayer && window.complaintMap.hasLayer(window.heatLayer);
     if (shouldShowMarkers) {
@@ -1834,8 +2203,7 @@ function displayClusters(clusters) {
     }
   });
   
-  // Update cluster statistics
-  updateClusterStatistics(clusters);
+  // Cluster statistics removed per request
 }
 
 // Get color for cluster based on complaint count
@@ -1862,7 +2230,7 @@ function createClusterPopup(cluster) {
       <h5>Recent Complaints:</h5>
       <ul>${complaintsList}</ul>
       ${moreText}
-      <button onclick="viewClusterComplaints(${cluster.clusterIndex})" class="btn btn-primary btn-sm">
+      <button data-action="view-cluster-complaints" data-cluster-index="${cluster.clusterIndex}" class="btn btn-primary btn-sm">
         View All Complaints
       </button>
     </div>
@@ -1926,8 +2294,8 @@ if (typeof window !== 'undefined') {
 // Update heatmap with clustering
 async function updateHeatmapWithClustering() {
   try {
-    // Get complaints data
-    const complaints = await window.getComplaints();
+    // Get complaints data via backend API
+    const complaints = await fetchComplaints();
     
     if (!complaints || complaints.length === 0) {
       showNoDataMessage();
@@ -2071,4 +2439,67 @@ function filterComplaintsInsideBoundary(complaints, boundaryLayer) {
   });
   
   return complaintsInside;
+}
+
+// Helper: fetch complaints via backend API (uses service key on server)
+async function fetchComplaints(params = {}) {
+	try {
+		// Get user's department for filtering
+		const user = checkAuth();
+		let departmentFilter = null;
+		if (user) {
+			const role = String(user.role || user.type || '').toLowerCase();
+			if (role.startsWith('lgu-admin-')) {
+				departmentFilter = role.replace('lgu-admin-', '');
+			} else if (role.startsWith('lgu-')) {
+				departmentFilter = role.replace('lgu-', '');
+			}
+		}
+
+		// Fetch all complaints and filter by assigned_unit
+		const qs = new URLSearchParams(params).toString();
+		const res = await fetch(`/api/complaints${qs ? `?${qs}` : ''}`);
+		if (!res.ok) {
+			console.error('fetchComplaints: API returned non-OK', res.status);
+			return [];
+		}
+		const body = await res.json();
+		// Support different shapes: array or { complaints | data }
+		let allComplaints = Array.isArray(body) ? body : (body.complaints || body.data || []);
+		
+		// Filter by assigned_unit if user has a department
+		if (departmentFilter && allComplaints.length > 0) {
+			console.log('🔍 Filtering complaints by assigned_unit:', departmentFilter);
+			const filteredComplaints = allComplaints.filter(complaint => 
+				complaint.assigned_unit === departmentFilter
+			);
+			console.log('📊 Total complaints:', allComplaints.length);
+			console.log('📊 Filtered complaints for department:', filteredComplaints.length);
+			return filteredComplaints;
+		}
+		
+		console.log('📊 All complaints count:', allComplaints.length);
+		return allComplaints;
+	} catch (err) {
+		console.error('fetchComplaints error:', err);
+		return [];
+	}
+}
+
+// Setup button event listeners
+function setupButtonEventListeners() {
+  // Use event delegation for dynamically created buttons
+  document.addEventListener('click', (e) => {
+    // Handle reload page button
+    if (e.target.matches('[data-action="reload-page"]') || e.target.closest('[data-action="reload-page"]')) {
+      location.reload();
+    }
+    
+    // Handle view cluster complaints button
+    if (e.target.matches('[data-action="view-cluster-complaints"]') || e.target.closest('[data-action="view-cluster-complaints"]')) {
+      const button = e.target.closest('[data-action="view-cluster-complaints"]');
+      const clusterIndex = button.getAttribute('data-cluster-index');
+      viewClusterComplaints(clusterIndex);
+    }
+  });
 }

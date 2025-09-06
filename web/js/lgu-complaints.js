@@ -44,6 +44,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Setup save button
   setupSaveButton();
+  
+  // Setup dispatch functionality
+  setupDispatchFunctionality();
+  
+  // Setup media preview event listeners
+  setupMediaPreviewEventListeners();
+  
+  // Setup button event listeners
+  setupButtonEventListeners();
 
   // Load departments into help section
   setupHelpRequests();
@@ -189,6 +198,11 @@ async function loadComplaints(complaints, filters = {}) {
   const end = start + perPage;
   const paginatedComplaints = filteredComplaints.slice(start, end);
   
+  // Get current user's department
+  const user = await checkAuth();
+  const userDept = user?.type?.replace('lgu-admin-', '').replace('lgu-', '') || null;
+  console.log('Current user department:', userDept);
+
   // Create table rows
   paginatedComplaints.forEach(complaint => {
     const row = document.createElement('tr');
@@ -206,7 +220,17 @@ async function loadComplaints(complaints, filters = {}) {
         break;
     }
     
-
+    // Check if complaint is assigned to user's department
+    const complaintAssignedUnit = complaint.assigned_unit || complaint.assignedUnit;
+    const isAssignedToUserDept = userDept && complaintAssignedUnit && 
+      (complaintAssignedUnit === userDept || complaintAssignedUnit.includes(userDept));
+    
+    // Only show View Details button if complaint is assigned to user's department
+    const viewButtonHtml = isAssignedToUserDept ? 
+      `<button class="btn btn-sm view-complaint-btn" data-id="${complaint.id}">
+        <i class="fas fa-eye"></i> View
+      </button>` : 
+      `<span class="text-muted">Not assigned to your department</span>`;
     
     row.innerHTML = `
       <td>${complaint.id}</td>
@@ -216,11 +240,7 @@ async function loadComplaints(complaints, filters = {}) {
       <td>${formatDate(complaint.created_at || complaint.createdAt)}</td>
       
       <td><span class="status-badge ${statusClass}">${normalizeStatus(complaint.status).replace('_',' ').toUpperCase()}</span></td>
-      <td>
-        <button class="btn btn-sm view-complaint-btn" data-id="${complaint.id}">
-          <i class="fas fa-eye"></i> View
-        </button>
-      </td>
+      <td>${viewButtonHtml}</td>
     `;
     
     tableBody.appendChild(row);
@@ -385,6 +405,355 @@ function updatePagination(totalItems, currentPage, perPage) {
   }
 }
 
+// ===== MEDIA DISPLAY FUNCTIONS =====
+
+// Display media files in the complaint details modal
+function displayMediaFiles(mediaFiles) {
+  const mediaSection = document.getElementById('media-section');
+  const noMediaMessage = document.getElementById('no-media-message');
+  const mediaGrid = document.getElementById('media-grid');
+  
+  if (!mediaFiles || mediaFiles.length === 0) {
+    mediaSection.style.display = 'block';
+    noMediaMessage.style.display = 'block';
+    mediaGrid.innerHTML = '';
+    return;
+  }
+  
+  mediaSection.style.display = 'block';
+  noMediaMessage.style.display = 'none';
+  mediaGrid.innerHTML = '';
+  
+  mediaFiles.forEach((file, index) => {
+    const mediaItem = createMediaItem(file, index);
+    mediaGrid.appendChild(mediaItem);
+  });
+}
+
+// Create individual media item for display
+function createMediaItem(file, index) {
+  const mediaItem = document.createElement('div');
+  mediaItem.className = 'media-item';
+  mediaItem.dataset.index = index;
+  
+  let thumbnailContent = '';
+  let playOverlay = '';
+  
+  if (file.type === 'image') {
+    // Use URL if available, otherwise fall back to data
+    const imageSrc = file.url || file.data;
+    thumbnailContent = `<img src="${imageSrc}" alt="${file.name}" class="media-thumbnail">`;
+  } else if (file.type === 'video') {
+    thumbnailContent = `<div class="media-thumbnail"><i class="fas fa-video"></i></div>`;
+    playOverlay = '<div class="media-play-overlay"><i class="fas fa-play"></i></div>';
+  } else if (file.type === 'audio') {
+    thumbnailContent = `<div class="media-thumbnail"><i class="fas fa-music"></i></div>`;
+    playOverlay = '<div class="media-play-overlay"><i class="fas fa-play"></i></div>';
+  }
+  
+  mediaItem.innerHTML = `
+    <div class="media-thumbnail-container">
+      ${thumbnailContent}
+      ${playOverlay}
+    </div>
+    <div class="media-type-badge ${file.type}">
+      ${file.type.toUpperCase()}
+    </div>
+    <div class="media-info">
+      <div class="media-name" title="${file.name}">${file.name}</div>
+      <div class="media-meta">
+        <span>${formatFileSize(file.size)}</span>
+        <span>${formatDate(file.uploadedAt)}</span>
+      </div>
+    </div>
+  `;
+  
+  // Add click handler for media preview
+  mediaItem.addEventListener('click', () => {
+    openMediaPreview(file, index);
+  });
+  
+  return mediaItem;
+}
+
+// Open media preview modal
+function openMediaPreview(file, index) {
+  // Create preview modal
+  const previewModal = document.createElement('div');
+  previewModal.className = 'media-preview-modal';
+  previewModal.innerHTML = `
+    <div class="media-preview-backdrop" data-action="close-media-preview"></div>
+    <div class="media-preview-content">
+      <div class="media-preview-header">
+        <h4>${file.name}</h4>
+        <button class="media-preview-close" data-action="close-media-preview">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="media-preview-body">
+        ${getMediaPreviewContent(file)}
+      </div>
+      <div class="media-preview-footer">
+        <div class="media-preview-info">
+          <span><strong>Type:</strong> ${file.type.toUpperCase()}</span>
+          <span><strong>Size:</strong> ${formatFileSize(file.size)}</span>
+          <span><strong>Uploaded:</strong> ${formatDate(file.uploadedAt)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(previewModal);
+  document.body.style.overflow = 'hidden';
+  
+  // Make closeMediaPreview globally accessible
+  window.closeMediaPreview = () => {
+    document.body.removeChild(previewModal);
+    document.body.style.overflow = '';
+    delete window.closeMediaPreview;
+  };
+}
+
+// Get media preview content based on file type
+function getMediaPreviewContent(file) {
+  // Use URL if available, otherwise fall back to data
+  const mediaSrc = file.url || file.data;
+  
+  if (file.type === 'image') {
+    return `<img src="${mediaSrc}" alt="${file.name}" style="max-width: 100%; max-height: 70vh; object-fit: contain;">`;
+  } else if (file.type === 'video') {
+    return `<video controls style="max-width: 100%; max-height: 70vh;">
+      <source src="${mediaSrc}" type="${file.mimeType}">
+      Your browser does not support the video tag.
+    </video>`;
+  } else if (file.type === 'audio') {
+    return `<audio controls style="width: 100%;">
+      <source src="${mediaSrc}" type="${file.mimeType}">
+      Your browser does not support the audio tag.
+    </audio>`;
+  }
+  return `<p>Preview not available for this file type.</p>`;
+}
+
+// Format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Format date
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+// ===== DISPATCH FUNCTIONALITY =====
+
+// Setup button event listeners
+function setupButtonEventListeners() {
+  // Clear filters button
+  const clearFiltersBtn = document.getElementById('clear-filters-btn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+  }
+  
+  // Refresh complaints button
+  const refreshComplaintsBtn = document.getElementById('refresh-complaints-btn');
+  if (refreshComplaintsBtn) {
+    refreshComplaintsBtn.addEventListener('click', refreshComplaints);
+  }
+  
+  // Debug buttons
+  const testSidebarBtn = document.getElementById('test-sidebar-btn');
+  if (testSidebarBtn) {
+    testSidebarBtn.addEventListener('click', testSidebar);
+  }
+  
+  const manualLoadSidebarBtn = document.getElementById('manual-load-sidebar-btn');
+  if (manualLoadSidebarBtn) {
+    manualLoadSidebarBtn.addEventListener('click', manualLoadSidebar);
+  }
+  
+  const checkUserDataBtn = document.getElementById('check-user-data-btn');
+  if (checkUserDataBtn) {
+    checkUserDataBtn.addEventListener('click', checkUserData);
+  }
+}
+
+// Setup media preview event listeners
+function setupMediaPreviewEventListeners() {
+  // Use event delegation for media preview modal
+  document.addEventListener('click', (e) => {
+    // Handle media preview close button and backdrop
+    if (e.target.matches('[data-action="close-media-preview"]') || e.target.closest('[data-action="close-media-preview"]')) {
+      closeMediaPreview();
+    }
+  });
+}
+
+// Setup dispatch functionality
+function setupDispatchFunctionality() {
+  const dispatchCheckbox = document.getElementById('dispatch-personnel');
+  const dispatchOptions = document.getElementById('dispatch-options');
+  
+  if (dispatchCheckbox && dispatchOptions) {
+    dispatchCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        dispatchOptions.style.display = 'block';
+        // Load available personnel
+        loadAvailablePersonnel();
+      } else {
+        dispatchOptions.style.display = 'none';
+        // Clear selected personnel
+        clearSelectedPersonnel();
+      }
+    });
+  }
+}
+
+// Load available personnel for dispatch
+async function loadAvailablePersonnel() {
+  const personnelGrid = document.querySelector('.dispatch-personnel-grid');
+  if (!personnelGrid) return;
+  
+  try {
+    // Get current user's department
+    const user = await checkAuth();
+    const role = String((user.role || user.type || '')).toLowerCase();
+    const deptFromRole = role.startsWith('lgu-admin-') ? role.replace('lgu-admin-', '')
+                        : role.startsWith('lgu-') ? role.replace('lgu-', '')
+                        : null;
+    
+    if (deptFromRole) {
+      const res = await fetch(`/api/officers?department=${encodeURIComponent(deptFromRole)}`);
+      const json = await res.json();
+      
+      if (res.ok && Array.isArray(json.officers)) {
+        personnelGrid.innerHTML = '';
+        
+        json.officers.forEach((officer, index) => {
+          const personnelItem = document.createElement('div');
+          personnelItem.className = 'personnel-item';
+          personnelItem.innerHTML = `
+            <input type="checkbox" id="dispatch-officer-${index}" class="personnel-checkbox" value="${officer.id}">
+            <label for="dispatch-officer-${index}">
+              <i class="fas fa-user-shield"></i>
+              <span>${officer.email}</span>
+            </label>
+          `;
+          personnelGrid.appendChild(personnelItem);
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error loading personnel:', error);
+    // Fallback to default personnel
+    loadDefaultPersonnel();
+  }
+}
+
+// Load default personnel if API fails
+function loadDefaultPersonnel() {
+  const personnelGrid = document.querySelector('.dispatch-personnel-grid');
+  if (!personnelGrid) return;
+  
+  const defaultPersonnel = [
+    { id: 'officer-1', name: 'Officer 1' },
+    { id: 'officer-2', name: 'Officer 2' },
+    { id: 'officer-3', name: 'Officer 3' },
+    { id: 'officer-4', name: 'Officer 4' }
+  ];
+  
+  personnelGrid.innerHTML = '';
+  defaultPersonnel.forEach((officer, index) => {
+    const personnelItem = document.createElement('div');
+    personnelItem.className = 'personnel-item';
+    personnelItem.innerHTML = `
+      <input type="checkbox" id="dispatch-officer-${index}" class="personnel-checkbox" value="${officer.id}">
+      <label for="dispatch-officer-${index}">
+        <i class="fas fa-user-shield"></i>
+        <span>${officer.name}</span>
+      </label>
+    `;
+    personnelGrid.appendChild(personnelItem);
+  });
+}
+
+// Clear selected personnel
+function clearSelectedPersonnel() {
+  const checkboxes = document.querySelectorAll('.personnel-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  
+  const instructions = document.getElementById('dispatch-instructions');
+  if (instructions) {
+    instructions.value = '';
+  }
+}
+
+// Get selected personnel
+function getSelectedPersonnel() {
+  const selectedPersonnel = [];
+  const checkboxes = document.querySelectorAll('.personnel-checkbox:checked');
+  
+  checkboxes.forEach(checkbox => {
+    selectedPersonnel.push({
+      id: checkbox.value,
+      name: checkbox.nextElementSibling.textContent.trim()
+    });
+  });
+  
+  return selectedPersonnel;
+}
+
+// Handle dispatch notification
+async function handleDispatchNotification(complaintId, personnel, instructions) {
+  try {
+    // In a real implementation, this would send notifications to the dispatched personnel
+    // For now, we'll just log the dispatch information
+    console.log('Dispatching personnel:', {
+      complaintId,
+      personnel,
+      instructions,
+      timestamp: new Date().toISOString()
+    });
+    
+    // You could add API calls here to:
+    // 1. Send push notifications to mobile apps
+    // 2. Send SMS messages
+    // 3. Send email notifications
+    // 4. Update a dispatch tracking system
+    
+    // Example API call (uncomment when backend is ready):
+    /*
+    const response = await fetch('/api/dispatch-notification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        complaintId,
+        personnel,
+        instructions
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to send dispatch notifications');
+    }
+    */
+    
+  } catch (error) {
+    console.error('Error handling dispatch notification:', error);
+    // Don't throw error here as it would prevent the main save operation
+    showToast('Complaint updated but dispatch notifications failed to send', 'warning');
+  }
+}
+
 // Show complaint details
 async function showComplaintDetails(complaintId) {
   console.log('showComplaintDetails called with ID:', complaintId);
@@ -466,16 +835,8 @@ async function showComplaintDetails(complaintId) {
     statusSelect.value = complaint.status;
   }
   
-  // Handle photo
-  const photoSection = document.getElementById('photo-section');
-  const photoElement = document.getElementById('detail-photo');
-  
-  if (complaint.photo) {
-    photoSection.style.display = 'block';
-    photoElement.style.backgroundImage = `url(${complaint.photo})`;
-  } else {
-    photoSection.style.display = 'none';
-  }
+  // Handle media files
+  displayMediaFiles(complaint.media_files || []);
   
   // Populate timeline
   const timelineContainer = document.getElementById('complaint-timeline');
@@ -562,21 +923,39 @@ function setupSaveButton() {
     const status = document.getElementById('complaint-status').value;
     const notes = document.getElementById('admin-notes').value;
     
+    // Get dispatch data
+    const dispatchCheckbox = document.getElementById('dispatch-personnel');
+    const isDispatchEnabled = dispatchCheckbox ? dispatchCheckbox.checked : false;
+    const selectedPersonnel = isDispatchEnabled ? getSelectedPersonnel() : [];
+    const dispatchInstructions = document.getElementById('dispatch-instructions') ? document.getElementById('dispatch-instructions').value : '';
+    
     try {
       // Update complaint basic fields if API available
       if (window.updateComplaint) {
         await window.updateComplaint(complaintId, {
           assignedUnit,
           status,
-          adminNotes: notes
+          adminNotes: notes,
+          dispatchEnabled: isDispatchEnabled,
+          dispatchedPersonnel: selectedPersonnel,
+          dispatchInstructions: dispatchInstructions
         });
+      }
+
+      // Handle dispatch notifications
+      if (isDispatchEnabled && selectedPersonnel.length > 0) {
+        await handleDispatchNotification(complaintId, selectedPersonnel, dispatchInstructions);
       }
 
       // If an officer was selected and there is a department involvement row, try to assign via backend API
       // Note: Without the complaint_department row id, we cannot target a specific row here.
       // This UI focuses on selecting officer; assignment per row happens in admin dashboard queue.
       // We simply notify success for the metadata update.
-      showToast(`Complaint ${complaintId} updated successfully!`, 'success');
+      const dispatchMessage = isDispatchEnabled && selectedPersonnel.length > 0 
+        ? `Complaint ${complaintId} updated and ${selectedPersonnel.length} personnel dispatched!`
+        : `Complaint ${complaintId} updated successfully!`;
+      
+      showToast(dispatchMessage, 'success');
       
       // Close modal
       document.getElementById('complaint-modal').style.display = 'none';

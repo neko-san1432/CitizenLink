@@ -43,10 +43,10 @@
                             <option value="year">Last 365 Days</option>
                             <option value="custom">Custom Range</option>
                         </select>
-                        <button class="btn btn-outline-primary btn-sm" onclick="testInsightsSystem()" style="margin-left: 10px;">
+                        <button id="test-system-btn" class="btn btn-outline-primary btn-sm" style="margin-left: 10px;">
                             <i class="fas fa-vial"></i> Test System
                         </button>
-                        <button class="btn btn-outline-info btn-sm" onclick="debugComplaintData()" style="margin-left: 10px;">
+                        <button id="debug-data-btn" class="btn btn-outline-info btn-sm" style="margin-left: 10px;">
                             <i class="fas fa-bug"></i> Debug Data
                         </button>
                     </div>
@@ -77,7 +77,7 @@
                     <div class="chart-card">
                         <div class="card-header">
                             <h3>Complaint Categories</h3>
-                            <p class="text-muted">Distribution by type and subcategory</p>
+                            <p class="text-muted">Distribution by main complaint types</p>
                         </div>
                         <div class="card-content">
                             <canvas id="categories-chart"></canvas>

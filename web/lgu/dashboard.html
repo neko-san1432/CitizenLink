@@ -6,6 +6,7 @@
     <meta name="description" content="LGU Dashboard - Government portal for managing citizen complaints. Monitor complaint status, track performance metrics, and ensure efficient resolution of community issues.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>LGU Dashboard - CitizenLink</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
@@ -87,72 +88,35 @@
                     </div>
                 </div>
 
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Complaint Overview</h3>
-                            <p class="text-muted">Distribution of complaints by status</p>
-                        </div>
-                        <div class="card-content">
-                            <canvas id="complaints-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Performance Metrics</h3>
-                            <p class="text-muted">Response and resolution times</p>
-                        </div>
-                        <div class="card-content">
-                            <div class="progress-container">
-                                <div class="progress-header">
-                                    <span>Average Response Time</span>
-                                    <span id="avg-response-time">0 hours</span>
+                <!-- Main Content Area with Charts and Complaints -->
+                <div class="main-content-layout">
+                    <!-- Row 1: CO&PM + Complaints -->
+                    <div class="top-row">
+                        <!-- Combined CO&PM Section -->
+                        <div class="combined-charts-section">
+                            <div class="chart-card">
+                                <div class="card-header">
+                                    <h3>Complaint Overview</h3>
+                                    <p class="text-muted">Distribution of complaints by status</p>
                                 </div>
-                                <div class="progress">
-                                    <div class="progress-bar" id="response-time-progress" style="width: 0%"></div>
-                                </div>
-                                <div class="progress-labels">
-                                    <span>Target: 24 hours</span>
+                                <div class="card-content">
+                                    <canvas id="complaints-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="progress-container">
-                                <div class="progress-header">
-                                    <span>Resolution Rate</span>
-                                    <span id="resolution-rate">0%</span>
+                            <div class="chart-card">
+                                <div class="card-header">
+                                    <h3>Performance Metrics</h3>
+                                    <p class="text-muted">Key performance indicators</p>
                                 </div>
-                                <div class="progress">
-                                    <div class="progress-bar" id="resolution-rate-progress" style="width: 0%"></div>
-                                </div>
-                                <div class="progress-labels">
-                                    <span>Target: 90%</span>
+                                <div class="card-content">
+                                    <canvas id="performance-metrics-chart"></canvas>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Complaints by Type</h3>
-                            <p class="text-muted">Distribution of complaints by category</p>
-                        </div>
-                        <div class="card-content">
-                            <canvas id="complaint-types-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Department Performance</h3>
-                            <p class="text-muted">Resolution rates by department</p>
-                        </div>
-                        <div class="card-content">
-                            <canvas id="department-performance-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-complaints">
+                        <!-- Complaints Section -->
+                        <div class="complaints-section">
+                            <div class="recent-complaints">
                     <div class="card">
                         <div class="card-header">
                             <h3>Recent Complaints</h3>
@@ -193,6 +157,31 @@
                         </div>
                         <div class="card-footer">
                             <a href="/lgu/complaints" class="btn btn-outline btn-block">View All Complaints</a>
+                        </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+
+                    <!-- Row 2: Complaints by Type + Department Performance -->
+                    <div class="bottom-row">
+                        <div class="chart-card">
+                            <div class="card-header">
+                                <h3>Complaints by Type</h3>
+                                <p class="text-muted">Distribution of complaints by category</p>
+                            </div>
+                            <div class="card-content">
+                                <canvas id="complaint-types-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="card-header">
+                                <h3>Department Performance</h3>
+                                <p class="text-muted">Resolution rates by department</p>
+                            </div>
+                            <div class="card-content">
+                                <canvas id="department-performance-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,161 @@
+@startuml CitizenLink Module Diagram
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+
+title CitizenLink - Module Architecture Diagram
+
+package "Frontend Layer" {
+    package "Authentication Module" {
+        component [Login/Signup] as Auth
+        component [OTP Verification] as OTP
+        component [Auth Check] as AuthCheck
+        component [Password Toggle] as PassToggle
+    }
+    
+    package "Citizen Interface" {
+        component [Dashboard] as CitizenDash
+        component [Submit Complaint] as SubmitComp
+        component [My Complaints] as MyComp
+        component [Profile] as CitizenProfile
+        component [News & Updates] as News
+    }
+    
+    package "LGU Interface" {
+        component [LGU Dashboard] as LGUDash
+        component [Complaints Management] as LGUComp
+        component [Admin Panel] as LGUAdmin
+        component [Heatmap] as Heatmap
+        component [Insights & Analytics] as Insights
+        component [News Management] as LGUNews
+        component [Notices Management] as Notices
+        component [Officer Management] as Officer
+        component [LGU Profile] as LGUProfile
+    }
+    
+    package "Shared Components" {
+        component [Sidebar Loader] as Sidebar
+        component [Citizen Sidebar] as CitizenSidebar
+        component [LGU Sidebar] as LGUSidebar
+        component [Data Management] as DataMgmt
+        component [User Utils] as UserUtils
+        component [Debug Logger] as Logger
+    }
+}
+
+package "Backend Layer" {
+    package "Server Module" {
+        component [Express Server] as Server
+        component [Security Headers] as Security
+        component [Route Handler] as Routes
+    }
+    
+    package "Database Layer" {
+        component [Supabase Bridge] as SupabaseBridge
+        component [Database Client] as DBClient
+        component [Service Client] as ServiceClient
+    }
+}
+
+package "Data Layer" {
+    database "Supabase Database" as Database {
+        component [Users Table] as Users
+        component [Complaints Table] as Complaints
+        component [Departments Table] as Departments
+        component [Officers Table] as Officers
+        component [News Table] as NewsTable
+        component [Events Table] as Events
+        component [Notices Table] as Notices
+    }
+}
+
+package "External Services" {
+    component [Font Awesome CDN] as FontAwesome
+    component [Bootstrap CDN] as Bootstrap
+    component [Chart.js CDN] as Charts
+    component [Leaflet Maps] as Maps
+}
+
+' Frontend to Backend connections
+Auth --> Server : HTTP Requests
+CitizenDash --> Server : API Calls
+SubmitComp --> Server : Submit Data
+MyComp --> Server : Fetch Data
+LGUDash --> Server : Admin Operations
+LGUComp --> Server : Manage Complaints
+LGUAdmin --> Server : Officer Management
+Heatmap --> Server : Location Data
+Insights --> Server : Analytics Data
+LGUNews --> Server : Content Management
+Notices --> Server : Notice Management
+
+' Backend to Database connections
+Server --> SupabaseBridge : Database Operations
+SupabaseBridge --> DBClient : Client Operations
+SupabaseBridge --> ServiceClient : Admin Operations
+DBClient --> Database : Data Access
+ServiceClient --> Database : Admin Access
+
+' Database table relationships
+Database --> Users
+Database --> Complaints
+Database --> Departments
+Database --> Officers
+Database --> NewsTable
+Database --> Events
+Database --> Notices
+
+' Frontend component relationships
+AuthCheck --> Auth : Authentication State
+Sidebar --> CitizenSidebar : Load Citizen UI
+Sidebar --> LGUSidebar : Load LGU UI
+DataMgmt --> CitizenDash : Provide Data
+DataMgmt --> LGUDash : Provide Data
+DataMgmt --> MyComp : Complaint Data
+DataMgmt --> LGUComp : Management Data
+UserUtils --> AuthCheck : User Operations
+Logger --> Server : Debug Information
+
+' External service connections
+FontAwesome --> Auth : Icons
+FontAwesome --> CitizenDash : Icons
+FontAwesome --> LGUDash : Icons
+Bootstrap --> Auth : Styling
+Bootstrap --> CitizenDash : Styling
+Bootstrap --> LGUDash : Styling
+Charts --> Insights : Data Visualization
+Maps --> Heatmap : Map Rendering
+
+' Security connections
+Security --> Server : Headers Protection
+Security --> Auth : Secure Authentication
+Security --> LGUDash : Admin Security
+
+note right of Database
+  Main data storage with:
+  - User authentication
+  - Complaint tracking
+  - Department management
+  - Officer assignments
+  - News and events
+  - Important notices
+end note
+
+note right of Server
+  Express.js server with:
+  - Security headers (Helmet)
+  - Route handling
+  - API endpoints
+  - Static file serving
+end note
+
+note right of SupabaseBridge
+  Client-side bridge for:
+  - Database connectivity
+  - Authentication
+  - Real-time updates
+  - Admin operations
+end note
+
+@enduml

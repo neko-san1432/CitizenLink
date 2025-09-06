@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await setupDashboard();
     console.log('✅ Dashboard setup completed');
     
+    // Setup button event listeners
+    setupButtonEventListeners();
+    
   } catch (error) {
     console.error('💥 Error in DOMContentLoaded:', error);
   }
@@ -280,30 +283,22 @@ async function loadRecentComplaints(user) {
       console.log('🔍 First complaint data:', allComplaints[0]);
     }
     
-    // Filter by user ID - try different user ID fields
+    // Determine current user id
     const userId = user.id || user.user_id || user.username;
     console.log('👤 Current user ID:', userId);
-    
-    if (allComplaints && allComplaints.length > 0) {
-      // Try different field names for user identification
-      userComplaints = allComplaints.filter(complaint => {
-        const complaintUserId = complaint.user_id || complaint.userId || complaint.user_id;
-        const matches = complaintUserId === userId;
-        console.log(`🔍 Complaint ${complaint.id}: complaintUserId=${complaintUserId}, userId=${userId}, matches=${matches}`);
-        return matches;
-      });
-      
-      console.log('✅ Filtered complaints for current user:', userComplaints);
-    }
-    
-    // TEMPORARY: For debugging, show all complaints if user is citizen
-    if (user.role === 'citizen' && allComplaints && allComplaints.length > 0) {
-      console.log('🔧 TEMPORARY: Showing all complaints for citizen user');
-      userComplaints = allComplaints;
-    }
-    
+
+    // Exclude complaints created by the current user
+    const otherUsersComplaints = (allComplaints || []).filter(complaint => {
+      const complaintUserId = complaint.user_id || complaint.userId || complaint.user_id;
+      const isOwn = complaintUserId === userId;
+      console.log(`🔍 Complaint ${complaint.id}: complaintUserId=${complaintUserId}, userId=${userId}, isOwn=${isOwn}`);
+      return !isOwn;
+    });
+
+    console.log('✅ Complaints excluding current user:', otherUsersComplaints);
+
     // Sort by date (newest first) and take the first 3
-    const recentComplaints = userComplaints
+    const recentComplaints = otherUsersComplaints
       .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
       .slice(0, 3);
     
@@ -341,13 +336,13 @@ async function loadRecentComplaints(user) {
     });
     
     // Add "View All" link if there are more complaints
-    if (userComplaints.length > 3) {
+    if (otherUsersComplaints.length > 3) {
       const viewAllLink = document.createElement('div');
       viewAllLink.className = 'text-center mt-3';
       viewAllLink.innerHTML = `
         <a href="/complaints" class="btn btn-outline-primary">
           <i class="fas fa-list"></i>
-          View All ${userComplaints.length} Complaints
+          View All ${otherUsersComplaints.length} Complaints
         </a>
       `;
       complaintsGrid.appendChild(viewAllLink);
@@ -364,7 +359,7 @@ async function loadRecentComplaints(user) {
         <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
         <h5 class="text-warning">Error loading complaints</h5>
         <p class="text-muted mb-3">Unable to load your complaints. Please try again later.</p>
-        <button class="btn btn-sm btn-outline-warning" onclick="loadRecentComplaints(window.userUtils.initializeUserData())">
+        <button class="btn btn-sm btn-outline-warning" data-action="load-recent-complaints">
           <i class="fas fa-redo"></i>
           Retry
         </button>
@@ -511,7 +506,7 @@ async function loadNews() {
         <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
         <h5 class="text-warning">Error loading news</h5>
         <p class="text-muted mb-3">Unable to load news articles. Please try again later.</p>
-        <button class="btn btn-sm btn-outline-warning" onclick="loadNews()">
+        <button class="btn btn-sm btn-outline-warning" data-action="load-news">
           <i class="fas fa-redo"></i>
           Retry
         </button>
@@ -879,7 +874,7 @@ function showCommunityUpdatesError(message = 'Unable to load events') {
           <div class="text-center py-2">
             <i class="fas fa-exclamation-triangle text-warning"></i>
             <p class="text-warning mb-0">${message}</p>
-            <button class="btn btn-sm btn-outline-warning mt-2" onclick="retryDataLoad(loadCommunityUpdates)">
+            <button class="btn btn-sm btn-outline-warning mt-2" data-action="retry-community-updates">
               <i class="fas fa-redo"></i>
               Retry
             </button>
@@ -906,7 +901,7 @@ function showImportantNoticesError(message = 'Unable to load notices') {
         <div style="padding: 1rem; border-radius: 0.5rem; background-color: #fef2f2; border: 1px solid #dc2626; color: #991b1b; text-align: center;">
           <i class="fas fa-exclamation-triangle"></i>
           <p class="mb-0">${message}</p>
-          <button class="btn btn-sm btn-outline-danger mt-2" onclick="retryDataLoad(loadImportantNotices)">
+          <button class="btn btn-sm btn-outline-danger mt-2" data-action="retry-important-notices">
             <i class="fas fa-redo"></i>
             Retry
           </button>
@@ -948,7 +943,7 @@ function createNewsCard(news) {
       <div class="news-tag">${category}</div>
       <h4 class="news-title">${news.title || 'Untitled'}</h4>
       <p class="news-excerpt">${news.excerpt || 'No excerpt available'}</p>
-      <button class="news-read-more" onclick="showNewsDetails('${news.id}')">
+      <button class="news-read-more" data-action="show-news-details" data-news-id="${news.id}">
         Read Full Article
         <i class="fas fa-arrow-right"></i>
       </button>
@@ -992,34 +987,45 @@ async function showNewsDetails(newsId) {
       return;
     }
 
-    // Create the news content HTML
+    // Simple sanitizer to neutralize HTML (prevents XSS). For rich content, replace with DOMPurify.
+    const sanitizeText = (str) => {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
+    // Create the news content HTML (sanitized)
     const newsContent = `
       <div class="news-article">
         <div class="article-header mb-4">
           <div class="article-meta">
-            <span class="badge bg-primary">${newsItem.category || 'General'}</span>
+            <span class="badge bg-primary">${sanitizeText(newsItem.category || 'General')}</span>
             <span class="text-muted ms-2">${formatDate(newsItem.date || newsItem.created_at || newsItem.published_at)}</span>
           </div>
         </div>
         
-        <h3 class="article-title mb-3">${newsItem.title || 'Untitled'}</h3>
+        <h3 class="article-title mb-3">${sanitizeText(newsItem.title || 'Untitled')}</h3>
         
-        ${newsItem.excerpt ? `<p class="lead mb-4">${newsItem.excerpt}</p>` : ''}
+        ${newsItem.excerpt ? `<p class="lead mb-4">${sanitizeText(newsItem.excerpt)}</p>` : ''}
         
         <div class="article-content">
-          ${newsItem.content || newsItem.body || newsItem.description || 'No content available'}
+          ${sanitizeText(newsItem.content || newsItem.body || newsItem.description || 'No content available')}
         </div>
         
         ${newsItem.author ? `
           <div class="article-author mt-4 pt-3 border-top">
-            <small class="text-muted">By ${newsItem.author}</small>
+            <small class="text-muted">By ${sanitizeText(newsItem.author)}</small>
           </div>
         ` : ''}
         
         ${newsItem.source_url ? `
           <div class="article-source mt-2">
             <small class="text-muted">
-              <a href="${newsItem.source_url}" target="_blank" rel="noopener noreferrer">
+              <a href="${sanitizeText(newsItem.source_url)}" target="_blank" rel="noopener noreferrer">
                 Read more at source
               </a>
             </small>
@@ -1316,6 +1322,39 @@ function checkFunctionAvailability() {
       // Function is available
     } else {
       // Function is not available
+    }
+  });
+}
+
+// Setup button event listeners
+function setupButtonEventListeners() {
+  // Use event delegation for dynamically created buttons
+  document.addEventListener('click', (e) => {
+    // Handle load recent complaints button
+    if (e.target.matches('[data-action="load-recent-complaints"]') || e.target.closest('[data-action="load-recent-complaints"]')) {
+      loadRecentComplaints(window.userUtils.initializeUserData());
+    }
+    
+    // Handle load news button
+    if (e.target.matches('[data-action="load-news"]') || e.target.closest('[data-action="load-news"]')) {
+      loadNews();
+    }
+    
+    // Handle retry community updates button
+    if (e.target.matches('[data-action="retry-community-updates"]') || e.target.closest('[data-action="retry-community-updates"]')) {
+      retryDataLoad(loadCommunityUpdates);
+    }
+    
+    // Handle retry important notices button
+    if (e.target.matches('[data-action="retry-important-notices"]') || e.target.closest('[data-action="retry-important-notices"]')) {
+      retryDataLoad(loadImportantNotices);
+    }
+    
+    // Handle show news details button
+    if (e.target.matches('[data-action="show-news-details"]') || e.target.closest('[data-action="show-news-details"]')) {
+      const button = e.target.closest('[data-action="show-news-details"]');
+      const newsId = button.getAttribute('data-news-id');
+      showNewsDetails(newsId);
     }
   });
 }

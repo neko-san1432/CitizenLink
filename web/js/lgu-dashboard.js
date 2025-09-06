@@ -11,33 +11,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let complaints = [];
   try {
-    if (isLgu && deptFromRole) {
-      // Prefer server API that already scopes by department and uses service key
-      console.log('[LGU] Fetching department queue for dept:', deptFromRole);
-      const res = await fetch(`/api/department-queue?department=${encodeURIComponent(deptFromRole)}`);
-      console.log('[LGU] /api/department-queue status:', res.status);
-      if (res.ok) {
-        const json = await res.json();
-        console.log('[LGU] /api/department-queue items length:', (json.items||[]).length);
-        const items = Array.isArray(json.items) ? json.items : [];
-        // Map department-queue items to complaint-like objects for the dashboard
-        const mapped = items.map(it => ({
-          id: it.complaint?.id || it.id,
-          title: it.complaint?.title || `Complaint ${it.complaint?.id || it.id}`,
-          status: it.status || it.complaint?.status || 'pending',
-          type: it.role || it.complaint?.type || 'General',
-          createdAt: it.complaint?.created_at || it.updated_at,
-          updatedAt: it.updated_at,
-          assignedUnit: deptFromRole
-        }));
-        complaints = normalizeComplaints(mapped);
+    // Fetch all complaints and filter by assigned_unit
+    console.log('[LGU] Fetching all complaints from /api/complaints');
+    const res = await fetch('/api/complaints');
+    console.log('[LGU] /api/complaints status:', res.status);
+    if (res.ok) {
+      const response = await res.json();
+      console.log('[LGU] /api/complaints response:', response);
+      // Handle the response format: { complaints: [...], page, limit }
+      let allComplaints = response.complaints || response.data || response;
+      console.log('[LGU] /api/complaints count:', Array.isArray(allComplaints) ? allComplaints.length : 0);
+      
+      // Filter by assigned_unit if user has a department
+      if (isLgu && deptFromRole && Array.isArray(allComplaints)) {
+        console.log('[LGU] Filtering complaints by assigned_unit:', deptFromRole);
+        const filteredComplaints = allComplaints.filter(complaint => 
+          complaint.assigned_unit === deptFromRole
+        );
+        console.log('[LGU] Total complaints:', allComplaints.length);
+        console.log('[LGU] Filtered complaints for department:', filteredComplaints.length);
+        complaints = normalizeComplaints(filteredComplaints);
+      } else {
+        console.log('[LGU] First few complaints:', allComplaints.slice(0, 3));
+        complaints = normalizeComplaints(allComplaints);
       }
     }
-  } catch (_) {
-    // Fall back silently
+  } catch (error) {
+    console.error('[LGU] Error fetching complaints:', error);
   }
 
-  // Fallback to all complaints if API not available or role not LGU
+  // Fallback to window.getComplaints if API fails
   if (!complaints.length) {
     console.log('[LGU] Falling back to window.getComplaints()');
     const complaintsRaw = await (window.getComplaints ? window.getComplaints() : []);
@@ -49,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateStats(complaints);
 
   // Initialize charts
-  initializeCharts(complaints);
+  await initializeCharts(complaints);
 
   // Load recent complaints
   loadRecentComplaints(complaints);
@@ -283,15 +286,11 @@ function updateStats(complaints) {
   document.getElementById('in-progress-complaints').textContent = inProgressComplaints;
   document.getElementById('resolved-complaints').textContent = resolvedComplaints;
   
-  // Calculate and update response time
+  // Calculate performance metrics for bar chart
   const avgResponseTime = calculateAverageResponseTime(complaints);
-  document.getElementById('avg-response-time').textContent = `${avgResponseTime} hours`;
-  document.getElementById('response-time-progress').style.width = `${Math.min(100, (avgResponseTime / 24) * 100)}%`;
-  
-  // Calculate and update resolution rate
   const resolutionRate = totalComplaints > 0 ? Math.round((resolvedComplaints / totalComplaints) * 100) : 0;
-  document.getElementById('resolution-rate').textContent = `${resolutionRate}%`;
-  document.getElementById('resolution-rate-progress').style.width = `${resolutionRate}%`;
+  const avgResolutionTime = calculateAverageResolutionTime(complaints);
+  const responseRate = totalComplaints > 0 ? Math.round(((totalComplaints - pendingComplaints) / totalComplaints) * 100) : 0;
 }
 
 // Calculate average response time
@@ -309,8 +308,23 @@ function calculateAverageResponseTime(complaints) {
       : 0;
 }
 
+// Calculate average resolution time
+function calculateAverageResolutionTime(complaints) {
+  const resolutionTimes = complaints
+      .filter(c => c.status === 'resolved')
+      .map(c => {
+          const created = new Date(c.createdAt);
+          const updated = new Date(c.updatedAt || c.createdAt);
+          return Math.round((updated - created) / (1000 * 60 * 60)); // Convert to hours
+      });
+  
+  return resolutionTimes.length > 0 
+      ? Math.round(resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length)
+      : 0;
+}
+
 // Initialize charts
-function initializeCharts(complaints) {
+async function initializeCharts(complaints) {
   // Complaint status chart
   const statusCtx = document.getElementById('complaints-chart').getContext('2d');
   const pendingCount = complaints.filter(c => c.status === 'pending').length;
@@ -331,7 +345,23 @@ function initializeCharts(complaints) {
           maintainAspectRatio: false,
           plugins: {
               legend: {
-                  position: 'bottom'
+                  position: 'bottom',
+                  display: true,
+                  labels: {
+                      padding: 15,
+                      usePointStyle: true,
+                      font: {
+                          size: 11
+                      }
+                  }
+              }
+          },
+          layout: {
+              padding: {
+                  bottom: 30,
+                  top: 10,
+                  left: 10,
+                  right: 10
               }
           }
       }
@@ -369,18 +399,117 @@ function initializeCharts(complaints) {
       }
   });
   
-  // Department performance chart
+  // Department performance chart - comparing all departments (use ALL complaints)
   const deptCtx = document.getElementById('department-performance-chart').getContext('2d');
-  const departmentStats = calculateDepartmentStats(complaints);
+  const allComplaintsForComparison = await fetchAllComplaintsForComparison();
+  console.log('[LGU] All complaints for department comparison:', allComplaintsForComparison.length);
+  console.log('[LGU] Sample complaint assigned_unit values:', allComplaintsForComparison.slice(0, 5).map(c => c.assigned_unit));
+  const departmentStats = calculateDepartmentPerformanceStats(allComplaintsForComparison);
+  console.log('[LGU] Department stats calculated:', departmentStats);
   
   new Chart(deptCtx, {
       type: 'bar',
       data: {
           labels: Object.keys(departmentStats),
+          datasets: [
+              {
+                  label: 'Complaints Received',
+                  data: Object.values(departmentStats).map(dept => dept.totalComplaints),
+                  backgroundColor: '#8b5cf6',
+                  yAxisID: 'y2'
+              },
+              {
+                  label: 'Resolution Rate (%)',
+                  data: Object.values(departmentStats).map(dept => dept.resolutionRate),
+                  backgroundColor: '#10b981',
+                  yAxisID: 'y'
+              },
+              {
+                  label: 'Response Rate (%)',
+                  data: Object.values(departmentStats).map(dept => dept.responseRate),
+                  backgroundColor: '#3b82f6',
+                  yAxisID: 'y'
+              },
+              {
+                  label: 'Avg Response Time (hrs)',
+                  data: Object.values(departmentStats).map(dept => dept.avgResponseTime),
+                  backgroundColor: '#f59e0b',
+                  yAxisID: 'y1'
+              },
+              {
+                  label: 'Avg Resolution Time (hrs)',
+                  data: Object.values(departmentStats).map(dept => dept.avgResolutionTime),
+                  backgroundColor: '#ef4444',
+                  yAxisID: 'y1'
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              y: {
+                  type: 'linear',
+                  display: true,
+                  position: 'left',
+                  beginAtZero: true,
+                  max: 100,
+                  ticks: {
+                      callback: value => `${value}%`
+                  },
+                  title: {
+                      display: true,
+                      text: 'Percentage (%)'
+                  }
+              },
+              y1: {
+                  type: 'linear',
+                  display: true,
+                  position: 'right',
+                  beginAtZero: true,
+                  ticks: {
+                      callback: value => `${value} hrs`
+                  },
+                  title: {
+                      display: true,
+                      text: 'Time (hours)'
+                  },
+                  grid: {
+                      drawOnChartArea: false,
+                  },
+              },
+              y2: {
+                  type: 'linear',
+                  display: false,
+                  beginAtZero: true,
+                  ticks: {
+                      callback: value => `${value}`
+                  }
+              }
+          },
+          plugins: {
+              legend: {
+                  position: 'top'
+              }
+          }
+      }
+  });
+
+  // Performance metrics bar chart
+  const performanceCtx = document.getElementById('performance-metrics-chart').getContext('2d');
+  const avgResponseTime = calculateAverageResponseTime(complaints);
+  const resolutionRate = complaints.length > 0 ? Math.round((complaints.filter(c => c.status === 'resolved').length / complaints.length) * 100) : 0;
+  const avgResolutionTime = calculateAverageResolutionTime(complaints);
+  const responseRate = complaints.length > 0 ? Math.round(((complaints.length - complaints.filter(c => c.status === 'pending').length) / complaints.length) * 100) : 0;
+  
+  new Chart(performanceCtx, {
+      type: 'bar',
+      data: {
+          labels: ['Response Rate (%)', 'Resolution Rate (%)', 'Avg Response Time (hrs)', 'Avg Resolution Time (hrs)'],
           datasets: [{
-              label: 'Resolution Rate (%)',
-              data: Object.values(departmentStats),
-              backgroundColor: '#10b981'
+              label: 'Performance Metrics',
+              data: [responseRate, resolutionRate, avgResponseTime, avgResolutionTime],
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
           }]
       },
       options: {
@@ -389,27 +518,117 @@ function initializeCharts(complaints) {
           scales: {
               y: {
                   beginAtZero: true,
-                  max: 100,
                   ticks: {
-                      callback: value => `${value}%`
+                      callback: function(value, index, values) {
+                          // For percentage metrics, add % symbol
+                          if (index < 2) {
+                              return value + '%';
+                          }
+                          // For time metrics, add hours
+                          return value + ' hrs';
+                      }
                   }
+              }
+          },
+          plugins: {
+              legend: {
+                  display: false
+              }
+          },
+          layout: {
+              padding: {
+                  bottom: 30,
+                  top: 10,
+                  left: 10,
+                  right: 10
               }
           }
       }
   });
 }
 
-// Calculate department statistics
-function calculateDepartmentStats(complaints) {
+// Fetch all complaints for department performance comparison
+async function fetchAllComplaintsForComparison() {
+  try {
+    console.log('[LGU] Fetching ALL complaints for department comparison');
+    const res = await fetch('/api/complaints');
+    if (res.ok) {
+      const response = await res.json();
+      const allComplaints = response.complaints || response.data || response;
+      console.log('[LGU] All complaints for comparison:', allComplaints.length);
+      console.log('[LGU] First few complaints structure:', allComplaints.slice(0, 2));
+      
+      // Don't normalize - use raw data to preserve all fields
+      return allComplaints;
+    }
+  } catch (error) {
+    console.error('[LGU] Error fetching all complaints for comparison:', error);
+  }
+  return [];
+}
+
+// Calculate department performance statistics
+function calculateDepartmentPerformanceStats(complaints) {
   const stats = {};
-  const departments = ['city_hall', 'police', 'fire', 'public_works', 'waste', 'health'];
+  // Define all LGU departments (including those with 0 complaints)
+  const allLguDepartments = ['wst', 'bfp', 'pnp', 'health', 'public_works', 'traffic', 'environment'];
+  console.log('[LGU] Calculating department stats for', complaints.length, 'complaints');
+  console.log('[LGU] All LGU departments:', allLguDepartments);
   
-  departments.forEach(dept => {
-      const deptComplaints = complaints.filter(c => c.assignedUnit === dept);
-      const resolved = deptComplaints.filter(c => c.status === 'resolved').length;
-      stats[dept] = deptComplaints.length > 0 
-          ? Math.round((resolved / deptComplaints.length) * 100)
-          : 0;
+  allLguDepartments.forEach(dept => {
+      const deptComplaints = complaints.filter(c => c.assigned_unit === dept);
+      console.log(`[LGU] ${dept.toUpperCase()} department complaints:`, deptComplaints.length);
+      
+      if (deptComplaints.length > 0) {
+          const resolved = deptComplaints.filter(c => c.status === 'resolved').length;
+          const responded = deptComplaints.filter(c => c.status !== 'pending').length;
+          
+          // Calculate resolution rate
+          const resolutionRate = Math.round((resolved / deptComplaints.length) * 100);
+          
+          // Calculate response rate
+          const responseRate = Math.round((responded / deptComplaints.length) * 100);
+          
+          // Calculate average response time
+          const responseTimes = deptComplaints
+              .filter(c => c.status !== 'pending')
+              .map(c => {
+                  const created = new Date(c.created_at);
+                  const updated = new Date(c.updated_at || c.created_at);
+                  return Math.round((updated - created) / (1000 * 60 * 60));
+              });
+          const avgResponseTime = responseTimes.length > 0 
+              ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+              : 0;
+          
+          // Calculate average resolution time
+          const resolutionTimes = deptComplaints
+              .filter(c => c.status === 'resolved')
+              .map(c => {
+                  const created = new Date(c.created_at);
+                  const updated = new Date(c.updated_at || c.created_at);
+                  return Math.round((updated - created) / (1000 * 60 * 60));
+              });
+          const avgResolutionTime = resolutionTimes.length > 0 
+              ? Math.round(resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length)
+              : 0;
+          
+          stats[dept.toUpperCase()] = {
+              resolutionRate,
+              responseRate,
+              avgResponseTime,
+              avgResolutionTime,
+              totalComplaints: deptComplaints.length
+          };
+      } else {
+          stats[dept.toUpperCase()] = {
+              resolutionRate: 0,
+              responseRate: 0,
+              avgResponseTime: 0,
+              avgResolutionTime: 0,
+              totalComplaints: 0
+          };
+      }
   });
   
   return stats;

@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Setup modal close
   setupModalClose();
+  
+  // Setup rating system
+  setupRatingSystem();
 });
 
 // Load complaints list
@@ -118,13 +121,35 @@ function loadComplaints(complaints, filters = {}) {
         break;
     }
     
+    // Create rating display
+    let ratingDisplay = '';
+    if (complaint.status === 'resolved') {
+      if (complaint.satisfaction_score) {
+        ratingDisplay = `
+          <div class="complaint-rating">
+            <span class="stars">${'★'.repeat(complaint.satisfaction_score)}${'☆'.repeat(5 - complaint.satisfaction_score)}</span>
+            <span class="score">${complaint.satisfaction_score}/5</span>
+          </div>
+        `;
+      } else {
+        ratingDisplay = `
+          <div class="complaint-rating no-rating">
+            <i class="fas fa-star-half-alt"></i>
+            <span>Rate this complaint</span>
+          </div>
+        `;
+      }
+    }
+    
     complaintItem.innerHTML = `
       <div class="complaint-info">
         <div class="complaint-title">${complaint.title}</div>
         <div class="complaint-date">${formatDate(complaint.createdAt)}</div>
+        ${ratingDisplay}
       </div>
       <div class="complaint-actions">
         <span class="status-badge ${statusClass}">${complaint.status}</span>
+        <button class="btn btn-outline btn-sm" onclick="showComplaintDetails('${complaint.id}')">View Details</button>
       </div>
     `;
     
@@ -324,6 +349,35 @@ function showComplaintDetails(complaintId) {
     timelineContainer.appendChild(timelineItem);
   });
   
+  // Handle rating section for resolved complaints
+  const ratingSection = document.getElementById('rating-section');
+  const satisfactionDisplay = document.getElementById('satisfaction-display');
+  
+  if (complaint.status === 'resolved') {
+    if (complaint.satisfaction_score) {
+      // Show existing rating
+      const detailSatisfaction = document.getElementById('detail-satisfaction');
+      if (detailSatisfaction) {
+        detailSatisfaction.innerHTML = `
+          <span class="stars">${'★'.repeat(complaint.satisfaction_score)}${'☆'.repeat(5 - complaint.satisfaction_score)}</span>
+          <span class="score">${complaint.satisfaction_score}/5</span>
+        `;
+        satisfactionDisplay.style.display = 'block';
+      }
+      ratingSection.style.display = 'none';
+    } else {
+      // Show rating form
+      satisfactionDisplay.style.display = 'none';
+      if (window.showRatingSection) {
+        window.showRatingSection(complaint.id, false);
+      }
+    }
+  } else {
+    // Hide rating sections for non-resolved complaints
+    ratingSection.style.display = 'none';
+    satisfactionDisplay.style.display = 'none';
+  }
+  
   // Show modal
   const modal = document.getElementById('complaint-modal');
   modal.classList.add('open');
@@ -441,4 +495,176 @@ const governmentUnitNames = {
 
 function showToast(message, type) {
     alert(message); // Replace with a proper toast notification
+}
+
+// Setup rating system
+function setupRatingSystem() {
+  const starRating = document.getElementById('star-rating');
+  const submitRatingBtn = document.getElementById('submit-rating');
+  const skipRatingBtn = document.getElementById('skip-rating');
+  
+  let currentRating = 0;
+  let currentComplaintId = null;
+  
+  // Star rating interaction
+  if (starRating) {
+    const stars = starRating.querySelectorAll('i');
+    
+    stars.forEach((star, index) => {
+      star.addEventListener('click', () => {
+        currentRating = index + 1;
+        updateStarDisplay(stars, currentRating);
+      });
+      
+      star.addEventListener('mouseenter', () => {
+        updateStarDisplay(stars, index + 1, true);
+      });
+    });
+    
+    starRating.addEventListener('mouseleave', () => {
+      updateStarDisplay(stars, currentRating);
+    });
+  }
+  
+  // Submit rating
+  if (submitRatingBtn) {
+    submitRatingBtn.addEventListener('click', async () => {
+      if (currentRating === 0) {
+        showToast('Please select a rating before submitting.', 'error');
+        return;
+      }
+      
+      const comment = document.getElementById('rating-comment').value;
+      await submitRating(currentComplaintId, currentRating, comment);
+    });
+  }
+  
+  // Skip rating
+  if (skipRatingBtn) {
+    skipRatingBtn.addEventListener('click', () => {
+      hideRatingSection();
+    });
+  }
+  
+  // Update star display
+  function updateStarDisplay(stars, rating, isHover = false) {
+    stars.forEach((star, index) => {
+      if (index < rating) {
+        star.classList.add(isHover ? 'active' : 'rated');
+        star.classList.remove(isHover ? 'rated' : 'active');
+      } else {
+        star.classList.remove('active', 'rated');
+      }
+    });
+  }
+  
+  // Submit rating to server
+  async function submitRating(complaintId, rating, comment) {
+    try {
+      console.log('Submitting rating:', { complaintId, rating, comment });
+      
+      // Update complaint with rating
+      const updateData = {
+        satisfaction_score: rating,
+        citizen_feedback: comment || null
+      };
+      
+      const success = await updateComplaintRating(complaintId, updateData);
+      
+      if (success) {
+        showToast('Thank you for your feedback!', 'success');
+        hideRatingSection();
+        showExistingRating(rating);
+        
+        // Refresh the complaints list to show updated rating
+        const user = await window.userUtils.initializeUserData();
+        if (user) {
+          const complaints = await getComplaintsByUserId(user.username);
+          loadComplaints(complaints);
+        }
+      } else {
+        showToast('Failed to submit rating. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      showToast('Failed to submit rating. Please try again.', 'error');
+    }
+  }
+  
+  // Show existing rating
+  function showExistingRating(rating) {
+    const satisfactionDisplay = document.getElementById('satisfaction-display');
+    const detailSatisfaction = document.getElementById('detail-satisfaction');
+    
+    if (satisfactionDisplay && detailSatisfaction) {
+      detailSatisfaction.innerHTML = `
+        <span class="stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</span>
+        <span class="score">${rating}/5</span>
+      `;
+      satisfactionDisplay.style.display = 'block';
+    }
+  }
+  
+  // Hide rating section
+  function hideRatingSection() {
+    const ratingSection = document.getElementById('rating-section');
+    if (ratingSection) {
+      ratingSection.style.display = 'none';
+    }
+  }
+  
+  // Show rating section for resolved complaints
+  function showRatingSection(complaintId, hasExistingRating) {
+    const ratingSection = document.getElementById('rating-section');
+    const satisfactionDisplay = document.getElementById('satisfaction-display');
+    
+    if (ratingSection) {
+      currentComplaintId = complaintId;
+      currentRating = 0;
+      
+      // Reset form
+      document.getElementById('rating-comment').value = '';
+      const stars = document.querySelectorAll('#star-rating i');
+      stars.forEach(star => star.classList.remove('active', 'rated'));
+      
+      if (hasExistingRating) {
+        ratingSection.style.display = 'none';
+      } else {
+        ratingSection.style.display = 'block';
+      }
+    }
+  }
+  
+  // Make functions available globally
+  window.showRatingSection = showRatingSection;
+  window.showExistingRating = showExistingRating;
+}
+
+// Update complaint rating function
+async function updateComplaintRating(complaintId, updateData) {
+  try {
+    if (window.updateComplaint) {
+      return await window.updateComplaint(complaintId, updateData);
+    }
+    
+    // Fallback: direct Supabase update
+    if (window.supabaseManager) {
+      const supabase = await window.supabaseManager.initialize();
+      const { error } = await supabase
+        .from('complaints')
+        .update(updateData)
+        .eq('id', complaintId);
+      
+      if (error) {
+        console.error('Error updating complaint:', error);
+        return false;
+      }
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error updating complaint:', error);
+    return false;
+  }
 }

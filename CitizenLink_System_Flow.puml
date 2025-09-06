@@ -1,0 +1,193 @@
+@startuml CitizenLink System Flow
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityBackgroundColor #E8F4FD
+skinparam activityBorderColor #2E86AB
+skinparam activityFontColor #000000
+skinparam noteBackgroundColor #FFF2CC
+skinparam noteBorderColor #D6B656
+
+title CitizenLink - System Flow Diagram
+
+start
+
+:User visits CitizenLink;
+note right: Landing page with features overview
+
+if (User has account?) then (No)
+    :User clicks "Sign Up";
+    :Fill registration form;
+    :Submit registration;
+    :Receive OTP via email;
+    :Enter OTP verification;
+    if (OTP valid?) then (Yes)
+        :Account created successfully;
+    else (No)
+        :Show error message;
+        stop
+    endif
+else (Yes)
+    :User clicks "Log In";
+    :Enter credentials;
+    if (Credentials valid?) then (Yes)
+        :Authentication successful;
+    else (No)
+        :Show error message;
+        stop
+    endif
+endif
+
+:Check user role;
+note right: Determine if Citizen or LGU Admin
+
+if (User role?) then (Citizen)
+    :Redirect to Citizen Dashboard;
+    
+    partition "Citizen Workflow" {
+        :Load citizen sidebar;
+        :Display dashboard with stats;
+        
+        if (User action?) then (Submit Complaint)
+            :Navigate to Submit Complaint;
+            :Fill complaint form;
+            note right
+                Form includes:
+                - Title & Description
+                - Location (GPS/Manual)
+                - Category & Subcategory
+                - Suggested Units
+                - Photo upload (optional)
+            end note
+            :Validate form data;
+            if (Form valid?) then (Yes)
+                :Submit to database;
+                :Store complaint with status "pending";
+                :Show success message;
+                :Redirect to My Complaints;
+            else (No)
+                :Show validation errors;
+            endif
+            
+        elseif (User action?) then (View My Complaints)
+            :Navigate to My Complaints;
+            :Fetch user's complaints;
+            :Display complaints list;
+            :Show status and progress;
+            if (Complaint resolved?) then (Yes)
+                :Show rating system;
+                :Allow feedback submission;
+            endif
+            
+        elseif (User action?) then (View News)
+            :Navigate to News & Updates;
+            :Fetch latest news;
+            :Display news articles;
+            
+        elseif (User action?) then (View Profile)
+            :Navigate to Profile;
+            :Display user information;
+            :Allow profile updates;
+        endif
+    }
+    
+elseif (User role?) then (LGU Admin)
+    :Redirect to LGU Dashboard;
+    
+    partition "LGU Admin Workflow" {
+        :Load LGU sidebar;
+        :Display admin dashboard;
+        
+        if (Admin action?) then (Manage Complaints)
+            :Navigate to Complaints Management;
+            :Fetch all complaints;
+            :Display complaints with filters;
+            if (Select complaint?) then (Yes)
+                :View complaint details;
+                :Assign to department/officer;
+                :Update status (pending → in_progress);
+                :Add admin notes;
+                :Save changes;
+            endif
+            
+        elseif (Admin action?) then (View Heatmap)
+            :Navigate to Heatmap;
+            :Load map with complaint locations;
+            :Display complaint clusters;
+            :Show location analytics;
+            :Export map data;
+            
+        elseif (Admin action?) then (View Insights)
+            :Navigate to Insights & Analytics;
+            :Fetch complaint statistics;
+            :Generate charts and reports;
+            :Display trends and patterns;
+            :Export analytics data;
+            
+        elseif (Admin action?) then (Manage Officers)
+            :Navigate to Admin Panel;
+            :View department officers;
+            :Appoint new officers;
+            :Assign roles and permissions;
+            :Update officer information;
+            
+        elseif (Admin action?) then (Manage News)
+            :Navigate to News Management;
+            :Create/edit news articles;
+            :Publish announcements;
+            :Manage content;
+            
+        elseif (Admin action?) then (Manage Notices)
+            :Navigate to Notices Management;
+            :Create important notices;
+            :Set notice priorities;
+            :Schedule notices;
+        endif
+    }
+endif
+
+partition "Real-time Updates" {
+    :Setup WebSocket connection;
+    :Listen for database changes;
+    if (Data changed?) then (Yes)
+        :Update UI in real-time;
+        :Refresh relevant components;
+    endif
+}
+
+partition "Security & Validation" {
+    :Apply security headers;
+    :Validate user permissions;
+    :Check session validity;
+    if (Session expired?) then (Yes)
+        :Redirect to login;
+        stop
+    endif
+    :Log user activities;
+    :Monitor system health;
+}
+
+:User continues using system;
+if (User logs out?) then (Yes)
+    :Clear session data;
+    :Redirect to landing page;
+    stop
+else (No)
+    :Continue to main workflow;
+endif
+
+stop
+
+note bottom
+  Key System Features:
+  • Role-based access control
+  • Real-time complaint tracking
+  • GPS location integration
+  • Photo upload capability
+  • Analytics and reporting
+  • Mobile-responsive design
+  • Security headers implementation
+  • Supabase database integration
+end note
+
+@enduml

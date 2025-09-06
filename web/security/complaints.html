@@ -6,7 +6,6 @@
     <meta name="description" content="Complaints Management - Government portal for reviewing, assigning, and resolving citizen complaints. Filter by status, type, urgency, and date for efficient complaint handling.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>Complaints Management - CitizenLink</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
@@ -21,9 +20,9 @@
 
         <div class="main-content">
             <header class="dashboard-header">
-                    <button class="sidebar-toggle" id="sidebar-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="header-right">
                     <span class="welcome-text">LGU Admin Portal</span>
                 </div>
@@ -32,7 +31,7 @@
             <main class="dashboard-main">
                 <div class="page-header">
                     <div>
-                    <h2>Complaints Management</h2>
+                        <h2>Complaints Management</h2>
                         <p class="text-muted">Review, assign, and resolve citizen complaints.</p>
                     </div>
                 </div>
@@ -58,6 +57,18 @@
                             <option value="noise">Noise</option>
                             <option value="other">Other</option>
                         </select>
+                        
+                        <select id="subcategory-filter">
+                            <option value="all">All Subcategories</option>
+                            <option value="Road Damage">Road Damage</option>
+                            <option value="Street Lighting">Street Lighting</option>
+                            <option value="Sidewalk Problems">Sidewalk Problems</option>
+                            <option value="Garbage Collection">Garbage Collection</option>
+                            <option value="Illegal Dumping">Illegal Dumping</option>
+                            <option value="Construction Noise">Construction Noise</option>
+                            <option value="Water Supply">Water Supply</option>
+                            <option value="Suspicious Activity">Suspicious Activity</option>
+                        </select>
 
                         <select id="sort-filter">
                             <option value="newest">Newest First</option>
@@ -75,6 +86,10 @@
                             <option value="month">This Month</option>
                             <option value="year">This Year</option>
                         </select>
+                        
+                        <button id="clear-filters" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </button>
                     </div>
                 </div>
 
@@ -106,11 +121,11 @@
                         <h3>No Complaints Found</h3>
                         <p class="empty-state-description">Great news! There are no complaints matching your current filters.</p>
                         <div class="empty-state-actions">
-                            <button class="btn btn-outline-primary" id="clear-filters-btn">
+                            <button class="btn btn-outline-primary" onclick="clearAllFilters()">
                                 <i class="fas fa-filter"></i>
                                 Clear All Filters
                             </button>
-                            <button class="btn btn-primary" id="refresh-complaints-btn">
+                            <button class="btn btn-primary" onclick="refreshComplaints()">
                                 <i class="fas fa-sync-alt"></i>
                                 Refresh
                             </button>
@@ -130,9 +145,9 @@
                 <div id="debug-sidebar" style="display: block; background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #dee2e6;">
                     <h5>Sidebar Debug Info:</h5>
                     <p>If sidebar is not working, try these:</p>
-                    <button class="btn btn-sm btn-outline-secondary" id="test-sidebar-btn">Test Sidebar Loader</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="manual-load-sidebar-btn">Manual Load Sidebar</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="check-user-data-btn">Check User Data</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="testSidebar()">Test Sidebar Loader</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="manualLoadSidebar()">Manual Load Sidebar</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="checkUserData()">Check User Data</button>
                     <div id="debug-output" style="margin-top: 1rem; font-family: monospace; font-size: 12px;"></div>
                 </div>
 
@@ -207,33 +222,26 @@
                         <p id="detail-description"></p>
                     </div>
                     
-                    <div class="detail-section" id="media-section">
-                        <h4>Media Files</h4>
-                        <div id="media-files-container" class="media-files-container">
-                            <div id="no-media-message" class="no-media-message" style="display: none;">
-                                <i class="fas fa-image fa-2x text-muted"></i>
-                                <p class="text-muted">No media files attached to this complaint.</p>
-                            </div>
-                            <div id="media-grid" class="media-grid"></div>
-                        </div>
+                    <div class="detail-section" id="photo-section">
+                        <h4>Photo</h4>
+                        <div id="detail-photo" class="complaint-photo"></div>
                     </div>
                     
                     <div class="detail-section">
-                        <h4>Assignment & Dispatch</h4>
+                        <h4>Assignment</h4>
                         <div class="assignment-form">
                             <div class="form-group">
                                 <label for="assigned-unit">Assign to Department:</label>
                                 <select id="assigned-unit" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">Select Department</option>
-                                    <option value="city_hall">City Hall</option>
-                                    <option value="police">Police Department (PNP)</option>
-                                    <option value="fire">Fire Department (BFP)</option>
-                                    <option value="public_works">Public Works (DPWH)</option>
-                                    <option value="waste">Waste Management</option>
-                                    <option value="health">Health Department</option>
+                                    <option value="">All Departments</option>
+                                    <option value="admin">City Hall (Administration)</option>
+                                    <option value="pnp">Police Department (PNP)</option>
+                                    <option value="bfp">Fire Department (BFP)</option>
+                                    <option value="dpwh">Public Works (DPWH)</option>
+                                    <option value="wst">Water, Sanitation & Transportation (WST)</option>
+                                    <option value="hlt">Health, Local & Tourism (HLT)</option>
                                 </select>
                             </div>
-                            
                             <div class="form-group">
                                 <label for="complaint-status">Update Status:</label>
                                 <select id="complaint-status" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
@@ -242,51 +250,6 @@
                                     <option value="resolved">Resolved</option>
                                 </select>
                             </div>
-
-                            <div class="form-group">
-                                <label class="dispatch-label">
-                                    <input type="checkbox" id="dispatch-personnel" class="dispatch-checkbox">
-                                    <span class="checkmark"></span>
-                                    Dispatch Personnel to Location
-                                </label>
-                                <div id="dispatch-options" class="dispatch-options" style="display: none;">
-                                    <div class="dispatch-personnel-grid">
-                                        <div class="personnel-item">
-                                            <input type="checkbox" id="dispatch-officer-1" class="personnel-checkbox" value="officer-1">
-                                            <label for="dispatch-officer-1">
-                                                <i class="fas fa-user-shield"></i>
-                                                <span>Officer 1</span>
-                                            </label>
-                                        </div>
-                                        <div class="personnel-item">
-                                            <input type="checkbox" id="dispatch-officer-2" class="personnel-checkbox" value="officer-2">
-                                            <label for="dispatch-officer-2">
-                                                <i class="fas fa-user-shield"></i>
-                                                <span>Officer 2</span>
-                                            </label>
-                                        </div>
-                                        <div class="personnel-item">
-                                            <input type="checkbox" id="dispatch-officer-3" class="personnel-checkbox" value="officer-3">
-                                            <label for="dispatch-officer-3">
-                                                <i class="fas fa-user-shield"></i>
-                                                <span>Officer 3</span>
-                                            </label>
-                                        </div>
-                                        <div class="personnel-item">
-                                            <input type="checkbox" id="dispatch-officer-4" class="personnel-checkbox" value="officer-4">
-                                            <label for="dispatch-officer-4">
-                                                <i class="fas fa-user-shield"></i>
-                                                <span>Officer 4</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="dispatch-notes">
-                                        <label for="dispatch-instructions">Dispatch Instructions:</label>
-                                        <textarea id="dispatch-instructions" rows="2" placeholder="Provide specific instructions for dispatched personnel..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <div class="form-group">
                                 <label for="admin-notes">Admin Notes:</label>
                                 <textarea id="admin-notes" rows="3" placeholder="Add notes about this complaint..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>

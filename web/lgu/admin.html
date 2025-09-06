@@ -5,379 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LGU Admin - Department Management</title>
     <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="/css/styles.css" rel="stylesheet">
     <link href="/css/additional-styles.css" rel="stylesheet">
 </head>
 <body class="bg-light">
     <div class="dashboard-container">
     <div id="sidebar-overlay"></div>
+    
+    <div class="main-content">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="brand-logo">
+                    <a href="/lgu/dashboard" class="logo-link">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        <span class="brand-text">CitizenLink</span>
+                    </a>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="user-menu" id="user-menu">
+                    <button class="user-menu-btn" id="user-menu-btn">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="user-name">Admin</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <a href="/lgu/profile" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            Profile
+                        </a>
+                        <a href="/lgu/dashboard" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                        <a href="/logout" class="dropdown-item text-danger">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
     <main id="content" class="content">
     <div class="container py-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h1 class="h3 mb-0">LGU Admin</h1>
-            <button id="sidebar-toggle" class="btn btn-outline-secondary d-inline d-md-none">Menu</button>
         </div>
         <p class="text-muted">Appoint officers and dispatch complaints within your department.</p>
 
         <div class="card mb-4">
-            <div class="card-header">Appoint Officer/Staff</div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>User Management <small class="text-muted">(Your Department Only)</small></span>
+                <button id="refresh-users" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
             <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label">Select Citizen</label>
-                        <select id="user-select" class="form-select">
-                            <option value="">Loading users...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Action</label>
-                        <select id="role-select" class="form-select">
-                            <option value="lgu">Promote to LGU Officer/Staff</option>
-                            <option value="lgu-admin">Promote to LGU Admin</option>
-                            <option value="citizen">Demote to Citizen</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <button id="update-role" class="btn btn-primary">Apply</button>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Current Role</th>
+                                <th>Department</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div id="role-result" class="mt-3 small"></div>
             </div>
         </div>
 
         
-
-        <div class="card mt-4">
-            <div class="card-header">Officers in Department</div>
-            <div class="card-body">
-                <div class="d-flex gap-2 mb-2">
-                    <input id="officers-dept" class="form-control" placeholder="Department" />
-                    <button id="load-officers" class="btn btn-secondary">Load</button>
-                </div>
-                <div id="officers-list" class="small"></div>
-            </div>
-        </div>
-
-        <div class="card mt-4">
-            <div class="card-header">Department Queue</div>
-            <div class="card-body">
-                <div class="d-flex gap-2 mb-2">
-                    <input id="queue-dept" class="form-control" placeholder="Department" />
-                    <button id="load-queue" class="btn btn-secondary">Load Queue</button>
-                </div>
-                <div id="queue-list" class="small"></div>
-            </div>
-        </div>
+        </main>
     </div>
-    </main>
     </div>
 
     <script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="/js/debug-logger.js"></script>
     <script src="/js/supabase-bridge.js"></script>
     <script src="/js/sidebar-loader.js"></script>
-    <script>
-    (function(){
-        let currentDept = null;
-        let deptOfficers = [];
-        // Simple role guard without complex redirects
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Wait for supabaseManager to be available
-                console.log('Waiting for supabaseManager...');
-                let attempts = 0;
-                while (!window.supabaseBridge && attempts < 200) {
-                    await new Promise(resolve => setTimeout(resolve, 25));
-                    attempts++;
-                    if (attempts % 20 === 0) {
-                        console.log(`Still waiting... attempt ${attempts}`);
-                    }
-                }
-                
-                if (!window.supabaseBridge) {
-                    throw new Error('Supabase manager not available after 5 seconds');
-                }
-                
-                console.log('Supabase manager found!');
-                
-                // Simple role check - just get the role without redirecting
-                console.log('Initializing Supabase via bridge...');
-                await window.supabaseBridge.initialize();
-                const sb = window.supabaseBridge.getClient();
-                console.log('Getting user...');
-                const { data: { user } } = await sb.auth.getUser();
-                console.log('User data:', user);
-                const role = (user?.user_metadata?.role || '').toLowerCase();
-                console.log('User role:', role);
-                
-                // Only allow lgu-admin-<dept> to access this page
-                if (!role.startsWith('lgu-admin-')) {
-                    // Instead of redirecting, just show an error message
-                    document.body.innerHTML = '<div class="container py-4"><div class="alert alert-danger">Access Denied: Only LGU Admins can access this page. Your role: ' + role + '</div></div>';
-                    return;
-                }
-                
-                currentDept = role.replace('lgu-admin-', '');
-                console.log('Current department:', currentDept);
-
-                // Preload officers for this department to enable selection in dispatch
-                try {
-                    const res = await fetch(`/api/officers?department=${encodeURIComponent(currentDept)}`);
-                    const json = await res.json();
-                    if (res.ok && Array.isArray(json.officers)) {
-                        deptOfficers = json.officers;
-                    } else {
-                        deptOfficers = [];
-                    }
-                } catch (_) {
-                    deptOfficers = [];
-                }
-                            } catch (error) {
-                    console.error('Error in role check:', error);
-                    document.body.innerHTML = '<div class="container py-5"><div class="alert alert-danger">Error loading page. Please refresh or contact support.</div></div>';
-                }
-        });
-        
-
-        // (Removed legacy dispatch handlers tied to removed UI)
-
-        const listEl = document.getElementById('officers-list');
-        document.getElementById('load-officers').addEventListener('click', async () => {
-            const dept = (document.getElementById('officers-dept').value || currentDept || '').trim();
-            if (!dept) { listEl.textContent = 'Department required'; return; }
-            listEl.textContent = 'Loading...';
-            try {
-                const res = await fetch(`/api/officers?department=${encodeURIComponent(dept)}`);
-                const json = await res.json();
-                if (!res.ok) { listEl.textContent = json.error || 'Error'; return; }
-                if (!json.officers?.length) { listEl.textContent = 'No officers found'; return; }
-                // Update cached officers for assignment dropdowns
-                deptOfficers = json.officers;
-                const ul = document.createElement('ul');
-                ul.className = 'list-group';
-                json.officers.forEach(o => {
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                    li.textContent = `${o.email} (${o.id})`;
-                    ul.appendChild(li);
-                });
-                listEl.innerHTML = '';
-                listEl.appendChild(ul);
-            } catch (e) {
-                listEl.textContent = 'Failed to load officers';
-            }
-        });
-
-        const queueEl = document.getElementById('queue-list');
-        document.getElementById('load-queue').addEventListener('click', async () => {
-            const dept = (document.getElementById('queue-dept').value || currentDept || '').trim();
-            if (!dept) { queueEl.textContent = 'Department required'; return; }
-            queueEl.textContent = 'Loading...';
-            try {
-                // Ensure we have the latest officers list before rendering queue
-                try {
-                    const ores = await fetch(`/api/officers?department=${encodeURIComponent(dept)}`);
-                    const ojson = await ores.json();
-                    if (ores.ok && Array.isArray(ojson.officers)) {
-                        deptOfficers = ojson.officers;
-                    }
-                } catch (_) {}
-                const res = await fetch(`/api/department-queue?department=${encodeURIComponent(dept)}`);
-                const json = await res.json();
-                if (!res.ok) { queueEl.textContent = json.error || 'Error'; return; }
-                if (!json.items?.length) { queueEl.textContent = 'No items'; return; }
-                const table = document.createElement('table');
-                table.className = 'table table-sm';
-                table.innerHTML = '<thead><tr><th>CD ID</th><th>Role</th><th>Status</th><th>Complaint</th><th>Assign</th><th>Actions</th></tr></thead>';
-                const tbody = document.createElement('tbody');
-                json.items.forEach(item => {
-                    const tr = document.createElement('tr');
-                    const comp = item.complaint || {};
-                    tr.innerHTML = `<td>${item.id}</td><td>${item.role}</td><td>${item.status}</td><td>${comp.title || comp.id}</td>`;
-                    const assignTd = document.createElement('td');
-                    // Build officer select (fallback to manual UUID input if none)
-                    let selectHtml = '';
-                    if (Array.isArray(deptOfficers) && deptOfficers.length) {
-                        const options = deptOfficers.map(o => `<option value="${o.id}">${o.email || o.id}</option>`).join('');
-                        selectHtml = `<select class="form-select form-select-sm" data-cd-select="${item.id}"><option value="">Select officer…</option>${options}</select>`;
-                    }
-                    const inputHtml = `<input class="form-control form-control-sm mt-1" placeholder="Officer UUID" data-cd="${item.id}">`;
-                    assignTd.innerHTML = `${selectHtml}${inputHtml} <button class="btn btn-sm btn-outline-primary mt-1" data-assign="${item.id}">Assign</button>`;
-                    const actionsTd = document.createElement('td');
-                    actionsTd.innerHTML = `<button class="btn btn-sm btn-outline-success" data-status="accepted" data-cd="${item.id}">Accept</button> <button class="btn btn-sm btn-outline-danger" data-status="rejected" data-cd="${item.id}">Reject</button>`;
-                    tr.appendChild(assignTd);
-                    tr.appendChild(actionsTd);
-                    tbody.appendChild(tr);
-                });
-                table.appendChild(tbody);
-                queueEl.innerHTML = '';
-                queueEl.appendChild(table);
-
-                queueEl.querySelectorAll('button[data-assign]').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const cdId = btn.getAttribute('data-assign');
-                        const select = queueEl.querySelector(`select[data-cd-select="${cdId}"]`);
-                        const input = queueEl.querySelector(`input[data-cd="${cdId}"]`);
-                        const officerId = (select?.value && select.value !== '') ? select.value : (input?.value?.trim() || '');
-                        if (!officerId) return;
-                        const res = await fetch(`/api/complaint_departments/${cdId}/assign_officer`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ officerId })
-                        });
-                        const json = await res.json();
-                        alert(res.ok ? 'Assigned' : (json.error || 'Error'));
-                    });
-                });
-                queueEl.querySelectorAll('button[data-status]').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const cdId = btn.getAttribute('data-cd');
-                        const status = btn.getAttribute('data-status');
-                        let reason = undefined;
-                        if (status === 'rejected') {
-                            reason = prompt('Please provide a reason for rejection (optional):') || '';
-                        }
-                        const res = await fetch(`/api/complaint_departments/${cdId}/status`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status, reason })
-                        });
-                        const json = await res.json();
-                        alert(res.ok ? 'Updated' : (json.error || 'Error'));
-                    });
-                });
-            } catch (e) {
-                queueEl.textContent = 'Failed to load queue';
-            }
-        });
-
-        // (Removed older unfiltered loadUsers)
-
-        // Handle role updates
-        document.addEventListener('DOMContentLoaded', () => {
-            const updateRoleBtn = document.getElementById('update-role');
-            if (updateRoleBtn) {
-                updateRoleBtn.addEventListener('click', async () => {
-                    const userId = document.getElementById('user-select')?.value;
-                    const newRole = document.getElementById('role-select')?.value;
-                    const result = document.getElementById('role-result');
-                    
-                    if (!userId || !newRole) {
-                        result.textContent = 'Please select both user and role';
-                        return;
-                    }
-
-                    result.textContent = 'Updating role...';
-                    
-                    try {
-                        let roleToSet = newRole;
-                        if (newRole === 'lgu' || newRole === 'lgu-admin') {
-                            roleToSet = `${newRole}-${currentDept}`;
-                        }
-
-                        const res = await fetch('/api/update-role', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId, newRole: roleToSet })
-                        });
-
-                        if (res.ok) {
-                            result.textContent = `Role updated to ${roleToSet}`;
-                            // Refresh the user list to show updated roles
-                            await loadUsers();
-                        } else {
-                            const error = await res.json();
-                            result.textContent = `Error: ${error.message || 'Failed to update role'}`;
-                        }
-                    } catch (error) {
-                        result.textContent = `Error: ${error.message}`;
-                    }
-                });
-            }
-        });
-
-            // Load users when page loads
-            window.addEventListener('load', loadUsers);
-
-            // Load all users for the dropdown
-            async function loadUsers() {
-                try {
-                    console.log('Loading users...');
-                    // Only show citizens by default
-                    const res = await fetch('/api/users?role=citizen');
-                    console.log('Response status:', res.status);
-                    console.log('Response headers:', res.headers);
-                    
-                    if (res.ok) {
-                        const data = await res.json();
-                        console.log('Users data:', data);
-                        const { users } = data;
-                        const userSelect = document.getElementById('user-select');
-                        if (userSelect) {
-                            userSelect.innerHTML = '<option value="">Select a user...</option>';
-                            
-                            users.forEach(user => {
-                                const option = document.createElement('option');
-                                option.value = user.id;
-                                option.textContent = `${user.email} (${user.user_metadata?.role || 'citizen'})`;
-                                userSelect.appendChild(option);
-                            });
-                        }
-                    } else {
-                        console.error('Error loading users:', res.status, res.statusText);
-                        const errorText = await res.text();
-                        console.error('Error response:', errorText);
-                    }
-                } catch (error) {
-                    console.error('Error loading users:', error);
-                }
-            }
-
-            // Handle role updates
-            document.addEventListener('DOMContentLoaded', () => {
-                const updateRoleBtn = document.getElementById('update-role');
-                if (updateRoleBtn) {
-                    updateRoleBtn.addEventListener('click', async () => {
-                        const userId = document.getElementById('user-select')?.value;
-                        const newRole = document.getElementById('role-select')?.value;
-                        const result = document.getElementById('role-result');
-                        
-                        if (!userId || !newRole) {
-                            result.textContent = 'Please select both user and role';
-                            return;
-                        }
-
-                        result.textContent = 'Updating role...';
-                        
-                        try {
-                            let roleToSet = newRole;
-                            if (newRole === 'lgu' || newRole === 'lgu-admin') {
-                                roleToSet = `${newRole}-${currentDept}`;
-                            }
-
-                            const res = await fetch('/api/update-role', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userId, newRole: roleToSet })
-                            });
-
-                            if (res.ok) {
-                                result.textContent = `Role updated to ${roleToSet}`;
-                                // Refresh the user list to show updated roles
-                                await loadUsers();
-                            } else {
-                                const error = await res.json();
-                                result.textContent = `Error: ${error.message || 'Failed to update role'}`;
-                            }
-                        } catch (error) {
-                            result.textContent = `Error: ${error.message}`;
-                        }
-                    });
-                }
-            });
-
-            // Load users when page loads
-            window.addEventListener('load', loadUsers);
-        })();
-    </script>
+    <script src="/js/lgu-admin.js"></script>
 </body>
 </html>
 

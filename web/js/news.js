@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Setup event listeners
   setupEventListeners();
+  
+  // Setup button event listeners
+  setupButtonEventListeners();
 });
 
 // Load news from Supabase
@@ -67,7 +70,7 @@ async function loadNews() {
         <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
         <h3 class="text-warning">Error loading news</h3>
         <p class="text-muted mb-4">Unable to load news articles. Please try again later.</p>
-        <button class="btn btn-outline-warning" onclick="loadNews()">
+        <button class="btn btn-outline-warning" data-action="load-news">
           <i class="fas fa-redo"></i> Try Again
         </button>
       </div>
@@ -122,7 +125,7 @@ function createNewsCard(news) {
             <i class="fas fa-clock me-1"></i>${readTime}
           </small>
         </div>
-        <button class="news-read-more" onclick="showNewsDetails(${news.id})">
+        <button class="news-read-more" data-action="show-news-details" data-news-id="${news.id}">
           Read Full Article
           <i class="fas fa-arrow-right"></i>
         </button>
@@ -247,7 +250,7 @@ async function filterNewsByCategory(category) {
           <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
           <h3 class="text-warning">Error filtering news</h3>
           <p class="text-muted mb-4">Unable to filter news articles. Please try again.</p>
-          <button class="btn btn-outline-warning" onclick="loadNews()">
+          <button class="btn btn-outline-warning" data-action="load-news">
             <i class="fas fa-redo"></i> Load All News
           </button>
         </div>
@@ -288,7 +291,7 @@ async function searchNews(query) {
           <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
           <h3 class="text-warning">Error searching news</h3>
           <p class="text-muted mb-4">Unable to search news articles. Please try again.</p>
-          <button class="btn btn-outline-warning" onclick="loadNews()">
+          <button class="btn btn-outline-warning" data-action="load-news">
             <i class="fas fa-redo"></i> Load All News
           </button>
         </div>
@@ -313,7 +316,7 @@ function displayFilteredNews(newsData) {
       <i class="fas fa-search fa-4x text-muted mb-4"></i>
       <h3 class="text-muted">No news found</h3>
       <p class="text-muted mb-4">No news articles match your search criteria.</p>
-      <button class="btn btn-outline-primary" onclick="loadNews()">
+      <button class="btn btn-outline-primary" data-action="load-news">
         <i class="fas fa-redo"></i> Show All News
       </button>
     `;
@@ -386,6 +389,24 @@ function formatDate(dateString) {
     day: 'numeric' 
   };
   return date.toLocaleDateString('en-US', options);
+}
+
+// Setup button event listeners
+function setupButtonEventListeners() {
+  // Use event delegation for dynamically created buttons
+  document.addEventListener('click', (e) => {
+    // Handle load news button
+    if (e.target.matches('[data-action="load-news"]') || e.target.closest('[data-action="load-news"]')) {
+      loadNews();
+    }
+    
+    // Handle show news details button
+    if (e.target.matches('[data-action="show-news-details"]') || e.target.closest('[data-action="show-news-details"]')) {
+      const button = e.target.closest('[data-action="show-news-details"]');
+      const newsId = button.getAttribute('data-news-id');
+      showNewsDetails(newsId);
+    }
+  });
 }
 
 // Show toast message
