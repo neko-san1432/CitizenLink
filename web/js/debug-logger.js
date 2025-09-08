@@ -1,24 +1,38 @@
 (function () {
 	const enabled = () => localStorage.getItem('debug') === '1';
 
-	function log(...args) {
-		if (!enabled()) return;
-		console.log('[DEBUG]', ...args);
+	// Mask console methods unless explicitly enabled
+	const originalConsole = {
+		log: console.log,
+		debug: console.debug,
+		info: console.info,
+		warn: console.warn,
+		error: console.error
+	};
+
+	const noop = () => {};
+	function applyConsoleMask() {
+		if (enabled()) {
+			console.log = originalConsole.log.bind(console);
+			console.debug = originalConsole.debug.bind(console);
+			console.info = originalConsole.info.bind(console);
+			console.warn = originalConsole.warn.bind(console);
+			console.error = originalConsole.error.bind(console);
+		} else {
+			console.log = noop;
+			console.debug = noop;
+			console.info = noop;
+			console.warn = noop;
+			// Keep error visible by default in the browser
+			console.error = originalConsole.error.bind(console);
+		}
 	}
 
-	function warn(...args) {
-		if (!enabled()) return;
-		console.warn('[DEBUG]', ...args);
-	}
-
-	function error(...args) {
-		if (!enabled()) return;
-		console.error('[DEBUG]', ...args);
-	}
+	applyConsoleMask();
 
 	// Global error handlers
 	window.addEventListener('error', (e) => {
-		error('GlobalError:', {
+		console.error('[DEBUG]', 'GlobalError:', {
 			message: e.message,
 			filename: e.filename,
 			lineno: e.lineno,
@@ -28,7 +42,7 @@
 	});
 
 	window.addEventListener('unhandledrejection', (e) => {
-		error('UnhandledRejection:', e.reason);
+		console.error('[DEBUG]', 'UnhandledRejection:', e.reason);
 	});
 
 	// Wrap fetch to log requests
@@ -38,7 +52,7 @@
 		try {
 			const res = await _fetch(input, init);
 			const dur = Math.round(performance.now() - start);
-			log('fetch', {
+			console.log('[DEBUG]', 'fetch', {
 				url: typeof input === 'string' ? input : input?.url,
 				method: init?.method || 'GET',
 				status: res.status,
@@ -48,7 +62,7 @@
 			return res;
 		} catch (err) {
 			const dur = Math.round(performance.now() - start);
-			error('fetch failed', {
+			console.error('[DEBUG]', 'fetch failed', {
 				url: typeof input === 'string' ? input : input?.url,
 				method: init?.method || 'GET',
 				ms: dur,
@@ -59,10 +73,10 @@
 	};
 
 	// Public toggles
-	Object.defineProperty(window, 'enableDebugLogging', { value: () => localStorage.setItem('debug', '1') });
-	Object.defineProperty(window, 'disableDebugLogging', { value: () => localStorage.removeItem('debug') });
+	Object.defineProperty(window, 'enableDebugLogging', { value: () => { localStorage.setItem('debug', '1'); applyConsoleMask(); } });
+	Object.defineProperty(window, 'disableDebugLogging', { value: () => { localStorage.removeItem('debug'); applyConsoleMask(); } });
 
-	log('Debug logger active. Use disableDebugLogging() to turn off.');
+	console.log('[DEBUG]', 'Debug logger active. Use disableDebugLogging() to turn off.');
 })();
 
 

@@ -1,45 +1,27 @@
-console.log('📁 citizen-dashboard.js file loaded');
-
-// Enable debug logging for troubleshooting
-if (typeof window.enableDebugLogging === 'function') {
-  window.enableDebugLogging();
-  console.log('🔧 Debug logging enabled');
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 DOMContentLoaded event fired');
   
   try {
     // Initialize user data using shared utilities
-    console.log('📋 Initializing user data...');
     const user = await window.userUtils.initializeUserData();
-    console.log('👤 User data:', user);
     
     if (!user) {
-      console.log('❌ No user data available, exiting');
       return;
     }
     
-    console.log('✅ User data initialized successfully');
-    
     // Update dashboard with user-specific data
-    console.log('🔄 Updating dashboard with user data...');
     updateDashboardWithUserData(user);
     
     // Setup other dashboard functionality
-    console.log('⚙️ Setting up dashboard functionality...');
     await setupDashboard();
-    console.log('✅ Dashboard setup completed');
     
     // Update stats
-    console.log('📊 Updating stats...');
     await updateStats();
-    console.log('✅ Stats updated');
     
     // Setup button event listeners
     setupButtonEventListeners();
     
   } catch (error) {
+    // Keep error logging
     console.error('💥 Error in DOMContentLoaded:', error);
   }
 });
@@ -264,53 +246,36 @@ function showRefreshMessage() {
 async function loadRecentComplaints(user) {
   const complaintsGrid = document.getElementById('recent-complaints-grid');
   if (!complaintsGrid) {
-    console.log('❌ complaintsGrid element not found');
     return;
   }
   
   try {
-    console.log('🔍 Starting loadRecentComplaints for user:', user);
     
     // Get complaints for this user from Supabase
     if (typeof window.getComplaints !== 'function') {
-      console.log('❌ getComplaints function not available');
       return;
     }
     
     const allComplaints = await window.getComplaints();
-    console.log('📋 All complaints from database:', allComplaints);
-    
-    // Debug: Show the structure of the first complaint
-    if (allComplaints && allComplaints.length > 0) {
-      console.log('🔍 First complaint structure:', Object.keys(allComplaints[0]));
-      console.log('🔍 First complaint data:', allComplaints[0]);
-    }
     
     // Determine current user id
     const userId = user.id || user.user_id || user.username;
-    console.log('👤 Current user ID:', userId);
 
     // Show complaints for the current user (citizen dashboard should show their own complaints)
     const userComplaints = (allComplaints || []).filter(complaint => {
       const complaintUserId = complaint.user_id || complaint.userId || complaint.user_id;
       const isOwn = complaintUserId === userId;
-      console.log(`🔍 Complaint ${complaint.id}: complaintUserId=${complaintUserId}, userId=${userId}, isOwn=${isOwn}`);
       return isOwn; // Show only the user's own complaints
     });
-
-    console.log('✅ User\'s own complaints:', userComplaints);
 
     // Sort by date (newest first) - show all complaints
     const recentComplaints = userComplaints
       .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
     
-    console.log('📅 Recent complaints (sorted):', recentComplaints);
-    
     // Clear existing content
     complaintsGrid.innerHTML = '';
     
     if (recentComplaints.length === 0) {
-      console.log('📭 No complaints to display, showing empty state');
       // Show empty state
       const emptyState = document.createElement('div');
       emptyState.className = 'empty-complaints-state';
@@ -328,8 +293,6 @@ async function loadRecentComplaints(user) {
       complaintsGrid.appendChild(emptyState);
       return;
     }
-    
-    console.log('🎴 Creating complaint cards for:', recentComplaints.length, 'complaints');
     
     // Add status summary section
     const statusSummary = createStatusSummary(recentComplaints);
@@ -469,7 +432,6 @@ function createStatusSummary(complaints) {
 
 // Load news content
 async function loadNews() {
-  console.log('📰 loadNews function called');
   
   const newsGrid = document.getElementById('news-grid');
   if (!newsGrid) {
@@ -477,27 +439,20 @@ async function loadNews() {
     return;
   }
   
-  console.log('✅ News grid element found');
-  
   try {
-    console.log('🔍 Checking getNews function availability...');
     if (typeof window.getNews !== 'function') {
       console.error('❌ getNews function not available on window object');
       return;
     }
     
-    console.log('✅ getNews function available');
-    
     
     // Get live news data from Supabase
     const newsData = await window.getNews();
-    // Removed console.log
     
     // Clear existing content
     newsGrid.innerHTML = '';
     
     if (!newsData || newsData.length === 0) {
-      // Removed console.log
       // Show "No data available yet" message
       const emptyState = document.createElement('div');
       emptyState.className = 'empty-news-state';
@@ -512,15 +467,12 @@ async function loadNews() {
       return;
     }
     
-    // Removed console.log
     // Create news cards
     newsData.forEach((news, index) => {
-      // Removed console.log
       const newsCard = createNewsCard(news);
       newsGrid.appendChild(newsCard);
     });
     
-    // Removed console.log
   } catch (error) {
     console.error('❌ Error loading news:', error);
     
@@ -551,7 +503,6 @@ async function loadCommunityUpdates() {
     showCommunityUpdatesLoading();
     
     // Check if the function is available
-    // Removed console.log
     if (!window.getUpcomingEvents) {
       console.error('❌ getUpcomingEvents function not available');
       showCommunityUpdatesError('Function not available');
@@ -561,7 +512,6 @@ async function loadCommunityUpdates() {
     
     // Get upcoming events from Supabase
     const eventsData = await window.getUpcomingEvents();
-    // Removed console.log
     
     // Find the community updates section using the CSS class
     const communityUpdatesSection = document.querySelector('.community-updates-section');
@@ -570,19 +520,15 @@ async function loadCommunityUpdates() {
       return;
     }
     
-    // Removed console.log
     await updateCommunityUpdatesContent(communityUpdatesSection, eventsData);
-    // Removed console.log
   } catch (error) {
     console.error('❌ Error loading community updates:', error);
     
     // Check if it's a permission error
     if (error.code === '42501' || error.message?.includes('permission denied')) {
-      // Removed console.log
       await showFallbackCommunityUpdates();
     } else {
       // Show error state in the community updates section
-      // Removed console.log
       showCommunityUpdatesError('Error loading events');
     }
   }
@@ -596,7 +542,6 @@ async function loadImportantNotices() {
     showImportantNoticesLoading();
     
     // Check if the function is available
-    // Removed console.log
     if (!window.getActiveNotices) {
       console.error('❌ getActiveNotices function not available');
       showImportantNoticesError('Function not available');
@@ -606,7 +551,6 @@ async function loadImportantNotices() {
     
     // Get active notices from Supabase
     const noticesData = await window.getActiveNotices();
-    // Removed console.log
     
     // Find the important notices section using the CSS class
     const importantNoticesSection = document.querySelector('.notices-section');
@@ -615,19 +559,15 @@ async function loadImportantNotices() {
       return;
     }
     
-    // Removed console.log
     await updateImportantNoticesContent(importantNoticesSection, noticesData);
-    // Removed console.log
   } catch (error) {
     console.error('❌ Error loading important notices:', error);
     
     // Check if it's a permission error
     if (error.code === '42501' || error.message?.includes('permission denied')) {
-      // Removed console.log
       await showFallbackImportantNotices();
     } else {
       // Show error state in the important notices section
-      // Removed console.log
       showImportantNoticesError('Error loading notices');
     }
   }
@@ -635,7 +575,6 @@ async function loadImportantNotices() {
 
 // Update community updates content with data from Supabase
 async function updateCommunityUpdatesContent(container, eventsData) {
-  // Removed console.log
   
   // Find the upcoming events list
   const eventsList = container.querySelector('.events-list');
@@ -644,12 +583,10 @@ async function updateCommunityUpdatesContent(container, eventsData) {
     return;
   }
   
-  // Removed console.log
   // Clear existing events
   eventsList.innerHTML = '';
   
   if (!eventsData || eventsData.length === 0) {
-    // Removed console.log
     // Show empty state
     const emptyState = document.createElement('li');
     emptyState.style.cssText = 'margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;';
@@ -662,8 +599,6 @@ async function updateCommunityUpdatesContent(container, eventsData) {
     eventsList.appendChild(emptyState);
     return;
   }
-  
-  // Removed console.log
   
   // Filter again to ensure no past events sneak in and tag today's events as happening now
   const startOfToday = new Date();
@@ -679,10 +614,7 @@ async function updateCommunityUpdatesContent(container, eventsData) {
     .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
     .slice(0, 5); // show up to 5
   
-  // Removed console.log
-  
   if (upcomingEvents.length === 0) {
-    // Removed console.log
     const emptyState = document.createElement('li');
     emptyState.style.cssText = 'margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;';
     emptyState.innerHTML = `
@@ -695,11 +627,8 @@ async function updateCommunityUpdatesContent(container, eventsData) {
     return;
   }
   
-  // Removed console.log
-  
   // Create event list items
   upcomingEvents.forEach((event, index) => {
-    // Removed console.log
     
     const eventItem = document.createElement('li');
     const isLast = index === upcomingEvents.length - 1;
@@ -728,15 +657,11 @@ async function updateCommunityUpdatesContent(container, eventsData) {
     `;
     
     eventsList.appendChild(eventItem);
-    // Removed console.log
   });
-  
-  // Removed console.log
 }
 
 // Update important notices content with data from Supabase
 async function updateImportantNoticesContent(container, noticesData) {
-  // Removed console.log
   
   // Find the notices container (the second direct child div after the header)
   const noticesContainer = container.querySelector(':scope > div:nth-of-type(2)') || container.querySelectorAll('div')[1];
@@ -745,12 +670,10 @@ async function updateImportantNoticesContent(container, noticesData) {
     return;
   }
   
-  // Removed console.log
   // Clear existing notices
   noticesContainer.innerHTML = '';
   
   if (!noticesData || noticesData.length === 0) {
-    // Removed console.log
     // Show empty state
     const emptyState = document.createElement('div');
     emptyState.style.cssText = 'padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb; border: 1px solid #d1d5db; color: #6b7280; text-align: center;';
@@ -761,8 +684,6 @@ async function updateImportantNoticesContent(container, noticesData) {
     noticesContainer.appendChild(emptyState);
     return;
   }
-  
-  // Removed console.log
   
   // Sort notices by priority and take the first 4 (increased from 2)
   const priorityNotices = noticesData
@@ -776,10 +697,7 @@ async function updateImportantNoticesContent(container, noticesData) {
     })
     .slice(0, 4); // Increased from 2 to 4
   
-  // Removed console.log
-  
   if (priorityNotices.length === 0) {
-    // Removed console.log
     const emptyState = document.createElement('div');
     emptyState.style.cssText = 'padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb; border: 1px solid #d1d5db; color: #6b7280; text-align: center;';
     emptyState.innerHTML = `
@@ -790,11 +708,8 @@ async function updateImportantNoticesContent(container, noticesData) {
     return;
   }
   
-  // Removed console.log
-  
   // Create notice items
   priorityNotices.forEach((notice, index) => {
-    // Removed console.log
     
     const noticeItem = document.createElement('div');
     const isLast = index === priorityNotices.length - 1;
@@ -818,10 +733,7 @@ async function updateImportantNoticesContent(container, noticesData) {
     `;
     
     noticesContainer.appendChild(noticeItem);
-    // Removed console.log
   });
-  
-  // Removed console.log
 }
 
 // Get priority-based colors for notices
@@ -945,7 +857,6 @@ function showImportantNoticesError(message = 'Unable to load notices') {
 
 // Create a news card element
 function createNewsCard(news) {
-  console.log('🎴 createNewsCard called with news:', news);
   
   const card = document.createElement('div');
   card.className = 'news-card';
@@ -981,20 +892,15 @@ function createNewsCard(news) {
 
 // Show news details with Supabase integration
 async function showNewsDetails(newsId) {
-  console.log('📰 showNewsDetails called with ID:', newsId);
   
   try {
-    console.log('🔧 Checking Supabase manager availability...');
     // Initialize Supabase client
     if (!window.supabaseManager || !window.supabaseManager.initialize) {
-      console.log('❌ Supabase manager not available');
       showToast('News system not available. Please try again later.', 'error');
       return;
     }
 
-    console.log('✅ Supabase manager available, initializing...');
     const supabase = await window.supabaseManager.initialize();
-    console.log('✅ Supabase client initialized');
     
     // Fetch the specific news article from Supabase
     const { data: newsItem, error } = await supabase
@@ -1279,10 +1185,9 @@ async function retryDataLoad(loadFunction, maxRetries = 3, delay = 2000) {
       await loadFunction();
       return; // Success, exit retry loop
     } catch (error) {
-      // Removed console.log
       
       if (attempt === maxRetries) {
-        // Removed console.log
+        
         // Show fallback data on final failure
         if (loadFunction === loadCommunityUpdates) {
           await showFallbackCommunityUpdates();
@@ -1304,7 +1209,6 @@ async function retryDataLoad(loadFunction, maxRetries = 3, delay = 2000) {
 
 // Function to manually load all data (for testing)
 async function manualLoadAllData() {
-  // Removed console.log
   
   try {
     const user = await window.userUtils.initializeUserData();
@@ -1313,7 +1217,6 @@ async function manualLoadAllData() {
       return;
     }
     
-    // Removed console.log
     
     // Load complaints
     await loadRecentComplaints(user);
@@ -1327,7 +1230,6 @@ async function manualLoadAllData() {
     // Load important notices
     await loadImportantNotices();
     
-    // Removed console.log
   } catch (error) {
     console.error('❌ Error in manual data loading:', error);
   }
@@ -1357,7 +1259,6 @@ async function updateStats() {
   try {
     const userId = window.userUtils.getCurrentUserId();
     if (!userId) {
-      console.log('❌ No user ID available for stats');
       return;
     }
 
@@ -1384,7 +1285,6 @@ async function updateStats() {
     updateStatElement('my-in-progress-complaints', inProgress);
     updateStatElement('my-resolved-complaints', resolved);
 
-    console.log('📊 Stats updated:', { total, pending, inProgress, resolved });
   } catch (error) {
     console.error('❌ Error updating stats:', error);
   }
@@ -1433,11 +1333,7 @@ function setupButtonEventListeners() {
 
 // Make functions available globally for testing
 if (typeof window !== 'undefined') {
-  console.log('🌍 Window object available, setting up global functions...');
   window.manualLoadAllData = manualLoadAllData;
   window.checkFunctionAvailability = checkFunctionAvailability;
   window.showNewsDetails = showNewsDetails;
-  console.log('✅ Global functions set up successfully');
 }
-
-console.log('📁 citizen-dashboard.js file execution completed');
