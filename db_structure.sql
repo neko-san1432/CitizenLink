@@ -14,6 +14,17 @@ CREATE TABLE public.complaint_departments (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT complaint_departments_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.complaint_evidences (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  complaint_id uuid NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['image'::text, 'video'::text, 'audio'::text])),
+  mime text NOT NULL,
+  url text NOT NULL,
+  caption text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT complaint_evidences_pkey PRIMARY KEY (id),
+  CONSTRAINT complaint_evidences_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
+);
 CREATE TABLE public.complaints (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid,
@@ -39,8 +50,11 @@ CREATE TABLE public.complaints (
   satisfaction_score numeric CHECK (satisfaction_score >= 1.0 AND satisfaction_score <= 5.0),
   urgency character varying DEFAULT 'medium'::character varying CHECK (urgency::text = ANY (ARRAY['low'::character varying::text, 'medium'::character varying::text, 'high'::character varying::text, 'critical'::character varying::text])),
   priority character varying DEFAULT 'medium'::character varying CHECK (priority::text = ANY (ARRAY['low'::character varying::text, 'medium'::character varying::text, 'high'::character varying::text, 'critical'::character varying::text])),
-  media_files jsonb DEFAULT '[]'::jsonb,
-  media_file_count integer DEFAULT 0,
+  media_files jsonb NOT NULL DEFAULT '[]'::jsonb,
+  media_file_count integer NOT NULL DEFAULT 0,
+  temp_complaint_id text,
+  is_anonymous boolean NOT NULL DEFAULT false,
+  department text,
   CONSTRAINT complaints_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.department_admins (

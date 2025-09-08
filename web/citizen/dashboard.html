@@ -6,7 +6,7 @@
     <meta name="description" content="Citizen Dashboard - Manage your complaints, submit new issues, and track resolution progress. Stay updated with community news and emergency contacts.">
     <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>Citizen Dashboard - CitizenLink</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
@@ -27,114 +27,124 @@
                     </button>
                     <div class="brand-logo">
                         <a href="/dashboard" class="logo-link">
-                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <i class="fas fa-shield-halved text-primary me-2"></i>
                             <span class="brand-text">CitizenLink</span>
                         </a>
                     </div>
                 </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">John Citizen</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">Loading...</span></span>
                 </div>
             </header>
 
             <main class="dashboard-main">
-                <div class="page-header">
-                    <div>
-                        <h2 class="mb-0">Dashboard</h2>
-                        <p class="text-muted mb-0">Stay updated with the latest news and announcements.</p>
-                    </div>
-                    <a href="/submit-complaint" class="btn btn-submit-complaint">
-                        <i class="fas fa-plus"></i>
-                        Submit a Complaint
-                    </a>
-                </div>
-
-                <div class="quick-actions">
-                    <a href="/submit-complaint" class="btn btn-outline-primary">
-                        <i class="fas fa-plus-circle"></i>
-                        New Complaint
-                    </a>
-                    <a href="/complaints" class="btn btn-outline-info">
-                        <i class="fas fa-list"></i>
-                        View All
-                    </a>
-                </div>
-                
-                <!-- Recent Complaints Section -->
-                <div class="recent-complaints">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">Recent Complaints</h3>
-                        <button id="refresh-complaints" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-sync-alt"></i>
-                            Refresh All
-                        </button>
-                    </div>
-                    <div class="complaints-grid" id="recent-complaints-grid">
-                        <!-- Complaints will be loaded here -->
-                    </div>
-                </div>
-                
-                <!-- Floating Action Button -->
-                <a href="/submit-complaint" class="fab-button" title="Submit a new complaint">
-                    <i class="fas fa-plus"></i>
-                </a>
-
-                <!-- News Section -->
-                <div class="news-section">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">Latest News & Updates</h3>
-                        <a href="/news" class="btn btn-sm btn-outline-primary">
-                            View All News
-                            <i class="fas fa-arrow-right ms-1"></i>
+                <div class="main-content-layout">
+                    <div class="page-header">
+                        <div>
+                            <h2 class="mb-0">Dashboard</h2>
+                            <p class="text-muted mb-0">Stay updated with the latest news and announcements.</p>
+                        </div>
+                        <a href="/submit-complaint" class="btn btn-submit-complaint">
+                            <i class="fas fa-plus"></i>
+                            Submit a Complaint
                         </a>
                     </div>
-                    <div class="news-grid" id="news-grid">
-                        <!-- News will be loaded here -->
-                    </div>
-                </div>
 
-                <!-- Community Updates - Using inline styles to force vertical stacking -->
-                <div class="community-updates-section" style="margin-top: 2rem; padding: 1.5rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
-                    <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 1.5rem; margin: -1.5rem -1.5rem 1.5rem -1.5rem; border-radius: 0.75rem 0.75rem 0 0;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 style="margin: 0; color: white;">
-                                <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
-                                Community Updates
-                            </h3>
-                            <button id="retry-events" class="btn btn-sm btn-outline-light" style="display: none;">
-                                <i class="fas fa-redo"></i>
-                                Retry
-                            </button>
+                    <div class="quick-actions">
+                        <a href="/submit-complaint" class="btn btn-outline-primary">
+                            <i class="fas fa-plus-circle"></i>
+                            New Complaint
+                        </a>
+                        <a href="/complaints" class="btn btn-outline-info">
+                            <i class="fas fa-list"></i>
+                            View All
+                        </a>
+                    </div>
+
+
+                <!-- Two Column Layout -->
+                <div class="dashboard-content">
+                    <!-- Left Column - Recent Complaints -->
+                    <div class="left-column">
+                        <div class="recent-complaints">
+                            <div class=" d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="mb-0">Recent Complaints</h3>
+                                <button id="refresh-complaints" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh All
+                                </button>
+                            </div>
+                            <div class="complaints-grid" id="recent-complaints-grid">
+                                <!-- Complaints will be loaded here -->
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Right Column - News & Community Updates -->
+                    <div class="right-column">
+                        <!-- News Section -->
+                        <div class="news-section">
+                            <div class=" d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="mb-0">Latest News & Updates</h3>
+                                <a href="/news" class="btn btn-sm btn-outline-primary">
+                                    View All News
+                                    <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="news-grid" id="news-grid">
+                                <!-- News will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Community Updates -->
+                        <div class="community-updates-section">
+                            <div class="community-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h3>
+                                        <i class="fas fa-users"></i>
+                                        Community Updates
+                                    </h3>
+                                    <button id="retry-events" class="btn btn-sm btn-outline-light" style="display: none;">
+                                        <i class="fas fa-redo"></i>
+                                        Retry
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Upcoming Events Section -->
+                            <div class="events-section">
+                                <h5>
+                                    <i class="fas fa-calendar-alt"></i>Upcoming Events
+                                </h5>
+                                <ul class="events-list">
+                                    <!-- Events will be loaded here from Supabase -->
+                                </ul>
+                            </div>
+                            
+                            <!-- Important Notices Section -->
+                            <div class="notices-section">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5>
+                                        <i class="fas fa-info-circle"></i>Important Notices
+                                    </h5>
+                                    <button id="retry-notices" class="btn btn-sm btn-outline-primary" style="display: none;">
+                                        <i class="fas fa-redo"></i>
+                                        Retry
+                                    </button>
+                                </div>
+                                <div>
+                                    <!-- Notices will be loaded here from Supabase -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                     
-                    <!-- Upcoming Events Section -->
-                    <div style="margin-bottom: 2rem; padding: 0; display: block; width: 100%;">
-                        <h5 style="color: #2563eb; font-weight: 600; margin-bottom: 1rem;">
-                            <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>Upcoming Events
-                        </h5>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            <!-- Events will be loaded here from Supabase -->
-                        </ul>
-                    </div>
-                    
-                    <!-- Important Notices Section -->
-                    <div class="important-notices-section" style="margin-top: 0; padding: 0; display: block; width: 100%;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 style="color: #0891b2; font-weight: 600; margin-bottom: 1rem;">
-                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>Important Notices
-                            </h5>
-                            <button id="retry-notices" class="btn btn-sm btn-outline-primary" style="display: none;">
-                                <i class="fas fa-redo"></i>
-                                Retry
-                            </button>
-                        </div>
-                        <div>
-                            <!-- Notices will be loaded here from Supabase -->
-                        </div>
-                    </div>
+                    <!-- Floating Action Button -->
+                    <a href="/submit-complaint" class="fab-button" title="Submit a new complaint">
+                        <i class="fas fa-plus"></i>
+                    </a>
                 </div>
-                
 
             </main>
         </div>

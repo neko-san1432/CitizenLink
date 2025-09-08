@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get user and complaints
   const user = await checkAuth();
   if (!user) return;
+
+  // Update header with user's name
+  updateHeaderWithUserName(user);
   
   // Preload officers for the admin's department (if admin)
   let officersForDept = [];
@@ -1511,6 +1514,19 @@ function manualLoadSidebar() {
     }
   } else {
     debugOutput.innerHTML += '❌ SidebarLoader not available<br>';
+  }
+}
+
+// Update header with user's name
+function updateHeaderWithUserName(user) {
+  const headerUserName = document.getElementById('header-user-name');
+  if (headerUserName && user) {
+    // Use the same name extraction logic as user-utils.js
+    const name = user.user_metadata?.full_name || 
+                 user.user_metadata?.name || 
+                 user.email?.split('@')[0] || 
+                 'User';
+    headerUserName.textContent = name;
   }
 }
 

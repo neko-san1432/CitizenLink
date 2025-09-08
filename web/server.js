@@ -5,12 +5,14 @@ import helmet from "helmet";
 import compression from "compression";
 import { existsSync } from "fs";
 import { getSupabaseServiceClient } from "./db/db.js";
+import multer from "multer";
 
 // ES6 module compatibility
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // Get the directory of the current file
 
 const app = express();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ===== IN-MEMORY STATE (development scaffolding) =====
 // Simple in-memory store for officer locations (for demo/testing)
@@ -28,26 +30,28 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 // Use Helmet to set secure headers - implementing all 7 major security headers
 app.use(
   helmet({
-  // 1. Content Security Policy (CSP)
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'", 
-        "'unsafe-inline'", // Needed for inline scripts
-        "'unsafe-eval'", // Needed for Bootstrap
-        "https://cdnjs.cloudflare.com", // Font Awesome CDN
-        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+    // 1. Content Security Policy (CSP)
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'", // Needed for inline scripts
+          "'unsafe-eval'", // Needed for Bootstrap
+          "https://cdnjs.cloudflare.com", // Font Awesome CDN
+          "https://cdn.jsdelivr.net", // Chart.js and other CDNs
           "https://unpkg.com", // Leaflet and plugins
-        "https://citizenlink-abwi.onrender.com", // External domain
+          "https://www.googletagmanager.com", // Google Analytics
+          "https://www.google-analytics.com", // Google Analytics
+          "https://citizenlink-abwi.onrender.com", // External domain
           ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []), // More permissive in development
-      ],
-      scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
-      styleSrc: [
-        "'self'", 
-        "'unsafe-inline'", // Needed for inline styles
-        "https://cdnjs.cloudflare.com", // Font Awesome CDN
-        "https://cdn.jsdelivr.net", // Chart.js and other CDNs
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'", // Needed for inline styles
+          "https://cdnjs.cloudflare.com", // Font Awesome CDN
+          "https://cdn.jsdelivr.net", // Chart.js and other CDNs
           "https://unpkg.com", // Leaflet CSS
           ...(isDevelopment ? ["'unsafe-inline'", "https:"] : []), // More permissive in development
         ],
@@ -59,6 +63,8 @@ app.use(
           "https://cdnjs.cloudflare.com",
           "https://cdn.jsdelivr.net",
           "https://unpkg.com",
+          "https://www.googletagmanager.com", // Google Analytics
+          "https://www.google-analytics.com", // Google Analytics
           ...(isDevelopment ? ["https:"] : []),
         ],
         styleSrcElem: [
@@ -68,57 +74,72 @@ app.use(
           "https://cdn.jsdelivr.net",
           "https://unpkg.com",
           ...(isDevelopment ? ["https:"] : []),
-      ],
-      fontSrc: [
-        "'self'",
-        "https://cdnjs.cloudflare.com", // Font Awesome fonts
-        "https://cdn.jsdelivr.net", // Additional fonts
+        ],
+        fontSrc: [
+          "'self'",
+          "https://cdnjs.cloudflare.com", // Font Awesome fonts
+          "https://cdn.jsdelivr.net", // Additional fonts
           ...(isDevelopment ? ["https:"] : []), // More permissive in development
-      ],
-        imgSrc: ["'self'", "data:", "https:", "https://*.tile.openstreetmap.org", "https://server.arcgisonline.com", "https://*.opentopomap.org", "https://tiles.stadiamaps.com", "https://api.mapbox.com", "https://*.tiles.mapbox.com", "https://*.basemaps.cartocdn.com"],
-      connectSrc: [
-        "'self'", 
-        "https://citizenlink-abwi.onrender.com", // External domain
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https:",
+          "https://*.tile.openstreetmap.org",
+          "https://server.arcgisonline.com",
+          "https://*.opentopomap.org",
+          "https://tiles.stadiamaps.com",
+          "https://api.mapbox.com",
+          "https://*.tiles.mapbox.com",
+          "https://*.basemaps.cartocdn.com",
+          "blob:",
+          "https://cnffzzptgkfqgcslwmfo.supabase.co"
+        ],
+        connectSrc: [
+          "'self'",
+          "https://citizenlink-abwi.onrender.com", // External domain
+          "https://www.google-analytics.com", // Google Analytics
+          "https://analytics.google.com", // Google Analytics
           // Allow Supabase project domains (HTTPS + WSS) in all environments
           "https://*.supabase.co",
           "wss://*.supabase.co",
           "https://*.supabase.in",
           "wss://*.supabase.in",
           ...(isDevelopment ? ["https:"] : []), // More permissive in development
-      ],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+        ],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
         frameAncestors: ["'self'"], // Prevents clickjacking
       },
-  },
-  
-  // 2. X-Frame-Options (Clickjacking protection)
-  frameguard: { 
+    },
+
+    // 2. X-Frame-Options (Clickjacking protection)
+    frameguard: {
       action: "sameorigin",
-  },
-  
-  // 3. X-Content-Type-Options (MIME type sniffing protection)
-  noSniff: true,
-  
-  // 4. X-XSS-Protection (XSS protection for older browsers)
-  xssFilter: true,
-  
-  // 5. Strict-Transport-Security (HSTS) - Disabled for HTTP development
-  // hsts: { 
-  //   maxAge: 31536000, // 1 year
-  //   includeSubDomains: true,
-  //   preload: true
-  // },
-  
-  // 6. Referrer-Policy
-  referrerPolicy: { 
+    },
+
+    // 3. X-Content-Type-Options (MIME type sniffing protection)
+    noSniff: true,
+
+    // 4. X-XSS-Protection (XSS protection for older browsers)
+    xssFilter: true,
+
+    // 5. Strict-Transport-Security (HSTS) - Disabled for HTTP development
+    // hsts: {
+    //   maxAge: 31536000, // 1 year
+    //   includeSubDomains: true,
+    //   preload: true
+    // },
+
+    // 6. Referrer-Policy
+    referrerPolicy: {
       policy: "strict-origin-when-cross-origin",
-  },
-  
-  // 7. Permissions-Policy (formerly Feature-Policy)
-  permissionsPolicy: {
-    features: {
+    },
+
+    // 7. Permissions-Policy (formerly Feature-Policy)
+    permissionsPolicy: {
+      features: {
         geolocation: ["self"],
         camera: ["none"],
         microphone: ["none"],
@@ -134,13 +155,13 @@ app.use(
         pictureInPicture: ["none"],
         syncXhr: ["none"],
       },
-  },
-  
-  // Additional security headers
-  hidePoweredBy: true, // Removes X-Powered-By header
-  ieNoOpen: true, // Prevents IE from executing downloads
-  noCache: false, // Allow caching for better performance
-  dnsPrefetchControl: {
+    },
+
+    // Additional security headers
+    hidePoweredBy: true, // Removes X-Powered-By header
+    ieNoOpen: true, // Prevents IE from executing downloads
+    noCache: false, // Allow caching for better performance
+    dnsPrefetchControl: {
       allow: false, // Disable DNS prefetching for security
     },
   })
@@ -148,18 +169,20 @@ app.use(
 
 // ===== COMPRESSION MIDDLEWARE =====
 // Enable gzip compression for better bandwidth efficiency
-app.use(compression({
-  level: 6, // Compression level (1-9, 6 is good balance of speed vs compression)
-  threshold: 1024, // Only compress files larger than 1KB
-  filter: (req, res) => {
-    // Don't compress if client doesn't support it or explicitly disabled
-    if (req.headers['x-no-compression']) {
-      return false;
-    }
-    // Use default compression filter which handles most cases
-    return compression.filter(req, res);
-  }
-}));
+app.use(
+  compression({
+    level: 6, // Compression level (1-9, 6 is good balance of speed vs compression)
+    threshold: 1024, // Only compress files larger than 1KB
+    filter: (req, res) => {
+      // Don't compress if client doesn't support it or explicitly disabled
+      if (req.headers["x-no-compression"]) {
+        return false;
+      }
+      // Use default compression filter which handles most cases
+      return compression.filter(req, res);
+    },
+  })
+);
 
 // Custom middleware to add additional security headers
 app.use((req, res, next) => {
@@ -167,7 +190,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Download-Options", "noopen");
   res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
   res.setHeader("X-DNS-Prefetch-Control", "off");
-  
+
   // Explicitly prevent HTTPS upgrades
   res.setHeader("Upgrade-Insecure-Requests", "0");
 
@@ -176,16 +199,16 @@ app.use((req, res, next) => {
     "Permissions-Policy",
     "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), usb=(), xr-spatial-tracking=()"
   );
-  
+
   // Development mode - more permissive CSP
   // Dev CSP: wide open, easier debugging
-    const devCSP = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-      "style-src 'self' 'unsafe-inline' https:",
-      "font-src 'self' https:",
-    "img-src 'self' data: https: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com",
-      "connect-src 'self' https:",
+  const devCSP = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+    "style-src 'self' 'unsafe-inline' https:",
+    "font-src 'self' https:",
+    "img-src 'self' data: https: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com blob:",
+    "connect-src 'self' https:",
     "object-src 'none'",
     "media-src 'self'",
     "frame-src 'none'",
@@ -195,44 +218,42 @@ app.use((req, res, next) => {
   // Prod CSP: stricter, only allow known origins
   const prodCSP = [
     "default-src 'self'",
-  
+
     // Scripts from your server + jsdelivr + cdnjs + unpkg (any file under these domains)
-    "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+    "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.supabase.in https://*.supabase.co",
     // Explicit element directive for some browsers
-    "script-src-elem 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
-  
+    "script-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://www.googletagmanager.com",
+
     // Styles from your server + cdnjs + unpkg
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
     // Explicit element directive for stylesheets
     "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
-  
+
     // Fonts from your server + cdnjs + Google Fonts
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
-  
+
     // Images from your server + data URIs + map tile servers + unpkg (Leaflet icons)
-    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com https://unpkg.com",
-  
+    "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://*.opentopomap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.tiles.mapbox.com https://*.basemaps.cartocdn.com https://unpkg.com blob: https://cnffzzptgkfqgcslwmfo.supabase.co",
+
     // API connections: your backend + ANY Supabase project (HTTPS + WSS for realtime)
     "connect-src 'self' https://citizenlink-abwi.onrender.com https://*.supabase.co wss://*.supabase.co https://*.supabase.in wss://*.supabase.in",
-  
-      "object-src 'none'",
-      "media-src 'self'",
-      "frame-src 'none'",
-      "frame-ancestors 'self'"
-    ].join('; ');
-    
 
+    "object-src 'none'",
+    "media-src 'self'",
+    "frame-src 'none'",
+    "frame-ancestors 'self'",
+  ].join("; ");
 
   res.setHeader(
     "Content-Security-Policy",
     process.env.NODE_ENV === "development" ? devCSP : prodCSP
   );
-  
+
   // Security headers for API endpoints
   if (req.path.startsWith("/api/")) {
     res.setHeader("X-API-Version", "1.0");
   }
-  
+
   next();
 });
 
@@ -277,7 +298,7 @@ app.get("/api/supabase-bridge", async (req, res) => {
   try {
     // Import the server-side config to get credentials
     const { supabaseConfig } = await import("./db/db.js");
-    
+
     res.json({
       url: supabaseConfig.url,
       anonKey: supabaseConfig.anonKey,
@@ -285,6 +306,99 @@ app.get("/api/supabase-bridge", async (req, res) => {
   } catch (error) {
     console.error("Error serving Supabase API config:", error);
     res.status(500).json({ error: "Failed to load Supabase configuration" });
+  }
+});
+
+// ===== NEWS IMAGE UPLOAD API =====
+// Upload news images using service role (bypasses RLS)
+app.post("/api/upload-news-image", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+    const objectKey = req.body?.path; // key relative to bucket root
+
+    if (!file || !objectKey) {
+      return res.status(400).json({ error: "file and path are required" });
+    }
+
+    console.log("📥 [upload-news-image] incoming file", {
+      name: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      path: objectKey
+    });
+
+    const sb = getSupabaseServiceClient(); // service role client
+
+    const { data, error } = await sb.storage
+      .from("news-images")
+      .upload(objectKey, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: "3600",
+        upsert: false
+      });
+
+    if (error) {
+      console.error("❌ [upload-news-image] storage.upload error", error);
+      return res.status(500).json({ error: error.message || "Upload failed" });
+    }
+
+    const { data: urlData } = sb.storage.from("news-images").getPublicUrl(objectKey);
+
+    console.log("✅ [upload-news-image] uploaded", { path: objectKey, url: urlData?.publicUrl });
+    return res.json({ path: objectKey, url: urlData?.publicUrl });
+  } catch (error) {
+    console.error("Error in news image upload:", error);
+    res.status(500).json({ error: "Upload failed" });
+  }
+});
+
+// Delete news article (and its image) using service role (bypasses RLS)
+app.delete("/api/news/:id", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    if (!articleId) return res.status(400).json({ error: "id required" });
+
+    const sb = getSupabaseServiceClient();
+
+    // Fetch article
+    const { data: article, error: fetchErr } = await sb
+      .from("news_data")
+      .select("id, image_path, image_url")
+      .eq("id", articleId)
+      .single();
+    if (fetchErr) return res.status(500).json({ error: fetchErr.message });
+    if (!article) return res.status(404).json({ error: "article not found" });
+
+    // Remove image if present
+    try {
+      let objectKey = null;
+      if (article.image_path && article.image_path.startsWith("news-images/")) {
+        objectKey = article.image_path.slice("news-images/".length);
+      } else if (article.image_url) {
+        // Attempt to parse from legacy public URL
+        const parts = String(article.image_url).split("/news-images/");
+        if (parts.length === 2) {
+          objectKey = parts[1].startsWith("news-images/")
+            ? parts[1].slice("news-images/".length)
+            : parts[1];
+        }
+      }
+      if (objectKey) {
+        const { error: rmErr } = await sb.storage.from("news-images").remove([objectKey]);
+        if (rmErr) console.warn("[server] storage remove failed", objectKey, rmErr);
+      }
+    } catch (e) {
+      console.warn("[server] image deletion skipped/failed", e?.message || e);
+    }
+
+    // Delete row
+    const { error: delErr } = await sb.from("news_data").delete().eq("id", articleId);
+    if (delErr) return res.status(500).json({ error: delErr.message });
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error("[server] delete news error", e);
+    return res.status(500).json({ error: "delete failed" });
   }
 });
 
@@ -941,13 +1055,13 @@ app.get("/dashboard", (req, res) => {
   console.log("Dashboard route accessed, serving file:", filePath);
   console.log("__dirname:", __dirname);
   console.log("File exists check:", existsSync(filePath));
-  
+
   // Check if file exists before sending
   if (!existsSync(filePath)) {
     console.error("Dashboard file not found:", filePath);
     return res.status(404).send("Dashboard file not found");
   }
-  
+
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error("Error sending dashboard file:", err);
@@ -1058,28 +1172,28 @@ app.get("/test-route", (req, res) => {
 app.get("/components/:filename(*)", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-  
+
   // Only serve HTML component files
   if (!req.params.filename.endsWith(".html")) {
     return res.status(404).send("Not an HTML component file");
   }
-  
+
   res.setHeader("Content-Type", "text/html");
   res.sendFile(filePath);
 });
 
 // Debug route to see all available routes
 app.get("/debug-routes", (req, res) => {
-    const routes = [];
+  const routes = [];
   app._router.stack.forEach((middleware) => {
-        if (middleware.route) {
-            routes.push({
-                path: middleware.route.path,
+    if (middleware.route) {
+      routes.push({
+        path: middleware.route.path,
         methods: Object.keys(middleware.route.methods),
-            });
-        }
-    });
-    res.json({ routes, __dirname, currentDir: process.cwd() });
+      });
+    }
+  });
+  res.json({ routes, __dirname, currentDir: process.cwd() });
 });
 
 // Serve border locations JSON file
@@ -1088,13 +1202,13 @@ app.get("/lgu/border_locations.json", (req, res) => {
   const filePath = path.join(__dirname, "lgu", "border_locations.json");
   console.log("📁 Serving border file:", filePath);
   console.log("📂 File exists:", existsSync(filePath));
-    
-    if (existsSync(filePath)) {
+
+  if (existsSync(filePath)) {
     res.setHeader("Content-Type", "application/json");
-        res.sendFile(filePath);
-    } else {
+    res.sendFile(filePath);
+  } else {
     res.status(404).json({ error: "Border locations file not found" });
-    }
+  }
 });
 
 // Serve any JSON files from LGU folder
@@ -1104,13 +1218,13 @@ app.get("/lgu/*.json", (req, res) => {
   const filePath = path.join(__dirname, "lgu", fileName);
   console.log("📁 Serving JSON file:", filePath);
   console.log("📂 File exists:", existsSync(filePath));
-    
-    if (existsSync(filePath)) {
+
+  if (existsSync(filePath)) {
     res.setHeader("Content-Type", "application/json");
-        res.sendFile(filePath);
-    } else {
-        res.status(404).json({ error: `JSON file ${fileName} not found` });
-    }
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: `JSON file ${fileName} not found` });
+  }
 });
 
 // ===== STATIC ASSET ROUTES (moved to end to avoid conflicts) =====
@@ -1118,12 +1232,12 @@ app.get("/lgu/*.json", (req, res) => {
 app.get("/css/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-  
+
   // Set caching headers for CSS files
   res.setHeader("Content-Type", "text/css");
   res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
   res.setHeader("ETag", `"${Date.now()}"`);
-  
+
   res.sendFile(filePath);
 });
 
@@ -1132,17 +1246,17 @@ app.get("/js/:filename(*)", (req, res) => {
   // Ensure we resolve a relative path (Windows-safe). Absolute req.path would break path.join
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-  
+
   // Only serve actual JavaScript files
   if (!req.params.filename.endsWith(".js")) {
     return res.status(404).send("Not a JavaScript file");
   }
-  
+
   // Set caching headers for JavaScript files
   res.setHeader("Content-Type", "application/javascript");
   res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
   res.setHeader("ETag", `"${Date.now()}"`);
-  
+
   res.sendFile(filePath);
 });
 
@@ -1150,12 +1264,12 @@ app.get("/js/:filename(*)", (req, res) => {
 app.get("/css/bootstrap/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-  
+
   // Set caching headers for Bootstrap CSS files
   res.setHeader("Content-Type", "text/css");
   res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
   res.setHeader("ETag", `"${Date.now()}"`);
-  
+
   res.sendFile(filePath);
 });
 
@@ -1163,12 +1277,12 @@ app.get("/css/bootstrap/*", (req, res) => {
 app.get("/js/bootstrap/*", (req, res) => {
   const relativePath = req.path.startsWith("/") ? req.path.slice(1) : req.path;
   const filePath = path.join(__dirname, relativePath);
-  
+
   // Set caching headers for Bootstrap JS files
   res.setHeader("Content-Type", "application/javascript");
   res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
   res.setHeader("ETag", `"${Date.now()}"`);
-  
+
   res.sendFile(filePath);
 });
 
@@ -1180,7 +1294,7 @@ app.get("/js/bootstrap/*", (req, res) => {
 
 // ===== API ROUTES =====
 app.get("/api/health", (req, res) => {
-  res.json({ 
+  res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
     security: "enabled",
@@ -1237,6 +1351,30 @@ app.use((err, req, res, next) => {
 });
 
 // ===== STATIC FILE SERVING =====
+// Serve favicon.ico
+app.get("/favicon.ico", (req, res) => {
+  const filePath = path.join(__dirname, "favicon.ico");
+  if (existsSync(filePath)) {
+    res.setHeader("Content-Type", "image/x-icon");
+    res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("Favicon not found");
+  }
+});
+
+// Serve site.webmanifest
+app.get("/site.webmanifest", (req, res) => {
+  const filePath = path.join(__dirname, "site.webmanifest");
+  if (existsSync(filePath)) {
+    res.setHeader("Content-Type", "application/manifest+json");
+    res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("Web manifest not found");
+  }
+});
+
 // Serve static HTML files
 // app.get('/*.html', (req, res) => {
 //   const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;

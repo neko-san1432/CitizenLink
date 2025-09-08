@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LGU Admin - Department Management</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="/css/styles.css" rel="stylesheet">
@@ -21,7 +22,7 @@
                 </button>
                 <div class="brand-logo">
                     <a href="/lgu/dashboard" class="logo-link">
-                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        <i class="fas fa-shield-halved text-primary me-2"></i>
                         <span class="brand-text">CitizenLink</span>
                     </a>
                 </div>
@@ -51,14 +52,14 @@
             </div>
         </header>
         
-    <main id="content" class="content">
-    <div class="container py-4">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h1 class="h3 mb-0">LGU Admin</h1>
-        </div>
-        <p class="text-muted">Appoint officers and dispatch complaints within your department.</p>
+    <main class="dashboard-main">
+        <div class="main-content-layout">
+            <div class="page-header">
+                <h2>LGU Admin</h2>
+                <p class="text-muted">Appoint officers and dispatch complaints within your department.</p>
+            </div>
 
-        <div class="card mb-4">
+            <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>User Management <small class="text-muted">(Your Department Only)</small></span>
                 <button id="refresh-users" class="btn btn-sm btn-outline-primary">
@@ -85,16 +86,16 @@
                 </div>
                 <div id="role-result" class="mt-3 small"></div>
             </div>
+            </div>
         </div>
-
-        
-        </main>
+    </main>
     </div>
     </div>
 
     <script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="/js/debug-logger.js"></script>
     <script src="/js/supabase-bridge.js"></script>
+    <script src="/js/user-utils.js"></script>
     <script src="/js/sidebar-loader.js"></script>
     <script src="/js/lgu-admin.js"></script>
 </body>

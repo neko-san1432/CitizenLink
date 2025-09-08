@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await setupDashboard();
     console.log('✅ Dashboard setup completed');
     
+    // Update stats
+    console.log('📊 Updating stats...');
+    await updateStats();
+    console.log('✅ Stats updated');
+    
     // Setup button event listeners
     setupButtonEventListeners();
     
@@ -267,8 +272,6 @@ async function loadRecentComplaints(user) {
     console.log('🔍 Starting loadRecentComplaints for user:', user);
     
     // Get complaints for this user from Supabase
-    let userComplaints = [];
-    
     if (typeof window.getComplaints !== 'function') {
       console.log('❌ getComplaints function not available');
       return;
@@ -287,20 +290,19 @@ async function loadRecentComplaints(user) {
     const userId = user.id || user.user_id || user.username;
     console.log('👤 Current user ID:', userId);
 
-    // Exclude complaints created by the current user
-    const otherUsersComplaints = (allComplaints || []).filter(complaint => {
+    // Show complaints for the current user (citizen dashboard should show their own complaints)
+    const userComplaints = (allComplaints || []).filter(complaint => {
       const complaintUserId = complaint.user_id || complaint.userId || complaint.user_id;
       const isOwn = complaintUserId === userId;
       console.log(`🔍 Complaint ${complaint.id}: complaintUserId=${complaintUserId}, userId=${userId}, isOwn=${isOwn}`);
-      return !isOwn;
+      return isOwn; // Show only the user's own complaints
     });
 
-    console.log('✅ Complaints excluding current user:', otherUsersComplaints);
+    console.log('✅ User\'s own complaints:', userComplaints);
 
-    // Sort by date (newest first) and take the first 3
-    const recentComplaints = otherUsersComplaints
-      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-      .slice(0, 3);
+    // Sort by date (newest first) - show all complaints
+    const recentComplaints = userComplaints
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
     
     console.log('📅 Recent complaints (sorted):', recentComplaints);
     
@@ -329,24 +331,15 @@ async function loadRecentComplaints(user) {
     
     console.log('🎴 Creating complaint cards for:', recentComplaints.length, 'complaints');
     
-    // Create complaint cards
+    // Add status summary section
+    const statusSummary = createStatusSummary(recentComplaints);
+    complaintsGrid.appendChild(statusSummary);
+    
+    // Create complaint cards for all complaints
     recentComplaints.forEach((complaint, index) => {
       const complaintCard = createComplaintCard(complaint);
       complaintsGrid.appendChild(complaintCard);
     });
-    
-    // Add "View All" link if there are more complaints
-    if (otherUsersComplaints.length > 3) {
-      const viewAllLink = document.createElement('div');
-      viewAllLink.className = 'text-center mt-3';
-      viewAllLink.innerHTML = `
-        <a href="/complaints" class="btn btn-outline-primary">
-          <i class="fas fa-list"></i>
-          View All ${otherUsersComplaints.length} Complaints
-        </a>
-      `;
-      complaintsGrid.appendChild(viewAllLink);
-    }
     
   } catch (error) {
     console.error('💥 Error in loadRecentComplaints:', error);
@@ -439,6 +432,39 @@ function createComplaintCard(complaint) {
   `;
   
   return card;
+}
+
+// Create simple status section
+function createStatusSummary(complaints) {
+  const summary = document.createElement('div');
+  summary.className = 'status-summary mb-4';
+  
+  // Count in-progress complaints
+  const inProgressComplaints = complaints.filter(complaint => 
+    (complaint.status || 'pending') === 'in_progress'
+  );
+  
+  if (inProgressComplaints.length === 0) {
+    return summary; // Return empty div if no in-progress complaints
+  }
+  
+  summary.innerHTML = `
+    <div class="card border-info">
+      <div class="card-header bg-info text-white">
+        <h6 class="mb-0">
+          <i class="fas fa-clock me-2"></i>
+          Your In-Progress Complaints
+        </h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-0 text-muted">
+          You have <strong>${inProgressComplaints.length}</strong> complaint${inProgressComplaints.length === 1 ? '' : 's'} currently being processed by our team.
+        </p>
+      </div>
+    </div>
+  `;
+  
+  return summary;
 }
 
 // Load news content
@@ -583,7 +609,7 @@ async function loadImportantNotices() {
     // Removed console.log
     
     // Find the important notices section using the CSS class
-    const importantNoticesSection = document.querySelector('.important-notices-section');
+    const importantNoticesSection = document.querySelector('.notices-section');
     if (!importantNoticesSection) {
       console.error('❌ Important notices section not found');
       return;
@@ -612,7 +638,7 @@ async function updateCommunityUpdatesContent(container, eventsData) {
   // Removed console.log
   
   // Find the upcoming events list
-  const eventsList = container.querySelector('ul');
+  const eventsList = container.querySelector('.events-list');
   if (!eventsList) {
     console.error('❌ Events list not found in community updates section');
     return;
@@ -833,7 +859,7 @@ function getNoticePriorityColors(priority) {
 function showCommunityUpdatesLoading() {
   const communitySection = document.querySelector('.community-updates-section');
   if (communitySection) {
-    const eventsList = communitySection.querySelector('ul');
+    const eventsList = communitySection.querySelector('.events-list');
     if (eventsList) {
       eventsList.innerHTML = `
         <li style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
@@ -849,7 +875,7 @@ function showCommunityUpdatesLoading() {
 
 // Show loading state for important notices
 function showImportantNoticesLoading() {
-  const section = document.querySelector('.important-notices-section');
+  const section = document.querySelector('.notices-section');
   if (section) {
     const noticesDiv = section.querySelector(':scope > div:nth-of-type(2)') || section.querySelectorAll('div')[1];
     if (noticesDiv) {
@@ -867,7 +893,7 @@ function showImportantNoticesLoading() {
 function showCommunityUpdatesError(message = 'Unable to load events') {
   const communitySection = document.querySelector('.community-updates-section');
   if (communitySection) {
-    const eventsList = communitySection.querySelector('ul');
+    const eventsList = communitySection.querySelector('.events-list');
     if (eventsList) {
       eventsList.innerHTML = `
         <li style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
@@ -893,7 +919,7 @@ function showCommunityUpdatesError(message = 'Unable to load events') {
 
 // Show error state for important notices
 function showImportantNoticesError(message = 'Unable to load notices') {
-  const section = document.querySelector('.important-notices-section');
+  const section = document.querySelector('.notices-section');
   if (section) {
     const noticesDiv = section.querySelector(':scope > div:nth-of-type(2)') || section.querySelectorAll('div')[1];
     if (noticesDiv) {
@@ -1121,7 +1147,7 @@ async function showFallbackCommunityUpdates() {
   const communitySection = document.querySelector('.community-updates-section');
   if (!communitySection) return;
   
-  const eventsList = communitySection.querySelector('ul');
+  const eventsList = communitySection.querySelector('.events-list');
   if (!eventsList) return;
   
   // Show fallback events data
@@ -1187,7 +1213,7 @@ async function showFallbackCommunityUpdates() {
 
 // Show fallback important notices when database is not accessible
 async function showFallbackImportantNotices() {
-  const section = document.querySelector('.important-notices-section');
+  const section = document.querySelector('.notices-section');
   if (!section) return;
   
   const noticesDiv = section.querySelector(':scope > div:nth-of-type(2)') || section.querySelectorAll('div')[1];
@@ -1324,6 +1350,52 @@ function checkFunctionAvailability() {
       // Function is not available
     }
   });
+}
+
+// Update stats for citizen dashboard
+async function updateStats() {
+  try {
+    const userId = window.userUtils.getCurrentUserId();
+    if (!userId) {
+      console.log('❌ No user ID available for stats');
+      return;
+    }
+
+    // Get user's complaints
+    const { data: complaints, error } = await window.supabase
+      .from('complaints')
+      .select('status')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('❌ Error fetching complaints for stats:', error);
+      return;
+    }
+
+    // Calculate stats
+    const total = complaints.length;
+    const pending = complaints.filter(c => c.status === 'pending').length;
+    const inProgress = complaints.filter(c => c.status === 'in_progress').length;
+    const resolved = complaints.filter(c => c.status === 'resolved').length;
+
+    // Update DOM elements
+    updateStatElement('my-total-complaints', total);
+    updateStatElement('my-pending-complaints', pending);
+    updateStatElement('my-in-progress-complaints', inProgress);
+    updateStatElement('my-resolved-complaints', resolved);
+
+    console.log('📊 Stats updated:', { total, pending, inProgress, resolved });
+  } catch (error) {
+    console.error('❌ Error updating stats:', error);
+  }
+}
+
+// Helper function to update stat elements
+function updateStatElement(id, value) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.textContent = value;
+  }
 }
 
 // Setup button event listeners

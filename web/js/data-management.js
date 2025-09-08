@@ -277,10 +277,11 @@ async function createNewsArticle(articleData) {
       .from('news_data')
       .insert([{
         ...articleData,
-        status: 'published',
-        featured: false,
-        tags: [],
-        image_url: null,
+        // Only override these fields if not provided in articleData
+        status: articleData.status || 'published',
+        featured: articleData.featured !== undefined ? articleData.featured : false,
+        tags: articleData.tags || [],
+        image_path: articleData.image_path || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         published_at: new Date().toISOString(),
@@ -949,6 +950,18 @@ if (typeof window !== 'undefined') {
   window.getNews = getNews;
   window.createNewsArticle = createNewsArticle;
   window.updateNewsArticle = updateNewsArticle;
+  window.checkBucketAvailability = async (bucketName) => {
+    try {
+      const supabase = await window.supabaseManager.initialize();
+      const { data, error } = await supabase.storage.from(bucketName).list('', { limit: 1 });
+      if (error) {
+        return { available: false, bucket: bucketName, message: error.message, status: error.status || error.statusCode || null };
+      }
+      return { available: true, bucket: bucketName, canList: Array.isArray(data), sampleCount: Array.isArray(data) ? data.length : 0 };
+    } catch (e) {
+      return { available: false, bucket: bucketName, message: e.message };
+    }
+  };
   
   // Events functions
   window.getUpcomingEvents = getUpcomingEvents;

@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = checkAuth();
   if (!user) return;
 
+  // Update header with user's name
+  updateHeaderWithUserName(user);
+
   const role = String(user.role || user.type || '').toLowerCase();
   const isLgu = role.startsWith('lgu-') || role.startsWith('lgu_admin') || role.startsWith('lgu-admin') || role === 'lgu' || role === 'admin';
   const deptFromRole = role.startsWith('lgu-admin-') ? role.replace('lgu-admin-', '')
@@ -745,6 +748,19 @@ function formatDate(dateString) {
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
+  }
+}
+
+// Update header with user's name
+function updateHeaderWithUserName(user) {
+  const headerUserName = document.getElementById('header-user-name');
+  if (headerUserName && user) {
+    // Use the same name extraction logic as user-utils.js
+    const name = user.user_metadata?.full_name || 
+                 user.user_metadata?.name || 
+                 user.email?.split('@')[0] || 
+                 'User';
+    headerUserName.textContent = name;
   }
 }
 

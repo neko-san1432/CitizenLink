@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LGU Dashboard - Government portal for managing citizen complaints. Monitor complaint status, track performance metrics, and ensure efficient resolution of community issues.">
-    <meta name="permissions-policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
+    <meta name="description"
+        content="LGU Dashboard - Government portal for managing citizen complaints. Monitor complaint status, track performance metrics, and ensure efficient resolution of community issues.">
+    <meta name="permissions-policy"
+        content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), sync-xhr=()">
     <title>LGU Dashboard - CitizenLink</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/additional-styles.css">
 </head>
+
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar will be loaded dynamically by sidebar-loader.js -->
-
         <!-- Sidebar overlay for mobile -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
         <div class="main-content">
             <header class="dashboard-header">
                 <div class="header-left">
@@ -27,69 +28,67 @@
                     </button>
                     <div class="brand-logo">
                         <a href="/dashboard" class="logo-link">
-                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <i class="fas fa-shield-halved text-primary me-2"></i>
                             <span class="brand-text">CitizenLink</span>
                         </a>
                     </div>
                 </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, <span id="header-user-name">LGU Admin</span></span>
+                    <span class="welcome-text">Welcome, <span id="header-user-name">Loading...</span></span>
                 </div>
             </header>
-
             <main class="dashboard-main">
-                <div class="page-header">
-                    <h2>LGU Dashboard</h2>
-                    <p class="text-muted">Overview of all citizen complaints and their status.</p>
-                </div>
-
-
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>Total Complaints</h3>
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="total-complaints">0</div>
-                            <p class="text-muted">All complaints received</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>Pending</h3>
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="pending-complaints">0</div>
-                            <p class="text-muted">Awaiting assignment</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>In Progress</h3>
-                            <i class="fas fa-spinner"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="in-progress-complaints">0</div>
-                            <p class="text-muted">Being addressed</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <h3>Resolved</h3>
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="resolved-complaints">0</div>
-                            <p class="text-muted">Successfully completed</p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Main Content Area with Charts and Complaints -->
                 <div class="main-content-layout">
+                    <div class="page-header">
+                        <h2>LGU Dashboard</h2>
+                        <p class="text-muted">Overview of all citizen complaints and their status.</p>
+                    </div>
+                    <div class="">
+                        <h3>Statistics Overview</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Total Complaints Received</h3>
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-complaints">0</div>
+                                <p class="text-muted">All complaints received</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Pending</h3>
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="pending-complaints">0</div>
+                                <p class="text-muted">Awaiting assignment</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>In Progress</h3>
+                                <i class="fas fa-spinner"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="in-progress-complaints">0</div>
+                                <p class="text-muted">Being addressed</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Resolved</h3>
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="resolved-complaints">0</div>
+                                <p class="text-muted">Successfully completed</p>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Row 1: CO&PM + Complaints -->
                     <div class="top-row">
                         <!-- Combined CO&PM Section -->
@@ -117,50 +116,52 @@
                         <!-- Complaints Section -->
                         <div class="complaints-section">
                             <div class="recent-complaints">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Recent Complaints</h3>
-                            <p class="text-muted">Most recently submitted complaints</p>
-                            <button id="refresh-complaints" class="btn btn-sm btn-outline" style="margin-left: auto;">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
-                        </div>
-                        <div class="card-content">
-                            <div class="tabs">
-                                <div class="tab-buttons">
-                                    <button class="tab-btn active" data-tab="all">All</button>
-                                    <button class="tab-btn" data-tab="pending">Pending</button>
-                                    <button class="tab-btn" data-tab="in-progress">In Progress</button>
-                                    <button class="tab-btn" data-tab="resolved">Resolved</button>
-                                </div>
-                                <div class="tab-content active" id="all-tab">
-                                    <div id="all-complaints-list" class="complaints-list">
-                                        <!-- Complaints will be loaded here -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3>Recent Complaints</h3>
+                                        <p class="text-muted">Most recently submitted complaints</p>
+                                        <button id="refresh-complaints" class="btn btn-sm btn-outline"
+                                            style="margin-left: auto;">
+                                            <i class="fas fa-sync-alt"></i> Refresh
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="tab-content" id="pending-tab">
-                                    <div id="pending-complaints-list" class="complaints-list">
-                                        <!-- Pending complaints will be loaded here -->
+                                    <div class="card-content">
+                                        <div class="tabs">
+                                            <div class="tab-buttons">
+                                                <button class="tab-btn active" data-tab="all">All</button>
+                                                <button class="tab-btn" data-tab="pending">Pending</button>
+                                                <button class="tab-btn" data-tab="in-progress">In Progress</button>
+                                                <button class="tab-btn" data-tab="resolved">Resolved</button>
+                                            </div>
+                                            <div class="tab-content active" id="all-tab">
+                                                <div id="all-complaints-list" class="complaints-list">
+                                                    <!-- Complaints will be loaded here -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-content" id="pending-tab">
+                                                <div id="pending-complaints-list" class="complaints-list">
+                                                    <!-- Pending complaints will be loaded here -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-content" id="in-progress-tab">
+                                                <div id="in-progress-complaints-list" class="complaints-list">
+                                                    <!-- In progress complaints will be loaded here -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-content" id="resolved-tab">
+                                                <div id="resolved-complaints-list" class="complaints-list">
+                                                    <!-- Resolved complaints will be loaded here -->
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="tab-content" id="in-progress-tab">
-                                    <div id="in-progress-complaints-list" class="complaints-list">
-                                        <!-- In progress complaints will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="resolved-tab">
-                                    <div id="resolved-complaints-list" class="complaints-list">
-                                        <!-- Resolved complaints will be loaded here -->
+                                    <div class="card-footer">
+                                        <a href="/lgu/complaints" class="btn btn-outline btn-block">View All
+                                            Complaints</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer">
-                            <a href="/lgu/complaints" class="btn btn-outline btn-block">View All Complaints</a>
-                        </div>
-                    </div>
-                    </div>
-                    </div>
                     </div>
 
                     <!-- Row 2: Complaints by Type + Department Performance -->
@@ -199,7 +200,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/data-management.js"></script>
     <script src="../js/auth-check.js"></script>
+    <script src="../js/user-utils.js"></script>
     <script src="../js/sidebar-loader.js"></script>
     <script src="../js/lgu-dashboard.js"></script>
-</body>
+</body><h3>Total Complaints</h3>
+
 </html>

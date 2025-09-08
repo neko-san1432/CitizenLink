@@ -95,6 +95,11 @@ function extractDepartmentFromUser(user) {
     }
   }
   
+  // Special case for lgu-admin-wst pattern
+  if (userType === 'lgu-admin-wst') {
+    return 'wst';
+  }
+  
   // Fallback: try to extract from common patterns
   if (userType.includes('wst')) return 'wst';
   if (userType.includes('roads')) return 'roads';
@@ -683,7 +688,12 @@ function initializeCharts(insights) {
   if (trendsCtx && insights.trends && insights.trends.labels && insights.trends.values) {
     console.log('✅ Creating trends chart with data:', insights.trends);
     try {
-    new Chart(trendsCtx.getContext('2d'), {
+      // Destroy existing chart if it exists
+      if (window.trendsChart) {
+        window.trendsChart.destroy();
+      }
+      
+      window.trendsChart = new Chart(trendsCtx.getContext('2d'), {
     type: 'line',
     data: {
         labels: insights.trends.labels,
@@ -745,7 +755,12 @@ function initializeCharts(insights) {
       
       console.log('✅ Creating resolution time chart with data:', { categories, avgTimes });
       try {
-      new Chart(resolutionTimeCtx.getContext('2d'), {
+        // Destroy existing chart if it exists
+        if (window.resolutionTimeChart) {
+          window.resolutionTimeChart.destroy();
+        }
+        
+        window.resolutionTimeChart = new Chart(resolutionTimeCtx.getContext('2d'), {
     type: 'bar',
     data: {
           labels: categories,
@@ -804,7 +819,12 @@ function initializeCharts(insights) {
     if (categoryData.length > 0) {
       console.log('✅ Creating categories chart with data:', categoryData);
       try {
-        new Chart(categoriesCtx.getContext('2d'), {
+        // Destroy existing chart if it exists
+        if (window.categoriesChart) {
+          window.categoriesChart.destroy();
+        }
+        
+        window.categoriesChart = new Chart(categoriesCtx.getContext('2d'), {
           type: 'doughnut',
           data: {
             labels: categoryData.map(([category]) => category),
@@ -1157,24 +1177,6 @@ function setupButtonEventListeners() {
       console.log('🔍 Debug Data button clicked');
       await debugComplaintData();
     });
-  }
-}
-
-// Show empty state when no data
-function showEmptyState() {
-  const mainContent = document.querySelector('.dashboard-main');
-  if (mainContent) {
-    mainContent.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-content">
-          <div class="empty-state-icon">
-            <i class="fas fa-chart-bar"></i>
-          </div>
-          <h3>No Data Available</h3>
-          <p class="empty-state-description">No complaint data found to generate insights. Start collecting complaints to see intelligent recommendations.</p>
-        </div>
-      </div>
-    `;
   }
 }
 

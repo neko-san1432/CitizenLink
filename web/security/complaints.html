@@ -20,9 +20,17 @@
 
         <div class="main-content">
             <header class="dashboard-header">
-                <button class="sidebar-toggle" id="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="brand-logo">
+                        <a href="/lgu/dashboard" class="logo-link">
+                            <i class="fas fa-shield-halved text-primary me-2"></i>
+                            <span class="brand-text">CitizenLink</span>
+                        </a>
+                    </div>
+                </div>
                 <div class="header-right">
                     <span class="welcome-text">LGU Admin Portal</span>
                 </div>
@@ -121,11 +129,11 @@
                         <h3>No Complaints Found</h3>
                         <p class="empty-state-description">Great news! There are no complaints matching your current filters.</p>
                         <div class="empty-state-actions">
-                            <button class="btn btn-outline-primary" onclick="clearAllFilters()">
+                            <button class="btn btn-outline-primary" id="clear-filters">
                                 <i class="fas fa-filter"></i>
                                 Clear All Filters
                             </button>
-                            <button class="btn btn-primary" onclick="refreshComplaints()">
+                            <button class="btn btn-primary" id="refresh-complaints">
                                 <i class="fas fa-sync-alt"></i>
                                 Refresh
                             </button>
@@ -145,9 +153,9 @@
                 <div id="debug-sidebar" style="display: block; background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #dee2e6;">
                     <h5>Sidebar Debug Info:</h5>
                     <p>If sidebar is not working, try these:</p>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="testSidebar()">Test Sidebar Loader</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="manualLoadSidebar()">Manual Load Sidebar</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="checkUserData()">Check User Data</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="test-sidebar-btn">Test Sidebar Loader</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="manual-load-sidebar-btn">Manual Load Sidebar</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="check-user-data-btn">Check User Data</button>
                     <div id="debug-output" style="margin-top: 1rem; font-family: monospace; font-size: 12px;"></div>
                 </div>
 
@@ -283,7 +291,9 @@
     <script src="../js/supabase-init.js"></script>
     <script src="../js/data-management.js"></script>
     <script src="../js/auth-check.js"></script>
+    <script src="../js/user-utils.js"></script>
     <script src="../js/sidebar-loader.js"></script>
     <script src="../js/lgu-complaints.js"></script>
+    <script src="../js/security-complaints-bindings.js"></script>
 </body>
 </html>
