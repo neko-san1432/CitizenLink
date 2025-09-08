@@ -18,14 +18,14 @@
     <meta name="google-site-verification" content="kXMBwCMQ_5xGds-7v-HLACS0LwMGVcua-kJVPgfX-VM" />
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://citizenlink-abwi.onrender.com/">
+    <link rel="canonical" href="https://citizenlink.dpdns.org/">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://citizenlink-abwi.onrender.com/">
+    <meta property="og:url" content="https://citizenlink.dpdns.org/">
     <meta property="og:title" content="CitizenLink - Citizen Complaint Management System">
     <meta property="og:description" content="Modern complaint management system connecting citizens and local government units. Submit, track, and resolve complaints efficiently.">
-    <meta property="og:image" content="https://citizenlink-abwi.onrender.com/images/og-image.jpg">
+    <meta property="og:image" content="https://citizenlink.dpdns.org/images/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="CitizenLink">
@@ -33,10 +33,10 @@
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://citizenlink-abwi.onrender.com/">
+    <meta property="twitter:url" content="https://citizenlink.dpdns.org/">
     <meta property="twitter:title" content="CitizenLink - Citizen Complaint Management System">
     <meta property="twitter:description" content="Modern complaint management system connecting citizens and local government units. Submit, track, and resolve complaints efficiently.">
-    <meta property="twitter:image" content="https://citizenlink-abwi.onrender.com/images/og-image.jpg">
+    <meta property="twitter:image" content="https://citizenlink.dpdns.org/images/og-image.jpg">
     
     <!-- Additional Meta Tags -->
     <meta name="theme-color" content="#007bff">
@@ -74,8 +74,8 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "CitizenLink",
-      "url": "https://citizenlink-abwi.onrender.com",
-      "logo": "https://citizenlink-abwi.onrender.com/images/logo.png",
+      "url": "https://citizenlink.dpdns.org",
+      "logo": "https://citizenlink.dpdns.org/images/logo.png",
       "description": "Modern complaint management system connecting citizens and local government units",
       "foundingDate": "2024",
       "sameAs": [
@@ -103,7 +103,7 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "CitizenLink",
-      "url": "https://citizenlink-abwi.onrender.com",
+      "url": "https://citizenlink.dpdns.org",
       "description": "Citizen complaint management system for local government units",
       "publisher": {
         "@type": "Organization",
@@ -111,9 +111,99 @@
       },
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://citizenlink-abwi.onrender.com/search?q={search_term_string}",
+        "target": "https://citizenlink.dpdns.org/search?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
+    }
+    </script>
+    
+    <!-- Government Service Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "GovernmentService",
+      "name": "Citizen Complaint Management System",
+      "description": "Digital platform for citizens to submit, track, and manage complaints with local government units",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "Local Government Unit",
+        "url": "https://citizenlink.dpdns.org"
+      },
+      "serviceType": "Citizen Services",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Philippines"
+      },
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceUrl": "https://citizenlink.dpdns.org",
+        "serviceSmsNumber": "+63-XXX-XXX-XXXX",
+        "servicePhone": "+63-XXX-XXX-XXXX"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Citizen Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Complaint Submission",
+              "description": "Submit complaints about infrastructure, public safety, and government services"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Complaint Tracking",
+              "description": "Real-time tracking of complaint status and resolution progress"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Government Dashboard",
+              "description": "Administrative dashboard for government units to manage complaints"
+            }
+          }
+        ]
+      }
+    }
+    </script>
+    
+    <!-- Local Business Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "GovernmentOrganization",
+      "name": "CitizenLink Government Services",
+      "url": "https://citizenlink.dpdns.org",
+      "logo": "https://citizenlink.dpdns.org/images/logo.png",
+      "description": "Digital government platform for citizen complaint management and local government services",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "PH",
+        "addressRegion": "Metro Manila"
+      },
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "availableLanguage": "English",
+          "areaServed": "PH"
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": "technical support",
+          "availableLanguage": "English",
+          "areaServed": "PH"
+        }
+      ],
+      "sameAs": [
+        "https://github.com/citizenlink"
+      ]
     }
     </script>
     

@@ -1385,6 +1385,37 @@ app.get("/site.webmanifest", (req, res) => {
   }
 });
 
+// Serve sitemap.xml - Only for search engines (User-Agent restriction)
+app.get("/sitemap.xml", (req, res) => {
+  const userAgent = req.get('User-Agent') || '';
+  const isSearchEngine = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkshare|w3c_validator/i.test(userAgent);
+  
+  if (!isSearchEngine) {
+    return res.status(403).send('Access denied - Sitemap only available to search engines');
+  }
+  
+  const filePath = path.join(__dirname, "sitemap.xml");
+  if (existsSync(filePath)) {
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600"); // 1 hour
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("Sitemap not found");
+  }
+});
+
+// Serve robots.txt - Public access allowed
+app.get("/robots.txt", (req, res) => {
+  const filePath = path.join(__dirname, "robots.txt");
+  if (existsSync(filePath)) {
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Cache-Control", "public, max-age=3600"); // 1 hour
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("Robots.txt not found");
+  }
+});
+
 // Serve static HTML files
 // app.get('/*.html', (req, res) => {
 //   const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;

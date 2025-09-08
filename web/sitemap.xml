@@ -1,99 +1,129 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/</loc>
+    <loc>https://citizenlink.dpdns.org/</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/login</loc>
+    <loc>https://citizenlink.dpdns.org/login</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/signup</loc>
+    <loc>https://citizenlink.dpdns.org/signup</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/verify-otp</loc>
+    <loc>https://citizenlink.dpdns.org/verify-otp</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/news</loc>
+    <loc>https://citizenlink.dpdns.org/news</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/citizen/dashboard</loc>
+    <loc>https://citizenlink.dpdns.org/citizen/dashboard</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/citizen/complaints</loc>
+    <loc>https://citizenlink.dpdns.org/citizen/complaints</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/citizen/submit-complaint</loc>
+    <loc>https://citizenlink.dpdns.org/citizen/submit-complaint</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/citizen/profile</loc>
+    <loc>https://citizenlink.dpdns.org/citizen/profile</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/dashboard</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/dashboard</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/complaints</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/complaints</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/heatmap</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/heatmap</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/insights</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/insights</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/news</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/news</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/events</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/events</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://citizenlink-abwi.onrender.com/lgu/notices</loc>
+    <loc>https://citizenlink.dpdns.org/lgu/notices</loc>
     <lastmod>2025-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://citizenlink.dpdns.org/lgu/officer</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://citizenlink.dpdns.org/lgu/admin</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://citizenlink.dpdns.org/lgu/profile</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://citizenlink.dpdns.org/superadmin/appointments</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://citizenlink.dpdns.org/security/complaints</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

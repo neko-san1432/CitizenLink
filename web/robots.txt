@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://citizenlink-abwi.onrender.com/sitemap.xml
+Sitemap: https://citizenlink.dpdns.org/sitemap.xml
 
 # Disallow admin and sensitive areas
 Disallow: /admin/
@@ -10,6 +10,10 @@ Disallow: /api/
 Disallow: /private/
 Disallow: /_next/
 Disallow: /node_modules/
+Disallow: /superadmin/
+Disallow: /security/
+Disallow: /*.json$
+Disallow: /db/
 
 # Allow important pages
 Allow: /login
@@ -18,12 +22,32 @@ Allow: /citizen/
 Allow: /lgu/
 Allow: /news
 Allow: /about
+Allow: /verify-otp
 
 # Allow CSS, JS, and images for proper rendering
 Allow: /css/
 Allow: /js/
 Allow: /images/
 Allow: /favicon.ico
+Allow: /android-chrome-*.png
+Allow: /apple-touch-icon.png
+Allow: /site.webmanifest
 
-# Remove crawl delay to allow faster indexing
-# Crawl-delay: 1
+# Special instructions for search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
