@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import helmet from "helmet";
 import compression from "compression";
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import { getSupabaseServiceClient } from "./db/db.js";
 import multer from "multer";
 
@@ -177,8 +177,74 @@ app.use(
   })
 );
 
-// ===== COMPRESSION MIDDLEWARE =====
-// Enable gzip compression for better bandwidth efficiency
+// ===== PERFORMANCE MONITORING =====
+// Track compression performance metrics
+const compressionMetrics = {
+  precompressed: { requests: 0, totalTime: 0, totalSize: 0 },
+  runtime: { requests: 0, totalTime: 0, totalSize: 0 },
+  uncompressed: { requests: 0, totalTime: 0, totalSize: 0 }
+};
+
+// Performance monitoring middleware
+function trackPerformance(type, startTime, originalSize, compressedSize) {
+  const duration = performance.now() - startTime;
+  compressionMetrics[type].requests++;
+  compressionMetrics[type].totalTime += duration;
+  compressionMetrics[type].totalSize += compressedSize || originalSize;
+}
+
+// ===== PRE-COMPRESSION MIDDLEWARE =====
+// Serve pre-compressed files when available (faster than runtime compression)
+app.use((req, res, next) => {
+  const startTime = performance.now();
+  
+  // Check if client accepts gzip encoding
+  const acceptsGzip = req.headers['accept-encoding'] && req.headers['accept-encoding'].includes('gzip');
+  
+  if (acceptsGzip) {
+    const gzPath = req.path + '.gz';
+    const fullGzPath = path.join(__dirname, gzPath);
+    
+    // Check if pre-compressed file exists
+    if (existsSync(fullGzPath)) {
+      const originalPath = path.join(__dirname, req.path);
+      const originalSize = existsSync(originalPath) ? statSync(originalPath).size : 0;
+      const compressedSize = statSync(fullGzPath).size;
+      
+      // Track performance metrics
+      trackPerformance('precompressed', startTime, originalSize, compressedSize);
+      
+      // Set appropriate headers for pre-compressed file
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Vary', 'Accept-Encoding');
+      
+      // Determine content type based on original file extension
+      const ext = path.extname(req.path).toLowerCase();
+      const contentTypes = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript',
+        '.json': 'application/json',
+        '.xml': 'application/xml',
+        '.txt': 'text/plain',
+        '.svg': 'image/svg+xml'
+      };
+      
+      if (contentTypes[ext]) {
+        res.setHeader('Content-Type', contentTypes[ext]);
+      }
+      
+      // Serve the pre-compressed file
+      return res.sendFile(fullGzPath);
+    }
+  }
+  
+  // Fall back to regular file serving
+  next();
+});
+
+// ===== FALLBACK COMPRESSION MIDDLEWARE =====
+// Enable gzip compression for files that weren't pre-compressed
 app.use(
   compression({
     level: 6, // Compression level (1-9, 6 is good balance of speed vs compression)
@@ -194,7 +260,35 @@ app.use(
   })
 );
 
-// Custom middleware to add additional security headers
+// Track runtime compression performance
+app.use((req, res, next) => {
+  const startTime = performance.now();
+  const originalWrite = res.write;
+  const originalEnd = res.end;
+  let responseSize = 0;
+  
+  res.write = function(chunk) {
+    if (chunk) responseSize += chunk.length;
+    return originalWrite.call(this, chunk);
+  };
+  
+  res.end = function(chunk) {
+    if (chunk) responseSize += chunk.length;
+    
+    // Track performance for runtime compression
+    if (res.getHeader('Content-Encoding') === 'gzip') {
+      trackPerformance('runtime', startTime, responseSize, responseSize);
+    } else {
+      trackPerformance('uncompressed', startTime, responseSize, responseSize);
+    }
+    
+    return originalEnd.call(this, chunk);
+  };
+  
+  next();
+});
+
+// Custom middleware to add additional security headers 
 app.use((req, res, next) => {
   // Additional custom security headers
   res.setHeader("X-Download-Options", "noopen");
@@ -985,6 +1079,11 @@ app.get("/news", (req, res) => {
   res.sendFile(path.join(__dirname, "news.html"));
 });
 
+// Performance monitor route
+app.get("/performance", (req, res) => {
+  res.sendFile(path.join(__dirname, "performance-monitor.html"));
+});
+
 // Serve new admin pages
 app.get("/superadmin/appointments.html", (req, res) => {
   res.sendFile(path.join(__dirname, "superadmin", "appointments.html"));
@@ -1346,6 +1445,47 @@ app.get("/api/health", (req, res) => {
         "/assets/*",
       ],
     },
+  });
+});
+
+// ===== PERFORMANCE METRICS API =====
+app.get("/api/performance", (req, res) => {
+  const calculateAverages = (metrics) => ({
+    requests: metrics.requests,
+    totalTime: Math.round(metrics.totalTime * 100) / 100,
+    totalSize: metrics.totalSize,
+    avgTime: metrics.requests > 0 ? Math.round((metrics.totalTime / metrics.requests) * 100) / 100 : 0,
+    avgSize: metrics.requests > 0 ? Math.round(metrics.totalSize / metrics.requests) : 0
+  });
+
+  const performanceData = {
+    timestamp: new Date().toISOString(),
+    metrics: {
+      precompressed: calculateAverages(compressionMetrics.precompressed),
+      runtime: calculateAverages(compressionMetrics.runtime),
+      uncompressed: calculateAverages(compressionMetrics.uncompressed)
+    },
+    analysis: {
+      totalRequests: compressionMetrics.precompressed.requests + compressionMetrics.runtime.requests + compressionMetrics.uncompressed.requests,
+      precompressedPercentage: compressionMetrics.precompressed.requests > 0 ? 
+        Math.round((compressionMetrics.precompressed.requests / (compressionMetrics.precompressed.requests + compressionMetrics.runtime.requests + compressionMetrics.uncompressed.requests)) * 100) : 0,
+      performanceGain: compressionMetrics.runtime.avgTime > 0 && compressionMetrics.precompressed.avgTime > 0 ? 
+        Math.round((compressionMetrics.runtime.avgTime / compressionMetrics.precompressed.avgTime) * 100) / 100 : 0
+    }
+  };
+
+  res.json(performanceData);
+});
+
+// ===== RESET METRICS API =====
+app.post("/api/performance/reset", (req, res) => {
+  compressionMetrics.precompressed = { requests: 0, totalTime: 0, totalSize: 0 };
+  compressionMetrics.runtime = { requests: 0, totalTime: 0, totalSize: 0 };
+  compressionMetrics.uncompressed = { requests: 0, totalTime: 0, totalSize: 0 };
+  
+  res.json({ 
+    message: "Performance metrics reset successfully",
+    timestamp: new Date().toISOString()
   });
 });
 

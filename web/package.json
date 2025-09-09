@@ -6,7 +6,14 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "node build-script.js",
+    "precompress": "npm run build",
+    "deploy": "node deploy.js",
+    "render-build": "npm install && npm run build",
+    "render-start": "npm start",
+    "benchmark": "node benchmark.js",
+    "test-performance": "npm run build && npm run benchmark"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
@@ -15,6 +22,9 @@
     "express": "^4.21.2",
     "helmet": "^8.1.0",
     "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "gzip-cli": "^1.0.0"
   },
   "keywords": [
     "citizen",

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink - Performance Monitor</title>
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metric-card {
+            transition: transform 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .performance-gain {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-tachometer-alt text-primary"></i>
+                    Performance Monitor
+                </h1>
+                <p class="text-muted">Real-time compression performance metrics for CitizenLink</p>
+            </div>
+        </div>
+
+        <!-- Performance Overview -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card metric-card border-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-rocket"></i> Pre-compressed
+                        </h5>
+                        <div class="performance-gain text-success" id="precompressed-requests">0</div>
+                        <p class="text-muted">Requests</p>
+                        <small class="text-muted" id="precompressed-avg-time">Avg: 0ms</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card metric-card border-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-warning">
+                            <i class="fas fa-cog"></i> Runtime
+                        </h5>
+                        <div class="performance-gain text-warning" id="runtime-requests">0</div>
+                        <p class="text-muted">Requests</p>
+                        <small class="text-muted" id="runtime-avg-time">Avg: 0ms</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card metric-card border-info">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-info">
+                            <i class="fas fa-file"></i> Uncompressed
+                        </h5>
+                        <div class="performance-gain text-info" id="uncompressed-requests">0</div>
+                        <p class="text-muted">Requests</p>
+                        <small class="text-muted" id="uncompressed-avg-time">Avg: 0ms</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Analysis -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-pie"></i> Request Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="requestChart" class="chart-container"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Response Time Comparison</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="timeChart" class="chart-container"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Summary -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-analytics"></i> Performance Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-primary" id="total-requests">0</h3>
+                                    <p class="text-muted">Total Requests</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-success" id="precompressed-percentage">0%</h3>
+                                    <p class="text-muted">Pre-compressed</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-warning" id="performance-gain">0x</h3>
+                                    <p class="text-muted">Performance Gain</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-info" id="last-updated">Never</h3>
+                                    <p class="text-muted">Last Updated</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-primary" onclick="refreshMetrics()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="resetMetrics()">
+                                <i class="fas fa-trash"></i> Reset Metrics
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="toggleAutoRefresh()">
+                                <i class="fas fa-play" id="auto-refresh-icon"></i> <span id="auto-refresh-text">Auto Refresh</span>
+                            </button>
+                        </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="auto-refresh-checkbox" checked>
+                            <label class="form-check-label" for="auto-refresh-checkbox">
+                                Auto-refresh every 5 seconds
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let autoRefreshInterval;
+        let requestChart, timeChart;
+
+        // Initialize charts
+        function initCharts() {
+            // Request distribution chart
+            const requestCtx = document.getElementById('requestChart').getContext('2d');
+            requestChart = new Chart(requestCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pre-compressed', 'Runtime', 'Uncompressed'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#28a745', '#ffc107', '#17a2b8'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Response time chart
+            const timeCtx = document.getElementById('timeChart').getContext('2d');
+            timeChart = new Chart(timeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Pre-compressed', 'Runtime', 'Uncompressed'],
+                    datasets: [{
+                        label: 'Average Response Time (ms)',
+                        data: [0, 0, 0],
+                        backgroundColor: ['#28a745', '#ffc107', '#17a2b8'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch performance metrics
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/performance');
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+            }
+        }
+
+        // Update UI with metrics
+        function updateUI(data) {
+            const { metrics, analysis } = data;
+
+            // Update request counts
+            document.getElementById('precompressed-requests').textContent = metrics.precompressed.requests;
+            document.getElementById('runtime-requests').textContent = metrics.runtime.requests;
+            document.getElementById('uncompressed-requests').textContent = metrics.uncompressed.requests;
+
+            // Update average times
+            document.getElementById('precompressed-avg-time').textContent = `Avg: ${metrics.precompressed.avgTime}ms`;
+            document.getElementById('runtime-avg-time').textContent = `Avg: ${metrics.runtime.avgTime}ms`;
+            document.getElementById('uncompressed-avg-time').textContent = `Avg: ${metrics.uncompressed.avgTime}ms`;
+
+            // Update analysis
+            document.getElementById('total-requests').textContent = analysis.totalRequests;
+            document.getElementById('precompressed-percentage').textContent = `${analysis.precompressedPercentage}%`;
+            document.getElementById('performance-gain').textContent = `${analysis.performanceGain}x`;
+            document.getElementById('last-updated').textContent = new Date(data.timestamp).toLocaleTimeString();
+
+            // Update charts
+            if (requestChart) {
+                requestChart.data.datasets[0].data = [
+                    metrics.precompressed.requests,
+                    metrics.runtime.requests,
+                    metrics.uncompressed.requests
+                ];
+                requestChart.update();
+            }
+
+            if (timeChart) {
+                timeChart.data.datasets[0].data = [
+                    metrics.precompressed.avgTime,
+                    metrics.runtime.avgTime,
+                    metrics.uncompressed.avgTime
+                ];
+                timeChart.update();
+            }
+        }
+
+        // Refresh metrics
+        function refreshMetrics() {
+            fetchMetrics();
+        }
+
+        // Reset metrics
+        async function resetMetrics() {
+            try {
+                await fetch('/api/performance/reset', { method: 'POST' });
+                fetchMetrics();
+            } catch (error) {
+                console.error('Error resetting metrics:', error);
+            }
+        }
+
+        // Toggle auto-refresh
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('auto-refresh-checkbox');
+            const icon = document.getElementById('auto-refresh-icon');
+            const text = document.getElementById('auto-refresh-text');
+
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(fetchMetrics, 5000);
+                icon.className = 'fas fa-pause';
+                text.textContent = 'Stop Auto Refresh';
+            } else {
+                clearInterval(autoRefreshInterval);
+                icon.className = 'fas fa-play';
+                text.textContent = 'Auto Refresh';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            fetchMetrics();
+            toggleAutoRefresh();
+        });
+    </script>
+</body>
+</html>
