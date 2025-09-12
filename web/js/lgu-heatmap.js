@@ -1573,7 +1573,6 @@ function getAreaKey(lat, lon, gridSizeDegrees = 0.01) {
   const lonNum = parseFloat(lon);
   if (Number.isNaN(latNum) || Number.isNaN(lonNum)) return "Unknown Area";
   // Prefer barangay name if point lies inside any barangay polygon
-
   if (Array.isArray(window._brgyPolygons) && window._brgyPolygons.length) {
     const point = L.latLng(latNum, lonNum);
     for (const poly of window._brgyPolygons) {
@@ -1623,7 +1622,6 @@ function formatDate(dateString) {
 // Setup filters with enhanced functionality
 function setupFilters() {
   const heatmapFilter = document.getElementById("heatmap-filter");
-  const timeFilter = document.getElementById("time-filter");
   const priorityFilter = document.getElementById("priority-filter");
   const urgencyFilter = document.getElementById("urgency-filter");
 
@@ -1631,7 +1629,6 @@ function setupFilters() {
   const debouncedUpdate = debounce(updateHeatmap, 300);
 
   if (heatmapFilter) heatmapFilter.addEventListener("change", debouncedUpdate);
-  if (timeFilter) timeFilter.addEventListener("change", debouncedUpdate);
   if (priorityFilter)
     priorityFilter.addEventListener("change", debouncedUpdate);
   if (urgencyFilter) urgencyFilter.addEventListener("change", debouncedUpdate);
@@ -1694,42 +1691,11 @@ function addAdvancedFilters() {
     <option value="resolved">Resolved</option>
   `;
 
-  // Date range filters (from/to)
-  const fromLabel = document.createElement("label");
-  fromLabel.textContent = "From:";
-  fromLabel.className = "filter-label";
-  fromLabel.setAttribute("for", "date-from");
-
-  const dateFrom = document.createElement("input");
-  dateFrom.type = "date";
-  dateFrom.id = "date-from";
-  dateFrom.className = "filter-select";
-  dateFrom.placeholder = "From";
-  dateFrom.setAttribute("aria-label", "Start date");
-
-  const toLabel = document.createElement("label");
-  toLabel.textContent = "To:";
-  toLabel.className = "filter-label";
-  toLabel.setAttribute("for", "date-to");
-
-  const dateTo = document.createElement("input");
-  dateTo.type = "date";
-  dateTo.id = "date-to";
-  dateTo.className = "filter-select";
-  dateTo.placeholder = "To";
-  dateTo.setAttribute("aria-label", "End date");
-
   advancedFiltersContainer.appendChild(statusFilter);
-  advancedFiltersContainer.appendChild(fromLabel);
-  advancedFiltersContainer.appendChild(dateFrom);
-  advancedFiltersContainer.appendChild(toLabel);
-  advancedFiltersContainer.appendChild(dateTo);
   container.appendChild(advancedFiltersContainer);
 
   // Add event listeners
   statusFilter.addEventListener("change", updateHeatmap);
-  dateFrom.addEventListener("change", updateHeatmap);
-  dateTo.addEventListener("change", updateHeatmap);
 }
 
 // Add filter reset functionality
@@ -1749,12 +1715,9 @@ function addFilterReset() {
 function resetAllFilters() {
   const filters = [
     "heatmap-filter",
-    "time-filter",
     "status-filter",
     "priority-filter",
     "urgency-filter",
-    "date-from",
-    "date-to",
     "complaint-search",
   ];
 
@@ -2642,16 +2605,14 @@ function updateResourceAllocation(complaints) {
 // Setup filters
 function setupFilters() {
   const heatmapFilter = document.getElementById("heatmap-filter");
-  const timeFilter = document.getElementById("time-filter");
 
-  if (!heatmapFilter || !timeFilter) {
+  if (!heatmapFilter) {
     console.warn("Filter elements not found");
     return;
   }
 
   // Add event listeners
   heatmapFilter.addEventListener("change", updateHeatmap);
-  timeFilter.addEventListener("change", updateHeatmap);
 
   // Add search functionality
   addSearchFilter();
@@ -2664,16 +2625,12 @@ function setupFilters() {
 async function updateHeatmap() {
   try {
     const heatmapFilter = document.getElementById("heatmap-filter");
-    const timeFilter = document.getElementById("time-filter");
     const statusFilter = document.getElementById("status-filter");
-    const dateFromEl = document.getElementById("date-from");
-    const dateToEl = document.getElementById("date-to");
     const searchInput = document.getElementById("complaint-search");
 
-    if (!heatmapFilter || !timeFilter) return;
+    if (!heatmapFilter) return;
 
     const selectedType = heatmapFilter.value; // category/type
-    const selectedTime = timeFilter.value; // all | week | month | quarter | year
     const selectedStatus = statusFilter ? statusFilter.value : "all";
     const selectedPriority = document.getElementById("priority-filter")
       ? document.getElementById("priority-filter").value
@@ -2681,9 +2638,6 @@ async function updateHeatmap() {
     const selectedUrgency = document.getElementById("urgency-filter")
       ? document.getElementById("urgency-filter").value
       : "all";
-    const fromDate =
-      dateFromEl && dateFromEl.value ? new Date(dateFromEl.value) : null;
-    const toDate = dateToEl && dateToEl.value ? new Date(dateToEl.value) : null;
     const searchTerm =
       searchInput && searchInput.value
         ? searchInput.value.toLowerCase().trim()
@@ -2726,53 +2680,6 @@ async function updateHeatmap() {
         if (complaintUrgency !== selectedUrgency) return false;
       }
 
-      // Time window
-      if (selectedTime && selectedTime !== "all") {
-        const created = new Date(complaint.created_at || complaint.createdAt);
-        const now = new Date();
-        let threshold = null;
-        switch (selectedTime) {
-          case "week":
-            threshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            break;
-          case "month":
-            threshold = new Date(
-              now.getFullYear(),
-              now.getMonth() - 1,
-              now.getDate()
-            );
-            break;
-          case "quarter":
-            threshold = new Date(
-              now.getFullYear(),
-              now.getMonth() - 3,
-              now.getDate()
-            );
-            break;
-          case "year":
-            threshold = new Date(
-              now.getFullYear() - 1,
-              now.getMonth(),
-              now.getDate()
-            );
-            break;
-          default:
-            threshold = null;
-        }
-        if (threshold && created < threshold) return false;
-      }
-
-      // Date range filter (from/to)
-      if (fromDate || toDate) {
-        const created = new Date(complaint.created_at || complaint.createdAt);
-        if (fromDate && created < fromDate) return false;
-        if (toDate) {
-          const end = new Date(toDate);
-          end.setHours(23, 59, 59, 999);
-          if (created > end) return false;
-        }
-      }
-
       // Search filter across key fields
       if (searchTerm) {
         const hay = `${complaint.title || ""} ${complaint.description || ""} ${
@@ -2809,8 +2716,6 @@ async function updateHeatmap() {
 
     // Use safe heatmap update function
     safeHeatmapUpdate(heatmapData);
-
-    // K-Means clustering and cluster display removed per request
 
     // Update markers layer
     if (window.markerLayer) {
