@@ -368,8 +368,9 @@ async function moveFilesToRealComplaintFolder(tempComplaintId, realComplaintId, 
     // Update file paths in the database to use real complaint ID
     const updatedMediaFiles = mediaFiles.map(file => ({
       ...file,
-      path: file.path.replace(`complaints/${tempComplaintId}/`, `complaints/${realComplaintId}/`),
-      url: file.url.replace(`complaints/${tempComplaintId}/`, `complaints/${realComplaintId}/`)
+      path: file.path.replace(`${tempComplaintId}/`, `${realComplaintId}/`),
+      storage_path: file.storage_path?.replace(`${tempComplaintId}/`, `${realComplaintId}/`),
+      url: file.url.replace(`${tempComplaintId}/`, `${realComplaintId}/`)
     }));
 
     // Update the complaint record with new file paths

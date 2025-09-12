@@ -357,9 +357,9 @@ async function getUpcomingEvents() {
     const supabase = await window.supabaseManager.initialize();
     
     const now = new Date();
-    // Only show events from today onwards, up to the next 12 months
-    const startOfTodayISO = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const twelveMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 12, 1).toISOString();
+    // Show events from past 3 months up to next 18 months (inclusive window)
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
+    const eighteenMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 18, 1).toISOString();
     
     
     
@@ -376,13 +376,13 @@ async function getUpcomingEvents() {
       
     }
     
-    // Get events from past 3 months to future 6 months (more inclusive)
+    // Get events within inclusive time window
     const { data, error } = await supabase
       .from('upcoming_events_data')
       .select('*')
       .eq('is_active', true)
-      .gte('event_date', startOfTodayISO)
-      .lte('event_date', twelveMonthsAhead)
+      .gte('event_date', threeMonthsAgo)
+      .lte('event_date', eighteenMonthsAhead)
       .order('event_date', { ascending: true });
 
     if (error) {

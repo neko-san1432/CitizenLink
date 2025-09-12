@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
+    "dev": "nodemon --quiet --watch . --ext js,html,css --exec node server.js",
+    "clean:gz": "node -e \"const fs=require('fs');const path=require('path');function walk(d){for(const f of fs.readdirSync(d)){const p=path.join(d,f);const s=fs.statSync(p);if(s.isDirectory())walk(p);else if(p.endsWith('.gz')){try{fs.unlinkSync(p);console.log('removed',p)}catch{}}}}walk(process.cwd());\"",
     "build": "node build-script.js",
     "precompress": "npm run build",
     "deploy": "node deploy.js",
@@ -24,7 +25,8 @@
     "multer": "^2.0.2"
   },
   "devDependencies": {
-    "gzip-cli": "^1.0.0"
+    "gzip-cli": "^1.0.0",
+    "nodemon": "^3.1.0"
   },
   "keywords": [
     "citizen",

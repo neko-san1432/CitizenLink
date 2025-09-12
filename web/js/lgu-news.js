@@ -98,12 +98,12 @@ async function loadNewsArticles() {
                 const resolved = [];
                 for (const art of newsArticles) {
                     if (art.image_path) {
-                        const signed = await getSignedUrlForPath(art.image_path, 86400);
+                        const signed = await getSignedUrlForPath(art.image_path, 315360000); // 10 years
                         resolved.push({ ...art, image_signed_url: signed });
                     } else if (art.image_url) {
                         // Legacy: derive key from URL and sign
                         const derivedPath = deriveDbPathFromUrl(art.image_url);
-                        const signed = derivedPath ? await getSignedUrlForPath(derivedPath, 86400) : null;
+                        const signed = derivedPath ? await getSignedUrlForPath(derivedPath, 315360000) : null; // 10 years
                         resolved.push({ ...art, image_path: derivedPath, image_signed_url: signed });
                     } else {
                         resolved.push(art);
@@ -384,14 +384,14 @@ function showNewsViewModal(article) {
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">View News Article</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h3 class="modal-title">View News Article</h3>
+                        <button class="modal-close" data-action="close-news-view-modal">&times;</button>
                     </div>
                     <div class="modal-body" id="news-view-content">
                         <!-- Content will be inserted here -->
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-outline" data-action="close-news-view-modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -435,73 +435,13 @@ function showNewsViewModal(article) {
         </div>
     `;
     
-    // Show modal (without Bootstrap dependency)
+    // Show modal using shared modal CSS
     console.log('About to show modal...');
-    
-    // Remove any existing backdrop first
-    const existingBackdrop = document.getElementById('news-view-backdrop');
-    if (existingBackdrop) {
-        existingBackdrop.remove();
-    }
-    
-    // Ensure modal is properly positioned in body
-    if (modal.parentNode && modal.parentNode !== document.body) {
-        document.body.appendChild(modal);
-    }
-    
-    // Create a separate backdrop element behind the modal
-    const backdrop = document.createElement('div');
-    backdrop.id = 'news-view-backdrop';
-    backdrop.style.position = 'fixed';
-    backdrop.style.top = '0';
-    backdrop.style.left = '0';
-    backdrop.style.width = '100%';
-    backdrop.style.height = '100%';
-    backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    backdrop.style.zIndex = '1040';
-    backdrop.style.pointerEvents = 'auto';
-    document.body.appendChild(backdrop);
-    
-    // Show modal with higher z-index (above backdrop)
-    modal.style.display = 'block';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.zIndex = '1050'; // High z-index for modal
-    modal.style.padding = '0';
-    modal.style.margin = '0';
-    modal.style.backgroundColor = 'transparent'; // Modal container transparent; backdrop provides dim
-    modal.style.pointerEvents = 'none'; // Let clicks fall through except dialog
     modal.classList.add('show');
     
-    // Ensure modal dialog is centered and visible
-    const modalDialog = modal.querySelector('.modal-dialog');
-    if (modalDialog) {
-        modalDialog.style.position = 'relative';
-        modalDialog.style.zIndex = '1061';
-        modalDialog.style.margin = '1.75rem auto';
-        modalDialog.style.maxWidth = '500px';
-        modalDialog.style.pointerEvents = 'auto'; // Re-enable pointer events for dialog
-    }
-    // Ensure modal content is fully opaque and readable
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.style.backgroundColor = '#fff';
-        modalContent.style.color = 'inherit';
-    }
-    
-    // Close modal when clicking backdrop
-    backdrop.addEventListener('click', () => {
-        closeViewModal();
-    });
-    
-    // Close modal when clicking close button
-    const closeBtn = modal.querySelector('.btn-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeViewModal);
-    }
+    // Close modal when clicking close buttons
+    const closeBtns = modal.querySelectorAll('[data-action="close-news-view-modal"], .modal-close');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeViewModal));
     
     console.log('Modal shown successfully');
     console.log('Modal parent:', modal.parentNode);
@@ -511,14 +451,9 @@ function showNewsViewModal(article) {
 // Close view modal
 function closeViewModal() {
     const modal = document.getElementById('news-view-modal');
-    const backdrop = document.getElementById('news-view-backdrop');
     
     if (modal) {
-        modal.style.display = 'none';
         modal.classList.remove('show');
-    }
-    if (backdrop) {
-        backdrop.remove();
     }
 }
 
@@ -553,11 +488,9 @@ async function editNewsArticle(articleId) {
                 imagePath: article.image_url ? article.image_url.split('/').pop() : 'No image'
             });
             
-            // Populate the form with article data
-            await populateNewsForm(article);
-            
-            // Show the edit modal
+            // Show the edit modal first (initializes upload UI), then populate
             showAddNewsModal();
+            await populateNewsForm(article);
         } else {
             showToast('News system not available', 'error');
         }
@@ -587,9 +520,10 @@ async function populateNewsForm(article) {
     if (featuredInput) featuredInput.checked = article.featured || false;
     if (tagsInput) tagsInput.value = article.tags ? article.tags.join(', ') : '';
     
-    // Handle existing image
-    if (article.image_path) {
-        await displayExistingImage(article.image_path);
+    // Handle existing image (defer until modal is painted)
+    if (article.image_path || article.image_url) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await displayExistingImage(article.image_path || article.image_url, article.image_url || null);
     }
     
     // Update modal title
@@ -602,7 +536,7 @@ async function populateNewsForm(article) {
 }
 
 // Display existing image in edit form
-async function displayExistingImage(imagePath) {
+async function displayExistingImage(imagePath, legacyUrl = null) {
     console.log('🖼️ Displaying existing image in edit form (by path):', {
         imagePath,
         hasPath: !!imagePath
@@ -610,18 +544,29 @@ async function displayExistingImage(imagePath) {
     
     const previewContainer = document.getElementById('image-preview-container');
     if (!previewContainer) return;
+    // Ensure container is visible
+    previewContainer.style.display = previewContainer.style.display || 'grid';
     
     // Clear existing previews
     previewContainer.innerHTML = '';
     
+    // Normalize path: allow raw object keys or full 'news-images/<key>'
+    let dbPath = imagePath || '';
+    // If we were passed a legacy public URL, derive the DB path
+    if (legacyUrl && !dbPath.startsWith('news-images/')) {
+        const derived = deriveDbPathFromUrl(legacyUrl);
+        if (derived) dbPath = derived;
+    }
+    // Normalize to 'news-images/<key>'
+    if (dbPath && !dbPath.startsWith('news-images/')) dbPath = `news-images/${dbPath}`;
     // Generate a fresh 24h signed URL
-    const validImageUrl = await getSignedUrlForPath(imagePath, 86400);
+    const validImageUrl = await getSignedUrlForPath(dbPath, 315360000); // 10 years
     
     // Create preview for existing image
     const previewItem = document.createElement('div');
     previewItem.className = 'image-preview-item';
     previewItem.innerHTML = `
-        <img src="${validImageUrl}" alt="Existing image" class="image-preview-thumbnail" onerror="this.style.display='none'">
+        <img src="${validImageUrl}" alt="Existing image" class="image-preview-thumbnail">
         <button class="image-preview-remove" data-action="remove-image-preview">
             <i class="fas fa-times"></i>
         </button>
@@ -634,13 +579,13 @@ async function displayExistingImage(imagePath) {
     
     console.log('🖼️ Existing image preview created:', {
         finalUrl: validImageUrl,
-        urlChanged: imageUrl !== validImageUrl,
+        dbPath,
         previewElement: 'image-preview-item created'
     });
     
     // Store the valid image URL for reference
     window.existingImageUrl = validImageUrl;
-    window.existingImagePath = imagePath;
+    window.existingImagePath = dbPath;
 }
 
 // Update news article
@@ -760,45 +705,10 @@ async function saveNews() {
             console.warn('Could not fetch user for logging:', e);
         }
         
-        // 1) If there are pending images, upload them now (all-or-nothing)
+        // We will upload after we know the article id (so path can be news_id/<file>)
         const newlyUploadedThisSave = [];
-        if (pendingImages && pendingImages.length > 0) {
-            showToast('Uploading images...', 'info');
-            console.log('🚀 Starting upload of pending images', { count: pendingImages.length });
-            for (const item of pendingImages) {
-                try {
-                    console.log('⬆️ Uploading image', { name: item.name, size: item.size });
-                    const result = await uploadSingleNewsImage(item.file);
-                    uploadedImages.push(result);
-                    newlyUploadedThisSave.push(result);
-                    console.log('✅ Uploaded image', result);
-                } catch (err) {
-                    console.error('❌ Error uploading a pending image, aborting save:', err);
-                    showToast('Image upload failed. Save cancelled.', 'error');
-                    // Rollback any images uploaded in this attempt
-                    try { await deleteUploadedImages(newlyUploadedThisSave); } catch (_) {}
-                    // Clear pending object URLs and keep previews as removed by user action only
-                    pendingImages.forEach(i => { if (i.previewUrl) URL.revokeObjectURL(i.previewUrl); });
-                    return; // Abort save entirely
-                }
-            }
-            // Clear pending now that uploads succeeded
-            pendingImages.forEach(i => { if (i.previewUrl) URL.revokeObjectURL(i.previewUrl); });
-            pendingImages = [];
-            console.log('🧹 Cleared pending images after upload');
-        }
-        // Determine image URL - prioritize new uploads, fallback to existing
         let imageUrl = null;
         let imagePath = null;
-        if (uploadedImages && uploadedImages.length > 0) {
-            // New images uploaded
-            imageUrl = uploadedImages[0].url; // legacy
-            imagePath = uploadedImages[0].path;
-        } else if (window.existingImageUrl && !window.imageRemoved) {
-            // Keep existing image if no new uploads and not removed
-            imageUrl = window.existingImageUrl; // signed URL for display
-            imagePath = window.existingImagePath || null;
-        }
         
         const newsData = {
             title: formData.get('title'),
@@ -809,8 +719,7 @@ async function saveNews() {
             read_time: '5 min', // You might want to calculate this based on content length
             status: formData.get('status'),
             featured: formData.get('featured') === 'on',
-            tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : [],
-            image_path: imagePath || null // Store path in DB
+            tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : []
         };
         
         // Validate required fields
@@ -819,31 +728,65 @@ async function saveNews() {
             return;
         }
         
-        console.log('Saving news article:', newsData);
+        console.log('Saving news article (two-phase for images):', newsData);
         
-        // Images are already uploaded, just get the URLs
-        let imageUrls = [];
-        if (uploadedImages && uploadedImages.length > 0) {
-            imageUrls = uploadedImages.map(img => img.url);
-            console.log('Using uploaded image URLs:', imageUrls);
-        }
-        
-        // Save to Supabase (imageUrls are handled separately in storage)
+        // Save to Supabase (two-phase when creating new)
         try {
             showToast('Saving news article...', 'info');
             
             let savedArticle;
-            if (window.editingArticleId) {
-                // Update existing article
-                savedArticle = await updateNewsArticle(window.editingArticleId, newsData);
-                console.log('News article updated:', savedArticle);
-                showToast('News article updated successfully!', 'success');
+            let articleId = window.editingArticleId || null;
+            if (articleId) {
+                // Update existing first (without image fields). We'll add image fields after upload below.
+                savedArticle = await updateNewsArticle(articleId, newsData);
             } else {
-                // Create new article
-                savedArticle = await window.createNewsArticle(newsData);
-                console.log('News article saved:', savedArticle);
-        showToast('News article saved successfully!', 'success');
+                // Create first to get ID
+                savedArticle = await window.createNewsArticle({ ...newsData });
+                articleId = savedArticle?.id;
             }
+
+            // If user removed existing image and provided no new one, delete old and clear fields
+            if (window.imageRemoved && !pendingImages?.length && window.existingImagePath) {
+                try { await deleteStorageObjectByPath(window.existingImagePath); } catch (_) {}
+                imagePath = null;
+                imageUrl = null;
+            }
+
+            // Upload pending images now using articleId
+            if (articleId && pendingImages && pendingImages.length > 0) {
+                showToast('Uploading images...', 'info');
+                console.log('🚀 Starting upload of pending images to article folder', { count: pendingImages.length, articleId });
+                for (const item of pendingImages) {
+                    try {
+                        const result = await uploadSingleNewsImage(item.file, articleId);
+                        newlyUploadedThisSave.push(result);
+                        imageUrl = result.url; // first image as primary
+                        imagePath = result.path; // 'news-images/<id>/<file>'
+                    } catch (err) {
+                        console.error('❌ Error uploading a pending image, aborting save:', err);
+                        showToast('Image upload failed. Save cancelled.', 'error');
+                        try { await deleteUploadedImages(newlyUploadedThisSave); } catch (_) {}
+                        pendingImages.forEach(i => { if (i.previewUrl) URL.revokeObjectURL(i.previewUrl); });
+                        return;
+                    }
+                }
+                pendingImages.forEach(i => { if (i.previewUrl) URL.revokeObjectURL(i.previewUrl); });
+                pendingImages = [];
+            }
+
+            // Determine fallback to existing image when not removed
+            if (!imagePath && window.existingImagePath && !window.imageRemoved) {
+                imagePath = window.existingImagePath;
+                imageUrl = window.existingImageUrl || imageUrl;
+            }
+
+            // Update article with image fields if changed/available
+            if (articleId) {
+                const updateWithImage = { ...newsData, image_path: imagePath || null, image_url: imageUrl || null };
+                savedArticle = await updateNewsArticle(articleId, updateWithImage);
+            }
+
+            showToast(window.editingArticleId ? 'News article updated successfully!' : 'News article saved successfully!', 'success');
             
             // Clear editing state
             window.editingArticleId = null;
@@ -1120,7 +1063,7 @@ function closeImageModal() {
 }
 
 // Upload single news image to Supabase Storage
-async function uploadSingleNewsImage(file) {
+async function uploadSingleNewsImage(file, articleId = null) {
     if (!window.supabaseManager) {
         throw new Error('Supabase manager not available');
     }
@@ -1137,10 +1080,10 @@ async function uploadSingleNewsImage(file) {
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 15);
     const fileExtension = file.name.split('.').pop();
+    const safeId = articleId ? String(articleId) : 'unassigned';
     const fileName = `news_${timestamp}_${randomId}.${fileExtension}`;
-    // Storage object key inside the bucket (no bucket prefix)
-    const objectKey = `${fileName}`;
-    // Path to store in DB (with bucket prefix as requested)
+    // Store inside per-article folder
+    const objectKey = `${safeId}/${fileName}`;
     const dbPath = `news-images/${objectKey}`;
     
     try {
@@ -1232,7 +1175,8 @@ async function deleteUploadedImages(items) {
         for (const it of items) {
             if (!it?.path) continue;
             try {
-                const { error } = await supabase.storage.from('news-images').remove([it.path]);
+                const objectKey = getObjectKeyFromPath(it.path) || it.path;
+                const { error } = await supabase.storage.from('news-images').remove([objectKey]);
                 if (error) {
                     console.warn('Could not delete uploaded image during rollback:', it.path, error);
                 } else {
@@ -1340,7 +1284,7 @@ async function refreshImageUrl(imagePath) {
         // Generate a signed URL (24h)
         const { data, error } = await supabase.storage
             .from('news-images')
-            .createSignedUrl(imagePath, 86400);
+            .createSignedUrl(imagePath, 315360000); // 10 years
         if (error) throw error;
         return data?.signedUrl || null;
     } catch (error) {
@@ -1356,15 +1300,20 @@ async function ensureImageUrl(article) {
 }
 
 // Create signed URL for a given storage path
-async function getSignedUrlForPath(imagePath, expiresInSeconds = 86400) {
+async function getSignedUrlForPath(imagePath, expiresInSeconds = 315360000) { // default 10 years
     try {
         if (!window.supabaseManager) {
             throw new Error('Supabase manager not available');
         }
         const supabase = await window.supabaseManager.initialize();
+        // Accept either full 'news-images/<key>' or raw '<key>'
+        const normalizedPath = imagePath.startsWith('news-images/') ? imagePath : `news-images/${imagePath}`;
+        // Supabase JS expects the full path relative to the bucket root.
+        // For storage.createSignedUrl, pass the normalizedPath including folder prefix.
+        // Use a long-lived URL if available via publicUrl. Otherwise create a signed URL.
         const { data, error } = await supabase.storage
             .from('news-images')
-            .createSignedUrl(imagePath, expiresInSeconds);
+            .createSignedUrl(normalizedPath, expiresInSeconds);
         if (error) throw error;
         const url = data?.signedUrl || null;
         if (url) await testImageUrl(url);
@@ -1382,7 +1331,7 @@ async function attachSignedUrlIfNeeded(article) {
         path = deriveDbPathFromUrl(article.image_url);
     }
     if (!path) return article;
-    const signed = await getSignedUrlForPath(path, 86400);
+    const signed = await getSignedUrlForPath(path, 315360000); // 10 years
     return { ...article, image_path: path, image_signed_url: signed };
 }
 
@@ -1428,60 +1377,11 @@ async function deleteNewsArticle(articleId) {
     }
     
     try {
-        console.log('Deleting news article:', articleId);
-        if (!window.supabaseManager) throw new Error('Supabase manager not available');
-        const supabase = await window.supabaseManager.initialize();
-
-        // 1) Fetch article to get image path/url
-        const { data: article, error: fetchErr } = await supabase
-            .from('news_data')
-            .select('*')
-            .eq('id', articleId)
-            .single();
-        if (fetchErr) {
-            console.warn('Could not fetch article before delete:', fetchErr);
-        }
-
-        // 2) Delete image from storage if present
-        try {
-            let dbPath = article?.image_path || null;
-            if (!dbPath && article?.image_url) {
-                dbPath = deriveDbPathFromUrl(article.image_url);
-            }
-            if (dbPath) {
-                const objectKey = getObjectKeyFromPath(dbPath); // strip 'news-images/'
-                if (objectKey) {
-                    const { error: rmErr } = await supabase.storage
-                        .from('news-images')
-                        .remove([objectKey]);
-                    if (rmErr) {
-                        console.warn('Storage remove failed:', { objectKey, rmErr });
-                    } else {
-                        console.log('Storage object removed:', objectKey);
-                    }
-                }
-            }
-        } catch (imgErr) {
-            console.warn('Image deletion skipped/failed:', imgErr);
-        }
-
-        // 3) Delete the DB row (client-side). If RLS blocks, fallback to server.
-        const { error: delErr } = await supabase
-            .from('news_data')
-            .delete()
-            .eq('id', articleId);
-        if (delErr) {
-            console.warn('Client delete failed, maybe RLS. Error:', delErr);
-            if ((delErr.message || '').toLowerCase().includes('row-level security')) {
-                console.log('Trying server-side delete fallback...');
-                const resp = await fetch(`/api/news/${articleId}`, { method: 'DELETE' });
-                if (!resp.ok) {
-                    const text = await resp.text().catch(() => '');
-                    throw new Error(`Server delete failed: ${resp.status} ${text}`);
-                }
-            } else {
-                throw delErr;
-            }
+        console.log('Deleting news article via server endpoint:', articleId);
+        const resp = await fetch(`/api/news/${articleId}`, { method: 'DELETE' });
+        if (!resp.ok) {
+            const text = await resp.text().catch(() => '');
+            throw new Error(`Server delete failed: ${resp.status} ${text}`);
         }
 
         showToast('News article deleted successfully!', 'success');

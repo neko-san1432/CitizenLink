@@ -1671,7 +1671,7 @@ body.heatmap-page .btn i {
 
 /* ===== MAP STYLES ===== */
 .map-card {
-  height: calc(100vh - 72px); /* header height */
+  height: 100%;
   margin: 0;
   border-radius: 0.5rem;
   overflow: hidden;

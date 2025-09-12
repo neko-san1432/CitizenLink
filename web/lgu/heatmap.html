@@ -47,21 +47,45 @@
                     </div>
                     <div class="side-panel-content">
                         <div class="filter-buttons">
-                            <select id="heatmap-filter" class="filter-select">
-                                <option value="all">All Complaints</option>
-                                <option value="infrastructure">Infrastructure</option>
-                                <option value="public_safety">Public Safety</option>
-                                <option value="sanitation">Sanitation</option>
-                                <option value="utilities">Utilities</option>
-                                <option value="noise">Noise</option>
-                            </select>
-                            <select id="time-filter" class="filter-select">
-                                <option value="all">All Time</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="quarter">This Quarter</option>
-                                <option value="year">This Year</option>
-                            </select>
+                            <div class="filter-group">
+                                <label for="heatmap-filter" class="filter-label">Complaint Type</label>
+                                <select id="heatmap-filter" class="filter-select">
+                                    <option value="all">All Complaints</option>
+                                    <option value="infrastructure">Infrastructure</option>
+                                    <option value="public_safety">Public Safety</option>
+                                    <option value="sanitation">Sanitation</option>
+                                    <option value="utilities">Utilities</option>
+                                    <option value="noise">Noise</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="time-filter" class="filter-label">Time Period</label>
+                                <select id="time-filter" class="filter-select">
+                                    <option value="all">All Time</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="priority-filter" class="filter-label">Priority Level</label>
+                                <select id="priority-filter" class="filter-select">
+                                    <option value="all">All Priorities</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="medium">Medium Priority</option>
+                                    <option value="low">Low Priority</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="urgency-filter" class="filter-label">Urgency</label>
+                                <select id="urgency-filter" class="filter-select">
+                                    <option value="all">All Urgency</option>
+                                    <option value="urgent">Urgent (0-24h)</option>
+                                    <option value="high">High (1-3 days)</option>
+                                    <option value="normal">Normal (3+ days)</option>
+                                </select>
+                            </div>
                         </div>
                         <div id="advanced-filters-container"></div>
                     </div>
@@ -90,6 +114,10 @@
                                     <span class="stat-label">Avg Response Time</span>
                                     <span class="stat-value" id="avg-response-time">-</span>
                                 </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Data Density</span>
+                                    <span class="stat-value" id="data-density">-</span>
+                                </div>
                             </div>
                         </div>
 
@@ -104,6 +132,16 @@
                                     <span class="hotspot-label">Loading hotspots...</span>
                                 </div>
                                 <ul id="hotspot-list" class="hotspot-list"></ul>
+                                <div class="hotspot-metrics">
+                                    <div class="metric-item">
+                                        <span class="metric-label">Peak Intensity:</span>
+                                        <span class="metric-value" id="peak-intensity">-</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Coverage Area:</span>
+                                        <span class="metric-value" id="coverage-area">-</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -170,7 +208,7 @@
                     <div class="card-content">
                         <div id="complaint-map" class="map-container">
                             <!-- Floating Controls inside map -->
-                            <div class="floating-controls leaflet-control" style="display: flex; flex-direction: column; gap: 8px;">
+                            <div class="floating-controls leaflet-control" style="display: flex; flex-direction: row; gap: 8px;">
                                 <button id="toggle-filters" class="btn btn-outline-primary btn-sm" title="Filters">
                                     <i class="fas fa-sliders-h"></i>
                                 </button>

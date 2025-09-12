@@ -13,7 +13,7 @@ app.use((req, res, next) => {
 
 // Helmet config with strong security headers
 app.use((req, res, next) => {
-  helmet({
+  helmet({  
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],

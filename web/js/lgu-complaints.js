@@ -411,7 +411,7 @@ function updatePagination(totalItems, currentPage, perPage) {
 // ===== MEDIA DISPLAY FUNCTIONS =====
 
 // Display media files in the complaint details modal
-function displayMediaFiles(mediaFiles) {
+async function displayMediaFiles(mediaFiles) {
   const mediaSection = document.getElementById('media-section');
   const noMediaMessage = document.getElementById('no-media-message');
   const mediaGrid = document.getElementById('media-grid');
@@ -427,10 +427,11 @@ function displayMediaFiles(mediaFiles) {
   noMediaMessage.style.display = 'none';
   mediaGrid.innerHTML = '';
   
-  mediaFiles.forEach((file, index) => {
+  for (let index = 0; index < mediaFiles.length; index++) {
+    const file = await resolveComplaintMediaLink(mediaFiles[index]);
     const mediaItem = createMediaItem(file, index);
     mediaGrid.appendChild(mediaItem);
-  });
+  }
 }
 
 // Create individual media item for display
@@ -536,6 +537,23 @@ function getMediaPreviewContent(file) {
     </audio>`;
   }
   return `<p>Preview not available for this file type.</p>`;
+}
+
+// Resolve media to a usable URL: prefer public url, else create 10y signed from storage_path
+async function resolveComplaintMediaLink(file) {
+  try {
+    if (file && file.url) return file; // already has public URL
+    const path = file?.storage_path || file?.path;
+    if (!path || !window.storageManager) return file;
+    
+    // Simple: just use the path directly - storageManager handles bucket internally
+    const signed = await window.storageManager?.getSignedUrl(path, 315360000);
+    if (signed) return { ...file, url: signed };
+    return file;
+  } catch (e) {
+    console.warn('Could not resolve media link', e);
+    return file;
+  }
 }
 
 // Format file size

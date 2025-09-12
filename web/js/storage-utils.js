@@ -37,7 +37,8 @@ class StorageManager {
     const extension = fileName.split('.').pop();
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    return `complaints/${complaintId}/${fileType}/${timestamp}_${randomId}_${sanitizedFileName}`;
+    // Simple path: just the file path within the bucket
+    return `${complaintId}/${timestamp}_${randomId}_${sanitizedFileName}`;
   }
 
   // Upload single file to Supabase Storage
@@ -80,7 +81,8 @@ class StorageManager {
         type: fileType,
         mimeType: file.type,
         size: file.size,
-        path: filePath,
+        path: filePath, // Just the path within bucket
+        storage_path: filePath, // Same as path - simple!
         url: urlData.publicUrl,
         uploadedAt: new Date().toISOString()
       };
@@ -191,6 +193,19 @@ class StorageManager {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  }
+
+  // Create a long-lived signed URL (default ~10 years)
+  async getSignedUrl(filePath, expiresInSeconds = 315360000) {
+    if (!this.isReady()) {
+      await this.initialize();
+    }
+
+    const { data, error } = await this.supabase.storage
+      .from(this.bucketName)
+      .createSignedUrl(filePath, expiresInSeconds);
+    if (error) throw error;
+    return data?.signedUrl || null;
   }
 
   // List files in a complaint folder

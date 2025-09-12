@@ -194,54 +194,31 @@ function trackPerformance(type, startTime, originalSize, compressedSize) {
 }
 
 // ===== PRE-COMPRESSION MIDDLEWARE =====
-// Serve pre-compressed files when available (faster than runtime compression)
-app.use((req, res, next) => {
-  const startTime = performance.now();
-  
-  // Check if client accepts gzip encoding
-  const acceptsGzip = req.headers['accept-encoding'] && req.headers['accept-encoding'].includes('gzip');
-  
-  if (acceptsGzip) {
-    const gzPath = req.path + '.gz';
-    const fullGzPath = path.join(__dirname, gzPath);
-    
-    // Check if pre-compressed file exists
-    if (existsSync(fullGzPath)) {
-      const originalPath = path.join(__dirname, req.path);
-      const originalSize = existsSync(originalPath) ? statSync(originalPath).size : 0;
-      const compressedSize = statSync(fullGzPath).size;
-      
-      // Track performance metrics
-      trackPerformance('precompressed', startTime, originalSize, compressedSize);
-      
-      // Set appropriate headers for pre-compressed file
-      res.setHeader('Content-Encoding', 'gzip');
-      res.setHeader('Vary', 'Accept-Encoding');
-      
-      // Determine content type based on original file extension
-      const ext = path.extname(req.path).toLowerCase();
-      const contentTypes = {
-        '.html': 'text/html',
-        '.css': 'text/css',
-        '.js': 'application/javascript',
-        '.json': 'application/json',
-        '.xml': 'application/xml',
-        '.txt': 'text/plain',
-        '.svg': 'image/svg+xml'
-      };
-      
-      if (contentTypes[ext]) {
-        res.setHeader('Content-Type', contentTypes[ext]);
+// Serve pre-compressed files in production only, or when explicitly enabled
+const enablePrecompressed = process.env.ENABLE_PRECOMPRESSED === 'true' || isProduction;
+if (enablePrecompressed) {
+  app.use((req, res, next) => {
+    const startTime = performance.now();
+    const acceptsGzip = req.headers['accept-encoding'] && req.headers['accept-encoding'].includes('gzip');
+    if (acceptsGzip) {
+      const gzPath = req.path + '.gz';
+      const fullGzPath = path.join(__dirname, gzPath);
+      if (existsSync(fullGzPath)) {
+        const originalPath = path.join(__dirname, req.path);
+        const originalSize = existsSync(originalPath) ? statSync(originalPath).size : 0;
+        const compressedSize = statSync(fullGzPath).size;
+        trackPerformance('precompressed', startTime, originalSize, compressedSize);
+        res.setHeader('Content-Encoding', 'gzip');
+        res.setHeader('Vary', 'Accept-Encoding');
+        const ext = path.extname(req.path).toLowerCase();
+        const contentTypes = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.xml': 'application/xml', '.txt': 'text/plain', '.svg': 'image/svg+xml' };
+        if (contentTypes[ext]) res.setHeader('Content-Type', contentTypes[ext]);
+        return res.sendFile(fullGzPath);
       }
-      
-      // Serve the pre-compressed file
-      return res.sendFile(fullGzPath);
     }
-  }
-  
-  // Fall back to regular file serving
-  next();
-});
+    next();
+  });
+}
 
 // ===== FALLBACK COMPRESSION MIDDLEWARE =====
 // Enable gzip compression for files that weren't pre-compressed
@@ -1525,23 +1502,15 @@ app.get("/site.webmanifest", (req, res) => {
   }
 });
 
-// Serve sitemap.xml - Only for search engines (User-Agent restriction)
+// Serve sitemap.xml - public access (allows validators and tools)
 app.get("/sitemap.xml", (req, res) => {
-  const userAgent = req.get('User-Agent') || '';
-  const isSearchEngine = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkshare|w3c_validator/i.test(userAgent);
-  
-  if (!isSearchEngine) {
-    return res.status(403).send('Access denied - Sitemap only available to search engines');
-  }
-  
   const filePath = path.join(__dirname, "sitemap.xml");
   if (existsSync(filePath)) {
     res.setHeader("Content-Type", "application/xml");
     res.setHeader("Cache-Control", "public, max-age=3600"); // 1 hour
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send("Sitemap not found");
+    return res.sendFile(filePath);
   }
+  return res.status(404).send("Sitemap not found");
 });
 
 // Serve robots.txt - Public access allowed

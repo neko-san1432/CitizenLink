@@ -53,6 +53,18 @@ function setupEventListeners() {
             await saveNotice();
         });
     }
+    
+    // Wire up close buttons and actions for custom modal
+    const createNoticeModal = document.getElementById('createNoticeModal');
+    if (createNoticeModal) {
+        const closeBtn = document.getElementById('create-notice-modal-close');
+        if (closeBtn) closeBtn.addEventListener('click', closeNoticeModal);
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="close-notice-modal"]')) closeNoticeModal();
+        });
+    }
+    
+    // Keep Bootstrap modal for notice detail as-is
 
     // Prevent default form submission (avoid reload on Enter key)
     const noticeForm = document.getElementById('create-notice-form');
@@ -284,44 +296,47 @@ function getPriorityBadgeClass(priority) {
     }
 }
 
-// Open create notice modal
+// Open create notice modal (match News modal behavior)
 function openCreateNoticeModal() {
-    const modal = new bootstrap.Modal(document.getElementById('createNoticeModal'));
-    modal.show();
-    
-    // Reset form
-    const form = document.getElementById('create-notice-form');
-    if (form) {
-        form.reset();
-        
-        // Set default dates
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
-        
-        const startDateInput = form.querySelector('[name="start_date"]');
-        const endDateInput = form.querySelector('[name="end_date"]');
-        
-        if (startDateInput) {
-            startDateInput.value = today.toISOString().split('T')[0];
+    const modal = document.getElementById('createNoticeModal');
+    if (modal) {
+        modal.style.display = 'block';
+
+        // Update modal title
+        const title = document.getElementById('create-notice-modal-title');
+        if (title) title.textContent = 'Create Important Notice';
+
+        // Reset form and set defaults
+        const form = document.getElementById('create-notice-form');
+        if (form) {
+            form.reset();
+
+            const today = new Date();
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+            const startDateInput = form.querySelector('[name="start_date"]');
+            const endDateInput = form.querySelector('[name="end_date"]');
+
+            if (startDateInput) startDateInput.value = today.toISOString().split('T')[0];
+            if (endDateInput) endDateInput.value = nextMonth.toISOString().split('T')[0];
         }
-        if (endDateInput) {
-            endDateInput.value = nextMonth.toISOString().split('T')[0];
+
+        // Update save button
+        const saveBtn = document.getElementById('save-notice-btn');
+        if (saveBtn) {
+            saveBtn.textContent = 'Create Notice';
+            saveBtn.onclick = async () => { await saveNotice(); };
         }
     }
-    
-    // Update modal title
-    const modalTitle = document.getElementById('createNoticeModalLabel');
-    if (modalTitle) {
-        modalTitle.textContent = 'Create Important Notice';
-    }
-    
-    // Update save button
-    const saveBtn = document.getElementById('save-notice-btn');
-    if (saveBtn) {
-        saveBtn.textContent = 'Create Notice';
-        saveBtn.onclick = async () => {
-            await saveNotice();
-        };
+}
+
+// Close create notice modal (match News modal behavior)
+function closeNoticeModal() {
+    const modal = document.getElementById('createNoticeModal');
+    if (modal) {
+        modal.style.display = 'none';
+        const form = document.getElementById('create-notice-form');
+        if (form) form.reset();
     }
 }
 
@@ -340,8 +355,6 @@ async function saveNotice() {
             start_date: formData.get('start_date'),
             end_date: formData.get('end_date'),
             is_urgent: formData.get('is_urgent') === 'on',
-            requires_action: formData.get('requires_action') === 'on',
-            action_required: formData.get('action_required'),
             contact_info: formData.get('contact_info'),
             status: formData.get('status'),
             acknowledgment_required: formData.get('acknowledgment_required') === 'on'
@@ -410,12 +423,7 @@ function viewNotice(notice) {
                 <div class="notice-content mb-3">
                     ${notice.content}
                 </div>
-                ${notice.action_required ? `
-                    <div class="action-required mb-3 p-3 bg-light border rounded">
-                        <strong>Action Required:</strong><br>
-                        ${notice.action_required}
-                    </div>
-                ` : ''}
+                
                 ${notice.contact_info ? `
                     <div class="contact-info mb-3">
                         <strong>Contact Information:</strong><br>
@@ -464,8 +472,6 @@ function editNotice(notice) {
         form.querySelector('[name="start_date"]').value = notice.start_date || notice.startDate;
         form.querySelector('[name="end_date"]').value = notice.end_date || notice.endDate;
         form.querySelector('[name="is_urgent"]').checked = notice.is_urgent;
-        form.querySelector('[name="requires_action"]').checked = notice.requires_action;
-        form.querySelector('[name="action_required"]').value = notice.action_required || '';
         form.querySelector('[name="contact_info"]').value = notice.contact_info || '';
         form.querySelector('[name="status"]').value = notice.status;
         form.querySelector('[name="acknowledgment_required"]').checked = notice.acknowledgment_required;
