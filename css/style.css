@@ -1,0 +1,26 @@
+:root{
+    --WHITE: #f7f2eb;
+}
+*{
+    font-family: Arial, Helvetica, sans-serif;
+}
+/* display flex */
+.flex{
+    display: flex;
+}
+.column{
+    flex-direction: column;
+}
+.row{
+    flex-direction: row;
+}
+body{
+    background-color: var(--WHITE);
+}
+a{text-decoration:none;
+    
+}
+a:hover{
+    text-decoration: underline;
+   cursor: pointer;
+}

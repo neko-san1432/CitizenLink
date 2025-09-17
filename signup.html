@@ -1,0 +1,62 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <form id="regForm">
+      <input type="text" id="name" name="name" placeholder="Name" required />
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Email"
+        required
+      />
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <span style="padding: 8px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px;">+63</span>
+        <input
+          type="tel"
+          id="mobile"
+          name="mobile"
+          placeholder="9123456789"
+          maxlength="10"
+          pattern="[0-9]{10}"
+          required
+          style="flex: 1;"
+        />
+      </div>
+      <input
+        type="password"
+        id="regPassword"
+        name="password"
+        placeholder="Password"
+        required
+      />
+      <input
+        type="password"
+        id="reRegPassword"
+        name="confirmPassword"
+        placeholder="Repeat Password"
+        required
+      />
+      <div class="g-recaptcha" data-sitekey="6LeggcsrAAAAACefwb7CiPymVjJ56GdyNOj63hWg" id="register-captcha"></div>
+      <input type="submit" value="Register" />
+      <input type="checkbox" required />Check the checkbox if you agree the
+      <a id="toc" >Terms and Condition</a> and <a id="pc">Privacy Consent</a>
+    </form>
+    <div style="margin-top:12px">
+      <button id="login-google" type="button">Continue with Google</button>
+      <button id="login-facebook" type="button" style="margin-left:8px">Continue with Facebook</button>
+    </div>
+    <div id="terms"></div>
+    <div id="privacy"></div>
+    <div id="toast"></div>
+  </body>
+  <script src="/env.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script type="module" src="./js/auth/auth.js"></script>
+  <script type="module" src="./js/auth/register.js"></script>
+</html>

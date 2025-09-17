@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Complete Your Profile</h2>
+        <p>Please provide your mobile number to complete registration.</p>
+        
+        <form id="oauthCompleteForm">
+            <input type="text" id="name" name="name" placeholder="Full Name" readonly style="background: #f5f5f5;" />
+            <input type="email" id="email" name="email" placeholder="Email" readonly style="background: #f5f5f5;" />
+            
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span>+63</span>
+                <input
+                    type="tel"
+                    id="mobile"
+                    name="mobile"
+                    placeholder="9123456789"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                    required
+                    style="flex: 1;"
+                />
+            </div>
+
+            <div class="g-recaptcha" data-sitekey="6LeggcsrAAAAACefwb7CiPymVjJ56GdyNOj63hWg" id="oauth-complete-captcha"></div>
+            
+            <input type="submit" value="Complete Registration" />
+            
+            <input type="checkbox" required />Check the checkbox if you agree the
+            <a id="toc">Terms and Condition</a> and <a id="pc">Privacy Consent</a>
+        </form>
+        
+        <div id="terms"></div>
+        <div id="privacy"></div>
+        <div id="toast"></div>
+    </div>
+</body>
+<script src="/env.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script type="module" src="./js/auth/oauth-complete.js"></script>
+</html>
