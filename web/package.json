@@ -17,12 +17,12 @@
     "test-performance": "npm run build && npm run benchmark"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.54.0",
     "compression": "^1.8.1",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "supabase": "^2.40.7"
   },
   "devDependencies": {
     "gzip-cli": "^1.0.0",

@@ -563,19 +563,30 @@ async function initializeMap() {
     }
 
     // Create heatmap data from complaints inside boundary
+    // Note: Leaflet heatmap expects [lat, lng, weight] format
     const heatmapData = complaintsInsideBoundary.map((complaint) => [
-      parseFloat(complaint.latitude),
-      parseFloat(complaint.longitude),
+      parseFloat(complaint.latitude),  // lat first
+      parseFloat(complaint.longitude), // lng second
       getComplaintWeight(complaint),
     ]);
+
+    // Debug: Log initial heatmap data
+    console.log(`🔥 Initial heatmap data points: ${heatmapData.length}`);
+    console.log(`📍 Initial sample coordinates:`, heatmapData.slice(0, 3));
+    console.log(`📊 Initial complaints inside boundary: ${complaintsInsideBoundary.length}`);
+    
+    if (complaintsInsideBoundary.length === 0) {
+      console.warn(`⚠️ No complaints inside boundary during initial load!`);
+    }
 
     // Add heatmap layer with enhanced visualization
     // Ensure map is properly initialized before creating heatmap
     if (map.getSize && map.getSize().x > 0) {
+      // Use fixed radius and blur - constant size at all zoom levels
       const heat = L.heatLayer(heatmapData, {
         pane: "heatmap-pane",
-        radius: 40, // Increased radius for better coverage
-        blur: 25, // Increased blur for smoother gradients
+        radius: 20, // Fixed constant radius
+        blur: 15,   // Fixed constant blur
         maxZoom: 16, // Increased max zoom for better detail
         minOpacity: 0.1, // Minimum opacity for subtle areas
         max: 1.0, // Maximum intensity
@@ -611,10 +622,11 @@ async function initializeMap() {
         try {
           map.invalidateSize();
           if (map.getSize && map.getSize().x > 0) {
+            // Use fixed radius and blur - constant size at all zoom levels
             const heat = L.heatLayer(heatmapData, {
               pane: "heatmap-pane",
-              radius: 40,
-              blur: 25,
+              radius: 20, // Fixed constant radius
+              blur: 15,   // Fixed constant blur
               maxZoom: 16,
               minOpacity: 0.1,
               max: 1.0,
@@ -651,6 +663,7 @@ async function initializeMap() {
 
     // Prepare markers (we will add/remove them as a layer based on zoom level)
     const complaintMarkers = [];
+    console.log(`📍 Creating ${complaintsInsideBoundary.length} markers from complaintsInsideBoundary`);
     complaintsInsideBoundary.forEach((complaint) => {
       const marker = createComplaintMarker(complaint);
       complaintMarkers.push(marker);
@@ -662,7 +675,7 @@ async function initializeMap() {
     const MARKER_VISIBILITY_ZOOM = 14; // Set above default zoom level to show heatmap by default
     const applyMarkerLayerVisibility = () => {
       const currentZoom = map.getZoom();
-      const shouldShowMarkers = currentZoom >= MARKER_VISIBILITY_ZOOM;
+      const shouldShowMarkers = currentZoom > MARKER_VISIBILITY_ZOOM; // Use > for clearer threshold
       const currentMarkerLayer = window.markerLayer;
       const markersOnMap = currentMarkerLayer
         ? map.hasLayer(currentMarkerLayer)
@@ -701,28 +714,53 @@ async function initializeMap() {
         }
       }
     };
-    // Apply initial state
-    applyMarkerLayerVisibility();
+    // Apply initial state - show heatmap at zoom 14 and below, markers above zoom 14
+    const initialZoom = map.getZoom();
+    if (initialZoom <= 14) {
+      if (window.heatLayer && !window.complaintMap.hasLayer(window.heatLayer)) {
+        window.heatLayer.addTo(window.complaintMap);
+      }
+      if (window.markerLayer && window.complaintMap.hasLayer(window.markerLayer)) {
+        window.complaintMap.removeLayer(window.markerLayer);
+      }
+    } else {
+      if (window.heatLayer && window.complaintMap.hasLayer(window.heatLayer)) {
+        window.complaintMap.removeLayer(window.heatLayer);
+      }
+      if (window.markerLayer && !window.complaintMap.hasLayer(window.markerLayer)) {
+        window.markerLayer.addTo(window.complaintMap);
+      }
+    }
 
-    // Show/hide marker layer on zoom
-    map.on("zoomend", applyMarkerLayerVisibility);
-    
-    // Add zoom debugging
-    map.on("zoomstart", () => {
-      console.log("🔄 Zoom started - Current zoom:", map.getZoom());
-    });
-    
+    // Show heatmap at zoom 14 and below, markers above zoom 14
     map.on("zoomend", () => {
       const currentZoom = map.getZoom();
-      const bounds = map.getBounds();
       console.log("✅ Zoom ended - Current zoom:", currentZoom);
-      console.log("📍 Map bounds:", {
-        north: bounds.getNorth(),
-        south: bounds.getSouth(),
-        east: bounds.getEast(),
-        west: bounds.getWest()
-      });
-      console.log("🎯 Map center:", map.getCenter());
+      
+      // Show heatmap at zoom 14 and below, markers above zoom 14
+      if (currentZoom <= 14) {
+        // Show heatmap at zoom 14 and below
+        if (window.heatLayer && !window.complaintMap.hasLayer(window.heatLayer)) {
+          window.heatLayer.addTo(window.complaintMap);
+        }
+        // Hide markers
+        if (window.markerLayer && window.complaintMap.hasLayer(window.markerLayer)) {
+          window.complaintMap.removeLayer(window.markerLayer);
+        }
+        // Update heatmap with zoom compensation to maintain consistent size
+        updateHeatmapForZoom(currentZoom);
+        console.log(`🔥 Showing heatmap at zoom ${currentZoom} (≤14)`);
+      } else {
+        // Hide heatmap above zoom 14, show markers
+        if (window.heatLayer && window.complaintMap.hasLayer(window.heatLayer)) {
+          window.complaintMap.removeLayer(window.heatLayer);
+        }
+        // Show markers above zoom 14
+        if (window.markerLayer && !window.complaintMap.hasLayer(window.markerLayer)) {
+          window.markerLayer.addTo(window.complaintMap);
+        }
+        console.log(`📍 Hiding heatmap at zoom ${currentZoom} (>14), showing markers`);
+      }
     });
     
     map.on("zoom", () => {
@@ -996,116 +1034,9 @@ function addCombinedControls(map) {
       </div>
     `;
 
-    // Add intensity control
-    const intensityDiv = L.DomUtil.create("div", "heatmap-intensity-control");
-    intensityDiv.style.background = "white";
-    intensityDiv.style.padding = "10px";
-    intensityDiv.style.borderRadius = "6px";
-    intensityDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-    intensityDiv.style.fontSize = "12px";
-    intensityDiv.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 8px; color: #333;">Heatmap Intensity</div>
-      <div style="margin-bottom: 8px;">
-        <label>Radius: <span id="radius-value">40</span>px</label>
-        <input type="range" id="radius-slider" min="10" max="100" value="40" style="width: 100%; margin-top: 4px;">
-      </div>
-      <div style="margin-bottom: 8px;">
-        <label>Blur: <span id="blur-value">25</span>px</label>
-        <input type="range" id="blur-slider" min="5" max="50" value="25" style="width: 100%; margin-top: 4px;">
-      </div>
-      <div style="margin-bottom: 8px;">
-        <label>Opacity: <span id="opacity-value">0.8</span></label>
-        <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="0.8" style="width: 100%; margin-top: 4px;">
-      </div>
-      <div>
-        <input type="number" id="intensity-input" placeholder="Custom intensity" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-      </div>
-    `;
-
-    // Add event listeners for intensity control
-    const radiusSlider = intensityDiv.querySelector("#radius-slider");
-    const blurSlider = intensityDiv.querySelector("#blur-slider");
-    const opacitySlider = intensityDiv.querySelector("#opacity-slider");
-    const intensityInput = intensityDiv.querySelector("#intensity-input");
-
-    const updateHeatmapSettings = () => {
-      if (window.heatLayer && window.complaintMap) {
-        if (
-          window.complaintMap.getSize &&
-          window.complaintMap.getSize().x > 0
-        ) {
-          const radius = parseInt(radiusSlider.value);
-          const blur = parseInt(blurSlider.value);
-          const opacity = parseFloat(opacitySlider.value);
-
-          const gradient = {
-            0.0: `rgba(0, 0, 255, ${opacity * 0.1})`,
-            0.2: `rgba(0, 255, 255, ${opacity * 0.3})`,
-            0.4: `rgba(0, 255, 0, ${opacity * 0.5})`,
-            0.6: `rgba(255, 255, 0, ${opacity * 0.7})`,
-            0.8: `rgba(255, 165, 0, ${opacity * 0.9})`,
-            1.0: `rgba(255, 0, 0, ${opacity})`,
-          };
-
-          window.heatLayer.setOptions({
-            radius: radius,
-            blur: blur,
-            gradient: gradient,
-          });
-        } else {
-          setTimeout(() => {
-            const radius = parseInt(radiusSlider.value);
-            const blur = parseInt(blurSlider.value);
-            const opacity = parseFloat(opacitySlider.value);
-
-            const gradient = {
-              0.0: `rgba(0, 0, 255, ${opacity * 0.1})`,
-              0.2: `rgba(0, 255, 255, ${opacity * 0.3})`,
-              0.4: `rgba(0, 255, 0, ${opacity * 0.5})`,
-              0.6: `rgba(255, 255, 0, ${opacity * 0.7})`,
-              0.8: `rgba(255, 165, 0, ${opacity * 0.9})`,
-              1.0: `rgba(255, 0, 0, ${opacity})`,
-            };
-
-            window.heatLayer.setOptions({
-              radius: radius,
-              blur: blur,
-              gradient: gradient,
-            });
-          }, 100);
-        }
-      }
-    };
-
-    radiusSlider.addEventListener("input", () => {
-      intensityDiv.querySelector("#radius-value").textContent =
-        radiusSlider.value;
-      updateHeatmapSettings();
-    });
-
-    blurSlider.addEventListener("input", () => {
-      intensityDiv.querySelector("#blur-value").textContent = blurSlider.value;
-      updateHeatmapSettings();
-    });
-
-    opacitySlider.addEventListener("input", () => {
-      intensityDiv.querySelector("#opacity-value").textContent =
-        opacitySlider.value;
-      updateHeatmapSettings();
-    });
-
-    intensityInput.addEventListener("change", () => {
-      const value = parseFloat(intensityInput.value);
-      if (!isNaN(value) && value > 0) {
-        radiusSlider.value = Math.min(100, Math.max(10, value));
-        intensityDiv.querySelector("#radius-value").textContent =
-          radiusSlider.value;
-        updateHeatmapSettings();
-      }
-    });
+    // Intensity control removed - heatmap now uses fixed constants
 
     div.appendChild(legendDiv);
-    div.appendChild(intensityDiv);
 
     return div;
   };
@@ -1113,139 +1044,7 @@ function addCombinedControls(map) {
   combinedControl.addTo(map);
 }
 
-// Add heatmap intensity control
-function addHeatmapIntensityControl(map) {
-  const intensityControl = L.control({ position: "topright" });
-
-  intensityControl.onAdd = function () {
-    const div = L.DomUtil.create("div", "heatmap-intensity-control");
-    div.style.background = "white";
-    div.style.padding = "10px";
-    div.style.borderRadius = "6px";
-    div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-    div.style.fontSize = "12px";
-    div.style.lineHeight = "1.2";
-    div.style.minWidth = "200px";
-
-    div.innerHTML = `
-      <div style="font-weight:600; margin-bottom:8px;">Heatmap Intensity</div>
-      <div style="margin-bottom:8px;">
-        <label for="intensity-slider" style="display:block; margin-bottom:4px;">Radius: <span id="radius-value">40</span>px</label>
-        <input type="range" id="intensity-slider" min="10" max="80" value="40" style="width:100%;">
-      </div>
-      <div style="margin-bottom:8px;">
-        <label for="blur-slider" style="display:block; margin-bottom:4px;">Blur: <span id="blur-value">25</span>px</label>
-        <input type="range" id="blur-slider" min="5" max="50" value="25" style="width:100%;">
-      </div>
-      <div style="margin-bottom:8px;">
-        <label for="opacity-slider" style="display:block; margin-bottom:4px;">Opacity: <span id="opacity-value">0.8</span></label>
-        <input type="range" id="opacity-slider" min="0.1" max="1.0" step="0.1" value="0.8" style="width:100%;">
-      </div>
-      <button id="reset-intensity" class="btn btn-sm btn-outline-secondary" style="width:100%; font-size:11px;">Reset to Default</button>
-    `;
-
-    // Add event listeners
-    const radiusSlider = div.querySelector("#intensity-slider");
-    const blurSlider = div.querySelector("#blur-slider");
-    const opacitySlider = div.querySelector("#opacity-slider");
-    const resetBtn = div.querySelector("#reset-intensity");
-
-    const updateHeatmapSettings = () => {
-      if (window.heatLayer && window.complaintMap) {
-        try {
-          // Ensure map is properly sized before updating
-          if (
-            window.complaintMap.getSize &&
-            window.complaintMap.getSize().x > 0
-          ) {
-            const radius = parseInt(radiusSlider.value);
-            const blur = parseInt(blurSlider.value);
-            const opacity = parseFloat(opacitySlider.value);
-
-            // Update gradient with new opacity
-            const gradient = {
-              0.0: `rgba(0, 0, 255, ${opacity * 0})`,
-              0.2: `rgba(0, 255, 255, ${opacity * 0.3})`,
-              0.4: `rgba(0, 255, 0, ${opacity * 0.5})`,
-              0.6: `rgba(255, 255, 0, ${opacity * 0.7})`,
-              0.8: `rgba(255, 165, 0, ${opacity * 0.8})`,
-              1.0: `rgba(255, 0, 0, ${opacity})`,
-            };
-
-            window.heatLayer.setOptions({
-              radius: radius,
-              blur: blur,
-              gradient: gradient,
-            });
-          } else {
-            // If map is not properly sized, invalidate and retry
-            window.complaintMap.invalidateSize();
-            setTimeout(() => {
-              try {
-                if (
-                  window.complaintMap.getSize &&
-                  window.complaintMap.getSize().x > 0
-                ) {
-                  const radius = parseInt(radiusSlider.value);
-                  const blur = parseInt(blurSlider.value);
-                  const opacity = parseFloat(opacitySlider.value);
-
-                  const gradient = {
-                    0.0: `rgba(0, 0, 255, ${opacity * 0})`,
-                    0.2: `rgba(0, 255, 255, ${opacity * 0.3})`,
-                    0.4: `rgba(0, 255, 0, ${opacity * 0.5})`,
-                    0.6: `rgba(255, 255, 0, ${opacity * 0.7})`,
-                    0.8: `rgba(255, 165, 0, ${opacity * 0.8})`,
-                    1.0: `rgba(255, 0, 0, ${opacity})`,
-                  };
-
-                  window.heatLayer.setOptions({
-                    radius: radius,
-                    blur: blur,
-                    gradient: gradient,
-                  });
-                }
-              } catch (e) {
-                console.warn("Heatmap settings update retry failed:", e);
-              }
-            }, 100);
-          }
-        } catch (e) {
-          console.warn("Failed to update heatmap settings:", e);
-        }
-      }
-    };
-
-    radiusSlider.addEventListener("input", (e) => {
-      div.querySelector("#radius-value").textContent = e.target.value;
-      updateHeatmapSettings();
-    });
-
-    blurSlider.addEventListener("input", (e) => {
-      div.querySelector("#blur-value").textContent = e.target.value;
-      updateHeatmapSettings();
-    });
-
-    opacitySlider.addEventListener("input", (e) => {
-      div.querySelector("#opacity-value").textContent = e.target.value;
-      updateHeatmapSettings();
-    });
-
-    resetBtn.addEventListener("click", () => {
-      radiusSlider.value = 40;
-      blurSlider.value = 25;
-      opacitySlider.value = 0.8;
-      div.querySelector("#radius-value").textContent = "40";
-      div.querySelector("#blur-value").textContent = "25";
-      div.querySelector("#opacity-value").textContent = "0.8";
-      updateHeatmapSettings();
-    });
-
-    return div;
-  };
-
-  intensityControl.addTo(map);
-}
+// Heatmap intensity control removed - heatmap now uses fixed constants
 
 // Add a status legend control (top-right)
 function addStatusLegend(map) {
@@ -1300,12 +1099,19 @@ function createComplaintMarker(complaint) {
     parseFloat(complaint.latitude),
     parseFloat(complaint.longitude),
   ];
+  
+  // Debug: Log marker coordinates for first few markers
+  if (window._markerDebugCount === undefined) window._markerDebugCount = 0;
+  if (window._markerDebugCount < 3) {
+    console.log(`📍 Marker ${window._markerDebugCount}: lat=${coordinates[0]}, lng=${coordinates[1]}, status=${complaint.status}`);
+    window._markerDebugCount++;
+  }
 
   // Ensure markers pane exists
 
   const marker = L.circleMarker(coordinates, {
     pane: "markers-pane",
-    radius: 8,
+    radius: 5,
     fillColor: markerColor,
     color: "#000",
     weight: 1,
@@ -1552,6 +1358,26 @@ function getComplaintWeight(complaint) {
   return Math.min(3.0, Math.max(0.1, weight));
 }
 
+// Calculate zoom-compensated radius to maintain consistent visual size
+function getZoomCompensatedRadius(baseRadius = 20, zoomLevel = null) {
+  // Always return fixed radius - no zoom compensation
+  return baseRadius;
+}
+
+// Calculate zoom-compensated blur to maintain consistent visual appearance
+function getZoomCompensatedBlur(baseBlur = 15, zoomLevel = null) {
+  // Always return fixed blur - no zoom compensation
+  return baseBlur;
+}
+
+// Update heatmap with zoom-compensated settings
+function updateHeatmapForZoom(zoomLevel) {
+  // No longer need to update heatmap on zoom since we're using fixed radius/blur
+  // The heatmap will maintain constant size at all zoom levels
+  console.log(`🔄 Heatmap maintains constant size at zoom ${zoomLevel}`);
+}
+
+
 // Normalize statuses to canonical values for consistent analytics
 function normalizeStatus(status) {
   const s = (status || "")
@@ -1623,7 +1449,6 @@ function formatDate(dateString) {
 function setupFilters() {
   const heatmapFilter = document.getElementById("heatmap-filter");
   const priorityFilter = document.getElementById("priority-filter");
-  const urgencyFilter = document.getElementById("urgency-filter");
 
   // Add event listeners with debouncing for better performance
   const debouncedUpdate = debounce(updateHeatmap, 300);
@@ -1631,7 +1456,6 @@ function setupFilters() {
   if (heatmapFilter) heatmapFilter.addEventListener("change", debouncedUpdate);
   if (priorityFilter)
     priorityFilter.addEventListener("change", debouncedUpdate);
-  if (urgencyFilter) urgencyFilter.addEventListener("change", debouncedUpdate);
 
   // Add search functionality
   addSearchFilter();
@@ -1717,7 +1541,6 @@ function resetAllFilters() {
     "heatmap-filter",
     "status-filter",
     "priority-filter",
-    "urgency-filter",
     "complaint-search",
   ];
 
@@ -2119,13 +1942,14 @@ function updateMarkers(complaintsWithCoordinates) {
     newMarkers.push(marker);
     marker.addTo(window.complaintMap);
 
-    // Set initial opacity based on zoom
+    // Set initial opacity based on zoom - only show markers above zoom 14
     const currentZoom = window.complaintMap.getZoom();
-    if (currentZoom >= 14) {
-      // Match MARKER_VISIBILITY_ZOOM
-      marker.setOpacity(1);
-    } else {
+    if (currentZoom <= 14) {
+      // Hide markers at zoom 14 and below (heatmap is shown instead)
       marker.setOpacity(0);
+    } else {
+      // Show markers above zoom 14
+      marker.setOpacity(1);
     }
   });
 
@@ -2401,8 +2225,36 @@ function safeHeatmapUpdate(heatmapData) {
   }
 
   try {
+    // Remove existing heatmap layer
     if (window.heatLayer && window.complaintMap.hasLayer(window.heatLayer)) {
-      window.heatLayer.setLatLngs(heatmapData);
+      window.complaintMap.removeLayer(window.heatLayer);
+    }
+
+    // Create new heatmap layer with updated data
+    if (heatmapData && heatmapData.length > 0) {
+      // Use fixed radius and blur - constant size at all zoom levels
+      const newHeatLayer = L.heatLayer(heatmapData, {
+        pane: "heatmap-pane",
+        radius: 20, // Fixed constant radius
+        blur: 15,   // Fixed constant blur
+        maxZoom: 16,
+        minOpacity: 0.1,
+        max: 1.0,
+        gradient: {
+          0.0: "rgba(0, 0, 255, 0)",
+          0.2: "rgba(0, 255, 255, 0.3)",
+          0.4: "rgba(0, 255, 0, 0.5)",
+          0.6: "rgba(255, 255, 0, 0.7)",
+          0.8: "rgba(255, 165, 0, 0.8)",
+          1.0: "rgba(255, 0, 0, 1.0)",
+        },
+      });
+
+      // Add new heatmap layer
+      newHeatLayer.addTo(window.complaintMap);
+      window.heatLayer = newHeatLayer;
+      
+      console.log(`🔥 Heatmap recreated with ${heatmapData.length} data points`);
     }
   } catch (e) {
     console.warn("Safe heatmap update failed:", e);
@@ -2635,9 +2487,6 @@ async function updateHeatmap() {
     const selectedPriority = document.getElementById("priority-filter")
       ? document.getElementById("priority-filter").value
       : "all";
-    const selectedUrgency = document.getElementById("urgency-filter")
-      ? document.getElementById("urgency-filter").value
-      : "all";
     const searchTerm =
       searchInput && searchInput.value
         ? searchInput.value.toLowerCase().trim()
@@ -2674,12 +2523,6 @@ async function updateHeatmap() {
         if (complaintPriority !== selectedPriority) return false;
       }
 
-      // Urgency filter
-      if (selectedUrgency && selectedUrgency !== "all") {
-        const complaintUrgency = getComplaintUrgency(complaint);
-        if (complaintUrgency !== selectedUrgency) return false;
-      }
-
       // Search filter across key fields
       if (searchTerm) {
         const hay = `${complaint.title || ""} ${complaint.description || ""} ${
@@ -2705,11 +2548,31 @@ async function updateHeatmap() {
     );
 
     // Update heatmap data from complaints inside boundary
+    // Note: Leaflet heatmap expects [lat, lng, weight] format
     const heatmapData = complaintsInsideBoundary.map((complaint) => [
-      parseFloat(complaint.latitude),
-      parseFloat(complaint.longitude),
+      parseFloat(complaint.latitude),  // lat first
+      parseFloat(complaint.longitude), // lng second
       getComplaintWeight(complaint),
     ]);
+
+    // Debug: Log comprehensive data flow
+    console.log(`📊 Total complaints: ${complaints.length}`);
+    console.log(`📊 Filtered complaints: ${filteredComplaints.length}`);
+    console.log(`📊 Complaints with coordinates: ${complaintsWithCoordinates.length}`);
+    console.log(`📊 Complaints inside boundary: ${complaintsInsideBoundary.length}`);
+    console.log(`🔥 Heatmap data points: ${heatmapData.length}`);
+    
+    if (complaintsInsideBoundary.length > 0) {
+      console.log(`📍 Sample boundary complaints:`, complaintsInsideBoundary.slice(0, 2));
+      console.log(`📍 Sample heatmap coordinates:`, heatmapData.slice(0, 3));
+      
+      // Debug: Check if coordinates are valid
+      heatmapData.slice(0, 3).forEach((point, index) => {
+        console.log(`Point ${index}: lat=${point[0]}, lng=${point[1]}, weight=${point[2]}`);
+      });
+    } else {
+      console.warn(`⚠️ No complaints inside boundary! Check boundary filtering.`);
+    }
 
     // Update heatmap layer safely; cache last data
     window._lastHeatmapData = heatmapData;
@@ -2723,6 +2586,8 @@ async function updateHeatmap() {
         window.complaintMap.removeLayer(window.markerLayer);
       } catch (_) {}
     }
+    console.log(`📍 Creating ${complaintsInsideBoundary.length} markers in updateHeatmap`);
+    window._markerDebugCount = 0; // Reset debug counter
     const newMarkers = complaintsInsideBoundary.map((c) =>
       createComplaintMarker(c)
     );
@@ -2745,21 +2610,33 @@ async function updateHeatmap() {
       console.log("➕ Added Complaints layer to control (updateHeatmap)");
     }
     
-    const shouldShowMarkers =
-      window.complaintMap && window.complaintMap.getZoom() >= 14; // Use same threshold as main function
-    const heatOnMap =
-      window.heatLayer && window.complaintMap.hasLayer(window.heatLayer);
-    if (shouldShowMarkers) {
-      window.markerLayer.addTo(window.complaintMap);
-      if (heatOnMap) window.complaintMap.removeLayer(window.heatLayer);
-    } else {
+    const currentZoom = window.complaintMap.getZoom();
+    const shouldShowHeatmap = currentZoom <= 14; // Show heatmap at zoom 14 and below
+    const heatOnMap = window.heatLayer && window.complaintMap.hasLayer(window.heatLayer);
+    
+    console.log(`🎯 Update visibility: zoom=${currentZoom}, shouldShowHeatmap=${shouldShowHeatmap}, heatOnMap=${heatOnMap}`);
+    
+    if (shouldShowHeatmap) {
+      // Show heatmap at zoom 14 and below, hide markers
+      if (window.markerLayer && window.complaintMap.hasLayer(window.markerLayer)) {
+        window.complaintMap.removeLayer(window.markerLayer);
+      }
       if (!heatOnMap && window.heatLayer) {
         window.heatLayer.addTo(window.complaintMap);
         if (window._lastHeatmapData) {
           try {
-            window.heatLayer.setLatLngs(window._lastHeatmapData);
+            // Recreate heatmap with cached data
+            safeHeatmapUpdate(window._lastHeatmapData);
           } catch (_) {}
         }
+      }
+    } else {
+      // Hide heatmap above zoom 14, show markers
+      if (window.markerLayer) {
+        window.markerLayer.addTo(window.complaintMap);
+      }
+      if (heatOnMap) {
+        window.complaintMap.removeLayer(window.heatLayer);
       }
     }
 
@@ -3028,7 +2905,7 @@ function displayClusters(clusters) {
     if (cluster.count > 1) {
       // Only show clusters with multiple complaints
       const clusterMarker = L.circleMarker(cluster.centroid, {
-        radius: Math.min(20, Math.max(8, cluster.count * 2)), // Size based on complaint count
+        radius: Math.min(12, Math.max(4, cluster.count * 1.5)), // Size based on complaint count, scaled down proportionally
         fillColor: getClusterColor(cluster.count),
         color: "#fff",
         weight: 2,
