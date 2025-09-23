@@ -17,6 +17,7 @@
     "test-performance": "npm run build && npm run benchmark"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "compression": "^1.8.1",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
