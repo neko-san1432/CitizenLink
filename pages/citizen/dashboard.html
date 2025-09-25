@@ -1,15 +1,29 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-</head>
-<body>
-    <div id="sidebar"></div>
-    <div id="app">
-        <h1> Dashboard</h1>
+    <link rel="stylesheet" href="../../css/style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div id="app" class="collapsible">
+        <h1>Dashboard</h1>
+        <div id="news-updates">
+          <h2>News Updates</h2>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+            quos.
+          </p>
+        </div>
+        <div id="events">
+          <h2>Events</h2>
+        </div>
+      </div>
     </div>
-</body>
-  <script src="/env.js"></script>
-  <script type="module" src="../../js/components/sidebar.js"></script>
+    <script type="module" src="../../js/components/header.js"></script>
+    <script type="module" src="../../js/components/sidebar.js"></script>
+  </body>
 </html>

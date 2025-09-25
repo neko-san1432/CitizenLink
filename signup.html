@@ -42,7 +42,7 @@
         placeholder="Repeat Password"
         required
       />
-      <div class="g-recaptcha" data-sitekey="6LeggcsrAAAAACefwb7CiPymVjJ56GdyNOj63hWg" id="register-captcha"></div>
+      <div id="register-captcha"></div>
       <input type="submit" value="Register" />
       <input type="checkbox" required />Check the checkbox if you agree the
       <a id="toc" >Terms and Condition</a> and <a id="pc">Privacy Consent</a>
@@ -55,8 +55,6 @@
     <div id="privacy"></div>
     <div id="toast"></div>
   </body>
-  <script src="/env.js"></script>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
   <script type="module" src="./js/auth/auth.js"></script>
-  <script type="module" src="./js/auth/register.js"></script>
 </html>

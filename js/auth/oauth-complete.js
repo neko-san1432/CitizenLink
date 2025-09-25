@@ -1,4 +1,4 @@
-import { supabase } from '../db.js';
+import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 
 // reCAPTCHA setup - using auto-rendered captcha from HTML

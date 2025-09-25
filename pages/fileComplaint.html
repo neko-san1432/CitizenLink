@@ -1,15 +1,175 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <div id="sidebar"></div>
-    <div id="app">
-        <h1>file complaint</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Complaint</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div id="app" class="collapsible">
+        <div class="complaint-form-container">
+          <h1>File Complaint</h1>
+          <form id="complaintForm" class="complaint-form">
+            <div class="form-group">
+              <label for="complaintTitle">Complaint Title *</label>
+              <input
+                type="text"
+                id="complaintTitle"
+                name="complaintTitle"
+                required
+                placeholder="Enter a descriptive title for your complaint"
+              />
+            </div>
+            <div class="form-group">
+              <label for="complaintType">Complaint Type</label>
+              <select id="complaintType" name="complaintType">
+                <option value="">Select complaint type (optional)</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="public-safety">Public Safety</option>
+                <option value="environmental">Environmental</option>
+                <option value="health">Health & Sanitation</option>
+                <option value="traffic">Traffic & Transportation</option>
+                <option value="noise">Noise Pollution</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="complaintSubtype">Complaint Subtype</label>
+              <select id="complaintSubtype" name="complaintSubtype">
+                <option value="">Select complaint subtype (optional)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Department Involved (Optional)</label>
+              <div class="checkbox-group">
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-public-works"
+                    name="department"
+                    value="public-works"
+                  />
+                  <label for="dept-public-works">Public Works</label>
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-police"
+                    name="department"
+                    value="police"
+                  />
+                  <label for="dept-police">Police Department</label>
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-health"
+                    name="department"
+                    value="health"
+                  />
+                  <label for="dept-health">Health Department</label>
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-environment"
+                    name="department"
+                    value="environment"
+                  />
+                  <label for="dept-environment">Environment Department</label>
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-traffic"
+                    name="department"
+                    value="traffic"
+                  />
+                  <label for="dept-traffic">Traffic Management</label>
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="dept-mayor"
+                    name="department"
+                    value="mayor"
+                  />
+                  <label for="dept-mayor">Mayor's Office</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="description">Description *</label>
+              <textarea
+                id="description"
+                name="description"
+                required
+                placeholder="Please provide a detailed description of your complaint..."
+                rows="5"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="location">Location *</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                required
+                placeholder="Enter the specific location of the complaint"
+              />
+            </div>
+            <div class="form-group">
+              <label>Pin Location on Map</label>
+              <div id="complaint-map" style="width: 100%; height: 320px; border: 1px solid #ddd; border-radius: 6px; position: relative;"></div>
+              <input type="hidden" id="latitude" name="latitude" />
+              <input type="hidden" id="longitude" name="longitude" />
+            </div>
+            <div class="form-group">
+              <label for="evidence">Evidence (Optional)</label>
+              <div class="file-upload-container">
+                <div class="file-drop-zone" id="fileDropZone">
+                  <div class="drop-zone-content">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop files here or click to browse</p>
+                    <p class="file-types">
+                      Supported: Images, Audio, Video (Max 5 files)
+                    </p>
+                    <input
+                      type="file"
+                      id="evidenceFiles"
+                      name="evidenceFiles"
+                      multiple
+                      accept="image/*,audio/*,video/*"
+                      style="display: none"
+                    />
+                  </div>
+                </div>
+                <div class="file-preview" id="filePreview"></div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="submit-btn">Submit Complaint</button>
+              <button
+                type="button"
+                class="cancel-btn"
+                onclick="window.history.back()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-</body>
-  <script src="/env.js"></script>
-  <script type="module" src="../js/components/sidebar.js"></script>
+    <script type="module" src="../js/components/header.js"></script>
+    <script type="module" src="../js/components/sidebar.js"></script>
+    <script type="module" src="../js/components/complaintForm.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../js/components/map/map-generator.js"></script>
+    <script type="module" src="../js/components/map/complaintMap.js"></script>
+  </body>
 </html>

@@ -9,7 +9,7 @@
     <form id = "login">
         <input type="email" name="Email" id="email" placeholder="Email">
         <input type="password" name="Password" id="password" placeholder="Password">
-        <div class="g-recaptcha" data-sitekey="6LeggcsrAAAAACefwb7CiPymVjJ56GdyNOj63hWg" id="login-captcha"></div>
+        <div id="login-captcha"></div>
         Forget password? <a href="/resetPassword">Rest Password</a>
         <input type="submit" name="Login">
     </form>
@@ -19,7 +19,6 @@
     </div>
     <div id="toast"></div>
 </body>
-<script src="/env.js"></script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 <script type="module" src="./js/auth/auth.js"></script>
 </html>

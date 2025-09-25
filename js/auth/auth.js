@@ -1,18 +1,48 @@
 // login, register, change pass, and additional social media
-import { supabase } from "../db.js";
+import { supabase } from "../config/config.js";
 import showMessage from "../components/toast.js";
-import { saveUserMeta, getOAuthContext, clearOAuthContext } from "./authChecker.js";
+import { saveUserMeta, getOAuthContext } from "./authChecker.js";
+// Show toast on login page if redirected due to missing auth
+try {
+  const isLoginPage = /\/login(?:$|\?)/.test(window.location.pathname + window.location.search)
+  if (isLoginPage) {
+    const params = new URLSearchParams(window.location.search)
+    const err = params.get('err')
+    if (err === 'not_authenticated') {
+      showMessage('error', 'Please log in to continue')
+    }
+  }
+} catch {}
 
 export const retrieveUserRole = async () => {};
 
 // reCAPTCHA setup
 let loginCaptchaWidgetId = null;
 let registerCaptchaWidgetId = null;
-const envCfg = window.__ENV__ || {};
-const siteKey = envCfg.CAPTCHA_CLIENT_KEY || "";
+let siteKey = "";
 
-function renderCaptchaWidgetsIfAny() {
-  if (!window.grecaptcha || !siteKey) return;
+// Fetch CAPTCHA key securely from server
+async function getCaptchaKey() {
+  try {
+    const response = await fetch('/api/captcha/key');
+    const data = await response.json();
+    return data.key || "";
+  } catch (error) {
+    console.error('Failed to fetch CAPTCHA key:', error);
+    return "";
+  }
+}
+
+async function renderCaptchaWidgetsIfAny() {
+  if (!window.grecaptcha) return;
+  
+  // Fetch CAPTCHA key if not already loaded
+  if (!siteKey) {
+    siteKey = await getCaptchaKey();
+  }
+  
+  if (!siteKey) return;
+  
   window.grecaptcha.ready(() => {
     const loginEl = document.getElementById("login-captcha");
     if (loginEl && loginCaptchaWidgetId === null) {
@@ -130,24 +160,62 @@ if (loginFormEl) loginFormEl.addEventListener("submit", async (e) => {
     }
     return;
   }
+  // Persist access token to HttpOnly cookie for server-protected pages
+  try {
+    const accessToken = data?.session?.access_token || null;
+    if (accessToken) {
+      const resp = await fetch('/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken })
+      });
+      // Verify cookie by hitting a protected endpoint before redirecting
+      if (resp.ok) {
+        let ok = false
+        try {
+          const check1 = await fetch('/api/user/role', { method: 'GET' })
+          ok = check1.ok
+        } catch {}
+        if (!ok) {
+          await new Promise(r => setTimeout(r, 300))
+          try {
+            const check2 = await fetch('/api/user/role', { method: 'GET' })
+            ok = check2.ok
+          } catch {}
+        }
+        if (!ok) {
+          showMessage('error', 'Session not ready. Please try again.')
+          return
+        }
+      }
+    }
+  } catch {}
+
   showMessage("success", "Logged in successfully");
   const role = data?.user?.user_metadata?.role || null
   const name = data?.user?.user_metadata?.name || null
+  console.log('🔐 Login successful - Role:', role, 'Name:', name);
+  
   if (role || name) {
     saveUserMeta({ role, name })
+    console.log('💾 User metadata saved to localStorage');
   }
   
   // Check if user has completed registration
   if (!role || !name) {
+    console.log('❌ Incomplete profile - Role:', role, 'Name:', name);
     showMessage("error", "Please complete your profile first");
     setTimeout(() => {
+      console.log('🔄 Redirecting to OAuth continuation');
       window.location.href = "/oauth-continuation";
     }, 2000);
     return;
   }
   
   // Redirect to dashboard based on role
+  console.log('✅ Profile complete, redirecting to dashboard in 1.5s...');
   setTimeout(() => {
+    console.log('🔄 Redirecting to /dashboard');
     window.location.href = "/dashboard";
   }, 1500);
 });

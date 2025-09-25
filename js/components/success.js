@@ -1,4 +1,4 @@
-import { supabase } from '../db.js'
+import { supabase } from '../config/config.js'
 import { saveUserMeta, setOAuthContext, clearOAuthContext } from '../auth/authChecker.js'
 
 const run = async () => {
@@ -28,11 +28,30 @@ const run = async () => {
   // Persist access token to HttpOnly cookie for server-protected pages
   try {
     if (accessToken) {
-      await fetch('/auth/session', {
+      const resp = await fetch('/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: accessToken })
       })
+      // Verify cookie by hitting a protected endpoint before redirecting
+      if (resp.ok) {
+        let ok = false
+        try {
+          const check1 = await fetch('/api/user/role', { method: 'GET' })
+          ok = check1.ok
+        } catch {}
+        if (!ok) {
+          await new Promise(r => setTimeout(r, 300))
+          try {
+            const check2 = await fetch('/api/user/role', { method: 'GET' })
+            ok = check2.ok
+          } catch {}
+        }
+        if (!ok) {
+          // If cannot verify, stay on page and let user refresh
+          return
+        }
+      }
     }
   } catch {}
 
