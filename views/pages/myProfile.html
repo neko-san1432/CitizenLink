@@ -1,0 +1,28 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="profile">Profile</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/toast.css">
+  </head>
+  <body>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible" 
+          role: <span id="role"></span> name: <span id="name"></span> email:
+          <span id="email"></span> password:
+          <span id="password"></span> social-media:
+          <span id="social-media">
+            <div id="google"></div>
+            <div id="facebook"></div>
+          </span>
+        </div>
+    </div>
+    <div id="toast"></div>
+    <script type="module" src="../js/components/header.js"></script>
+    <script type="module" src="../js/components/sidebar.js"></script>
+    <script type="module" src="../js/auth/authChecker.js"></script>
+  </body>
+</html>

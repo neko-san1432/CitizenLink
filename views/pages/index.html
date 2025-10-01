@@ -1,0 +1,77 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/toast.css">
+    <style>
+        /* Landing page authentication buttons styling */
+        #auth-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50vh;
+            gap: 20px;
+        }
+        
+        #auth-buttons a, #auth-buttons button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        #auth-buttons a:hover, #auth-buttons button:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+        
+        #logout-btn {
+            background-color: #dc3545;
+            margin-left: 10px;
+        }
+        
+        #logout-btn:hover {
+            background-color: #c82333;
+        }
+        
+        #authenticated-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #unauthenticated-buttons {
+            display: flex;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication buttons container -->
+    <div id="auth-buttons">
+        <!-- Default buttons for unauthenticated users -->
+        <div id="unauthenticated-buttons">
+            <a href="/login" id="login-btn">Login</a>
+            <a href="/signup" id="signup-btn">Signup</a>
+        </div>
+        
+        <!-- Dashboard button for authenticated users (hidden by default) -->
+        <div id="authenticated-buttons" style="display: none;">
+            <a href="/dashboard" id="dashboard-btn">Go to Dashboard</a>
+            <button id="logout-btn" type="button">Logout</button>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
+    <script type="module" src="./js/auth/authChecker.js"></script>
+    <script type="module" src="./js/auth/index-page.js"></script>
+</body>
+</html>

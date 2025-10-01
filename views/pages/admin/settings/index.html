@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Management - CitizenLink</title>
+    <link rel="stylesheet" href="../../../css/style.css">
+    <link rel="stylesheet" href="../../../css/toast.css">
+    <style>
+        .settings-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .settings-sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            height: fit-content;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .category-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .category-item:hover {
+            background: #f3f4f6;
+        }
+
+        .category-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .setting-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 0;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .setting-key {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-family: monospace;
+        }
+
+        .setting-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .setting-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .setting-value {
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .setting-value.html {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .type-badge {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .public-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .editor-help {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1>Settings Management</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="initializeDefaults()">
+                    Initialize Defaults
+                </button>
+                <button class="btn btn-primary" onclick="openModal('add')">
+                    Add Setting
+                </button>
+            </div>
+        </header>
+
+        <div class="settings-container">
+            <div class="settings-sidebar">
+                <h3>Categories</h3>
+                <ul class="category-list" id="categoryList">
+                    <li class="category-item active" data-category="all">All Settings</li>
+                </ul>
+            </div>
+
+            <div class="settings-content">
+                <div id="settingsContent">
+                    <!-- Settings will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Setting Modal -->
+    <div id="settingModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add Setting</h2>
+            <form id="settingForm">
+                <div class="form-group">
+                    <label for="settingKey">Setting Key</label>
+                    <input type="text" id="settingKey" name="key" required 
+                           pattern="[a-z0-9_]+" title="Use only lowercase letters, numbers, and underscores">
+                    <div class="editor-help">Use snake_case format (e.g., max_file_size)</div>
+                </div>
+                <div class="form-group">
+                    <label for="settingType">Type</label>
+                    <select id="settingType" name="type" onchange="handleTypeChange()">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="html">HTML</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="number">Number</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="settingValue">Value</label>
+                    <textarea id="settingValue" name="value" required rows="4"></textarea>
+                    <div class="editor-help" id="valueHelp">Enter the setting value</div>
+                </div>
+                <div class="form-group">
+                    <label for="settingCategory">Category</label>
+                    <input type="text" id="settingCategory" name="category" value="general">
+                    <div class="editor-help">Group related settings together</div>
+                </div>
+                <div class="form-group">
+                    <label for="settingDescription">Description</label>
+                    <textarea id="settingDescription" name="description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="settingPublic" name="is_public">
+                        Public Setting (visible to all users)
+                    </label>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Save Setting
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script type="module" src="../../../js/admin/settings.js"></script>
+</body>
+</html>

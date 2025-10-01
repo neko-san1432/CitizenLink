@@ -1,0 +1,26 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/toast.css">
+</head>
+<body>
+    <form id = "login">
+        <input type="email" name="Email" id="email" placeholder="Email">
+        <input type="password" name="Password" id="password" placeholder="Password">
+        <div id="login-captcha"></div>
+        Forget password? <a href="/resetPassword">Rest Password</a>
+        <input type="submit" name="Login">
+    </form>
+    <div style="margin-top:12px">
+        <button id="login-google" type="button">Continue with Google</button>
+        <button id="login-facebook" type="button" style="margin-left:8px">Continue with Facebook</button>
+    </div>
+    <div id="toast"></div>
+</body>
+<script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
+    <script type="module" src="./js/auth/auth.js"></script>
+    <script type="module" src="./js/auth/login-page.js"></script>
+</html>

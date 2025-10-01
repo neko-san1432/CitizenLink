@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heatmap - Barangay Boundaries</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="../../css/style.css" />
+    <link rel="stylesheet" href="../../css/toast.css" />
+    <link rel="stylesheet" href="../../css/heatmap.css" />
+
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <div id="sidebar" class="collapsible"></div>
+    <!-- Original menu button hidden - using map control instead -->
+    <div id="menu-toggle" class="heatmap-menu" >
+      ☰
+    </div>
+
+    <!-- Map Container -->
+    <div id="heatmap">
+      <div id="map" style="width: 100%; height: 100%"></div>
+    </div>
+    <div id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/components/map/map-generator.js"></script>
+    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/components/sidebar.js"></script>
+    <script
+      type="module"
+      src="../../js/components/map/boundaryGenerator.js"
+    ></script>
+    <script type="module">
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Initialize map
+          const map = await initializeSimpleMap("map");
+          if (!map) {
+            throw new Error("Failed to initialize map");
+          }
+
+          
+          // Safely get map layers
+          const mapLayers = window.simpleMapLayers || {};
+          
+          // Validate layer names and create options
+          const createSafeOption = (layerName) => {
+            const option = document.createElement('option');
+            option.value = layerName;
+            option.textContent = layerName; // Safer than innerHTML
+            return option;
+          };
+
+
+          
+        } catch (error) {
+          console.error("Error initializing map:", error);
+          document.getElementById("status").textContent = "Error loading map";
+          document.getElementById("status").classList.add("error");
+        }
+      });
+    </script>
+  </body>
+</html>
