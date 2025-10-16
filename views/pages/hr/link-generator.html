@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>Link Generator - HR Dashboard</title>
+    <link rel="stylesheet" href="../../../css/style.css">
+    <link rel="stylesheet" href="../../../css/toast.css">
+    <link rel="stylesheet" href="../../../css/app.css">
+    <link rel="stylesheet" href="../../../css/pages/hr-link-generator.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <div class="link-generator-container">
+                <div class="page-header">
+                    <div>
+                        <h1>Link Generator</h1>
+                        <div id="role-info" class="role-info" style="display: none;">
+                            <div class="info-box">
+                                <h3>Your Permissions</h3>
+                                <p id="role-description"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="linkGenerator.generateLink()">
+                        Generate New Link
+                    </button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <h3 id="totalLinks">0</h3>
+                        <p>Total Links</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="activeLinks">0</h3>
+                        <p>Active Links</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="usedLinks">0</h3>
+                        <p>Used Links</p>
+                    </div>
+                </div>
+
+                <div class="generator-form" id="generatorForm" style="display: none;">
+                    <h2>Generate Signup Link</h2>
+                    <form id="linkForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="role">Role</label>
+                                <select id="role" name="role" required>
+                                    <option value="">Select Role</option>
+                                    <option value="lgu-officer">LGU Officer</option>
+                                    <option value="lgu-admin">LGU Admin</option>
+                                    <option value="lgu-hr">LGU HR</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="department">Department</label>
+                                <select id="department" name="department_code">
+                                    <option value="">Select Department (Optional)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiresIn">Expires In (Hours)</label>
+                                <input type="number" id="expiresIn" name="expires_in_hours" value="1" min="1" max="24">
+                                <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem; display: block;">
+                                    Links expire quickly for security. Default is 1 hour.
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button type="submit" class="btn btn-primary">Generate Link</button>
+                                    <button type="button" class="btn btn-secondary" onclick="linkGenerator.cancelGenerate()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="generated-link" id="generatedLink">
+                        <h3>Generated Link</h3>
+                        <div class="link-display">
+                            <input type="text" class="link-input" id="linkInput" readonly>
+                            <button class="copy-btn" onclick="linkGenerator.copyLink()">Copy</button>
+                        </div>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">
+                            ⏰ This link will expire in <span id="expiryTime"></span>
+                        </p>
+                        <p style="font-size: 0.75rem; color: #ef4444; margin: 0.5rem 0 0 0; font-weight: 500;">
+                            ⚠️ Share this link immediately - it expires quickly for security!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="links-list">
+                    <div class="links-header">
+                        <h2>Generated Links</h2>
+                        <div class="filters">
+                            <select class="filter-select" id="roleFilter" onchange="linkGenerator.filterLinks()">
+                                <option value="">All Roles</option>
+                                <option value="lgu-officer">LGU Officer</option>
+                                <option value="lgu-admin">LGU Admin</option>
+                                <option value="lgu-hr">LGU HR</option>
+                            </select>
+                            <select class="filter-select" id="statusFilter" onchange="linkGenerator.filterLinks()">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="used">Used</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="linksList">
+                        <!-- Links will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Include necessary JavaScript files -->
+    <script type="module" src="../../../js/components/header.js"></script>
+    <script type="module" src="../../../js/components/sidebar.js"></script>
+    <script type="module" src="../../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../../js/hr/linkGenerator.js"></script>
+</body>
+</html>

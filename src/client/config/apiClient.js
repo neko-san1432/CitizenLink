@@ -5,15 +5,11 @@ class ApiClient {
   async getAuthHeaders() {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    
-    if (!token) {
-      throw new Error('No authentication token available');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
-    
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
+    return headers;
   }
 
   async get(url) {
@@ -163,6 +159,152 @@ class ApiClient {
     }
   }
 
+  async put(url, data) {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(data)
+      });
+      
+      if (response.status === 401) {
+        // Try to refresh token before redirecting
+        try {
+          console.log('Token expired, attempting refresh...');
+          const { data: { session }, error } = await supabase.auth.refreshSession();
+          
+          if (error || !session) {
+            console.log('Token refresh failed, showing session expired toast');
+            const { showMessage } = await import('../components/toast.js');
+            showMessage('error', 'Session expired. Please log in again.', 5000);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
+            return;
+          }
+          
+          // Update server cookie with new token
+          await fetch('/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: session.access_token })
+          });
+          
+          // Retry the original request with new token
+          console.log('Token refreshed, retrying request...');
+          const newHeaders = await this.getAuthHeaders();
+          const retryResponse = await fetch(url, {
+            method: 'PUT',
+            headers: newHeaders,
+            body: JSON.stringify(data)
+          });
+          
+          if (retryResponse.status === 401) {
+            console.log('Retry failed, showing session expired toast');
+            const { showMessage } = await import('../components/toast.js');
+            showMessage('error', 'Session expired. Please log in again.', 5000);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
+            return;
+          }
+          
+          return await retryResponse.json();
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          const { showMessage } = await import('../components/toast.js');
+          showMessage('error', 'Session expired. Please log in again.', 5000);
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 3000);
+          return;
+        }
+      }
+      
+      if (response.status === 403) {
+        throw new Error('Insufficient permissions');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('API PUT error:', error);
+      throw error;
+    }
+  }
+
+  async delete(url) {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers
+      });
+      
+      if (response.status === 401) {
+        // Try to refresh token before redirecting
+        try {
+          console.log('Token expired, attempting refresh...');
+          const { data: { session }, error } = await supabase.auth.refreshSession();
+          
+          if (error || !session) {
+            console.log('Token refresh failed, showing session expired toast');
+            const { showMessage } = await import('../components/toast.js');
+            showMessage('error', 'Session expired. Please log in again.', 5000);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
+            return;
+          }
+          
+          // Update server cookie with new token
+          await fetch('/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: session.access_token })
+          });
+          
+          // Retry the original request with new token
+          console.log('Token refreshed, retrying request...');
+          const newHeaders = await this.getAuthHeaders();
+          const retryResponse = await fetch(url, {
+            method: 'DELETE',
+            headers: newHeaders
+          });
+          
+          if (retryResponse.status === 401) {
+            console.log('Retry failed, showing session expired toast');
+            const { showMessage } = await import('../components/toast.js');
+            showMessage('error', 'Session expired. Please log in again.', 5000);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
+            return;
+          }
+          
+          return await retryResponse.json();
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          const { showMessage } = await import('../components/toast.js');
+          showMessage('error', 'Session expired. Please log in again.', 5000);
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 3000);
+          return;
+        }
+      }
+      
+      if (response.status === 403) {
+        throw new Error('Insufficient permissions');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('API DELETE error:', error);
+      throw error;
+    }
+  }
+
   // Convenience methods for common API calls
   async getUserProfile() {
     return await this.get('/api/user/profile');
@@ -179,17 +321,28 @@ class ApiClient {
   // Complaint management methods
   async submitComplaint(formData) {
     try {
+      // Get fresh CSRF token for this request
+      const csrfResponse = await fetch('/api/auth/csrf-token');
+      const csrfData = await csrfResponse.json();
+
+      if (!csrfData.success) {
+        throw new Error('Failed to get CSRF token');
+      }
+
+      // Add the fresh CSRF token to FormData
+      formData.append('_csrf', csrfData.csrfToken);
+
       const response = await fetch('/api/complaints', {
         method: 'POST',
         body: formData
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Complaint submission failed');
       }
-      
+
       return result;
     } catch (error) {
       console.error('[API CLIENT] Complaint submission error:', error);
@@ -228,12 +381,38 @@ class ApiClient {
     return await this.get(`/api/departments/type/${type}`);
   }
 
+  async getDepartmentOfficers(departmentId) {
+    return await this.get(`/api/departments/${departmentId}/officers`);
+  }
+
   async getDepartment(id) {
     return await this.get(`/api/departments/${id}`);
   }
 
   async createDepartment(data) {
     return await this.post('/api/departments', data);
+  }
+
+  // HR Methods
+  async generateSignupLink(data) {
+    return await this.post('/api/hr/signup-links', data);
+  }
+
+  async getSignupLinks(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    return await this.get(`/api/hr/signup-links?${queryParams}`);
+  }
+
+  async deactivateSignupLink(linkId) {
+    return await this.delete(`/api/hr/signup-links/${linkId}`);
+  }
+
+  async validateSignupCode(code) {
+    return await this.get(`/api/hr/validate-signup-code/${code}`);
+  }
+
+  async getHRDashboard() {
+    return await this.get('/api/hr/dashboard');
   }
 
   async updateDepartment(id, data) {

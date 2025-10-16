@@ -7,6 +7,7 @@ const { csrfProtection } = require('../middleware/csrf');
 const router = express.Router();
 const complaintController = new ComplaintController();
 
+// Configure multer to handle both files and form fields
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -21,12 +22,15 @@ const upload = multer({
       cb(new Error('Invalid file type'), false);
     }
   }
-});
+}).fields([
+  { name: 'evidenceFiles', maxCount: 5 },
+  { name: '_csrf', maxCount: 1 }
+]);
 
 router.post('/',
   authenticateUser,
+  upload,
   csrfProtection,
-  upload.array('evidenceFiles', 5),
   (req, res) => complaintController.createComplaint(req, res)
 );
 
@@ -40,6 +44,12 @@ router.get('/stats',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.getComplaintStats(req, res)
+);
+
+router.get('/locations', 
+  authenticateUser,
+  requireRole([/^lgu-/, 'super-admin']),
+  (req, res) => complaintController.getComplaintLocations(req, res)
 );
 
 router.get('/', 
@@ -57,6 +67,14 @@ router.patch('/:id/status',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.updateComplaintStatus(req, res)
+);
+
+// Human confirmation workflow transitions (officer -> admin -> citizen)
+router.patch('/:id/transition', 
+  authenticateUser,
+  requireRole([/^lgu-/, 'super-admin', 'citizen']),
+  upload, // allow evidence on transition
+  (req, res) => complaintController.transitionStatus(req, res)
 );
 
 router.patch('/:id/assign-coordinator', 

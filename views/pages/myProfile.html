@@ -2,27 +2,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title id="profile">Profile</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/toast.css">
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/components/clock.css">
   </head>
   <body>
     <div class="app-container">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
-        <div id="app" class="collapsible" 
-          role: <span id="role"></span> name: <span id="name"></span> email:
-          <span id="email"></span> password:
-          <span id="password"></span> social-media:
-          <span id="social-media">
-            <div id="google"></div>
-            <div id="facebook"></div>
-          </span>
+        <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+        <div id="app" class="collapsible">
+          <div class="card">
+            <div class="card-header">
+              <h1 class="card-title">My Profile</h1>
+            </div>
+            <div class="card-body space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="form-label">Name</label>
+                  <div id="profile-name" class="input read-only"></div>
+                </div>
+                <div>
+                  <label class="form-label">Email</label>
+                  <div id="profile-email" class="input read-only"></div>
+                </div>
+                <div>
+                  <label class="form-label">Mobile Number</label>
+                  <div id="profile-mobile" class="input read-only"></div>
+                </div>
+              </div>
+
+              <hr>
+
+              <form id="change-password-form" class="space-y-3">
+                <h2 class="text-lg font-semibold">Change Password</h2>
+                <input id="current-password" class="input" type="password" placeholder="Current password" autocomplete="current-password">
+                <input id="new-password" class="input" type="password" placeholder="New password" autocomplete="new-password">
+                <input id="confirm-new-password" class="input" type="password" placeholder="Confirm new password" autocomplete="new-password">
+                <button id="change-password-btn" class="btn-primary w-full md:w-auto" type="submit">Update Password</button>
+              </form>
+
+              <hr>
+
+              <div>
+                <div class="flex items-center justify-between">
+                  <h2 class="text-lg font-semibold">My Complaints</h2>
+                  <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
+                </div>
+                <div id="my-complaints" class="mt-3 space-y-2"></div>
+                <div id="complaints-empty" class="text-sm text-gray-500 hidden">No complaints yet.</div>
+              </div>
+            </div>
+          </div>
         </div>
     </div>
-    <div id="toast"></div>
+    <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../js/components/header.js"></script>
     <script type="module" src="../js/components/sidebar.js"></script>
     <script type="module" src="../js/auth/authChecker.js"></script>
+    <script type="module" src="../js/components/clock.js"></script>
+    <script type="module" src="../js/pages/myProfile.js"></script>
   </body>
 </html>

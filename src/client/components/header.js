@@ -9,6 +9,7 @@ export function createHeader() {
       <a href="${brandConfig.dashboardUrl}" class="brand-logo">${brandConfig.name}</a>
     </div>
     <div class="header-right">
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
       <div class="notification-container">
         <button id="notification-btn" class="notification-btn" title="Notifications">
           🔔
@@ -67,6 +68,21 @@ export function createHeader() {
   `;
 }
 
+// Initialize menu toggle functionality
+function initializeMenuToggle() {
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('open');
+    });
+    console.log('✅ Menu toggle initialized');
+  } else {
+    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
+  }
+}
+
 // Initialize header when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   const headerContainer = document.querySelector('.header-container');
@@ -74,6 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
     headerContainer.innerHTML = createHeader();
     initializeNotificationButton();
     initializeProfileButton();
+    initializeMenuToggle(); // Initialize menu toggle after header HTML is created
+    initializeThemeToggle();
+
+    // Move dashboard clock into header-right to align with buttons
+    try {
+      const headerRight = headerContainer.querySelector('.header-right');
+      const clockEl = document.getElementById('dashboard-clock');
+      if (headerRight && clockEl) {
+        headerRight.appendChild(clockEl);
+      }
+    } catch {}
   }
 });
 
@@ -133,5 +160,48 @@ function initializeProfileButton() {
         profilePanel.classList.add('hidden');
       }
     });
+  }
+}
+
+// Theme toggle with persisted preference and a11y-friendly approach
+function initializeThemeToggle() {
+  const THEME_KEY = 'citizenlink_theme';
+  const rootElement = document.documentElement; // apply .dark at the html element
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  // Determine initial theme: localStorage -> system preference -> light
+  const stored = (localStorage.getItem(THEME_KEY) || '').toLowerCase();
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialIsDark = stored ? stored === 'dark' : prefersDark;
+
+  applyTheme(initialIsDark ? 'dark' : 'light');
+
+  if (themeToggleBtn) {
+    updateThemeToggleLabel();
+    themeToggleBtn.addEventListener('click', () => {
+      const isDark = rootElement.classList.contains('dark');
+      const next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem(THEME_KEY, next);
+      updateThemeToggleLabel();
+    });
+  }
+
+  // Reflect current theme in button label/title for screen readers
+  function updateThemeToggleLabel() {
+    const isDark = rootElement.classList.contains('dark');
+    if (themeToggleBtn) {
+      themeToggleBtn.setAttribute('aria-pressed', String(isDark));
+      themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
+    }
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      rootElement.classList.add('dark');
+    } else {
+      rootElement.classList.remove('dark');
+    }
   }
 }

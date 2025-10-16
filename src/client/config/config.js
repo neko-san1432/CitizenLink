@@ -6,20 +6,31 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Fetch Supabase configuration securely from server
 let supabaseConfig = null;
 let supabase = null;
+let initPromise = null;
 
 async function initializeSupabase() {
   if (supabase) return supabase;
-  
-  try {
-    const response = await fetch('/api/supabase/config');
-    const config = await response.json();
-    supabase = createClient(config.url, config.anonKey);
-    return supabase;
-  } catch (error) {
-    console.error('Failed to initialize Supabase:', error);
-    // Fallback - this should not happen in production
-    throw new Error('Unable to connect to authentication service');
-  }
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    try {
+      const response = await fetch('/api/supabase/config');
+      const config = await response.json();
+      if (!config || !config.url || !config.anonKey) {
+        throw new Error('Missing Supabase client configuration');
+      }
+      supabaseConfig = config;
+      supabase = createClient(config.url, config.anonKey);
+      return supabase;
+    } catch (error) {
+      console.error('Failed to initialize Supabase:', error);
+      throw error;
+    } finally {
+      // Keep initPromise so late callers can await the same promise
+    }
+  })();
+
+  return initPromise;
 }
 
 // Create a proxy object that initializes Supabase on first use
@@ -29,19 +40,8 @@ const supabaseProxy = new Proxy({}, {
       return supabase[prop];
     }
     
-    // Initialize synchronously for backward compatibility
-    // This is not ideal but maintains compatibility
-    if (!supabaseConfig) {
-      fetch('/api/supabase/config')
-        .then(response => response.json())
-        .then(config => {
-          supabaseConfig = config;
-          supabase = createClient(config.url, config.anonKey);
-        })
-        .catch(error => {
-          console.error('Failed to initialize Supabase:', error);
-        });
-    }
+    // Kick off initialization (single flight)
+    initializeSupabase().catch(() => {});
     
     // Return a promise-based method for async operations
     if (prop === 'auth') {
@@ -51,17 +51,8 @@ const supabaseProxy = new Proxy({}, {
             if (supabase) {
               return supabase.auth[authProp](...args);
             }
-            // Return a promise that resolves when Supabase is ready
-            return new Promise((resolve, reject) => {
-              const checkSupabase = () => {
-                if (supabase) {
-                  resolve(supabase.auth[authProp](...args));
-                } else {
-                  setTimeout(checkSupabase, 50);
-                }
-              };
-              checkSupabase();
-            });
+            // Defer until client initialized
+            return initializeSupabase().then(() => supabase.auth[authProp](...args));
           };
         }
       });

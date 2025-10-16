@@ -1,12 +1,42 @@
 // Application-wide constants
 
 // User Roles
+// Note: LGU roles can have department suffixes
+// - LGU Officers: 'lgu-{dept}', 'lgu-{dept}', 'lgu-{dept}', etc. (department code only)
+// - LGU Admins: 'lgu-admin-{dept}', 'lgu-admin-{dept}', etc. (admin prefix + department)
+// - LGU HR: 'lgu-hr-{dept}', 'lgu-hr-{dept}', etc. (hr prefix + department)
 const USER_ROLES = {
   CITIZEN: 'citizen',
-  LGU: 'lgu',
-  LGU_ADMIN: 'lgu-admin',
+  COMPLAINT_COORDINATOR: 'complaint-coordinator',
+  LGU_OFFICER: 'lgu', // Base pattern - actual roles: 'lgu-{dept}', 'lgu-{dept}', etc.
+  LGU_ADMIN: 'lgu-admin', // Can be 'lgu-admin-{dept}', 'lgu-admin-{dept}', etc.
+  LGU_HR: 'lgu-hr', // Can be 'lgu-hr-{dept}', 'lgu-hr-{dept}', etc.
   SUPER_ADMIN: 'super-admin'
 };
+
+// Role Hierarchy (for permission checks)
+// Note: LGU officer roles start with 'lgu-' (e.g., 'lgu-{dept}'), check with startsWith()
+const ROLE_HIERARCHY = {
+  'citizen': 0,
+  'lgu': 1, // LGU Officers: lgu-{dept}, lgu-{dept}, etc.
+  'complaint-coordinator': 2,
+  'lgu-admin': 3,
+  'lgu-hr': 4,
+  'super-admin': 5
+};
+
+// Roles that can file complaints (or switch to citizen mode)
+const COMPLAINT_ROLES = ['citizen'];
+
+// Roles that can switch to citizen mode
+// Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
+const SWITCHABLE_ROLES = [
+  'complaint-coordinator',
+  'lgu', // LGU Officers: lgu-{dept}, lgu-{dept}, etc.
+  'lgu-admin',
+  'lgu-hr',
+  'super-admin'
+];
 
 // Complaint Statuses
 const COMPLAINT_STATUS = {
@@ -94,8 +124,85 @@ const VALIDATION = {
   MAX_LOCATION_LENGTH: 500
 };
 
+// Notification Types
+const NOTIFICATION_TYPES = {
+  // Citizen notifications
+  COMPLAINT_SUBMITTED: 'complaint_submitted',
+  COMPLAINT_STATUS_CHANGED: 'complaint_status_changed',
+  COMPLAINT_ASSIGNED: 'complaint_assigned_to_officer',
+  COMPLAINT_DUPLICATE: 'complaint_marked_duplicate',
+  COMPLAINT_RESOLVED: 'complaint_resolved',
+  COMPLAINT_REJECTED: 'complaint_rejected',
+  OFFICER_UPDATE: 'officer_added_update',
+  
+  // Officer notifications
+  TASK_ASSIGNED: 'task_assigned',
+  TASK_DEADLINE_APPROACHING: 'task_deadline_approaching',
+  TASK_OVERDUE: 'task_overdue',
+  TASK_PRIORITY_CHANGED: 'task_priority_changed',
+  COORDINATOR_NOTE: 'coordinator_added_note',
+  
+  // Coordinator notifications
+  NEW_COMPLAINT_REVIEW: 'new_complaint_needs_review',
+  DUPLICATE_DETECTED: 'duplicate_detected',
+  SIMILAR_COMPLAINTS: 'similar_complaints_found',
+  RESOLUTION_PENDING_APPROVAL: 'resolution_pending_approval',
+  
+  // Admin notifications
+  APPROVAL_REQUIRED: 'approval_required',
+  OFFICER_ASSIGNED_DEPARTMENT: 'officer_assigned_to_department',
+  COMPLAINT_ESCALATED: 'complaint_escalated',
+  
+  // HR notifications
+  STAFF_ADDED: 'staff_member_added',
+  ROLE_CHANGE_COMPLETED: 'role_change_completed',
+  DEPARTMENT_TRANSFER_COMPLETED: 'department_transfer_completed',
+  
+  // System notifications
+  SYSTEM_ALERT: 'system_alert',
+  WELCOME: 'welcome'
+};
+
+// Notification Priorities
+const NOTIFICATION_PRIORITY = {
+  INFO: 'info',
+  WARNING: 'warning',
+  URGENT: 'urgent'
+};
+
+// Notification Icons (by type)
+const NOTIFICATION_ICONS = {
+  [NOTIFICATION_TYPES.COMPLAINT_SUBMITTED]: '✅',
+  [NOTIFICATION_TYPES.COMPLAINT_STATUS_CHANGED]: '🔄',
+  [NOTIFICATION_TYPES.COMPLAINT_ASSIGNED]: '👷',
+  [NOTIFICATION_TYPES.COMPLAINT_DUPLICATE]: '🔗',
+  [NOTIFICATION_TYPES.COMPLAINT_RESOLVED]: '✔️',
+  [NOTIFICATION_TYPES.COMPLAINT_REJECTED]: '❌',
+  [NOTIFICATION_TYPES.OFFICER_UPDATE]: '💬',
+  [NOTIFICATION_TYPES.TASK_ASSIGNED]: '📋',
+  [NOTIFICATION_TYPES.TASK_DEADLINE_APPROACHING]: '⏰',
+  [NOTIFICATION_TYPES.TASK_OVERDUE]: '🚨',
+  [NOTIFICATION_TYPES.TASK_PRIORITY_CHANGED]: '⚠️',
+  [NOTIFICATION_TYPES.COORDINATOR_NOTE]: '📝',
+  [NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW]: '🔍',
+  [NOTIFICATION_TYPES.DUPLICATE_DETECTED]: '🔗',
+  [NOTIFICATION_TYPES.SIMILAR_COMPLAINTS]: '📊',
+  [NOTIFICATION_TYPES.RESOLUTION_PENDING_APPROVAL]: '✋',
+  [NOTIFICATION_TYPES.APPROVAL_REQUIRED]: '🔐',
+  [NOTIFICATION_TYPES.OFFICER_ASSIGNED_DEPARTMENT]: '👔',
+  [NOTIFICATION_TYPES.COMPLAINT_ESCALATED]: '⬆️',
+  [NOTIFICATION_TYPES.STAFF_ADDED]: '👥',
+  [NOTIFICATION_TYPES.ROLE_CHANGE_COMPLETED]: '🔄',
+  [NOTIFICATION_TYPES.DEPARTMENT_TRANSFER_COMPLETED]: '🏢',
+  [NOTIFICATION_TYPES.SYSTEM_ALERT]: '🔔',
+  [NOTIFICATION_TYPES.WELCOME]: '👋'
+};
+
 module.exports = {
   USER_ROLES,
+  ROLE_HIERARCHY,
+  COMPLAINT_ROLES,
+  SWITCHABLE_ROLES,
   COMPLAINT_STATUS,
   WORKFLOW_STATUS,
   PRIORITY_LEVELS,
@@ -103,5 +210,8 @@ module.exports = {
   FILE_UPLOAD,
   PAGINATION,
   MESSAGES,
-  VALIDATION
+  VALIDATION,
+  NOTIFICATION_TYPES,
+  NOTIFICATION_PRIORITY,
+  NOTIFICATION_ICONS
 };

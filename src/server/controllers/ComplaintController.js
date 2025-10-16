@@ -9,7 +9,12 @@ class ComplaintController {
     try {
       const { user } = req;
       const complaintData = req.body;
-      const files = req.files || [];
+
+      // Handle multer .fields() response (files is an object, not array)
+      let files = [];
+      if (req.files && req.files.evidenceFiles) {
+        files = req.files.evidenceFiles;
+      }
 
       const complaint = await this.complaintService.createComplaint(
         user.id, 
@@ -77,7 +82,7 @@ class ComplaintController {
     try {
       const { user } = req;
       const { id } = req.params;
-      const userRole = user.user_metadata?.role;
+      const userRole = user.role || 'citizen';
 
       let complaint;
       if (userRole === 'citizen') {
@@ -165,6 +170,43 @@ class ComplaintController {
         success: false,
         error: error.message
       });
+    }
+  }
+
+  async transitionStatus(req, res) {
+    try {
+      const complaintId = req.params.id;
+      const { status, resolution_notes, admin_notes, feedback } = req.body || {};
+      const userId = req.user?.id;
+      const userRole = req.user?.role || 'citizen';
+
+      // Optional evidence from officer during submit-for-approval
+      const files = (req.files && req.files.evidenceFiles) ? req.files.evidenceFiles : [];
+
+      if (!status) {
+        return res.status(400).json({ success: false, error: 'Status is required' });
+      }
+
+      // Citizens can only confirm resolution (one-way)
+      if (userRole === 'citizen' && status !== 'resolved') {
+        return res.status(400).json({ success: false, error: 'Citizens can only confirm resolution' });
+      }
+
+      if (files && files.length > 0) {
+        await this.complaintService.addEvidence(complaintId, files);
+      }
+
+      const updated = await this.complaintService.updateComplaintStatus(
+        complaintId,
+        status,
+        userRole === 'citizen' ? null : (resolution_notes || admin_notes || feedback || null),
+        userId
+      );
+
+      return res.json({ success: true, data: updated });
+    } catch (error) {
+      console.error('[COMPLAINT] Transition status error:', error);
+      res.status(500).json({ success: false, error: 'Failed to update complaint status' });
     }
   }
 
@@ -256,6 +298,41 @@ class ComplaintController {
       res.status(500).json({
         success: false,
         error: "Failed to fetch complaint statistics"
+      });
+    }
+  }
+
+  async getComplaintLocations(req, res) {
+    try {
+      
+      const { 
+        status, 
+        type, 
+        department, 
+        startDate, 
+        endDate,
+        includeResolved = 'true'
+      } = req.query;
+
+      const locations = await this.complaintService.getComplaintLocations({
+        status,
+        type,
+        department,
+        startDate,
+        endDate,
+        includeResolved: includeResolved === 'true'
+      });
+
+      res.json({
+        success: true,
+        data: locations,
+        count: locations.length
+      });
+    } catch (error) {
+      console.error("[COMPLAINT-CONTROLLER] Error fetching complaint locations:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch complaint locations"
       });
     }
   }

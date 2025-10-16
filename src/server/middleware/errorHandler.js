@@ -4,14 +4,14 @@ const path = require('path');
 class ErrorHandler {
   static handle(err, req, res, next) {
     console.error('Application error:', err);
-    
+
     // API error response
     if (req.path.startsWith('/api/')) {
       return this.handleApiError(err, req, res);
     }
-    
+
     // Page error response
-    return this.handlePageError(err, req, res);
+    return ErrorHandler.handlePageError(err, req, res);
   }
 
   static handleApiError(err, req, res) {
@@ -36,11 +36,11 @@ class ErrorHandler {
     const statusCode = this.getStatusCode(err);
     
     if (statusCode === 404) {
-      return res.status(404).sendFile(path.join(config.rootDir, 'views', 'pages', '404.html'));
+      return res.status(404).sendFile(path.join(__dirname, '../views/pages/404.html'));
     }
 
     // For other errors, send a generic error page or redirect
-    return res.status(500).sendFile(path.join(config.rootDir, 'views', 'pages', '500.html'));
+    return res.status(500).sendFile(path.join(__dirname, '../views/pages/500.html'));
   }
 
   static getStatusCode(err) {

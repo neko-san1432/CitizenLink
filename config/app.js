@@ -3,14 +3,14 @@ const { join } = require('path');
 class AppConfig {
   constructor() {
     this.env = process.env.NODE_ENV || 'development';
-    this.port = process.env.PORT || 3000;
+    this.port = process.env.PORT || 3001;
     this.host = process.env.HOST || 'localhost';
 
     // Paths
     this.rootDir = join(__dirname, '..');
     this.publicDir = join(this.rootDir, 'public');
     this.viewsDir = join(this.rootDir, 'views');
-    this.uploadsDir = join(this.rootDir, 'uploads');
+    this.uploadsDir = join(this.rootDir, 'uplaoads');
 
     // Security (handled by Supabase)
     // Note: JWT and session secrets not needed - using Supabase Auth

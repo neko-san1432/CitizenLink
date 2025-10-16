@@ -8,6 +8,7 @@ import { setupRealtimeValidation } from '../../utils/validation.js';
 import { createComplaintFileHandler, setupDragAndDrop } from '../../utils/fileHandler.js';
 import showMessage from '../toast.js';
 import apiClient from '../../config/apiClient.js';
+import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/roleToggle.js';
 
 // Complaint type and subtype mapping
 const COMPLAINT_SUBTYPES = {
@@ -64,7 +65,7 @@ const COMPLAINT_SUBTYPES = {
 /**
  * Initialize complaint form
  */
-export function initializeComplaintForm() {
+export async function initializeComplaintForm() {
   const form = document.getElementById('complaintForm');
   if (!form) {
     console.error('[COMPLAINT FORM] Form element not found');
@@ -72,6 +73,28 @@ export function initializeComplaintForm() {
   }
 
   console.log('[COMPLAINT FORM] Initializing...');
+
+  // Check if user is citizen or in citizen mode
+  const activeRole = getActiveRole();
+  const inCitizenMode = isInCitizenMode();
+  
+  console.log('[COMPLAINT FORM] Active role:', activeRole, 'Citizen mode:', inCitizenMode);
+
+  if (activeRole !== 'citizen' && !inCitizenMode) {
+    // User is not a citizen and not in citizen mode
+    const canSwitch = await canSwitchToCitizen();
+    
+    if (canSwitch) {
+      // Show message to switch to citizen mode
+      showRoleSwitchRequired(form);
+      return;
+    } else {
+      // Shouldn't happen, but handle it
+      showMessage('error', 'Only citizens can file complaints');
+      form.style.display = 'none';
+      return;
+    }
+  }
 
   // Get form elements
   const elements = {
@@ -108,6 +131,15 @@ export function initializeComplaintForm() {
   setupFormSubmission(elements.form, fileHandler);
   loadDepartments();
 
+  // Prevent any auto-focus behavior (browser default or otherwise)
+  setTimeout(() => {
+    // Remove focus from any form field
+    if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+      document.activeElement.blur();
+      console.log('[COMPLAINT FORM] Cleared auto-focus from:', document.activeElement);
+    }
+  }, 50);
+
   console.log('[COMPLAINT FORM] Initialization complete');
 }
 
@@ -129,7 +161,7 @@ function populateSubtypes(selectedType, subtypeSelect) {
   if (!subtypeSelect) return;
 
   // Clear existing options
-  subtypeSelect.innerHTML = '<option value="">Select complaint subtype (optional)</option>';
+  subtypeSelect.innerHTML = '<option value="">Select complaint subtype</option>';
   
   if (!selectedType || !COMPLAINT_SUBTYPES[selectedType]) return;
 
@@ -157,6 +189,39 @@ function setupFileHandling(dropZone, fileInput, fileHandler) {
   window.complaintFileHandler = fileHandler;
 
   console.log('[COMPLAINT FORM] File handling setup complete');
+}
+
+/**
+ * Show role switch required message
+ */
+function showRoleSwitchRequired(form) {
+  const message = document.createElement('div');
+  message.className = 'role-switch-required';
+  message.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+      margin: 40px auto;
+      max-width: 500px;
+    ">
+      <div style="font-size: 3rem; margin-bottom: 20px;">🔄</div>
+      <h2 style="margin: 0 0 15px 0; font-size: 1.5rem;">Switch to Citizen Mode Required</h2>
+      <p style="margin: 0 0 25px 0; opacity: 0.9; font-size: 1rem;">
+        To file a complaint, please switch to Citizen mode using the toggle button in the header.
+      </p>
+      <div style="font-size: 2rem; margin-bottom: 10px;">↗️</div>
+      <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">
+        Look for the toggle button at the top right corner
+      </p>
+    </div>
+  `;
+  
+  form.style.display = 'none';
+  form.parentNode.insertBefore(message, form);
 }
 
 /**

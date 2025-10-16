@@ -2,12 +2,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Success</title>
     <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/pages/success.css">
 </head>
 <body>
-    Success
-    <div id="toast"></div>
+    <div class="card">
+      <h1 class="success-title">Success</h1>
+      <p class="success-message">Your request completed successfully.</p>
+      <div class="success-actions">
+        <a href="/" class="btn">Go Home</a>
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+      </div>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script type="module" src="./js/components/toast.js"></script>
     <script type="module" src="./js/components/success.js"></script>
 </body>
 </html>

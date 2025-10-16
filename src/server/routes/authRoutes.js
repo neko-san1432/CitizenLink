@@ -4,7 +4,8 @@ const { authenticateUser } = require('../middleware/auth');
 const { ErrorHandler } = require('../middleware/errorHandler');
 const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
-const { supabase } = new Database();
+const db = new Database();
+const supabase = db.getClient();
 
 const router = express.Router();
 
@@ -17,14 +18,21 @@ const router = express.Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/signup', csrfProtection, ErrorHandler.asyncWrapper(AuthController.signup));
+router.post('/signup', ErrorHandler.asyncWrapper(AuthController.signup));
+
+/**
+ * @route   POST /api/auth/signup-with-code
+ * @desc    Register a new user with HR signup code
+ * @access  Public
+ */
+router.post('/signup-with-code', ErrorHandler.asyncWrapper(AuthController.signupWithCode));
 
 /**
  * @route   POST /api/auth/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', csrfProtection, ErrorHandler.asyncWrapper(AuthController.login));
+router.post('/login', ErrorHandler.asyncWrapper(AuthController.login));
 
 /**
  * @route   GET /api/auth/verify-email
@@ -50,7 +58,7 @@ router.post('/forgot-password', csrfProtection, ErrorHandler.asyncWrapper(async 
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password`
+      redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password`
     });
 
     if (error) {
@@ -97,10 +105,10 @@ router.post('/reset-password', csrfProtection, ErrorHandler.asyncWrapper(async (
       });
     }
 
-    if (password.length < 8) {
+    if (password.length < 4) {
       return res.status(400).json({
         success: false,
-        error: 'Password must be at least 8 characters'
+        error: 'Password must be at least 4 characters'
       });
     }
 
@@ -162,6 +170,20 @@ router.post('/change-password', authenticateUser, csrfProtection, ErrorHandler.a
  * @access  Private
  */
 router.post('/logout', authenticateUser, ErrorHandler.asyncWrapper(AuthController.logout));
+
+/**
+ * @route   POST /api/auth/complete-oauth
+ * @desc    Complete OAuth registration with mobile number
+ * @access  Private
+ */
+router.post('/complete-oauth', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuth));
+
+/**
+ * @route   POST /api/auth/complete-oauth-hr
+ * @desc    Complete OAuth registration with HR signup code
+ * @access  Private
+ */
+router.post('/complete-oauth-hr', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
 
 /**
  * @route   GET /api/auth/sessions

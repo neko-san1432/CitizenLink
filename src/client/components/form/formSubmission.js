@@ -6,7 +6,6 @@
 import apiClient from '../../config/apiClient.js';
 import { extractComplaintFormData, validateComplaintForm } from '../../utils/validation.js';
 import showMessage from '../toast.js';
-import { addCsrfTokenToForm } from '../../utils/csrf.js';
 
 /**
  * Handle complaint form submission
@@ -59,10 +58,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
       apiFormData.append('evidenceFiles', file);
     });
 
-    // Add CSRF token
-    await addCsrfTokenToForm(apiFormData);
-
-    // Submit via API client
+    // Submit via API client (CSRF token handled internally)
     const result = await apiClient.submitComplaint(apiFormData);
 
     if (!result.success) {

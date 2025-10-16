@@ -1,0 +1,81 @@
+html, body { height: 100%; margin: 0; }
+body { min-height: 100vh; display: grid; place-items: center; overflow: hidden; background: #fafafa; }
+.container { max-width: 520px; width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-sizing: border-box; }
+.phone-input { display:flex; align-items:center; gap:8px; }
+.readonly { background: #f3f4f6; }
+.phone-number { flex: 1; }
+#oauthCompleteForm input[type="submit"] { width: 100%; padding: 10px 12px; border-radius: 8px; background: #2563eb; color: #fff; border: 1px solid #2563eb; }
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+  
+  .phone-input {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .country-code {
+    text-align: center;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .phone-number {
+    width: 100%;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px;
+  }
+  
+  #oauthCompleteForm input[type="submit"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 8px;
+    padding-top: 16px;
+  }
+  
+  .container {
+    padding: 16px;
+  }
+  
+  .phone-input {
+    gap: 6px;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    padding: 10px;
+  }
+  
+  #oauthCompleteForm input[type="submit"] {
+    padding: 10px;
+  }
+}
+

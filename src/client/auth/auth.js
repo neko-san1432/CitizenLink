@@ -3,7 +3,7 @@ import { supabase } from "../config/config.js";
 import showMessage from "../components/toast.js";
 import { saveUserMeta, getOAuthContext } from "./authChecker.js";
 import { addCsrfTokenToForm } from "../utils/csrf.js";
-import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword } from "../utils/validation.js";
+import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword, isValidEmail } from "../utils/validation.js";
 // Show toast on login page if redirected due to missing auth
 try {
   const isLoginPage = /\/login(?:$|\?)/.test(window.location.pathname + window.location.search)
@@ -72,7 +72,7 @@ async function verifyCaptchaOrFail(widgetId) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/captcha/verify", {
+    const res = await fetch("/api/captcha/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
@@ -130,29 +130,38 @@ if (regFormEl) regFormEl.addEventListener("submit", async (e) => {
   if (!captchaResult.ok) return;
 
   try {
-    // Create FormData for CSRF token
-    const submitData = new FormData();
-    submitData.append('email', validation.sanitizedData.email);
-    submitData.append('password', regPass);
-    submitData.append('confirmPassword', reRegPass);
-    submitData.append('firstName', validation.sanitizedData.name);
-    submitData.append('lastName', ''); // Assuming no last name field for now
-    submitData.append('mobileNumber', `+63${validation.sanitizedData.mobile}`);
-    submitData.append('role', 'citizen');
-    submitData.append('agreedToTerms', 'true');
-
-    // Add CSRF token
-    await addCsrfTokenToForm(submitData);
+    // Build JSON payload (role defaults to 'citizen' on backend)
+    const payload = {
+      email: validation.sanitizedData.email,
+      password: regPass,
+      confirmPassword: reRegPass,
+      name: validation.sanitizedData.name, // Single name field
+      mobileNumber: `+63${validation.sanitizedData.mobile}`,
+      // role: 'citizen', // ❌ Removed - Backend defaults to citizen
+      agreedToTerms: true,
+      isOAuth: false // Regular signup
+    };
 
     // Submit via API instead of direct Supabase call
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
-      body: submitData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
     const result = await response.json();
 
     if (result.success) {
+      // Ensure browser Supabase client has the session to prevent auto-logout
+      try {
+        const accessToken = result.data?.session?.accessToken || null;
+        const refreshToken = result.data?.session?.refreshToken || null;
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        }
+      } catch (e) {
+        console.warn('Failed to set Supabase client session:', e);
+      }
       showMessage("success", "Successfully registered. Please confirm via the email we sent.");
       setTimeout(()=>{window.location.href = "/login";},3000);
     } else {
@@ -186,18 +195,11 @@ if (loginFormEl) loginFormEl.addEventListener("submit", async (e) => {
   if (!captchaResult.ok) return;
 
   try {
-    // Create FormData for CSRF token
-    const loginData = new FormData();
-    loginData.append('email', email);
-    loginData.append('password', pass);
-
-    // Add CSRF token
-    await addCsrfTokenToForm(loginData);
-
-    // Submit via API instead of direct Supabase call
+    // Submit via API with JSON body
     const response = await fetch('/api/auth/login', {
       method: 'POST',
-      body: loginData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
     });
 
     const result = await response.json();
@@ -235,9 +237,33 @@ if (loginFormEl) loginFormEl.addEventListener("submit", async (e) => {
       } catch {}
 
       showMessage("success", "Logged in successfully");
-      const role = result.data?.user?.role || null
-      const name = result.data?.user?.name || null
-      console.log('🔐 Login successful - Role:', role, 'Name:', name);
+      // Get role from multiple sources
+      const sessionUserMetadata = result.data?.session?.user?.user_metadata || {};
+      const sessionRawUserMetadata = result.data?.session?.user?.raw_user_meta_data || {};
+
+      console.log('🔍 Login metadata sources:', {
+        userRole: result.data?.user?.role,
+        sessionUserMetadata,
+        sessionRawUserMetadata
+      });
+
+      const combinedSessionMetadata = { ...sessionRawUserMetadata, ...sessionUserMetadata };
+
+      const role = result.data?.user?.role
+        || combinedSessionMetadata.role
+        || combinedSessionMetadata.normalized_role
+        || sessionUserMetadata.role
+        || sessionRawUserMetadata.role
+        || null;
+
+      const name = result.data?.user?.fullName
+        || (result.data?.user?.firstName && result.data?.user?.lastName ? `${result.data.user.firstName} ${result.data.user.lastName}` : null)
+        || combinedSessionMetadata.name
+        || sessionUserMetadata.name
+        || sessionRawUserMetadata.name
+        || null;
+
+      console.log('🔐 Login successful - Role:', role, 'Name:', name, 'Combined metadata:', combinedSessionMetadata);
 
       if (role || name) {
         saveUserMeta({ role, name })
@@ -250,7 +276,7 @@ if (loginFormEl) loginFormEl.addEventListener("submit", async (e) => {
         showMessage("error", "Please complete your profile first");
         setTimeout(() => {
           console.log('🔄 Redirecting to OAuth continuation');
-          window.location.href = "/oauth-continuation";
+        window.location.href = "/OAuthContinuation";
         }, 2000);
         return;
       }
@@ -283,7 +309,9 @@ if (googleBtn) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/success`
+        redirectTo: `${window.location.origin}/success`,
+        // Request additional scopes to get phone number
+        scopes: 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
       }
     });
     if (error) {
@@ -299,7 +327,9 @@ if (fbBtn) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: `${window.location.origin}/success`
+        redirectTo: `${window.location.origin}/success`,
+        // Request phone number permission from Facebook
+        scopes: 'email public_profile user_mobile_phone'
       }
     });
     if (error) {

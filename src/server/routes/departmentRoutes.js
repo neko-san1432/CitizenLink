@@ -15,6 +15,11 @@ router.get('/type/:type',
   (req, res) => departmentController.getDepartmentsByType(req, res)
 );
 
+router.get('/:id/officers', 
+  authenticateUser,
+  (req, res) => departmentController.getDepartmentOfficers(req, res)
+);
+
 router.get('/', 
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),

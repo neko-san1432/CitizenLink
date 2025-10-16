@@ -1,5 +1,6 @@
 // Notification component with lazy loading functionality
 import { brandConfig } from '../config/index.js';
+import apiClient from '../config/apiClient.js';
 
 // Notification state management
 let notificationState = {
@@ -9,6 +10,10 @@ let notificationState = {
   loading: false,
   notifications: []
 };
+
+// Real-time polling interval (30 seconds)
+let pollingInterval = null;
+const POLLING_INTERVAL_MS = 30000;
 
 // Initialize notification button functionality
 export function initializeNotificationButton() {
@@ -67,8 +72,11 @@ export function initializeNotificationButton() {
       }
     });
     
-    // Initial notification count
-    updateNotificationCount(0);
+    // Initial notification count load
+    loadUnreadCount();
+    
+    // Start real-time polling for unread count
+    startPolling();
   }
 }
 
@@ -77,6 +85,40 @@ export function closeNotificationPanel() {
   const notificationPanel = document.getElementById('notification-panel');
   if (notificationPanel && !notificationPanel.classList.contains('hidden')) {
     notificationPanel.classList.add('hidden');
+  }
+}
+
+// Start real-time polling
+function startPolling() {
+  // Clear any existing interval
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
+  
+  // Poll every 30 seconds
+  pollingInterval = setInterval(() => {
+    loadUnreadCount();
+  }, POLLING_INTERVAL_MS);
+}
+
+// Stop polling (cleanup)
+export function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+// Load unread count
+async function loadUnreadCount() {
+  try {
+    const response = await apiClient.get('/api/notifications/count');
+    
+    if (response.success) {
+      updateNotificationCount(response.count);
+    }
+  } catch (error) {
+    console.error('[NOTIFICATION] Failed to load unread count:', error);
   }
 }
 
@@ -123,39 +165,50 @@ async function loadNotifications(reset = false) {
   }
 }
 
-// Simulate API call - replace with actual implementation
+// Fetch notifications from API
 async function fetchNotifications(page, limit) {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock data - replace with actual API call
-  const allNotifications = [
-    { id: 1, title: 'Welcome to CitizenLink', message: 'Welcome to our platform!', time: 'Just now', icon: '📢', read: false },
-    { id: 2, title: 'Complaint Received', message: 'Your complaint has been received and is being reviewed', time: '2 minutes ago', icon: '✅', read: false },
-    { id: 3, title: 'Status Update', message: 'Your complaint status has been updated', time: '1 hour ago', icon: '🔄', read: false },
-    { id: 4, title: 'New Message', message: 'You have a new message from support', time: '2 hours ago', icon: '💬', read: true },
-    { id: 5, title: 'System Maintenance', message: 'Scheduled maintenance will occur tonight', time: '3 hours ago', icon: '🔧', read: true },
-    { id: 6, title: 'Profile Update', message: 'Your profile has been successfully updated', time: '1 day ago', icon: '👤', read: true },
-    { id: 7, title: 'Security Alert', message: 'New login detected from different location', time: '2 days ago', icon: '🔒', read: true },
-    { id: 8, title: 'Feature Update', message: 'New features are now available', time: '3 days ago', icon: '✨', read: true },
-    { id: 9, title: 'Reminder', message: 'Don\'t forget to complete your profile', time: '1 week ago', icon: '⏰', read: true },
-    { id: 10, title: 'Welcome Back', message: 'Welcome back to CitizenLink', time: '1 week ago', icon: '👋', read: true },
-    { id: 11, title: 'Account Verified', message: 'Your account has been verified', time: '2 weeks ago', icon: '✓', read: true },
-    { id: 12, title: 'Password Changed', message: 'Your password has been successfully changed', time: '2 weeks ago', icon: '🔑', read: true }
-  ];
-  
-  const startIndex = page * limit;
-  const endIndex = startIndex + limit;
-  const notifications = allNotifications.slice(startIndex, endIndex);
-  const hasMore = endIndex < allNotifications.length;
-  
-  return {
-    success: true,
-    data: {
-      notifications,
-      hasMore
+  try {
+    const response = await apiClient.get(`/api/notifications?page=${page}&limit=${limit}`);
+    
+    if (!response.success) {
+      throw new Error('Failed to fetch notifications');
     }
-  };
+    
+    // Format created_at to relative time
+    const formattedNotifications = response.data.notifications.map(notif => ({
+      ...notif,
+      time: formatRelativeTime(notif.created_at)
+    }));
+    
+    return {
+      success: true,
+      data: {
+        notifications: formattedNotifications,
+        hasMore: response.data.hasMore
+      }
+    };
+  } catch (error) {
+    console.error('[NOTIFICATION] Fetch error:', error);
+    throw error;
+  }
+}
+
+// Format timestamp to relative time (e.g., "2 minutes ago")
+function formatRelativeTime(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffMs = now - time;
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffSecs < 60) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+  return time.toLocaleDateString();
 }
 
 // Render notifications in the UI
@@ -168,18 +221,58 @@ function renderNotifications() {
     return;
   }
   
-  const html = notificationState.notifications.map(notification => `
-    <div class="notification-item ${notification.read ? 'read' : ''}" data-id="${notification.id}">
-      <div class="notification-icon">${notification.icon}</div>
-      <div class="notification-text">
-        <div class="notification-title">${notification.title}</div>
-        <div class="notification-message">${notification.message}</div>
-        <div class="notification-time">${notification.time}</div>
+  const html = notificationState.notifications.map(notification => {
+    const priorityClass = notification.priority === 'urgent' ? 'notification-urgent' :
+                         notification.priority === 'warning' ? 'notification-warning' : '';
+    
+    const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
+    
+    return `
+      <div class="notification-item ${notification.read ? 'read' : ''} ${priorityClass}" 
+           data-id="${notification.id}" 
+           ${linkAttr}
+           style="cursor: ${notification.link ? 'pointer' : 'default'}">
+        <div class="notification-icon">${notification.icon}</div>
+        <div class="notification-text">
+          <div class="notification-title">${escapeHtml(notification.title)}</div>
+          <div class="notification-message">${escapeHtml(notification.message)}</div>
+          <div class="notification-time">${notification.time}</div>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
   
   content.innerHTML = html;
+  
+  // Add click handlers for notifications with links
+  content.querySelectorAll('.notification-item[data-link]').forEach(item => {
+    item.addEventListener('click', async function() {
+      const notifId = this.dataset.id;
+      const link = this.dataset.link;
+      
+      // Mark as read
+      try {
+        await apiClient.put(`/api/notifications/${notifId}/read`);
+        this.classList.add('read');
+        loadUnreadCount();
+      } catch (error) {
+        console.warn('[NOTIFICATION] Failed to mark as read:', error);
+      }
+      
+      // Navigate to link
+      if (link) {
+        closeNotificationPanel();
+        window.location.href = link;
+      }
+    });
+  });
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 // Update show more button state
@@ -220,18 +313,27 @@ function hideErrorState() {
 }
 
 // Mark all notifications as read
-function markAllNotificationsAsRead() {
-  notificationState.notifications.forEach(notification => {
-    notification.read = true;
-  });
-  
-  renderNotifications();
-  updateNotificationCount(0);
-  
-  // Close panel
-  const notificationPanel = document.getElementById('notification-panel');
-  if (notificationPanel) {
-    notificationPanel.classList.add('hidden');
+async function markAllNotificationsAsRead() {
+  try {
+    const response = await apiClient.put('/api/notifications/read-all');
+    
+    if (response.success) {
+      // Update local state
+      notificationState.notifications.forEach(notification => {
+        notification.read = true;
+      });
+      
+      renderNotifications();
+      updateNotificationCount(0);
+      
+      // Close panel
+      const notificationPanel = document.getElementById('notification-panel');
+      if (notificationPanel) {
+        notificationPanel.classList.add('hidden');
+      }
+    }
+  } catch (error) {
+    console.error('[NOTIFICATION] Failed to mark all as read:', error);
   }
 }
 

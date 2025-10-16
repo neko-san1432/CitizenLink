@@ -11,6 +11,7 @@ class DepartmentManager {
   async init() {
     await this.loadDepartments();
     this.setupEventListeners();
+    this.startStatusRefresh();
   }
 
   setupEventListeners() {
@@ -30,9 +31,11 @@ class DepartmentManager {
 
   async loadDepartments() {
     try {
-      const response = await apiClient.get('/api/departments');
+      const response = await apiClient.get('/api/departments/active');
       if (response.success) {
         this.departments = response.data;
+        // Load officers for each department
+        await this.loadOfficersForAllDepartments();
         this.renderDepartments();
         this.updateStats();
       }
@@ -40,6 +43,31 @@ class DepartmentManager {
       console.error('Failed to load departments:', error);
       showMessage('error', 'Failed to load departments');
     }
+  }
+
+  async loadOfficersForAllDepartments() {
+    const promises = this.departments.map(async (dept) => {
+      try {
+        const response = await apiClient.getDepartmentOfficers(dept.id);
+        if (response.success) {
+          dept.officers = response.data.map(officer => ({
+            ...officer,
+            lastSeenText: this.getLastSeenText(officer.last_sign_in_at),
+            statusClass: this.getStatusClass(officer.is_online, officer.last_sign_in_at)
+          }));
+          dept.officersVisible = false; // Initially hidden
+        } else {
+          dept.officers = [];
+          dept.officersVisible = false;
+        }
+      } catch (error) {
+        console.error(`Failed to load officers for department ${dept.name}:`, error);
+        dept.officers = [];
+        dept.officersVisible = false;
+      }
+    });
+
+    await Promise.all(promises);
   }
 
   renderDepartments() {
@@ -56,6 +84,37 @@ class DepartmentManager {
         </div>
         <h3>${dept.name}</h3>
         <p>${dept.description || 'No description provided'}</p>
+        
+        <div class="officers-section" id="officers-${dept.id}">
+          <div class="officers-header">
+            <h4>Officers (${dept.officers ? dept.officers.length : 0})</h4>
+            <button class="toggle-officers" onclick="departmentManager.toggleOfficers(${dept.id})">
+              ${dept.officersVisible ? 'Hide' : 'Show'} Officers
+            </button>
+          </div>
+          <div class="officers-list" style="display: ${dept.officersVisible ? 'grid' : 'none'}">
+            ${dept.officers && dept.officers.length > 0 ? 
+              dept.officers.map(officer => `
+                <div class="officer-item">
+                  <div class="officer-status">
+                    <div class="officer-avatar">${officer.name.charAt(0).toUpperCase()}</div>
+                    <div class="status-indicator ${officer.statusClass}"></div>
+                  </div>
+                  <div class="officer-info">
+                    <p class="officer-name">${officer.name}</p>
+                    <p class="officer-role">${officer.role || 'Officer'}</p>
+                    <p class="officer-status-text ${officer.statusClass}-text">
+                      ${officer.is_online ? 'Online' : 'Offline'}
+                    </p>
+                    <p class="officer-last-seen">${officer.lastSeenText}</p>
+                  </div>
+                </div>
+              `).join('') : 
+              '<div class="no-officers">No officers assigned to this department</div>'
+            }
+          </div>
+        </div>
+        
         <div class="department-actions">
           <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
             Edit
@@ -167,6 +226,69 @@ class DepartmentManager {
       showMessage('error', error.message || 'Operation failed');
     }
   }
+
+  toggleOfficers(departmentId) {
+    const department = this.departments.find(d => d.id === departmentId);
+    if (!department) return;
+
+    department.officersVisible = !department.officersVisible;
+    this.renderDepartments();
+  }
+
+  getLastSeenText(lastSignInAt) {
+    if (!lastSignInAt) return 'Never';
+    
+    const lastSignIn = new Date(lastSignInAt);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    return lastSignIn.toLocaleDateString();
+  }
+
+  getStatusClass(isOnline, lastSignInAt) {
+    if (isOnline) return 'status-online';
+    
+    if (!lastSignInAt) return 'status-offline';
+    
+    const lastSignIn = new Date(lastSignInAt);
+    const now = new Date();
+    const diffInMinutes = (now - lastSignIn) / (1000 * 60);
+    
+    // Consider "away" if last seen within 1 hour but not online
+    if (diffInMinutes < 60) return 'status-away';
+    
+    return 'status-offline';
+  }
+
+  startStatusRefresh() {
+    // Refresh status every 2 minutes
+    setInterval(() => {
+      this.refreshOfficerStatus();
+    }, 2 * 60 * 1000);
+  }
+
+  async refreshOfficerStatus() {
+    // Only refresh if officers are visible
+    const hasVisibleOfficers = this.departments.some(dept => dept.officersVisible);
+    if (!hasVisibleOfficers) return;
+
+    try {
+      // Reload officers for all departments
+      await this.loadOfficersForAllDepartments();
+      this.renderDepartments();
+    } catch (error) {
+      console.error('Failed to refresh officer status:', error);
+    }
+  }
 }
 
 // Global functions for onclick handlers
@@ -179,6 +301,12 @@ window.openModal = (mode) => {
 window.closeModal = () => {
   if (window.departmentManager) {
     window.departmentManager.closeModal();
+  }
+};
+
+window.toggleOfficers = (departmentId) => {
+  if (window.departmentManager) {
+    window.departmentManager.toggleOfficers(departmentId);
   }
 };
 

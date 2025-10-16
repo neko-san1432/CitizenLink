@@ -28,9 +28,13 @@ class CitizenLinkApp {
     this.app.use(cookieParser());
     
     // Serve static files with proper paths
+    // Prefer public assets, then fall back to src client assets
+    this.app.use('/js', express.static(path.join(config.rootDir, 'public', 'js')));
+    this.app.use('/css', express.static(path.join(config.rootDir, 'public', 'css')));
     this.app.use('/js', express.static(path.join(config.rootDir, 'src', 'client')));
     this.app.use('/css', express.static(path.join(config.rootDir, 'src', 'client', 'styles')));
     this.app.use('/assets', express.static(path.join(config.rootDir, 'src', 'client', 'assets')));
+    this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
     
     // Serve node_modules for browser imports
@@ -41,24 +45,51 @@ class CitizenLinkApp {
     // API Routes
     this.app.use('/api', routes);
 
-    // Protected Pages
+    // Session cookie helpers for client
+    this.app.post('/auth/session', (req, res) => {
+      try {
+        const token = req.body?.access_token;
+        if (!token) {
+          return res.status(400).json({ success: false, error: 'access_token is required' });
+        }
+        res.cookie('sb_access_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: config.security.cookieMaxAge
+        });
+        return res.json({ success: true });
+      } catch (e) {
+        return res.status(500).json({ success: false, error: 'Failed to set session' });
+      }
+    });
+
+    this.app.delete('/auth/session', (req, res) => {
+      try {
+        res.clearCookie('sb_access_token');
+        return res.json({ success: true });
+      } catch (e) {
+        return res.status(500).json({ success: false, error: 'Failed to clear session' });
+      }
+    });
+
+    // Protected Pages (must come before public routes and 404 handler)
     this.setupProtectedRoutes();
 
     // Public Pages
     this.setupPublicRoutes();
 
-    // 404 Handler
+    // 404 Handler (catch-all for unmatched routes - MUST be last)
     this.app.use('*', (req, res) => {
-      res.status(404).sendFile(path.join(__dirname, '..', '..', 'views', 'pages', '404.html'));
+      res.status(404).sendFile(path.join(config.rootDir, 'views/pages/404.html'));
     });
   }
 
   setupProtectedRoutes() {
     // Dashboard route - protected and routed by role
     this.app.get("/dashboard", authenticateUser, (req, res) => {
-      const userRole = req.user?.user_metadata?.role || "citizen";
+      const userRole = req.user?.role || "citizen";
       const dashboardPath = this.getDashboardPath(userRole);
-      console.log(`[DASHBOARD] Role: ${userRole}, Path: ${dashboardPath}, User ID: ${req.user?.id}`);
       res.sendFile(dashboardPath);
     });
 
@@ -67,14 +98,15 @@ class CitizenLinkApp {
       res.sendFile(path.join(config.rootDir, "views", "pages", "myProfile.html"));
     });
 
-    this.app.get("/fileComplaint", authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "fileComplaint.html"));
+    // File Complaint page (citizen only or staff in citizen mode)
+    this.app.get("/citizen/fileComplaint", authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, "views", "pages", "citizen", "fileComplaint.html"));
     });
 
     // Admin pages
     this.app.get("/admin/departments", 
       authenticateUser, 
-      requireRole(["lgu-admin", "super-admin"]), 
+      requireRole(["super-admin"]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", "admin", "departments", "index.html"));
       }
@@ -91,34 +123,51 @@ class CitizenLinkApp {
     // LGU-specific pages
     this.app.get("/taskAssigned", 
       authenticateUser, 
-      requireRole(["lgu", /^lgu-/]), 
+      requireRole([/^lgu-(?!admin|hr)/]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", "lgu", "taskAssigned.html"));
       }
     );
 
     // LGU Admin specific pages
-    this.app.get("/heatmap", 
-      authenticateUser, 
-      requireRole([/^lgu-admin(?:-|$)/]), 
+    this.app.get("/lgu-admin/heatmap",
+      authenticateUser,
+      requireRole(["lgu-admin", /^lgu-admin/]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "heatmap.html"));
       }
     );
 
-    this.app.get("/publish", 
-      authenticateUser, 
-      requireRole([/^lgu-admin(?:-|$)/]), 
+    // Redirect /heatmap to /lgu-admin/heatmap for convenience
+    this.app.get("/heatmap",
+      authenticateUser,
+      requireRole(["lgu-admin", /^lgu-admin/]),
+      (req, res) => {
+        res.redirect("/lgu-admin/heatmap");
+      }
+    );
+
+    this.app.get("/publish",
+      authenticateUser,
+      requireRole(["lgu-admin", /^lgu-admin/]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html"));
       }
     );
 
-    this.app.get("/appointMembers", 
-      authenticateUser, 
-      requireRole([/^lgu-admin(?:-|$)/]), 
+    this.app.get("/appointMembers",
+      authenticateUser,
+      requireRole(["lgu-admin", /^lgu-admin/]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "appointMembers.html"));
+      }
+    );
+
+    this.app.get("/lgu-admin/assignments",
+      authenticateUser,
+      requireRole(["lgu-admin", /^lgu-admin/]),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "assignments.html"));
       }
     );
 
@@ -140,6 +189,50 @@ class CitizenLinkApp {
       res.redirect("/dashboard");
     });
 
+    this.app.get("/coordinator", authenticateUser, requireRole(["complaint-coordinator"]), (req, res) => {
+      res.redirect("/dashboard");
+    });
+
+    // Coordinator review queue list page
+    this.app.get("/coordinator/review-queue", 
+      authenticateUser, 
+      requireRole(["complaint-coordinator"]), 
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review-queue.html"));
+      }
+    );
+
+    // Coordinator complaint review page (individual)
+    this.app.get("/coordinator/review/:id", 
+      authenticateUser, 
+      requireRole(["complaint-coordinator"]), 
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review.html"));
+      }
+    );
+
+    this.app.get("/hr", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
+      res.redirect("/dashboard");
+    });
+
+    this.app.get("/hr/link-generator", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
+      res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "link-generator.html"));
+    });
+
+    // HR Role Changer dedicated page
+    this.app.get("/hr/role-changer",
+      authenticateUser,
+      requireRole(["lgu-hr", /^lgu-hr/]),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "role-changer.html"));
+      }
+    );
+
+    // Complete Position Signup page (public - no auth required)
+    this.app.get("/complete-position-signup", (req, res) => {
+      res.sendFile(path.join(config.rootDir, "views", "pages", "auth", "complete-position-signup.html"));
+    });
+
     this.app.get("/lgu-admin", authenticateUser, requireRole(["lgu-admin"]), (req, res) => {
       res.redirect("/dashboard");
     });
@@ -147,6 +240,16 @@ class CitizenLinkApp {
     this.app.get("/super-admin", authenticateUser, requireRole(["super-admin"]), (req, res) => {
       res.redirect("/dashboard");
     });
+
+    // Super Admin Role Changer dedicated page
+    this.app.get("/super-admin/role-changer",
+      authenticateUser,
+      requireRole(["super-admin"]),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, "views", "pages", "super-admin", "role-changer.html"));
+      }
+    );
+
 
     // Legacy API endpoints for user info
     this.app.get("/api/user/profile", authenticateUser, (req, res) => {
@@ -156,9 +259,12 @@ class CitizenLinkApp {
         data: {
           id: user.id,
           email: user.email,
-          name: user.user_metadata?.name,
-          role: user.user_metadata?.role,
-          mobile: user.user_metadata?.mobile,
+          name: user.name,
+          role: user.role,
+          mobile: user.mobile,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          hasCompleteProfile: user.hasCompleteProfile
         },
       });
     });
@@ -168,8 +274,80 @@ class CitizenLinkApp {
       res.json({
         success: true,
         data: {
-          role: user.user_metadata?.role || "citizen",
+          role: user.role || "citizen",
+          name: user.name || "Unknown",
         },
+      });
+    });
+
+    // User role switching endpoint
+    this.app.post("/api/user/switch-role", authenticateUser, async (req, res) => {
+      try {
+        const { targetRole, previousRole } = req.body;
+        const { user } = req;
+
+        if (!targetRole) {
+          return res.status(400).json({
+            success: false,
+            error: 'targetRole is required'
+          });
+        }
+
+        // Prepare new metadata
+        const newMetadata = {
+          ...user.raw_user_meta_data,
+          role: targetRole
+        };
+
+        // If switching to citizen, store previous role as actual_role for UI logic
+        if (targetRole === 'citizen' && previousRole) {
+          newMetadata.actual_role = previousRole;
+        }
+
+        const { data, error } = await database.supabase.auth.admin.updateUserById(user.id, {
+          user_metadata: newMetadata
+        });
+
+        if (error) {
+          console.error('Error updating user role:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to update role'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: {
+            role: targetRole,
+            message: 'Role updated successfully'
+          }
+        });
+      } catch (error) {
+        console.error('Role switch error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error'
+        });
+      }
+    });
+
+    // User role info endpoint (for role toggle functionality)
+    this.app.get("/api/user/role-info", authenticateUser, (req, res) => {
+      const { user } = req;
+      const role = user.role || "citizen";
+      const metaActual = user.raw_user_meta_data?.actual_role || null;
+      // If no meta actual_role is stored, assume staff's actual role equals their current role (not citizen)
+      const actualRole = metaActual || (role !== 'citizen' ? role : null);
+      res.json({
+        success: true,
+        data: {
+          role: role,
+          name: user.name || "Unknown",
+          email: user.email,
+          metadata: user.raw_user_meta_data,
+          actual_role: actualRole
+        }
       });
     });
   }
@@ -186,6 +364,12 @@ class CitizenLinkApp {
       this.app.get(`/${page}`, (req, res) => {
         res.sendFile(path.join(config.rootDir, "views", "pages", `${page}.html`));
       });
+    });
+
+    // Special signup with code page
+    this.app.get('/signup-with-code', (req, res) => {
+      const filePath = path.join(config.rootDir, "views", "pages", "auth", "signup-with-code.html");
+      res.sendFile(filePath);
     });
 
     // Public API endpoints
@@ -233,9 +417,19 @@ class CitizenLinkApp {
     const roleDashboards = {
       citizen: path.join(config.rootDir, "views", "pages", "citizen", "dashboard.html"),
       lgu: path.join(config.rootDir, "views", "pages", "lgu", "dashboard.html"),
+      "complaint-coordinator": path.join(config.rootDir, "views", "pages", "coordinator", "dashboard.html"),
       "lgu-admin": path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html"),
+      "lgu-hr": path.join(config.rootDir, "views", "pages", "hr", "dashboard.html"),
       "super-admin": path.join(config.rootDir, "views", "pages", "super-admin", "dashboard.html"),
     };
+
+    // Check for department-specific roles (e.g., lgu-hr-{dept}, lgu-admin-{dept})
+    if (userRole.startsWith('lgu-hr-')) {
+      return path.join(config.rootDir, "views", "pages", "hr", "dashboard.html");
+    }
+    if (userRole.startsWith('lgu-admin-')) {
+      return path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html");
+    }
 
     return roleDashboards[userRole] || roleDashboards.citizen;
   }
@@ -248,7 +442,7 @@ class CitizenLinkApp {
     this.app.use(ErrorHandler.handle);
   }
 
-  async start(port = 3000) {
+  async start(port = 3001) {
     try {
       // Test database connection
       const isConnected = await database.testConnection();
@@ -257,9 +451,7 @@ class CitizenLinkApp {
       }
 
       this.app.listen(port, () => {
-        console.log(`🚀 CitizenLink server running on port ${port}`);
-        console.log(`📊 Database connected successfully`);
-        console.log(`🔗 Access the application at http://localhost:${port}`);
+        // Server started
       });
     } catch (error) {
       console.error('Failed to start server:', error);

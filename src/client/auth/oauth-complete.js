@@ -49,7 +49,7 @@ async function verifyCaptchaOrFail(widgetId) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/captcha/verify", {
+    const res = await fetch("/api/captcha/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
@@ -78,8 +78,7 @@ const prefillOAuthData = async () => {
     
     if (user) {
       // Extract name from various OAuth provider sources
-      const name = user.user_metadata?.full_name || 
-                   user.user_metadata?.name ||
+      const name = user.user_metadata?.name ||
                    (user.user_metadata?.first_name && user.user_metadata?.last_name ? 
                     `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : '') ||
                    '';
@@ -96,12 +95,45 @@ const prefillOAuthData = async () => {
         emailInput.value = user.email;
       }
       
-      // Prefill mobile if it exists in user metadata
+      // Try to get phone from OAuth provider (Google, Facebook, etc.)
+      // Google provides: user_metadata.phone_number or user_metadata.phone
+      // Facebook provides: user_metadata.phone_number
+      const oauthPhone = user.user_metadata?.phone_number || 
+                        user.user_metadata?.phone || 
+                        user.user_metadata?.mobile ||
+                        null;
+      
       const mobileInput = document.getElementById("mobile");
-      if (mobileInput && user.user_metadata?.mobile) {
-        // Extract the 10 digits from +63XXXXXXXXXX format
-        const mobile = user.user_metadata.mobile.replace('+63', '');
-        mobileInput.value = mobile;
+      if (mobileInput) {
+        if (oauthPhone) {
+          
+          // Extract digits only (handle various formats: +63XXX, +1XXX, etc.)
+          let digits = oauthPhone.replace(/\D/g, '');
+          
+          // If it starts with country code, try to extract Philippines mobile
+          if (digits.startsWith('63') && digits.length >= 12) {
+            // Remove country code 63 and keep 10 digits
+            digits = digits.substring(2, 12);
+          } else if (digits.length === 10) {
+            // Already 10 digits, use as is
+          } else if (digits.length > 10) {
+            // Take last 10 digits
+            digits = digits.substring(digits.length - 10);
+          }
+          
+          mobileInput.value = digits;
+          mobileInput.readOnly = true;
+          mobileInput.style.background = '#f5f5f5';
+          mobileInput.style.cursor = 'not-allowed';
+          console.log('[OAUTH] Phone field locked with value:', digits);
+        } else {
+          // No phone from OAuth - keep field editable
+          console.log('[OAUTH] No phone from provider - field remains editable');
+          mobileInput.readOnly = false;
+          mobileInput.style.background = '';
+          mobileInput.style.cursor = '';
+          mobileInput.required = true;
+        }
       }
     }
   } catch (error) {
@@ -142,21 +174,23 @@ if (oauthCompleteForm) {
       console.log("Captcha not available, skipping verification");
     }
 
-    // Update user metadata with mobile number and default role
+    // Update user metadata with mobile number and complete profile via backend
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
+      const response = await fetch('/api/auth/complete-oauth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           name,
-          role: 'citizen', // Default role for OAuth users
-          mobile: `+63${mobile}`,
-          registration_completed: true,
-          registration_date: new Date().toISOString(),
-          oauth_completed: true
-        }
+          mobile
+        })
       });
 
-      if (error) {
-        showMessage("error", error.message || "Failed to complete registration");
+      const result = await response.json();
+
+      if (!result.success) {
+        showMessage("error", result.error || "Failed to complete registration");
         return;
       }
 
@@ -166,6 +200,7 @@ if (oauthCompleteForm) {
         window.location.href = "/dashboard";
       }, 2000);
     } catch (err) {
+      console.error('OAuth completion error:', err);
       showMessage("error", "Registration failed. Please try again.");
     }
   });

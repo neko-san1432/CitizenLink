@@ -25,12 +25,19 @@ const checkAuthAndRedirect = async () => {
     console.log('✅ Session found, extracting user metadata...');
     // Get user metadata
     const user = session.user;
-    const role = user?.user_metadata?.role || 'citizen';
-    const name = user?.user_metadata?.name || '';
-    console.log('👤 User metadata - Role:', role, 'Name:', name);
 
-    // Check if user has completed registration
-    if (!role || !name) {
+    // Check both user_metadata and raw_user_meta_data
+    const userMetadata = user?.user_metadata || {};
+    const rawUserMetaData = user?.raw_user_meta_data || {};
+    const combinedMetadata = { ...rawUserMetaData, ...userMetadata };
+
+    // Prioritize original role, but fall back to normalized role for backward compatibility
+    const role = combinedMetadata.role || combinedMetadata.normalized_role || 'citizen';
+    const name = combinedMetadata.name || userMetadata.name || rawUserMetaData.name || '';
+    console.log('👤 User metadata - Role:', role, 'Name:', name, 'Combined metadata:', combinedMetadata);
+
+    // Check if user has completed registration (role should always exist now)
+    if (!name) {
       console.log('❌ User profile incomplete - Role:', role, 'Name:', name);
       console.log('🔄 Redirecting to OAuth continuation');
       window.location.href = '/oauth-continuation';

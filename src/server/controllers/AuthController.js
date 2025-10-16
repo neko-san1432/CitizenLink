@@ -1,7 +1,8 @@
 const UserService = require('../services/UserService');
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 const Database = require('../config/database');
-const { supabase } = new Database();
+const db = new Database();
+const supabase = db.getClient();
 
 class AuthController {
   /**
@@ -15,12 +16,14 @@ class AuthController {
         confirmPassword,
         firstName,
         lastName,
+        name, // Single name field
         mobileNumber,
         role = 'citizen',
         department,
         employeeId,
         address = {},
-        agreedToTerms
+        agreedToTerms,
+        isOAuth = false
       } = req.body;
 
       // Validation
@@ -60,11 +63,13 @@ class AuthController {
         password,
         firstName,
         lastName,
+        name, // Pass single name field
         mobileNumber,
         role,
         department,
         employeeId,
-        address
+        address,
+        isOAuth
       });
 
       res.status(201).json({
@@ -119,17 +124,18 @@ class AuthController {
 
       const userId = authData.user.id;
 
-      // Get user business data
-      const user = await UserService.getUserById(userId);
+      // Get user data from auth metadata
+      let user = await UserService.getUserById(userId);
       
       if (!user) {
-        // Sync auth user to business table if missing
-        await UserService.syncAuthUser(userId);
-        user = await UserService.getUserById(userId);
+        return res.status(404).json({
+          success: false,
+          error: 'User profile not found'
+        });
       }
 
-      // Check if user is active
-      if (user.status !== 'active') {
+      // Check if user is active (skip for pending_verification on first login)
+      if (user.status && user.status !== 'active' && user.status !== 'pending_verification') {
         return res.status(403).json({
           success: false,
           error: `Account is ${user.status}. Please contact support.`
@@ -328,6 +334,361 @@ class AuthController {
         success: false,
         error: 'Logout failed'
       });
+    }
+  }
+
+  /**
+   * Complete OAuth registration with HR signup code
+   */
+  async completeOAuthHR(req, res) {
+    try {
+      const userId = req.user.id; // From auth middleware
+      const { name, mobile, signupCode } = req.body;
+
+      if (!name || !mobile || !signupCode) {
+        return res.status(400).json({
+          success: false,
+          error: 'Name, mobile number, and signup code are required'
+        });
+      }
+
+      // Validate mobile format
+      if (!/^[0-9]{10}$/.test(mobile)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Mobile number must be 10 digits'
+        });
+      }
+
+      // Validate signup code
+      const HRService = require('../services/HRService');
+      const hrService = new HRService();
+      const codeValidation = await hrService.validateSignupCode(signupCode);
+      
+      if (!codeValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: codeValidation.error
+        });
+      }
+
+      const { role, department_code } = codeValidation.data;
+
+      const firstName = name.split(' ')[0] || '';
+      const lastName = name.split(' ').slice(1).join(' ') || '';
+      const mobileNumber = `+63${mobile}`;
+
+      // Update user metadata in auth.users with HR role and department
+      const completeMetadata = {
+        // Identity
+        name: name.trim(),
+        first_name: firstName,
+        last_name: lastName,
+        full_name: name.trim(),
+        
+        // Contact
+        mobile: mobileNumber,
+        phone: mobileNumber,
+        mobile_number: mobileNumber,
+        
+        // HR-specific
+        role: role,
+        department: department_code,
+        employee_id: null, // Will be filled later by HR
+        
+        // System
+        profile_complete: true,
+        registration_method: 'oauth_hr',
+        signup_code_used: signupCode,
+        
+        // Timestamps
+        profile_completed_at: new Date().toISOString(),
+        last_updated: new Date().toISOString()
+      };
+
+      // Update user metadata in Supabase
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        user_metadata: completeMetadata
+      });
+
+      if (updateError) {
+        console.error('Error updating user metadata:', updateError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to complete registration'
+        });
+      }
+
+      // Mark signup code as used
+      await hrService.markSignupCodeUsed(signupCode, userId);
+
+      res.json({
+        success: true,
+        message: 'HR registration completed successfully',
+        data: {
+          user_id: userId,
+          role: role,
+          department: department_code
+        }
+      });
+
+    } catch (error) {
+      console.error('Complete HR OAuth error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to complete HR registration'
+      });
+    }
+  }
+
+  /**
+   * Complete OAuth registration
+   */
+  async completeOAuth(req, res) {
+    try {
+      const userId = req.user.id; // From auth middleware
+      const { name, mobile } = req.body;
+
+      if (!name || !mobile) {
+        return res.status(400).json({
+          success: false,
+          error: 'Name and mobile number are required'
+        });
+      }
+
+      // Validate mobile format
+      if (!/^[0-9]{10}$/.test(mobile)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Mobile number must be 10 digits'
+        });
+      }
+
+      const firstName = name.split(' ')[0] || '';
+      const lastName = name.split(' ').slice(1).join(' ') || '';
+      const mobileNumber = `+63${mobile}`;
+
+      // Update user metadata in auth.users
+      const completeMetadata = {
+        // Identity
+        first_name: firstName,
+        last_name: lastName,
+        name: name,
+        
+        // Contact
+        mobile_number: mobileNumber,
+        mobile: mobileNumber,
+        
+        // Role & Status
+        role: 'citizen',
+        normalized_role: 'citizen',
+        status: 'active',
+        
+        // LGU Staff (null for citizens)
+        department: null,
+        employee_id: null,
+        position: null,
+        
+        // Address (optional, null for now)
+        address_line_1: null,
+        address_line_2: null,
+        city: null,
+        province: null,
+        postal_code: null,
+        barangay: null,
+        
+        // Verification
+        email_verified: true,
+        phone_verified: false,
+        
+        // Preferences
+        preferred_language: 'en',
+        timezone: 'Asia/Manila',
+        email_notifications: true,
+        sms_notifications: false,
+        push_notifications: true,
+        
+        // Security
+        banStrike: 0,
+        banStarted: null,
+        banDuration: null,
+        permanentBan: false,
+        
+        // Metadata
+        is_oauth: true,
+        oauth_providers: ['google', 'facebook'], // Will be set based on provider
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.auth.admin.updateUserById(userId, {
+        user_metadata: completeMetadata,
+        raw_user_meta_data: completeMetadata
+      });
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: 'Failed to complete registration'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'OAuth registration completed successfully'
+      });
+
+    } catch (error) {
+      console.error('Complete OAuth error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to complete OAuth registration'
+      });
+    }
+  }
+
+  /**
+   * Signup with HR link code
+   */
+  async signupWithCode(req, res) {
+    try {
+      const {
+        email,
+        password,
+        confirmPassword,
+        firstName,
+        lastName,
+        name,
+        mobileNumber,
+        signupCode,
+        address = {},
+        agreedToTerms,
+        isOAuth = false
+      } = req.body;
+
+      // Validate signup code first
+      const HRService = require('../services/HRService');
+      const hrService = new HRService();
+      const codeValidation = await hrService.validateSignupCode(signupCode);
+      
+      if (!codeValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: codeValidation.error
+        });
+      }
+
+      const { role, department_code } = codeValidation.data;
+
+      // Validation
+      if (!agreedToTerms) {
+        return res.status(400).json({
+          success: false,
+          error: 'You must agree to the terms and conditions'
+        });
+      }
+
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'Passwords do not match'
+        });
+      }
+
+      // Create user with the role from the signup code
+      const user = await UserService.createUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        name,
+        mobileNumber,
+        role, // Use role from signup code
+        department: department_code, // Use department from signup code
+        employeeId: null, // Will be filled later by HR
+        address,
+        isOAuth
+      });
+
+      // Mark signup code as used
+      await hrService.markSignupCodeUsed(signupCode, user.id);
+
+      res.status(201).json({
+        success: true,
+        data: user,
+        message: 'Account created successfully! Please check your email to verify your account.'
+      });
+
+    } catch (error) {
+      console.error('Signup with code error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Registration failed'
+      });
+    }
+  }
+
+  /**
+   * Complete OAuth registration with HR signup code
+   * - Validates signup code
+   * - Updates auth.users metadata (role, normalized_role, department, mobile, name)
+   * - Marks code as used
+   */
+  async completeOAuthHR(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
+
+      const { name, mobile, signupCode } = req.body || {};
+      if (!signupCode) {
+        return res.status(400).json({ success: false, error: 'Signup code is required' });
+      }
+
+      // Validate signup code and extract intended role/department
+      const HRService = require('../services/HRService');
+      const hrService = new HRService();
+      const codeValidation = await hrService.validateSignupCode(signupCode);
+      if (!codeValidation.valid) {
+        return res.status(400).json({ success: false, error: codeValidation.error || 'Invalid signup code' });
+      }
+
+      const { role, department_code } = codeValidation.data;
+
+      // Merge/prepare metadata
+      const completeMetadata = {
+        // Identity
+        name: name || req.user?.name || null,
+        mobile_number: mobile || req.user?.mobileNumber || null,
+        mobile: mobile || req.user?.mobileNumber || null,
+        // Role fields (department-specific role allowed in role; normalized_role is general bucket)
+        role: role,
+        normalized_role: (role || '').startsWith('lgu-admin') ? 'lgu-admin' : (role || '').startsWith('lgu') ? 'lgu' : role || 'citizen',
+        department: department_code || null,
+        // Flags
+        is_oauth: true,
+        status: 'active',
+        email_verified: true,
+        phone_verified: !!mobile,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        user_metadata: completeMetadata,
+        raw_user_meta_data: completeMetadata
+      });
+
+      if (updateError) {
+        return res.status(400).json({ success: false, error: 'Failed to update user profile' });
+      }
+
+      // Mark signup code as used by this user
+      await hrService.markSignupCodeUsed(signupCode, userId);
+
+      return res.json({ success: true, message: 'OAuth registration (HR) completed successfully' });
+    } catch (error) {
+      console.error('Complete OAuth HR error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to complete OAuth registration' });
     }
   }
 

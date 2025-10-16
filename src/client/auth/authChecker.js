@@ -25,8 +25,18 @@ export const requireRole = (allowedRoles) => {
 
 export const refreshMetaFromSession = async () => {
   const { data: { session } } = await supabase.auth.getSession()
-  const role = session?.user?.user_metadata?.role || null
-  const name = session?.user?.user_metadata?.name || null
+
+  // Check both raw_user_meta_data and user_metadata
+  const rawUserMetaData = session?.user?.raw_user_meta_data || {}
+  const userMetadata = session?.user?.user_metadata || {}
+
+  // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
+  const combinedMetadata = { ...userMetadata, ...rawUserMetaData }
+
+  // Prioritize original role, but fall back to normalized role for backward compatibility
+  const role = combinedMetadata.role || combinedMetadata.normalized_role || null
+  const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null
+
   if (role || name) {
     saveUserMeta({ role, name })
   }
@@ -55,9 +65,51 @@ export const getUserRole = async (options = {}) => {
     const cached = getUserMeta()
     if (cached && cached.role) return cached.role
   }
+
+  try {
+    // Try to get role from API first (server has complete metadata)
+    const response = await fetch('/api/user/role')
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.data.role) {
+        console.log('🔍 Got role from API:', data.data.role)
+        saveUserMeta({ role: data.data.role, name: data.data.name })
+        return data.data.role
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get role from API:', error)
+  }
+
+  // Fallback to session metadata
   const { data: { session } } = await supabase.auth.getSession()
-  const role = session?.user?.user_metadata?.role || null
-  const name = session?.user?.user_metadata?.name || null
+
+  // Check both raw_user_meta_data (priority) and user_metadata (fallback)
+  const rawUserMetaData = session?.user?.raw_user_meta_data || {}
+  const userMetadata = session?.user?.user_metadata || {}
+
+  // Debug: Log what we find in metadata
+  console.log('🔍 Session metadata debug:', {
+    rawUserMetaData,
+    userMetadata,
+    hasRawUserMetaData: Object.keys(rawUserMetaData).length > 0,
+    hasUserMetadata: Object.keys(userMetadata).length > 0
+  })
+
+  // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
+  const combinedMetadata = { ...userMetadata, ...rawUserMetaData }
+
+  // Prioritize original role, but fall back to normalized role for backward compatibility
+  const role = combinedMetadata.role || combinedMetadata.normalized_role || null
+  const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null
+
+  console.log('🔍 Role detection result:', {
+    combinedMetadata,
+    role,
+    name,
+    willSaveToLocalStorage: !!(role || name)
+  })
+
   if (role || name) saveUserMeta({ role, name })
   return role
 }
@@ -121,6 +173,20 @@ export const initializeAuthListener = () => {
   supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
     
+    // Ensure server cookie is set when we get a valid session
+    if (event === 'SIGNED_IN' && session) {
+      try {
+        await fetch('/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: session.access_token })
+        });
+      } catch {}
+      // Restart monitoring on fresh session
+      stopTokenExpiryMonitoring();
+      startTokenExpiryMonitoring();
+    }
+
     if (event === 'TOKEN_REFRESHED' && session) {
       console.log('Token refreshed, updating server cookie');
       try {
@@ -150,7 +216,7 @@ let tokenExpiryTimer = null;
 const isAuthPage = () => {
   try {
     const p = (window.location.pathname || '').toLowerCase()
-    return p === '/login' || p === '/signup' || p === '/resetpassword' || p === '/success' || p === '/oauth-continuation'
+    return p === '/login' || p === '/signup' || p === '/resetpassword' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation'
   } catch { return false }
 }
 
@@ -167,8 +233,8 @@ export const startTokenExpiryMonitoring = () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error || !session) {
-        console.log('No valid session found, logging out');
-        handleSessionExpired();
+        // No session yet; recheck soon instead of immediate logout
+        tokenExpiryTimer = setTimeout(checkTokenExpiry, 3000);
         return;
       }
 
@@ -199,8 +265,9 @@ export const startTokenExpiryMonitoring = () => {
       });
 
       if (timeUntilExpiry <= 0) {
-        console.log('Token has expired, logging out');
-        handleSessionExpired();
+        console.log('Token has expired, attempting refresh');
+        try { await supabase.auth.refreshSession(); } catch {}
+        tokenExpiryTimer = setTimeout(checkTokenExpiry, 2000);
         return;
       }
 

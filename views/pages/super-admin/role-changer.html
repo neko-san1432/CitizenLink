@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <title>System User Management - Role Changer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/toast.css">
+  <link rel="stylesheet" href="/css/components/sidebar.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/pages/super-admin-role-changer.css">
+</head>
+<body>
+  <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+
+    <div id="app" class="collapsible page">
+      <h1>System User Management</h1>
+      <p class="muted">Search across all users. Filter by barangay and assign roles/departments.</p>
+
+      <div class="grid" style="margin-top: 16px;">
+        <div class="card">
+          <h3 style="margin-top:0;">Search</h3>
+          <div class="form-group">
+            <label>Keyword</label>
+            <input id="sa-rc-search" class="input" type="text" placeholder="Name or email">
+          </div>
+          <div class="form-group">
+            <label>Barangay</label>
+            <select id="sa-rc-brgy" class="select">
+              <option value="">All barangays</option>
+            </select>
+          </div>
+          <div>
+            <button id="sa-rc-search-btn" class="btn">Search</button>
+          </div>
+          <div id="sa-rc-list" class="list"></div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0;">Details</h3>
+          <div id="sa-rc-details" class="muted">Select a user to view details</div>
+          <div style="margin-top:16px;">
+            <div class="row" style="align-items:end; gap:12px;">
+              <div>
+                <label>New Role</label>
+                <select id="sa-rc-role" class="select">
+                  <option value="">Select role</option>
+                  <option value="citizen">Citizen</option>
+                  <option value="lgu-wst">LGU Officer - Water & Sanitation</option>
+                  <option value="lgu-engineering">LGU Officer - Engineering</option>
+                  <option value="lgu-health">LGU Officer - Health</option>
+                  <option value="lgu-admin-wst">LGU Admin - Water & Sanitation</option>
+                  <option value="lgu-admin-engineering">LGU Admin - Engineering</option>
+                  <option value="lgu-admin-health">LGU Admin - Health</option>
+                  <option value="lgu-hr">LGU HR</option>
+                  <option value="complaint-coordinator">Complaint Coordinator</option>
+                  <option value="super-admin">Super Admin</option>
+                </select>
+              </div>
+              <div>
+                <label>Department (optional)</label>
+                <input id="sa-rc-dept" class="input" placeholder="e.g., WST / ENGINEERING">
+              </div>
+              <div>
+                <button id="sa-rc-assign" class="btn">Assign Role</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <h4>Complaints</h4>
+            <div id="sa-rc-complaints"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/js/components/toast.js"></script>
+
+  <script type="module" src="/js/components/header.js"></script>
+  <script type="module" src="/js/components/sidebar.js"></script>
+  <script type="module" src="/js/auth/authChecker.js"></script>
+  <script type="module" src="/js/auth/roleToggle.js"></script>
+  <script type="module" src="/js/components/clock.js"></script>
+  <script type="module" src="../../js/pages/super-admin-role-changer.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>Review Queue - CitizenLink</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header will be injected here -->
+        <div class="header-container"></div>
+
+        <!-- Sidebar will be injected here -->
+        <div id="sidebar"></div>
+
+        <main class="main-content">
+            <div class="queue-container">
+                <div class="queue-header">
+                    <h1>📋 Review Queue</h1>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-urgent">0</div>
+                        <div class="stat-label">Urgent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-high">0</div>
+                        <div class="stat-label">High Priority</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-similar">0</div>
+                        <div class="stat-label">With Duplicates</div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="filter-priority">Priority</label>
+                        <select id="filter-priority" onchange="applyFilters()">
+                            <option value="">All Priorities</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-type">Type</label>
+                        <select id="filter-type" onchange="applyFilters()">
+                            <option value="">All Types</option>
+                            <option value="Infrastructure">Infrastructure</option>
+                            <option value="Sanitation">Sanitation</option>
+                            <option value="Community">Community</option>
+                            <option value="Safety">Safety</option>
+                            <option value="Environment">Environment</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-similar">Duplicates</label>
+                        <select id="filter-similar" onchange="applyFilters()">
+                            <option value="">All Complaints</option>
+                            <option value="yes">With Similar Complaints</option>
+                            <option value="no">No Duplicates</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading review queue...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <h2>✅ All Caught Up!</h2>
+                    <p>There are no complaints pending review at the moment.</p>
+                </div>
+
+                <!-- Complaint List -->
+                <div id="complaint-list" class="complaint-list" style="display: none;"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container"></div>
+
+    <script type="module" src="../../js/components/header.js"></script>
+    <script type="module" src="../../js/components/sidebar.js"></script>
+    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/coordinator/review-queue.js"></script>
+</body>
+</html>
+
+

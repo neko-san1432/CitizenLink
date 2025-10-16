@@ -3,132 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Department Management - CitizenLink</title>
     <link rel="stylesheet" href="../../../css/style.css">
     <link rel="stylesheet" href="../../../css/toast.css">
-    <style>
-        .department-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .department-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .department-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .department-code {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .department-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .status-active {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-inactive {
-            background: #fef2f2;
-            color: #991b1b;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            margin: 10% auto;
-            padding: 2rem;
-            border-radius: 8px;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-            margin-top: 1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="../../../css/app.css">
+    <link rel="stylesheet" href="../../../css/pages/admin-departments.css">
 </head>
 <body>
-    <div class="container">
-        <header class="page-header">
-            <h1>Department Management</h1>
-            <button class="btn btn-primary" onclick="openModal('add')">
-                Add Department
-            </button>
-        </header>
-
-        <div class="stats-row">
-            <div class="stat-card">
-                <h3 id="totalCount">0</h3>
-                <p>Total Departments</p>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <div class="page-header">
+                <h1>Department Management</h1>
+                <button class="btn btn-primary" onclick="openModal('add')">
+                    Add Department
+                </button>
             </div>
-            <div class="stat-card">
-                <h3 id="activeCount">0</h3>
-                <p>Active Departments</p>
-            </div>
-        </div>
 
-        <div id="departmentGrid" class="department-grid">
-            <!-- Departments will be loaded here -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <h3 id="totalCount">0</h3>
+                    <p>Total Departments</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeCount">0</h3>
+                    <p>Active Departments</p>
+                </div>
+            </div>
+
+            <div id="departmentGrid" class="department-grid">
+                <!-- Departments will be loaded here -->
+            </div>
         </div>
     </div>
 
@@ -170,6 +79,11 @@
 
     <div id="toast-container"></div>
 
+    <!-- Include necessary JavaScript files -->
+    <script type="module" src="../../../js/components/header.js"></script>
+    <script type="module" src="../../../js/components/sidebar.js"></script>
+    <script type="module" src="../../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../../js/admin/departments.js"></script>
 </body>
 </html>

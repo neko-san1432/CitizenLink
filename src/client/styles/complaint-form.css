@@ -37,10 +37,33 @@
 
 /* Additional Form Enhancements */
 .complaint-form-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
+
+/* ❌ Removed focus-within effect - form container stays static */
+
+/* Make form more prominent when sidebar is collapsed */
+body:not(.sidebar-open) .complaint-form-container {
+  max-width: 1000px;
+  margin: 20px auto;
+}
+
+/* Form field focus enhancements */
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* ❌ Removed auto-focus indicator - all fields look the same */
 
 .form-group {
   margin-bottom: 1.5rem;

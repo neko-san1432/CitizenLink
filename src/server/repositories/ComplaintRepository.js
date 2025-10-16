@@ -1,5 +1,5 @@
 const Database = require('../config/database');
-const Complaint = require('../models/Complaint').default;
+const Complaint = require('../models/Complaint');
 
 class ComplaintRepository {
   constructor() {

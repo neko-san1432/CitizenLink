@@ -129,6 +129,23 @@ class DepartmentController {
       });
     }
   }
+
+  async getDepartmentOfficers(req, res) {
+    try {
+      const { id } = req.params;
+      const officers = await this.departmentService.getDepartmentOfficers(id);
+      res.json({
+        success: true,
+        data: officers
+      });
+    } catch (error) {
+      console.error('Error fetching department officers:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch department officers'
+      });
+    }
+  }
 }
 
 module.exports = DepartmentController;

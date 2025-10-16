@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Complete Your Profile</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/pages/oauth-complete.css">
 </head>
 <body>
     <div class="container">
@@ -13,11 +18,11 @@
         <p>Please provide your mobile number to complete registration.</p>
         
         <form id="oauthCompleteForm">
-            <input type="text" id="name" name="name" placeholder="Full Name" readonly style="background: #f5f5f5;" />
-            <input type="email" id="email" name="email" placeholder="Email" readonly style="background: #f5f5f5;" />
+            <input type="text" id="name" name="name" placeholder="Full Name" readonly class="readonly" />
+            <input type="email" id="email" name="email" placeholder="Email" readonly class="readonly" />
             
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <span>+63</span>
+            <div class="phone-input">
+                <span class="phone-prefix">+63</span>
                 <input
                     type="tel"
                     id="mobile"
@@ -26,7 +31,7 @@
                     maxlength="10"
                     pattern="[0-9]{10}"
                     required
-                    style="flex: 1;"
+                    class="phone-number"
                 />
             </div>
 
@@ -40,7 +45,8 @@
         
         <div id="terms"></div>
         <div id="privacy"></div>
-        <div id="toast"></div>
+        <div id="toast-container" class="toast-container"></div>
+        <script type="module" src="./js/components/toast.js"></script>
     </div>
 </body>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>

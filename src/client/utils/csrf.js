@@ -28,6 +28,15 @@ export const getCsrfToken = async () => {
 };
 
 /**
+ * Get fresh CSRF token from response headers
+ * @param {Response} response - Fetch response object
+ * @returns {string|null} CSRF token from headers
+ */
+export const getCsrfTokenFromHeaders = (response) => {
+  return response.headers.get('X-CSRF-Token');
+};
+
+/**
  * Add CSRF token to form data
  * @param {FormData} formData - Form data to add token to
  */

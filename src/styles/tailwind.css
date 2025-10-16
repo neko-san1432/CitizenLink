@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-brand: #2563EB;
+    --color-text: #111827;
+    --color-bg: #F9FAFB;
+    --color-surface: #FFFFFF;
+    --color-line: #E5E7EB;
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-danger: #EF4444;
+    --color-info: #3B82F6;
+  }
+
+  .dark {
+    --color-text: #F9FAFB;
+    --color-bg: #0B1220;
+    --color-surface: #111827;
+    --color-line: #1F2937;
+  }
+
+  html, body {
+    @apply font-sans bg-[var(--color-bg)] text-[var(--color-text)];
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-brand text-white hover:bg-brand-700 focus:outline-none focus:ring-2 ring-brand/40;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white text-brand border border-neutral-line hover:bg-brand/5 focus:outline-none focus:ring-2 ring-brand/20;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-danger text-white hover:bg-red-600 focus:outline-none focus:ring-2 ring-red-400/40;
+  }
+
+  /* Form controls */
+  .form-label {
+    @apply block text-sm font-medium text-[var(--color-text)] opacity-80 mb-1;
+  }
+  .input, .select, .textarea {
+    @apply w-full rounded-md border border-neutral-line bg-white text-[var(--color-text)] placeholder:text-gray-400 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 ring-brand/30 focus:border-brand disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .input-error {
+    @apply border-red-300 ring-red-400/30;
+  }
+  .input-success {
+    @apply border-green-300 ring-emerald-400/30;
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-lg border border-neutral-line bg-white dark:bg-[#111827] p-4 shadow-sm;
+  }
+  .card-header {
+    @apply mb-3 flex items-center justify-between gap-2;
+  }
+  .card-title {
+    @apply text-lg font-semibold text-[var(--color-text)];
+  }
+  .card-subtitle {
+    @apply text-sm text-gray-600;
+  }
+  .card-body {
+    @apply text-[var(--color-text)];
+  }
+  .card-footer {
+    @apply mt-4 pt-3 border-t border-neutral-line;
+  }
+
+  /* Badges */
+  .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
+  .badge-success { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
+  .badge-warning { @apply bg-amber-50 text-amber-700 border border-amber-200; }
+  .badge-danger { @apply bg-red-50 text-red-700 border border-red-200; }
+  .badge-info { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+
+  /* Tables */
+  .table-responsive { @apply w-full overflow-x-auto; }
+  .table { @apply w-full border-collapse; }
+  .table th { @apply bg-gray-50 text-left text-xs font-medium text-gray-600 uppercase tracking-wide px-4 py-2 border-b border-neutral-line; }
+  .table td { @apply px-4 py-2 text-sm text-[var(--color-text)] border-b border-neutral-line; }
+  .table tr:hover { @apply bg-gray-50/60; }
+}
+
+

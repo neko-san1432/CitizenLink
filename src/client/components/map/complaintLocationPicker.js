@@ -155,20 +155,20 @@ function setupLocationPicker(map) {
   // Update location text function
   async function updateLocationText(lat, lng) {
     if (!locationInput) return;
-    
+
     try {
       console.log(`🌍 Attempting reverse geocoding for: ${lat}, ${lng}`);
-      
+
       // Use server-side reverse geocoding endpoint to avoid CORS issues
       const response = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('🌍 Reverse geocoding response:', data);
-      
+
       if (data && data.display_name) {
         locationInput.value = data.display_name;
         console.log(`📍 Address found: ${data.display_name}`);
@@ -182,6 +182,11 @@ function setupLocationPicker(map) {
       // Fallback to coordinates
       locationInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       console.log(`📍 Using coordinates as fallback: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+
+      // Ensure location field is not empty for validation
+      if (!locationInput.value.trim()) {
+        locationInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
     }
   }
 
