@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>Department Management - CitizenLink</title>
+    <link rel="stylesheet" href="../../../css/style.css">
+    <link rel="stylesheet" href="../../../css/toast.css">
+    <link rel="stylesheet" href="../../../css/components/sidebar.css">
+    <link rel="stylesheet" href="../../../css/app.css">
+    <link rel="stylesheet" href="../../../css/header-redesign.css">
+    <link rel="stylesheet" href="../../../css/pages/admin-departments.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <div class="page-header">
+                <h1>Department Management</h1>
+                <button class="btn btn-primary" onclick="openModal('add')">
+                    Add Department
+                </button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <h3 id="totalCount">0</h3>
+                    <p>Total Departments</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeCount">0</h3>
+                    <p>Active Departments</p>
+                </div>
+            </div>
+
+            <div id="departmentGrid" class="department-grid">
+                <!-- Departments will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Department Modal -->
+    <div id="departmentModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add Department</h2>
+            <form id="departmentForm">
+                <div class="form-group">
+                    <label for="departmentName">Department Name</label>
+                    <input type="text" id="departmentName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="departmentCode">Department Code</label>
+                    <input type="text" id="departmentCode" name="code" required 
+                           pattern="[A-Z0-9_]+" title="Use only uppercase letters, numbers, and underscores">
+                </div>
+                <div class="form-group">
+                    <label for="departmentDescription">Description</label>
+                    <textarea id="departmentDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="departmentActive" name="is_active" checked>
+                        Active
+                    </label>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Save Department
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Include necessary JavaScript files -->
+    <script type="module" src="../../../js/components/header.js"></script>
+    <script type="module" src="../../../js/components/sidebar.js"></script>
+    <script type="module" src="../../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../../js/admin/departments.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <title>Role Changer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/toast.css">
+  <link rel="stylesheet" href="/css/components/sidebar.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/components/clock.css">
+  <link rel="stylesheet" href="/css/header-redesign.css">
+  <link rel="stylesheet" href="/css/pages/hr-role-changer.css">
+</head>
+<body>
+  <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+
+    <div id="app" class="collapsible page">
+      <h1>Role Changer</h1>
+      <p class="muted">Search users, filter by barangay, view details and complaints, and update roles.</p>
+
+      <div class="grid" style="margin-top: 16px;">
+        <div class="card">
+          <h3 style="margin-top:0;">Search</h3>
+          <div class="form-group">
+            <label>Keyword</label>
+            <input id="rc-search" type="text" placeholder="Name or email" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+          </div>
+          <div class="form-group">
+            <label>Barangay</label>
+            <select id="rc-brgy" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+              <option value="">All barangays</option>
+            </select>
+          </div>
+          <div>
+            <button id="rc-search-btn" class="btn">Search</button>
+          </div>
+          <div id="rc-list" class="list"></div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0;">Details</h3>
+          <div id="rc-details" class="muted">Select a user to view details</div>
+          <div style="margin-top:16px;">
+            <h4>Complaints</h4>
+            <div id="rc-complaints"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/js/components/toast.js"></script>
+
+  <script type="module" src="/js/components/header.js"></script>
+  <script type="module" src="/js/components/sidebar.js"></script>
+  <script type="module" src="/js/auth/authChecker.js"></script>
+  <script type="module" src="/js/auth/roleToggle.js"></script>
+  <script type="module" src="/js/components/clock.js"></script>
+  <script type="module" src="/js/pages/hr-role-changer.js"></script>
+</body>
+</html>

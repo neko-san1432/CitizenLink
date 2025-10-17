@@ -1,0 +1,126 @@
+/* Super Admin Role Changer Page Styles */
+.page { 
+    padding: 20px; 
+    max-width: 1600px; 
+    margin: 0 auto; 
+}
+
+.grid { 
+    display: grid; 
+    grid-template-columns: 420px 1fr; 
+    gap: 20px; 
+}
+
+.card { 
+    background: #fff; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); 
+    padding: 20px; 
+}
+
+.list { 
+    max-height: 600px; 
+    overflow: auto; 
+    border-top: 1px solid #eee; 
+    margin-top: 8px; 
+}
+
+.item { 
+    padding: 12px 8px; 
+    border-bottom: 1px solid #f2f2f2; 
+    cursor: pointer; 
+}
+
+.item:hover { 
+    background: #fafafa; 
+}
+
+.muted { 
+    color: #7f8c8d; 
+    font-size: 0.9rem; 
+}
+
+.btn { 
+    padding: 10px 16px; 
+    border: none; 
+    border-radius: 6px; 
+    background: #667eea; 
+    color: #fff; 
+    cursor: pointer; 
+    font-weight: 600; 
+}
+
+.row { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+    gap: 10px; 
+}
+
+.select, .input { 
+    width:100%; 
+    padding:10px; 
+    border:1px solid #ddd; 
+    border-radius:6px; 
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .page { 
+        padding: 15px; 
+    }
+    
+    .grid { 
+        grid-template-columns: 1fr; 
+        gap: 15px; 
+    }
+    
+    .card { 
+        padding: 15px; 
+    }
+    
+    .list { 
+        max-height: 400px; 
+    }
+    
+    .item { 
+        padding: 10px 6px; 
+    }
+    
+    .btn { 
+        padding: 8px 12px; 
+        font-size: 0.9rem; 
+    }
+    
+    .row { 
+        grid-template-columns: 1fr; 
+        gap: 8px; 
+    }
+    
+    .select, .input { 
+        padding: 8px; 
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+}
+
+@media (max-width: 480px) {
+    .page { 
+        padding: 10px; 
+    }
+    
+    .card { 
+        padding: 12px; 
+    }
+    
+    .item { 
+        padding: 8px 4px; 
+    }
+    
+    .btn { 
+        padding: 6px 10px; 
+        font-size: 0.85rem; 
+    }
+    
+    .select, .input { 
+        padding: 6px; 
+    }
+}

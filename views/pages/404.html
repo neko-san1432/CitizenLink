@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>404 - Page Not Found | CitizenLink</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/pages/404.css">
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🔍</div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+            Oops! The page you're looking for seems to have wandered off. 
+            It might have been moved, deleted, or never existed in the first place.
+        </p>
+        
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary">🏠 Go Home</a>
+            <button id="go-back" class="btn" type="button">← Go Back</button>
+        </div>
+
+        <div class="suggestions">
+            <h3>Here are some helpful links:</h3>
+            <ul>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/signup">Sign Up</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module" src="/js/pages/404.js"></script>
+</body>
+</html>
