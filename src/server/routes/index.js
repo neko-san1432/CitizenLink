@@ -19,6 +19,7 @@ const lguAdminRoutes = require('./lguAdminRoutes');
 const lguRoutes = require('./lguOfficerRoutes'); // LGU officer routes (using lguOfficerRoutes file)
 const notificationRoutes = require('./notificationRoutes');
 const storageRoutes = require('./storageRoutes');
+const contentRoutes = require('./contentRoutes');
 
 const router = express.Router();
 
@@ -42,6 +43,7 @@ router.use('/lgu-admin', lguAdminRoutes);
 router.use('/lgu', lguRoutes); // LGU officer routes (lgu-wst, lgu-engineering, etc.)
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
+router.use('/content', contentRoutes);
 
 router.get('/health', (req, res) => {
   res.json({

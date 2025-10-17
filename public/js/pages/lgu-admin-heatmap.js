@@ -20,18 +20,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
   
-  // Fix menu button functionality
+  // Menu button functionality with mutual exclusivity
   const menuToggle = document.getElementById('menu-toggle');
-  if (menuToggle) {
+  const sidebar = document.getElementById('sidebar');
+  const heatmapControls = document.getElementById('heatmap-controls');
+  
+  if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', () => {
       console.log('[HEATMAP] Menu button clicked');
-      // Toggle sidebar visibility
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) {
-        sidebar.classList.toggle('collapsed');
-        console.log('[HEATMAP] Sidebar toggled');
+      const isOpening = !sidebar.classList.contains('open');
+      
+      sidebar.classList.toggle('open');
+      
+      // If sidebar is opening, hide heatmap controls
+      if (isOpening && heatmapControls) {
+        heatmapControls.classList.add('collapsed');
+        console.log('[HEATMAP] Heatmap controls collapsed');
+      }
+      
+      console.log('[HEATMAP] Sidebar toggled, open:', sidebar.classList.contains('open'));
+    });
+  }
+  
+  // Listen for sidebar close button
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('sidebar-close')) {
+      // When sidebar closes, show heatmap controls
+      if (heatmapControls) {
+        heatmapControls.classList.remove('collapsed');
+        console.log('[HEATMAP] Heatmap controls expanded');
+      }
+    }
+  });
+  
+  // If heatmap controls toggle exists, close sidebar when controls open
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.target.id === 'heatmap-controls' && 
+          mutation.attributeName === 'class') {
+        const isControlsVisible = !heatmapControls.classList.contains('collapsed');
+        
+        // If controls are being shown and sidebar is open, close sidebar
+        if (isControlsVisible && sidebar && sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          console.log('[HEATMAP] Sidebar closed due to controls opening');
+        }
       }
     });
+  });
+  
+  if (heatmapControls) {
+    observer.observe(heatmapControls, { attributes: true });
   }
 });
 

@@ -87,4 +87,155 @@
   .table tr:hover { @apply bg-gray-50/60; }
 }
 
+@layer components {
+  /* App Layout */
+  .app-container {
+    @apply flex flex-col h-screen overflow-hidden;
+  }
 
+  /* Header */
+  .header-container {
+    @apply relative z-[999] bg-gradient-to-r from-blue-600 to-blue-700 w-full h-16 flex-shrink-0 flex items-center justify-between px-6 shadow-md;
+  }
+
+  .header-left {
+    @apply flex items-center gap-6;
+  }
+
+  .header-right {
+    @apply flex items-center gap-4;
+  }
+
+  #menu-toggle {
+    @apply bg-white/10 backdrop-blur-sm border-none rounded-lg px-3 py-2 cursor-pointer text-white text-xl flex-shrink-0 flex items-center justify-center z-[1001] hover:bg-white/20 transition-all duration-200;
+  }
+
+  .brand-logo {
+    @apply text-white no-underline text-xl font-bold z-[1002] m-0 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis hover:text-blue-100 transition-colors;
+  }
+
+  /* Main Content */
+  #app {
+    @apply flex-1 px-[15%] py-[2%] z-[1] min-h-0 overflow-y-auto;
+  }
+
+  /* Notification Button */
+  .notification-btn {
+    @apply relative bg-white/10 backdrop-blur-sm border-none cursor-pointer text-white text-xl p-2.5 rounded-lg hover:bg-white/20 transition-all duration-200;
+  }
+
+  .notification-badge {
+    @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-lg;
+  }
+
+  /* Profile Button */
+  .profile-btn {
+    @apply bg-white/10 backdrop-blur-sm border-none cursor-pointer p-1.5 rounded-lg hover:bg-white/20 transition-all duration-200;
+  }
+
+  .profile-avatar {
+    @apply w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-xl text-white;
+  }
+
+  /* Theme Toggle */
+  .theme-toggle {
+    @apply bg-white/10 backdrop-blur-sm border-none cursor-pointer text-white text-xl p-2.5 rounded-lg hover:bg-white/20 transition-all duration-200;
+  }
+
+  /* Dashboard Clock */
+  .dashboard-clock {
+    @apply text-sm font-medium text-white/90 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg;
+  }
+
+  /* Notification Panel */
+  .notification-container {
+    @apply relative;
+  }
+
+  .notification-panel {
+    @apply absolute right-0 top-[calc(100%+8px)] w-80 max-h-96 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-lg shadow-lg overflow-hidden z-[1000];
+  }
+
+  .notification-panel.hidden {
+    @apply hidden;
+  }
+
+  .notification-header {
+    @apply flex items-center justify-between p-4 border-b border-[var(--color-line)];
+  }
+
+  .notification-header h3 {
+    @apply text-base font-semibold text-[var(--color-text)] m-0;
+  }
+
+  .close-btn {
+    @apply bg-transparent border-none text-2xl cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 leading-none p-0;
+  }
+
+  .notification-content {
+    @apply max-h-64 overflow-y-auto p-2;
+  }
+
+  .notification-footer {
+    @apply flex items-center justify-between gap-2 p-3 border-t border-[var(--color-line)];
+  }
+
+  .mark-read-btn,
+  .show-more-btn {
+    @apply text-xs px-3 py-1.5 rounded border-none cursor-pointer bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-[var(--color-text)];
+  }
+
+  .notification-loading,
+  .notification-error {
+    @apply flex flex-col items-center justify-center gap-2 p-6 text-center;
+  }
+
+  .loading-spinner {
+    @apply w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin;
+  }
+
+  .retry-btn {
+    @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer border-none;
+  }
+
+  /* Profile Panel */
+  .profile-container {
+    @apply relative;
+  }
+
+  .profile-panel {
+    @apply absolute right-0 top-[calc(100%+8px)] w-64 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-lg shadow-lg overflow-hidden z-[1000];
+  }
+
+  .profile-panel.hidden {
+    @apply hidden;
+  }
+
+  .profile-header {
+    @apply flex items-center justify-between p-4 border-b border-[var(--color-line)];
+  }
+
+  .profile-header h3 {
+    @apply text-base font-semibold text-[var(--color-text)] m-0;
+  }
+
+  .profile-content {
+    @apply p-2;
+  }
+
+  .profile-item {
+    @apply flex items-center gap-3 p-3 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+  }
+
+  .profile-icon {
+    @apply text-xl;
+  }
+
+  .profile-text {
+    @apply flex-1;
+  }
+
+  .profile-title {
+    @apply text-sm font-medium text-[var(--color-text)];
+  }
+}

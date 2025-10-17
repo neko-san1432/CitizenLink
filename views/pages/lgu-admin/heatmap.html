@@ -17,16 +17,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../../css/style.css" />
     <link rel="stylesheet" href="../../css/toast.css" />
+    <link rel="stylesheet" href="../../css/components/sidebar.css" />
     <link rel="stylesheet" href="../../css/heatmap.css" />
     <link rel="stylesheet" href="../../css/app.css" />
+    <link rel="stylesheet" href="../../css/heatmap-redesign.css" />
 
   </head>
   <body>
     <div id="sidebar" class="collapsible"></div>
-    <!-- Original menu button hidden - using map control instead -->
-    <div id="menu-toggle" class="heatmap-menu" >
-      ☰
-    </div>
+    <button id="menu-toggle" class="heatmap-menu-btn">☰</button>
 
     <!-- Map Container -->
     <div id="heatmap">
@@ -51,8 +50,8 @@
     <script src="../../js/components/map/heatmapVisualization.js"></script>
     <script src="../../js/components/map/heatmapController.js"></script>
     <script src="../../js/components/map/heatmapControls.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
+    <script type="module" src="../../js/auth/authChecker.js"></script>
     <script
       type="module"
       src="../../js/components/map/boundaryGenerator.js"

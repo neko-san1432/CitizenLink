@@ -77,6 +77,8 @@ a:hover {
   left: -100%;
   transition: left 0.3s ease;
   border-right: 1px solid #ccc;
+  background-color: #f5f5f5;
+  overflow-y: auto;
 }
 
 #sidebar.open {
@@ -1197,3 +1199,91 @@ a:hover {
 }
 
 /* Heatmap responsive styles moved to css/heatmap.css */
+
+/* Dark Mode Styles */
+html.dark {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+html.dark body {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+html.dark #sidebar {
+  background-color: #2d2d2d;
+  border-right: 1px solid #444;
+}
+
+html.dark #sidebar > a {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+}
+
+html.dark #sidebar > a:hover {
+  background-color: #4a4a4a;
+  color: #fff;
+}
+
+html.dark .sidebar-brand {
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444;
+}
+
+html.dark .brand-link {
+  color: #e0e0e0;
+}
+
+html.dark .sidebar-close {
+  color: #e0e0e0;
+}
+
+html.dark .sidebar-close:hover {
+  color: #fff;
+  background-color: rgba(255,255,255,0.1);
+}
+
+html.dark #menu-toggle {
+  background: #3a3a3a;
+  border: 1px solid #555;
+  color: #e0e0e0;
+}
+
+html.dark #menu-toggle:hover {
+  background: #4a4a4a;
+}
+
+html.dark .header-container {
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444;
+}
+
+html.dark #app {
+  background-color: #1a1a1a;
+}
+
+html.dark .card,
+html.dark .panel,
+html.dark .form-group {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #3a3a3a;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+html.dark button {
+  background-color: #3a3a3a;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+html.dark button:hover {
+  background-color: #4a4a4a;
+}

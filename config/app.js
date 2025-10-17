@@ -3,7 +3,7 @@ const { join } = require('path');
 class AppConfig {
   constructor() {
     this.env = process.env.NODE_ENV || 'development';
-    this.port = process.env.PORT || 3001;
+    this.port = process.env.PORT || 3000;
     this.host = process.env.HOST || 'localhost';
 
     // Paths
