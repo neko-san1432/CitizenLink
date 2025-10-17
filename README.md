@@ -1,17 +1,79 @@
 # CitizenLink 2.0
 
-Modern Citizen Complaint Management System with Clean Architecture
+**Modern Citizen Complaint Management System with Advanced Analytics and Clean Architecture**
 
-## 🚀 Features
+## 📖 About the Program
 
-- **Clean Architecture**: Modular, maintainable codebase
-- **Multi-Department Workflow**: Advanced complaint routing and management
-- **Department Management**: Dynamic department configuration
-- **Customizable Settings**: Flexible terms, privacy policy, and system settings
-- **File Upload**: Secure evidence file handling
-- **Role-Based Access**: Comprehensive user role management
-- **Audit Trail**: Complete action logging and tracking
-- **Responsive Design**: Works on all devices
+### Introduction
+
+CitizenLink 2.0 is a comprehensive web-based complaint management system designed for Local Government Units (LGUs) to efficiently handle, route, and resolve citizen complaints. The system features advanced geospatial analytics using DBSCAN clustering for complaint hotspot detection, robust security measures, content management capabilities, and intelligent complaint distribution mechanisms.
+
+Built with modern web technologies and following clean architecture principles, CitizenLink provides a scalable, maintainable, and secure platform for managing citizen feedback and complaints across multiple government departments.
+
+### Key Capabilities
+
+- **Intelligent Complaint Routing**: Automated department assignment with coordinator oversight
+- **Geospatial Analytics**: DBSCAN-based heatmap clustering for identifying complaint hotspots
+- **Multi-Role System**: Support for Citizens, LGU Officers, Admins, HR, and Super Admins
+- **Content Management**: Integrated news, events, and notices publishing system
+- **Duplicate Detection**: Advanced similarity detection to prevent duplicate complaints
+- **Comprehensive Audit Trail**: Verbose logging of all system actions and state changes
+- **Secure by Design**: Enterprise-grade security with Helmet.js, CSP, and RLS policies
+
+## 📦 Installation & Dependencies
+
+### Prerequisites
+
+- **Node.js** 18+ (LTS recommended)
+- **PostgreSQL** 13+ or **Supabase** account
+- **npm** or **yarn** package manager
+
+### Installation Steps
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd CitizenLink
+
+# Install dependencies
+npm install
+
+# Create environment file
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run database migrations
+npm run migrate
+
+# Start development server
+npm run dev
+```
+
+### Dependencies Overview
+
+#### Production Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| **@supabase/supabase-js** | ^2.57.4 | PostgreSQL database client with built-in authentication, real-time subscriptions, and Row Level Security (RLS) support. Provides seamless integration with Supabase backend services. |
+| **chart.js** | ^4.5.0 | Data visualization library for rendering complaint statistics, trends, and analytics dashboards. Used for generating charts and graphs in admin panels. |
+| **compression** | ^1.8.1 | HTTP response compression middleware for Express. Reduces bandwidth usage by compressing responses using gzip/deflate, improving application performance. |
+| **cookie-parser** | ^1.4.7 | Express middleware for parsing cookies from HTTP requests. Essential for session management and authentication token handling. |
+| **cors** | ^2.8.5 | Cross-Origin Resource Sharing (CORS) middleware. Enables secure API access from different origins while preventing unauthorized cross-domain requests. |
+| **dotenv** | ^17.2.1 | Environment variable loader from `.env` files. Manages sensitive configuration data (API keys, database credentials) outside of source code. |
+| **express** | ^4.21.2 | Fast, minimalist web framework for Node.js. Serves as the core HTTP server handling routing, middleware, and request/response management. |
+| **helmet** | ^8.1.0 | Security middleware that sets various HTTP headers to protect against common web vulnerabilities (XSS, clickjacking, MIME sniffing). Implements Content Security Policy (CSP). |
+| **multer** | ^2.0.2 | Multipart/form-data middleware for handling file uploads. Manages complaint evidence attachments with file type validation and size limits. |
+
+#### Development Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| **autoprefixer** | ^10.4.21 | PostCSS plugin that automatically adds vendor prefixes to CSS rules for cross-browser compatibility. |
+| **gzip-cli** | ^1.0.0 | Command-line tool for compressing static assets during build process to reduce file sizes. |
+| **nodemon** | ^3.1.10 | Development utility that automatically restarts the Node.js server when file changes are detected. |
+| **postcss** | ^8.5.6 | CSS transformation tool used with TailwindCSS for processing and optimizing stylesheets. |
+| **tailwindcss** | ^3.4.18 | Utility-first CSS framework for rapid UI development with responsive design and modern styling. |
 
 ## 🏗️ Architecture
 
@@ -68,74 +130,229 @@ CitizenLink/
 - **Middleware Pattern**: Request/response processing
 - **Observer Pattern**: Event-driven architecture
 
-## 🛠️ Setup & Installation
+## ✨ Feature Highlights
 
-### Prerequisites
+### 🗺️ DBSCAN Heatmap Clustering
 
-- Node.js 18+ 
-- PostgreSQL 13+
-- Supabase account
+CitizenLink implements **Density-Based Spatial Clustering of Applications with Noise (DBSCAN)** algorithm for advanced geospatial analysis:
+
+- **Hotspot Detection**: Automatically identifies areas with high complaint density
+- **Cluster Visualization**: Interactive map overlays showing complaint clusters with color-coded severity
+- **Configurable Parameters**: Adjustable epsilon (radius) and minimum points for cluster formation
+- **Real-time Analysis**: Dynamic clustering based on filtered complaint data
+- **Implementation**: Client-side JavaScript implementation in `src/client/components/map/dbscan.js`
+
+**Use Cases**:
+- Identify neighborhoods requiring immediate attention
+- Allocate resources based on complaint concentration
+- Detect patterns in infrastructure issues
+- Support data-driven policy decisions
+
+### 🔒 Robust Security
+
+Comprehensive security implementation across multiple layers:
+
+#### Application Security
+- **Helmet.js Integration**: Sets 11+ security-related HTTP headers
+- **Content Security Policy (CSP)**: Prevents XSS attacks by controlling resource loading
+- **XSS Protection**: Output sanitization and input validation
+- **CSRF Protection**: Request verification tokens
+- **Clickjacking Prevention**: X-Frame-Options headers
+- **MIME Sniffing Protection**: X-Content-Type-Options headers
+
+#### Database Security
+- **Row Level Security (RLS)**: PostgreSQL policies enforce data access at database level
+- **Parameterized Queries**: SQL injection prevention
+- **Role-Based Access Control**: Granular permissions per user role
+- **Secure Authentication**: Supabase Auth with JWT tokens
+
+#### File Upload Security
+- **Type Validation**: Whitelist-based file type checking
+- **Size Limits**: Configurable maximum file sizes
+- **Virus Scanning Ready**: Architecture supports AV integration
+
+**Security Files**:
+- `src/server/middleware/security.js` - Security headers and CSP configuration
+- `sql/20251008_security_rpc.sql` - Database security functions
+- `RLS_POLICIES.sql` - Row Level Security policies
+
+### 📰 Content Management System
+
+Integrated CMS for public information dissemination:
+
+#### News Management
+- Create, publish, and archive news articles
+- Rich text content with image support
+- Category and tag-based organization
+- Draft/Published/Archived workflow
+- Author attribution and timestamps
+
+#### Events Management
+- Upcoming events calendar
+- Event registration tracking
+- Location and organizer information
+- Status tracking (upcoming, ongoing, completed, cancelled)
+- Maximum participant limits
+
+#### Notices System
+- Priority-based notices (low, normal, high, urgent)
+- Target audience filtering (citizens, LGU staff, admins)
+- Time-bound validity periods
+- Alert types (announcement, alert, reminder, advisory)
+
+**Database Tables**: `news`, `events`, `notices` (see `sql/content_management_schema.sql`)
+
+### 🎯 Complaint Distribution via Coordinator
+
+Intelligent complaint routing system:
+
+- **Complaint Coordinator Role**: Dedicated role for complaint triage and assignment
+- **Multi-Department Routing**: Complaints can be assigned to multiple departments
+- **Assignment Workflow**: Pending → Accepted → In Progress → Resolved
+- **Rejection Handling**: Departments can reject with reasons, triggering reassignment
+- **Load Balancing**: Track assignments per officer to distribute workload
+- **Escalation Support**: Automatic escalation for overdue complaints
+
+**Key Tables**: `complaint_assignments`, `complaint_coordinators`
+
+### 🔍 Duplication Detector
+
+Advanced similarity detection to prevent duplicate complaints:
+
+- **Text Similarity Analysis**: Compares complaint descriptions using natural language processing
+- **Location-Based Matching**: Identifies complaints from similar geographic areas
+- **Category Correlation**: Checks for similar complaint types and departments
+- **Similarity Scoring**: Calculates similarity scores (0-1) for complaint pairs
+- **Automatic Flagging**: Marks potential duplicates for coordinator review
+- **Master Complaint Linking**: Links duplicate complaints to master complaint
+
+**Implementation**: `src/server/services/SimilarityCalculatorService.js`
+**Database Table**: `complaint_similarities`
+
+### 📝 Verbose Logging & Audit Trail
+
+Comprehensive logging system for accountability and debugging:
+
+#### Audit Logs (`audit_logs` table)
+- **System-Wide Tracking**: All critical actions logged
+- **Actor Attribution**: Records who performed each action
+- **IP Address Logging**: Tracks request origin
+- **Metadata Storage**: JSONB field for flexible action details
+- **Action Types**: User management, role changes, department transfers, system configuration
+
+#### Complaint History (`complaint_history` table)
+- **Per-Complaint Timeline**: Complete history of complaint lifecycle
+- **Status Changes**: Tracks all status transitions
+- **Assignment History**: Records all department and officer assignments
+- **Notes and Comments**: Stores coordinator and officer notes
+
+#### Workflow Logs (`complaint_workflow_logs` table)
+- **Detailed Action Tracking**: Granular logging of workflow steps
+- **JSONB Details**: Flexible schema for action-specific data
+- **Performance Monitoring**: Timestamps for workflow analysis
+
+**Benefits**:
+- Full accountability and transparency
+- Debugging and troubleshooting support
+- Compliance and reporting
+- Performance analysis and optimization
+
+## 🛠️ Environment Configuration
 
 ### Environment Variables
 
-Create a `.env` file:
+Create a `.env` file in the root directory:
 
 ```env
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Security (handled by Supabase)
-# JWT_SECRET=not_needed_using_supabase_auth
-# SESSION_SECRET=not_needed_using_supabase_sessions
+# Database Configuration
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # External Services
 CAPTCHA_CLIENT_KEY=your_recaptcha_site_key
 CAPTCHA_SECRET_KEY=your_recaptcha_secret_key
 
-# Application
+# Application Settings
 NODE_ENV=development
 PORT=3000
 HOST=localhost
 ```
 
-### Installation
+### NPM Scripts
 
 ```bash
-# Install dependencies
-npm install
+# Development
+npm run dev          # Start development server with auto-reload
+npm run check        # Run health checks
 
-# Run health check
-npm run check
+# Production
+npm start            # Start production server
+npm run prod         # Start with NODE_ENV=production
 
-# Run migrations (manual step required)
-npm run migrate
+# Database
+npm run migrate      # Run database migrations
+npm run seed         # Seed database with sample data
 
-# Start development server
-npm run dev
+# Build
+npm run build        # Build TailwindCSS
+npm run build:css    # Build and minify CSS
 
-# Start production server
-npm run prod
+# Code Quality
+npm test             # Run tests
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix linting issues
 ```
 
-## 📊 Database Schema
+## 🗄️ Database Tables and Purposes
 
-### Core Tables
+### Core Complaint Management
 
-- **complaints**: Main complaint records with workflow support
-- **departments**: Dynamic department management
-- **settings**: Customizable application settings
-- **complaint_coordinators**: Role-based complaint assignment
-- **complaint_workflow_logs**: Audit trail for all actions
+| Table | Purpose |
+|-------|----------|
+| **complaints** | Main complaint records storing citizen-submitted issues. Includes location data, description, status, priority, type, department routing, workflow status, and resolution information. |
+| **complaint_assignments** | Tracks department and officer assignments for each complaint. Manages assignment status (pending, accepted, rejected, completed), rejection reasons, and assignment history. |
+| **complaint_history** | Complete audit trail for individual complaints. Records all actions, status changes, notes, and actor information with timestamps. |
+| **complaint_workflow_logs** | Detailed workflow action logging with JSONB metadata. Tracks complaint lifecycle events, department transfers, and coordinator actions. |
+| **complaint_similarities** | Stores similarity scores between complaints for duplicate detection. Links potential duplicate complaints with similarity metrics (0-1 scale). |
 
-### New Features in 2.0
+### Department & User Management
 
-- Multi-department workflow system
-- Customizable terms and privacy policies
-- Dynamic department loading
-- Enhanced audit trails
-- Coordinator management system
+| Table | Purpose |
+|-------|----------|
+| **departments** | Stores LGU departments (e.g., Waste Management, Public Works). Includes department name, unique code, and creation timestamp. |
+| **invitation_tokens** | HR-generated signup links for staff registration. Controls role assignment, department association, expiration, and usage limits. |
+| **signup_links** | Alternative signup link system with metadata support. Tracks link usage, expiration, and creator information. |
+| **role_changes** | Audit trail for user role modifications. Records old role, new role, performer, reason, and timestamp for accountability. |
+| **department_transfers** | Tracks user transfers between departments. Maintains history of department assignments with performer attribution. |
+
+### Content Management
+
+| Table | Purpose |
+|-------|----------|
+| **news** | News articles for public information. Supports title, content, excerpt, images, categories, tags, and publication workflow (draft/published/archived). |
+| **events** | Upcoming events calendar. Stores event details, location, dates, organizer, registration info, and status tracking. |
+| **notices** | Official notices and announcements. Priority-based (low/normal/high/urgent) with target audience filtering and validity periods. |
+
+### Notifications & Communication
+
+| Table | Purpose |
+|-------|----------|
+| **app_notifications** | In-app user notifications for assignments, status changes, and system alerts. Supports priority levels, read status, expiration, and metadata. |
+
+### System Audit & Security
+
+| Table | Purpose |
+|-------|----------|
+| **audit_logs** | System-wide audit trail for all critical actions. Logs actor, action type, target (user/complaint/department), IP address, user agent, and JSONB details. |
+
+### Authentication (Managed by Supabase)
+
+| Table | Purpose |
+|-------|----------|
+| **auth.users** | Supabase-managed user authentication table. Stores email, encrypted password, user metadata (role, department), and authentication tokens. |
+
+### Total Tables: 16 core tables + Supabase auth tables
 
 ## 🔧 API Endpoints
 
@@ -299,6 +516,35 @@ CMD ["npm", "start"]
 4. Write tests for new features
 5. Submit a pull request
 
+## 👨‍💻 Development Team
+
+CitizenLink 2.0 was developed by a dedicated team of specialists:
+
+### Core Developers
+
+**Pyrrhus Go** - *Backend Developer*
+- Server architecture and API design
+- Database schema and migrations
+- Authentication and security implementation
+- Business logic and service layer
+- Integration with Supabase
+
+**John Dave Maca** - *Frontend Developer*
+- User interface design and implementation
+- Client-side JavaScript components
+- Responsive design and UX optimization
+- Map visualization and DBSCAN integration
+- Admin dashboard development
+
+**Josh Andre Timosan** - *Data Surveyor*
+- Database design and optimization
+- Data modeling and relationships
+- SQL query optimization
+- Data migration and seeding
+- Analytics and reporting requirements
+
+---
+
 ## 📄 License
 
 MIT License - see LICENSE file for details
@@ -311,4 +557,4 @@ MIT License - see LICENSE file for details
 
 ---
 
-**CitizenLink 2.0** - Modern, Maintainable, Scalable 🚀
+**CitizenLink 2.0** - Modern, Secure, Intelligent Complaint Management 🚀
