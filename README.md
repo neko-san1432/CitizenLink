@@ -120,15 +120,184 @@ CitizenLink/
 └── 📁 uploads/                # User uploaded files (auto-created)
 ```
 
-### Design Patterns Used
+### Architectural Design Patterns
 
-- **Repository Pattern**: Clean data access abstraction
-- **Service Layer**: Business logic separation
-- **MVC Architecture**: Model-View-Controller pattern
-- **Dependency Injection**: Loose coupling between components
-- **Factory Pattern**: Object creation abstraction
-- **Middleware Pattern**: Request/response processing
-- **Observer Pattern**: Event-driven architecture
+CitizenLink follows a **layered architecture** with clear separation of concerns, implementing multiple design patterns for maintainability and scalability.
+
+#### 🏛️ MVC + Service Layer Architecture (Fat Service, Thin Controller)
+
+The application implements an **enhanced MVC pattern** with an additional Service Layer, following the **"Fat Service, Thin Controller"** principle:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         CLIENT LAYER                         │
+│  (Views, Frontend Components, API Consumers)                 │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                    CONTROLLER LAYER (Thin)                   │
+│  • Request/Response handling                                 │
+│  • Input parsing and validation                              │
+│  • HTTP status code management                               │
+│  • Minimal logic - delegates to services                     │
+│                                                               │
+│  Example: ComplaintController.js                             │
+│  - Extracts request data                                     │
+│  - Calls ComplaintService methods                            │
+│  - Formats and returns responses                             │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                     SERVICE LAYER (Fat)                      │
+│  • Business logic and rules                                  │
+│  • Workflow orchestration                                    │
+│  • Cross-cutting concerns                                    │
+│  • Transaction management                                    │
+│  • Coordinates multiple repositories                         │
+│  • Implements domain logic                                   │
+│                                                               │
+│  Example: ComplaintService.js                                │
+│  - Validates business rules                                  │
+│  - Orchestrates complaint workflow                           │
+│  - Manages department assignments                            │
+│  - Triggers notifications                                    │
+│  - Handles file processing                                   │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                   REPOSITORY LAYER                           │
+│  • Data access abstraction                                   │
+│  • Database queries (CRUD operations)                        │
+│  • No business logic                                         │
+│  • Returns domain models                                     │
+│                                                               │
+│  Example: ComplaintRepository.js                             │
+│  - create(), findById(), findAll()                           │
+│  - Supabase query execution                                  │
+│  - Maps database rows to Models                              │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                      MODEL LAYER                             │
+│  • Data structure definitions                                │
+│  • Validation rules                                          │
+│  • Data transformation methods                               │
+│  • No business logic                                         │
+│                                                               │
+│  Example: Complaint.js                                       │
+│  - Property definitions                                      │
+│  - validate() method                                         │
+│  - sanitizeForInsert() method                                │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                    DATABASE LAYER                            │
+│  (PostgreSQL/Supabase)                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Benefits of This Architecture:**
+
+1. **Separation of Concerns**: Each layer has a single, well-defined responsibility
+2. **Testability**: Business logic in services can be tested independently
+3. **Reusability**: Services can be called from multiple controllers or other services
+4. **Maintainability**: Changes to business logic don't affect controllers or repositories
+5. **Scalability**: Easy to add new features without modifying existing layers
+
+**Code Example:**
+
+```javascript
+// THIN CONTROLLER - Only handles HTTP concerns
+class ComplaintController {
+  async createComplaint(req, res) {
+    try {
+      const { user } = req;
+      const complaintData = req.body;
+      const files = req.files?.evidenceFiles || [];
+
+      // Delegate to service layer
+      const complaint = await this.complaintService.createComplaint(
+        user.id, 
+        complaintData, 
+        files
+      );
+
+      // Format response
+      res.status(201).json({
+        success: true,
+        data: complaint,
+        message: "Complaint submitted successfully"
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+}
+
+// FAT SERVICE - Contains all business logic
+class ComplaintService {
+  async createComplaint(userId, complaintData, files) {
+    // Business validation
+    const complaint = new Complaint(complaintData);
+    const validation = Complaint.validate(complaint);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+    }
+
+    // Orchestrate multiple operations
+    const createdComplaint = await this.complaintRepo.create(complaint);
+    await this._processWorkflow(createdComplaint, departments);
+    await this._processFileUploads(createdComplaint.id, files);
+    await this.notificationService.notifyComplaintSubmitted(userId, createdComplaint.id);
+    
+    // Business logic for duplicate detection
+    await this.duplicationService.checkForDuplicates(createdComplaint);
+    
+    return createdComplaint;
+  }
+}
+
+// REPOSITORY - Only data access
+class ComplaintRepository {
+  async create(complaintData) {
+    const { data, error } = await this.supabase
+      .from('complaints')
+      .insert(complaintData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return new Complaint(data);
+  }
+}
+```
+
+#### 🎯 Additional Design Patterns
+
+| Pattern | Implementation | Purpose |
+|---------|----------------|---------|
+| **Repository Pattern** | `ComplaintRepository`, `DepartmentRepository`, `CoordinatorRepository` | Abstracts data access logic, provides clean interface for database operations, enables easy testing with mock repositories |
+| **Dependency Injection** | Constructor injection in Controllers and Services | Loose coupling between components, easier testing, flexible component replacement |
+| **Model-View-Controller (MVC)** | Models (`Complaint.js`), Views (HTML templates), Controllers (`ComplaintController.js`) | Separates data, presentation, and control logic |
+| **Middleware Pattern** | `auth.js`, `security.js`, `roleCheck.js` | Modular request/response processing pipeline, cross-cutting concerns (auth, logging, security) |
+| **Factory Pattern** | Model constructors, Database client initialization | Centralized object creation, encapsulates instantiation logic |
+| **Strategy Pattern** | Role-based access control, different notification strategies | Enables runtime selection of algorithms based on context |
+| **Observer Pattern** | Notification system, event-driven workflows | Decoupled event handling, automatic notifications on state changes |
+| **Singleton Pattern** | Database connection (`Database` class) | Single shared instance for database connections, resource optimization |
+| **Facade Pattern** | Service layer methods that orchestrate multiple operations | Simplified interface to complex subsystems |
+| **Chain of Responsibility** | Express middleware chain | Sequential processing of requests through multiple handlers |
+
+#### 📋 Layer Responsibilities Summary
+
+| Layer | Responsibilities | What It Should NOT Do |
+|-------|------------------|----------------------|
+| **Controllers** | Parse requests, call services, format responses, handle HTTP status codes | Business logic, database queries, complex validations |
+| **Services** | Business logic, workflow orchestration, transaction management, coordinate repositories | Direct database access, HTTP concerns, response formatting |
+| **Repositories** | CRUD operations, query building, data mapping | Business logic, validation, workflow management |
+| **Models** | Data structure, basic validation, data transformation | Business logic, database access, HTTP handling |
+| **Middleware** | Authentication, authorization, logging, security headers | Business logic, data access |
+
+This architecture ensures that **business logic lives in the Service Layer**, making the codebase maintainable, testable, and scalable.
 
 ## ✨ Feature Highlights
 
