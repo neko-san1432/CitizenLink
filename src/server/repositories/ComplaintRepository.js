@@ -92,7 +92,9 @@ class ComplaintRepository {
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,descriptive_su.ilike.%${search}%,location_text.ilike.%${search}%`);
+      // Sanitize search term to prevent SQL injection
+      const sanitizedSearch = search.replace(/[%_]/g, '\\$&');
+      query = query.or(`title.ilike.%${sanitizedSearch}%,descriptive_su.ilike.%${sanitizedSearch}%,location_text.ilike.%${sanitizedSearch}%`);
     }
 
     const { data, error, count } = await query

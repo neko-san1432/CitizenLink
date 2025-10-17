@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 
 // In-memory store for CSRF tokens (in production, use Redis or database)
+// TODO: Replace with Redis or database storage for production
 const tokenStore = new Map();
 
 // Generate a secure CSRF token
