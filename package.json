@@ -30,6 +30,8 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.0",
+    "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "gzip-cli": "^1.0.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
