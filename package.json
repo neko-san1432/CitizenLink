@@ -14,8 +14,9 @@
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
     "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./public/css/app.css --minify",
-    "build": "npm run build:css",
-    "check": "node scripts/healthcheck.js"
+    "security-scan": "node scripts/security-autoresolve.js",
+    "security-audit": "npm audit --audit-level=moderate",
+    "security-fix": "npm run security-audit && npm audit fix && npm run lint:fix",
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

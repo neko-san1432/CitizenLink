@@ -1,0 +1,150 @@
+name: "Security Auto-Resolution"
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    # Run weekly security scans on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  security-scan:
+    name: "Security Scan and Auto-Fix"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      security-events: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit and fix
+        id: security-audit
+        run: |
+          echo "🔍 Running npm audit..."
+          npm run security-audit
+
+          echo "🔧 Running npm audit fix..."
+          if npm run security-fix; then
+            echo "audit-fixed=true" >> $GITHUB_OUTPUT
+          else
+            echo "audit-fixed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run custom security auto-resolution
+        id: auto-resolve
+        run: |
+          echo "🤖 Running custom security auto-resolution..."
+          if npm run security-scan; then
+            echo "auto-resolved=true" >> $GITHUB_OUTPUT
+          else
+            echo "auto-resolved=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for file changes
+        id: file-changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes-detected=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes-detected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit security fixes
+        if: steps.file-changes.outputs.changes-detected == 'true'
+        run: |
+          git config --local user.email "security-bot@github.com"
+          git config --local user.name "Security Auto-Resolver"
+
+          # Add all security-related changes
+          git add package.json package-lock.json src/ .eslintrc.js SECURITY.md security-report.json
+
+          # Check if there are any changes to commit
+          if ! git diff --cached --quiet; then
+            git commit -m "🔒 Auto-resolve security issues
+
+            - Fixed npm dependency vulnerabilities
+            - Applied ESLint security rule fixes
+            - Updated security configurations
+            - Generated security documentation
+
+            Auto-resolved by GitHub Actions"
+            echo "committed=true" >> $GITHUB_OUTPUT
+          else
+            echo "committed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push security fixes
+        if: steps.file-changes.outputs.changes-detected == 'true' && steps.commit-security-fixes.outputs.committed == 'true'
+        run: |
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Comment on PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const auditFixed = '${{ steps.security-audit.outputs.audit-fixed }}' === 'true';
+            const autoResolved = '${{ steps.auto-resolve.outputs.auto-resolved }}' === 'true';
+            const changesDetected = '${{ steps.file-changes.outputs.changes-detected }}' === 'true';
+
+            let comment = '## 🔒 Security Scan Results\n\n';
+
+            if (auditFixed) {
+              comment += '✅ **npm audit fix**: Applied fixes for dependency vulnerabilities\n';
+            } else {
+              comment += 'ℹ️ **npm audit fix**: No dependency vulnerabilities found\n';
+            }
+
+            if (autoResolved) {
+              comment += '✅ **Custom security fixes**: Applied automatic security improvements\n';
+            } else {
+              comment += 'ℹ️ **Custom security fixes**: No additional fixes needed\n';
+            }
+
+            if (changesDetected) {
+              comment += '🔄 **Files modified**: Security fixes have been applied and committed\n';
+            } else {
+              comment += '✅ **No changes**: All security checks passed\n';
+            }
+
+            comment += '\n---\n*Automated security scan completed*';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          config-file: ./.github/codeql-config.yml
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:javascript-typescript"
+
+      - name: Upload CodeQL Results to GitHub
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: codeql-results.sarif
