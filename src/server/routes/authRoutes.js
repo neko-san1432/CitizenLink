@@ -6,7 +6,7 @@ const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
-const { loginLimiter, passwordResetLimiter } = require('../middleware/rateLimiting');
+const { loginLimiter, passwordResetLimiter, authLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
 

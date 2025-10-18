@@ -45,9 +45,13 @@ const cspConfig = {
     baseUri: ['\'self\''],
     formAction: ['\'self\''],
     frameAncestors: ['\'none\''],
-    upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : undefined,
   }
 };
+
+// Add upgrade-insecure-requests only in production
+if (process.env.NODE_ENV === 'production') {
+  cspConfig.directives.upgradeInsecureRequests = true;
+}
 
 // Enhanced security headers using helmet
 const securityHeaders = helmet({
@@ -60,7 +64,6 @@ const securityHeaders = helmet({
   },
   noSniff: true,
   frameguard: { action: 'deny' },
-  xssFilter: true,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   permittedCrossDomainPolicies: { permittedPolicies: 'none' },
   dnsPrefetchControl: { allow: false },
@@ -82,5 +85,6 @@ const customSecurityHeaders = (req, res, next) => {
 
 module.exports = {
   securityHeaders,
-  cspConfig
+  cspConfig,
+  customSecurityHeaders
 };

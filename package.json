@@ -30,7 +30,10 @@
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
-    "multer": "^2.0.2"
+    "isomorphic-dompurify": "^1.8.0",
+    "multer": "^2.0.2",
+    "validator": "^13.11.0",
+    "xss": "^1.0.14"
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
