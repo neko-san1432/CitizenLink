@@ -58,12 +58,24 @@ export const clearOAuthContext = () => {
   try { localStorage.removeItem(oauthKey); } catch {}
 };
 
+// Cache for API calls to prevent excessive requests
+let roleApiCache = null;
+let roleApiCacheTime = 0;
+const CACHE_DURATION = 5000; // 5 seconds cache
+
 // Global role getter
 export const getUserRole = async (options = {}) => {
   const { refresh = false } = options;
   if (!refresh) {
     const cached = getUserMeta();
     if (cached && cached.role) return cached.role;
+  }
+
+  // Check API cache to prevent excessive calls
+  const now = Date.now();
+  if (!refresh && roleApiCache && (now - roleApiCacheTime) < CACHE_DURATION) {
+    console.log('🔍 Using cached role from API');
+    return roleApiCache;
   }
 
   try {
@@ -74,6 +86,9 @@ export const getUserRole = async (options = {}) => {
       if (data.success && data.data.role) {
         console.log('🔍 Got role from API:', data.data.role);
         saveUserMeta({ role: data.data.role, name: data.data.name });
+        // Cache the result
+        roleApiCache = data.data.role;
+        roleApiCacheTime = now;
         return data.data.role;
       }
     }

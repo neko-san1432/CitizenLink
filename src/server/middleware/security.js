@@ -34,6 +34,7 @@ const cspConfig = {
     ],
     fontSrc: [
       '\'self\'',
+      'data:',
       'https://fonts.gstatic.com'
     ],
     objectSrc: ['\'none\''],
@@ -77,7 +78,7 @@ const customSecurityHeaders = (req, res, next) => {
 
   // Permissions Policy (formerly Feature Policy)
   res.setHeader('Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=()'
+    'camera=(), microphone=(), geolocation=(), payment=()'
   );
 
   next();

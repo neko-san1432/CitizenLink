@@ -13,9 +13,22 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Simple rate limiting middleware factory
+// Skip rate limiting entirely for localhost/development
 function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false) {
   return (req, res, next) => {
+    // Skip rate limiting for localhost/development
+    const hostname = req.hostname || req.get('host')?.split(':')[0] || '';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || process.env.NODE_ENV === 'development';
+    
+    // Always skip rate limiting in development mode
+    if (process.env.NODE_ENV === 'development' || isLocalhost) {
+      console.log(`[RATE_LIMIT] Skipping rate limit for development/localhost: ${hostname} (NODE_ENV: ${process.env.NODE_ENV})`);
+      return next();
+    }
+
+    // Debug logging for non-localhost requests
+    console.log(`[RATE_LIMIT] Processing request for ${hostname} (IP: ${req.ip})`);
+
     const key = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
     const windowStart = now - windowMs;
@@ -36,6 +49,7 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
 
     // Check if limit exceeded
     if (rateLimitData.requests.length >= maxRequests) {
+      console.log(`[RATE_LIMIT] Rate limit exceeded for ${key}: ${rateLimitData.requests.length}/${maxRequests} requests in ${windowMs}ms`);
       return res.status(429).json({
         success: false,
         error: 'Too many requests from this IP, please try again later.'
@@ -50,6 +64,11 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
       rateLimitData.resetTime = now + windowMs;
     }
 
+    // Debug logging for development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[RATE_LIMIT] Request allowed for ${key}: ${rateLimitData.requests.length}/${maxRequests} requests`);
+    }
+
     // Add headers for rate limit info
     res.set({
       'X-RateLimit-Limit': maxRequests,
@@ -61,14 +80,14 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
   };
 }
 
-// General API rate limiting
-const apiLimiter = createRateLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes
+// General API rate limiting - very permissive for development
+const apiLimiter = createRateLimiter(50000, 15 * 60 * 1000); // 50000 requests per 15 minutes
 
-// Stricter rate limiting for authentication endpoints
-const authLimiter = createRateLimiter(5, 15 * 60 * 1000); // 5 requests per 15 minutes
+// Stricter rate limiting for authentication endpoints - more permissive for dev
+const authLimiter = createRateLimiter(10000, 15 * 60 * 1000); // 10000 requests per 15 minutes
 
 // Very strict rate limiting for login attempts
-const loginLimiter = createRateLimiter(3, 15 * 60 * 1000); // 3 requests per 15 minutes
+const loginLimiter = createRateLimiter(1000, 15 * 60 * 1000); // 1000 requests per 15 minutes
 
 // Rate limiting for password reset requests
 const passwordResetLimiter = createRateLimiter(3, 60 * 60 * 1000); // 3 requests per hour

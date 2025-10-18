@@ -1,4 +1,10 @@
   require('dotenv').config();
+
+// Set development mode if not already set
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development';
+}
+
 const config = require('./config/app');
 const CitizenLinkApp = require('./src/server/app');
 

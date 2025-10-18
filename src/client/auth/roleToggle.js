@@ -20,6 +20,11 @@ const SWITCHABLE_ROLES = [
   'super-admin'
 ];
 
+// Cache for role info API calls
+let roleInfoCache = null;
+let roleInfoCacheTime = 0;
+const ROLE_INFO_CACHE_DURATION = 5000; // 5 seconds cache
+
 /**
  * Check if current user can switch to citizen mode
  * Logic: Check the actual_role (not current role) to determine if user is staff
@@ -28,6 +33,27 @@ const SWITCHABLE_ROLES = [
  */
 export async function canSwitchToCitizen() {
   try {
+    // Check cache first
+    const now = Date.now();
+    if (roleInfoCache && (now - roleInfoCacheTime) < ROLE_INFO_CACHE_DURATION) {
+      console.log('[ROLE_TOGGLE] Using cached role info');
+      const actualRole = roleInfoCache.data.actual_role;
+      const currentRole = roleInfoCache.data.role;
+      
+      // If no actual_role exists, user is a real citizen
+      if (!actualRole) {
+        console.log('[ROLE_TOGGLE] No actual_role found - user is a real citizen');
+        return false;
+      }
+
+      // Check if actual_role is a switchable staff role
+      const canSwitch = SWITCHABLE_ROLES.some(switchableRole => {
+        return actualRole === switchableRole || actualRole?.startsWith(switchableRole + '-');
+      });
+
+      return canSwitch;
+    }
+
     // Get role info from API - we need actual_role to determine if user is really staff
     const response = await fetch('/api/user/role-info');
     const result = await response.json();
@@ -36,6 +62,10 @@ export async function canSwitchToCitizen() {
       console.error('[ROLE_TOGGLE] Failed to get role info:', result);
       return false;
     }
+
+    // Cache the result
+    roleInfoCache = result;
+    roleInfoCacheTime = now;
 
     // IMPORTANT: Check actual_role, not current role
     // actual_role tells us what the user's real role is
@@ -234,9 +264,20 @@ export async function initializeRoleToggle() {
       return;
     }
 
-    // Get role info from API (includes actual_role)
-    const response = await fetch('/api/user/role-info');
-    const result = await response.json();
+    // Get role info from API (includes actual_role) - use cache if available
+    let result;
+    const now = Date.now();
+    if (roleInfoCache && (now - roleInfoCacheTime) < ROLE_INFO_CACHE_DURATION) {
+      console.log('[ROLE_TOGGLE] Using cached role info for initialization');
+      result = roleInfoCache;
+    } else {
+      const response = await fetch('/api/user/role-info');
+      result = await response.json();
+      
+      // Cache the result
+      roleInfoCache = result;
+      roleInfoCacheTime = now;
+    }
 
     console.log('[ROLE_TOGGLE] API role-info response:', result);
 

@@ -153,7 +153,14 @@
   }
 
   .notification-panel {
-    @apply absolute right-0 top-[calc(100%+8px)] w-80 max-h-96 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-lg shadow-lg overflow-hidden z-[1000];
+    @apply fixed top-[70px] right-[10px] w-80 max-h-96 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-lg shadow-lg overflow-hidden z-[1000];
+  }
+
+  /* Responsive notification panel */
+  @media (max-width: 640px) {
+    .notification-panel {
+      @apply w-72 right-[5px] top-[65px];
+    }
   }
 
   .notification-panel.hidden {
