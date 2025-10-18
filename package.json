@@ -16,7 +16,7 @@
     "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./public/css/app.css --minify",
     "security-scan": "node scripts/security-autoresolve.js",
     "security-audit": "npm audit --audit-level=moderate",
-    "security-fix": "npm run security-audit && npm audit fix && npm run lint:fix",
+    "security-fix": "npm run security-audit && npm audit fix && npm run lint:fix"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
