@@ -40,22 +40,42 @@ const cspConfig = {
     mediaSrc: ["'self'"],
     frameSrc: [
       "https://www.google.com"
-    ]
+    ],
+    // Additional CSP directives for enhanced security
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+    frameAncestors: ["'none'"],
+    upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : undefined,
   }
 };
 
-// Security headers middleware
-const securityHeaders = (req, res, next) => {
-  // Basic security headers
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+// Enhanced security headers using helmet
+const securityHeaders = helmet({
+  contentSecurityPolicy: cspConfig,
+  crossOriginEmbedderPolicy: false, // Disable for now due to compatibility issues
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  frameguard: { action: 'deny' },
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
+  dnsPrefetchControl: { allow: false },
+  ieNoOpen: true,
+});
 
-  // HSTS for HTTPS (only in production)
-  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
+// Additional custom security headers
+const customSecurityHeaders = (req, res, next) => {
+  // Remove server information disclosure
+  res.removeHeader('X-Powered-By');
+
+  // Permissions Policy (formerly Feature Policy)
+  res.setHeader('Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=()'
+  );
 
   next();
 };

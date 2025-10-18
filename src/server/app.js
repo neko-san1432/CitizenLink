@@ -8,7 +8,9 @@ const database = new Database();
 const routes = require('./routes');
 const { authenticateUser, requireRole } = require('./middleware/auth');
 const { ErrorHandler } = require('./middleware/errorHandler');
-const { securityHeaders, cspConfig } = require('./middleware/security');
+const { securityHeaders, cspConfig, customSecurityHeaders } = require('./middleware/security');
+const { apiLimiter, authLimiter, loginLimiter, passwordResetLimiter } = require('./middleware/rateLimiting');
+const InputSanitizer = require('./middleware/inputSanitizer');
 
 class CitizenLinkApp {
   constructor() {
@@ -19,8 +21,17 @@ class CitizenLinkApp {
   }
 
   initializeMiddleware() {
-    // Security middleware (applied first)
+    // Enhanced security headers (applied first)
     this.app.use(securityHeaders);
+    this.app.use(customSecurityHeaders);
+
+    // Rate limiting (applied early to protect against abuse)
+    this.app.use('/api/', apiLimiter);
+
+    // Input sanitization and validation
+    this.app.use(InputSanitizer.validateRequestSize);
+    this.app.use(InputSanitizer.preventSQLInjection);
+    this.app.use(InputSanitizer.sanitize);
 
     this.app.use(cors());
     this.app.use(express.json({ limit: '50mb' }));

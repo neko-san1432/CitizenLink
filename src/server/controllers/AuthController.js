@@ -3,6 +3,7 @@ const { ValidationError, ConflictError } = require('../middleware/errorHandler')
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
+const { validatePasswordStrength } = require('../../shared/passwordValidation');
 
 class AuthController {
   /**
@@ -38,6 +39,16 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Passwords do not match'
+        });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 
@@ -268,10 +279,13 @@ class AuthController {
         });
       }
 
-      if (newPassword.length < 8) {
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'New password must be at least 8 characters'
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 
@@ -591,6 +605,16 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Passwords do not match'
+        });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 

@@ -6,6 +6,7 @@ const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
+const { loginLimiter, passwordResetLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.post('/signup-with-code', ErrorHandler.asyncWrapper(AuthController.signup
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', ErrorHandler.asyncWrapper(AuthController.login));
+router.post('/login', loginLimiter, ErrorHandler.asyncWrapper(AuthController.login));
 
 /**
  * @route   GET /api/auth/verify-email
@@ -46,7 +47,7 @@ router.get('/verify-email', ErrorHandler.asyncWrapper(AuthController.verifyEmail
  * @desc    Send password reset email
  * @access  Public
  */
-router.post('/forgot-password', csrfProtection, ErrorHandler.asyncWrapper(async (req, res) => {
+router.post('/forgot-password', passwordResetLimiter, csrfProtection, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
     const { email } = req.body;
 
