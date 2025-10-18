@@ -75,9 +75,3 @@ class InvitationTokenRepository {
 
 module.exports = InvitationTokenRepository;
 
-
-
-
-
-
-

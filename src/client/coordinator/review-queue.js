@@ -21,20 +21,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadReviewQueue() {
   try {
     const response = await fetch('/api/coordinator/review-queue');
-    
+
     if (!response.ok) {
       throw new Error('Failed to load review queue');
     }
 
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to load review queue');
     }
 
     allComplaints = result.data || [];
     filteredComplaints = [...allComplaints];
-    
+
     renderQueue();
   } catch (error) {
     console.error('[REVIEW_QUEUE] Load error:', error);
@@ -73,10 +73,10 @@ function renderQueue() {
  */
 function renderComplaints() {
   const list = document.getElementById('complaint-list');
-  
+
   list.innerHTML = filteredComplaints.map(complaint => {
     const hasSimilar = complaint.similarities && complaint.similarities.length > 0;
-    
+
     return `
       <div class="complaint-card priority-${complaint.priority}" 
            onclick="viewComplaint('${complaint.id}')">
@@ -168,22 +168,22 @@ function truncate(text, length) {
  */
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
-  
+
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
+
   if (minutes < 60) return `${minutes} min ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric' 
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
   });
 }
 

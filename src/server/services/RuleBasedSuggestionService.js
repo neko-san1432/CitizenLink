@@ -19,7 +19,7 @@ class RuleBasedSuggestionService {
   async computeSuggestions(complaint) {
     const text = [complaint.title, complaint.descriptive_su, complaint.location_text]
       .filter(Boolean)
-      .join(' ') 
+      .join(' ')
       .toLowerCase();
 
     // Base rules: type → default dept list
@@ -97,9 +97,4 @@ class RuleBasedSuggestionService {
 }
 
 module.exports = RuleBasedSuggestionService;
-
-
-
-
-
 

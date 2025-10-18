@@ -11,7 +11,7 @@ let assignments = [];
 let officers = [];
 let currentFilter = 'all';
 let selectedComplaint = null;
-let currentFilters = {
+const currentFilters = {
   status: 'all',
   sub_type: 'all',
   priority: 'all'
@@ -75,18 +75,18 @@ function initializeEventListeners() {
 async function loadAssignments() {
   try {
     showLoadingState();
-    
+
     // Build query parameters
     const params = new URLSearchParams();
     if (currentFilters.status !== 'all') params.append('status', currentFilters.status);
     if (currentFilters.sub_type !== 'all') params.append('sub_type', currentFilters.sub_type);
     if (currentFilters.priority !== 'all') params.append('priority', currentFilters.priority);
-    
+
     const queryString = params.toString();
     const url = queryString ? `/api/lgu-admin/department-assignments?${queryString}` : '/api/lgu-admin/department-assignments';
-    
+
     const response = await apiClient.get(url);
-    
+
     if (response.success) {
       assignments = response.data;
       console.log('[ASSIGNMENTS] Loaded assignments:', assignments);
@@ -109,9 +109,9 @@ async function loadOfficers() {
   try {
     console.log('[ASSIGNMENTS] Loading officers...');
     const response = await apiClient.get('/api/lgu-admin/department-officers');
-    
+
     console.log('[ASSIGNMENTS] Officers API response:', response);
-    
+
     if (response.success) {
       officers = response.data;
       console.log('[ASSIGNMENTS] Loaded officers:', officers);
@@ -143,7 +143,7 @@ function updateStats() {
  */
 function renderAssignments() {
   const filteredAssignments = filterAssignments();
-  
+
   if (filteredAssignments.length === 0) {
     showEmptyState();
     return;
@@ -175,12 +175,12 @@ function renderAssignments() {
  */
 function filterAssignments() {
   switch (currentFilter) {
-    case 'unassigned':
-      return assignments.filter(a => !a.assigned_to);
-    case 'assigned':
-      return assignments.filter(a => a.assigned_to);
-    default:
-      return assignments;
+  case 'unassigned':
+    return assignments.filter(a => !a.assigned_to);
+  case 'assigned':
+    return assignments.filter(a => a.assigned_to);
+  default:
+    return assignments;
   }
 }
 
@@ -192,7 +192,7 @@ function createAssignmentHTML(assignment) {
   const priorityClass = `priority-${assignment.priority || 'medium'}`;
   const statusClass = isAssigned ? 'status-assigned' : 'status-unassigned';
   const statusText = isAssigned ? 'Assigned' : 'Unassigned';
-  
+
   const assignedInfo = isAssigned ? `
     <div class="assigned-officer">
       <div class="officer-avatar">${getInitials(assignment.officer_name || 'Unknown')}</div>
@@ -242,14 +242,14 @@ function createAssignmentHTML(assignment) {
 function openAssignmentModal(assignment) {
   console.log('[ASSIGNMENTS] Opening assignment modal for:', assignment);
   selectedComplaint = assignment;
-  
+
   // Populate complaint summary
   const summaryEl = document.getElementById('complaint-summary');
   if (!summaryEl) {
     console.error('[ASSIGNMENTS] Complaint summary element not found!');
     return;
   }
-  
+
   summaryEl.innerHTML = `
     <div class="complaint-summary-title">${escapeHtml(assignment.title)}</div>
     <div class="complaint-summary-detail"><strong>ID:</strong> ${assignment.complaint_id.slice(0, 8)}</div>
@@ -344,23 +344,23 @@ async function handleAssignmentSubmit(e) {
 function populateOfficerSelect() {
   console.log('[ASSIGNMENTS] Populating officer select with:', officers);
   const select = document.getElementById('officer-select');
-  
+
   if (!select) {
     console.error('[ASSIGNMENTS] Officer select element not found!');
     return;
   }
-  
+
   if (!officers || officers.length === 0) {
     console.warn('[ASSIGNMENTS] No officers available');
     select.innerHTML = '<option value="">-- No officers available --</option>';
     return;
   }
-  
+
   select.innerHTML = '<option value="">-- Select an officer --</option>' +
     officers.map(officer => `
       <option value="${officer.id}">${escapeHtml(officer.name)} ${officer.employee_id ? `(${officer.employee_id})` : ''}</option>
     `).join('');
-    
+
   console.log('[ASSIGNMENTS] Officer select populated with', officers.length, 'officers');
 }
 
@@ -415,7 +415,7 @@ function formatRelativeTime(timestamp) {
   if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  
+
   return time.toLocaleDateString();
 }
 

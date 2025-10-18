@@ -38,29 +38,29 @@ export function initComplaintTransitions(root = document) {
       let payload = {};
       let files = [];
       switch (action) {
-        case 'officer-submit-approval': {
-          const notes = (container.querySelector('[data-resolution-notes]') || {}).value || '';
-          payload = { status: 'pending_approval', resolution_notes: notes };
-          files = collectEvidenceFiles(container);
-          break;
-        }
-        case 'admin-approve': {
-          payload = { status: 'pending_citizen_confirmation' };
-          break;
-        }
-        case 'admin-request-changes': {
-          const notes = (container.querySelector('[data-admin-notes]') || {}).value || '';
-          payload = { status: 'in progress', admin_notes: notes };
-          break;
-        }
-        case 'citizen-confirm': {
-          payload = { status: 'resolved' };
-          break;
-        }
-        // Citizens cannot send a not-satisfied transition anymore
-        default:
-          btn.disabled = false;
-          return;
+      case 'officer-submit-approval': {
+        const notes = (container.querySelector('[data-resolution-notes]') || {}).value || '';
+        payload = { status: 'pending_approval', resolution_notes: notes };
+        files = collectEvidenceFiles(container);
+        break;
+      }
+      case 'admin-approve': {
+        payload = { status: 'pending_citizen_confirmation' };
+        break;
+      }
+      case 'admin-request-changes': {
+        const notes = (container.querySelector('[data-admin-notes]') || {}).value || '';
+        payload = { status: 'in progress', admin_notes: notes };
+        break;
+      }
+      case 'citizen-confirm': {
+        payload = { status: 'resolved' };
+        break;
+      }
+      // Citizens cannot send a not-satisfied transition anymore
+      default:
+        btn.disabled = false;
+        return;
       }
       const result = await sendTransition(complaintId, payload, files);
       // Simple UI hint; integrate with your toast if desired
@@ -75,5 +75,4 @@ export function initComplaintTransitions(root = document) {
     }
   });
 }
-
 

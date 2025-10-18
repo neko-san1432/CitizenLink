@@ -18,4 +18,3 @@ router.post('/tasks/:assignmentId/update', LguOfficerController.addProgressUpdat
 
 module.exports = router;
 
-

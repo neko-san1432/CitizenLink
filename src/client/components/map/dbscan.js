@@ -19,11 +19,11 @@ class DBSCAN {
     const R = 6371; // Earth's radius in kilometers
     const dLat = this.toRadians(point2.lat - point1.lat);
     const dLng = this.toRadians(point2.lng - point1.lng);
-    
+
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(this.toRadians(point1.lat)) * Math.cos(this.toRadians(point2.lat)) *
               Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
@@ -87,22 +87,22 @@ class DBSCAN {
         let j = 0;
         while (j < neighbors.length) {
           const neighborIndex = neighbors[j];
-          
+
           if (!visited[neighborIndex]) {
             visited[neighborIndex] = true;
             const neighborNeighbors = this.findNeighbors(points, neighborIndex);
-            
+
             if (neighborNeighbors.length >= this.minPts) {
               // Add new neighbors to the list
               neighbors.push(...neighborNeighbors);
             }
           }
-          
+
           if (!clustered[neighborIndex]) {
             cluster.push(neighborIndex);
             clustered[neighborIndex] = true;
           }
-          
+
           j++;
         }
 
@@ -121,7 +121,7 @@ class DBSCAN {
    */
   calculateStatistics(points, clusteringResult) {
     const { clusters, noise } = clusteringResult;
-    
+
     const stats = {
       totalPoints: points.length,
       numClusters: clusters.length,
@@ -131,11 +131,11 @@ class DBSCAN {
 
     clusters.forEach((cluster, index) => {
       const clusterPoints = cluster.map(i => points[i]);
-      
+
       // Calculate cluster center (centroid)
       const centerLat = clusterPoints.reduce((sum, p) => sum + p.lat, 0) / clusterPoints.length;
       const centerLng = clusterPoints.reduce((sum, p) => sum + p.lng, 0) / clusterPoints.length;
-      
+
       // Calculate cluster radius (maximum distance from center)
       let maxRadius = 0;
       clusterPoints.forEach(point => {
@@ -191,11 +191,11 @@ class DBSCAN {
     }
 
     distances.sort((a, b) => a - b);
-    
+
     // Use 75th percentile as suggested eps
     const epsIndex = Math.floor(distances.length * 0.75);
     const suggestedEps = distances[epsIndex] || 0.01;
-    
+
     // Suggested minPts based on data size
     const suggestedMinPts = Math.max(3, Math.min(10, Math.floor(points.length / 10)));
 
@@ -212,6 +212,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.DBSCAN = DBSCAN;
 }
-
-
 

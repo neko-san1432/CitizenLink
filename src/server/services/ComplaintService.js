@@ -54,7 +54,7 @@ class ComplaintService {
     try {
       await this._processWorkflow(createdComplaint, departments);
       await this._processFileUploads(createdComplaint.id, files);
-      
+
       // Send notification to citizen
       try {
         await this.notificationService.notifyComplaintSubmitted(
@@ -65,7 +65,7 @@ class ComplaintService {
       } catch (notifError) {
         console.warn('[COMPLAINT] Failed to send submission notification:', notifError.message);
       }
-      
+
       const finalComplaint = await this.complaintRepo.findById(createdComplaint.id);
       return finalComplaint;
     } catch (error) {
@@ -168,7 +168,7 @@ class ComplaintService {
     for (const file of files) {
       try {
         const fileName = `${complaintId}/${Date.now()}-${file.originalname}`;
-        
+
         const { data: uploadData, error: uploadError } = await this.complaintRepo.supabase.storage
           .from('complaint-evidence')
           .upload(fileName, file.buffer, {
@@ -233,7 +233,7 @@ class ComplaintService {
 
   async updateComplaintStatus(id, status, notes = null, userId = null) {
     const complaint = await this.getComplaintById(id);
-    
+
     const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid status');
@@ -286,7 +286,7 @@ class ComplaintService {
 
   async transferComplaint(complaintId, fromDept, toDept, reason, transferredBy) {
     const complaint = await this.getComplaintById(complaintId);
-    
+
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
       primary_department: toDept,
       assigned_coordinator_id: null
@@ -304,10 +304,10 @@ class ComplaintService {
     try {
       await this.complaintRepo.logAction(complaintId, 'transferred', {
         reason,
-        details: { 
-          from_dept: fromDept, 
-          to_dept: toDept, 
-          transferred_by: transferredBy 
+        details: {
+          from_dept: fromDept,
+          to_dept: toDept,
+          transferred_by: transferredBy
         }
       });
     } catch (error) {
@@ -319,7 +319,7 @@ class ComplaintService {
 
   async getComplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
-    
+
     let query = this.complaintRepo.supabase
       .from('complaints')
       .select('status, type, priority, submitted_at');
@@ -351,7 +351,7 @@ class ComplaintService {
       stats.by_status[complaint.status] = (stats.by_status[complaint.status] || 0) + 1;
       stats.by_type[complaint.type] = (stats.by_type[complaint.type] || 0) + 1;
       stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
-      
+
       const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
       stats.by_month[month] = (stats.by_month[month] || 0) + 1;
     });
@@ -361,16 +361,16 @@ class ComplaintService {
 
   async getComplaintLocations(filters = {}) {
     console.log('[COMPLAINT-SERVICE] getComplaintLocations called with filters:', filters);
-    
-    const { 
-      status, 
-      type, 
-      department, 
-      startDate, 
-      endDate, 
-      includeResolved = true 
+
+    const {
+      status,
+      type,
+      department,
+      startDate,
+      endDate,
+      includeResolved = true
     } = filters;
-    
+
     try {
       let query = this.complaintRepo.supabase
         .from('complaints')
@@ -378,31 +378,31 @@ class ComplaintService {
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
-    // Filter by status
-    if (status) {
-      query = query.eq('status', status);
-    } else if (!includeResolved) {
-      query = query.neq('status', 'resolved').neq('status', 'closed');
-    }
+      // Filter by status
+      if (status) {
+        query = query.eq('status', status);
+      } else if (!includeResolved) {
+        query = query.neq('status', 'resolved').neq('status', 'closed');
+      }
 
-    // Filter by type
-    if (type) {
-      query = query.eq('type', type);
-    }
+      // Filter by type
+      if (type) {
+        query = query.eq('type', type);
+      }
 
-    // Filter by department
-    if (department) {
-      query = query.contains('department_r', [department]);
-    }
+      // Filter by department
+      if (department) {
+        query = query.contains('department_r', [department]);
+      }
 
-    // Filter by date range
-    if (startDate) {
-      query = query.gte('submitted_at', startDate);
-    }
+      // Filter by date range
+      if (startDate) {
+        query = query.gte('submitted_at', startDate);
+      }
 
-    if (endDate) {
-      query = query.lte('submitted_at', endDate);
-    }
+      if (endDate) {
+        query = query.lte('submitted_at', endDate);
+      }
 
       const { data, error } = await query;
       if (error) {

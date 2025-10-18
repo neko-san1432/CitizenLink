@@ -45,7 +45,7 @@ class DepartmentService {
 
   async updateDepartment(id, departmentData) {
     const existingDepartment = await this.getDepartmentById(id);
-    
+
     const validation = Department.validate(departmentData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -80,7 +80,7 @@ class DepartmentService {
 
   async getDepartmentsByType(type) {
     const allDepartments = await this.getActiveDepartments();
-    
+
     const typeMapping = {
       'infrastructure': ['DPWH', 'ENGINEERING', 'ROADS', 'BRIDGES'],
       'health': ['DOH', 'HEALTH', 'MEDICAL', 'SANITATION'],
@@ -94,8 +94,8 @@ class DepartmentService {
       return allDepartments;
     }
 
-    return allDepartments.filter(dept => 
-      typeMapping[type].some(keyword => 
+    return allDepartments.filter(dept =>
+      typeMapping[type].some(keyword =>
         dept.code.includes(keyword) || dept.name.toUpperCase().includes(keyword)
       )
     );
@@ -119,14 +119,14 @@ class DepartmentService {
       .filter(user => {
         const metadata = user.user_metadata || {};
         const role = metadata.role || '';
-        
+
         // Match lgu-* but exclude lgu-admin-* and lgu-hr-*
         const isOfficer = /^lgu-(?!admin|hr)/.test(role);
-        
+
         // Check if the role contains the department code (e.g., lgu-wst for wst department)
         const roleContainsDepartment = role.includes(`-${department.code}`);
         const hasCorrectDepartment = metadata.department === department.code;
-        
+
         return isOfficer && (roleContainsDepartment || hasCorrectDepartment);
       })
       .map(user => ({
@@ -147,31 +147,31 @@ class DepartmentService {
 
   isUserOnline(lastSignInAt) {
     if (!lastSignInAt) return false;
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = (now - lastSignIn) / (1000 * 60);
-    
+
     // Consider user online if they signed in within the last 10 minutes
     return diffInMinutes <= 10;
   }
 
   getLastSeenText(lastSignInAt) {
     if (!lastSignInAt) return 'Never';
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return lastSignIn.toLocaleDateString();
   }
 }

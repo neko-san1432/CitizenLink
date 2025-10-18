@@ -31,7 +31,7 @@ class CoordinatorService {
       // Enhance with algorithm confidence levels
       const enhanced = complaints.map(complaint => {
         const hasSimilarities = complaint.similarities && complaint.similarities.length > 0;
-        const highConfidence = hasSimilarities && 
+        const highConfidence = hasSimilarities &&
           complaint.similarities.some(s => s.similarity_score >= 0.85);
 
         return {
@@ -119,62 +119,62 @@ class CoordinatorService {
   async processDecision(complaintId, decision, coordinatorId, data = {}) {
     try {
       switch (decision) {
-        case 'mark_duplicate':
-          if (!data.masterComplaintId) {
-            throw new Error('Master complaint ID required');
-          }
-          return await this.markAsDuplicate(
+      case 'mark_duplicate':
+        if (!data.masterComplaintId) {
+          throw new Error('Master complaint ID required');
+        }
+        return await this.markAsDuplicate(
+          complaintId,
+          data.masterComplaintId,
+          coordinatorId,
+          data.reason
+        );
+
+      case 'mark_unique':
+        return await this.markAsUnique(complaintId, coordinatorId);
+
+      case 'assign_department':
+        // Support single or multiple departments
+        if (!data.department && (!data.departments || data.departments.length === 0)) {
+          throw new Error('Department required');
+        }
+        if (Array.isArray(data.departments) && data.departments.length > 0) {
+          return await this.assignToDepartments(
             complaintId,
-            data.masterComplaintId,
+            data.departments,
             coordinatorId,
-            data.reason
+            data.options || {}
           );
+        }
+        return await this.assignToDepartment(
+          complaintId,
+          data.department,
+          coordinatorId,
+          data.options
+        );
 
-        case 'mark_unique':
-          return await this.markAsUnique(complaintId, coordinatorId);
+      case 'link_related':
+        if (!data.relatedComplaintIds) {
+          throw new Error('Related complaint IDs required');
+        }
+        return await this.linkRelatedComplaints(
+          complaintId,
+          data.relatedComplaintIds,
+          coordinatorId
+        );
 
-        case 'assign_department':
-          // Support single or multiple departments
-          if (!data.department && (!data.departments || data.departments.length === 0)) {
-            throw new Error('Department required');
-          }
-          if (Array.isArray(data.departments) && data.departments.length > 0) {
-            return await this.assignToDepartments(
-              complaintId,
-              data.departments,
-              coordinatorId,
-              data.options || {}
-            );
-          }
-          return await this.assignToDepartment(
-            complaintId,
-            data.department,
-            coordinatorId,
-            data.options
-          );
+      case 'reject':
+        if (!data.reason) {
+          throw new Error('Rejection reason required');
+        }
+        return await this.rejectComplaint(
+          complaintId,
+          coordinatorId,
+          data.reason
+        );
 
-        case 'link_related':
-          if (!data.relatedComplaintIds) {
-            throw new Error('Related complaint IDs required');
-          }
-          return await this.linkRelatedComplaints(
-            complaintId,
-            data.relatedComplaintIds,
-            coordinatorId
-          );
-
-        case 'reject':
-          if (!data.reason) {
-            throw new Error('Rejection reason required');
-          }
-          return await this.rejectComplaint(
-            complaintId,
-            coordinatorId,
-            data.reason
-          );
-
-        default:
-          throw new Error('Invalid decision type');
+      default:
+        throw new Error('Invalid decision type');
       }
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Process decision error:', error);
@@ -188,7 +188,7 @@ class CoordinatorService {
   async markAsDuplicate(complaintId, masterComplaintId, coordinatorId, reason) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-      
+
       await this.coordinatorRepo.markAsDuplicate(
         complaintId,
         masterComplaintId,
@@ -226,7 +226,7 @@ class CoordinatorService {
     try {
       // Update all similarities to 'unique' decision
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-      
+
       if (complaint.similarities && complaint.similarities.length > 0) {
         for (const similarity of complaint.similarities) {
           await this.coordinatorRepo.updateSimilarityDecision(
@@ -439,11 +439,11 @@ class CoordinatorService {
             complaintId,
             dept.id,
             coordinatorId,
-              {
-                status: 'pending',
-                priority: options.priority || 'medium',
-                deadline: options.deadline || null
-              }
+            {
+              status: 'pending',
+              priority: options.priority || 'medium',
+              deadline: options.deadline || null
+            }
           );
           await this.notifyDepartmentAdmins(code, complaintId, updated.title || 'New Complaint');
         } catch (e) {
@@ -477,12 +477,12 @@ class CoordinatorService {
     try {
       // Update similarities to 'related' decision
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-      
+
       for (const relatedId of relatedIds) {
         const similarity = complaint.similarities.find(
           s => s.similar_complaint_id === relatedId
         );
-        
+
         if (similarity) {
           await this.coordinatorRepo.updateSimilarityDecision(
             similarity.id,
@@ -608,7 +608,7 @@ class CoordinatorService {
   async detectClusters(options = {}) {
     try {
       const clusters = await this.similarityService.detectClusters(options);
-      
+
       return {
         success: true,
         clusters,
@@ -690,15 +690,15 @@ class CoordinatorService {
     try {
       // Get all users with lgu-admin-{department_code} role
       const { data: users, error } = await this.coordinatorRepo.supabase.auth.admin.listUsers();
-      
+
       if (error) {
         console.warn('[COORDINATOR_SERVICE] Failed to get users for notification:', error.message);
         return;
       }
 
       const adminRole = `lgu-admin-${departmentCode}`;
-      const admins = users.users.filter(user => 
-        user.user_metadata?.role === adminRole || 
+      const admins = users.users.filter(user =>
+        user.user_metadata?.role === adminRole ||
         user.raw_user_meta_data?.role === adminRole
       );
 
@@ -713,7 +713,7 @@ class CoordinatorService {
             `"${complaintTitle}" has been assigned to ${departmentCode}.`,
             {
               priority: 'info',
-              link: `/lgu-admin/assignments`,
+              link: '/lgu-admin/assignments',
               metadata: { complaint_id: complaintId, department: departmentCode }
             }
           );
@@ -733,7 +733,7 @@ class CoordinatorService {
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     try {
       const notifPriority = priority === 'urgent' ? 'urgent' :
-                            priority === 'high' ? 'warning' : 'info';
+        priority === 'high' ? 'warning' : 'info';
 
       await this.notificationService.createNotification(
         officerId,
@@ -743,8 +743,8 @@ class CoordinatorService {
         {
           priority: notifPriority,
           link: `/lgu/tasks/${complaintId}`,
-          metadata: { 
-            complaint_id: complaintId, 
+          metadata: {
+            complaint_id: complaintId,
             priority,
             deadline: deadline || null
           }

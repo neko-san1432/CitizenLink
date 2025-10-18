@@ -5,46 +5,46 @@ const { authenticateUser, requireRole } = require('../middleware/auth');
 const router = express.Router();
 const departmentController = new DepartmentController();
 
-router.get('/active', 
+router.get('/active',
   authenticateUser,
   (req, res) => departmentController.getActiveDepartments(req, res)
 );
 
-router.get('/type/:type', 
+router.get('/type/:type',
   authenticateUser,
   (req, res) => departmentController.getDepartmentsByType(req, res)
 );
 
-router.get('/:id/officers', 
+router.get('/:id/officers',
   authenticateUser,
   (req, res) => departmentController.getDepartmentOfficers(req, res)
 );
 
-router.get('/', 
+router.get('/',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => departmentController.getAllDepartments(req, res)
 );
 
-router.get('/:id', 
+router.get('/:id',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => departmentController.getDepartmentById(req, res)
 );
 
-router.post('/', 
+router.post('/',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => departmentController.createDepartment(req, res)
 );
 
-router.put('/:id', 
+router.put('/:id',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => departmentController.updateDepartment(req, res)
 );
 
-router.delete('/:id', 
+router.delete('/:id',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => departmentController.deleteDepartment(req, res)

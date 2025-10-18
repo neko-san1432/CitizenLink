@@ -70,7 +70,7 @@ class HRService {
       // Get current role - must be an LGU officer (lgu-wst, lgu-engineering, etc.)
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
-      
+
       if (!isLguOfficer) {
         throw new Error('Can only promote LGU officers to admin');
       }
@@ -118,7 +118,7 @@ class HRService {
       // Get current role - must be an LGU admin
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
-      
+
       if (!isLguAdmin) {
         throw new Error('Can only demote LGU admins');
       }
@@ -163,7 +163,7 @@ class HRService {
 
       // Get current role
       const currentRole = await this.roleService.getUserRole(userId);
-      
+
       // Can't strip citizen or HR/Super Admin roles
       if (currentRole === 'citizen') {
         throw new Error('User is already a citizen');
@@ -219,7 +219,7 @@ class HRService {
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
-      
+
       if (!isLguOfficer && !isLguAdmin) {
         throw new Error('Can only assign LGU officers/admins to departments');
       }
@@ -312,12 +312,12 @@ class HRService {
    */
   async generateSignupLink(hrId, role, departmentCode, expiresInHours = 1) {
     try {
-      
+
       // Validate HR role and get user metadata
       const hrRole = await this.roleService.getUserRole(hrId);
       const isHR = hrRole === 'lgu-hr' || hrRole === 'super-admin' || /^lgu-hr/.test(hrRole);
       const isCoordinator = hrRole === 'complaint-coordinator';
-      
+
       if (!isHR && !isCoordinator) {
         throw new Error('Only HR or coordinators can generate signup links');
       }
@@ -338,26 +338,26 @@ class HRService {
         hrDepartment = hrMetadata.department;
       }
 
-    // Role-based restrictions
-    if (isHR && !isCoordinator) {
+      // Role-based restrictions
+      if (isHR && !isCoordinator) {
       // LGU-HR can only create links for their own department
-      if (hrDepartment && hrDepartment !== departmentCode) {
-        throw new Error(`You can only create signup links for your own department (${hrDepartment})`);
+        if (hrDepartment && hrDepartment !== departmentCode) {
+          throw new Error(`You can only create signup links for your own department (${hrDepartment})`);
+        }
+
+        // For LGU-HR, automatically use their department if not specified
+        if (isHR && !departmentCode && hrDepartment) {
+          departmentCode = hrDepartment;
+          console.log(`[HR] Auto-setting department to HR's department: ${departmentCode}`);
+        }
+
+        console.log(`[HR] Final departmentCode before database insert: ${departmentCode}`);
+
+        // LGU-HR can only create officer or admin roles
+        if (!['lgu-officer', 'lgu-admin'].includes(role)) {
+          throw new Error('You can only create signup links for officer or admin roles');
+        }
       }
-      
-      // For LGU-HR, automatically use their department if not specified
-      if (isHR && !departmentCode && hrDepartment) {
-        departmentCode = hrDepartment;
-        console.log(`[HR] Auto-setting department to HR's department: ${departmentCode}`);
-      }
-      
-      console.log(`[HR] Final departmentCode before database insert: ${departmentCode}`);
-      
-      // LGU-HR can only create officer or admin roles
-      if (!['lgu-officer', 'lgu-admin'].includes(role)) {
-        throw new Error('You can only create signup links for officer or admin roles');
-      }
-    }
 
       // Validate role
       const validRoles = ['lgu-officer', 'lgu-admin', 'lgu-hr'];
@@ -377,7 +377,7 @@ class HRService {
 
       // Generate unique code
       const code = this.generateUniqueCode();
-      
+
       // Calculate expiration
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + expiresInHours);
@@ -402,7 +402,7 @@ class HRService {
         expires_at: expiresAt.toISOString(),
         department_name: departmentName
       });
-      
+
       const { data: linkData, error: linkError } = await supabase
         .from('signup_links')
         .insert({
@@ -517,10 +517,10 @@ class HRService {
   async deactivateSignupLink(hrId, linkId) {
     try {
       console.log('[HR-SERVICE] Deactivating signup link:', { hrId, linkId });
-      
+
       // Validate HR role
       const hrRole = await this.roleService.getUserRole(hrId);
-      
+
       const isHR = hrRole === 'lgu-hr' || hrRole === 'super-admin' || /^lgu-hr/.test(hrRole);
       if (!isHR) {
         throw new Error('Only HR can deactivate signup links');

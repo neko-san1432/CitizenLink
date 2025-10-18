@@ -72,7 +72,7 @@ export function createHeader() {
 function initializeMenuToggle() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
-  
+
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', function() {
       sidebar.classList.toggle('open');
@@ -111,17 +111,17 @@ function initializeProfileButton() {
   const closeBtn = document.getElementById('close-profile');
   const myProfileItem = document.getElementById('my-profile-item');
   const logoutItem = document.getElementById('logout-item');
-  
+
   if (profileBtn && profilePanel) {
     // Toggle profile panel
     profileBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       profilePanel.classList.toggle('hidden');
-      
+
       // Close notification panel when profile is opened
       closeNotificationPanel();
     });
-    
+
     // Close panel when close button is clicked
     if (closeBtn) {
       closeBtn.addEventListener('click', function(e) {
@@ -129,7 +129,7 @@ function initializeProfileButton() {
         profilePanel.classList.add('hidden');
       });
     }
-    
+
     // My Profile functionality
     if (myProfileItem) {
       myProfileItem.addEventListener('click', function() {
@@ -137,7 +137,7 @@ function initializeProfileButton() {
         profilePanel.classList.add('hidden');
       });
     }
-    
+
     // Logout functionality
     if (logoutItem) {
       logoutItem.addEventListener('click', async function() {
@@ -153,7 +153,7 @@ function initializeProfileButton() {
         profilePanel.classList.add('hidden');
       });
     }
-    
+
     // Close panel when clicking outside
     document.addEventListener('click', function(e) {
       if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {

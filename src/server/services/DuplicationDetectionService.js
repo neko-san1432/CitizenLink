@@ -35,7 +35,7 @@ class DuplicationDetectionService {
 
       // Merge and score results
       const merged = this.mergeAndScore(textMatches, locationMatches, temporalMatches);
-      
+
       // Save results to database
       await this.saveSimilarityResults(complaintId, merged);
 
@@ -83,7 +83,7 @@ class DuplicationDetectionService {
         complaint.title.toLowerCase(),
         candidate.title.toLowerCase()
       );
-      
+
       const descScore = this.calculateTextSimilarity(
         complaint.descriptive_su.toLowerCase(),
         candidate.descriptive_su.toLowerCase()
@@ -119,7 +119,7 @@ class DuplicationDetectionService {
 
     // Search within 1km radius
     const radiusKm = 1.0;
-    
+
     const { data: candidates, error } = await this.supabase
       .from('complaints')
       .select('*')
@@ -170,7 +170,7 @@ class DuplicationDetectionService {
     // Check for complaints within 7 days
     const beforeDate = new Date(complaint.submitted_at);
     beforeDate.setDate(beforeDate.getDate() - 7);
-    
+
     const afterDate = new Date(complaint.submitted_at);
     afterDate.setDate(afterDate.getDate() + 7);
 
@@ -235,7 +235,7 @@ class DuplicationDetectionService {
     // Calculate weighted final score
     const results = Array.from(allMatches.values()).map(match => {
       // Weighted scoring: text (40%), location (40%), temporal (20%)
-      const finalScore = 
+      const finalScore =
         match.scores.text * 0.4 +
         match.scores.location * 0.4 +
         match.scores.temporal * 0.2;
@@ -279,9 +279,9 @@ class DuplicationDetectionService {
 
     const { error } = await this.supabase
       .from('complaint_similarities')
-      .upsert(records, { 
+      .upsert(records, {
         onConflict: 'complaint_id,similar_complaint_id',
-        ignoreDuplicates: false 
+        ignoreDuplicates: false
       });
 
     if (error) {
@@ -295,9 +295,9 @@ class DuplicationDetectionService {
   calculateTextSimilarity(str1, str2) {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
-    
+
     if (longer.length === 0) return 1.0;
-    
+
     const distance = this.levenshteinDistance(longer, shorter);
     return (longer.length - distance) / longer.length;
   }
@@ -338,10 +338,10 @@ class DuplicationDetectionService {
    */
   calculateKeywordOverlap(text1, text2) {
     const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were']);
-    
+
     const words1 = text1.toLowerCase().split(/\W+/)
       .filter(word => word.length > 3 && !stopWords.has(word));
-    
+
     const words2 = text2.toLowerCase().split(/\W+/)
       .filter(word => word.length > 3 && !stopWords.has(word));
 
@@ -362,12 +362,12 @@ class DuplicationDetectionService {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRad(lat2 - lat1);
     const dLon = this.toRad(lon2 - lon1);
-    
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
@@ -381,14 +381,14 @@ class DuplicationDetectionService {
    */
   isSameStreet(location1, location2) {
     if (!location1 || !location2) return false;
-    
+
     const normalize = str => str.toLowerCase()
       .replace(/street|st\.|road|rd\.|avenue|ave\./gi, '')
       .trim();
-    
+
     const loc1 = normalize(location1);
     const loc2 = normalize(location2);
-    
+
     return loc1.includes(loc2) || loc2.includes(loc1);
   }
 

@@ -11,22 +11,22 @@ const router = express.Router();
 router.get('/news', async (req, res) => {
   try {
     const { limit = 10, offset = 0, category } = req.query;
-    
+
     let query = Database.supabase
       .from('news')
       .select('*')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1);
-    
+
     if (category) {
       query = query.eq('category', category);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data,
@@ -45,23 +45,23 @@ router.get('/news', async (req, res) => {
 router.get('/news/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const { data, error } = await Database.supabase
       .from('news')
       .select('*')
       .eq('id', id)
       .eq('status', 'published')
       .single();
-    
+
     if (error) throw error;
-    
+
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'News article not found'
       });
     }
-    
+
     return res.json({
       success: true,
       data
@@ -79,14 +79,14 @@ router.get('/news/:id', async (req, res) => {
 router.post('/news', async (req, res) => {
   try {
     const { title, content, excerpt, image_url, category, tags, status } = req.body;
-    
+
     if (!title || !content) {
       return res.status(400).json({
         success: false,
         error: 'Title and content are required'
       });
     }
-    
+
     const newsData = {
       title,
       content,
@@ -98,15 +98,15 @@ router.post('/news', async (req, res) => {
       published_at: status === 'published' ? new Date().toISOString() : null,
       author_id: req.user?.id
     };
-    
+
     const { data, error } = await Database.supabase
       .from('news')
       .insert([newsData])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data
@@ -128,7 +128,7 @@ router.post('/news', async (req, res) => {
 router.get('/events', async (req, res) => {
   try {
     const { limit = 10, offset = 0, status = 'upcoming' } = req.query;
-    
+
     const { data, error } = await Database.supabase
       .from('events')
       .select('*')
@@ -136,9 +136,9 @@ router.get('/events', async (req, res) => {
       .gte('event_date', new Date().toISOString())
       .order('event_date', { ascending: true })
       .range(offset, offset + limit - 1);
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data,
@@ -157,22 +157,22 @@ router.get('/events', async (req, res) => {
 router.get('/events/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const { data, error } = await Database.supabase
       .from('events')
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'Event not found'
       });
     }
-    
+
     return res.json({
       success: true,
       data
@@ -202,14 +202,14 @@ router.post('/events', async (req, res) => {
       max_participants,
       registration_required
     } = req.body;
-    
+
     if (!title || !description || !event_date) {
       return res.status(400).json({
         success: false,
         error: 'Title, description, and event date are required'
       });
     }
-    
+
     const eventData = {
       title,
       description,
@@ -225,15 +225,15 @@ router.post('/events', async (req, res) => {
       status: 'upcoming',
       created_by: req.user?.id
     };
-    
+
     const { data, error } = await Database.supabase
       .from('events')
       .insert([eventData])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data
@@ -255,7 +255,7 @@ router.post('/events', async (req, res) => {
 router.get('/notices', async (req, res) => {
   try {
     const { limit = 10, offset = 0, priority } = req.query;
-    
+
     let query = Database.supabase
       .from('notices')
       .select('*')
@@ -264,15 +264,15 @@ router.get('/notices', async (req, res) => {
       .order('priority', { ascending: false })
       .order('valid_from', { ascending: false })
       .range(offset, offset + limit - 1);
-    
+
     if (priority) {
       query = query.eq('priority', priority);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data,
@@ -291,22 +291,22 @@ router.get('/notices', async (req, res) => {
 router.get('/notices/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const { data, error } = await Database.supabase
       .from('notices')
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'Notice not found'
       });
     }
-    
+
     return res.json({
       success: true,
       data
@@ -333,14 +333,14 @@ router.post('/notices', async (req, res) => {
       valid_from,
       valid_until
     } = req.body;
-    
+
     if (!title || !content) {
       return res.status(400).json({
         success: false,
         error: 'Title and content are required'
       });
     }
-    
+
     const noticeData = {
       title,
       content,
@@ -353,15 +353,15 @@ router.post('/notices', async (req, res) => {
       status: 'active',
       created_by: req.user?.id
     };
-    
+
     const { data, error } = await Database.supabase
       .from('notices')
       .insert([noticeData])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return res.json({
       success: true,
       data

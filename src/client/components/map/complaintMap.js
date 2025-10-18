@@ -182,8 +182,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           const score = 0.6 * proximityScore + 0.3 * classScore + 0.1 * brevity;
           return { item, score };
         })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3); // show best 3
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3); // show best 3
 
         console.log('⭐ Top results:', scored.map(s => ({ name: s.item.display_name, score: s.score.toFixed(3) })));
 
@@ -306,5 +306,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Complaint map init error:', e);
   }
 });
-
 

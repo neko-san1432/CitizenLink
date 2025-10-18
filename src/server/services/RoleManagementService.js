@@ -28,7 +28,7 @@ class RoleManagementService {
 
       // Get current user data
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
         throw new Error('User not found');
@@ -81,7 +81,7 @@ class RoleManagementService {
   async getUserRole(userId) {
     try {
       const { data, error } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (error) throw error;
       if (!data || !data.user) throw new Error('User not found');
 
@@ -123,7 +123,7 @@ class RoleManagementService {
   canManageRole(managerRole, targetRole) {
     const managerLevel = ROLE_HIERARCHY[managerRole] || 0;
     const targetLevel = ROLE_HIERARCHY[targetRole] || 0;
-    
+
     return managerLevel > targetLevel;
   }
 
@@ -135,11 +135,11 @@ class RoleManagementService {
       // Note: Supabase doesn't allow querying auth.users directly via client
       // This would need to use a custom RPC function or edge function
       // For now, we'll use the business users table
-      
+
       // TODO: Implement proper user listing
       // This is a placeholder that would need enhancement
       console.warn('[ROLE] getUsersByRole needs custom RPC implementation');
-      
+
       return {
         users: [],
         message: 'User listing requires custom Supabase RPC function'
@@ -192,7 +192,7 @@ class RoleManagementService {
   async assignDepartment(userId, departmentId, assignedBy) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
 
       const user = currentUser.user;
@@ -232,7 +232,7 @@ class RoleManagementService {
   async transferDepartment(userId, fromDepartment, toDepartment, transferredBy, reason) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
 
       const user = currentUser.user;
@@ -313,7 +313,7 @@ class RoleManagementService {
       // HR can assign LGU officer roles (lgu-wst, lgu-engineering, etc.) and lgu-admin
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(targetNewRole);
       const isLguAdmin = /^lgu-admin/.test(targetNewRole);
-      
+
       if (!isLguOfficer && !isLguAdmin) {
         errors.push('HR can only assign LGU officer (lgu-*) and lgu-admin roles');
       }

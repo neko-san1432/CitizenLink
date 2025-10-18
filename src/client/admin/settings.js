@@ -49,7 +49,7 @@ class SettingsManager {
 
     const categories = ['all', ...new Set(this.settings.map(s => s.category))];
     const allItem = categoryList.querySelector('[data-category="all"]');
-    
+
     // Remove existing category items except "All"
     const existingItems = categoryList.querySelectorAll('[data-category]:not([data-category="all"])');
     existingItems.forEach(item => item.remove());
@@ -73,13 +73,13 @@ class SettingsManager {
 
   selectCategory(category) {
     this.currentCategory = category;
-    
+
     // Update active state
     document.querySelectorAll('.category-item').forEach(item => {
       item.classList.remove('active');
     });
     document.querySelector(`[data-category="${category}"]`).classList.add('active');
-    
+
     this.renderSettings();
   }
 
@@ -87,8 +87,8 @@ class SettingsManager {
     const content = document.getElementById('settingsContent');
     if (!content) return;
 
-    const filteredSettings = this.currentCategory === 'all' 
-      ? this.settings 
+    const filteredSettings = this.currentCategory === 'all'
+      ? this.settings
       : this.settings.filter(s => s.category === this.currentCategory);
 
     if (filteredSettings.length === 0) {
@@ -128,20 +128,20 @@ class SettingsManager {
 
   formatValue(setting) {
     switch (setting.type) {
-      case 'html':
-        return setting.value; // Show raw HTML for editing purposes
-      case 'boolean':
-        return setting.parsed_value ? 'true' : 'false';
-      case 'json':
-        return JSON.stringify(setting.parsed_value, null, 2);
-      default:
-        return setting.value;
+    case 'html':
+      return setting.value; // Show raw HTML for editing purposes
+    case 'boolean':
+      return setting.parsed_value ? 'true' : 'false';
+    case 'json':
+      return JSON.stringify(setting.parsed_value, null, 2);
+    default:
+      return setting.value;
     }
   }
 
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       key: formData.get('key'),

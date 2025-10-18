@@ -55,7 +55,7 @@ class LguOfficerController {
       const assignmentsWithUsers = await Promise.all(
         (assignments || []).map(async (assignment) => {
           let assignedByName = 'Unknown';
-          
+
           if (assignment.assigned_by) {
             const { data: assignedByUser } = await supabase.auth.admin.getUserById(assignment.assigned_by);
             if (assignedByUser?.user) {
@@ -165,7 +165,7 @@ class LguOfficerController {
 
       await supabase
         .from('complaints')
-        .update({ 
+        .update({
           status: complaintStatus,
           updated_at: new Date().toISOString()
         })
@@ -179,7 +179,7 @@ class LguOfficerController {
           message: `Officer updated task status to "${status}" for: ${assignment.complaints?.title}`,
           type: 'task_update',
           priority: 'info',
-          link: `/lgu-admin/assignments`,
+          link: '/lgu-admin/assignments',
           metadata: {
             assignment_id: assignmentId,
             complaint_id: assignment.complaint_id,
@@ -282,5 +282,4 @@ class LguOfficerController {
 }
 
 module.exports = new LguOfficerController();
-
 

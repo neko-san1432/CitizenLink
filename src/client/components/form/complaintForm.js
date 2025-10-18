@@ -14,7 +14,7 @@ import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/r
 const COMPLAINT_SUBTYPES = {
   'infrastructure': [
     'Roads & Bridges',
-    'Street Lighting', 
+    'Street Lighting',
     'Water Supply',
     'Drainage System',
     'Public Buildings',
@@ -77,13 +77,13 @@ export async function initializeComplaintForm() {
   // Check if user is citizen or in citizen mode
   const activeRole = getActiveRole();
   const inCitizenMode = isInCitizenMode();
-  
+
   console.log('[COMPLAINT FORM] Active role:', activeRole, 'Citizen mode:', inCitizenMode);
 
   if (activeRole !== 'citizen' && !inCitizenMode) {
     // User is not a citizen and not in citizen mode
     const canSwitch = await canSwitchToCitizen();
-    
+
     if (canSwitch) {
       // Show message to switch to citizen mode
       showRoleSwitchRequired(form);
@@ -162,7 +162,7 @@ function populateSubtypes(selectedType, subtypeSelect) {
 
   // Clear existing options
   subtypeSelect.innerHTML = '<option value="">Select complaint subtype</option>';
-  
+
   if (!selectedType || !COMPLAINT_SUBTYPES[selectedType]) return;
 
   // Add new options
@@ -219,7 +219,7 @@ function showRoleSwitchRequired(form) {
       </p>
     </div>
   `;
-  
+
   form.style.display = 'none';
   form.parentNode.insertBefore(message, form);
 }
@@ -244,26 +244,26 @@ function setupFormSubmission(form, fileHandler) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     console.log('[COMPLAINT FORM] Form submission started');
 
     try {
       // Get current files
       const selectedFiles = fileHandler.getFiles();
-      
+
       // Submit the complaint
       const result = await handleComplaintSubmit(form, selectedFiles);
-      
+
       console.log('[COMPLAINT FORM] Submission successful:', result);
-      
+
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());
-      
+
       // Redirect to dashboard after delay
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);
-      
+
     } catch (error) {
       console.error('[COMPLAINT FORM] Submission failed:', error);
       // Error is already handled in handleComplaintSubmit
@@ -283,11 +283,11 @@ async function loadDepartments() {
   try {
     console.log('[DEPARTMENTS] Loading departments...');
     const response = await apiClient.getActiveDepartments();
-    
+
     if (response.success && response.data) {
       const departments = response.data;
       console.log(`[DEPARTMENTS] Loaded ${departments.length} departments`);
-      
+
       container.innerHTML = departments.map(dept => `
         <div class="checkbox-item">
           <input

@@ -243,9 +243,9 @@ router.delete('/sessions/:sessionId', authenticateUser, ErrorHandler.asyncWrappe
 
     const { error } = await supabase
       .from('user_sessions')
-      .update({ 
-        is_active: false, 
-        ended_at: new Date().toISOString() 
+      .update({
+        is_active: false,
+        ended_at: new Date().toISOString()
       })
       .eq('id', sessionId)
       .eq('user_id', userId);

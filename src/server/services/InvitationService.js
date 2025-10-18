@@ -61,9 +61,3 @@ class InvitationService {
 
 module.exports = InvitationService;
 
-
-
-
-
-
-

@@ -3,7 +3,7 @@ async function loadBoundaries() {
     // Wait for map instance to be available with shorter intervals
     const maxAttempts = 20;
     let attempts = 0;
-    
+
     while (!window.simpleMap && attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 500ms to 100ms
       attempts++;
@@ -15,7 +15,7 @@ async function loadBoundaries() {
     }
 
     // Fetch boundaries data
-    const response = await fetch("/api/boundaries");
+    const response = await fetch('/api/boundaries');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -35,9 +35,9 @@ async function loadBoundaries() {
           opacity: 1,
           fillOpacity: 0, // Slight fill for better visibility
         },
-  
+
       });
-   
+
       geojsonLayer.addTo(M);
     });
 
@@ -47,8 +47,8 @@ async function loadBoundaries() {
 
     console.log('Boundaries loaded successfully');
   } catch (err) {
-    console.error("Error loading boundaries:", err.message);
-    console.error("Stack:", err.stack);
+    console.error('Error loading boundaries:', err.message);
+    console.error('Stack:', err.stack);
   }
 }
 
@@ -70,13 +70,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function addCityBoundary(map, brgyData) {
   try {
     console.log('🏙️ Creating inverted city boundary mask...');
-    
+
     // Create a feature collection from all barangay geojson
     const allFeatures = brgyData.map(barangay => barangay.geojson);
-    
+
     // Calculate the convex hull (outer boundary) of all barangays
     const cityBoundary = calculateConvexHull(allFeatures);
-    
+
     if (cityBoundary) {
       // Create a world rectangle that covers the entire map
       const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
@@ -90,7 +90,7 @@ async function addCityBoundary(map, brgyData) {
           ]]
         }
       };
-      
+
       // Create the inverted mask using a "donut" polygon
       const invertedMask = {
         type: 'Feature',
@@ -103,7 +103,7 @@ async function addCityBoundary(map, brgyData) {
           ]
         }
       };
-      
+
       // Create the inverted mask layer
       const maskLayer = L.geoJSON(invertedMask, {
         style: {
@@ -122,7 +122,7 @@ async function addCityBoundary(map, brgyData) {
           `);
         }
       });
-      
+
       // Add inverted mask to map
       maskLayer.addTo(map);
       console.log('✅ Inverted city boundary mask added successfully');

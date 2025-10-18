@@ -38,9 +38,3 @@ class AuditLogRepository {
 
 module.exports = AuditLogRepository;
 
-
-
-
-
-
-

@@ -19,7 +19,7 @@ class HeatmapControls {
       minPts: 3
     };
     this.isVisible = true;
-    
+
     this.createControls();
   }
 
@@ -31,7 +31,7 @@ class HeatmapControls {
     controlsContainer.id = 'heatmap-controls';
     controlsContainer.className = 'map-controls';
     controlsContainer.innerHTML = this.getControlsHTML();
-    
+
     // Insert after the map container
     const mapContainer = document.getElementById('map');
     if (mapContainer && mapContainer.parentNode) {
@@ -321,10 +321,10 @@ class HeatmapControls {
   updateClusteringParams() {
     const eps = parseFloat(document.getElementById('eps-slider')?.value || 0.01);
     const minPts = parseInt(document.getElementById('minpts-slider')?.value || 3);
-    
+
     this.clusteringParams.eps = eps;
     this.clusteringParams.minPts = minPts;
-    
+
     this.controller.updateClusteringParameters(eps, minPts);
   }
 
@@ -343,12 +343,12 @@ class HeatmapControls {
     // Update sliders
     const epsSlider = document.getElementById('eps-slider');
     const minPtsSlider = document.getElementById('minpts-slider');
-    
+
     if (epsSlider) {
       epsSlider.value = suggested.eps;
       this.updateEpsValue(suggested.eps);
     }
-    
+
     if (minPtsSlider) {
       minPtsSlider.value = suggested.minPts;
       this.updateMinPtsValue(suggested.minPts);
@@ -415,7 +415,7 @@ class HeatmapControls {
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
-      
+
       // Hide after 5 seconds
       setTimeout(() => {
         errorDiv.style.display = 'none';

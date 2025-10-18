@@ -15,7 +15,7 @@ export const sanitizeString = (input) => {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        "'": '&#x27;',
+        '\'': '&#x27;',
         '&': '&amp;'
       };
       return entityMap[match];

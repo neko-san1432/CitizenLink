@@ -22,7 +22,7 @@ function renderMediaList(complaintId, evidence = []) {
     if (!items || items.length === 0) return '';
     const itemsHtml = items.map((e, idx) => {
       const btnAttrs = [
-        `data-media-preview` ,
+        'data-media-preview' ,
         `data-complaint-id="${complaintId}"`,
         `data-file-name="${e.fileName || ''}"`,
         `data-file-type="${e.fileType || ''}"`,
@@ -131,9 +131,4 @@ export function initComplaintDropdowns(root = document) {
     }
   });
 }
-
-
-
-
-
 

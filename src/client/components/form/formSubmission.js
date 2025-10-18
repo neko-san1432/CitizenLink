@@ -16,7 +16,7 @@ import showMessage from '../toast.js';
 export async function handleComplaintSubmit(formElement, selectedFiles = []) {
   const submitBtn = formElement.querySelector('.submit-btn');
   const originalText = submitBtn?.textContent || 'Submit Complaint';
-  
+
   try {
     // Disable submit button
     if (submitBtn) {
@@ -41,7 +41,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
 
     // Create FormData for API submission
     const apiFormData = new FormData();
-    
+
     // Add basic fields
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {

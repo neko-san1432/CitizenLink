@@ -14,7 +14,7 @@ class EventsWidget {
     try {
       const response = await fetch(`/api/content/events?limit=${this.options.limit}`);
       const result = await response.json();
-      
+
       if (result.success) {
         this.events = result.data;
         this.render();
@@ -40,7 +40,7 @@ class EventsWidget {
     }
 
     const eventsHTML = this.events.map(item => this.renderEventItem(item)).join('');
-    
+
     this.container.innerHTML = `
       <div class="events-widget">
         <div class="events-widget-header">
@@ -58,10 +58,10 @@ class EventsWidget {
     const eventDate = new Date(item.event_date);
     const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
     const day = eventDate.getDate();
-    const time = eventDate.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    const time = eventDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
 
     const imageHTML = this.options.showImages && item.image_url
@@ -104,7 +104,7 @@ class EventsWidget {
 
   renderError(message) {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="events-widget-error">
         <p>⚠️ ${message}</p>

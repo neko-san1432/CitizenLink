@@ -15,7 +15,7 @@ class NewsWidget {
     try {
       const response = await fetch(`/api/content/news?limit=${this.options.limit}`);
       const result = await response.json();
-      
+
       if (result.success) {
         this.news = result.data;
         this.render();
@@ -41,7 +41,7 @@ class NewsWidget {
     }
 
     const newsHTML = this.news.map(item => this.renderNewsItem(item)).join('');
-    
+
     this.container.innerHTML = `
       <div class="news-widget">
         <div class="news-widget-header">
@@ -92,7 +92,7 @@ class NewsWidget {
 
   renderError(message) {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="news-widget-error">
         <p>⚠️ ${message}</p>

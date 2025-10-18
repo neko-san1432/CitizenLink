@@ -39,10 +39,10 @@ class ToastManager {
   createToast(type, message, options = {}) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     const icon = this.getIcon(type);
     const title = this.getTitle(type);
-    
+
     toast.innerHTML = `
       <div class="toast-content">
         <div class="toast-icon">${icon}</div>
@@ -122,7 +122,7 @@ class ToastManager {
 
   remove(toast) {
     if (!toast || !toast.parentNode) return;
-    
+
     toast.classList.add('toast-hide');
     setTimeout(() => {
       if (toast.parentNode) {

@@ -156,7 +156,7 @@ class ComplaintRepository {
   async assignCoordinator(id, coordinatorId) {
     const { data, error } = await this.supabase
       .from('complaints')
-      .update({ 
+      .update({
         assigned_coordinator_id: coordinatorId,
         updated_at: new Date().toISOString()
       })

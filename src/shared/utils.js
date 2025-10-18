@@ -106,7 +106,7 @@ function generateId(length = 8) {
 function parseQueryParams(queryString) {
   const params = {};
   const urlParams = new URLSearchParams(queryString);
-  
+
   for (const [key, value] of urlParams.entries()) {
     // Handle arrays (key[])
     if (key.endsWith('[]')) {
@@ -117,7 +117,7 @@ function parseQueryParams(queryString) {
       params[key] = value;
     }
   }
-  
+
   return params;
 }
 
@@ -132,7 +132,7 @@ function formatDate(date, options = {}) {
     hour: '2-digit',
     minute: '2-digit'
   };
-  
+
   const formatOptions = { ...defaultOptions, ...options };
   return new Intl.DateTimeFormat('en-US', formatOptions).format(new Date(date));
 }
@@ -161,7 +161,7 @@ function getPaginationMeta(page, limit, total) {
   const totalPages = Math.ceil(total / limit);
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
-  
+
   return {
     page: parseInt(page),
     limit: parseInt(limit),

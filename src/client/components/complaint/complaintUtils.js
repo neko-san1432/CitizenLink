@@ -30,7 +30,7 @@ export const departmentNames = {
   'health': 'Health Department',
   'environment': 'Environment Department',
   'traffic': 'Traffic Management',
-  'mayor': "Mayor's Office"
+  'mayor': 'Mayor\'s Office'
 };
 
 // Complaint type display names
@@ -66,7 +66,7 @@ export function formatComplaint(complaint) {
 export function createStatusBadge(status) {
   const color = statusColors[status] || '#6c757d';
   const displayStatus = status.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  
+
   return `<span class="status-badge" style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
     ${displayStatus}
   </span>`;
@@ -78,7 +78,7 @@ export function createStatusBadge(status) {
 export function createPriorityBadge(priority) {
   const color = priorityColors[priority] || '#6c757d';
   const displayPriority = priority.charAt(0).toUpperCase() + priority.slice(1);
-  
+
   return `<span class="priority-badge" style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
     ${displayPriority}
   </span>`;
@@ -89,7 +89,7 @@ export function createPriorityBadge(priority) {
  */
 export function createComplaintCard(complaint) {
   const formatted = formatComplaint(complaint);
-  
+
   return `
     <div class="complaint-card" data-complaint-id="${complaint.id}" style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: white;">
       <div class="complaint-header" style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 12px;">
@@ -148,10 +148,10 @@ export async function viewComplaint(complaintId) {
     if (!response.success) {
       throw new Error(response.error);
     }
-    
+
     const complaint = response.data;
     const formatted = formatComplaint(complaint);
-    
+
     // Create modal HTML
     const modalHTML = `
       <div id="complaintModal" class="modal" style="display: flex; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
@@ -218,10 +218,10 @@ export async function viewComplaint(complaintId) {
         </div>
       </div>
     `;
-    
+
     // Add modal to page
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
   } catch (error) {
     console.error('Error viewing complaint:', error);
     showMessage('error', 'Failed to load complaint details');
@@ -243,7 +243,7 @@ export function closeComplaintModal() {
  */
 export async function showStatusUpdate(complaintId, currentStatus) {
   const statusOptions = ['pending review', 'in progress', 'resolved', 'rejected', 'closed'];
-  
+
   const modalHTML = `
     <div id="statusUpdateModal" class="modal" style="display: flex; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
       <div class="modal-content" style="background-color: white; padding: 24px; border-radius: 8px; max-width: 400px; margin: 20px;">
@@ -281,19 +281,19 @@ export async function showStatusUpdate(complaintId, currentStatus) {
       </div>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
+
   // Handle form submission
   document.getElementById('statusUpdateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const newStatus = document.getElementById('newStatus').value;
     const notes = document.getElementById('adminNotes').value;
-    
+
     try {
       const response = await apiClient.updateComplaintStatus(complaintId, newStatus, notes);
-      
+
       if (response.success) {
         showMessage('success', 'Complaint status updated successfully');
         closeStatusModal();

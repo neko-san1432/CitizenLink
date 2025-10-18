@@ -4,17 +4,17 @@ import { supabase } from '../config/config.js';
 const checkAuthAndRedirect = async () => {
   try {
     console.log('🔍 Dashboard auth check starting...');
-    
+
     // Prevent multiple redirects
     if (window.location.pathname === '/login') {
       console.log('⚠️ Already on login page, skipping auth check');
       return;
     }
-    
+
     // Get current session
     console.log('🔐 Getting current session...');
     const { data: { session }, error } = await supabase.auth.getSession();
-    
+
     if (error || !session) {
       console.log('❌ No session found - Error:', error, 'Session:', session);
       console.log('🔄 Redirecting to login');
@@ -56,7 +56,7 @@ const checkAuthAndRedirect = async () => {
   } catch (error) {
     console.error('💥 Authentication check failed:', error);
     console.log('🔄 Redirecting to login due to error');
-    
+
     // Show error toast before redirecting
     try {
       const { default: showMessage } = await import('../components/toast.js');
@@ -64,7 +64,7 @@ const checkAuthAndRedirect = async () => {
     } catch (toastError) {
       console.error('Failed to show error toast:', toastError);
     }
-    
+
     setTimeout(() => {
       window.location.href = '/login';
     }, 2000);

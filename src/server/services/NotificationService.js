@@ -1,8 +1,8 @@
 const Database = require('../config/database');
-const { 
-  NOTIFICATION_TYPES, 
-  NOTIFICATION_PRIORITY, 
-  NOTIFICATION_ICONS 
+const {
+  NOTIFICATION_TYPES,
+  NOTIFICATION_PRIORITY,
+  NOTIFICATION_ICONS
 } = require('../../shared/constants');
 
 /**
@@ -57,7 +57,7 @@ class NotificationService {
     try {
       // Support both calling patterns
       let userId, notifType, notifTitle, notifMessage, notifOptions;
-      
+
       if (typeof userIdOrOptions === 'object' && !type) {
         // Object syntax: createNotification({ userId, type, title, message, ... })
         const opts = userIdOrOptions;
@@ -392,8 +392,8 @@ class NotificationService {
     };
 
     const priority = newStatus === 'resolved' ? NOTIFICATION_PRIORITY.INFO :
-                     newStatus === 'rejected' ? NOTIFICATION_PRIORITY.WARNING :
-                     NOTIFICATION_PRIORITY.INFO;
+      newStatus === 'rejected' ? NOTIFICATION_PRIORITY.WARNING :
+        NOTIFICATION_PRIORITY.INFO;
 
     return this.createNotification(
       citizenId,
@@ -413,8 +413,8 @@ class NotificationService {
    */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
-                          priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
-                          NOTIFICATION_PRIORITY.INFO;
+      priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
+        NOTIFICATION_PRIORITY.INFO;
 
     return this.createNotification(
       officerId,

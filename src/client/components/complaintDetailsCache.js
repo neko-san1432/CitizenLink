@@ -41,8 +41,3 @@ export function formatBytes(bytes) {
   return `${num.toFixed(1)} ${units[i]}`;
 }
 
-
-
-
-
-

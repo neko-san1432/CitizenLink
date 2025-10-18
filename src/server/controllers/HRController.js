@@ -21,7 +21,7 @@ class HRController {
     try {
       const { role, department_code, expires_in_hours } = req.body;
       const hrId = req.user.id;
-      
+
 
       if (!role) {
         return res.status(400).json({
@@ -78,7 +78,7 @@ class HRController {
       console.log('[HR-CONTROLLER] Deactivate signup link called');
       const { linkId } = req.params;
       const hrId = req.user.id;
-      
+
       console.log('[HR-CONTROLLER] Link ID:', linkId, 'HR ID:', hrId);
 
       const result = await this.hrService.deactivateSignupLink(hrId, linkId);

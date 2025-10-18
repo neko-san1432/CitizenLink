@@ -37,7 +37,7 @@ class CitizenLinkApp {
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
     this.app.use(cookieParser());
-    
+
     // Serve static files with proper paths
     // Prefer public assets, then fall back to src client assets
     this.app.use('/js', express.static(path.join(config.rootDir, 'public', 'js')));
@@ -47,7 +47,7 @@ class CitizenLinkApp {
     this.app.use('/assets', express.static(path.join(config.rootDir, 'src', 'client', 'assets')));
     this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
-    
+
     // Serve node_modules for browser imports
     this.app.use('/node_modules', express.static(path.join(config.rootDir, 'node_modules')));
   }
@@ -98,172 +98,172 @@ class CitizenLinkApp {
 
   setupProtectedRoutes() {
     // Dashboard route - protected and routed by role
-    this.app.get("/dashboard", authenticateUser, (req, res) => {
-      const userRole = req.user?.role || "citizen";
+    this.app.get('/dashboard', authenticateUser, (req, res) => {
+      const userRole = req.user?.role || 'citizen';
       const dashboardPath = this.getDashboardPath(userRole);
       res.sendFile(dashboardPath);
     });
 
     // General protected pages
-    this.app.get("/myProfile", authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "myProfile.html"));
+    this.app.get('/myProfile', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'myProfile.html'));
     });
 
     // File Complaint page (citizen only or staff in citizen mode)
-    this.app.get("/citizen/fileComplaint", authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "citizen", "fileComplaint.html"));
+    this.app.get('/citizen/fileComplaint', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'fileComplaint.html'));
     });
 
     // Admin pages
-    this.app.get("/admin/departments", 
-      authenticateUser, 
-      requireRole(["super-admin"]),
+    this.app.get('/admin/departments',
+      authenticateUser,
+      requireRole(['super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "admin", "departments", "index.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'departments', 'index.html'));
       }
     );
 
-    this.app.get("/admin/settings", 
-      authenticateUser, 
-      requireRole(["lgu-admin", "super-admin"]), 
+    this.app.get('/admin/settings',
+      authenticateUser,
+      requireRole(['lgu-admin', 'super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "admin", "settings", "index.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'settings', 'index.html'));
       }
     );
 
     // LGU-specific pages
-    this.app.get("/taskAssigned", 
-      authenticateUser, 
+    this.app.get('/taskAssigned',
+      authenticateUser,
       requireRole([/^lgu-(?!admin|hr)/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu", "taskAssigned.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu', 'taskAssigned.html'));
       }
     );
 
     // LGU Admin specific pages
-    this.app.get("/lgu-admin/heatmap",
+    this.app.get('/lgu-admin/heatmap',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "heatmap.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
       }
     );
 
     // Redirect /heatmap to /lgu-admin/heatmap for convenience
-    this.app.get("/heatmap",
+    this.app.get('/heatmap',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
-        res.redirect("/lgu-admin/heatmap");
+        res.redirect('/lgu-admin/heatmap');
       }
     );
 
-    this.app.get("/publish",
+    this.app.get('/publish',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'publish.html'));
       }
     );
 
-    this.app.get("/appointMembers",
+    this.app.get('/appointMembers',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "appointMembers.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'appointMembers.html'));
       }
     );
 
-    this.app.get("/lgu-admin/assignments",
+    this.app.get('/lgu-admin/assignments',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "assignments.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'assignments.html'));
       }
     );
 
     // Super Admin specific pages
-    this.app.get("/appointAdmins", 
-      authenticateUser, 
-      requireRole(["super-admin"]), 
+    this.app.get('/appointAdmins',
+      authenticateUser,
+      requireRole(['super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "super-admin", "appointAdmins.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'appointAdmins.html'));
       }
     );
 
     // Role-based dashboard shortcuts
-    this.app.get("/citizen", authenticateUser, requireRole(["citizen"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/citizen', authenticateUser, requireRole(['citizen']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/lgu", authenticateUser, requireRole(["lgu", /^lgu-/]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/lgu', authenticateUser, requireRole(['lgu', /^lgu-/]), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/coordinator", authenticateUser, requireRole(["complaint-coordinator"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/coordinator', authenticateUser, requireRole(['complaint-coordinator']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
     // Coordinator review queue list page
-    this.app.get("/coordinator/review-queue", 
-      authenticateUser, 
-      requireRole(["complaint-coordinator"]), 
+    this.app.get('/coordinator/review-queue',
+      authenticateUser,
+      requireRole(['complaint-coordinator']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review-queue.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'coordinator', 'review-queue.html'));
       }
     );
 
     // Coordinator complaint review page (individual)
-    this.app.get("/coordinator/review/:id", 
-      authenticateUser, 
-      requireRole(["complaint-coordinator"]), 
+    this.app.get('/coordinator/review/:id',
+      authenticateUser,
+      requireRole(['complaint-coordinator']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'coordinator', 'review.html'));
       }
     );
 
-    this.app.get("/hr", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/hr', authenticateUser, requireRole(['lgu-hr', /^lgu-hr/]), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/hr/link-generator", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "link-generator.html"));
+    this.app.get('/hr/link-generator', authenticateUser, requireRole(['lgu-hr', /^lgu-hr/]), (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'link-generator.html'));
     });
 
     // HR Role Changer dedicated page
-    this.app.get("/hr/role-changer",
+    this.app.get('/hr/role-changer',
       authenticateUser,
-      requireRole(["lgu-hr", /^lgu-hr/]),
+      requireRole(['lgu-hr', /^lgu-hr/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "role-changer.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'role-changer.html'));
       }
     );
 
     // Complete Position Signup page (public - no auth required)
-    this.app.get("/complete-position-signup", (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "auth", "complete-position-signup.html"));
+    this.app.get('/complete-position-signup', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'auth', 'complete-position-signup.html'));
     });
 
-    this.app.get("/lgu-admin", authenticateUser, requireRole(["lgu-admin"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/lgu-admin', authenticateUser, requireRole(['lgu-admin']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/super-admin", authenticateUser, requireRole(["super-admin"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/super-admin', authenticateUser, requireRole(['super-admin']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
     // Super Admin Role Changer dedicated page
-    this.app.get("/super-admin/role-changer",
+    this.app.get('/super-admin/role-changer',
       authenticateUser,
-      requireRole(["super-admin"]),
+      requireRole(['super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "super-admin", "role-changer.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'role-changer.html'));
       }
     );
 
 
     // Legacy API endpoints for user info
-    this.app.get("/api/user/profile", authenticateUser, (req, res) => {
+    this.app.get('/api/user/profile', authenticateUser, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
@@ -280,19 +280,19 @@ class CitizenLinkApp {
       });
     });
 
-    this.app.get("/api/user/role", authenticateUser, (req, res) => {
+    this.app.get('/api/user/role', authenticateUser, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
         data: {
-          role: user.role || "citizen",
-          name: user.name || "Unknown",
+          role: user.role || 'citizen',
+          name: user.name || 'Unknown',
         },
       });
     });
 
     // User role switching endpoint
-    this.app.post("/api/user/switch-role", authenticateUser, async (req, res) => {
+    this.app.post('/api/user/switch-role', authenticateUser, async (req, res) => {
       try {
         const { targetRole, previousRole } = req.body;
         const { user } = req;
@@ -344,9 +344,9 @@ class CitizenLinkApp {
     });
 
     // User role info endpoint (for role toggle functionality)
-    this.app.get("/api/user/role-info", authenticateUser, (req, res) => {
+    this.app.get('/api/user/role-info', authenticateUser, (req, res) => {
       const { user } = req;
-      const role = user.role || "citizen";
+      const role = user.role || 'citizen';
       const metaActual = user.raw_user_meta_data?.actual_role || null;
       // If no meta actual_role is stored, assume staff's actual role equals their current role (not citizen)
       const actualRole = metaActual || (role !== 'citizen' ? role : null);
@@ -354,7 +354,7 @@ class CitizenLinkApp {
         success: true,
         data: {
           role: role,
-          name: user.name || "Unknown",
+          name: user.name || 'Unknown',
           email: user.email,
           metadata: user.raw_user_meta_data,
           actual_role: actualRole
@@ -365,28 +365,28 @@ class CitizenLinkApp {
 
   setupPublicRoutes() {
     // Root route
-    this.app.get("/", (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "index.html"));
+    this.app.get('/', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'index.html'));
     });
 
     // Public pages
     const publicPages = ['login', 'signup', 'resetPass', 'OAuthContinuation', 'success'];
     publicPages.forEach(page => {
       this.app.get(`/${page}`, (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", `${page}.html`));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', `${page}.html`));
       });
     });
 
     // Special signup with code page
     this.app.get('/signup-with-code', (req, res) => {
-      const filePath = path.join(config.rootDir, "views", "pages", "auth", "signup-with-code.html");
+      const filePath = path.join(config.rootDir, 'views', 'pages', 'auth', 'signup-with-code.html');
       res.sendFile(filePath);
     });
 
     // Public API endpoints
-    this.app.get("/api/boundaries", async (req, res) => {
+    this.app.get('/api/boundaries', async (req, res) => {
       try {
-        const filePath = path.join(config.rootDir, "src", "client", "assets", "brgy_boundaries_location.json");
+        const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'brgy_boundaries_location.json');
         const fs = require('fs').promises;
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
@@ -395,26 +395,26 @@ class CitizenLinkApp {
       }
     });
 
-    this.app.get("/api/reverse-geocode", async (req, res) => {
+    this.app.get('/api/reverse-geocode', async (req, res) => {
       try {
         const { lat, lng } = req.query;
-        
+
         if (!lat || !lng) {
           return res.status(400).json({ error: 'Latitude and longitude are required' });
         }
 
         const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
-        
+
         const response = await fetch(nominatimUrl, {
           headers: {
             'User-Agent': 'CitizenLink/1.0 (https://citizenlink.local)'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`Nominatim API error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         res.json(data);
       } catch (error) {
@@ -426,20 +426,20 @@ class CitizenLinkApp {
 
   getDashboardPath(userRole) {
     const roleDashboards = {
-      citizen: path.join(config.rootDir, "views", "pages", "citizen", "dashboard.html"),
-      lgu: path.join(config.rootDir, "views", "pages", "lgu", "dashboard.html"),
-      "complaint-coordinator": path.join(config.rootDir, "views", "pages", "coordinator", "dashboard.html"),
-      "lgu-admin": path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html"),
-      "lgu-hr": path.join(config.rootDir, "views", "pages", "hr", "dashboard.html"),
-      "super-admin": path.join(config.rootDir, "views", "pages", "super-admin", "dashboard.html"),
+      citizen: path.join(config.rootDir, 'views', 'pages', 'citizen', 'dashboard.html'),
+      lgu: path.join(config.rootDir, 'views', 'pages', 'lgu', 'dashboard.html'),
+      'complaint-coordinator': path.join(config.rootDir, 'views', 'pages', 'coordinator', 'dashboard.html'),
+      'lgu-admin': path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'dashboard.html'),
+      'lgu-hr': path.join(config.rootDir, 'views', 'pages', 'hr', 'dashboard.html'),
+      'super-admin': path.join(config.rootDir, 'views', 'pages', 'super-admin', 'dashboard.html'),
     };
 
     // Check for department-specific roles (e.g., lgu-hr-{dept}, lgu-admin-{dept})
     if (userRole.startsWith('lgu-hr-')) {
-      return path.join(config.rootDir, "views", "pages", "hr", "dashboard.html");
+      return path.join(config.rootDir, 'views', 'pages', 'hr', 'dashboard.html');
     }
     if (userRole.startsWith('lgu-admin-')) {
-      return path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html");
+      return path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'dashboard.html');
     }
 
     return roleDashboards[userRole] || roleDashboards.citizen;
@@ -448,7 +448,7 @@ class CitizenLinkApp {
   initializeErrorHandling() {
     // 404 handler for unmatched routes
     this.app.use(ErrorHandler.notFound);
-    
+
     // Global error handler
     this.app.use(ErrorHandler.handle);
   }

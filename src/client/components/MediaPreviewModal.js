@@ -95,8 +95,3 @@ export function closeModal() {
   if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
 }
 
-
-
-
-
-

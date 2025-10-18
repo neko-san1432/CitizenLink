@@ -93,8 +93,8 @@ class DepartmentManager {
             </button>
           </div>
           <div class="officers-list" style="display: ${dept.officersVisible ? 'grid' : 'none'}">
-            ${dept.officers && dept.officers.length > 0 ? 
-              dept.officers.map(officer => `
+            ${dept.officers && dept.officers.length > 0 ?
+    dept.officers.map(officer => `
                 <div class="officer-item">
                   <div class="officer-status">
                     <div class="officer-avatar">${officer.name.charAt(0).toUpperCase()}</div>
@@ -109,9 +109,9 @@ class DepartmentManager {
                     <p class="officer-last-seen">${officer.lastSeenText}</p>
                   </div>
                 </div>
-              `).join('') : 
-              '<div class="no-officers">No officers assigned to this department</div>'
-            }
+              `).join('') :
+    '<div class="no-officers">No officers assigned to this department</div>'
+}
           </div>
         </div>
         
@@ -131,7 +131,7 @@ class DepartmentManager {
   updateStats() {
     const totalElement = document.getElementById('totalCount');
     const activeElement = document.getElementById('activeCount');
-    
+
     if (totalElement) totalElement.textContent = this.departments.length;
     if (activeElement) {
       activeElement.textContent = this.departments.filter(d => d.is_active).length;
@@ -140,7 +140,7 @@ class DepartmentManager {
 
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
@@ -207,7 +207,7 @@ class DepartmentManager {
 
     const newStatus = !department.is_active;
     const action = newStatus ? 'activate' : 'deactivate';
-    
+
     if (!confirm(`Are you sure you want to ${action} "${department.name}"?`)) {
       return;
     }
@@ -237,35 +237,35 @@ class DepartmentManager {
 
   getLastSeenText(lastSignInAt) {
     if (!lastSignInAt) return 'Never';
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return lastSignIn.toLocaleDateString();
   }
 
   getStatusClass(isOnline, lastSignInAt) {
     if (isOnline) return 'status-online';
-    
+
     if (!lastSignInAt) return 'status-offline';
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = (now - lastSignIn) / (1000 * 60);
-    
+
     // Consider "away" if last seen within 1 hour but not online
     if (diffInMinutes < 60) return 'status-away';
-    
+
     return 'status-offline';
   }
 

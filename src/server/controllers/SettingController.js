@@ -82,7 +82,7 @@ class SettingController {
       });
     } catch (error) {
       console.error('Error creating setting:', error);
-      const status = error.message.includes('Validation failed') || 
+      const status = error.message.includes('Validation failed') ||
                      error.message.includes('already exists') ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -103,7 +103,7 @@ class SettingController {
     } catch (error) {
       console.error('Error updating setting:', error);
       const status = error.message === 'Setting not found' ? 404 :
-                     error.message.includes('Validation failed') ? 400 : 500;
+        error.message.includes('Validation failed') ? 400 : 500;
       res.status(status).json({
         success: false,
         error: error.message

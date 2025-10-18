@@ -31,31 +31,30 @@ export async function canSwitchToCitizen() {
     // Get role info from API - we need actual_role to determine if user is really staff
     const response = await fetch('/api/user/role-info');
     const result = await response.json();
-    
+
     if (!result.success) {
       console.error('[ROLE_TOGGLE] Failed to get role info:', result);
       return false;
     }
-    
+
     // IMPORTANT: Check actual_role, not current role
     // actual_role tells us what the user's real role is
     // If they're in citizen mode, actual_role will still be their staff role
     const actualRole = result.data.actual_role;
     const currentRole = result.data.role;
-    
 
-    
+
     // If no actual_role exists, user is a real citizen
     if (!actualRole) {
       console.log('[ROLE_TOGGLE] No actual_role found - user is a real citizen');
       return false;
     }
-    
+
     // Check if actual_role is a switchable staff role
     const canSwitch = SWITCHABLE_ROLES.some(switchableRole => {
       return actualRole === switchableRole || actualRole?.startsWith(switchableRole + '-');
     });
-    
+
     return canSwitch;
   } catch (error) {
     console.error('[ROLE_TOGGLE] Check switch error:', error);
@@ -220,10 +219,10 @@ export function getActualRole() {
  */
 export async function initializeRoleToggle() {
   console.log('[ROLE_TOGGLE] Initializing role toggle...');
-  
+
   // Show button immediately with loading state
   createRoleToggleButton(null, false, true);
-  
+
   try {
     const canSwitch = await canSwitchToCitizen();
 
@@ -238,16 +237,16 @@ export async function initializeRoleToggle() {
     // Get role info from API (includes actual_role)
     const response = await fetch('/api/user/role-info');
     const result = await response.json();
-    
+
     console.log('[ROLE_TOGGLE] API role-info response:', result);
-    
+
     const currentRole = result?.data?.role || 'citizen';
     const actualRole = result?.data?.actual_role || currentRole;
     const isInCitizen = currentRole === 'citizen' && actualRole !== 'citizen';
 
-    console.log('[ROLE_TOGGLE] Role state:', { 
-      currentRole, 
-      actualRole, 
+    console.log('[ROLE_TOGGLE] Role state:', {
+      currentRole,
+      actualRole,
       isInCitizen,
       condition: `currentRole(${currentRole}) === 'citizen' && actualRole(${actualRole}) !== 'citizen'`
     });
@@ -293,15 +292,15 @@ function createRoleToggleButton(actualRole, isInCitizen, isLoading = false) {
   const toggleBtn = document.createElement('button');
   toggleBtn.id = 'role-toggle-btn';
   toggleBtn.className = 'role-toggle-btn';
-  
+
   if (isLoading) {
     toggleBtn.title = 'Loading...';
     toggleBtn.innerHTML = '⏳';
     toggleBtn.disabled = true;
   } else {
     toggleBtn.title = isInCitizen ? `Switch back to ${formatRoleName(actualRole)}` : 'Switch to Citizen Mode';
-    toggleBtn.innerHTML = isInCitizen ? `👔` : `👤`;
-    
+    toggleBtn.innerHTML = isInCitizen ? '👔' : '👤';
+
     toggleBtn.addEventListener('click', async () => {
       if (isInCitizenMode()) {
         const success = await switchToActualRole();
@@ -343,23 +342,23 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
 
   toggleBtn.disabled = false;
   toggleBtn.title = isInCitizen ? `Switch back to ${formatRoleName(actualRole)}` : 'Switch to Citizen Mode';
-  toggleBtn.innerHTML = isInCitizen ? `👔` : `👤`;
-  
+  toggleBtn.innerHTML = isInCitizen ? '👔' : '👤';
+
   console.log('[ROLE_TOGGLE] Button config:', {
     actualRole,
     isInCitizen,
     title: toggleBtn.title,
     icon: toggleBtn.innerHTML
   });
-  
+
   // Remove old listener and add new one
   const newBtn = toggleBtn.cloneNode(true);
   toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
-  
+
   newBtn.addEventListener('click', async () => {
     const inCitizenMode = isInCitizenMode();
     console.log('[ROLE_TOGGLE] Button clicked, isInCitizenMode:', inCitizenMode);
-    
+
     if (inCitizenMode) {
       console.log('[ROLE_TOGGLE] Attempting to switch back to actual role...');
       const success = await switchToActualRole();
@@ -387,19 +386,19 @@ function formatRoleName(role) {
     const dept = role.replace(/^lgu-/, '').toUpperCase();
     return `LGU Officer (${dept})`;
   }
-  
+
   // Handle LGU admin roles with department codes
   if (/^lgu-admin-/.test(role)) {
     const dept = role.replace(/^lgu-admin-/, '').toUpperCase();
     return `LGU Admin (${dept})`;
   }
-  
+
   // Handle LGU HR roles with department codes
   if (/^lgu-hr-/.test(role)) {
     const dept = role.replace(/^lgu-hr-/, '').toUpperCase();
     return `HR (${dept})`;
   }
-  
+
   const names = {
     'complaint-coordinator': 'Coordinator',
     'lgu-admin': 'LGU Admin',

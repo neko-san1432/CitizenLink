@@ -12,9 +12,9 @@ class SimilarityCalculatorService {
 
   /**
    * Find all similar complaints within a radius
-   * @param {number} latitude 
-   * @param {number} longitude 
-   * @param {number} radiusKm 
+   * @param {number} latitude
+   * @param {number} longitude
+   * @param {number} radiusKm
    * @param {object} filters - Additional filters (type, dateRange, etc.)
    */
   async findSimilarInRadius(latitude, longitude, radiusKm = 0.5, filters = {}) {
@@ -155,7 +155,7 @@ class SimilarityCalculatorService {
       let i = 0;
       while (i < neighbors.length) {
         const neighbor = neighbors[i];
-        
+
         if (!visited.has(neighbor.id)) {
           visited.add(neighbor.id);
           const neighborNeighbors = this.findNeighbors(
@@ -163,7 +163,7 @@ class SimilarityCalculatorService {
             complaints,
             radiusKm
           );
-          
+
           if (neighborNeighbors.length >= minPoints) {
             neighbors.push(...neighborNeighbors);
           }
@@ -204,7 +204,7 @@ class SimilarityCalculatorService {
   findNeighbors(complaint, allComplaints, radiusKm) {
     return allComplaints.filter(other => {
       if (other.id === complaint.id) return false;
-      
+
       const distance = this.calculateDistance(
         complaint.latitude,
         complaint.longitude,
@@ -239,7 +239,7 @@ class SimilarityCalculatorService {
    */
   calculateClusterRadius(center, complaints) {
     return Math.max(
-      ...complaints.map(c => 
+      ...complaints.map(c =>
         this.calculateDistance(
           center.lat,
           center.lng,
@@ -264,7 +264,7 @@ class SimilarityCalculatorService {
     // Calculate time differences
     const timeDiffs = [];
     for (let i = 1; i < sorted.length; i++) {
-      const diff = (new Date(sorted[i].submitted_at) - new Date(sorted[i - 1].submitted_at)) 
+      const diff = (new Date(sorted[i].submitted_at) - new Date(sorted[i - 1].submitted_at))
         / (1000 * 60 * 60 * 24); // Days
       timeDiffs.push(diff);
     }
@@ -339,12 +339,12 @@ class SimilarityCalculatorService {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRad(lat2 - lat1);
     const dLon = this.toRad(lon2 - lon1);
-    
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }

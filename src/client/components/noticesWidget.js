@@ -14,7 +14,7 @@ class NoticesWidget {
     try {
       const response = await fetch(`/api/content/notices?limit=${this.options.limit}`);
       const result = await response.json();
-      
+
       if (result.success) {
         this.notices = result.data;
         this.render();
@@ -40,7 +40,7 @@ class NoticesWidget {
     }
 
     const noticesHTML = this.notices.map(item => this.renderNoticeItem(item)).join('');
-    
+
     this.container.innerHTML = `
       <div class="notices-widget">
         <div class="notices-widget-header">
@@ -63,7 +63,7 @@ class NoticesWidget {
 
     const priorityClass = `notice-priority-${item.priority}`;
     const priorityIcon = this.getPriorityIcon(item.priority);
-    
+
     const priorityHTML = this.options.showPriority
       ? `<span class="notice-item-priority ${priorityClass}">${priorityIcon} ${item.priority.toUpperCase()}</span>`
       : '';
@@ -108,7 +108,7 @@ class NoticesWidget {
 
   renderError(message) {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="notices-widget-error">
         <p>⚠️ ${message}</p>

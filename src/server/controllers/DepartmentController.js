@@ -65,7 +65,7 @@ class DepartmentController {
       });
     } catch (error) {
       console.error('Error creating department:', error);
-      const status = error.message.includes('Validation failed') || 
+      const status = error.message.includes('Validation failed') ||
                      error.message.includes('already exists') ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -86,7 +86,7 @@ class DepartmentController {
     } catch (error) {
       console.error('Error updating department:', error);
       const status = error.message === 'Department not found' ? 404 :
-                     error.message.includes('Validation failed') || 
+        error.message.includes('Validation failed') ||
                      error.message.includes('already exists') ? 400 : 500;
       res.status(status).json({
         success: false,

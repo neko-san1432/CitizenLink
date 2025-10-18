@@ -34,56 +34,56 @@ router.post('/',
   (req, res) => complaintController.createComplaint(req, res)
 );
 
-router.get('/my', 
+router.get('/my',
   authenticateUser,
   requireRole(['citizen']),
   (req, res) => complaintController.getMyComplaints(req, res)
 );
 
-router.get('/stats', 
+router.get('/stats',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.getComplaintStats(req, res)
 );
 
-router.get('/locations', 
+router.get('/locations',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.getComplaintLocations(req, res)
 );
 
-router.get('/', 
+router.get('/',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.getAllComplaints(req, res)
 );
 
-router.get('/:id', 
+router.get('/:id',
   authenticateUser,
   (req, res) => complaintController.getComplaintById(req, res)
 );
 
-router.patch('/:id/status', 
+router.patch('/:id/status',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin']),
   (req, res) => complaintController.updateComplaintStatus(req, res)
 );
 
 // Human confirmation workflow transitions (officer -> admin -> citizen)
-router.patch('/:id/transition', 
+router.patch('/:id/transition',
   authenticateUser,
   requireRole([/^lgu-/, 'super-admin', 'citizen']),
   upload, // allow evidence on transition
   (req, res) => complaintController.transitionStatus(req, res)
 );
 
-router.patch('/:id/assign-coordinator', 
+router.patch('/:id/assign-coordinator',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => complaintController.assignCoordinator(req, res)
 );
 
-router.patch('/:id/transfer', 
+router.patch('/:id/transfer',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => complaintController.transferComplaint(req, res)

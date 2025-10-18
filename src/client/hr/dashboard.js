@@ -77,7 +77,7 @@ function setupFormHandlers() {
     const userId = document.getElementById('strip-titles-user').value;
     const reason = document.getElementById('strip-titles-reason').value;
 
-    if (!confirm(`Are you sure you want to strip all titles from this user? This will revert them to citizen status.`)) {
+    if (!confirm('Are you sure you want to strip all titles from this user? This will revert them to citizen status.')) {
       return;
     }
 

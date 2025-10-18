@@ -11,7 +11,7 @@ let selectedTask = null;
  */
 async function initTaskAssignedPage() {
   console.log('[TASK_ASSIGNED] Initializing...');
-  
+
   setupEventListeners();
   await loadTasks();
   updateStats();
@@ -50,7 +50,7 @@ function setupEventListeners() {
 async function loadTasks() {
   try {
     const response = await apiClient.get('/lgu/my-tasks');
-    
+
     if (response.success) {
       allTasks = response.data || [];
       filteredTasks = [...allTasks];
@@ -88,25 +88,25 @@ function filterTasks(status) {
  */
 function sortTasks(sortBy) {
   switch (sortBy) {
-    case 'deadline':
-      filteredTasks.sort((a, b) => {
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return new Date(a.deadline) - new Date(b.deadline);
-      });
-      break;
-    case 'priority':
-      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-      filteredTasks.sort((a, b) => {
-        return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
-      });
-      break;
-    case 'newest':
-      filteredTasks.sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at));
-      break;
-    case 'oldest':
-      filteredTasks.sort((a, b) => new Date(a.assigned_at) - new Date(b.assigned_at));
-      break;
+  case 'deadline':
+    filteredTasks.sort((a, b) => {
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return new Date(a.deadline) - new Date(b.deadline);
+    });
+    break;
+  case 'priority':
+    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+    filteredTasks.sort((a, b) => {
+      return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
+    });
+    break;
+  case 'newest':
+    filteredTasks.sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at));
+    break;
+  case 'oldest':
+    filteredTasks.sort((a, b) => new Date(a.assigned_at) - new Date(b.assigned_at));
+    break;
   }
 
   renderTasks();
@@ -194,7 +194,7 @@ function createTaskCard(task) {
  */
 function openTaskModal(task) {
   selectedTask = task;
-  
+
   const modal = document.getElementById('task-modal');
   if (!modal) return;
 
@@ -209,7 +209,7 @@ function openTaskModal(task) {
   document.getElementById('modal-task-status').className = `badge status-${task.assignment_status}`;
   document.getElementById('modal-assigned-by').textContent = task.assigned_by_name;
   document.getElementById('modal-assigned-date').textContent = formatDate(task.assigned_at);
-  
+
   if (task.deadline) {
     document.getElementById('modal-deadline').textContent = formatDate(task.deadline);
     document.getElementById('modal-deadline-row').style.display = 'flex';
@@ -254,15 +254,15 @@ function updateModalActions(status) {
   completeBtn.style.display = 'none';
 
   switch (status) {
-    case 'pending':
-      acceptBtn.style.display = 'inline-block';
-      break;
-    case 'active':
-      startBtn.style.display = 'inline-block';
-      break;
-    case 'in_progress':
-      completeBtn.style.display = 'inline-block';
-      break;
+  case 'pending':
+    acceptBtn.style.display = 'inline-block';
+    break;
+  case 'active':
+    startBtn.style.display = 'inline-block';
+    break;
+  case 'in_progress':
+    completeBtn.style.display = 'inline-block';
+    break;
   }
 }
 
@@ -346,7 +346,7 @@ function updateStats() {
   const pending = allTasks.filter(t => t.assignment_status === 'pending').length;
   const inProgress = allTasks.filter(t => t.assignment_status === 'in_progress').length;
   const completed = allTasks.filter(t => t.assignment_status === 'completed').length;
-  const overdue = allTasks.filter(t => 
+  const overdue = allTasks.filter(t =>
     t.deadline && new Date(t.deadline) < new Date() && t.assignment_status !== 'completed'
   ).length;
 
@@ -408,7 +408,7 @@ function formatRelativeDate(dateString) {
   const now = new Date();
   const diffTime = Math.abs(now - date);
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;

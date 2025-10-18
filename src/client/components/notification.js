@@ -3,7 +3,7 @@ import { brandConfig } from '../config/index.js';
 import apiClient from '../config/apiClient.js';
 
 // Notification state management
-let notificationState = {
+const notificationState = {
   page: 0,
   limit: 10,
   hasMore: true,
@@ -23,19 +23,19 @@ export function initializeNotificationButton() {
   const markAllReadBtn = document.getElementById('mark-all-read');
   const showMoreBtn = document.getElementById('show-more-notifications');
   const retryBtn = document.getElementById('retry-notifications');
-  
+
   if (notificationBtn && notificationPanel) {
     // Toggle notification panel
     notificationBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       notificationPanel.classList.toggle('hidden');
-      
+
       // Load notifications when panel is opened
       if (!notificationPanel.classList.contains('hidden')) {
         loadNotifications(true);
       }
     });
-    
+
     // Close panel when close button is clicked
     if (closeBtn) {
       closeBtn.addEventListener('click', function(e) {
@@ -43,38 +43,38 @@ export function initializeNotificationButton() {
         notificationPanel.classList.add('hidden');
       });
     }
-    
+
     // Mark all as read functionality
     if (markAllReadBtn) {
       markAllReadBtn.addEventListener('click', function() {
         markAllNotificationsAsRead();
       });
     }
-    
+
     // Show more notifications
     if (showMoreBtn) {
       showMoreBtn.addEventListener('click', function() {
         loadNotifications(false);
       });
     }
-    
+
     // Retry loading notifications
     if (retryBtn) {
       retryBtn.addEventListener('click', function() {
         loadNotifications(true);
       });
     }
-    
+
     // Close panel when clicking outside
     document.addEventListener('click', function(e) {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
         notificationPanel.classList.add('hidden');
       }
     });
-    
+
     // Initial notification count load
     loadUnreadCount();
-    
+
     // Start real-time polling for unread count
     startPolling();
   }
@@ -94,7 +94,7 @@ function startPolling() {
   if (pollingInterval) {
     clearInterval(pollingInterval);
   }
-  
+
   // Poll every 30 seconds
   pollingInterval = setInterval(() => {
     loadUnreadCount();
@@ -113,7 +113,7 @@ export function stopPolling() {
 async function loadUnreadCount() {
   try {
     const response = await apiClient.get('/api/notifications/count');
-    
+
     if (response.success) {
       updateNotificationCount(response.count);
     }
@@ -125,31 +125,31 @@ async function loadUnreadCount() {
 // Load notifications with lazy loading
 async function loadNotifications(reset = false) {
   if (notificationState.loading) return;
-  
+
   if (reset) {
     notificationState.page = 0;
     notificationState.notifications = [];
     notificationState.hasMore = true;
   }
-  
+
   if (!notificationState.hasMore) return;
-  
+
   notificationState.loading = true;
   showLoadingState(true);
   hideErrorState();
-  
+
   try {
     // Simulate API call - replace with actual API endpoint
     const response = await fetchNotifications(notificationState.page, notificationState.limit);
-    
+
     if (response.success) {
       const newNotifications = response.data.notifications;
       const hasMore = response.data.hasMore;
-      
+
       notificationState.notifications = reset ? newNotifications : [...notificationState.notifications, ...newNotifications];
       notificationState.hasMore = hasMore;
       notificationState.page++;
-      
+
       renderNotifications();
       updateShowMoreButton();
       updateNotificationCount(notificationState.notifications.filter(n => !n.read).length);
@@ -169,17 +169,17 @@ async function loadNotifications(reset = false) {
 async function fetchNotifications(page, limit) {
   try {
     const response = await apiClient.get(`/api/notifications?page=${page}&limit=${limit}`);
-    
+
     if (!response.success) {
       throw new Error('Failed to fetch notifications');
     }
-    
+
     // Format created_at to relative time
     const formattedNotifications = response.data.notifications.map(notif => ({
       ...notif,
       time: formatRelativeTime(notif.created_at)
     }));
-    
+
     return {
       success: true,
       data: {
@@ -202,7 +202,7 @@ function formatRelativeTime(timestamp) {
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
-  
+
   if (diffSecs < 60) return 'Just now';
   if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
@@ -215,18 +215,18 @@ function formatRelativeTime(timestamp) {
 function renderNotifications() {
   const content = document.getElementById('notification-content');
   if (!content) return;
-  
+
   if (notificationState.notifications.length === 0) {
     content.innerHTML = '<div class="no-notifications">No notifications yet</div>';
     return;
   }
-  
+
   const html = notificationState.notifications.map(notification => {
     const priorityClass = notification.priority === 'urgent' ? 'notification-urgent' :
-                         notification.priority === 'warning' ? 'notification-warning' : '';
-    
+      notification.priority === 'warning' ? 'notification-warning' : '';
+
     const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
-    
+
     return `
       <div class="notification-item ${notification.read ? 'read' : ''} ${priorityClass}" 
            data-id="${notification.id}" 
@@ -241,15 +241,15 @@ function renderNotifications() {
       </div>
     `;
   }).join('');
-  
+
   content.innerHTML = html;
-  
+
   // Add click handlers for notifications with links
   content.querySelectorAll('.notification-item[data-link]').forEach(item => {
     item.addEventListener('click', async function() {
       const notifId = this.dataset.id;
       const link = this.dataset.link;
-      
+
       // Mark as read
       try {
         await apiClient.put(`/api/notifications/${notifId}/read`);
@@ -258,7 +258,7 @@ function renderNotifications() {
       } catch (error) {
         console.warn('[NOTIFICATION] Failed to mark as read:', error);
       }
-      
+
       // Navigate to link
       if (link) {
         closeNotificationPanel();
@@ -279,7 +279,7 @@ function escapeHtml(text) {
 function updateShowMoreButton() {
   const showMoreBtn = document.getElementById('show-more-notifications');
   if (!showMoreBtn) return;
-  
+
   if (!notificationState.hasMore) {
     showMoreBtn.style.display = 'none';
   } else {
@@ -316,16 +316,16 @@ function hideErrorState() {
 async function markAllNotificationsAsRead() {
   try {
     const response = await apiClient.put('/api/notifications/read-all');
-    
+
     if (response.success) {
       // Update local state
       notificationState.notifications.forEach(notification => {
         notification.read = true;
       });
-      
+
       renderNotifications();
       updateNotificationCount(0);
-      
+
       // Close panel
       const notificationPanel = document.getElementById('notification-panel');
       if (notificationPanel) {

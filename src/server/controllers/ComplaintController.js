@@ -17,15 +17,15 @@ class ComplaintController {
       }
 
       const complaint = await this.complaintService.createComplaint(
-        user.id, 
-        complaintData, 
+        user.id,
+        complaintData,
         files
       );
 
       const response = {
         success: true,
         data: complaint,
-        message: "Complaint submitted successfully"
+        message: 'Complaint submitted successfully'
       };
 
       if (complaint.primary_department || complaint.assigned_coordinator_id) {
@@ -37,9 +37,9 @@ class ComplaintController {
       }
 
       res.status(201).json(response);
-      console.log("[COMPLAINT] Enhanced complaint submission completed successfully");
+      console.log('[COMPLAINT] Enhanced complaint submission completed successfully');
     } catch (error) {
-      console.error("[COMPLAINT] Submission error:", error);
+      console.error('[COMPLAINT] Submission error:', error);
       const status = error.message.includes('Validation failed') ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -70,10 +70,10 @@ class ComplaintController {
         }
       });
     } catch (error) {
-      console.error("Error fetching user complaints:", error);
+      console.error('Error fetching user complaints:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch complaints"
+        error: 'Failed to fetch complaints'
       });
     }
   }
@@ -96,8 +96,8 @@ class ComplaintController {
         data: complaint
       });
     } catch (error) {
-      console.error("Error fetching complaint:", error);
-      const status = error.message === 'Complaint not found' || 
+      console.error('Error fetching complaint:', error);
+      const status = error.message === 'Complaint not found' ||
                      error.message === 'Access denied' ? 404 : 500;
       res.status(status).json({
         success: false,
@@ -129,10 +129,10 @@ class ComplaintController {
         }
       });
     } catch (error) {
-      console.error("Error fetching all complaints:", error);
+      console.error('Error fetching all complaints:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch complaints"
+        error: 'Failed to fetch complaints'
       });
     }
   }
@@ -146,26 +146,26 @@ class ComplaintController {
       if (!status) {
         return res.status(400).json({
           success: false,
-          error: "Status is required"
+          error: 'Status is required'
         });
       }
 
       const complaint = await this.complaintService.updateComplaintStatus(
-        id, 
-        status, 
-        notes, 
+        id,
+        status,
+        notes,
         user.id
       );
 
       res.json({
         success: true,
         data: complaint,
-        message: "Complaint status updated successfully"
+        message: 'Complaint status updated successfully'
       });
     } catch (error) {
-      console.error("Error updating complaint status:", error);
+      console.error('Error updating complaint status:', error);
       const status = error.message === 'Complaint not found' ? 404 :
-                     error.message === 'Invalid status' ? 400 : 500;
+        error.message === 'Invalid status' ? 400 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -219,23 +219,23 @@ class ComplaintController {
       if (!coordinator_id) {
         return res.status(400).json({
           success: false,
-          error: "Coordinator ID is required"
+          error: 'Coordinator ID is required'
         });
       }
 
       const complaint = await this.complaintService.assignCoordinator(
-        id, 
-        coordinator_id, 
+        id,
+        coordinator_id,
         user.id
       );
 
       res.json({
         success: true,
         data: complaint,
-        message: "Coordinator assigned successfully"
+        message: 'Coordinator assigned successfully'
       });
     } catch (error) {
-      console.error("Error assigning coordinator:", error);
+      console.error('Error assigning coordinator:', error);
       const status = error.message === 'Complaint not found' ? 404 : 500;
       res.status(status).json({
         success: false,
@@ -253,7 +253,7 @@ class ComplaintController {
       if (!from_department || !to_department || !reason) {
         return res.status(400).json({
           success: false,
-          error: "From department, to department, and reason are required"
+          error: 'From department, to department, and reason are required'
         });
       }
 
@@ -268,10 +268,10 @@ class ComplaintController {
       res.json({
         success: true,
         data: complaint,
-        message: "Complaint transferred successfully"
+        message: 'Complaint transferred successfully'
       });
     } catch (error) {
-      console.error("Error transferring complaint:", error);
+      console.error('Error transferring complaint:', error);
       const status = error.message === 'Complaint not found' ? 404 : 500;
       res.status(status).json({
         success: false,
@@ -294,22 +294,22 @@ class ComplaintController {
         data: stats
       });
     } catch (error) {
-      console.error("Error fetching complaint stats:", error);
+      console.error('Error fetching complaint stats:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch complaint statistics"
+        error: 'Failed to fetch complaint statistics'
       });
     }
   }
 
   async getComplaintLocations(req, res) {
     try {
-      
-      const { 
-        status, 
-        type, 
-        department, 
-        startDate, 
+
+      const {
+        status,
+        type,
+        department,
+        startDate,
         endDate,
         includeResolved = 'true'
       } = req.query;
@@ -329,10 +329,10 @@ class ComplaintController {
         count: locations.length
       });
     } catch (error) {
-      console.error("[COMPLAINT-CONTROLLER] Error fetching complaint locations:", error);
+      console.error('[COMPLAINT-CONTROLLER] Error fetching complaint locations:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch complaint locations"
+        error: 'Failed to fetch complaint locations'
       });
     }
   }

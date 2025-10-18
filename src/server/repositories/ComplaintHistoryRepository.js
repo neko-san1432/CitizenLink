@@ -36,9 +36,3 @@ class ComplaintHistoryRepository {
 
 module.exports = ComplaintHistoryRepository;
 
-
-
-
-
-
-
