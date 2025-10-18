@@ -67,6 +67,7 @@ jobs:
           fi
 
       - name: Commit security fixes
+        id: commit-security-fixes
         if: steps.file-changes.outputs.changes-detected == 'true'
         run: |
           git config --local user.email "security-bot@github.com"

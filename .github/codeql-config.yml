@@ -3,9 +3,8 @@ name: "CitizenLink CodeQL Configuration"
 disable-default-queries: false
 
 queries:
-  # Include security and quality queries
+  # Include security and quality queries (valid query packs)
   - uses: security-and-quality
-  - uses: security-expert
   - uses: security-extended
 
 paths-ignore:
@@ -34,8 +33,6 @@ rules:
   - id: js/enabling-cors
     severity: warning
 
-  # Add more rule suppressions as needed based on your specific alerts
-
 # Configure query suites for different purposes
 query-filters:
   - exclude:
@@ -44,7 +41,6 @@ query-filters:
       tags: "experimental"
 
 # Baseline for suppressing existing issues
-# This helps establish a baseline of acceptable issues
 baseline:
   # Set to true to only report new issues, suppressing existing ones
   new-issues-only: false
