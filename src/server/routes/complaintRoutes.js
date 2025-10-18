@@ -3,6 +3,7 @@ const multer = require('multer');
 const ComplaintController = require('../controllers/ComplaintController');
 const { authenticateUser, requireRole } = require('../middleware/auth');
 const { csrfProtection } = require('../middleware/csrf');
+const { complaintLimiter, uploadLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
 const complaintController = new ComplaintController();
@@ -29,6 +30,7 @@ const upload = multer({
 
 router.post('/',
   authenticateUser,
+  complaintLimiter,
   upload,
   csrfProtection,
   (req, res) => complaintController.createComplaint(req, res)

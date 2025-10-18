@@ -57,7 +57,7 @@ class CitizenLinkApp {
     this.app.use('/api', routes);
 
     // Session cookie helpers for client
-    this.app.post('/auth/session', (req, res) => {
+    this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
         const token = req.body?.access_token;
         if (!token) {
@@ -75,7 +75,7 @@ class CitizenLinkApp {
       }
     });
 
-    this.app.delete('/auth/session', (req, res) => {
+    this.app.delete('/auth/session', authLimiter, (req, res) => {
       try {
         res.clearCookie('sb_access_token');
         return res.json({ success: true });
@@ -263,7 +263,7 @@ class CitizenLinkApp {
 
 
     // Legacy API endpoints for user info
-    this.app.get('/api/user/profile', authenticateUser, (req, res) => {
+    this.app.get('/api/user/profile', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
@@ -280,7 +280,7 @@ class CitizenLinkApp {
       });
     });
 
-    this.app.get('/api/user/role', authenticateUser, (req, res) => {
+    this.app.get('/api/user/role', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
@@ -292,7 +292,7 @@ class CitizenLinkApp {
     });
 
     // User role switching endpoint
-    this.app.post('/api/user/switch-role', authenticateUser, async (req, res) => {
+    this.app.post('/api/user/switch-role', authenticateUser, authLimiter, async (req, res) => {
       try {
         const { targetRole, previousRole } = req.body;
         const { user } = req;
@@ -344,7 +344,7 @@ class CitizenLinkApp {
     });
 
     // User role info endpoint (for role toggle functionality)
-    this.app.get('/api/user/role-info', authenticateUser, (req, res) => {
+    this.app.get('/api/user/role-info', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       const role = user.role || 'citizen';
       const metaActual = user.raw_user_meta_data?.actual_role || null;

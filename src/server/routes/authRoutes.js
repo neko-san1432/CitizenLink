@@ -19,14 +19,14 @@ const router = express.Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/signup', ErrorHandler.asyncWrapper(AuthController.signup));
+router.post('/signup', authLimiter, ErrorHandler.asyncWrapper(AuthController.signup));
 
 /**
  * @route   POST /api/auth/signup-with-code
  * @desc    Register a new user with HR signup code
  * @access  Public
  */
-router.post('/signup-with-code', ErrorHandler.asyncWrapper(AuthController.signupWithCode));
+router.post('/signup-with-code', authLimiter, ErrorHandler.asyncWrapper(AuthController.signupWithCode));
 
 /**
  * @route   POST /api/auth/login
@@ -163,7 +163,7 @@ router.put('/profile', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
  * @desc    Change user password
  * @access  Private
  */
-router.post('/change-password', authenticateUser, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));
+router.post('/change-password', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));
 
 /**
  * @route   POST /api/auth/logout
@@ -177,14 +177,14 @@ router.post('/logout', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
  * @desc    Complete OAuth registration with mobile number
  * @access  Private
  */
-router.post('/complete-oauth', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuth));
+router.post('/complete-oauth', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(AuthController.completeOAuth));
 
 /**
  * @route   POST /api/auth/complete-oauth-hr
  * @desc    Complete OAuth registration with HR signup code
  * @access  Private
  */
-router.post('/complete-oauth-hr', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
+router.post('/complete-oauth-hr', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
 
 /**
  * @route   GET /api/auth/sessions
@@ -273,7 +273,7 @@ router.delete('/sessions/:sessionId', authenticateUser, ErrorHandler.asyncWrappe
  * @desc    Refresh access token
  * @access  Public (but requires refresh token)
  */
-router.post('/refresh', ErrorHandler.asyncWrapper(async (req, res) => {
+router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
