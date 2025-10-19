@@ -18,41 +18,45 @@ module.exports = {
   },
   rules: {
     // Code style rules for all files
-    'indent': ['error', 2],
+    'indent': ['error', 2, { 'SwitchCase': 1 }],
     'linebreak-style': ['error', 'unix'],
-    'quotes': ['error', 'single'],
+    'quotes': ['error', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': true }],
     'semi': ['error', 'always'],
-    'no-unused-vars': ['warn'],
+    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     'no-console': 'off',
     'no-var': 'error',
-    'prefer-const': 'error',
+    'prefer-const': ['error', { 'destructuring': 'all' }],
     'no-multiple-empty-lines': ['error', { max: 2, maxBOF: 0, maxEOF: 1 }],
-    'no-trailing-spaces': 'error',
-    'no-empty': 'warn', // Allow empty blocks but warn
-    'no-inner-declarations': 'warn', // Allow inner declarations but warn
-    'no-case-declarations': 'warn', // Allow declarations in case blocks but warn
-    'no-useless-escape': 'warn', // Allow unnecessary escapes but warn
-    'no-prototype-builtins': 'warn', // Allow prototype builtins but warn
-    'no-dupe-class-members': 'error', // Prevent duplicate class members
-    'no-dupe-else-if': 'error', // Prevent duplicate else-if conditions
+    'no-trailing-spaces': ['error', { 'skipBlankLines': false, 'ignoreComments': false }],
+    'no-empty': ['error', { 'allowEmptyCatch': true }],
+    'no-inner-declarations': 'error',
+    'no-case-declarations': 'error', // Block-scoped declarations in case blocks
+    'no-useless-escape': 'error', // Unnecessary escape characters
+    'no-prototype-builtins': 'error',
+    'no-dupe-class-members': 'error',
+    'no-dupe-else-if': 'error',
+    'no-constant-condition': ['error', { 'checkLoops': false }],
 
-    // Security rules - manually specified to avoid config issues
+    // Security rules - comprehensive security scanning
     'security/detect-buffer-noassert': 'error',
-    'security/detect-child-process': 'warn',
+    'security/detect-child-process': 'error',
     'security/detect-disable-mustache-escape': 'error',
     'security/detect-eval-with-expression': 'error',
     'security/detect-new-buffer': 'error',
     'security/detect-no-csrf-before-method-override': 'error',
-    'security/detect-non-literal-fs-filename': 'warn',
-    'security/detect-non-literal-regexp': 'warn',
-    'security/detect-non-literal-require': 'warn',
-    'security/detect-object-injection': 'warn', // Allow but warn about object injection
-    'security/detect-possible-timing-attacks': 'warn',
-    'security/detect-unsafe-regex': 'warn',
+    'security/detect-non-literal-fs-filename': 'error', // File system operations with non-literal paths
+    'security/detect-non-literal-regexp': 'error', // Regular expressions with non-literal patterns
+    'security/detect-non-literal-require': 'error', // Require calls with non-literal paths
+    'security/detect-object-injection': 'error', // Object injection vulnerabilities
+    'security/detect-possible-timing-attacks': 'error', // Potential timing attack vulnerabilities
+    'security/detect-unsafe-regex': 'error', // Unsafe regular expressions (ReDoS)
+    'security/detect-pseudoRandomBytes': 'error', // Weak random number generation
+    'security/detect-buffer-overflow': 'error', // Buffer overflow vulnerabilities
+    'security/detect-no-csrf-before-method-override': 'error', // CSRF protection
 
-    // XSS protection rules - relaxed for client code
-    'no-unsanitized/method': 'warn',
-    'no-unsanitized/property': 'warn',
+    // XSS protection rules - comprehensive sanitization checks
+    'no-unsanitized/method': 'error', // Unsafe method calls
+    'no-unsanitized/property': 'error', // Unsafe property access
 
     // Additional security rules
     'no-eval': 'error',

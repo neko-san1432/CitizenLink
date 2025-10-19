@@ -18,6 +18,7 @@
     "codeql-scan-verbose": "node scripts/codeql-local-scan.js --verbose",
     "codeql-scan-sarif": "node scripts/codeql-local-scan.js --output-format=sarif",
     "security-scan": "node scripts/security-autoresolve.js",
+    "security-scan-detailed": "node scripts/security-scan-detailed.js",
     "security-audit": "node scripts/security-audit.js",
     "security-audit-npm": "npm audit --audit-level=moderate",
     "security-fix": "npm run security-audit-npm && npm audit fix && npm run lint:fix",
