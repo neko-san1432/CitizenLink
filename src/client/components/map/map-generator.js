@@ -324,7 +324,6 @@ function destroySimpleMap() {
     window.simpleMapLayerControl = null;
   }
 
-
   if (window._simpleMapResizeObserver) {
     window._simpleMapResizeObserver.disconnect();
     window._simpleMapResizeObserver = null;

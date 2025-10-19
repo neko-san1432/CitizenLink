@@ -26,7 +26,6 @@ class LguAdminController {
       // Extract department from role (e.g., lgu-admin-{dept} -> {dept})
       const departmentCode = userRole.replace('lgu-admin-', '');
 
-
       // Get the department ID
       const { data: department, error: deptError } = await supabase
         .from('departments')
@@ -41,7 +40,6 @@ class LguAdminController {
           error: 'Department not found'
         });
       }
-
 
       // Step 1: Get all complaints for this department with filters
       let query = supabase
@@ -66,7 +64,6 @@ class LguAdminController {
         query = query.eq('priority', priority);
       }
 
-
       const { data: departmentComplaints, error: complaintsError } = await query;
 
       if (complaintsError) {
@@ -77,7 +74,6 @@ class LguAdminController {
           details: complaintsError.message
         });
       }
-
 
       // Step 2: Get existing assignments for these complaints
       const complaintIds = departmentComplaints.map(c => c.id);
@@ -114,7 +110,6 @@ class LguAdminController {
           complaints: complaint
         };
       });
-
 
       // Get officer information for assigned complaints
       const assignedOfficerIds = departmentAssignments
@@ -172,7 +167,6 @@ class LguAdminController {
         notes: assignment.notes
       }));
 
-
       return res.json({
         success: true,
         data: formattedAssignments
@@ -197,7 +191,6 @@ class LguAdminController {
 
       // Extract department from role
       const departmentCode = userRole.replace('lgu-admin-', '');
-
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -256,7 +249,6 @@ class LguAdminController {
           mobile: user.user_metadata?.mobile
         }));
 
-
       return res.json({
         success: true,
         data: officers
@@ -286,7 +278,6 @@ class LguAdminController {
           error: 'Complaint ID and Officer ID are required'
         });
       }
-
 
       // Extract department from role
       const departmentCode = userRole.replace('lgu-admin-', '');
@@ -396,7 +387,6 @@ class LguAdminController {
         }
       );
 
-
       return res.json({
         success: true,
         data: assignment
@@ -413,4 +403,3 @@ class LguAdminController {
 }
 
 module.exports = new LguAdminController();
-

@@ -277,15 +277,15 @@ window.openAssignModal = function() {
   document.getElementById('assign-priority').value = currentComplaint.complaint.priority || 'medium';
 };
 
-window.openDuplicateModal = function() {
+window.showDuplicateModal = function() {
   document.getElementById('duplicate-modal').classList.add('active');
 };
 
-window.openRelatedModal = function() {
+window.linkRelatedComplaints = function() {
   Toast.info('Link related complaints feature coming soon');
 };
 
-window.openRejectModal = function() {
+window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
 };
 
@@ -477,4 +477,3 @@ function formatDate(dateString) {
     day: 'numeric'
   });
 }
-

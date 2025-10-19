@@ -21,11 +21,7 @@ const csrfProtection = (req, res, next) => {
   if (req.headers['x-csrf-token']) {
     token = req.headers['x-csrf-token'];
   }
-  // Check for token in body (for JSON requests)
-  else if (req.body && req.body._csrf) {
-    token = req.body._csrf;
-  }
-  // Check for token in multer fields (for FormData)
+  // Check for token in body (for JSON requests and FormData)
   else if (req.body && req.body._csrf) {
     token = req.body._csrf;
   }

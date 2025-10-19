@@ -85,7 +85,6 @@ class LguOfficerController {
         })
       );
 
-
       return res.json({
         success: true,
         data: assignmentsWithUsers
@@ -282,4 +281,3 @@ class LguOfficerController {
 }
 
 module.exports = new LguOfficerController();
-

@@ -404,4 +404,3 @@ try {
   // Start token expiry monitoring
   startTokenExpiryMonitoring();
 } catch {}
-

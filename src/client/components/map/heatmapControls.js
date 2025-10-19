@@ -49,7 +49,6 @@ class HeatmapControls {
     return `
       <div class="control-section">
         <h3>🗺️ Heatmap Controls</h3>
-        
 
         <!-- Filters -->
         <div class="control-group">
@@ -110,16 +109,16 @@ class HeatmapControls {
               Enable DBSCAN Clustering
             </label>
           </div>
-          
+
           <div class="clustering-params" id="clustering-params" style="display: none;">
             <label>Epsilon (km):</label>
             <input type="range" id="eps-slider" min="0.005" max="0.05" step="0.005" value="0.01">
             <span id="eps-value">0.01</span>
-            
+
             <label>Min Points:</label>
             <input type="range" id="minpts-slider" min="2" max="10" step="1" value="3">
             <span id="minpts-value">3</span>
-            
+
             <button id="suggest-params" class="btn-small">Suggest Parameters</button>
           </div>
         </div>
@@ -224,7 +223,6 @@ class HeatmapControls {
     });
   }
 
-
   /**
    * Apply current filters
    */
@@ -313,7 +311,6 @@ class HeatmapControls {
     }
     this.clusteringParams.minPts = parseInt(value);
   }
-
 
   /**
    * Update clustering parameters
@@ -422,7 +419,6 @@ class HeatmapControls {
       }, 5000);
     }
   }
-
 
   /**
    * Toggle controls visibility

@@ -374,35 +374,35 @@ class HeatmapVisualization {
               <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
             </div>
           </div>
-          
+
           <div class="popup-content">
             <div class="complaint-info">
               <div class="info-row">
                 <span class="label">Type:</span>
                 <span class="value">${complaint.type}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Location:</span>
                 <span class="value">${complaint.location}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Department:</span>
                 <span class="value">${complaint.department || 'Not assigned'}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Submitted:</span>
                 <span class="value">${submittedDate} at ${submittedTime}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            
+
             <div class="popup-actions">
               <div class="access-denied">
                 <p>🔒 Access restricted to assigned department</p>
@@ -422,35 +422,35 @@ class HeatmapVisualization {
             <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
           </div>
         </div>
-        
+
         <div class="popup-content">
           <div class="complaint-info">
             <div class="info-row">
               <span class="label">Type:</span>
               <span class="value">${complaint.type}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Location:</span>
               <span class="value">${complaint.location}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Department:</span>
               <span class="value">${complaint.department || 'Not assigned'}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Submitted:</span>
               <span class="value">${submittedDate} at ${submittedTime}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
             </div>
           </div>
-          
+
           <div class="popup-actions">
             <button class="btn-details" onclick="viewComplaintDetails('${complaint.id}')">
               📋 View Full Details

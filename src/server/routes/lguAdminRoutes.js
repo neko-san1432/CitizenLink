@@ -22,4 +22,3 @@ router.get('/department-officers', LguAdminController.getDepartmentOfficers.bind
 router.post('/assign-complaint', LguAdminController.assignComplaint.bind(LguAdminController));
 
 module.exports = router;
-

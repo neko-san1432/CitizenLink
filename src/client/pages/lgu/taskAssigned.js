@@ -159,9 +159,9 @@ function createTaskCard(task) {
           ${getStatusIcon(task.assignment_status)} ${formatStatus(task.assignment_status)}
         </div>
       </div>
-      
+
       <h3 class="task-title">${escapeHtml(task.complaint_title)}</h3>
-      
+
       <div class="task-meta">
         <div class="task-type">
           <span class="icon">📂</span>
@@ -424,4 +424,3 @@ function escapeHtml(text) {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initTaskAssignedPage);
-

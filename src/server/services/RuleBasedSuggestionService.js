@@ -97,4 +97,3 @@ class RuleBasedSuggestionService {
 }
 
 module.exports = RuleBasedSuggestionService;
-

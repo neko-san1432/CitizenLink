@@ -19,7 +19,7 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
     // Skip rate limiting for localhost/development
     const hostname = req.hostname || req.get('host')?.split(':')[0] || '';
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0';
-    
+
     // Always skip rate limiting in development mode or localhost
     if (process.env.NODE_ENV === 'development' || isLocalhost) {
       console.log(`[RATE_LIMIT] Skipping rate limit for development/localhost: ${hostname} (NODE_ENV: ${process.env.NODE_ENV})`);
@@ -85,7 +85,7 @@ const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === 'true' || pr
 
 // Create a no-op rate limiter for when rate limiting is disabled
 const noOpLimiter = (req, res, next) => {
-  console.log(`[RATE_LIMIT] Rate limiting disabled - allowing request`);
+  console.log('[RATE_LIMIT] Rate limiting disabled - allowing request');
   next();
 };
 
@@ -114,7 +114,7 @@ function clearRateLimit(ip = null) {
     console.log(`[RATE_LIMIT] Cleared rate limit for IP: ${ip}`);
   } else {
     rateLimitStore.clear();
-    console.log(`[RATE_LIMIT] Cleared all rate limits`);
+    console.log('[RATE_LIMIT] Cleared all rate limits');
   }
 }
 
@@ -124,11 +124,11 @@ function getRateLimitStatus(ip) {
   if (!data) {
     return { requests: 0, remaining: 1000, resetTime: null };
   }
-  
+
   const now = Date.now();
   const windowStart = now - (15 * 60 * 1000); // 15 minutes
   const validRequests = data.requests.filter(timestamp => timestamp > windowStart);
-  
+
   return {
     requests: validRequests.length,
     remaining: Math.max(0, 1000 - validRequests.length),

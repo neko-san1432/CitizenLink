@@ -88,7 +88,6 @@ class HeatmapController {
     this.updateStatistics();
   }
 
-
   /**
    * Toggle clustering on/off
    * @param {boolean} enabled - Whether clustering should be enabled
@@ -251,7 +250,6 @@ class HeatmapController {
       }
     }, 2000);
   }
-
 
   /**
    * Get current map bounds

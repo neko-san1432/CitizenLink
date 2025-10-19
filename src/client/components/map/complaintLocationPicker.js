@@ -244,7 +244,6 @@ function setupLocationPicker(map) {
     div.innerHTML = '<button type="button" title="Use my location">📍</button>';
     div.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px;';
 
-    div.onclick = function() {
       console.log('📍 Geolocation button clicked');
 
       if (navigator.geolocation) {

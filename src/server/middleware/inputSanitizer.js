@@ -65,7 +65,7 @@ class InputSanitizer {
   // Sanitize HTTP headers
   static sanitizeHeaders(headers) {
     const sensitiveHeaders = ['user-agent', 'referer', 'origin', 'x-forwarded-for'];
-    
+
     for (const [key, value] of Object.entries(headers)) {
       if (sensitiveHeaders.includes(key.toLowerCase()) && typeof value === 'string') {
         // Sanitize sensitive headers but preserve functionality
@@ -144,32 +144,32 @@ class InputSanitizer {
       /onload\s*=/gi,
       /onerror\s*=/gi,
       /onclick\s*=/gi,
-      
+
       // SQL injection patterns
       /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/gi,
       /(--|#|\/\*|\*\/)/g,
       /(\bor\b\s+\d+\s*=\s*\d+)/gi,
       /(\band\b\s+\d+\s*=\s*\d+)/gi,
-      
+
       // Command injection patterns
       /[;&|`$()]/g,
       /\.\.\//g,
       /\.\.\\/g,
-      
+
       // XSS patterns
       /<iframe[^>]*>.*?<\/iframe>/gi,
       /<object[^>]*>.*?<\/object>/gi,
       /<embed[^>]*>.*?<\/embed>/gi,
       /<link[^>]*>.*?<\/link>/gi,
       /<meta[^>]*>.*?<\/meta>/gi,
-      
+
       // Path traversal
       /\.\.\//g,
       /\.\.\\/g,
-      
+
       // LDAP injection
       /[()=*!&|]/g,
-      
+
       // NoSQL injection
       /\$where/gi,
       /\$ne/gi,
@@ -369,7 +369,7 @@ class InputSanitizer {
       }
 
       if (typeof obj === 'object' && obj !== null) {
-        return Object.entries(obj).some(([key, value]) => 
+        return Object.entries(obj).some(([key, value]) =>
           checkForSQLInjection(value, path ? `${path}.${key}` : key)
         );
       }
@@ -377,8 +377,8 @@ class InputSanitizer {
       return false;
     };
 
-    if (checkForSQLInjection(req.body, 'body') || 
-        checkForSQLInjection(req.query, 'query') || 
+    if (checkForSQLInjection(req.body, 'body') ||
+        checkForSQLInjection(req.query, 'query') ||
         checkForSQLInjection(req.params, 'params')) {
       return res.status(400).json({
         success: false,
@@ -418,7 +418,7 @@ class InputSanitizer {
       }
 
       if (typeof obj === 'object' && obj !== null) {
-        return Object.entries(obj).some(([key, value]) => 
+        return Object.entries(obj).some(([key, value]) =>
           checkForXSS(value, path ? `${path}.${key}` : key)
         );
       }
@@ -426,8 +426,8 @@ class InputSanitizer {
       return false;
     };
 
-    if (checkForXSS(req.body, 'body') || 
-        checkForXSS(req.query, 'query') || 
+    if (checkForXSS(req.body, 'body') ||
+        checkForXSS(req.query, 'query') ||
         checkForXSS(req.params, 'params')) {
       return res.status(400).json({
         success: false,
@@ -443,26 +443,26 @@ class InputSanitizer {
   // Rate limiting for specific endpoints
   static createEndpointRateLimit(windowMs, maxRequests, message = 'Too many requests') {
     const requests = new Map();
-    
+
     return (req, res, next) => {
       const key = `${req.ip}-${req.path}`;
       const now = Date.now();
       const windowStart = now - windowMs;
-      
+
       // Clean up old entries
       for (const [k, v] of requests.entries()) {
         if (v.resetTime < now) {
           requests.delete(k);
         }
       }
-      
+
       const userRequests = requests.get(key) || { count: 0, resetTime: now + windowMs };
-      
+
       if (userRequests.resetTime < now) {
         userRequests.count = 0;
         userRequests.resetTime = now + windowMs;
       }
-      
+
       if (userRequests.count >= maxRequests) {
         return res.status(429).json({
           success: false,
@@ -470,10 +470,10 @@ class InputSanitizer {
           retryAfter: Math.ceil((userRequests.resetTime - now) / 1000)
         });
       }
-      
+
       userRequests.count++;
       requests.set(key, userRequests);
-      
+
       next();
     };
   }
@@ -489,7 +489,7 @@ class InputSanitizer {
       path: req?.path,
       method: req?.method
     };
-    
+
     console.log(`[SECURITY-AUDIT] ${JSON.stringify(logEntry)}`);
   }
 }

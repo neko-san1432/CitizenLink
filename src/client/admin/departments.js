@@ -84,7 +84,7 @@ class DepartmentManager {
         </div>
         <h3>${dept.name}</h3>
         <p>${dept.description || 'No description provided'}</p>
-        
+
         <div class="officers-section" id="officers-${dept.id}">
           <div class="officers-header">
             <h4>Officers (${dept.officers ? dept.officers.length : 0})</h4>
@@ -114,7 +114,7 @@ class DepartmentManager {
 }
           </div>
         </div>
-        
+
         <div class="department-actions">
           <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
             Edit

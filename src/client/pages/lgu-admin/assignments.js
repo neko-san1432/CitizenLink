@@ -224,7 +224,7 @@ function createAssignmentHTML(assignment) {
           <span class="status-badge ${statusClass}">${statusText}</span>
         </div>
       </div>
-      
+
       <div class="assignment-details">
         ${escapeHtml(assignment.description || 'No description provided').substring(0, 200)}${assignment.description?.length > 200 ? '...' : ''}
       </div>
@@ -427,4 +427,3 @@ function formatDateTimeLocal(date) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
-

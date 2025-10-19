@@ -25,4 +25,3 @@ router.put('/read-all', NotificationController.markAllAsRead.bind(NotificationCo
 router.delete('/:id', NotificationController.deleteNotification.bind(NotificationController));
 
 module.exports = router;
-

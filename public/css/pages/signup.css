@@ -1,16 +1,11 @@
-/* ===== MODERN SIGNUP PAGE STYLES ===== */
-
-/* Inherit from login page styles and add signup-specific styles */
 .signup-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
 
-/* Phone Input Styling */
 .phone-input-wrapper {
   position: relative;
-  display: flex;
   align-items: center;
   border: 1px solid var(--gray-300);
   border-radius: var(--radius-md);
@@ -39,11 +34,9 @@
 .phone-input {
   flex: 1;
   border: none;
-  padding: var(--space-3) var(--space-4);
   background: transparent;
   color: var(--gray-900);
   font-family: inherit;
-  font-size: 0.875rem;
   line-height: 1.25;
   outline: none;
 }
@@ -52,11 +45,8 @@
   color: var(--gray-400);
 }
 
-/* Password Strength Indicator */
 .password-strength {
   margin-top: var(--space-2);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
 }
 
@@ -65,7 +55,6 @@
   height: 4px;
   background: var(--gray-200);
   border-radius: var(--radius-sm);
-  overflow: hidden;
 }
 
 .strength-fill {
@@ -73,7 +62,6 @@
   width: 0%;
   background: var(--gray-400);
   transition: all var(--transition-normal);
-  border-radius: var(--radius-sm);
 }
 
 .strength-fill.weak {
@@ -92,14 +80,12 @@
 }
 
 .strength-fill.strong {
-  width: 100%;
   background: var(--success-500);
 }
 
 .strength-text {
   font-size: 0.75rem;
   color: var(--gray-500);
-  font-weight: 500;
 }
 
 .strength-text.weak {
@@ -118,22 +104,18 @@
   color: var(--success-600);
 }
 
-/* Terms and Privacy Checkbox */
 .terms-checkbox {
   align-items: flex-start;
   gap: var(--space-3);
 }
 
 .terms-checkbox .checkbox-label {
-  font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--gray-700);
 }
 
 .terms-link {
   color: var(--primary-600);
   text-decoration: none;
-  font-weight: 500;
   transition: color var(--transition-fast);
 }
 
@@ -142,7 +124,6 @@
   text-decoration: underline;
 }
 
-/* Form Validation States */
 .input:invalid {
   border-color: var(--error-500);
 }
@@ -159,45 +140,45 @@
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-/* Password Match Indicator */
 .password-match {
   margin-top: var(--space-1);
-  font-size: 0.75rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
 }
 
 .password-match.match {
   color: var(--success-600);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .password-match.no-match {
   color: var(--error-600);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .password-match-icon {
   width: 16px;
   height: 16px;
-  display: flex;
-  align-items: center;
   justify-content: center;
 }
 
-/* Enhanced Form Groups */
 .form-group {
+  margin-bottom: var(--space-4);
   position: relative;
 }
 
 .form-group.has-error .input {
   border-color: var(--error-500);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.06);
 }
 
 .form-group.has-success .input {
   border-color: var(--success-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.06);
 }
 
 .error-message {
@@ -205,38 +186,23 @@
   top: 100%;
   left: 0;
   right: 0;
-  margin-top: var(--space-1);
-  font-size: 0.75rem;
-  color: var(--error-600);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
 }
 
 .success-message {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: var(--space-1);
-  font-size: 0.75rem;
-  color: var(--success-600);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+  color: var(--success-700);
+  background: rgba(16,185,129,0.06);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16,185,129,0.12);
+  font-weight: 600;
 }
 
-/* Loading States for Form Submission */
 .signup-form.loading .btn {
-  position: relative;
   color: transparent;
 }
 
 .signup-form.loading .btn::after {
   content: '';
-  position: absolute;
   width: 20px;
   height: 20px;
   top: 50%;
@@ -249,36 +215,32 @@
   animation: spin 1s linear infinite;
 }
 
-/* Progress Indicator */
 .signup-progress {
   margin-bottom: var(--space-6);
   padding: var(--space-4);
   background: var(--primary-50);
-  border-radius: var(--radius-md);
   border: 1px solid var(--primary-200);
+  border-radius: var(--radius-lg);
 }
 
 .progress-steps {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: var(--space-3);
 }
 
 .progress-step {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
   flex: 1;
-  position: relative;
 }
 
 .progress-step::after {
   content: '';
   position: absolute;
   top: 12px;
-  left: 50%;
   right: -50%;
   height: 2px;
   background: var(--gray-300);
@@ -294,21 +256,14 @@
 }
 
 .progress-step.completed::after {
-  background: var(--success-500);
+  background: var(--primary-500);
 }
 
 .step-number {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  background: var(--gray-300);
   color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
   font-weight: 600;
-  position: relative;
   z-index: 2;
 }
 
@@ -317,85 +272,54 @@
 }
 
 .progress-step.completed .step-number {
-  background: var(--success-500);
+  background: var(--primary-600);
+  color: white;
 }
 
 .step-label {
-  font-size: 0.75rem;
   color: var(--gray-600);
-  font-weight: 500;
   text-align: center;
 }
 
 .progress-step.active .step-label {
   color: var(--primary-600);
+  font-weight: 600;
 }
 
 .progress-step.completed .step-label {
-  color: var(--success-600);
+  color: var(--primary-600);
+  font-weight: 600;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
-  .signup-form {
+  .progress-steps {
     gap: var(--space-4);
   }
-  
-  .phone-input-wrapper {
+
+  .progress-step {
     flex-direction: column;
     align-items: stretch;
-  }
-  
-  .phone-prefix {
     border-right: none;
     border-bottom: 1px solid var(--gray-300);
     text-align: center;
-  }
-  
-  .progress-steps {
-    flex-direction: column;
     gap: var(--space-2);
   }
-  
-  .progress-step::after {
-    display: none;
-  }
-  
+
   .step-label {
+    display: none;
     font-size: 0.7rem;
   }
 }
 
 @media (max-width: 480px) {
-  .signup-form {
+  .signup-progress {
     gap: var(--space-3);
-  }
-  
-  .phone-prefix {
     padding: var(--space-2) var(--space-3);
-    font-size: 0.8rem;
-  }
-  
-  .phone-input {
-    padding: var(--space-2) var(--space-3);
-  }
-  
-  .terms-checkbox {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-  
-  .terms-checkbox .checkbox-label {
-    font-size: 0.8rem;
-    line-height: 1.4;
   }
 }
 
-/* ===== DARK MODE SUPPORT ===== */
+/* Dark mode styles */
 .dark .phone-prefix {
-  background: var(--gray-200);
-  color: var(--gray-600);
   border-color: var(--gray-300);
 }
 
@@ -408,11 +332,11 @@
 }
 
 .dark .strength-bar {
-  background: var(--gray-300);
+  background: var(--gray-700);
 }
 
 .dark .strength-text {
-  color: var(--gray-400);
+  color: var(--gray-300);
 }
 
 .dark .terms-checkbox .checkbox-label {
@@ -420,37 +344,31 @@
 }
 
 .dark .signup-progress {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
+  background: var(--gray-700);
 }
 
 .dark .step-number {
-  background: var(--gray-400);
+  background: var(--gray-600);
+  color: var(--gray-200);
 }
 
 .dark .step-label {
-  color: var(--gray-400);
+  color: var(--gray-300);
 }
 
-/* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
-  .strength-fill {
+  .auth-pattern {
     transition: none;
-  }
-  
-  .signup-form.loading .btn::after {
     animation: none;
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
-  .phone-input-wrapper {
+  .btn {
     border-width: 2px;
   }
-  
-  .strength-bar {
+
+  .input {
     border: 1px solid var(--gray-400);
   }
 }
-

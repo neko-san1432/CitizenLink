@@ -62,7 +62,6 @@ class RoleManagementService {
       // Log the role change
       await this.logRoleChange(userId, currentRole, newRole, performedBy, metadata);
 
-
       return {
         success: true,
         user: updatedUser.user,

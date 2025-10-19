@@ -22,7 +22,6 @@ class HRController {
       const { role, department_code, expires_in_hours } = req.body;
       const hrId = req.user.id;
 
-
       if (!role) {
         return res.status(400).json({
           success: false,

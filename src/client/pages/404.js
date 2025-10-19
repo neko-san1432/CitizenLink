@@ -11,4 +11,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('404 Error - Page not found:', window.location.pathname);
   } catch {}
 });
-

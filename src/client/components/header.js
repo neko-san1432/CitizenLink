@@ -18,7 +18,7 @@ export function createHeader() {
           <span class="brand-text">${brandConfig.name}</span>
         </a>
       </div>
-      
+
       <div class="header-right">
         <button id="theme-toggle" class="header-action theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,7 +33,7 @@ export function createHeader() {
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
         </button>
-        
+
         <div class="notification-container">
           <button id="notification-btn" class="header-action notification-btn" title="Notifications">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -72,7 +72,7 @@ export function createHeader() {
             </div>
           </div>
         </div>
-        
+
         <div class="profile-container">
           <button id="profile-btn" class="header-action profile-btn" title="Profile">
             <div class="profile-avatar">U</div>
@@ -165,16 +165,16 @@ function initializeHeaderScroll() {
   if (!headerContainer) return;
 
   let lastScrollY = window.scrollY;
-  
+
   window.addEventListener('scroll', () => {
     const currentScrollY = window.scrollY;
-    
+
     if (currentScrollY > 10) {
       headerContainer.classList.add('scrolled');
     } else {
       headerContainer.classList.remove('scrolled');
     }
-    
+
     lastScrollY = currentScrollY;
   });
 }

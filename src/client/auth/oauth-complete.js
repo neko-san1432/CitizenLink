@@ -217,4 +217,3 @@ document.getElementById('pc').addEventListener('click', () => {
 
 // Prefill data on page load
 prefillOAuthData();
-

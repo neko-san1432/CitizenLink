@@ -306,4 +306,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Complaint map init error:', e);
   }
 });
-

@@ -262,7 +262,6 @@ class CitizenLinkApp {
       }
     );
 
-
     // Legacy API endpoints for user info
     this.app.get('/api/user/profile', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;

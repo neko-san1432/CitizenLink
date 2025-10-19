@@ -702,7 +702,6 @@ class CoordinatorService {
         user.raw_user_meta_data?.role === adminRole
       );
 
-
       // Create notifications for each admin
       for (const admin of admins) {
         try {

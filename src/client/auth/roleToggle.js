@@ -39,7 +39,7 @@ export async function canSwitchToCitizen() {
       console.log('[ROLE_TOGGLE] Using cached role info');
       const actualRole = roleInfoCache.data.actual_role;
       const currentRole = roleInfoCache.data.role;
-      
+
       // If no actual_role exists, user is a real citizen
       if (!actualRole) {
         console.log('[ROLE_TOGGLE] No actual_role found - user is a real citizen');
@@ -72,7 +72,6 @@ export async function canSwitchToCitizen() {
     // If they're in citizen mode, actual_role will still be their staff role
     const actualRole = result.data.actual_role;
     const currentRole = result.data.role;
-
 
     // If no actual_role exists, user is a real citizen
     if (!actualRole) {
@@ -273,7 +272,7 @@ export async function initializeRoleToggle() {
     } else {
       const response = await fetch('/api/user/role-info');
       result = await response.json();
-      
+
       // Cache the result
       roleInfoCache = result;
       roleInfoCacheTime = now;

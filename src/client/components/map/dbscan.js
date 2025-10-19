@@ -212,4 +212,3 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.DBSCAN = DBSCAN;
 }
-

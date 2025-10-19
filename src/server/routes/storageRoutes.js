@@ -29,4 +29,3 @@ router.get('/signed-url', authenticateUser, async (req, res) => {
 });
 
 module.exports = router;
-

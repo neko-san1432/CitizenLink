@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { clearRateLimit, getRateLimitStatus, DISABLE_RATE_LIMITING } = require('../middleware/rateLimiting');
-
 // Admin endpoint to clear rate limits
 router.post('/clear', (req, res) => {
   try {
     const { ip } = req.body;
-    
     if (ip) {
       clearRateLimit(ip);
       res.json({
@@ -30,13 +28,11 @@ router.post('/clear', (req, res) => {
     });
   }
 });
-
 // Admin endpoint to check rate limit status
 router.get('/status/:ip?', (req, res) => {
   try {
     const ip = req.params.ip || req.ip || req.connection.remoteAddress;
     const status = getRateLimitStatus(ip);
-    
     res.json({
       success: true,
       ip: ip,
@@ -52,7 +48,6 @@ router.get('/status/:ip?', (req, res) => {
     });
   }
 });
-
 // Admin endpoint to check if rate limiting is disabled
 router.get('/config', (req, res) => {
   res.json({
@@ -62,5 +57,4 @@ router.get('/config', (req, res) => {
     disableEnvVar: process.env.DISABLE_RATE_LIMITING
   });
 });
-
 module.exports = router;
