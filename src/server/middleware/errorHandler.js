@@ -110,7 +110,7 @@ class ErrorHandler {
   static getErrorCode(err) {
     // Generate a unique error code for tracking without exposing internal details
     const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
+    const random = require('crypto').randomInt(0, 1000);
     return `ERR_${timestamp}_${random}`;
   }
 

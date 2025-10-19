@@ -18,9 +18,9 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
   return (req, res, next) => {
     // Skip rate limiting for localhost/development
     const hostname = req.hostname || req.get('host')?.split(':')[0] || '';
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || process.env.NODE_ENV === 'development';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0';
     
-    // Always skip rate limiting in development mode
+    // Always skip rate limiting in development mode or localhost
     if (process.env.NODE_ENV === 'development' || isLocalhost) {
       console.log(`[RATE_LIMIT] Skipping rate limit for development/localhost: ${hostname} (NODE_ENV: ${process.env.NODE_ENV})`);
       return next();
@@ -80,23 +80,61 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
   };
 }
 
+// Check if rate limiting should be disabled entirely
+const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === 'true' || process.env.NODE_ENV === 'development';
+
+// Create a no-op rate limiter for when rate limiting is disabled
+const noOpLimiter = (req, res, next) => {
+  console.log(`[RATE_LIMIT] Rate limiting disabled - allowing request`);
+  next();
+};
+
 // General API rate limiting - very permissive for development
-const apiLimiter = createRateLimiter(50000, 15 * 60 * 1000); // 50000 requests per 15 minutes
+const apiLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(1000, 15 * 60 * 1000); // 1000 requests per 15 minutes
 
 // Stricter rate limiting for authentication endpoints - more permissive for dev
-const authLimiter = createRateLimiter(10000, 15 * 60 * 1000); // 10000 requests per 15 minutes
+const authLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes
 
 // Very strict rate limiting for login attempts
-const loginLimiter = createRateLimiter(1000, 15 * 60 * 1000); // 1000 requests per 15 minutes
+const loginLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(20, 15 * 60 * 1000); // 20 requests per 15 minutes
 
 // Rate limiting for password reset requests
-const passwordResetLimiter = createRateLimiter(3, 60 * 60 * 1000); // 3 requests per hour
+const passwordResetLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(5, 60 * 60 * 1000); // 5 requests per hour
 
 // Rate limiting for file uploads
-const uploadLimiter = createRateLimiter(10, 15 * 60 * 1000); // 10 uploads per 15 minutes
+const uploadLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(20, 15 * 60 * 1000); // 20 uploads per 15 minutes
 
 // Rate limiting for complaint submissions
-const complaintLimiter = createRateLimiter(5, 60 * 60 * 1000); // 5 complaints per hour
+const complaintLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(10, 60 * 60 * 1000); // 10 complaints per hour
+
+// Utility function to clear rate limits for a specific IP or all IPs
+function clearRateLimit(ip = null) {
+  if (ip) {
+    rateLimitStore.delete(ip);
+    console.log(`[RATE_LIMIT] Cleared rate limit for IP: ${ip}`);
+  } else {
+    rateLimitStore.clear();
+    console.log(`[RATE_LIMIT] Cleared all rate limits`);
+  }
+}
+
+// Utility function to get rate limit status for an IP
+function getRateLimitStatus(ip) {
+  const data = rateLimitStore.get(ip);
+  if (!data) {
+    return { requests: 0, remaining: 1000, resetTime: null };
+  }
+  
+  const now = Date.now();
+  const windowStart = now - (15 * 60 * 1000); // 15 minutes
+  const validRequests = data.requests.filter(timestamp => timestamp > windowStart);
+  
+  return {
+    requests: validRequests.length,
+    remaining: Math.max(0, 1000 - validRequests.length),
+    resetTime: data.resetTime
+  };
+}
 
 module.exports = {
   apiLimiter,
@@ -105,4 +143,7 @@ module.exports = {
   passwordResetLimiter,
   uploadLimiter,
   complaintLimiter,
+  clearRateLimit,
+  getRateLimitStatus,
+  DISABLE_RATE_LIMITING
 };

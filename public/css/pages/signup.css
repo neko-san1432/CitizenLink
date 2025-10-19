@@ -1,78 +1,456 @@
-html, body { height: 100%; margin: 0; }
-body { min-height: 100vh; display: grid; place-items: center; overflow: hidden; background: #fafafa; }
-#regForm { max-width: 520px; width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-sizing: border-box; }
-#regForm input[type="text"],
-#regForm input[type="email"],
-#regForm input[type="password"],
-#regForm input[type="tel"] { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #e5e7eb; border-radius: 8px; box-sizing: border-box; }
-#regForm input[type="submit"] { width: 100%; padding: 10px 12px; margin-top: 8px; border-radius: 8px; background: #2563eb; color: #fff; border: 1px solid #2563eb; }
-.oauth-buttons { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-.btn-oauth { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #374151; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
-.btn-oauth.google:hover { border-color: #4285f4; background: #f8f9ff; }
-.btn-oauth.facebook:hover { border-color: #1877f2; background: #f0f4ff; }
+/* ===== MODERN SIGNUP PAGE STYLES ===== */
 
-/* Mobile responsiveness */
+/* Inherit from login page styles and add signup-specific styles */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Phone Input Styling */
+.phone-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: white;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.phone-input-wrapper:focus-within {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phone-prefix {
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-50);
+  color: var(--gray-700);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-right: 1px solid var(--gray-300);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.phone-input {
+  flex: 1;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  color: var(--gray-900);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  outline: none;
+}
+
+.phone-input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.strength-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gray-400);
+  transition: all var(--transition-normal);
+  border-radius: var(--radius-sm);
+}
+
+.strength-fill.weak {
+  width: 25%;
+  background: var(--error-500);
+}
+
+.strength-fill.fair {
+  width: 50%;
+  background: var(--warning-500);
+}
+
+.strength-fill.good {
+  width: 75%;
+  background: var(--info-500);
+}
+
+.strength-fill.strong {
+  width: 100%;
+  background: var(--success-500);
+}
+
+.strength-text {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.strength-text.weak {
+  color: var(--error-600);
+}
+
+.strength-text.fair {
+  color: var(--warning-600);
+}
+
+.strength-text.good {
+  color: var(--info-600);
+}
+
+.strength-text.strong {
+  color: var(--success-600);
+}
+
+/* Terms and Privacy Checkbox */
+.terms-checkbox {
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.terms-checkbox .checkbox-label {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--gray-700);
+}
+
+.terms-link {
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.terms-link:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
+}
+
+/* Form Validation States */
+.input:invalid {
+  border-color: var(--error-500);
+}
+
+.input:valid {
+  border-color: var(--success-500);
+}
+
+.input:focus:invalid {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input:focus:valid {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Password Match Indicator */
+.password-match {
+  margin-top: var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.password-match.match {
+  color: var(--success-600);
+}
+
+.password-match.no-match {
+  color: var(--error-600);
+}
+
+.password-match-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Enhanced Form Groups */
+.form-group {
+  position: relative;
+}
+
+.form-group.has-error .input {
+  border-color: var(--error-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-group.has-success .input {
+  border-color: var(--success-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.error-message {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--error-600);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.success-message {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--success-600);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Loading States for Form Submission */
+.signup-form.loading .btn {
+  position: relative;
+  color: transparent;
+}
+
+.signup-form.loading .btn::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Progress Indicator */
+.signup-progress {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: var(--primary-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-200);
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  position: relative;
+}
+
+.progress-step::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  right: -50%;
+  height: 2px;
+  background: var(--gray-300);
+  z-index: 1;
+}
+
+.progress-step:last-child::after {
+  display: none;
+}
+
+.progress-step.active::after {
+  background: var(--primary-500);
+}
+
+.progress-step.completed::after {
+  background: var(--success-500);
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gray-300);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-step.active .step-number {
+  background: var(--primary-500);
+}
+
+.progress-step.completed .step-number {
+  background: var(--success-500);
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  font-weight: 500;
+  text-align: center;
+}
+
+.progress-step.active .step-label {
+  color: var(--primary-600);
+}
+
+.progress-step.completed .step-label {
+  color: var(--success-600);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
-  body {
-    padding: 16px;
-    align-items: flex-start;
-    padding-top: 20px;
+  .signup-form {
+    gap: var(--space-4);
   }
   
-  #regForm {
-    max-width: 100%;
-    width: 100%;
-    margin: 0;
-  }
-  
-  #regForm input[type="text"],
-  #regForm input[type="email"],
-  #regForm input[type="password"],
-  #regForm input[type="tel"] {
-    font-size: 16px; /* Prevent zoom on iOS */
-    padding: 12px;
-  }
-  
-  #regForm input[type="submit"] {
-    font-size: 16px;
-    padding: 12px;
-  }
-  
-  .oauth-buttons {
+  .phone-input-wrapper {
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
   }
   
-  .oauth-buttons .btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
+  .phone-prefix {
+    border-right: none;
+    border-bottom: 1px solid var(--gray-300);
+    text-align: center;
+  }
+  
+  .progress-steps {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .progress-step::after {
+    display: none;
+  }
+  
+  .step-label {
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 480px) {
-  body {
-    padding: 8px;
-    padding-top: 16px;
+  .signup-form {
+    gap: var(--space-3);
   }
   
-  #regForm {
-    padding: 16px;
+  .phone-prefix {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8rem;
   }
   
-  #regForm input[type="text"],
-  #regForm input[type="email"],
-  #regForm input[type="password"],
-  #regForm input[type="tel"] {
-    padding: 10px;
+  .phone-input {
+    padding: var(--space-2) var(--space-3);
   }
   
-  #regForm input[type="submit"] {
-    padding: 10px;
+  .terms-checkbox {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
   }
   
-  .oauth-buttons {
-    gap: 8px;
+  .terms-checkbox .checkbox-label {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+}
+
+/* ===== DARK MODE SUPPORT ===== */
+.dark .phone-prefix {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  border-color: var(--gray-300);
+}
+
+.dark .phone-input {
+  color: var(--gray-100);
+}
+
+.dark .phone-input::placeholder {
+  color: var(--gray-400);
+}
+
+.dark .strength-bar {
+  background: var(--gray-300);
+}
+
+.dark .strength-text {
+  color: var(--gray-400);
+}
+
+.dark .terms-checkbox .checkbox-label {
+  color: var(--gray-300);
+}
+
+.dark .signup-progress {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+.dark .step-number {
+  background: var(--gray-400);
+}
+
+.dark .step-label {
+  color: var(--gray-400);
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  .strength-fill {
+    transition: none;
+  }
+  
+  .signup-form.loading .btn::after {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .phone-input-wrapper {
+    border-width: 2px;
+  }
+  
+  .strength-bar {
+    border: 1px solid var(--gray-400);
   }
 }
 

@@ -28,10 +28,10 @@ export function initializeNotificationButton() {
     // Toggle notification panel
     notificationBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      notificationPanel.classList.toggle('hidden');
+      notificationPanel.classList.toggle('show');
 
       // Load notifications when panel is opened
-      if (!notificationPanel.classList.contains('hidden')) {
+      if (notificationPanel.classList.contains('show')) {
         loadNotifications(true);
       }
     });
@@ -40,7 +40,7 @@ export function initializeNotificationButton() {
     if (closeBtn) {
       closeBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        notificationPanel.classList.add('hidden');
+        notificationPanel.classList.remove('show');
       });
     }
 
@@ -68,7 +68,7 @@ export function initializeNotificationButton() {
     // Close panel when clicking outside
     document.addEventListener('click', function(e) {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
-        notificationPanel.classList.add('hidden');
+        notificationPanel.classList.remove('show');
       }
     });
 
@@ -83,8 +83,8 @@ export function initializeNotificationButton() {
 // Close notification panel (exported for use by other components)
 export function closeNotificationPanel() {
   const notificationPanel = document.getElementById('notification-panel');
-  if (notificationPanel && !notificationPanel.classList.contains('hidden')) {
-    notificationPanel.classList.add('hidden');
+  if (notificationPanel && notificationPanel.classList.contains('show')) {
+    notificationPanel.classList.remove('show');
   }
 }
 
@@ -329,7 +329,7 @@ async function markAllNotificationsAsRead() {
       // Close panel
       const notificationPanel = document.getElementById('notification-panel');
       if (notificationPanel) {
-        notificationPanel.classList.add('hidden');
+        notificationPanel.classList.remove('show');
       }
     }
   } catch (error) {

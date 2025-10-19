@@ -28,9 +28,10 @@ class CitizenLinkApp {
     // Rate limiting (applied early to protect against abuse)
     this.app.use('/api/', apiLimiter);
 
-    // Input sanitization and validation
+    // Enhanced input sanitization and validation
     this.app.use(InputSanitizer.validateRequestSize);
     this.app.use(InputSanitizer.preventSQLInjection);
+    this.app.use(InputSanitizer.preventXSS);
     this.app.use(InputSanitizer.sanitize);
 
     this.app.use(cors());

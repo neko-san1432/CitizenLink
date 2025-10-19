@@ -20,6 +20,7 @@ const lguRoutes = require('./lguOfficerRoutes'); // LGU officer routes (using lg
 const notificationRoutes = require('./notificationRoutes');
 const storageRoutes = require('./storageRoutes');
 const contentRoutes = require('./contentRoutes');
+const rateLimitRoutes = require('./rateLimitRoutes');
 
 const router = express.Router();
 
@@ -44,6 +45,7 @@ router.use('/lgu', lguRoutes); // LGU officer routes (lgu-wst, lgu-engineering, 
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/content', contentRoutes);
+router.use('/rate-limit', rateLimitRoutes);
 
 router.get('/health', (req, res) => {
   res.json({

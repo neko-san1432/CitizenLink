@@ -18,8 +18,12 @@
     "codeql-scan-verbose": "node scripts/codeql-local-scan.js --verbose",
     "codeql-scan-sarif": "node scripts/codeql-local-scan.js --output-format=sarif",
     "security-scan": "node scripts/security-autoresolve.js",
-    "security-audit": "npm audit --audit-level=moderate",
-    "security-fix": "npm run security-audit && npm audit fix && npm run lint:fix"
+    "security-audit": "node scripts/security-audit.js",
+    "security-audit-npm": "npm audit --audit-level=moderate",
+    "security-fix": "npm run security-audit-npm && npm audit fix && npm run lint:fix",
+    "setup-dev": "node scripts/setup-dev-env.js",
+    "rate-limit": "node scripts/rate-limit-manager.js",
+    "cleanup": "node scripts/cleanup-unused-files.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
