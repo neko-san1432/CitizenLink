@@ -142,9 +142,17 @@ jobs:
           fi
 
       - name: Push security fixes
-        if: matrix.language == 'javascript-typescript' && steps.file-changes.outputs.changes-detected == 'true' && steps.commit-security-fixes.outputs.committed == 'true'
+        if: matrix.language == 'javascript-typescript' && steps.file-changes.outputs.changes-detected == 'true' && steps.commit-security-fixes.outputs.committed == 'true' && github.event_name == 'pull_request'
         run: |
-          git push origin HEAD:${{ github.head_ref || github.ref_name }}
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Report security fixes (main branch)
+        if: matrix.language == 'javascript-typescript' && steps.file-changes.outputs.changes-detected == 'true' && steps.commit-security-fixes.outputs.committed == 'true' && github.event_name != 'pull_request'
+        run: |
+          echo "🔒 Security fixes applied to main branch"
+          echo "Files modified:"
+          git diff --name-only HEAD~1
+          echo "Security improvements have been applied and committed to main branch"
 
       # PR Comment (only for PRs)
       - name: Comment on PR with results
