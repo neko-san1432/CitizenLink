@@ -1,12 +1,131 @@
 import apiClient from '../../utils/apiClient.js';
 import { showToast } from '../../components/toast.js';
 
-// Simple HTML sanitization function
+// Enhanced URL validation function
+function validateAndSanitizeURL(urlString) {
+  if (!urlString || typeof urlString !== 'string') {
+    return '';
+  }
+
+  const trimmedUrl = urlString.trim();
+  
+  // Basic URL format validation
+  try {
+    const url = new URL(trimmedUrl);
+    
+    // Whitelist of allowed protocols
+    const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
+    if (!allowedProtocols.includes(url.protocol)) {
+      console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
+      return '';
+    }
+
+    // Check for suspicious patterns
+    const suspiciousPatterns = [
+      /javascript:/i,
+      /vbscript:/i,
+      /data:/i,
+      /file:/i,
+      /about:/i,
+      /chrome:/i,
+      /chrome-extension:/i,
+      /moz-extension:/i,
+      /ms-appx:/i,
+      /ms-appx-web:/i,
+      /blob:/i,
+      /ws:/i,
+      /wss:/i
+    ];
+
+    if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
+      console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
+      return '';
+    }
+
+    // Check for protocol confusion attacks
+    if (url.protocol !== trimmedUrl.split(':')[0] + ':') {
+      console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
+      return '';
+    }
+
+    // Validate hostname
+    if (!url.hostname || url.hostname.length === 0) {
+      return '';
+    }
+
+    // Check for private IP ranges
+    const privateRanges = [
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^192\.168\./,
+      /^localhost$/i,
+      /^0\.0\.0\.0$/,
+      /^::1$/,
+      /^fe80:/i
+    ];
+
+    if (privateRanges.some(range => range.test(url.hostname))) {
+      console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
+      return '';
+    }
+
+    // Return the validated URL
+    return trimmedUrl;
+
+  } catch (error) {
+    // If URL constructor fails, the URL is invalid
+    console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
+    return '';
+  }
+}
+
+// Enhanced HTML sanitization function
 function sanitizeHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+  
+  // Use DOMPurify for comprehensive sanitization
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'ul', 'ol', 'li', 'a', 'img'],
+      ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title', 'data-*'],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      SANITIZE_DOM: true,
+      KEEP_CONTENT: true
+    });
+  }
+  
+  // Fallback sanitization if DOMPurify is not available
   return html
-    .replace(/<script\b[^<]*>.*?<\/script>/gi, '')
+    // Remove script tags and their content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Remove event handlers
     .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/javascript:/gi, '');
+    // Remove javascript: URLs
+    .replace(/javascript\s*:/gi, '')
+    // Remove vbscript: URLs
+    .replace(/vbscript\s*:/gi, '')
+    // Remove data: URLs (except safe image types)
+    .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
+    // Remove object tags
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    // Remove embed tags
+    .replace(/<embed\b[^<]*>/gi, '')
+    // Remove form tags
+    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+    // Remove input tags
+    .replace(/<input\b[^<]*>/gi, '')
+    // Remove button tags with onclick
+    .replace(/<button\b[^<]*onclick[^<]*>/gi, '<button>')
+    // Remove style attributes with javascript
+    .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, '')
+    // Remove href with javascript
+    .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+    // Remove src with javascript
+    .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
 }
 
 // Task state

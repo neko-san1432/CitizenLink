@@ -146,13 +146,52 @@ class SettingsManager {
     }
   }
 
-  // Simple HTML sanitization function
+  // Enhanced HTML sanitization function
   sanitizeHtml(html) {
-    // Basic sanitization - remove script tags and dangerous attributes
+    if (!html || typeof html !== 'string') return '';
+    
+    // Use DOMPurify for comprehensive sanitization
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'ul', 'ol', 'li', 'a', 'img'],
+        ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title', 'data-*'],
+        ALLOW_DATA_ATTR: true,
+        ALLOW_UNKNOWN_PROTOCOLS: false,
+        SANITIZE_DOM: true,
+        KEEP_CONTENT: true
+      });
+    }
+    
+    // Fallback sanitization if DOMPurify is not available
     return html
-      .replace(/<script\b[^<]*>.*?<\/script>/gi, '')
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove event handlers
       .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-      .replace(/javascript:/gi, '');
+      // Remove javascript: URLs
+      .replace(/javascript\s*:/gi, '')
+      // Remove vbscript: URLs
+      .replace(/vbscript\s*:/gi, '')
+      // Remove data: URLs (except safe image types)
+      .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
+      // Remove object tags
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      // Remove embed tags
+      .replace(/<embed\b[^<]*>/gi, '')
+      // Remove form tags
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // Remove input tags
+      .replace(/<input\b[^<]*>/gi, '')
+      // Remove button tags with onclick
+      .replace(/<button\b[^<]*onclick[^<]*>/gi, '<button>')
+      // Remove style attributes with javascript
+      .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, '')
+      // Remove href with javascript
+      .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+      // Remove src with javascript
+      .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
   }
 
   formatValue(setting) {

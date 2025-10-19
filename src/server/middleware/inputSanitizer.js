@@ -334,6 +334,22 @@ class InputSanitizer {
     return { valid: true, sanitized: bool };
   }
 
+  static validateURL(url, required = false) {
+    if (required && (!url || typeof url !== 'string')) {
+      return { valid: false, error: 'URL is required' };
+    }
+
+    if (url && typeof url === 'string') {
+      const sanitized = InputSanitizer.validateAndSanitizeURL(url);
+      if (sanitized === '') {
+        return { valid: false, error: 'Invalid URL format or security risk detected' };
+      }
+      return { valid: true, sanitized };
+    }
+
+    return { valid: true, sanitized: url };
+  }
+
   // Request size validation middleware
   static validateRequestSize(req, res, next) {
     const maxSize = 10 * 1024 * 1024; // 10MB
@@ -478,6 +494,103 @@ class InputSanitizer {
 
       next();
     };
+  }
+
+  // Enhanced URL validation to protect against validator.js vulnerability
+  static validateAndSanitizeURL(urlString) {
+    if (!urlString || typeof urlString !== 'string') {
+      return '';
+    }
+
+    const trimmedUrl = urlString.trim();
+    
+    // First, use validator.js for basic validation (with known vulnerability)
+    if (!validator.isURL(trimmedUrl)) {
+      return '';
+    }
+
+    // Additional validation using native URL constructor to catch bypasses
+    try {
+      const url = new URL(trimmedUrl);
+      
+      // Whitelist of allowed protocols
+      const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
+      if (!allowedProtocols.includes(url.protocol)) {
+        console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
+        return '';
+      }
+
+      // Check for suspicious patterns that might bypass validation
+      const suspiciousPatterns = [
+        /javascript:/i,
+        /vbscript:/i,
+        /data:/i,
+        /file:/i,
+        /about:/i,
+        /chrome:/i,
+        /chrome-extension:/i,
+        /moz-extension:/i,
+        /ms-appx:/i,
+        /ms-appx-web:/i,
+        /blob:/i,
+        /ws:/i,
+        /wss:/i
+      ];
+
+      if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
+        console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
+        return '';
+      }
+
+      // Check for protocol confusion attacks (e.g., "http:javascript:alert(1)")
+      if (url.protocol !== trimmedUrl.split(':')[0] + ':') {
+        console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
+        return '';
+      }
+
+      // Validate hostname
+      if (!url.hostname || url.hostname.length === 0) {
+        return '';
+      }
+
+      // Check for IP addresses and validate them
+      const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (ipPattern.test(url.hostname)) {
+        const parts = url.hostname.split('.');
+        for (const part of parts) {
+          const num = parseInt(part, 10);
+          if (num < 0 || num > 255) {
+            console.warn(`[SECURITY] Invalid IP address detected: ${url.hostname}`);
+            return '';
+          }
+        }
+      }
+
+      // Check for localhost and private IP ranges
+      const privateRanges = [
+        /^127\./,
+        /^10\./,
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+        /^192\.168\./,
+        /^localhost$/i,
+        /^0\.0\.0\.0$/,
+        /^::1$/,
+        /^fe80:/i
+      ];
+
+      if (privateRanges.some(range => range.test(url.hostname))) {
+        console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
+        return '';
+      }
+
+      // Return the sanitized URL
+      return validator.escape(trimmedUrl);
+
+    } catch (error) {
+      // If URL constructor fails, the URL is invalid
+      console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
+      return '';
+    }
   }
 
   // Security audit logging

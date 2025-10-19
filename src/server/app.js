@@ -9,7 +9,7 @@ const routes = require('./routes');
 const { authenticateUser, requireRole } = require('./middleware/auth');
 const { ErrorHandler } = require('./middleware/errorHandler');
 const { securityHeaders, cspConfig, customSecurityHeaders } = require('./middleware/security');
-const { apiLimiter, authLimiter, loginLimiter, passwordResetLimiter, uploadLimiter, complaintLimiter } = require('./middleware/rateLimiting');
+const { apiLimiter, authLimiter } = require('./middleware/rateLimiting');
 const InputSanitizer = require('./middleware/inputSanitizer');
 
 class CitizenLinkApp {

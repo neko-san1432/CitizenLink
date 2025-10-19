@@ -175,12 +175,12 @@ function renderAssignments() {
  */
 function filterAssignments() {
   switch (currentFilter) {
-  case 'unassigned':
-    return assignments.filter(a => !a.assigned_to);
-  case 'assigned':
-    return assignments.filter(a => a.assigned_to);
-  default:
-    return assignments;
+    case 'unassigned':
+      return assignments.filter(a => !a.assigned_to);
+    case 'assigned':
+      return assignments.filter(a => a.assigned_to);
+    default:
+      return assignments;
   }
 }
 

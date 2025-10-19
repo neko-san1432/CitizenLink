@@ -30,26 +30,19 @@ const serviceFiles = [
 function fixFileIndentation(filePath) {
   try {
     console.log(`📄 Processing: ${filePath}`);
-    
     // Read file content
     let content = fs.readFileSync(filePath, 'utf8');
-    
     // Convert CRLF to LF
     content = content.replace(/\r\n/g, '\n');
-    
     // Split into lines
     const lines = content.split('\n');
     const fixedLines = [];
-    
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      
+      const line = lines[i];
       // Remove trailing whitespace
       line = line.replace(/\s+$/, '');
-      
       // Fix indentation - convert tabs to 2 spaces
       line = line.replace(/^\t+/, (match) => '  '.repeat(match.length));
-      
       // Ensure consistent 2-space indentation
       const leadingSpaces = line.match(/^(\s*)/)[1];
       if (leadingSpaces) {
@@ -58,19 +51,14 @@ function fixFileIndentation(filePath) {
         const indentLevel = Math.floor(spaceCount / 2);
         line = '  '.repeat(indentLevel) + line.trim();
       }
-      
       fixedLines.push(line);
     }
-    
     // Join lines back together
     const fixedContent = fixedLines.join('\n') + '\n';
-    
     // Write back to file
     fs.writeFileSync(filePath, fixedContent, 'utf8');
-    
     console.log(`✅ Fixed: ${filePath}`);
     return true;
-    
   } catch (error) {
     console.error(`❌ Error fixing ${filePath}:`, error.message);
     return false;
@@ -79,8 +67,7 @@ function fixFileIndentation(filePath) {
 
 function main() {
   let successCount = 0;
-  let totalCount = serviceFiles.length;
-  
+  const totalCount = serviceFiles.length;
   console.log(`Found ${totalCount} service files to fix:\n`);
   
   serviceFiles.forEach(fileName => {
