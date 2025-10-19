@@ -6,7 +6,7 @@ const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
-const { loginLimiter, passwordResetLimiter, authLimiter } = require('../middleware/rateLimiting');
+const { loginLimiter, passwordResetLimiter, authLimiter, apiLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
 
@@ -40,7 +40,7 @@ router.post('/login', loginLimiter, ErrorHandler.asyncWrapper(AuthController.log
  * @desc    Verify user email
  * @access  Public
  */
-router.get('/verify-email', ErrorHandler.asyncWrapper(AuthController.verifyEmail));
+router.get('/verify-email', authLimiter, ErrorHandler.asyncWrapper(AuthController.verifyEmail));
 
 /**
  * @route   POST /api/auth/forgot-password
@@ -326,7 +326,7 @@ router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) 
  * @desc    Get CSRF token for form submissions
  * @access  Public
  */
-router.get('/csrf-token', generateCsrfToken, (req, res) => {
+router.get('/csrf-token', authLimiter, generateCsrfToken, (req, res) => {
   res.json({
     success: true,
     csrfToken: res.locals.csrfToken

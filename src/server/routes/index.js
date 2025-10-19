@@ -6,6 +6,7 @@ const settingRoutes = require('./settingRoutes');
 const supabaseRoutes = require('./supabaseRoutes');
 const captchaRoutes = require('./captchaRoutes');
 const coordinatorRoutes = require('./coordinatorRoutes');
+const { apiLimiter } = require('../middleware/rateLimiting');
 let hrRoutes;
 try {
   hrRoutes = require('./hrRoutes');
@@ -47,7 +48,7 @@ router.use('/storage', storageRoutes);
 router.use('/content', contentRoutes);
 router.use('/rate-limit', rateLimitRoutes);
 
-router.get('/health', (req, res) => {
+router.get('/health', apiLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'API is healthy',

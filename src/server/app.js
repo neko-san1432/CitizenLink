@@ -9,7 +9,7 @@ const routes = require('./routes');
 const { authenticateUser, requireRole } = require('./middleware/auth');
 const { ErrorHandler } = require('./middleware/errorHandler');
 const { securityHeaders, cspConfig, customSecurityHeaders } = require('./middleware/security');
-const { apiLimiter, authLimiter, loginLimiter, passwordResetLimiter } = require('./middleware/rateLimiting');
+const { apiLimiter, authLimiter, loginLimiter, passwordResetLimiter, uploadLimiter, complaintLimiter } = require('./middleware/rateLimiting');
 const InputSanitizer = require('./middleware/inputSanitizer');
 
 class CitizenLinkApp {
@@ -384,7 +384,7 @@ class CitizenLinkApp {
     });
 
     // Public API endpoints
-    this.app.get('/api/boundaries', async (req, res) => {
+    this.app.get('/api/boundaries', apiLimiter, async (req, res) => {
       try {
         const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'brgy_boundaries_location.json');
         const fs = require('fs').promises;
@@ -395,7 +395,7 @@ class CitizenLinkApp {
       }
     });
 
-    this.app.get('/api/reverse-geocode', async (req, res) => {
+    this.app.get('/api/reverse-geocode', apiLimiter, async (req, res) => {
       try {
         const { lat, lng } = req.query;
 
