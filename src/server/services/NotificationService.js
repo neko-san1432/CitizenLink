@@ -6,9 +6,9 @@ const {
 } = require('../../shared/constants');
 
 /**
- * NotificationService
- * Handles all notification-related operations
- */
+* NotificationService
+* Handles all notification-related operations
+*/
 class NotificationService {
   constructor() {
     this.db = new Database();
@@ -16,9 +16,9 @@ class NotificationService {
   }
 
   /**
-   * Notify all admins of a department (lgu-admin variants) about a new complaint assignment
-   * Department matching by code suffix in role (e.g., lgu-admin-{dept}) and/or profile metadata
-   */
+  * Notify all admins of a department (lgu-admin variants) about a new complaint assignment
+  * Department matching by code suffix in role (e.g., lgu-admin-{dept}) and/or profile metadata
+  */
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     // Secure lookup via RPC (SECURITY DEFINER)
     const { data: targets, error } = await this.supabase
@@ -44,15 +44,15 @@ class NotificationService {
   }
 
   /**
-   * Create a new notification
-   * Supports both object and individual parameter syntax
-   * @param {string|object} userIdOrOptions - User ID or options object
-   * @param {string} type - Notification type from NOTIFICATION_TYPES
-   * @param {string} title - Notification title
-   * @param {string} message - Notification message
-   * @param {object} options - Additional options
-   * @returns {object} Created notification
-   */
+  * Create a new notification
+  * Supports both object and individual parameter syntax
+  * @param {string|object} userIdOrOptions - User ID or options object
+  * @param {string} type - Notification type from NOTIFICATION_TYPES
+  * @param {string} title - Notification title
+  * @param {string} message - Notification message
+  * @param {object} options - Additional options
+  * @returns {object} Created notification
+  */
   async createNotification(userIdOrOptions, type, title, message, options = {}) {
     try {
       // Support both calling patterns
@@ -117,9 +117,9 @@ class NotificationService {
   }
 
   /**
-   * Create multiple notifications (bulk)
-   * @param {Array} notifications - Array of notification objects
-   */
+  * Create multiple notifications (bulk)
+  * @param {Array} notifications - Array of notification objects
+  */
   async createBulkNotifications(notifications) {
     try {
       const notificationsData = notifications.map(notif => ({
@@ -153,12 +153,12 @@ class NotificationService {
   }
 
   /**
-   * Get user notifications (paginated)
-   * @param {string} userId - User ID
-   * @param {number} page - Page number (0-indexed)
-   * @param {number} limit - Items per page
-   * @returns {object} Paginated notifications
-   */
+  * Get user notifications (paginated)
+  * @param {string} userId - User ID
+  * @param {number} page - Page number (0-indexed)
+  * @param {number} limit - Items per page
+  * @returns {object} Paginated notifications
+  */
   async getUserNotifications(userId, page = 0, limit = 10) {
     try {
       const offset = page * limit;
@@ -192,10 +192,10 @@ class NotificationService {
   }
 
   /**
-   * Get unread notification count for user
-   * @param {string} userId - User ID
-   * @returns {number} Unread count
-   */
+  * Get unread notification count for user
+  * @param {string} userId - User ID
+  * @returns {number} Unread count
+  */
   async getUnreadCount(userId) {
     try {
       const { count, error } = await this.supabase
@@ -217,11 +217,11 @@ class NotificationService {
   }
 
   /**
-   * Mark notification as read
-   * @param {string} notificationId - Notification ID
-   * @param {string} userId - User ID (for security check)
-   * @returns {object} Updated notification
-   */
+  * Mark notification as read
+  * @param {string} notificationId - Notification ID
+  * @param {string} userId - User ID (for security check)
+  * @returns {object} Updated notification
+  */
   async markAsRead(notificationId, userId) {
     try {
       const { data, error } = await this.supabase
@@ -248,10 +248,10 @@ class NotificationService {
   }
 
   /**
-   * Mark all user notifications as read
-   * @param {string} userId - User ID
-   * @returns {object} Update result
-   */
+  * Mark all user notifications as read
+  * @param {string} userId - User ID
+  * @returns {object} Update result
+  */
   async markAllAsRead(userId) {
     try {
       const { data, error } = await this.supabase
@@ -279,10 +279,10 @@ class NotificationService {
   }
 
   /**
-   * Delete a notification
-   * @param {string} notificationId - Notification ID
-   * @param {string} userId - User ID (for security check)
-   */
+  * Delete a notification
+  * @param {string} notificationId - Notification ID
+  * @param {string} userId - User ID (for security check)
+  */
   async deleteNotification(notificationId, userId) {
     try {
       const { error } = await this.supabase
@@ -303,9 +303,9 @@ class NotificationService {
   }
 
   /**
-   * Delete expired notifications (cleanup job)
-   * Removes notifications older than their expires_at date
-   */
+  * Delete expired notifications (cleanup job)
+  * Removes notifications older than their expires_at date
+  */
   async deleteExpiredNotifications() {
     try {
       const { data, error } = await this.supabase
@@ -329,11 +329,11 @@ class NotificationService {
   }
 
   /**
-   * Get notification summary for email
-   * Groups notifications by priority
-   * @param {string} userId - User ID
-   * @returns {object} Notification summary
-   */
+  * Get notification summary for email
+  * Groups notifications by priority
+  * @param {string} userId - User ID
+  * @returns {object} Notification summary
+  */
   async getNotificationSummary(userId) {
     try {
       const { data, error } = await this.supabase
@@ -364,8 +364,8 @@ class NotificationService {
   // ==================== ROLE-SPECIFIC NOTIFICATION HELPERS ====================
 
   /**
-   * Notify citizen about complaint submission
-   */
+  * Notify citizen about complaint submission
+  */
   async notifyComplaintSubmitted(citizenId, complaintId, complaintTitle) {
     return this.createNotification(
       citizenId,
@@ -381,8 +381,8 @@ class NotificationService {
   }
 
   /**
-   * Notify citizen about status change
-   */
+  * Notify citizen about status change
+  */
   async notifyComplaintStatusChanged(citizenId, complaintId, complaintTitle, newStatus, oldStatus) {
     const statusMessages = {
       'in progress': 'is now being worked on',
@@ -409,8 +409,8 @@ class NotificationService {
   }
 
   /**
-   * Notify officer about new task assignment
-   */
+  * Notify officer about new task assignment
+  */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
       priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
@@ -430,8 +430,8 @@ class NotificationService {
   }
 
   /**
-   * Notify officer about approaching deadline
-   */
+  * Notify officer about approaching deadline
+  */
   async notifyDeadlineApproaching(officerId, complaintId, complaintTitle, hoursRemaining) {
     return this.createNotification(
       officerId,
@@ -447,8 +447,8 @@ class NotificationService {
   }
 
   /**
-   * Notify officer about overdue task
-   */
+  * Notify officer about overdue task
+  */
   async notifyTaskOverdue(officerId, complaintId, complaintTitle) {
     return this.createNotification(
       officerId,
@@ -464,8 +464,8 @@ class NotificationService {
   }
 
   /**
-   * Notify coordinator about new complaint needing review
-   */
+  * Notify coordinator about new complaint needing review
+  */
   async notifyNewComplaintReview(coordinatorId, complaintId, complaintTitle) {
     return this.createNotification(
       coordinatorId,
@@ -481,8 +481,8 @@ class NotificationService {
   }
 
   /**
-   * Notify citizen that their complaint was marked as duplicate
-   */
+  * Notify citizen that their complaint was marked as duplicate
+  */
   async notifyComplaintDuplicate(citizenId, complaintId, complaintTitle, masterComplaintId) {
     return this.createNotification(
       citizenId,
@@ -499,3 +499,4 @@ class NotificationService {
 }
 
 module.exports = NotificationService;
+

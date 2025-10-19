@@ -15,8 +15,8 @@ class UserService {
     return 'citizen';
   }
   /**
-   * Create a new user (stores everything in auth.users metadata)
-   */
+  * Create a new user (stores everything in auth.users metadata)
+  */
   async createUser(userData) {
     const {
       email,
@@ -164,8 +164,8 @@ class UserService {
   }
 
   /**
-   * Get user by ID (from auth.users metadata only)
-   */
+  * Get user by ID (from auth.users metadata only)
+  */
   async getUserById(userId) {
     try {
       const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
@@ -188,8 +188,8 @@ class UserService {
   }
 
   /**
-   * Update user profile (updates auth.users metadata)
-   */
+  * Update user profile (updates auth.users metadata)
+  */
   async updateUser(userId, updateData, updatedBy = null) {
     // Validate update data
     this.validateUpdateData(updateData);
@@ -228,8 +228,8 @@ class UserService {
   }
 
   /**
-   * Change user role (updates metadata and logs)
-   */
+  * Change user role (updates metadata and logs)
+  */
   async changeUserRole(userId, newRole, changedBy, reason = null) {
     // Validate role parameter to prevent injection
     const validRoles = [
@@ -271,8 +271,8 @@ class UserService {
   }
 
   /**
-   * Track user login
-   */
+  * Track user login
+  */
   async trackLogin(userId, ipAddress = null, userAgent = null) {
     try {
       const { error } = await supabase.rpc('update_user_login', {
@@ -290,8 +290,8 @@ class UserService {
   }
 
   /**
-   * Get users with filters and pagination (from auth.users)
-   */
+  * Get users with filters and pagination (from auth.users)
+  */
   async getUsers(filters = {}, pagination = {}) {
     const {
       role,
@@ -358,8 +358,8 @@ class UserService {
   }
 
   /**
-   * Sync auth user (no-op now since we only use auth.users)
-   */
+  * Sync auth user (no-op now since we only use auth.users)
+  */
   async syncAuthUser(authUserId) {
     // No longer needed - all data is in auth.users metadata
     return true;
@@ -497,3 +497,4 @@ class UserService {
 }
 
 module.exports = new UserService();
+

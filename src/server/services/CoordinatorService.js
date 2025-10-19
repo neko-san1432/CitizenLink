@@ -7,9 +7,9 @@ const NotificationService = require('./NotificationService');
 const RuleBasedSuggestionService = require('./RuleBasedSuggestionService');
 
 /**
- * CoordinatorService
- * Business logic for coordinator operations
- */
+* CoordinatorService
+* Business logic for coordinator operations
+*/
 class CoordinatorService {
   constructor() {
     this.coordinatorRepo = new CoordinatorRepository();
@@ -22,8 +22,8 @@ class CoordinatorService {
   }
 
   /**
-   * Get review queue with algorithm results
-   */
+  * Get review queue with algorithm results
+  */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
@@ -53,8 +53,8 @@ class CoordinatorService {
   }
 
   /**
-   * Get complaint for review with full analysis
-   */
+  * Get complaint for review with full analysis
+  */
   async getComplaintForReview(complaintId, coordinatorId) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
@@ -114,67 +114,67 @@ class CoordinatorService {
   }
 
   /**
-   * Process coordinator decision
-   */
+  * Process coordinator decision
+  */
   async processDecision(complaintId, decision, coordinatorId, data = {}) {
     try {
       switch (decision) {
-      case 'mark_duplicate':
-        if (!data.masterComplaintId) {
-          throw new Error('Master complaint ID required');
-        }
-        return await this.markAsDuplicate(
-          complaintId,
-          data.masterComplaintId,
-          coordinatorId,
-          data.reason
-        );
-
-      case 'mark_unique':
-        return await this.markAsUnique(complaintId, coordinatorId);
-
-      case 'assign_department':
-        // Support single or multiple departments
-        if (!data.department && (!data.departments || data.departments.length === 0)) {
-          throw new Error('Department required');
-        }
-        if (Array.isArray(data.departments) && data.departments.length > 0) {
-          return await this.assignToDepartments(
+        case 'mark_duplicate':
+          if (!data.masterComplaintId) {
+            throw new Error('Master complaint ID required');
+          }
+          return await this.markAsDuplicate(
             complaintId,
-            data.departments,
+            data.masterComplaintId,
             coordinatorId,
-            data.options || {}
+            data.reason
           );
-        }
-        return await this.assignToDepartment(
-          complaintId,
-          data.department,
-          coordinatorId,
-          data.options
-        );
 
-      case 'link_related':
-        if (!data.relatedComplaintIds) {
-          throw new Error('Related complaint IDs required');
-        }
-        return await this.linkRelatedComplaints(
-          complaintId,
-          data.relatedComplaintIds,
-          coordinatorId
-        );
+        case 'mark_unique':
+          return await this.markAsUnique(complaintId, coordinatorId);
 
-      case 'reject':
-        if (!data.reason) {
-          throw new Error('Rejection reason required');
-        }
-        return await this.rejectComplaint(
-          complaintId,
-          coordinatorId,
-          data.reason
-        );
+        case 'assign_department':
+        // Support single or multiple departments
+          if (!data.department && (!data.departments || data.departments.length === 0)) {
+            throw new Error('Department required');
+          }
+          if (Array.isArray(data.departments) && data.departments.length > 0) {
+            return await this.assignToDepartments(
+              complaintId,
+              data.departments,
+              coordinatorId,
+              data.options || {}
+            );
+          }
+          return await this.assignToDepartment(
+            complaintId,
+            data.department,
+            coordinatorId,
+            data.options
+          );
 
-      default:
-        throw new Error('Invalid decision type');
+        case 'link_related':
+          if (!data.relatedComplaintIds) {
+            throw new Error('Related complaint IDs required');
+          }
+          return await this.linkRelatedComplaints(
+            complaintId,
+            data.relatedComplaintIds,
+            coordinatorId
+          );
+
+        case 'reject':
+          if (!data.reason) {
+            throw new Error('Rejection reason required');
+          }
+          return await this.rejectComplaint(
+            complaintId,
+            coordinatorId,
+            data.reason
+          );
+
+        default:
+          throw new Error('Invalid decision type');
       }
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Process decision error:', error);
@@ -183,8 +183,8 @@ class CoordinatorService {
   }
 
   /**
-   * Mark complaint as duplicate
-   */
+  * Mark complaint as duplicate
+  */
   async markAsDuplicate(complaintId, masterComplaintId, coordinatorId, reason) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
@@ -220,8 +220,8 @@ class CoordinatorService {
   }
 
   /**
-   * Mark complaint as unique (not a duplicate)
-   */
+  * Mark complaint as unique (not a duplicate)
+  */
   async markAsUnique(complaintId, coordinatorId) {
     try {
       // Update all similarities to 'unique' decision
@@ -256,8 +256,8 @@ class CoordinatorService {
   }
 
   /**
-   * Reject complaint
-   */
+  * Reject complaint
+  */
   async rejectComplaint(complaintId, coordinatorId, reason) {
     try {
       // Update complaint status to rejected
@@ -309,8 +309,8 @@ class CoordinatorService {
   }
 
   /**
-   * Assign complaint to department
-   */
+  * Assign complaint to department
+  */
   async assignToDepartment(complaintId, departmentName, coordinatorId, options = {}) {
     try {
       // console.log removed for security
@@ -393,8 +393,8 @@ class CoordinatorService {
   }
 
   /**
-   * Assign complaint to multiple departments
-   */
+  * Assign complaint to multiple departments
+  */
   async assignToDepartments(complaintId, departmentCodes, coordinatorId, options = {}) {
     try {
       const uniqueCodes = Array.from(new Set((departmentCodes || []).filter(Boolean)));
@@ -466,8 +466,8 @@ class CoordinatorService {
   }
 
   /**
-   * Link related complaints
-   */
+  * Link related complaints
+  */
   async linkRelatedComplaints(complaintId, relatedIds, coordinatorId) {
     try {
       // Update similarities to 'related' decision
@@ -506,8 +506,8 @@ class CoordinatorService {
   }
 
   /**
-   * Bulk assign complaints
-   */
+  * Bulk assign complaints
+  */
   async bulkAssign(complaintIds, departmentName, coordinatorId) {
     try {
       const assigned = await this.coordinatorRepo.bulkAssign(
@@ -550,8 +550,8 @@ class CoordinatorService {
   }
 
   /**
-   * Get coordinator dashboard data
-   */
+  * Get coordinator dashboard data
+  */
   async getDashboardData(coordinatorId) {
     try {
       // console.log removed for security
@@ -598,8 +598,8 @@ class CoordinatorService {
   }
 
   /**
-   * Detect clusters in area
-   */
+  * Detect clusters in area
+  */
   async detectClusters(options = {}) {
     try {
       const clusters = await this.similarityService.detectClusters(options);
@@ -616,8 +616,8 @@ class CoordinatorService {
   }
 
   /**
-   * Helper: Categorize similarities by confidence
-   */
+  * Helper: Categorize similarities by confidence
+  */
   categorizeSimilarities(similarities) {
     return {
       veryHigh: similarities.filter(s => s.similarity_score >= 0.85),
@@ -628,8 +628,8 @@ class CoordinatorService {
   }
 
   /**
-   * Helper: Generate recommendation based on analysis
-   */
+  * Helper: Generate recommendation based on analysis
+  */
   generateRecommendation(complaint, categorized) {
     if (categorized.veryHigh.length > 0) {
       return {
@@ -667,8 +667,8 @@ class CoordinatorService {
   }
 
   /**
-   * Check if user is coordinator
-   */
+  * Check if user is coordinator
+  */
   async checkCoordinatorStatus(userId) {
     try {
       return await this.coordinatorRepo.isCoordinator(userId);
@@ -679,8 +679,8 @@ class CoordinatorService {
   }
 
   /**
-   * Notify department admins about new assignment
-   */
+  * Notify department admins about new assignment
+  */
   async notifyDepartmentAdmins(departmentCode, complaintId, complaintTitle) {
     try {
       // Get all users with lgu-admin-{department_code} role
@@ -722,8 +722,8 @@ class CoordinatorService {
   }
 
   /**
-   * Notify officer about task assignment
-   */
+  * Notify officer about task assignment
+  */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     try {
       const notifPriority = priority === 'urgent' ? 'urgent' :
@@ -753,3 +753,4 @@ class CoordinatorService {
 }
 
 module.exports = CoordinatorService;
+

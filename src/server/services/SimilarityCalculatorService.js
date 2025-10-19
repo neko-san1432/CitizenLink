@@ -1,9 +1,9 @@
 const Database = require('../config/database');
 
 /**
- * SimilarityCalculatorService
- * Advanced similarity calculations and pattern detection
- */
+* SimilarityCalculatorService
+* Advanced similarity calculations and pattern detection
+*/
 class SimilarityCalculatorService {
   constructor() {
     this.db = new Database();
@@ -11,12 +11,12 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Find all similar complaints within a radius
-   * @param {number} latitude
-   * @param {number} longitude
-   * @param {number} radiusKm
-   * @param {object} filters - Additional filters (type, dateRange, etc.)
-   */
+  * Find all similar complaints within a radius
+  * @param {number} latitude
+  * @param {number} longitude
+  * @param {number} radiusKm
+  * @param {object} filters - Additional filters (type, dateRange, etc.)
+  */
   async findSimilarInRadius(latitude, longitude, radiusKm = 0.5, filters = {}) {
     try {
       let query = this.supabase
@@ -73,9 +73,9 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Detect geographic clusters of complaints
-   * Uses DBSCAN-like algorithm
-   */
+  * Detect geographic clusters of complaints
+  * Uses DBSCAN-like algorithm
+  */
   async detectClusters(options = {}) {
     const {
       radiusKm = 0.5,
@@ -117,8 +117,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * DBSCAN-like clustering algorithm
-   */
+  * DBSCAN-like clustering algorithm
+  */
   clusterComplaints(complaints, radiusKm, minPoints) {
     const clusters = [];
     const visited = new Set();
@@ -199,8 +199,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Find neighboring complaints within radius
-   */
+  * Find neighboring complaints within radius
+  */
   findNeighbors(complaint, allComplaints, radiusKm) {
     return allComplaints.filter(other => {
       if (other.id === complaint.id) return false;
@@ -217,8 +217,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Calculate geometric center of cluster
-   */
+  * Calculate geometric center of cluster
+  */
   calculateClusterCenter(complaints) {
     const sum = complaints.reduce(
       (acc, c) => ({
@@ -235,8 +235,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Calculate maximum radius of cluster
-   */
+  * Calculate maximum radius of cluster
+  */
   calculateClusterRadius(center, complaints) {
     return Math.max(
       ...complaints.map(c =>
@@ -251,8 +251,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Detect pattern type based on temporal distribution
-   */
+  * Detect pattern type based on temporal distribution
+  */
   detectPatternType(complaints) {
     if (complaints.length < 3) return 'normal';
 
@@ -290,8 +290,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Save clusters to database
-   */
+  * Save clusters to database
+  */
   async saveClusters(clusters) {
     if (clusters.length === 0) return;
 
@@ -305,8 +305,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Get nearest similar complaints
-   */
+  * Get nearest similar complaints
+  */
   async getNearestSimilar(complaintId, limit = 10) {
     try {
       const complaint = await this.getComplaint(complaintId);
@@ -333,8 +333,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Calculate distance between two points
-   */
+  * Calculate distance between two points
+  */
   calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRad(lat2 - lat1);
@@ -354,8 +354,8 @@ class SimilarityCalculatorService {
   }
 
   /**
-   * Get complaint by ID
-   */
+  * Get complaint by ID
+  */
   async getComplaint(complaintId) {
     const { data, error } = await this.supabase
       .from('complaints')
@@ -369,3 +369,4 @@ class SimilarityCalculatorService {
 }
 
 module.exports = SimilarityCalculatorService;
+

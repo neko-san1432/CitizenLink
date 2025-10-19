@@ -3,9 +3,9 @@ const { USER_ROLES } = require('../../shared/constants');
 const Database = require('../config/database');
 
 /**
- * SuperAdminService
- * Handles Super Admin operations: role swaps, department transfers, system logs
- */
+* SuperAdminService
+* Handles Super Admin operations: role swaps, department transfers, system logs
+*/
 class SuperAdminService {
   constructor() {
     this.roleService = new RoleManagementService();
@@ -14,9 +14,9 @@ class SuperAdminService {
   }
 
   /**
-   * Role Swap: Assign any role to any user
-   * Super Admin can change anyone's role (except other super admins)
-   */
+  * Role Swap: Assign any role to any user
+  * Super Admin can change anyone's role (except other super admins)
+  */
   async roleSwap(userId, newRole, superAdminId, reason) {
     try {
       // Validate super admin
@@ -62,9 +62,9 @@ class SuperAdminService {
   }
 
   /**
-   * Transfer user between departments
-   * Can transfer officers, admins, coordinators, HR across departments
-   */
+  * Transfer user between departments
+  * Can transfer officers, admins, coordinators, HR across departments
+  */
   async transferUserBetweenDepartments(userId, fromDepartment, toDepartment, superAdminId, reason) {
     try {
       // Validate super admin
@@ -112,8 +112,8 @@ class SuperAdminService {
   }
 
   /**
-   * Promote citizen to any department
-   */
+  * Promote citizen to any department
+  */
   async assignCitizenToDepartment(userId, role, departmentId, superAdminId, reason) {
     try {
       // Validate super admin
@@ -163,8 +163,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get all system logs
-   */
+  * Get all system logs
+  */
   async getSystemLogs(superAdminId, options = {}) {
     try {
       // Validate super admin
@@ -251,8 +251,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get system statistics
-   */
+  * Get system statistics
+  */
   async getSystemStatistics(superAdminId) {
     try {
       // Validate super admin
@@ -287,8 +287,8 @@ class SuperAdminService {
   }
 
   /**
-   * Helper: Get count from table
-   */
+  * Helper: Get count from table
+  */
   async getCount(tableName) {
     try {
       const { count, error } = await this.supabase
@@ -304,8 +304,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get Super Admin dashboard
-   */
+  * Get Super Admin dashboard
+  */
   async getDashboard(superAdminId) {
     try {
       const [stats, recentLogs] = await Promise.all([
@@ -328,3 +328,4 @@ class SuperAdminService {
 }
 
 module.exports = SuperAdminService;
+

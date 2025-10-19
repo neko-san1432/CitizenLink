@@ -2,17 +2,17 @@ const RoleManagementService = require('./RoleManagementService');
 const { USER_ROLES } = require('../../shared/constants');
 
 /**
- * HRService
- * Handles HR-specific operations: manage LGU officers and admins
- */
+* HRService
+* Handles HR-specific operations: manage LGU officers and admins
+*/
 class HRService {
   constructor() {
     this.roleService = new RoleManagementService();
   }
 
   /**
-   * Promote citizen to LGU officer
-   */
+  * Promote citizen to LGU officer
+  */
   async promoteToOfficer(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -57,8 +57,8 @@ class HRService {
   }
 
   /**
-   * Promote LGU officer to LGU admin
-   */
+  * Promote LGU officer to LGU admin
+  */
   async promoteToAdmin(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -105,8 +105,8 @@ class HRService {
   }
 
   /**
-   * Demote LGU admin to LGU officer
-   */
+  * Demote LGU admin to LGU officer
+  */
   async demoteAdminToOfficer(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -151,8 +151,8 @@ class HRService {
   }
 
   /**
-   * Strip all titles - revert to citizen
-   */
+  * Strip all titles - revert to citizen
+  */
   async stripTitles(userId, hrId, reason) {
     try {
       // Validate permission
@@ -205,8 +205,8 @@ class HRService {
   }
 
   /**
-   * Assign LGU officer to department
-   */
+  * Assign LGU officer to department
+  */
   async assignOfficerToDepartment(userId, departmentId, hrId) {
     try {
       // Validate permission
@@ -245,8 +245,8 @@ class HRService {
   }
 
   /**
-   * Get HR dashboard data
-   */
+  * Get HR dashboard data
+  */
   async getHRDashboard(hrId) {
     try {
       // Validate HR role
@@ -281,8 +281,8 @@ class HRService {
   }
 
   /**
-   * Get role change history for a user
-   */
+  * Get role change history for a user
+  */
   async getUserRoleHistory(userId, hrId) {
     try {
       const Database = require('../config/database');
@@ -308,8 +308,8 @@ class HRService {
   }
 
   /**
-   * Generate signup link for specific role and department
-   */
+  * Generate signup link for specific role and department
+  */
   async generateSignupLink(hrId, role, departmentCode, expiresInHours = 1) {
     try {
 
@@ -440,8 +440,8 @@ class HRService {
   }
 
   /**
-   * Get all signup links created by HR
-   */
+  * Get all signup links created by HR
+  */
   async getSignupLinks(hrId, filters = {}) {
     try {
       // Validate HR role
@@ -499,8 +499,8 @@ class HRService {
   }
 
   /**
-   * Deactivate a signup link
-   */
+  * Deactivate a signup link
+  */
   async deactivateSignupLink(hrId, linkId) {
     try {
       // console.log removed for security
@@ -543,8 +543,8 @@ class HRService {
   }
 
   /**
-   * Validate signup code (public method)
-   */
+  * Validate signup code (public method)
+  */
   async validateSignupCode(code) {
     try {
       const Database = require('../config/database');
@@ -587,8 +587,8 @@ class HRService {
   }
 
   /**
-   * Mark signup code as used
-   */
+  * Mark signup code as used
+  */
   async markSignupCodeUsed(code, userId) {
     try {
       const Database = require('../config/database');
@@ -616,8 +616,8 @@ class HRService {
   }
 
   /**
-   * Generate unique code for signup link
-   */
+  * Generate unique code for signup link
+  */
   generateUniqueCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -629,3 +629,4 @@ class HRService {
 }
 
 module.exports = HRService;
+

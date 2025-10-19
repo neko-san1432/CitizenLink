@@ -24,6 +24,7 @@
     "security-fix": "npm run security-audit-npm && npm audit fix && npm run lint:fix",
     "setup-dev": "node scripts/setup-dev-env.js",
     "setup-actions": "node scripts/setup-github-actions.js",
+    "fix-indentation": "node scripts/fix-service-indentation.js",
     "rate-limit": "node scripts/rate-limit-manager.js",
     "cleanup": "node scripts/cleanup-unused-files.js"
   },

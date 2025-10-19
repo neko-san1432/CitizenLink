@@ -2,9 +2,9 @@ const Database = require('../config/database');
 const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require('../../shared/constants');
 
 /**
- * RoleManagementService
- * Handles role changes by modifying auth.users.raw_user_meta_data
- */
+* RoleManagementService
+* Handles role changes by modifying auth.users.raw_user_meta_data
+*/
 class RoleManagementService {
   constructor() {
     this.db = new Database();
@@ -12,12 +12,12 @@ class RoleManagementService {
   }
 
   /**
-   * Update user role in auth.users.raw_user_meta_data
-   * @param {string} userId - User ID to update
-   * @param {string} newRole - New role to assign
-   * @param {string} performedBy - ID of user making the change
-   * @param {object} metadata - Additional metadata (department, reason, etc.)
-   */
+  * Update user role in auth.users.raw_user_meta_data
+  * @param {string} userId - User ID to update
+  * @param {string} newRole - New role to assign
+  * @param {string} performedBy - ID of user making the change
+  * @param {object} metadata - Additional metadata (department, reason, etc.)
+  */
   async updateUserRole(userId, newRole, performedBy, metadata = {}) {
     try {
       // Validate role
@@ -75,8 +75,8 @@ class RoleManagementService {
   }
 
   /**
-   * Get user's current role from auth metadata
-   */
+  * Get user's current role from auth metadata
+  */
   async getUserRole(userId) {
     try {
       const { data, error } = await this.supabase.auth.admin.getUserById(userId);
@@ -95,16 +95,16 @@ class RoleManagementService {
   }
 
   /**
-   * Check if user can switch to citizen mode
-   */
+  * Check if user can switch to citizen mode
+  */
   canSwitchToCitizen(userRole) {
     return SWITCHABLE_ROLES.includes(userRole);
   }
 
   /**
-   * Toggle user to citizen mode (temporary)
-   * Stores in session/local state, not in database
-   */
+  * Toggle user to citizen mode (temporary)
+  * Stores in session/local state, not in database
+  */
   async createCitizenSession(userId, actualRole) {
     // This returns data for client-side session storage
     return {
@@ -117,8 +117,8 @@ class RoleManagementService {
   }
 
   /**
-   * Check if role A can manage role B
-   */
+  * Check if role A can manage role B
+  */
   canManageRole(managerRole, targetRole) {
     const managerLevel = ROLE_HIERARCHY[managerRole] || 0;
     const targetLevel = ROLE_HIERARCHY[targetRole] || 0;
@@ -127,8 +127,8 @@ class RoleManagementService {
   }
 
   /**
-   * Get all users by role
-   */
+  * Get all users by role
+  */
   async getUsersByRole(role, options = {}) {
     try {
       // Note: Supabase doesn't allow querying auth.users directly via client
@@ -150,8 +150,8 @@ class RoleManagementService {
   }
 
   /**
-   * Log role change for audit trail
-   */
+  * Log role change for audit trail
+  */
   async logRoleChange(userId, oldRole, newRole, performedBy, metadata = {}) {
     try {
       // Create a role_changes table entry
@@ -186,8 +186,8 @@ class RoleManagementService {
   }
 
   /**
-   * Assign user to department
-   */
+  * Assign user to department
+  */
   async assignDepartment(userId, departmentId, assignedBy) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
@@ -226,8 +226,8 @@ class RoleManagementService {
   }
 
   /**
-   * Transfer user between departments
-   */
+  * Transfer user between departments
+  */
   async transferDepartment(userId, fromDepartment, toDepartment, transferredBy, reason) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
@@ -273,8 +273,8 @@ class RoleManagementService {
   }
 
   /**
-   * Log department transfer
-   */
+  * Log department transfer
+  */
   async logDepartmentTransfer(userId, fromDept, toDept, performedBy, reason) {
     try {
       const logEntry = {
@@ -302,8 +302,8 @@ class RoleManagementService {
   }
 
   /**
-   * Validate permission for role change
-   */
+  * Validate permission for role change
+  */
   validateRoleChangePermission(performerRole, targetCurrentRole, targetNewRole) {
     const errors = [];
 
@@ -340,3 +340,4 @@ class RoleManagementService {
 }
 
 module.exports = RoleManagementService;
+

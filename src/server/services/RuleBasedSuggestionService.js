@@ -2,9 +2,9 @@ const DepartmentRepository = require('../repositories/DepartmentRepository');
 const ComplaintRepository = require('../repositories/ComplaintRepository');
 
 /**
- * RuleBasedSuggestionService
- * Lightweight, explainable suggestions (no ML) for routing
- */
+* RuleBasedSuggestionService
+* Lightweight, explainable suggestions (no ML) for routing
+*/
 class RuleBasedSuggestionService {
   constructor() {
     this.departmentRepo = new DepartmentRepository();
@@ -12,10 +12,10 @@ class RuleBasedSuggestionService {
   }
 
   /**
-   * Compute department and coordinator suggestions for a complaint
-   * @param {object} complaint - complaint record (title, descriptive_su, type, location_text)
-   * @returns {object} suggestions
-   */
+  * Compute department and coordinator suggestions for a complaint
+  * @param {object} complaint - complaint record (title, descriptive_su, type, location_text)
+  * @returns {object} suggestions
+  */
   async computeSuggestions(complaint) {
     const text = [complaint.title, complaint.descriptive_su, complaint.location_text]
       .filter(Boolean)
@@ -97,3 +97,4 @@ class RuleBasedSuggestionService {
 }
 
 module.exports = RuleBasedSuggestionService;
+

@@ -1,9 +1,9 @@
 const Database = require('../config/database');
 
 /**
- * DuplicationDetectionService
- * Detects duplicate and similar complaints using multiple algorithms
- */
+* DuplicationDetectionService
+* Detects duplicate and similar complaints using multiple algorithms
+*/
 class DuplicationDetectionService {
   constructor() {
     this.db = new Database();
@@ -11,10 +11,10 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Main method to detect potential duplicates for a complaint
-   * @param {string} complaintId - The complaint to check
-   * @returns {Promise<Array>} Array of potential duplicates with scores
-   */
+  * Main method to detect potential duplicates for a complaint
+  * @param {string} complaintId - The complaint to check
+  * @returns {Promise<Array>} Array of potential duplicates with scores
+  */
   async detectDuplicates(complaintId) {
     try {
       const complaint = await this.getComplaint(complaintId);
@@ -47,8 +47,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Get complaint by ID
-   */
+  * Get complaint by ID
+  */
   async getComplaint(complaintId) {
     const { data, error } = await this.supabase
       .from('complaints')
@@ -61,9 +61,9 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Find complaints with similar text content
-   * Uses Levenshtein distance and keyword matching
-   */
+  * Find complaints with similar text content
+  * Uses Levenshtein distance and keyword matching
+  */
   async findTextSimilarity(complaint) {
     const { data: candidates, error } = await this.supabase
       .from('complaints')
@@ -110,8 +110,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Find complaints in similar geographic locations
-   */
+  * Find complaints in similar geographic locations
+  */
   async findLocationSimilarity(complaint) {
     if (!complaint.latitude || !complaint.longitude) {
       return [];
@@ -164,8 +164,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Find complaints submitted within similar time period
-   */
+  * Find complaints submitted within similar time period
+  */
   async findTemporalSimilarity(complaint) {
     // Check for complaints within 7 days
     const beforeDate = new Date(complaint.submitted_at);
@@ -212,8 +212,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Merge results from different algorithms and calculate final score
-   */
+  * Merge results from different algorithms and calculate final score
+  */
   mergeAndScore(textMatches, locationMatches, temporalMatches) {
     const allMatches = new Map();
 
@@ -264,8 +264,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Save similarity results to database
-   */
+  * Save similarity results to database
+  */
   async saveSimilarityResults(complaintId, results) {
     const records = results.map(result => ({
       complaint_id: complaintId,
@@ -290,8 +290,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Calculate text similarity using Levenshtein distance
-   */
+  * Calculate text similarity using Levenshtein distance
+  */
   calculateTextSimilarity(str1, str2) {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
@@ -303,8 +303,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Levenshtein distance algorithm
-   */
+  * Levenshtein distance algorithm
+  */
   levenshteinDistance(str1, str2) {
     const matrix = [];
 
@@ -334,8 +334,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Calculate keyword overlap between two texts
-   */
+  * Calculate keyword overlap between two texts
+  */
   calculateKeywordOverlap(text1, text2) {
     const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were']);
 
@@ -355,9 +355,9 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Calculate distance between two geographic points (Haversine formula)
-   * Returns distance in kilometers
-   */
+  * Calculate distance between two geographic points (Haversine formula)
+  * Returns distance in kilometers
+  */
   calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRad(lat2 - lat1);
@@ -377,8 +377,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Check if two locations are on the same street
-   */
+  * Check if two locations are on the same street
+  */
   isSameStreet(location1, location2) {
     if (!location1 || !location2) return false;
 
@@ -393,8 +393,8 @@ class DuplicationDetectionService {
   }
 
   /**
-   * Get timestamp threshold (X days ago)
-   */
+  * Get timestamp threshold (X days ago)
+  */
   getTimeThreshold(days) {
     const date = new Date();
     date.setDate(date.getDate() - days);
@@ -403,3 +403,4 @@ class DuplicationDetectionService {
 }
 
 module.exports = DuplicationDetectionService;
+

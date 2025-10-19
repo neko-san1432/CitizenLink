@@ -162,3 +162,4 @@ class SettingService {
 }
 
 module.exports = SettingService;
+
