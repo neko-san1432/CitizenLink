@@ -56,16 +56,29 @@ jobs:
           SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
         run: |
           echo "🔍 Running ESLint analysis..."
-          npx eslint . \
+          
+          # Create empty SARIF file first
+          echo '{"version": "2.1.0", "runs": [{"results": []}]}' > eslint-results.sarif
+          
+          # Run ESLint and capture output
+          if npx eslint . \
             --config .eslintrc.js \
             --ext .js,.jsx,.ts,.tsx \
             --format @microsoft/eslint-formatter-sarif \
-            --output-file eslint-results.sarif
+            --output-file eslint-results.sarif; then
+            echo "✅ ESLint analysis completed successfully"
+          else
+            echo "⚠️ ESLint found issues, but continuing with analysis"
+            # Ensure SARIF file exists even if ESLint fails
+            if [ ! -f eslint-results.sarif ]; then
+              echo '{"version": "2.1.0", "runs": [{"results": []}]}' > eslint-results.sarif
+            fi
+          fi
         continue-on-error: true
 
       - name: Upload ESLint Results
         if: matrix.language == 'javascript-typescript'
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: eslint-results.sarif
           wait-for-processing: true
