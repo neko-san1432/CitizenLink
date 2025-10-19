@@ -1,83 +1,29 @@
+# CodeQL configuration file for CitizenLink
+# This file configures CodeQL analysis settings
+
 name: "CitizenLink CodeQL Configuration"
 
+# Disable queries that are not relevant for this project
 disable-default-queries: false
 
+# Enable additional security queries
 queries:
-  # Include security and quality queries (valid query packs)
-  - uses: security-and-quality
-  - uses: security-extended
+  - name: security-and-quality
+  - name: security-extended
 
+# Paths to exclude from analysis
 paths-ignore:
-  # Ignore test files and build artifacts
-  - "**/test/**"
-  - "**/tests/**"
-  - "**/*.test.js"
-  - "**/*.spec.js"
-  - "**/node_modules/**"
-  - "**/public/**"
-  - "**/build/**"
-  - "**/dist/**"
-  - "**/*.min.js"
-  - "**/*.min.css"
+  - "node_modules/**"
+  - "public/**"
+  - "views/**"
+  - "*.min.js"
+  - "coverage/**"
+  - "dist/**"
+  - "build/**"
 
+# Paths to include in analysis
 paths:
-  # Only scan source code
-  - "src/"
-
-# Suppress specific false positives
-rules:
-  # Suppress known safe patterns in your codebase
-  - id: js/disabling-electron-node-integration
-    severity: warning
-
-  - id: js/enabling-cors
-    severity: warning
-
-# Configure query suites for different purposes
-query-filters:
-  - exclude:
-      # Exclude queries that are too noisy for your project
-      problem.severity: "info"
-      tags: "experimental"
-
-# Baseline for suppressing existing issues
-baseline:
-  # Set to true to only report new issues, suppressing existing ones
-  new-issues-only: false
-
-# Custom query configuration
-query-configuration:
-  # Configure specific queries
-  - query: js/sql-injection
-    enabled: true
-    severity: "error"
-
-  - query: js/xss
-    enabled: true
-    severity: "error"
-
-  - query: js/path-injection
-    enabled: true
-    severity: "warning"
-
-# Disable queries that don't apply to your project
-  - query: cpp/
-    enabled: false
-
-  - query: csharp/
-    enabled: false
-
-  - query: go/
-    enabled: false
-
-  - query: java/
-    enabled: false
-
-  - query: python/
-    enabled: false
-
-  - query: ruby/
-    enabled: false
-
-  - query: swift/
-    enabled: false
+  - "src/**"
+  - "scripts/**"
+  - "*.js"
+  - "*.json"

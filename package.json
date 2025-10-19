@@ -22,6 +22,7 @@
     "security-audit-npm": "npm audit --audit-level=moderate",
     "security-fix": "npm run security-audit-npm && npm audit fix && npm run lint:fix",
     "setup-dev": "node scripts/setup-dev-env.js",
+    "setup-actions": "node scripts/setup-github-actions.js",
     "rate-limit": "node scripts/rate-limit-manager.js",
     "cleanup": "node scripts/cleanup-unused-files.js"
   },
