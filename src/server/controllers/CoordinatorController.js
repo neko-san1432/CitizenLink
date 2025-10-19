@@ -149,10 +149,10 @@ class CoordinatorController {
   async getDashboard(req, res) {
     try {
       const { user } = req;
-      console.log('[COORDINATOR_CONTROLLER] Fetching dashboard for user:', user.id);
+      // console.log removed for security
 
       const data = await this.coordinatorService.getDashboardData(user.id);
-      console.log('[COORDINATOR_CONTROLLER] Dashboard data fetched successfully');
+      // console.log removed for security
 
       res.json({
         success: true,

@@ -27,7 +27,7 @@ const csrfProtection = (req, res, next) => {
   }
 
   if (!token) {
-    console.log('[CSRF] Token missing in request');
+    // console.log removed for security
     return res.status(403).json({
       success: false,
       error: 'CSRF token missing'
@@ -36,7 +36,7 @@ const csrfProtection = (req, res, next) => {
 
   // Verify token exists and is valid
   if (!tokenStore.has(token)) {
-    console.log('[CSRF] Invalid token:', token, 'Available tokens:', Array.from(tokenStore.keys()));
+    // console.log removed for security
     return res.status(403).json({
       success: false,
       error: 'Invalid CSRF token'
@@ -49,7 +49,7 @@ const csrfProtection = (req, res, next) => {
     tokenStore.delete(token);
   }
 
-  console.log('[CSRF] Token validated successfully');
+  // console.log removed for security
   next();
 };
 

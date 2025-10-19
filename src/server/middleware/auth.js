@@ -12,9 +12,9 @@ const authenticateUser = async (req, res, next) => {
       req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-      console.log('[AUTH] No token found in cookies or headers');
-      console.log('[AUTH] Request cookies:', req.cookies);
-      console.log('[AUTH] Request headers:', req.headers.authorization);
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
@@ -31,10 +31,7 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      console.log(
-        '[AUTH] Token invalid or expired:',
-        error?.message || 'No user'
-      );
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
@@ -48,10 +45,7 @@ const authenticateUser = async (req, res, next) => {
     const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(tokenUser.id);
 
     if (authError || !authUser) {
-      console.log(
-        '[AUTH] Failed to get auth user data:',
-        authError?.message || 'No auth user'
-      );
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,

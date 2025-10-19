@@ -7,7 +7,7 @@ const oauthCompleteCaptchaWidgetId = 0; // Default ID for auto-rendered captchas
 // Wait for captcha to be ready
 const waitForCaptcha = () => {
   if (window.grecaptcha && window.grecaptcha.getResponse) {
-    console.log('Captcha is ready');
+    // console.log removed for security
     return true;
   }
   return false;
@@ -16,9 +16,9 @@ const waitForCaptcha = () => {
 // Check if captcha is ready, retry if not
 const checkCaptchaReady = () => {
   if (waitForCaptcha()) {
-    console.log('Captcha ready, widget ID:', oauthCompleteCaptchaWidgetId);
+    // console.log removed for security
   } else {
-    console.log('Captcha not ready, retrying...');
+    // console.log removed for security
     setTimeout(checkCaptchaReady, 500);
   }
 };
@@ -27,22 +27,22 @@ const checkCaptchaReady = () => {
 checkCaptchaReady();
 
 async function verifyCaptchaOrFail(widgetId) {
-  console.log('Verifying captcha, widgetId:', widgetId);
+  // console.log removed for security
 
   if (widgetId === null || widgetId === undefined) {
-    console.log('Widget ID is null/undefined');
+    // console.log removed for security
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };
   }
 
   if (!window.grecaptcha) {
-    console.log('grecaptcha not available');
+    // console.log removed for security
     showMessage('error', 'reCAPTCHA not loaded. Please refresh the page.');
     return { ok: false };
   }
 
   const token = window.grecaptcha.getResponse(widgetId);
-  console.log('Captcha token:', token ? 'present' : 'missing');
+  // console.log removed for security
 
   if (!token) {
     showMessage('error', 'Please complete the captcha.');
@@ -125,10 +125,10 @@ const prefillOAuthData = async () => {
           mobileInput.readOnly = true;
           mobileInput.style.background = '#f5f5f5';
           mobileInput.style.cursor = 'not-allowed';
-          console.log('[OAUTH] Phone field locked with value:', digits);
+          // console.log removed for security
         } else {
           // No phone from OAuth - keep field editable
-          console.log('[OAUTH] No phone from provider - field remains editable');
+          // console.log removed for security
           mobileInput.readOnly = false;
           mobileInput.style.background = '';
           mobileInput.style.cursor = '';
@@ -171,7 +171,7 @@ if (oauthCompleteForm) {
       const captchaResult = await verifyCaptchaOrFail(oauthCompleteCaptchaWidgetId);
       if (!captchaResult.ok) return;
     } else {
-      console.log('Captcha not available, skipping verification');
+      // console.log removed for security
     }
 
     // Update user metadata with mobile number and complete profile via backend

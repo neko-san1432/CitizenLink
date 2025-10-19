@@ -23,11 +23,11 @@ class ApiClient {
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
 
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             // Import and show session expired toast
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
@@ -45,7 +45,7 @@ class ApiClient {
           });
 
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'GET',
@@ -53,7 +53,7 @@ class ApiClient {
           });
 
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -97,11 +97,11 @@ class ApiClient {
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
 
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -118,7 +118,7 @@ class ApiClient {
           });
 
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'POST',
@@ -127,7 +127,7 @@ class ApiClient {
           });
 
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -171,11 +171,11 @@ class ApiClient {
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
 
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -192,7 +192,7 @@ class ApiClient {
           });
 
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'PUT',
@@ -201,7 +201,7 @@ class ApiClient {
           });
 
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -244,11 +244,11 @@ class ApiClient {
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
 
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
@@ -265,7 +265,7 @@ class ApiClient {
           });
 
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'DELETE',
@@ -273,7 +273,7 @@ class ApiClient {
           });
 
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {

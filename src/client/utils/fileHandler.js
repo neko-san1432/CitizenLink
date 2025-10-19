@@ -52,7 +52,7 @@ export class FileHandler {
   removeFile(index) {
     if (index >= 0 && index < this.selectedFiles.length) {
       const removedFile = this.selectedFiles.splice(index, 1)[0];
-      console.log(`[FILE] Removed file: ${removedFile.name}`);
+      // console.log removed for security
 
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();

@@ -47,7 +47,7 @@ class HeatmapVisualization {
    */
   async loadComplaintData(filters = {}) {
     try {
-      console.log('[HEATMAP] Loading complaint data with filters:', filters);
+      // console.log removed for security
       this.currentFilters = filters;
 
       const queryParams = new URLSearchParams();
@@ -60,17 +60,17 @@ class HeatmapVisualization {
       // Use apiClient for authenticated requests
       const apiClientModule = await import('../../config/apiClient.js');
       const apiClient = apiClientModule.default;
-      console.log('[HEATMAP] Making API request to:', `/api/complaints/locations?${queryParams}`);
+      // console.log removed for security
 
       const result = await apiClient.get(`/api/complaints/locations?${queryParams}`);
-      console.log('[HEATMAP] API response:', result);
-      console.log('[HEATMAP] API response data length:', result.data?.length);
-      console.log('[HEATMAP] API response data sample:', result.data?.slice(0, 3));
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
 
       this.complaintData = result.data || [];
 
-      console.log(`[HEATMAP] Loaded ${this.complaintData.length} complaint locations`);
-      console.log('[HEATMAP] First few complaints:', this.complaintData.slice(0, 3));
+      // console.log removed for security
+      // console.log removed for security
       return this.complaintData;
     } catch (error) {
       console.error('[HEATMAP] Error loading complaint data:', error);
@@ -97,7 +97,7 @@ class HeatmapVisualization {
     // Create heatmap layer using Leaflet.heat
     this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
 
-    console.log(`[HEATMAP] Created heatmap layer with ${heatmapData.length} points`);
+    // console.log removed for security
     return this.heatmapLayer;
   }
 
@@ -146,15 +146,15 @@ class HeatmapVisualization {
 
     this.markerLayer = L.layerGroup();
 
-    console.log(`[HEATMAP] Creating markers for ${this.complaintData.length} complaints`);
+    // console.log removed for security
 
     this.complaintData.forEach((complaint, index) => {
-      console.log(`[HEATMAP] Creating marker ${index + 1}: ${complaint.title} - Lat: ${complaint.lat}, Lng: ${complaint.lng}`);
+      // console.log removed for security
       const marker = this.createComplaintMarker(complaint);
       this.markerLayer.addLayer(marker);
     });
 
-    console.log(`[HEATMAP] Created marker layer with ${this.complaintData.length} markers`);
+    // console.log removed for security
     return this.markerLayer;
   }
 
@@ -168,15 +168,15 @@ class HeatmapVisualization {
 
     this.circleLayer = L.layerGroup();
 
-    console.log(`[HEATMAP] Creating circles for ${this.complaintData.length} complaints`);
+    // console.log removed for security
 
     this.complaintData.forEach((complaint, index) => {
-      console.log(`[HEATMAP] Creating circle ${index + 1}: ${complaint.title} - Lat: ${complaint.lat}, Lng: ${complaint.lng}`);
+      // console.log removed for security
       const circle = this.createComplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
     });
 
-    console.log(`[HEATMAP] Created circle layer with ${this.complaintData.length} circles`);
+    // console.log removed for security
     return this.circleLayer;
   }
 
@@ -272,7 +272,7 @@ class HeatmapVisualization {
 
     // Add click event for additional actions
     circle.on('click', (e) => {
-      console.log('[HEATMAP] Circle clicked for complaint:', complaint.title);
+      // console.log removed for security
       // You can add additional click actions here
     });
 
@@ -475,19 +475,19 @@ class HeatmapVisualization {
       const { getUserRole } = await import('../../auth/authChecker.js');
       const userRole = await getUserRole();
 
-      console.log('[HEATMAP] Checking access for complaint:', complaint.title);
-      console.log('[HEATMAP] User role:', userRole);
-      console.log('[HEATMAP] Complaint department:', complaint.department);
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
 
       // Super admin has access to everything
       if (userRole === 'super-admin') {
-        console.log('[HEATMAP] Super admin - access granted');
+        // console.log removed for security
         return true;
       }
 
       // Complaint coordinator has access to everything
       if (userRole === 'complaint-coordinator') {
-        console.log('[HEATMAP] Complaint coordinator - access granted');
+        // console.log removed for security
         return true;
       }
 
@@ -501,17 +501,17 @@ class HeatmapVisualization {
         }
       }
 
-      console.log('[HEATMAP] User department:', userDepartment);
+      // console.log removed for security
 
       if (!userDepartment) {
-        console.log('[HEATMAP] No department found in user role - access denied');
+        // console.log removed for security
         return false;
       }
 
       // Check if complaint is assigned to user's department
       const complaintDepartment = complaint.department?.toUpperCase();
       if (complaintDepartment === userDepartment) {
-        console.log('[HEATMAP] Complaint assigned to user department - access granted');
+        // console.log removed for security
         return true;
       }
 
@@ -519,12 +519,12 @@ class HeatmapVisualization {
       if (complaintDepartment && complaintDepartment.includes(',')) {
         const assignedDepartments = complaintDepartment.split(',').map(dept => dept.trim().toUpperCase());
         if (assignedDepartments.includes(userDepartment)) {
-          console.log('[HEATMAP] Joint complaint includes user department - access granted');
+          // console.log removed for security
           return true;
         }
       }
 
-      console.log('[HEATMAP] Access denied - complaint not assigned to user department');
+      // console.log removed for security
       return false;
 
     } catch (error) {
@@ -557,7 +557,7 @@ class HeatmapVisualization {
     const clusteringResult = this.dbscan.cluster(points);
     this.clusters = clusteringResult.clusters;
 
-    console.log(`[HEATMAP] Clustering completed: ${clusteringResult.clusters.length} clusters, ${clusteringResult.noise.length} noise points`);
+    // console.log removed for security
 
     return clusteringResult;
   }
@@ -620,7 +620,7 @@ class HeatmapVisualization {
       this.clusterLayer.addLayer(clusterMarker);
     });
 
-    console.log(`[HEATMAP] Created cluster layer with ${this.clusters.length} clusters`);
+    // console.log removed for security
     return this.clusterLayer;
   }
 

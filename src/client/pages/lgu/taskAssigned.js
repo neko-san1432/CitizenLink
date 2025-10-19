@@ -10,7 +10,7 @@ let selectedTask = null;
  * Initialize the task assigned page
  */
 async function initTaskAssignedPage() {
-  console.log('[TASK_ASSIGNED] Initializing...');
+  // console.log removed for security
 
   setupEventListeners();
   await loadTasks();
@@ -56,7 +56,7 @@ async function loadTasks() {
       filteredTasks = [...allTasks];
       renderTasks();
       updateStats();
-      console.log('[TASK_ASSIGNED] Loaded tasks:', allTasks.length);
+      // console.log removed for security
     } else {
       showToast(response.error || 'Failed to load tasks', 'error');
     }

@@ -74,7 +74,7 @@ export const getUserRole = async (options = {}) => {
   // Check API cache to prevent excessive calls
   const now = Date.now();
   if (!refresh && roleApiCache && (now - roleApiCacheTime) < CACHE_DURATION) {
-    console.log('🔍 Using cached role from API');
+    // console.log removed for security
     return roleApiCache;
   }
 
@@ -84,7 +84,7 @@ export const getUserRole = async (options = {}) => {
     if (response.ok) {
       const data = await response.json();
       if (data.success && data.data.role) {
-        console.log('🔍 Got role from API:', data.data.role);
+        // console.log removed for security
         saveUserMeta({ role: data.data.role, name: data.data.name });
         // Cache the result
         roleApiCache = data.data.role;
@@ -104,12 +104,7 @@ export const getUserRole = async (options = {}) => {
   const userMetadata = session?.user?.user_metadata || {};
 
   // Debug: Log what we find in metadata
-  console.log('🔍 Session metadata debug:', {
-    rawUserMetaData,
-    userMetadata,
-    hasRawUserMetaData: Object.keys(rawUserMetaData).length > 0,
-    hasUserMetadata: Object.keys(userMetadata).length > 0
-  });
+  // console.log removed for security
 
   // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
   const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
@@ -118,12 +113,7 @@ export const getUserRole = async (options = {}) => {
   const role = combinedMetadata.role || combinedMetadata.normalized_role || null;
   const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
 
-  console.log('🔍 Role detection result:', {
-    combinedMetadata,
-    role,
-    name,
-    willSaveToLocalStorage: !!(role || name)
-  });
+  // console.log removed for security
 
   if (role || name) saveUserMeta({ role, name });
   return role;
@@ -135,7 +125,7 @@ export const validateAndRefreshToken = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error || !session) {
-      console.log('No valid session found');
+      // console.log removed for security
       return false;
     }
 
@@ -146,20 +136,14 @@ export const validateAndRefreshToken = async () => {
     const timeUntilExpiry = expiresAt.getTime() - now.getTime();
     const fiveMinutes = 5 * 60 * 1000;
 
-    console.log('🔄 Token validation:', {
-      rawExpiresAt: session.expires_at || session.expiresAt,
-      expiresAt: expiresAt.toISOString(),
-      now: now.toISOString(),
-      timeUntilExpiry: timeUntilExpiry,
-      isValidDate: !isNaN(expiresAt.getTime())
-    });
+    // console.log removed for security
 
     if (timeUntilExpiry < fiveMinutes) {
-      console.log('Token expiring soon, refreshing...');
+      // console.log removed for security
       const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
 
       if (refreshError || !newSession) {
-        console.log('Token refresh failed');
+        // console.log removed for security
         return false;
       }
 
@@ -170,7 +154,7 @@ export const validateAndRefreshToken = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: newSession.access_token })
         });
-        console.log('Token refreshed and server cookie updated');
+        // console.log removed for security
       } catch (cookieError) {
         console.error('Failed to update server cookie:', cookieError);
       }
@@ -186,7 +170,7 @@ export const validateAndRefreshToken = async () => {
 // Set up automatic token refresh listener
 export const initializeAuthListener = () => {
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+    // console.log removed for security
 
     // Ensure server cookie is set when we get a valid session
     if (event === 'SIGNED_IN' && session) {
@@ -203,7 +187,7 @@ export const initializeAuthListener = () => {
     }
 
     if (event === 'TOKEN_REFRESHED' && session) {
-      console.log('Token refreshed, updating server cookie');
+      // console.log removed for security
       try {
         // Update server-side cookie with new token
         await fetch('/auth/session', {
@@ -211,14 +195,14 @@ export const initializeAuthListener = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: session.access_token })
         });
-        console.log('Server cookie updated with refreshed token');
+        // console.log removed for security
       } catch (error) {
         console.error('Failed to update server cookie:', error);
       }
     }
 
     if (event === 'SIGNED_OUT') {
-      console.log('User signed out, clearing local data');
+      // console.log removed for security
       localStorage.removeItem(storageKey);
       localStorage.removeItem(oauthKey);
     }
@@ -254,15 +238,7 @@ export const startTokenExpiryMonitoring = () => {
       }
 
       // Debug: Log session structure to see available properties
-      console.log('🔍 Session object structure:', {
-        expires_at: session.expires_at,
-        expiresAt: session.expiresAt,
-        expires_in: session.expires_in,
-        token_type: session.token_type,
-        access_token: session.access_token ? 'present' : 'missing',
-        refresh_token: session.refresh_token ? 'present' : 'missing',
-        user: session.user ? 'present' : 'missing'
-      });
+      // console.log removed for security
 
       // Check if token is expired or about to expire (within 1 minute)
       // Supabase expires_at is a Unix timestamp in seconds, not milliseconds
@@ -271,28 +247,22 @@ export const startTokenExpiryMonitoring = () => {
       const timeUntilExpiry = expiresAt.getTime() - now.getTime();
       const oneMinute = 60 * 1000;
 
-      console.log('⏰ Token expiry check:', {
-        rawExpiresAt: session.expires_at || session.expiresAt,
-        expiresAt: expiresAt.toISOString(),
-        now: now.toISOString(),
-        timeUntilExpiry: timeUntilExpiry,
-        isValidDate: !isNaN(expiresAt.getTime())
-      });
+      // console.log removed for security
 
       if (timeUntilExpiry <= 0) {
-        console.log('Token has expired, attempting refresh');
+        // console.log removed for security
         try { await supabase.auth.refreshSession(); } catch {}
         tokenExpiryTimer = setTimeout(checkTokenExpiry, 2000);
         return;
       }
 
       if (timeUntilExpiry <= oneMinute) {
-        console.log('Token expiring soon, attempting refresh...');
+        // console.log removed for security
         try {
           const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
 
           if (refreshError || !newSession) {
-            console.log('Token refresh failed, logging out');
+            // console.log removed for security
             handleSessionExpired();
             return;
           }
@@ -304,7 +274,7 @@ export const startTokenExpiryMonitoring = () => {
             body: JSON.stringify({ access_token: newSession.access_token })
           });
 
-          console.log('Token refreshed successfully');
+          // console.log removed for security
           // Restart monitoring with new token
           startTokenExpiryMonitoring();
           return;

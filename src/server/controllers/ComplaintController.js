@@ -37,7 +37,7 @@ class ComplaintController {
       }
 
       res.status(201).json(response);
-      console.log('[COMPLAINT] Enhanced complaint submission completed successfully');
+      // console.log removed for security
     } catch (error) {
       console.error('[COMPLAINT] Submission error:', error);
       const status = error.message.includes('Validation failed') ? 400 : 500;

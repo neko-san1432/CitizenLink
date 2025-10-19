@@ -32,12 +32,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
       throw new Error(validation.errors.join('. '));
     }
 
-    console.log('[COMPLAINT] Submitting complaint:', {
-      title: formData.title,
-      type: formData.type,
-      departments: formData.departments?.length || 0,
-      files: selectedFiles.length
-    });
+    // console.log removed for security
 
     // Create FormData for API submission
     const apiFormData = new FormData();
@@ -66,7 +61,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     }
 
     showMessage('success', result.message || 'Complaint submitted successfully');
-    console.log('[COMPLAINT] Submission successful:', result.data);
+    // console.log removed for security
 
     return result.data;
 
@@ -111,5 +106,5 @@ export function resetComplaintForm(formElement, clearFiles) {
     clearFiles();
   }
 
-  console.log('[COMPLAINT] Form reset completed');
+  // console.log removed for security
 }

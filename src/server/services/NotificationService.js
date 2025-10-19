@@ -104,7 +104,7 @@ class NotificationService {
 
       if (error) throw error;
 
-      console.log(`[NOTIFICATION] Created for user ${userId}: ${notifTitle}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -140,7 +140,7 @@ class NotificationService {
 
       if (error) throw error;
 
-      console.log(`[NOTIFICATION] Created ${data.length} bulk notifications`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -266,7 +266,7 @@ class NotificationService {
 
       if (error) throw error;
 
-      console.log(`[NOTIFICATION] Marked ${data.length} notifications as read for user ${userId}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -316,7 +316,7 @@ class NotificationService {
 
       if (error) throw error;
 
-      console.log(`[NOTIFICATION] Deleted ${data?.length || 0} expired notifications`);
+      // console.log removed for security
 
       return {
         success: true,

@@ -34,7 +34,7 @@ async function loadDashboardData() {
 
     if (dashboardResult.success) {
       // Additional dashboard data if needed
-      console.log('[SUPERADMIN] Dashboard loaded', dashboardResult.dashboard);
+      // console.log removed for security
     }
   } catch (error) {
     console.error('[SUPERADMIN] Load dashboard error:', error);

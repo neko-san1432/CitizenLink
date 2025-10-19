@@ -9,7 +9,7 @@ const coordinatorRoutes = require('./coordinatorRoutes');
 let hrRoutes;
 try {
   hrRoutes = require('./hrRoutes');
-  console.log('[ROUTES] HR routes loaded successfully');
+  // console.log removed for security
 } catch (error) {
   console.error('[ROUTES] Error loading HR routes:', error);
   throw error;

@@ -12,7 +12,7 @@ const { authenticateUser, requireRole } = require('../middleware/auth');
 let hrController;
 try {
   hrController = new HRController();
-  console.log('[HR-ROUTES] HR Controller initialized successfully');
+  // console.log removed for security
 } catch (error) {
   console.error('[HR-ROUTES] Error initializing HR Controller:', error);
   throw error;
@@ -20,7 +20,7 @@ try {
 
 // Test route (no auth required)
 router.get('/test', (req, res) => {
-  console.log('[HR-ROUTES] Test route accessed');
+  // console.log removed for security
   res.json({ success: true, message: 'HR routes are working!' });
 });
 

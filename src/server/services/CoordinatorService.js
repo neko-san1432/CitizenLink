@@ -313,12 +313,7 @@ class CoordinatorService {
    */
   async assignToDepartment(complaintId, departmentName, coordinatorId, options = {}) {
     try {
-      console.log('[COORDINATOR_SERVICE] Assigning complaint to department:', {
-        complaintId,
-        departmentName,
-        coordinatorId,
-        options
-      });
+      // console.log removed for security
 
       // Update complaint with department assignment
       const assigned = await this.coordinatorRepo.assignToDepartment(
@@ -357,7 +352,7 @@ class CoordinatorService {
           if (assignError) {
             console.warn('[COORDINATOR_SERVICE] Assignment creation failed:', assignError.message);
           } else {
-            console.log('[COORDINATOR_SERVICE] Assignment created:', assignment.id);
+            // console.log removed for security
           }
         }
       } catch (e) {
@@ -559,29 +554,29 @@ class CoordinatorService {
    */
   async getDashboardData(coordinatorId) {
     try {
-      console.log('[COORDINATOR_SERVICE] Starting dashboard data fetch for:', coordinatorId);
+      // console.log removed for security
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      console.log('[COORDINATOR_SERVICE] Fetching pending count...');
+      // console.log removed for security
       const pendingCount = await this.coordinatorRepo.getPendingReviewsCount(coordinatorId);
-      console.log('[COORDINATOR_SERVICE] Pending count:', pendingCount);
+      // console.log removed for security
 
-      console.log('[COORDINATOR_SERVICE] Fetching stats...');
+      // console.log removed for security
       const stats = await this.coordinatorRepo.getCoordinatorStats(
         coordinatorId,
         weekAgo.toISOString(),
         today.toISOString()
       );
-      console.log('[COORDINATOR_SERVICE] Stats:', stats);
+      // console.log removed for security
 
-      console.log('[COORDINATOR_SERVICE] Fetching review queue...');
+      // console.log removed for security
       const recentQueue = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 10 });
-      console.log('[COORDINATOR_SERVICE] Queue items:', recentQueue?.length || 0);
+      // console.log removed for security
 
-      console.log('[COORDINATOR_SERVICE] Fetching clusters...');
+      // console.log removed for security
       const clusters = await this.coordinatorRepo.getActiveClusters({ limit: 5 });
-      console.log('[COORDINATOR_SERVICE] Clusters:', clusters?.length || 0);
+      // console.log removed for security
 
       const result = {
         pending_reviews: pendingCount,
@@ -593,7 +588,7 @@ class CoordinatorService {
         active_clusters: clusters
       };
 
-      console.log('[COORDINATOR_SERVICE] Dashboard data complete');
+      // console.log removed for security
       return result;
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Get dashboard error:', error);
@@ -716,7 +711,7 @@ class CoordinatorService {
               metadata: { complaint_id: complaintId, department: departmentCode }
             }
           );
-          console.log(`[COORDINATOR_SERVICE] Notification sent to admin: ${admin.email}`);
+          // console.log removed for security
         } catch (notifError) {
           console.warn(`[COORDINATOR_SERVICE] Failed to notify admin ${admin.email}:`, notifError.message);
         }
@@ -749,7 +744,7 @@ class CoordinatorService {
           }
         }
       );
-      console.log(`[COORDINATOR_SERVICE] Task assignment notification sent to officer: ${officerId}`);
+      // console.log removed for security
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Notify task assigned error:', error);
       throw error;

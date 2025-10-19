@@ -89,7 +89,7 @@ async function loadAssignments() {
 
     if (response.success) {
       assignments = response.data;
-      console.log('[ASSIGNMENTS] Loaded assignments:', assignments);
+      // console.log removed for security
       updateStats();
       renderAssignments();
     } else {
@@ -107,14 +107,14 @@ async function loadAssignments() {
  */
 async function loadOfficers() {
   try {
-    console.log('[ASSIGNMENTS] Loading officers...');
+    // console.log removed for security
     const response = await apiClient.get('/api/lgu-admin/department-officers');
 
-    console.log('[ASSIGNMENTS] Officers API response:', response);
+    // console.log removed for security
 
     if (response.success) {
       officers = response.data;
-      console.log('[ASSIGNMENTS] Loaded officers:', officers);
+      // console.log removed for security
       populateOfficerSelect();
     } else {
       throw new Error(response.error || 'Failed to load officers');
@@ -158,9 +158,9 @@ function renderAssignments() {
   filteredAssignments.forEach(assignment => {
     const btn = document.querySelector(`[data-complaint-id="${assignment.complaint_id}"]`);
     if (btn) {
-      console.log('[ASSIGNMENTS] Attaching click listener to button for complaint:', assignment.complaint_id);
+      // console.log removed for security
       btn.addEventListener('click', (e) => {
-        console.log('[ASSIGNMENTS] Assign button clicked for complaint:', assignment.complaint_id);
+        // console.log removed for security
         e.preventDefault();
         openAssignmentModal(assignment);
       });
@@ -240,7 +240,7 @@ function createAssignmentHTML(assignment) {
  * Open assignment modal
  */
 function openAssignmentModal(assignment) {
-  console.log('[ASSIGNMENTS] Opening assignment modal for:', assignment);
+  // console.log removed for security
   selectedComplaint = assignment;
 
   // Populate complaint summary
@@ -280,7 +280,7 @@ function openAssignmentModal(assignment) {
   const modal = document.getElementById('assignment-modal');
   if (modal) {
     modal.style.display = 'flex';
-    console.log('[ASSIGNMENTS] Modal should now be visible');
+    // console.log removed for security
   } else {
     console.error('[ASSIGNMENTS] Assignment modal not found!');
   }
@@ -342,7 +342,7 @@ async function handleAssignmentSubmit(e) {
  * Populate officer select dropdown
  */
 function populateOfficerSelect() {
-  console.log('[ASSIGNMENTS] Populating officer select with:', officers);
+  // console.log removed for security
   const select = document.getElementById('officer-select');
 
   if (!select) {
@@ -361,7 +361,7 @@ function populateOfficerSelect() {
       <option value="${officer.id}">${escapeHtml(officer.name)} ${officer.employee_id ? `(${officer.employee_id})` : ''}</option>
     `).join('');
 
-  console.log('[ASSIGNMENTS] Officer select populated with', officers.length, 'officers');
+  // console.log removed for security
 }
 
 /**

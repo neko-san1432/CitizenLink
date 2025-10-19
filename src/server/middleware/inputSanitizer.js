@@ -8,7 +8,7 @@ class InputSanitizer {
   static sanitize(req, res, next) {
     try {
       // Log sanitization attempt for security monitoring
-      console.log(`[SANITIZER] Sanitizing request from IP: ${req.ip}, User-Agent: ${req.get('User-Agent')?.substring(0, 50)}...`);
+      // console.log removed for security
 
       // Sanitize request body
       if (req.body && typeof req.body === 'object') {
@@ -490,7 +490,7 @@ class InputSanitizer {
       method: req?.method
     };
 
-    console.log(`[SECURITY-AUDIT] ${JSON.stringify(logEntry)}`);
+    // console.log removed for security
   }
 }
 

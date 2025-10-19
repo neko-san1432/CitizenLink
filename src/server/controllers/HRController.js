@@ -74,14 +74,14 @@ class HRController {
    */
   async deactivateSignupLink(req, res) {
     try {
-      console.log('[HR-CONTROLLER] Deactivate signup link called');
+      // console.log removed for security
       const { linkId } = req.params;
       const hrId = req.user.id;
 
-      console.log('[HR-CONTROLLER] Link ID:', linkId, 'HR ID:', hrId);
+      // console.log removed for security
 
       const result = await this.hrService.deactivateSignupLink(hrId, linkId);
-      console.log('[HR-CONTROLLER] Deactivation result:', result);
+      // console.log removed for security
       res.json(result);
     } catch (error) {
       console.error('[HR-CONTROLLER] Deactivate signup link error:', error);
@@ -97,20 +97,20 @@ class HRController {
    */
   async validateSignupCode(req, res) {
     try {
-      console.log('[HR] Validate signup code called with:', req.params);
+      // console.log removed for security
       const { code } = req.params;
 
       if (!code) {
-        console.log('[HR] No code provided');
+        // console.log removed for security
         return res.status(400).json({
           success: false,
           error: 'Code is required'
         });
       }
 
-      console.log('[HR] Validating code:', code);
+      // console.log removed for security
       const result = await this.hrService.validateSignupCode(code);
-      console.log('[HR] Validation result:', result);
+      // console.log removed for security
       res.json(result);
     } catch (error) {
       console.error('[HR] Validate signup code error:', error);

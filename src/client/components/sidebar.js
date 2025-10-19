@@ -14,7 +14,7 @@ function initializeSidebarClose() {
     sidebarClose.addEventListener('click', function() {
       sidebar.classList.remove('open');
     });
-    console.log('✅ Sidebar close button initialized');
+    // console.log removed for security
   }
 }
 
@@ -48,18 +48,7 @@ async function setSidebarRole() {
     const isSuperAdmin = role === 'super-admin';
 
     // Debug logging
-    console.log('🔧 Sidebar role detection:', {
-      roleRaw,
-      role,
-      activeRole,
-      inCitizenMode,
-      canFileComplaint,
-      isLguAdmin,
-      isLguOfficer,
-      isHR,
-      isCoordinator,
-      isSuperAdmin
-    });
+    // console.log removed for security
 
     // Update localStorage with the correct role for future use
     if (roleRaw) {
@@ -81,12 +70,12 @@ async function setSidebarRole() {
       links.push({ href: `${root}/coordinator/review-queue`, label: '📋 Review Queue' });
       links.push({ href: `${root}/hr/link-generator`, label: '🔗 Link Generator' });
     } else if (isLguAdmin) {
-      console.log('✅ LGU Admin detected - adding admin links');
+      // console.log removed for security
       links.push({ href: `${root}/lgu-admin/assignments`, label: '📋 Department Assignments' });
       links.push({ href: `${root}/heatmap`, label: 'Heatmap' });
       links.push({ href: `${root}/publish`, label: 'Publish Content' });
     } else if (isLguOfficer) {
-      console.log('✅ LGU Officer detected - adding officer links');
+      // console.log removed for security
       links.push({ href: `${root}/taskAssigned`, label: '📝 Assigned Tasks' });
     }
 

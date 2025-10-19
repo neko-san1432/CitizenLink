@@ -36,13 +36,13 @@ export async function canSwitchToCitizen() {
     // Check cache first
     const now = Date.now();
     if (roleInfoCache && (now - roleInfoCacheTime) < ROLE_INFO_CACHE_DURATION) {
-      console.log('[ROLE_TOGGLE] Using cached role info');
+      // console.log removed for security
       const actualRole = roleInfoCache.data.actual_role;
       const currentRole = roleInfoCache.data.role;
 
       // If no actual_role exists, user is a real citizen
       if (!actualRole) {
-        console.log('[ROLE_TOGGLE] No actual_role found - user is a real citizen');
+        // console.log removed for security
         return false;
       }
 
@@ -75,7 +75,7 @@ export async function canSwitchToCitizen() {
 
     // If no actual_role exists, user is a real citizen
     if (!actualRole) {
-      console.log('[ROLE_TOGGLE] No actual_role found - user is a real citizen');
+      // console.log removed for security
       return false;
     }
 
@@ -126,7 +126,7 @@ export async function switchToCitizenMode() {
       return false;
     }
 
-    console.log(`[ROLE_TOGGLE] Switching from ${actualRole} to citizen mode`);
+    // console.log removed for security
 
     // Update database via API
     const response = await fetch('/api/user/switch-role', {
@@ -177,7 +177,7 @@ export async function switchToActualRole() {
       return false;
     }
 
-    console.log(`[ROLE_TOGGLE] Switching back from citizen to ${actualRole}`);
+    // console.log removed for security
 
     // Update database via API
     const response = await fetch('/api/user/switch-role', {
@@ -191,7 +191,7 @@ export async function switchToActualRole() {
 
     const result = await response.json();
 
-    console.log('[ROLE_TOGGLE] API response:', result);
+    // console.log removed for security
 
     if (!result.success) {
       showMessage('error', result.error || 'Failed to switch role');
@@ -204,7 +204,7 @@ export async function switchToActualRole() {
     // Update user meta to reflect actual role
     saveUserMeta({ role: actualRole });
 
-    console.log(`[ROLE_TOGGLE] ✅ Successfully switched back to ${actualRole}`);
+    // console.log removed for security
     showMessage('success', `Switched back to ${actualRole} mode. Refreshing...`);
 
     // Refresh page to reload with new role
@@ -247,7 +247,7 @@ export function getActualRole() {
  * Should be called on every page that needs the toggle
  */
 export async function initializeRoleToggle() {
-  console.log('[ROLE_TOGGLE] Initializing role toggle...');
+  // console.log removed for security
 
   // Show button immediately with loading state
   createRoleToggleButton(null, false, true);
@@ -256,7 +256,7 @@ export async function initializeRoleToggle() {
     const canSwitch = await canSwitchToCitizen();
 
     if (!canSwitch) {
-      console.log('[ROLE_TOGGLE] User cannot switch - removing toggle');
+      // console.log removed for security
       // Remove the button if user can't switch
       const btn = document.getElementById('role-toggle-btn');
       if (btn) btn.remove();
@@ -267,7 +267,7 @@ export async function initializeRoleToggle() {
     let result;
     const now = Date.now();
     if (roleInfoCache && (now - roleInfoCacheTime) < ROLE_INFO_CACHE_DURATION) {
-      console.log('[ROLE_TOGGLE] Using cached role info for initialization');
+      // console.log removed for security
       result = roleInfoCache;
     } else {
       const response = await fetch('/api/user/role-info');
@@ -278,26 +278,21 @@ export async function initializeRoleToggle() {
       roleInfoCacheTime = now;
     }
 
-    console.log('[ROLE_TOGGLE] API role-info response:', result);
+    // console.log removed for security
 
     const currentRole = result?.data?.role || 'citizen';
     const actualRole = result?.data?.actual_role || currentRole;
     const isInCitizen = currentRole === 'citizen' && actualRole !== 'citizen';
 
-    console.log('[ROLE_TOGGLE] Role state:', {
-      currentRole,
-      actualRole,
-      isInCitizen,
-      condition: `currentRole(${currentRole}) === 'citizen' && actualRole(${actualRole}) !== 'citizen'`
-    });
+    // console.log removed for security
 
     // Update localStorage to keep in sync
     if (isInCitizen) {
-      console.log('[ROLE_TOGGLE] Detected citizen mode - storing actual role');
+      // console.log removed for security
       localStorage.setItem(ACTUAL_ROLE_KEY, actualRole);
       localStorage.setItem(ROLE_MODE_KEY, 'citizen');
     } else {
-      console.log('[ROLE_TOGGLE] Not in citizen mode - clearing mode key');
+      // console.log removed for security
       localStorage.removeItem(ROLE_MODE_KEY);
     }
 
@@ -318,7 +313,7 @@ export async function initializeRoleToggle() {
 function createRoleToggleButton(actualRole, isInCitizen, isLoading = false) {
   // Check if button already exists
   if (document.getElementById('role-toggle-btn')) {
-    console.log('[ROLE_TOGGLE] Button already exists');
+    // console.log removed for security
     return;
   }
 
@@ -367,7 +362,7 @@ function createRoleToggleButton(actualRole, isInCitizen, isLoading = false) {
     headerRight.prepend(toggleBtn);
   }
 
-  console.log('[ROLE_TOGGLE] Button created successfully');
+  // console.log removed for security
 }
 
 /**
@@ -384,12 +379,7 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
   toggleBtn.title = isInCitizen ? `Switch back to ${formatRoleName(actualRole)}` : 'Switch to Citizen Mode';
   toggleBtn.innerHTML = isInCitizen ? '👔' : '👤';
 
-  console.log('[ROLE_TOGGLE] Button config:', {
-    actualRole,
-    isInCitizen,
-    title: toggleBtn.title,
-    icon: toggleBtn.innerHTML
-  });
+  // console.log removed for security
 
   // Remove old listener and add new one
   const newBtn = toggleBtn.cloneNode(true);
@@ -397,16 +387,16 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
 
   newBtn.addEventListener('click', async () => {
     const inCitizenMode = isInCitizenMode();
-    console.log('[ROLE_TOGGLE] Button clicked, isInCitizenMode:', inCitizenMode);
+    // console.log removed for security
 
     if (inCitizenMode) {
-      console.log('[ROLE_TOGGLE] Attempting to switch back to actual role...');
+      // console.log removed for security
       const success = await switchToActualRole();
       if (success) {
         setTimeout(() => window.location.reload(), 500);
       }
     } else {
-      console.log('[ROLE_TOGGLE] Attempting to switch to citizen mode...');
+      // console.log removed for security
       const success = await switchToCitizenMode();
       if (success) {
         setTimeout(() => window.location.reload(), 500);
@@ -414,7 +404,7 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
     }
   });
 
-  console.log('[ROLE_TOGGLE] Button updated successfully with mode:', isInCitizen ? 'CITIZEN' : 'STAFF');
+  // console.log removed for security
 }
 
 /**

@@ -24,7 +24,7 @@ class ComplaintService {
       }
     }
 
-    console.log('[COMPLAINT] Received departments:', departments);
+    // console.log removed for security
 
     // Map client field names to server field names
     const mappedData = {
@@ -46,10 +46,7 @@ class ComplaintService {
     const sanitizedData = complaint.sanitizeForInsert();
     const createdComplaint = await this.complaintRepo.create(sanitizedData);
 
-    console.log('[COMPLAINT] Created complaint with departments:', {
-      id: createdComplaint.id,
-      department_r: createdComplaint.department_r
-    });
+    // console.log removed for security
 
     try {
       await this._processWorkflow(createdComplaint, departments);
@@ -83,10 +80,7 @@ class ComplaintService {
           secondary_departments: departmentArray.slice(1),
           updated_at: new Date().toISOString()
         });
-        console.log('[WORKFLOW] Departments assigned:', {
-          primary: departmentArray[0],
-          secondary: departmentArray.slice(1)
-        });
+        // console.log removed for security
         // Create complaint_assignments for primary and secondary departments
         for (const deptCode of departmentArray) {
           try {
@@ -122,7 +116,7 @@ class ComplaintService {
       try {
         const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
         if (autoAssignResult && autoAssignResult.length > 0) {
-          console.log('[WORKFLOW] Auto-assignment successful:', autoAssignResult[0]);
+          // console.log removed for security
         }
       } catch (error) {
         console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
@@ -139,7 +133,7 @@ class ComplaintService {
             to_dept: targetDept,
             reason: 'Auto-assigned available coordinator'
           });
-          console.log('[WORKFLOW] Coordinator assigned:', coordinator.user_id);
+          // console.log removed for security
         }
       } catch (error) {
         console.warn('[WORKFLOW] Coordinator assignment failed:', error.message);
@@ -193,7 +187,7 @@ class ComplaintService {
           publicUrl: publicUrl
         });
 
-        console.log('[FILE] File uploaded:', file.originalname);
+        // console.log removed for security
       } catch (error) {
         console.error('[FILE] Processing error:', error);
       }
@@ -360,7 +354,7 @@ class ComplaintService {
   }
 
   async getComplaintLocations(filters = {}) {
-    console.log('[COMPLAINT-SERVICE] getComplaintLocations called with filters:', filters);
+    // console.log removed for security
 
     const {
       status,
@@ -410,7 +404,7 @@ class ComplaintService {
         throw error;
       }
 
-      console.log(`[COMPLAINT-SERVICE] Retrieved ${data.length} complaint locations`);
+      // console.log removed for security
 
       // Transform data for heatmap
       const transformedData = data.map(complaint => ({
@@ -426,7 +420,7 @@ class ComplaintService {
         department: complaint.primary_department
       }));
 
-      console.log('[COMPLAINT-SERVICE] Transformed data sample:', transformedData.slice(0, 2));
+      // console.log removed for security
       return transformedData;
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] getComplaintLocations error:', error);

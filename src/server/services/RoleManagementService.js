@@ -213,7 +213,7 @@ class RoleManagementService {
 
       if (updateError) throw updateError;
 
-      console.log(`[ROLE] Assigned user ${userId} to department ${departmentId}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -258,7 +258,7 @@ class RoleManagementService {
       // Log the transfer
       await this.logDepartmentTransfer(userId, fromDepartment, toDepartment, transferredBy, reason);
 
-      console.log(`[ROLE] Transferred user ${userId} from ${fromDepartment} to ${toDepartment}`);
+      // console.log removed for security
 
       return {
         success: true,

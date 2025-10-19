@@ -241,11 +241,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const sessionUserMetadata = result.data?.session?.user?.user_metadata || {};
       const sessionRawUserMetadata = result.data?.session?.user?.raw_user_meta_data || {};
 
-      console.log('🔍 Login metadata sources:', {
-        userRole: result.data?.user?.role,
-        sessionUserMetadata,
-        sessionRawUserMetadata
-      });
+      // console.log removed for security
 
       const combinedSessionMetadata = { ...sessionRawUserMetadata, ...sessionUserMetadata };
 
@@ -263,28 +259,28 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         || sessionRawUserMetadata.name
         || null;
 
-      console.log('🔐 Login successful - Role:', role, 'Name:', name, 'Combined metadata:', combinedSessionMetadata);
+      // console.log removed for security
 
       if (role || name) {
         saveUserMeta({ role, name });
-        console.log('💾 User metadata saved to localStorage');
+        // console.log removed for security
       }
 
       // Check if user has completed registration
       if (!role || !name) {
-        console.log('❌ Incomplete profile - Role:', role, 'Name:', name);
+        // console.log removed for security
         showMessage('error', 'Please complete your profile first');
         setTimeout(() => {
-          console.log('🔄 Redirecting to OAuth continuation');
+          // console.log removed for security
           window.location.href = '/OAuthContinuation';
         }, 2000);
         return;
       }
 
       // Redirect to dashboard based on role
-      console.log('✅ Profile complete, redirecting to dashboard in 1.5s...');
+      // console.log removed for security
       setTimeout(() => {
-        console.log('🔄 Redirecting to /dashboard');
+        // console.log removed for security
         window.location.href = '/dashboard';
       }, 1500);
     } else {

@@ -8,7 +8,7 @@ let logoutListenerAdded = false;
 // Check authentication status and update UI
 const checkAuthenticationAndUpdateUI = async () => {
   try {
-    console.log('🔍 Checking authentication status on landing page...');
+    // console.log removed for security
 
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -18,7 +18,7 @@ const checkAuthenticationAndUpdateUI = async () => {
     const logoutBtn = document.getElementById('logout-btn');
 
     if (session && !error) {
-      console.log('✅ User is authenticated, showing dashboard button');
+      // console.log removed for security
 
       // Get user metadata
       const user = session.user;
@@ -27,7 +27,7 @@ const checkAuthenticationAndUpdateUI = async () => {
 
       // Check if user has completed registration
       if (role && name) {
-        console.log('🎯 Profile complete, showing dashboard access for role:', role);
+        // console.log removed for security
 
         // Hide login/signup buttons, show dashboard button
         if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'none';
@@ -36,19 +36,19 @@ const checkAuthenticationAndUpdateUI = async () => {
         // Add logout functionality (only once)
         if (logoutBtn && !logoutListenerAdded) {
           logoutBtn.addEventListener('click', async () => {
-            console.log('🚪 Logging out user...');
+            // console.log removed for security
             await logout();
           });
           logoutListenerAdded = true;
         }
       } else {
-        console.log('❌ User profile incomplete, keeping login/signup buttons visible');
+        // console.log removed for security
         // Profile incomplete, keep showing login/signup for profile completion
         if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'block';
         if (authenticatedButtons) authenticatedButtons.style.display = 'none';
       }
     } else {
-      console.log('❌ User not authenticated, showing login/signup buttons');
+      // console.log removed for security
 
       // Show login/signup buttons, hide dashboard button
       if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'block';

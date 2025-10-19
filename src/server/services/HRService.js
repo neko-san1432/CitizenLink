@@ -348,10 +348,10 @@ class HRService {
         // For LGU-HR, automatically use their department if not specified
         if (isHR && !departmentCode && hrDepartment) {
           departmentCode = hrDepartment;
-          console.log(`[HR] Auto-setting department to HR's department: ${departmentCode}`);
+          // console.log removed for security
         }
 
-        console.log(`[HR] Final departmentCode before database insert: ${departmentCode}`);
+        // console.log removed for security
 
         // LGU-HR can only create officer or admin roles
         if (!['lgu-officer', 'lgu-admin'].includes(role)) {
@@ -394,14 +394,7 @@ class HRService {
       }
 
       // Create signup link record
-      console.log('[HR] Inserting into database:', {
-        code,
-        role,
-        department_code: departmentCode,
-        created_by: hrId,
-        expires_at: expiresAt.toISOString(),
-        department_name: departmentName
-      });
+      // console.log removed for security
 
       const { data: linkData, error: linkError } = await supabase
         .from('signup_links')
@@ -484,13 +477,7 @@ class HRService {
         throw new Error('Failed to fetch signup links');
       }
 
-      console.log('[HR] Retrieved links from database:', links.map(link => ({
-        id: link.id,
-        code: link.code,
-        role: link.role,
-        department_code: link.department_code,
-        created_at: link.created_at
-      })));
+      // console.log removed for security
 
       // Add full URLs and status to each link
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -516,7 +503,7 @@ class HRService {
    */
   async deactivateSignupLink(hrId, linkId) {
     try {
-      console.log('[HR-SERVICE] Deactivating signup link:', { hrId, linkId });
+      // console.log removed for security
 
       // Validate HR role
       const hrRole = await this.roleService.getUserRole(hrId);
@@ -530,7 +517,7 @@ class HRService {
       const db = new Database();
       const supabase = db.getClient();
 
-      console.log('[HR-SERVICE] Updating signup_links table...');
+      // console.log removed for security
       const { data, error } = await supabase
         .from('signup_links')
         .update({ is_active: false })
@@ -538,7 +525,7 @@ class HRService {
         .eq('created_by', hrId)
         .select();
 
-      console.log('[HR-SERVICE] Update result:', { data, error });
+      // console.log removed for security
 
       if (error) {
         throw new Error('Failed to deactivate signup link');

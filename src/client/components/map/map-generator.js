@@ -80,15 +80,15 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
         map.dragging.enable();
       }
     });
-    console.log('🗺️ Simple map initialized with zoom:', map.getZoom());
-    console.log('📍 Initial map center:', map.getCenter());
+    // console.log removed for security
+    // console.log removed for security
 
     // Expose globally
     window.simpleMap = map;
 
     // Add tile layers
     const tileLayers = createTileLayers();
-    console.log('🗺️ Created tile layers:', Object.keys(tileLayers));
+    // console.log removed for security
 
     // Validate tile layers were created
     if (!tileLayers || Object.keys(tileLayers).length === 0) {
@@ -101,7 +101,7 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       console.error('Available layers:', Object.keys(tileLayers));
       throw new Error('Default tile layer not found');
     }
-    console.log('🗺️ Adding default layer to map');
+    // console.log removed for security
     defaultLayer.addTo(map);
 
     // Add layer control for tile switching (positioned below other controls)
@@ -127,7 +127,7 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       map.invalidateSize();
     }, 100);
 
-    console.log('✅ Simple map initialization complete');
+    // console.log removed for security
     return map;
 
   } catch (error) {
@@ -218,7 +218,7 @@ function switchTileLayer(layerName) {
   // Add the target layer
   targetLayer.addTo(window.simpleMap);
 
-  console.log(`🔄 Switched to tile layer: ${layerName}`);
+  // console.log removed for security
   return true;
 }
 
@@ -273,7 +273,7 @@ function addCustomTileLayer(name, url, options = {}) {
     window.simpleMapLayerControl.addOverlay(customLayer, name);
   }
 
-  console.log(`➕ Added custom tile layer: ${name}`);
+  // console.log removed for security
   return true;
 }
 
@@ -303,7 +303,7 @@ function removeTileLayer(name) {
   // Remove from layers object
   delete window.simpleMapLayers[name];
 
-  console.log(`🗑️ Removed tile layer: ${name}`);
+  // console.log removed for security
   return true;
 }
 
@@ -329,7 +329,7 @@ function destroySimpleMap() {
     window._simpleMapResizeObserver = null;
   }
 
-  console.log('🧹 Simple map cleaned up');
+  // console.log removed for security
 }
 
 // Export functions for use in other modules

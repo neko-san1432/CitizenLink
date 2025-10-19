@@ -22,12 +22,12 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
 
     // Always skip rate limiting in development mode or localhost
     if (process.env.NODE_ENV === 'development' || isLocalhost) {
-      console.log(`[RATE_LIMIT] Skipping rate limit for development/localhost: ${hostname} (NODE_ENV: ${process.env.NODE_ENV})`);
+      // console.log removed for security
       return next();
     }
 
     // Debug logging for non-localhost requests
-    console.log(`[RATE_LIMIT] Processing request for ${hostname} (IP: ${req.ip})`);
+    // console.log removed for security
 
     const key = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
@@ -49,7 +49,7 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
 
     // Check if limit exceeded
     if (rateLimitData.requests.length >= maxRequests) {
-      console.log(`[RATE_LIMIT] Rate limit exceeded for ${key}: ${rateLimitData.requests.length}/${maxRequests} requests in ${windowMs}ms`);
+      // console.log removed for security
       return res.status(429).json({
         success: false,
         error: 'Too many requests from this IP, please try again later.'
@@ -66,7 +66,7 @@ function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false
 
     // Debug logging for development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[RATE_LIMIT] Request allowed for ${key}: ${rateLimitData.requests.length}/${maxRequests} requests`);
+      // console.log removed for security
     }
 
     // Add headers for rate limit info
@@ -85,7 +85,7 @@ const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === 'true' || pr
 
 // Create a no-op rate limiter for when rate limiting is disabled
 const noOpLimiter = (req, res, next) => {
-  console.log('[RATE_LIMIT] Rate limiting disabled - allowing request');
+  // console.log removed for security
   next();
 };
 
@@ -111,10 +111,10 @@ const complaintLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter
 function clearRateLimit(ip = null) {
   if (ip) {
     rateLimitStore.delete(ip);
-    console.log(`[RATE_LIMIT] Cleared rate limit for IP: ${ip}`);
+    // console.log removed for security
   } else {
     rateLimitStore.clear();
-    console.log('[RATE_LIMIT] Cleared all rate limits');
+    // console.log removed for security
   }
 }
 

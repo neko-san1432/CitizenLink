@@ -130,7 +130,7 @@ function initializeMenuToggle() {
     menuToggle.addEventListener('click', function() {
       sidebar.classList.toggle('open');
     });
-    console.log('✅ Menu toggle initialized');
+    // console.log removed for security
   } else {
     console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
   }

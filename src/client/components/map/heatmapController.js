@@ -18,7 +18,7 @@ class HeatmapController {
    */
   async initialize(mapContainerId = 'map') {
     try {
-      console.log('[HEATMAP-CONTROLLER] Initializing...');
+      // console.log removed for security
 
       // Initialize map
       this.map = await initializeSimpleMap(mapContainerId, {
@@ -43,7 +43,7 @@ class HeatmapController {
       this.setupEventListeners();
 
       this.isInitialized = true;
-      console.log('[HEATMAP-CONTROLLER] Initialization complete');
+      // console.log removed for security
 
     } catch (error) {
       console.error('[HEATMAP-CONTROLLER] Initialization failed:', error);
@@ -206,17 +206,17 @@ class HeatmapController {
     if (!this.map || !this.heatmapViz) return;
 
     const zoom = this.map.getZoom();
-    console.log(`[HEATMAP-CONTROLLER] Zoom level: ${zoom}, Threshold: ${this.zoomThreshold}`);
+    // console.log removed for security
 
     if (zoom >= this.zoomThreshold) {
       // Zoomed in - show markers
-      console.log('[HEATMAP-CONTROLLER] ✅ Zoomed in - showing markers');
+      // console.log removed for security
       this.heatmapViz.createMarkerLayer();
       this.heatmapViz.showMarkers();
       this.showZoomNotification('📍 Markers visible (zoomed in)');
     } else {
       // Zoomed out - hide markers, show only heatmap
-      console.log('[HEATMAP-CONTROLLER] 🔍 Zoomed out - hiding markers');
+      // console.log removed for security
       this.heatmapViz.hideMarkers();
       this.showZoomNotification('🗺️ Heatmap only (zoomed out)');
     }
@@ -314,7 +314,7 @@ class HeatmapController {
    */
   setZoomThreshold(threshold) {
     this.zoomThreshold = threshold;
-    console.log(`[HEATMAP-CONTROLLER] Zoom threshold set to: ${threshold}`);
+    // console.log removed for security
     // Refresh view to apply new threshold
     this.refreshVisualization();
   }

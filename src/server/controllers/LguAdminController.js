@@ -228,15 +228,7 @@ class LguAdminController {
           const roleContainsDepartment = role.includes(`-${departmentCode}`);
           const hasCorrectDepartment = metadata.department === departmentCode;
 
-          console.log('[LGU_ADMIN] User check:', {
-            id: user.id,
-            role,
-            department: metadata.department,
-            isOfficer,
-            roleContainsDepartment,
-            hasCorrectDepartment,
-            targetDepartment: departmentCode
-          });
+          // console.log removed for security
 
           // Match if role contains department code OR if department field matches
           return isOfficer && (roleContainsDepartment || hasCorrectDepartment);

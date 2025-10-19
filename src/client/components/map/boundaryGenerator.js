@@ -45,7 +45,7 @@ async function loadBoundaries() {
     const bounds = L.geoJSON(brgyData.map(b => b.geojson)).getBounds();
     M.fitBounds(bounds, { padding: [20, 20] }); // Add padding for better view
 
-    console.log('Boundaries loaded successfully');
+    // console.log removed for security
   } catch (err) {
     console.error('Error loading boundaries:', err.message);
     console.error('Stack:', err.stack);
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function addCityBoundary(map, brgyData) {
   try {
-    console.log('🏙️ Creating inverted city boundary mask...');
+    // console.log removed for security
 
     // Create a feature collection from all barangay geojson
     const allFeatures = brgyData.map(barangay => barangay.geojson);
@@ -125,7 +125,7 @@ async function addCityBoundary(map, brgyData) {
 
       // Add inverted mask to map
       maskLayer.addTo(map);
-      console.log('✅ Inverted city boundary mask added successfully');
+      // console.log removed for security
     }
   } catch (error) {
     console.error('❌ Error creating inverted city boundary:', error);

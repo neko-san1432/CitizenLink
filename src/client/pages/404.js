@@ -8,6 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Optional: log for analytics without inline scripts
   try {
-    console.log('404 Error - Page not found:', window.location.pathname);
+    // console.log removed for security
   } catch {}
 });
