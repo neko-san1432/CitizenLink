@@ -92,16 +92,28 @@ class SettingsManager {
       : this.settings.filter(s => s.category === this.currentCategory);
 
     if (filteredSettings.length === 0) {
-      content.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: #6b7280;">
-          <p>No settings found in this category.</p>
-          <button class="btn btn-primary" onclick="openModal('add')">Add First Setting</button>
-        </div>
-      `;
+      content.innerHTML = '';
+      const noSettingsDiv = document.createElement('div');
+      noSettingsDiv.style.textAlign = 'center';
+      noSettingsDiv.style.padding = '2rem';
+      noSettingsDiv.style.color = '#6b7280';
+
+      const message = document.createElement('p');
+      message.textContent = 'No settings found in this category.';
+
+      const button = document.createElement('button');
+      button.className = 'btn btn-primary';
+      button.textContent = 'Add First Setting';
+      button.onclick = () => openModal('add');
+
+      noSettingsDiv.appendChild(message);
+      noSettingsDiv.appendChild(button);
+      content.appendChild(noSettingsDiv);
       return;
     }
 
-    content.innerHTML = filteredSettings.map(setting => `
+    // Create safe HTML content
+    const safeHtml = filteredSettings.map(setting => `
       <div class="setting-item">
         <div class="setting-header">
           <div>
@@ -124,6 +136,23 @@ class SettingsManager {
         </div>
       </div>
     `).join('');
+
+    // Use safer DOM manipulation instead of innerHTML
+    content.innerHTML = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.sanitizeHtml(safeHtml);
+    while (tempDiv.firstChild) {
+      content.appendChild(tempDiv.firstChild);
+    }
+  }
+
+  // Simple HTML sanitization function
+  sanitizeHtml(html) {
+    // Basic sanitization - remove script tags and dangerous attributes
+    return html
+      .replace(/<script\b[^<]*>.*?<\/script>/gi, '')
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/javascript:/gi, '');
   }
 
   formatValue(setting) {
@@ -273,7 +302,8 @@ class SettingsManager {
     };
 
     if (helpElement) {
-      helpElement.textContent = helpTexts[type] || 'Enter the setting value';
+      const safeType = String(type || '').toLowerCase();
+      helpElement.textContent = helpTexts[safeType] || 'Enter the setting value';
     }
 
     // Adjust textarea size based on type

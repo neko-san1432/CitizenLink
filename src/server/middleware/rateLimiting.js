@@ -14,7 +14,7 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // Skip rate limiting entirely for localhost/development
-function createRateLimiter(maxRequests, windowMs, skipSuccessfulRequests = false) {
+function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = false) {
   return (req, res, next) => {
     // Skip rate limiting for localhost/development
     const hostname = req.hostname || req.get('host')?.split(':')[0] || '';

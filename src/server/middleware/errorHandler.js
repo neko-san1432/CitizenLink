@@ -2,7 +2,7 @@ const config = require('../../../config/app');
 const path = require('path');
 
 class ErrorHandler {
-  static handle(err, req, res, next) {
+  static handle(err, req, res, _next) {
     console.error('Application error:', {
       message: err.message,
       stack: config.isDevelopment ? err.stack : 'Stack trace hidden in production',
@@ -73,10 +73,10 @@ class ErrorHandler {
     sanitized = sanitized.replace(/([a-zA-Z]+:\/\/)[^@\s]+@[^\/\s]+/g, '$1[REDACTED]@[REDACTED]');
 
     // Remove potential API keys or tokens
-    sanitized = sanitized.replace(/\b[A-Za-z0-9_\-]{20,}\b/g, '[TOKEN]');
+    sanitized = sanitized.replace(/\b[A-Za-z0-9_-]{20,}\b/g, '[TOKEN]');
 
     // Remove email addresses if they appear in error messages
-    sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]');
+    sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, '[EMAIL]');
 
     // Remove IP addresses
     sanitized = sanitized.replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP]');
@@ -107,7 +107,7 @@ class ErrorHandler {
     }
   }
 
-  static getErrorCode(err) {
+  static getErrorCode(_err) {
     // Generate a unique error code for tracking without exposing internal details
     const timestamp = Date.now();
     const random = require('crypto').randomInt(0, 1000);

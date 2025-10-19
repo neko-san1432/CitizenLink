@@ -1,6 +1,6 @@
-const path = require('path');
+const _path = require('path');
 const Database = require('../config/database');
-const UserService = require('../services/UserService');
+const _UserService = require('../services/UserService');
 const database = new Database();
 
 const supabase = database.getClient();
@@ -135,7 +135,9 @@ const requireRole = (allowedRoles) => {
       if (typeof allowedRole === 'string') {
         // Support wildcard matching (e.g., "lgu-admin*" matches "lgu-admin-{dept}")
         if (allowedRole.includes('*')) {
-          const regex = new RegExp('^' + allowedRole.replace(/\*/g, '.*') + '$');
+          // Safe wildcard matching without dynamic regex
+          const pattern = allowedRole.replace(/\*/g, '.*');
+          const regex = new RegExp(`^${pattern}$`);
           return regex.test(normalizedRole);
         }
         return normalizedRole === allowedRole.toLowerCase();

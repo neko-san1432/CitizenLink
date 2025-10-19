@@ -74,7 +74,9 @@ class DepartmentManager {
     const grid = document.getElementById('departmentGrid');
     if (!grid) return;
 
-    grid.innerHTML = this.departments.map(dept => `
+    // Use safer DOM manipulation instead of innerHTML
+    grid.innerHTML = '';
+    const safeHtml = this.departments.map(dept => `
       <div class="department-card">
         <div class="department-header">
           <span class="department-code">${dept.code}</span>
@@ -126,6 +128,21 @@ class DepartmentManager {
         </div>
       </div>
     `).join('');
+
+    // Use safer approach - create elements directly
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(this.sanitizeHtml(safeHtml), 'text/html');
+    const fragment = document.createDocumentFragment();
+    Array.from(doc.body.children).forEach(child => fragment.appendChild(child.cloneNode(true)));
+    grid.appendChild(fragment);
+  }
+
+  // Simple HTML sanitization function
+  sanitizeHtml(html) {
+    return html
+      .replace(/<script\b[^<]*>.*?<\/script>/gi, '')
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/javascript:/gi, '');
   }
 
   updateStats() {

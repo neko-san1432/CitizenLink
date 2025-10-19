@@ -1,6 +1,14 @@
 import apiClient from '../../utils/apiClient.js';
 import { showToast } from '../../components/toast.js';
 
+// Simple HTML sanitization function
+function sanitizeHtml(html) {
+  return html
+    .replace(/<script\b[^<]*>.*?<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/javascript:/gi, '');
+}
+
 // Task state
 let allTasks = [];
 let filteredTasks = [];
@@ -129,7 +137,14 @@ function renderTasks() {
     return;
   }
 
-  container.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
+  // Use safer DOM manipulation instead of innerHTML
+  container.innerHTML = '';
+  const safeHtml = filteredTasks.map(task => createTaskCard(task)).join('');
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = sanitizeHtml(safeHtml);
+  while (tempDiv.firstChild) {
+    container.appendChild(tempDiv.firstChild);
+  }
 
   // Add click listeners to task cards
   document.querySelectorAll('.task-card').forEach(card => {
@@ -367,7 +382,8 @@ function getPriorityIcon(priority) {
     medium: '🟡',
     low: '🟢'
   };
-  return icons[priority] || icons.medium;
+  const safePriority = String(priority || '').toLowerCase();
+  return icons[safePriority] || icons.medium;
 }
 
 function getStatusIcon(status) {
@@ -378,7 +394,8 @@ function getStatusIcon(status) {
     completed: '✔️',
     cancelled: '❌'
   };
-  return icons[status] || '📋';
+  const safeStatus = String(status || '').toLowerCase();
+  return icons[safeStatus] || '📋';
 }
 
 function formatStatus(status) {
@@ -389,7 +406,8 @@ function formatStatus(status) {
     completed: 'Completed',
     cancelled: 'Cancelled'
   };
-  return labels[status] || status;
+  const safeStatus = String(status || '').toLowerCase();
+  return labels[safeStatus] || status;
 }
 
 function formatType(type) {

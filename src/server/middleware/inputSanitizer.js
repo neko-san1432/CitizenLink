@@ -1,5 +1,5 @@
 const validator = require('validator');
-const xss = require('xss');
+const _xss = require('xss');
 const DOMPurify = require('isomorphic-dompurify');
 
 // Enhanced input sanitization and validation middleware
@@ -54,8 +54,9 @@ class InputSanitizer {
     const sanitized = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      const sanitizedKey = InputSanitizer.sanitizeValue(key, `key_${key}`);
-      const fieldPath = context ? `${context}.${key}` : key;
+      const safeKey = String(key || '').replace(/[^a-zA-Z0-9_-]/g, '');
+      const sanitizedKey = InputSanitizer.sanitizeValue(safeKey, `key_${safeKey}`);
+      const fieldPath = context ? `${context}.${safeKey}` : safeKey;
       sanitized[sanitizedKey] = InputSanitizer.sanitizeValue(value, fieldPath);
     }
 
@@ -67,9 +68,10 @@ class InputSanitizer {
     const sensitiveHeaders = ['user-agent', 'referer', 'origin', 'x-forwarded-for'];
 
     for (const [key, value] of Object.entries(headers)) {
-      if (sensitiveHeaders.includes(key.toLowerCase()) && typeof value === 'string') {
+      const safeKey = String(key || '').toLowerCase();
+      if (sensitiveHeaders.includes(safeKey) && typeof value === 'string') {
         // Sanitize sensitive headers but preserve functionality
-        headers[key] = InputSanitizer.sanitizeValue(value, `header_${key}`);
+        headers[key] = InputSanitizer.sanitizeValue(value, `header_${safeKey}`);
       }
     }
   }
@@ -108,7 +110,7 @@ class InputSanitizer {
     }
 
     if (fieldName.toLowerCase().includes('url') || fieldName.toLowerCase().includes('link')) {
-      return validator.isURL(stringValue) ? validator.escape(stringValue) : '';
+      return InputSanitizer.validateAndSanitizeURL(stringValue);
     }
 
     if (fieldName.toLowerCase().includes('name') || fieldName.toLowerCase().includes('title')) {
@@ -127,7 +129,7 @@ class InputSanitizer {
 
     if (fieldName.toLowerCase().includes('id') || fieldName.toLowerCase().includes('uuid')) {
       // For ID fields, only allow alphanumeric and hyphens
-      return stringValue.replace(/[^a-zA-Z0-9\-]/g, '');
+      return stringValue.replace(/[^a-zA-Z0-9-]/g, '');
     }
 
     // Default sanitization for other fields
@@ -135,7 +137,7 @@ class InputSanitizer {
   }
 
   // Detect potential security threats
-  static detectThreats(value, fieldName) {
+  static detectThreats(value, _fieldName) {
     const threats = [
       // Script injection patterns
       /<script[^>]*>.*?<\/script>/gi,
@@ -244,7 +246,7 @@ class InputSanitizer {
     }
 
     // Check for potentially dangerous characters
-    if (!/^[a-zA-Z\s\-'\.]+$/.test(trimmed)) {
+    if (!/^[a-zA-Z\s-'.]+$/.test(trimmed)) {
       return { valid: false, error: 'Name contains invalid characters' };
     }
 
@@ -447,7 +449,7 @@ class InputSanitizer {
     return (req, res, next) => {
       const key = `${req.ip}-${req.path}`;
       const now = Date.now();
-      const windowStart = now - windowMs;
+      const _windowStart = now - windowMs;
 
       // Clean up old entries
       for (const [k, v] of requests.entries()) {
@@ -480,7 +482,7 @@ class InputSanitizer {
 
   // Security audit logging
   static logSecurityEvent(event, details, req) {
-    const logEntry = {
+    const _logEntry = {
       timestamp: new Date().toISOString(),
       event,
       details,
