@@ -495,3 +495,4 @@ class InputSanitizer {
 }
 
 module.exports = InputSanitizer;
+

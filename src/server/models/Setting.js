@@ -39,18 +39,18 @@ class Setting {
 
   getParsedValue() {
     switch (this.type) {
-    case 'boolean':
-      return this.value === 'true' || this.value === true;
-    case 'number':
-      return parseFloat(this.value);
-    case 'json':
-      try {
-        return JSON.parse(this.value);
-      } catch {
+      case 'boolean':
+        return this.value === 'true' || this.value === true;
+      case 'number':
+        return parseFloat(this.value);
+      case 'json':
+        try {
+          return JSON.parse(this.value);
+        } catch {
+          return this.value;
+        }
+      default:
         return this.value;
-      }
-    default:
-      return this.value;
     }
   }
 
@@ -71,3 +71,4 @@ class Setting {
 }
 
 module.exports = Setting;
+

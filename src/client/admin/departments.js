@@ -119,7 +119,7 @@ class DepartmentManager {
           <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
             Edit
           </button>
-          <button class="btn btn-sm ${dept.is_active ? 'btn-warning' : 'btn-success'}" 
+          <button class="btn btn-sm ${dept.is_active ? 'btn-warning' : 'btn-success'}"
                   onclick="departmentManager.toggleStatus(${dept.id})">
             ${dept.is_active ? 'Deactivate' : 'Activate'}
           </button>
@@ -322,3 +322,4 @@ window.addEventListener('click', (e) => {
     window.departmentManager?.closeModal();
   }
 });
+

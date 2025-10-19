@@ -7,8 +7,8 @@ let filteredTasks = [];
 let selectedTask = null;
 
 /**
- * Initialize the task assigned page
- */
+* Initialize the task assigned page
+*/
 async function initTaskAssignedPage() {
   // console.log removed for security
 
@@ -18,8 +18,8 @@ async function initTaskAssignedPage() {
 }
 
 /**
- * Setup event listeners
- */
+* Setup event listeners
+*/
 function setupEventListeners() {
   // Filter buttons
   document.getElementById('filter-all')?.addEventListener('click', () => filterTasks('all'));
@@ -45,8 +45,8 @@ function setupEventListeners() {
 }
 
 /**
- * Load all tasks from API
- */
+* Load all tasks from API
+*/
 async function loadTasks() {
   try {
     const response = await apiClient.get('/lgu/my-tasks');
@@ -67,8 +67,8 @@ async function loadTasks() {
 }
 
 /**
- * Filter tasks by status
- */
+* Filter tasks by status
+*/
 function filterTasks(status) {
   // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -84,37 +84,37 @@ function filterTasks(status) {
 }
 
 /**
- * Sort tasks
- */
+* Sort tasks
+*/
 function sortTasks(sortBy) {
   switch (sortBy) {
-  case 'deadline':
-    filteredTasks.sort((a, b) => {
-      if (!a.deadline) return 1;
-      if (!b.deadline) return -1;
-      return new Date(a.deadline) - new Date(b.deadline);
-    });
-    break;
-  case 'priority':
-    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-    filteredTasks.sort((a, b) => {
-      return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
-    });
-    break;
-  case 'newest':
-    filteredTasks.sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at));
-    break;
-  case 'oldest':
-    filteredTasks.sort((a, b) => new Date(a.assigned_at) - new Date(b.assigned_at));
-    break;
+    case 'deadline':
+      filteredTasks.sort((a, b) => {
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return new Date(a.deadline) - new Date(b.deadline);
+      });
+      break;
+    case 'priority':
+      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+      filteredTasks.sort((a, b) => {
+        return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
+      });
+      break;
+    case 'newest':
+      filteredTasks.sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at));
+      break;
+    case 'oldest':
+      filteredTasks.sort((a, b) => new Date(a.assigned_at) - new Date(b.assigned_at));
+      break;
   }
 
   renderTasks();
 }
 
 /**
- * Render tasks to the DOM
- */
+* Render tasks to the DOM
+*/
 function renderTasks() {
   const container = document.getElementById('tasks-container');
   if (!container) return;
@@ -142,8 +142,8 @@ function renderTasks() {
 }
 
 /**
- * Create HTML for a task card
- */
+* Create HTML for a task card
+*/
 function createTaskCard(task) {
   const priorityClass = `priority-${task.priority || 'medium'}`;
   const statusClass = `status-${task.assignment_status}`;
@@ -190,8 +190,8 @@ function createTaskCard(task) {
 }
 
 /**
- * Open task detail modal
- */
+* Open task detail modal
+*/
 function openTaskModal(task) {
   selectedTask = task;
 
@@ -231,8 +231,8 @@ function openTaskModal(task) {
 }
 
 /**
- * Close task modal
- */
+* Close task modal
+*/
 function closeTaskModal() {
   const modal = document.getElementById('task-modal');
   modal?.classList.remove('show');
@@ -241,8 +241,8 @@ function closeTaskModal() {
 }
 
 /**
- * Update modal action buttons based on task status
- */
+* Update modal action buttons based on task status
+*/
 function updateModalActions(status) {
   const acceptBtn = document.getElementById('btn-accept-task');
   const startBtn = document.getElementById('btn-start-task');
@@ -254,21 +254,21 @@ function updateModalActions(status) {
   completeBtn.style.display = 'none';
 
   switch (status) {
-  case 'pending':
-    acceptBtn.style.display = 'inline-block';
-    break;
-  case 'active':
-    startBtn.style.display = 'inline-block';
-    break;
-  case 'in_progress':
-    completeBtn.style.display = 'inline-block';
-    break;
+    case 'pending':
+      acceptBtn.style.display = 'inline-block';
+      break;
+    case 'active':
+      startBtn.style.display = 'inline-block';
+      break;
+    case 'in_progress':
+      completeBtn.style.display = 'inline-block';
+      break;
   }
 }
 
 /**
- * Update task status
- */
+* Update task status
+*/
 async function updateTaskStatus(newStatus) {
   if (!selectedTask) return;
 
@@ -291,15 +291,15 @@ async function updateTaskStatus(newStatus) {
 }
 
 /**
- * Show add update form
- */
+* Show add update form
+*/
 function showAddUpdateForm() {
   document.getElementById('update-form').style.display = 'block';
 }
 
 /**
- * Hide add update form
- */
+* Hide add update form
+*/
 function hideAddUpdateForm() {
   document.getElementById('update-form').style.display = 'none';
   document.getElementById('update-message').value = '';
@@ -307,8 +307,8 @@ function hideAddUpdateForm() {
 }
 
 /**
- * Submit progress update
- */
+* Submit progress update
+*/
 async function submitProgressUpdate() {
   if (!selectedTask) return;
 
@@ -339,8 +339,8 @@ async function submitProgressUpdate() {
 }
 
 /**
- * Update stats dashboard
- */
+* Update stats dashboard
+*/
 function updateStats() {
   const total = allTasks.length;
   const pending = allTasks.filter(t => t.assignment_status === 'pending').length;
@@ -358,8 +358,8 @@ function updateStats() {
 }
 
 /**
- * Helper functions
- */
+* Helper functions
+*/
 function getPriorityIcon(priority) {
   const icons = {
     urgent: '🔴',
@@ -424,3 +424,4 @@ function escapeHtml(text) {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initTaskAssignedPage);
+

@@ -128,3 +128,4 @@ class Complaint {
 }
 
 module.exports = Complaint;
+

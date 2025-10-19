@@ -128,14 +128,14 @@ class SettingsManager {
 
   formatValue(setting) {
     switch (setting.type) {
-    case 'html':
-      return setting.value; // Show raw HTML for editing purposes
-    case 'boolean':
-      return setting.parsed_value ? 'true' : 'false';
-    case 'json':
-      return JSON.stringify(setting.parsed_value, null, 2);
-    default:
-      return setting.value;
+      case 'html':
+        return setting.value; // Show raw HTML for editing purposes
+      case 'boolean':
+        return setting.parsed_value ? 'true' : 'false';
+      case 'json':
+        return JSON.stringify(setting.parsed_value, null, 2);
+      default:
+        return setting.value;
     }
   }
 
@@ -326,3 +326,4 @@ window.addEventListener('click', (e) => {
     window.settingsManager?.closeModal();
   }
 });
+

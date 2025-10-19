@@ -70,8 +70,8 @@ const authenticateUser = async (req, res, next) => {
     // Build consistent user object for req.user
     // Use combined metadata (checks both sources)
     const userName = combinedMetadata.name ||
-                     `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
-                     'Unknown User';
+                    `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
+                    'Unknown User';
 
     // Attach the enhanced user object to the request
     req.user = {
@@ -157,3 +157,4 @@ module.exports = {
   authenticateUser,
   requireRole
 };
+

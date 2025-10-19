@@ -88,22 +88,22 @@ class ErrorHandler {
     const statusCode = this.getStatusCode(err);
 
     switch (statusCode) {
-    case 400:
-      return 'Invalid request data';
-    case 401:
-      return 'Authentication required';
-    case 403:
-      return 'Access forbidden';
-    case 404:
-      return 'Resource not found';
-    case 409:
-      return 'Resource conflict';
-    case 413:
-      return 'Request too large';
-    case 429:
-      return 'Too many requests';
-    default:
-      return 'Internal server error';
+      case 400:
+        return 'Invalid request data';
+      case 401:
+        return 'Authentication required';
+      case 403:
+        return 'Access forbidden';
+      case 404:
+        return 'Resource not found';
+      case 409:
+        return 'Resource conflict';
+      case 413:
+        return 'Request too large';
+      case 429:
+        return 'Too many requests';
+      default:
+        return 'Internal server error';
     }
   }
 
@@ -197,3 +197,4 @@ module.exports = {
   NotFoundError,
   ConflictError
 };
+
