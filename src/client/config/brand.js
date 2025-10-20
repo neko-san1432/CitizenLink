@@ -14,7 +14,7 @@ export const brandConfig = {
   },
   fonts: {
     mobile: '16px',
-    tablet: '16px', 
+    tablet: '16px',
     desktop: '17px',
     largeDesktop: '18px'
   }

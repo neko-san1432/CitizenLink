@@ -6,6 +6,7 @@ const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
+const { loginLimiter, passwordResetLimiter, authLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
 
@@ -18,35 +19,35 @@ const router = express.Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/signup', ErrorHandler.asyncWrapper(AuthController.signup));
+router.post('/signup', authLimiter, ErrorHandler.asyncWrapper(AuthController.signup));
 
 /**
  * @route   POST /api/auth/signup-with-code
  * @desc    Register a new user with HR signup code
  * @access  Public
  */
-router.post('/signup-with-code', ErrorHandler.asyncWrapper(AuthController.signupWithCode));
+router.post('/signup-with-code', authLimiter, ErrorHandler.asyncWrapper(AuthController.signupWithCode));
 
 /**
  * @route   POST /api/auth/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', ErrorHandler.asyncWrapper(AuthController.login));
+router.post('/login', loginLimiter, ErrorHandler.asyncWrapper(AuthController.login));
 
 /**
  * @route   GET /api/auth/verify-email
  * @desc    Verify user email
  * @access  Public
  */
-router.get('/verify-email', ErrorHandler.asyncWrapper(AuthController.verifyEmail));
+router.get('/verify-email', authLimiter, ErrorHandler.asyncWrapper(AuthController.verifyEmail));
 
 /**
  * @route   POST /api/auth/forgot-password
  * @desc    Send password reset email
  * @access  Public
  */
-router.post('/forgot-password', csrfProtection, ErrorHandler.asyncWrapper(async (req, res) => {
+router.post('/forgot-password', passwordResetLimiter, csrfProtection, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -162,7 +163,7 @@ router.put('/profile', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
  * @desc    Change user password
  * @access  Private
  */
-router.post('/change-password', authenticateUser, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));
+router.post('/change-password', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));
 
 /**
  * @route   POST /api/auth/logout
@@ -176,14 +177,14 @@ router.post('/logout', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
  * @desc    Complete OAuth registration with mobile number
  * @access  Private
  */
-router.post('/complete-oauth', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuth));
+router.post('/complete-oauth', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(AuthController.completeOAuth));
 
 /**
  * @route   POST /api/auth/complete-oauth-hr
  * @desc    Complete OAuth registration with HR signup code
  * @access  Private
  */
-router.post('/complete-oauth-hr', authenticateUser, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
+router.post('/complete-oauth-hr', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
 
 /**
  * @route   GET /api/auth/sessions
@@ -242,9 +243,9 @@ router.delete('/sessions/:sessionId', authenticateUser, ErrorHandler.asyncWrappe
 
     const { error } = await supabase
       .from('user_sessions')
-      .update({ 
-        is_active: false, 
-        ended_at: new Date().toISOString() 
+      .update({
+        is_active: false,
+        ended_at: new Date().toISOString()
       })
       .eq('id', sessionId)
       .eq('user_id', userId);
@@ -272,7 +273,7 @@ router.delete('/sessions/:sessionId', authenticateUser, ErrorHandler.asyncWrappe
  * @desc    Refresh access token
  * @access  Public (but requires refresh token)
  */
-router.post('/refresh', ErrorHandler.asyncWrapper(async (req, res) => {
+router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
@@ -298,8 +299,7 @@ router.post('/refresh', ErrorHandler.asyncWrapper(async (req, res) => {
     res.cookie('sb_access_token', data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 4 * 60 * 60 * 1000 // 4 hours
+      sameSite: 'lax'
     });
 
     res.json({
@@ -325,7 +325,7 @@ router.post('/refresh', ErrorHandler.asyncWrapper(async (req, res) => {
  * @desc    Get CSRF token for form submissions
  * @access  Public
  */
-router.get('/csrf-token', generateCsrfToken, (req, res) => {
+router.get('/csrf-token', authLimiter, generateCsrfToken, (req, res) => {
   res.json({
     success: true,
     csrfToken: res.locals.csrfToken

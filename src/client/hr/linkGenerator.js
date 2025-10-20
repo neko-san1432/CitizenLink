@@ -31,11 +31,11 @@ class LinkGenerator {
       const response = await apiClient.getActiveDepartments();
       if (response.success) {
         this.departments = response.data;
-        
+
         // Get user role to determine department restrictions
         const userRole = await this.getUserRole();
         this.filterDepartmentsByRole(userRole);
-        
+
         this.populateDepartmentSelect();
         this.setupRoleRestrictions(userRole);
       }
@@ -65,7 +65,7 @@ class LinkGenerator {
     // If user is LGU-HR, filter to only their department
     if (userRole.startsWith('lgu-hr-')) {
       const userDepartment = userRole.split('-')[2]; // Extract department from lgu-hr-DEPT
-      this.departments = this.departments.filter(dept => 
+      this.departments = this.departments.filter(dept =>
         dept.code === userDepartment.toUpperCase()
       );
     }
@@ -73,12 +73,12 @@ class LinkGenerator {
   }
 
   setupRoleRestrictions(userRole) {
-    console.log('[LINK-GENERATOR] Setting up role restrictions for:', userRole);
-    
+    // console.log removed for security
+
     const roleSelect = document.getElementById('role');
     const roleInfo = document.getElementById('role-info');
     const roleDescription = document.getElementById('role-description');
-    
+
     if (userRole.startsWith('lgu-hr-')) {
       // LGU-HR can only create officer or admin roles
       const options = roleSelect.querySelectorAll('option');
@@ -87,17 +87,17 @@ class LinkGenerator {
           option.style.display = 'none';
         }
       });
-      
+
       // Get HR user's department
       const hrDepartment = userRole.split('-')[2]?.toUpperCase() || 'WST';
-      console.log(`[LINK-GENERATOR] HR Department: ${hrDepartment}`);
-      
+      // console.log removed for security
+
       // Hide the department field completely for LGU-HR
       const departmentField = document.querySelector('.form-group:has(#department)');
       if (departmentField) {
         departmentField.style.display = 'none';
       }
-      
+
       // Show role info
       if (roleInfo && roleDescription) {
         roleDescription.textContent = `As an LGU-HR, you can only create signup links for ${hrDepartment} department with officer or admin roles.`;
@@ -135,7 +135,7 @@ class LinkGenerator {
     try {
       const response = await apiClient.getSignupLinks();
       if (response.success) {
-        console.log('[LINK-GENERATOR] Loaded links:', response.data);
+        // console.log removed for security
         this.links = response.data;
         this.renderLinks();
         this.updateStats();
@@ -156,12 +156,8 @@ class LinkGenerator {
     }
 
     container.innerHTML = this.links.map(link => {
-      console.log('[LINK-GENERATOR] Rendering link:', { 
-        code: link.code, 
-        role: link.role, 
-        department_code: link.department_code 
-      });
-      
+      // console.log removed for security
+
       return `
       <div class="link-item ${link.is_expired ? 'expired' : ''} ${link.is_used ? 'used' : ''}">
         <div class="link-item-header">
@@ -247,27 +243,27 @@ class LinkGenerator {
 
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const userRole = await this.getUserRole();
-    
+
     // Automatically get department based on user role
     let departmentCode = null;
     if (userRole.startsWith('lgu-hr-')) {
       departmentCode = this.getHRDepartment(userRole);
-      console.log(`[LINK-GENERATOR] Auto-setting department for HR: ${departmentCode}`);
+      // console.log removed for security
     } else {
       // For coordinators and super-admin, use form data
       departmentCode = formData.get('department_code') || null;
     }
-    
+
     const data = {
       role: formData.get('role'),
       department_code: departmentCode,
       expires_in_hours: parseInt(formData.get('expires_in_hours')) || 1
     };
-    
-    console.log('[LINK-GENERATOR] Form data being submitted:', data);
+
+    // console.log removed for security
 
     try {
       const response = await apiClient.generateSignupLink(data);
@@ -321,17 +317,17 @@ class LinkGenerator {
   }
 
   async deactivateLink(linkId) {
-    console.log('[LINK-GENERATOR] Deactivating link:', linkId);
-    
+    // console.log removed for security
+
     if (!confirm('Are you sure you want to deactivate this link?')) {
       return;
     }
 
     try {
-      console.log('[LINK-GENERATOR] Calling API to deactivate link...');
+      // console.log removed for security
       const response = await apiClient.deactivateSignupLink(linkId);
-      console.log('[LINK-GENERATOR] Deactivation response:', response);
-      
+      // console.log removed for security
+
       if (response.success) {
         showMessage('success', 'Link deactivated successfully');
         await this.loadLinks();

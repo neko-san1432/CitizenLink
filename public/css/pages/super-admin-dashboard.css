@@ -1,4 +1,5 @@
-/* Super Admin Dashboard Page Styles */
+/* Super Admin Dashboard Styles */
+
 .superadmin-dashboard {
     padding: 20px;
     max-width: 1600px;
@@ -18,12 +19,19 @@
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .stat-value {
     font-size: 3rem;
     font-weight: bold;
     margin: 15px 0;
+    line-height: 1;
 }
 
 .stat-label {
@@ -31,6 +39,7 @@
     opacity: 0.9;
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-bottom: 5px;
 }
 
 .action-card {
@@ -39,6 +48,12 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    transition: box-shadow 0.3s ease;
+}
+
+.action-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .action-card h3 {
@@ -46,6 +61,9 @@
     color: #2c3e50;
     font-size: 1.4rem;
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .actions-grid {
@@ -74,6 +92,7 @@
     border-radius: 6px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -81,6 +100,7 @@
 .form-group textarea:focus {
     border-color: #667eea;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .btn {
@@ -91,6 +111,9 @@
     font-size: 1rem;
     font-weight: 600;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn-primary {
@@ -110,6 +133,7 @@
 
 .btn-info:hover {
     background: #2980b9;
+    transform: translateY(-1px);
 }
 
 .logs-container {
@@ -118,6 +142,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-top: 30px;
+    border: 1px solid #e5e7eb;
 }
 
 .log-entry {
@@ -126,12 +151,18 @@
     background: #f9f9f9;
     margin-bottom: 15px;
     border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.log-entry:hover {
+    background: #f0f0f0;
 }
 
 .log-entry-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
+    align-items: center;
 }
 
 .log-type {
@@ -148,6 +179,7 @@
     font-size: 2rem;
     color: #2c3e50;
     margin: 40px 0 20px 0;
+    font-weight: 700;
 }
 
 .help-text {
@@ -156,124 +188,69 @@
     margin-top: 5px;
 }
 
-/* Mobile responsiveness */
+.loading-placeholder {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* Traffic Graph Styles */
+#traffic-graph {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    background: #f9fafb;
+    border: 1px solid #eee;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.traffic-bar {
+    background: linear-gradient(to top, #667eea, #764ba2);
+    border-radius: 2px;
+    min-height: 2px;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.traffic-bar:hover {
+    background: linear-gradient(to top, #5a6fd8, #6a4190);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .superadmin-dashboard {
-        padding: 15px;
+    .actions-grid {
+        grid-template-columns: 1fr;
     }
     
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .stat-card {
-        padding: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
     
     .stat-value {
         font-size: 2.5rem;
     }
     
-    .action-card {
-        padding: 20px;
-    }
-    
-    .action-card h3 {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-    }
-    
-    .actions-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        font-size: 16px; /* Prevent zoom on iOS */
-        padding: 12px;
-    }
-    
-    .btn {
-        padding: 12px 20px;
-        font-size: 0.95rem;
-    }
-    
-    .logs-container {
-        padding: 20px;
-        margin-top: 20px;
-    }
-    
-    .log-entry {
-        padding: 12px;
-    }
-    
-    .section-title {
-        font-size: 1.5rem;
-        margin: 30px 0 15px 0;
+    .superadmin-dashboard {
+        padding: 15px;
     }
 }
 
 @media (max-width: 480px) {
-    .superadmin-dashboard {
-        padding: 10px;
-    }
-    
-    .stats-grid {
-        gap: 10px;
-    }
-    
-    .stat-card {
-        padding: 15px;
-    }
-    
     .stat-value {
         font-size: 2rem;
     }
     
-    .stat-label {
-        font-size: 0.8rem;
-    }
-    
     .action-card {
-        padding: 15px;
-    }
-    
-    .action-card h3 {
-        font-size: 1.1rem;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        padding: 10px;
-    }
-    
-    .btn {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-    }
-    
-    .logs-container {
-        padding: 15px;
-    }
-    
-    .log-entry {
-        padding: 10px;
-    }
-    
-    .log-type {
-        font-size: 0.75rem;
-        padding: 3px 8px;
+        padding: 20px;
     }
     
     .section-title {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
     }
 }
+
+

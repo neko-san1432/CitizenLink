@@ -24,7 +24,7 @@ export class FileHandler {
    */
   addFiles(files) {
     const validation = validateFiles(files, this.selectedFiles);
-    
+
     if (validation.errors.length > 0) {
       // Show errors but still add valid files
       validation.errors.forEach(error => {
@@ -35,11 +35,11 @@ export class FileHandler {
 
     if (validation.validFiles.length > 0) {
       this.selectedFiles.push(...validation.validFiles);
-      
+
       if (validation.errors.length === 0) {
         showMessage('success', `${validation.validFiles.length} file(s) added successfully`);
       }
-      
+
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();
     }
@@ -52,8 +52,8 @@ export class FileHandler {
   removeFile(index) {
     if (index >= 0 && index < this.selectedFiles.length) {
       const removedFile = this.selectedFiles.splice(index, 1)[0];
-      console.log(`[FILE] Removed file: ${removedFile.name}`);
-      
+      // console.log removed for security
+
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();
     }
@@ -175,7 +175,7 @@ export function setupDragAndDrop(dropZone, fileHandler, fileInput) {
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       fileHandler.addFiles(files);

@@ -18,8 +18,8 @@ class HeatmapController {
    */
   async initialize(mapContainerId = 'map') {
     try {
-      console.log('[HEATMAP-CONTROLLER] Initializing...');
-      
+      // console.log removed for security
+
       // Initialize map
       this.map = await initializeSimpleMap(mapContainerId, {
         center: [6.7492, 125.3571], // Digos City, Philippines
@@ -32,19 +32,19 @@ class HeatmapController {
 
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
-      
+
       // Initialize controls
       this.controls = new HeatmapControls(this);
-      
+
       // Load initial data
       await this.loadData();
-      
+
       // Set up event listeners
       this.setupEventListeners();
-      
+
       this.isInitialized = true;
-      console.log('[HEATMAP-CONTROLLER] Initialization complete');
-      
+      // console.log removed for security
+
     } catch (error) {
       console.error('[HEATMAP-CONTROLLER] Initialization failed:', error);
       throw error;
@@ -77,7 +77,7 @@ class HeatmapController {
     // Show heatmap always, markers only when zoomed in
     this.heatmapViz.createHeatmapLayer();
     this.heatmapViz.showHeatmap();
-    
+
     const zoom = this.map ? this.map.getZoom() : 0;
     if (zoom >= this.zoomThreshold) {
       this.heatmapViz.createMarkerLayer();
@@ -87,7 +87,6 @@ class HeatmapController {
     // Update statistics
     this.updateStatistics();
   }
-
 
   /**
    * Toggle clustering on/off
@@ -162,7 +161,7 @@ class HeatmapController {
         this.updateHeatmapIntensity();
         this.updateViewBasedOnZoom();
       });
-      
+
       this.map.on('zoomstart', () => {
         this.handleZoomStart();
       });
@@ -207,17 +206,17 @@ class HeatmapController {
     if (!this.map || !this.heatmapViz) return;
 
     const zoom = this.map.getZoom();
-    console.log(`[HEATMAP-CONTROLLER] Zoom level: ${zoom}, Threshold: ${this.zoomThreshold}`);
+    // console.log removed for security
 
     if (zoom >= this.zoomThreshold) {
       // Zoomed in - show markers
-      console.log('[HEATMAP-CONTROLLER] ✅ Zoomed in - showing markers');
+      // console.log removed for security
       this.heatmapViz.createMarkerLayer();
       this.heatmapViz.showMarkers();
       this.showZoomNotification('📍 Markers visible (zoomed in)');
     } else {
       // Zoomed out - hide markers, show only heatmap
-      console.log('[HEATMAP-CONTROLLER] 🔍 Zoomed out - hiding markers');
+      // console.log removed for security
       this.heatmapViz.hideMarkers();
       this.showZoomNotification('🗺️ Heatmap only (zoomed out)');
     }
@@ -233,17 +232,17 @@ class HeatmapController {
       notification = document.createElement('div');
       notification.id = 'zoom-notification';
       notification.className = 'zoom-notification';
-      
+
       // Insert after the map container
       const mapContainer = document.getElementById('map');
       if (mapContainer && mapContainer.parentNode) {
         mapContainer.parentNode.appendChild(notification);
       }
     }
-    
+
     notification.textContent = message;
     notification.style.display = 'block';
-    
+
     // Auto-hide after 2 seconds
     setTimeout(() => {
       if (notification) {
@@ -251,7 +250,6 @@ class HeatmapController {
       }
     }, 2000);
   }
-
 
   /**
    * Get current map bounds
@@ -291,10 +289,10 @@ class HeatmapController {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const container = this.map.getContainer();
-        
+
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
-        
+
         // This is a basic implementation - in production, use a proper map export library
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -302,7 +300,7 @@ class HeatmapController {
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Map Export', canvas.width / 2, canvas.height / 2);
-        
+
         resolve(canvas.toDataURL());
       } else {
         resolve(null);
@@ -316,7 +314,7 @@ class HeatmapController {
    */
   setZoomThreshold(threshold) {
     this.zoomThreshold = threshold;
-    console.log(`[HEATMAP-CONTROLLER] Zoom threshold set to: ${threshold}`);
+    // console.log removed for security
     // Refresh view to apply new threshold
     this.refreshVisualization();
   }

@@ -1,6 +1,6 @@
     // Citizen File Complaint Access Check
-import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../auth/roleToggle.js';
-import showMessage from '../components/toast.js';
+import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../src/client/auth/roleToggle.js';
+import showMessage from '../../src/client/components/toast.js';
 
 // Check access on page load
 document.addEventListener('DOMContentLoaded', async () => {

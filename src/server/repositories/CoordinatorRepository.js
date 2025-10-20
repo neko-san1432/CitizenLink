@@ -44,10 +44,10 @@ class CoordinatorRepository {
 
       // Fetch user information separately for each complaint
       const complaints = data || [];
-      
+
       // Get unique user IDs
       const userIds = [...new Set(complaints.map(c => c.submitted_by).filter(Boolean))];
-      
+
       // Fetch user details from auth.users
       const usersMap = {};
       if (userIds.length > 0) {
@@ -121,7 +121,7 @@ class CoordinatorRepository {
       // Fetch similar complaint details separately
       if (similarities && similarities.length > 0) {
         const similarComplaintIds = similarities.map(s => s.similar_complaint_id).filter(Boolean);
-        
+
         if (similarComplaintIds.length > 0) {
           const { data: similarComplaints } = await this.supabase
             .from('complaints')

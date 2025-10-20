@@ -14,7 +14,7 @@ import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/r
 const COMPLAINT_SUBTYPES = {
   'infrastructure': [
     'Roads & Bridges',
-    'Street Lighting', 
+    'Street Lighting',
     'Water Supply',
     'Drainage System',
     'Public Buildings',
@@ -72,18 +72,18 @@ export async function initializeComplaintForm() {
     return;
   }
 
-  console.log('[COMPLAINT FORM] Initializing...');
+  // console.log removed for security
 
   // Check if user is citizen or in citizen mode
   const activeRole = getActiveRole();
   const inCitizenMode = isInCitizenMode();
-  
-  console.log('[COMPLAINT FORM] Active role:', activeRole, 'Citizen mode:', inCitizenMode);
+
+  // console.log removed for security
 
   if (activeRole !== 'citizen' && !inCitizenMode) {
     // User is not a citizen and not in citizen mode
     const canSwitch = await canSwitchToCitizen();
-    
+
     if (canSwitch) {
       // Show message to switch to citizen mode
       showRoleSwitchRequired(form);
@@ -120,7 +120,7 @@ export async function initializeComplaintForm() {
   const fileHandler = createComplaintFileHandler({
     previewContainer: elements.filePreview,
     onFilesChange: (files) => {
-      console.log(`[COMPLAINT FORM] Files updated: ${files.length} files`);
+      // console.log removed for security
     }
   });
 
@@ -136,11 +136,11 @@ export async function initializeComplaintForm() {
     // Remove focus from any form field
     if (document.activeElement && document.activeElement.tagName !== 'BODY') {
       document.activeElement.blur();
-      console.log('[COMPLAINT FORM] Cleared auto-focus from:', document.activeElement);
+      // console.log removed for security
     }
   }, 50);
 
-  console.log('[COMPLAINT FORM] Initialization complete');
+  // console.log removed for security
 }
 
 /**
@@ -162,7 +162,7 @@ function populateSubtypes(selectedType, subtypeSelect) {
 
   // Clear existing options
   subtypeSelect.innerHTML = '<option value="">Select complaint subtype</option>';
-  
+
   if (!selectedType || !COMPLAINT_SUBTYPES[selectedType]) return;
 
   // Add new options
@@ -173,7 +173,7 @@ function populateSubtypes(selectedType, subtypeSelect) {
     subtypeSelect.appendChild(option);
   });
 
-  console.log(`[COMPLAINT FORM] Populated ${COMPLAINT_SUBTYPES[selectedType].length} subtypes for ${selectedType}`);
+  // console.log removed for security
 }
 
 /**
@@ -188,7 +188,7 @@ function setupFileHandling(dropZone, fileInput, fileHandler) {
   // Make file handler globally available for cleanup
   window.complaintFileHandler = fileHandler;
 
-  console.log('[COMPLAINT FORM] File handling setup complete');
+  // console.log removed for security
 }
 
 /**
@@ -219,7 +219,7 @@ function showRoleSwitchRequired(form) {
       </p>
     </div>
   `;
-  
+
   form.style.display = 'none';
   form.parentNode.insertBefore(message, form);
 }
@@ -233,7 +233,7 @@ function setupFormValidation(form) {
   // Setup real-time validation
   setupRealtimeValidation(form);
 
-  console.log('[COMPLAINT FORM] Validation setup complete');
+  // console.log removed for security
 }
 
 /**
@@ -244,33 +244,33 @@ function setupFormSubmission(form, fileHandler) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    console.log('[COMPLAINT FORM] Form submission started');
+
+    // console.log removed for security
 
     try {
       // Get current files
       const selectedFiles = fileHandler.getFiles();
-      
+
       // Submit the complaint
       const result = await handleComplaintSubmit(form, selectedFiles);
-      
-      console.log('[COMPLAINT FORM] Submission successful:', result);
-      
+
+      // console.log removed for security
+
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());
-      
+
       // Redirect to dashboard after delay
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);
-      
+
     } catch (error) {
       console.error('[COMPLAINT FORM] Submission failed:', error);
       // Error is already handled in handleComplaintSubmit
     }
   });
 
-  console.log('[COMPLAINT FORM] Form submission setup complete');
+  // console.log removed for security
 }
 
 /**
@@ -281,13 +281,13 @@ async function loadDepartments() {
   if (!container) return;
 
   try {
-    console.log('[DEPARTMENTS] Loading departments...');
+    // console.log removed for security
     const response = await apiClient.getActiveDepartments();
-    
+
     if (response.success && response.data) {
       const departments = response.data;
-      console.log(`[DEPARTMENTS] Loaded ${departments.length} departments`);
-      
+      // console.log removed for security
+
       container.innerHTML = departments.map(dept => `
         <div class="checkbox-item">
           <input

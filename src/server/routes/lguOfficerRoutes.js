@@ -17,5 +17,3 @@ router.put('/tasks/:assignmentId/status', LguOfficerController.updateTaskStatus)
 router.post('/tasks/:assignmentId/update', LguOfficerController.addProgressUpdate);
 
 module.exports = router;
-
-

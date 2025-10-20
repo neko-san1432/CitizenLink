@@ -25,7 +25,6 @@ class LguAdminController {
 
       // Extract department from role (e.g., lgu-admin-{dept} -> {dept})
       const departmentCode = userRole.replace('lgu-admin-', '');
-      
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -42,7 +41,6 @@ class LguAdminController {
         });
       }
 
-
       // Step 1: Get all complaints for this department with filters
       let query = supabase
         .from('complaints')
@@ -57,7 +55,7 @@ class LguAdminController {
         // Default: show pending review and in progress
         query = query.in('status', ['pending review', 'in progress']);
       }
-      
+
       // Apply other filters
       if (sub_type && sub_type !== 'all') {
         query = query.eq('subtype', sub_type);
@@ -66,7 +64,6 @@ class LguAdminController {
         query = query.eq('priority', priority);
       }
 
-      
       const { data: departmentComplaints, error: complaintsError } = await query;
 
       if (complaintsError) {
@@ -77,7 +74,6 @@ class LguAdminController {
           details: complaintsError.message
         });
       }
-
 
       // Step 2: Get existing assignments for these complaints
       const complaintIds = departmentComplaints.map(c => c.id);
@@ -115,7 +111,6 @@ class LguAdminController {
         };
       });
 
-
       // Get officer information for assigned complaints
       const assignedOfficerIds = departmentAssignments
         .filter(a => a.assigned_to)
@@ -124,7 +119,7 @@ class LguAdminController {
       let officersMap = {};
       if (assignedOfficerIds.length > 0) {
         const { data: officers } = await supabase.auth.admin.listUsers();
-        
+
         officersMap = officers.users
           .filter(u => assignedOfficerIds.includes(u.id))
           .reduce((acc, user) => {
@@ -142,7 +137,7 @@ class LguAdminController {
       let citizensMap = {};
       if (citizenIds.length > 0) {
         const { data: citizens } = await supabase.auth.admin.listUsers();
-        
+
         citizensMap = citizens.users
           .filter(u => citizenIds.includes(u.id))
           .reduce((acc, user) => {
@@ -172,7 +167,6 @@ class LguAdminController {
         notes: assignment.notes
       }));
 
-
       return res.json({
         success: true,
         data: formattedAssignments
@@ -194,10 +188,9 @@ class LguAdminController {
   async getDepartmentOfficers(req, res) {
     try {
       const userRole = req.user.role;
-      
+
       // Extract department from role
       const departmentCode = userRole.replace('lgu-admin-', '');
-      
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -217,34 +210,26 @@ class LguAdminController {
       // Get all users with lgu-* officer role in this department
       // Officer roles follow pattern: lgu-wst, lgu-engineering, lgu-health, etc.
       const { data: allUsers } = await supabase.auth.admin.listUsers();
-      
+
       const allLguUsers = allUsers.users.filter(user => {
         const metadata = user.user_metadata || {};
         const role = metadata.role || '';
         return /^lgu-(?!admin|hr)/.test(role);
       });
-      
+
       const officers = allUsers.users
         .filter(user => {
           const metadata = user.user_metadata || {};
           const role = metadata.role || '';
           // Match lgu-* but exclude lgu-admin-* and lgu-hr-*
           const isOfficer = /^lgu-(?!admin|hr)/.test(role);
-          
+
           // Check if the role contains the department code (e.g., lgu-wst for wst department)
           const roleContainsDepartment = role.includes(`-${departmentCode}`);
           const hasCorrectDepartment = metadata.department === departmentCode;
-          
-          console.log('[LGU_ADMIN] User check:', {
-            id: user.id,
-            role,
-            department: metadata.department,
-            isOfficer,
-            roleContainsDepartment,
-            hasCorrectDepartment,
-            targetDepartment: departmentCode
-          });
-          
+
+          // console.log removed for security
+
           // Match if role contains department code OR if department field matches
           return isOfficer && (roleContainsDepartment || hasCorrectDepartment);
         })
@@ -255,7 +240,6 @@ class LguAdminController {
           employee_id: user.user_metadata?.employee_id,
           mobile: user.user_metadata?.mobile
         }));
-
 
       return res.json({
         success: true,
@@ -286,7 +270,6 @@ class LguAdminController {
           error: 'Complaint ID and Officer ID are required'
         });
       }
-
 
       // Extract department from role
       const departmentCode = userRole.replace('lgu-admin-', '');
@@ -377,9 +360,9 @@ class LguAdminController {
 
       // Send notification to the officer
       // Map complaint priority to notification priority
-      const notificationPriority = priority === 'urgent' ? 'urgent' : 
-                                   priority === 'high' ? 'warning' : 'info';
-      
+      const notificationPriority = priority === 'urgent' ? 'urgent' :
+        priority === 'high' ? 'warning' : 'info';
+
       await notificationService.createNotification(
         officerId,
         'task_assigned',
@@ -395,7 +378,6 @@ class LguAdminController {
           }
         }
       );
-
 
       return res.json({
         success: true,
@@ -413,4 +395,3 @@ class LguAdminController {
 }
 
 module.exports = new LguAdminController();
-

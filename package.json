@@ -14,8 +14,20 @@
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
     "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./public/css/app.css --minify",
-    "build": "npm run build:css",
-    "check": "node scripts/healthcheck.js"
+    "codeql-scan": "node scripts/codeql-local-scan.js",
+    "codeql-scan-verbose": "node scripts/codeql-local-scan.js --verbose",
+    "codeql-scan-sarif": "node scripts/codeql-local-scan.js --output-format=sarif",
+    "security-scan": "node scripts/security-autoresolve.js",
+    "security-scan-detailed": "node scripts/security-scan-detailed.js",
+    "security-audit": "node scripts/security-audit.js",
+    "security-audit-npm": "npm audit --audit-level=moderate",
+    "security-fix": "npm run security-audit-npm && npm audit fix && npm run lint:fix",
+    "setup-dev": "node scripts/setup-dev-env.js",
+    "setup-actions": "node scripts/setup-github-actions.js",
+    "fix-indentation": "node scripts/fix-service-indentation.js",
+    "fix-all-indentation": "node scripts/fix-all-indentation.js",
+    "rate-limit": "node scripts/rate-limit-manager.js",
+    "cleanup": "node scripts/cleanup-unused-files.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
@@ -26,10 +38,17 @@
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
-    "multer": "^2.0.2"
+    "isomorphic-dompurify": "^1.8.0",
+    "multer": "^2.0.2",
+    "validator": "^13.15.15",
+    "xss": "^1.0.14"
   },
   "devDependencies": {
+    "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.0",
+    "eslint-plugin-no-unsanitized": "^4.1.4",
+    "eslint-plugin-security": "^3.0.1",
     "gzip-cli": "^1.0.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.6",

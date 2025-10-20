@@ -14,7 +14,7 @@ class HeatmapVisualization {
     this.dbscan = new DBSCAN();
     this.isClusteringEnabled = false;
     this.currentFilters = {};
-    
+
     // Heatmap configuration
     this.heatmapConfig = {
       radius: 25,
@@ -47,9 +47,9 @@ class HeatmapVisualization {
    */
   async loadComplaintData(filters = {}) {
     try {
-      console.log('[HEATMAP] Loading complaint data with filters:', filters);
+      // console.log removed for security
       this.currentFilters = filters;
-      
+
       const queryParams = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== '') {
@@ -60,17 +60,17 @@ class HeatmapVisualization {
       // Use apiClient for authenticated requests
       const apiClientModule = await import('../../config/apiClient.js');
       const apiClient = apiClientModule.default;
-      console.log('[HEATMAP] Making API request to:', `/api/complaints/locations?${queryParams}`);
-      
+      // console.log removed for security
+
       const result = await apiClient.get(`/api/complaints/locations?${queryParams}`);
-      console.log('[HEATMAP] API response:', result);
-      console.log('[HEATMAP] API response data length:', result.data?.length);
-      console.log('[HEATMAP] API response data sample:', result.data?.slice(0, 3));
-      
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+
       this.complaintData = result.data || [];
-      
-      console.log(`[HEATMAP] Loaded ${this.complaintData.length} complaint locations`);
-      console.log('[HEATMAP] First few complaints:', this.complaintData.slice(0, 3));
+
+      // console.log removed for security
+      // console.log removed for security
       return this.complaintData;
     } catch (error) {
       console.error('[HEATMAP] Error loading complaint data:', error);
@@ -96,8 +96,8 @@ class HeatmapVisualization {
 
     // Create heatmap layer using Leaflet.heat
     this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
-    
-    console.log(`[HEATMAP] Created heatmap layer with ${heatmapData.length} points`);
+
+    // console.log removed for security
     return this.heatmapLayer;
   }
 
@@ -146,15 +146,15 @@ class HeatmapVisualization {
 
     this.markerLayer = L.layerGroup();
 
-    console.log(`[HEATMAP] Creating markers for ${this.complaintData.length} complaints`);
-    
+    // console.log removed for security
+
     this.complaintData.forEach((complaint, index) => {
-      console.log(`[HEATMAP] Creating marker ${index + 1}: ${complaint.title} - Lat: ${complaint.lat}, Lng: ${complaint.lng}`);
+      // console.log removed for security
       const marker = this.createComplaintMarker(complaint);
       this.markerLayer.addLayer(marker);
     });
 
-    console.log(`[HEATMAP] Created marker layer with ${this.complaintData.length} markers`);
+    // console.log removed for security
     return this.markerLayer;
   }
 
@@ -168,15 +168,15 @@ class HeatmapVisualization {
 
     this.circleLayer = L.layerGroup();
 
-    console.log(`[HEATMAP] Creating circles for ${this.complaintData.length} complaints`);
-    
+    // console.log removed for security
+
     this.complaintData.forEach((complaint, index) => {
-      console.log(`[HEATMAP] Creating circle ${index + 1}: ${complaint.title} - Lat: ${complaint.lat}, Lng: ${complaint.lng}`);
+      // console.log removed for security
       const circle = this.createComplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
     });
 
-    console.log(`[HEATMAP] Created circle layer with ${this.complaintData.length} circles`);
+    // console.log removed for security
     return this.circleLayer;
   }
 
@@ -188,7 +188,7 @@ class HeatmapVisualization {
   createComplaintMarker(complaint) {
     const icon = this.getComplaintIcon(complaint);
     const marker = L.marker([complaint.lat, complaint.lng], { icon });
-    
+
     // Create popup content
     const popupContent = this.createComplaintPopup(complaint);
     marker.bindPopup(popupContent, {
@@ -207,7 +207,7 @@ class HeatmapVisualization {
   createComplaintCircle(complaint) {
     const priorityColors = {
       'low': '#28a745',
-      'medium': '#ffc107', 
+      'medium': '#ffc107',
       'high': '#fd7e14',
       'urgent': '#dc3545'
     };
@@ -272,7 +272,7 @@ class HeatmapVisualization {
 
     // Add click event for additional actions
     circle.on('click', (e) => {
-      console.log('[HEATMAP] Circle clicked for complaint:', complaint.title);
+      // console.log removed for security
       // You can add additional click actions here
     });
 
@@ -331,7 +331,7 @@ class HeatmapVisualization {
   createComplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
     const priorityClass = complaint.priority.replace(' ', '-').toLowerCase();
-    
+
     return `
       <div class="complaint-popup-content">
         <h4>${complaint.title}</h4>
@@ -357,13 +357,13 @@ class HeatmapVisualization {
     const submittedTime = new Date(complaint.submittedAt).toLocaleTimeString();
     const priorityClass = complaint.priority.replace(' ', '-').toLowerCase();
     const statusClass = complaint.status.replace(' ', '-').toLowerCase();
-    
+
     // Calculate days since submission
     const daysSinceSubmission = Math.floor((Date.now() - new Date(complaint.submittedAt).getTime()) / (1000 * 60 * 60 * 24));
-    
+
     // Check if user has access to this complaint
     const hasAccess = await this.checkComplaintAccess(complaint);
-    
+
     if (!hasAccess) {
       return `
         <div class="complaint-detail-popup">
@@ -374,35 +374,35 @@ class HeatmapVisualization {
               <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
             </div>
           </div>
-          
+
           <div class="popup-content">
             <div class="complaint-info">
               <div class="info-row">
                 <span class="label">Type:</span>
                 <span class="value">${complaint.type}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Location:</span>
                 <span class="value">${complaint.location}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Department:</span>
                 <span class="value">${complaint.department || 'Not assigned'}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Submitted:</span>
                 <span class="value">${submittedDate} at ${submittedTime}</span>
               </div>
-              
+
               <div class="info-row">
                 <span class="label">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            
+
             <div class="popup-actions">
               <div class="access-denied">
                 <p>🔒 Access restricted to assigned department</p>
@@ -412,7 +412,7 @@ class HeatmapVisualization {
         </div>
       `;
     }
-    
+
     return `
       <div class="complaint-detail-popup">
         <div class="popup-header">
@@ -422,35 +422,35 @@ class HeatmapVisualization {
             <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
           </div>
         </div>
-        
+
         <div class="popup-content">
           <div class="complaint-info">
             <div class="info-row">
               <span class="label">Type:</span>
               <span class="value">${complaint.type}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Location:</span>
               <span class="value">${complaint.location}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Department:</span>
               <span class="value">${complaint.department || 'Not assigned'}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Submitted:</span>
               <span class="value">${submittedDate} at ${submittedTime}</span>
             </div>
-            
+
             <div class="info-row">
               <span class="label">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
             </div>
           </div>
-          
+
           <div class="popup-actions">
             <button class="btn-details" onclick="viewComplaintDetails('${complaint.id}')">
               📋 View Full Details
@@ -474,23 +474,23 @@ class HeatmapVisualization {
       // Import getUserRole function
       const { getUserRole } = await import('../../auth/authChecker.js');
       const userRole = await getUserRole();
-      
-      console.log('[HEATMAP] Checking access for complaint:', complaint.title);
-      console.log('[HEATMAP] User role:', userRole);
-      console.log('[HEATMAP] Complaint department:', complaint.department);
-      
+
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+
       // Super admin has access to everything
       if (userRole === 'super-admin') {
-        console.log('[HEATMAP] Super admin - access granted');
+        // console.log removed for security
         return true;
       }
-      
+
       // Complaint coordinator has access to everything
       if (userRole === 'complaint-coordinator') {
-        console.log('[HEATMAP] Complaint coordinator - access granted');
+        // console.log removed for security
         return true;
       }
-      
+
       // Extract user's department from role
       let userDepartment = null;
       if (userRole && userRole.startsWith('lgu-')) {
@@ -500,33 +500,49 @@ class HeatmapVisualization {
           userDepartment = roleParts[2].toUpperCase();
         }
       }
-      
-      console.log('[HEATMAP] User department:', userDepartment);
-      
+
+      // console.log removed for security
+
       if (!userDepartment) {
-        console.log('[HEATMAP] No department found in user role - access denied');
+        // console.log removed for security
         return false;
       }
-      
+
       // Check if complaint is assigned to user's department
       const complaintDepartment = complaint.department?.toUpperCase();
+      const complaintDepartments = complaint.departments || [];
+      const secondaryDepartments = complaint.secondaryDepartments || [];
+      
+      // Check primary department
       if (complaintDepartment === userDepartment) {
-        console.log('[HEATMAP] Complaint assigned to user department - access granted');
+        // console.log removed for security
         return true;
       }
-      
+
+      // Check if user's department is in the departments array
+      if (complaintDepartments.includes(userDepartment)) {
+        // console.log removed for security
+        return true;
+      }
+
+      // Check if user's department is in secondary departments
+      if (secondaryDepartments.includes(userDepartment)) {
+        // console.log removed for security
+        return true;
+      }
+
       // Check if it's a joint/forced complaint (multiple departments)
       if (complaintDepartment && complaintDepartment.includes(',')) {
         const assignedDepartments = complaintDepartment.split(',').map(dept => dept.trim().toUpperCase());
         if (assignedDepartments.includes(userDepartment)) {
-          console.log('[HEATMAP] Joint complaint includes user department - access granted');
+          // console.log removed for security
           return true;
         }
       }
-      
-      console.log('[HEATMAP] Access denied - complaint not assigned to user department');
+
+      // console.log removed for security
       return false;
-      
+
     } catch (error) {
       console.error('[HEATMAP] Error checking complaint access:', error);
       return false;
@@ -557,8 +573,8 @@ class HeatmapVisualization {
     const clusteringResult = this.dbscan.cluster(points);
     this.clusters = clusteringResult.clusters;
 
-    console.log(`[HEATMAP] Clustering completed: ${clusteringResult.clusters.length} clusters, ${clusteringResult.noise.length} noise points`);
-    
+    // console.log removed for security
+
     return clusteringResult;
   }
 
@@ -620,7 +636,7 @@ class HeatmapVisualization {
       this.clusterLayer.addLayer(clusterMarker);
     });
 
-    console.log(`[HEATMAP] Created cluster layer with ${this.clusters.length} clusters`);
+    // console.log removed for security
     return this.clusterLayer;
   }
 
@@ -673,21 +689,21 @@ class HeatmapVisualization {
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
-            ${Object.entries(statusCounts).map(([status, count]) => 
-              `<li>${status}: ${count}</li>`
-            ).join('')}
+            ${Object.entries(statusCounts).map(([status, count]) =>
+    `<li>${status}: ${count}</li>`
+  ).join('')}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
-            ${Object.entries(typeCounts).map(([type, count]) => 
-              `<li>${type}: ${count}</li>`
-            ).join('')}
+            ${Object.entries(typeCounts).map(([type, count]) =>
+    `<li>${type}: ${count}</li>`
+  ).join('')}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
-            ${Object.entries(priorityCounts).map(([priority, count]) => 
-              `<li>${priority}: ${count}</li>`
-            ).join('')}
+            ${Object.entries(priorityCounts).map(([priority, count]) =>
+    `<li>${priority}: ${count}</li>`
+  ).join('')}
           </ul>
         </div>
       </div>
@@ -774,7 +790,7 @@ class HeatmapVisualization {
   updateClusteringParameters(eps, minPts) {
     this.clusterConfig.eps = eps;
     this.clusterConfig.minPts = minPts;
-    
+
     // Re-cluster if clustering is enabled
     if (this.isClusteringEnabled) {
       this.performClustering();
@@ -790,7 +806,7 @@ class HeatmapVisualization {
    */
   toggleClustering(enabled) {
     this.isClusteringEnabled = enabled;
-    
+
     if (enabled) {
       this.performClustering();
       this.createClusterLayer();
@@ -830,11 +846,11 @@ class HeatmapVisualization {
    */
   refresh() {
     this.clearAllLayers();
-    
+
     if (this.complaintData.length > 0) {
       this.createHeatmapLayer();
       this.createMarkerLayer();
-      
+
       if (this.isClusteringEnabled) {
         this.performClustering();
         this.createClusterLayer();

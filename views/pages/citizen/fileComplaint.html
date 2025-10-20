@@ -33,28 +33,25 @@
               />
             </div>
             <div class="form-group">
-              <label for="complaintType">Complaint Type</label>
-              <select id="complaintType" name="complaintType">
-                <option value="">Select complaint type (optional)</option>
-                <option value="infrastructure">Infrastructure</option>
-                <option value="public-safety">Public Safety</option>
-                <option value="environmental">Environmental</option>
-                <option value="health">Health & Sanitation</option>
-                <option value="traffic">Traffic & Transportation</option>
-                <option value="noise">Noise Pollution</option>
-                <option value="other">Other</option>
+              <label for="complaintCategory">Complaint Category *</label>
+              <select id="complaintCategory" name="complaintCategory" required>
+                <option value="">Select a category</option>
+                <div class="loading-placeholder">Loading categories...</div>
               </select>
             </div>
             <div class="form-group">
-              <label for="complaintSubtype">Complaint Subtype</label>
-              <select id="complaintSubtype" name="complaintSubtype">
-                <option value="">Select complaint subtype (optional)</option>
+              <label for="complaintSubcategory">Complaint Subcategory *</label>
+              <select id="complaintSubcategory" name="complaintSubcategory" required disabled>
+                <option value="">Select a subcategory</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Department Involved (Optional)</label>
+              <label>Relevant Departments</label>
+              <div class="department-selection-info">
+                <p class="info-text">Departments will be automatically selected based on your subcategory choice. You can modify the selection if needed.</p>
+              </div>
               <div id="departmentCheckboxes" class="checkbox-group">
-                <div class="loading-placeholder">Loading departments...</div>
+                <div class="loading-placeholder">Select a subcategory to see relevant departments</div>
               </div>
             </div>
             <div class="form-group">
@@ -135,6 +132,6 @@
     <script src="../../js/components/map/complaintLocationPicker.js"></script>
     
     <!-- Complaint Form Scripts (loaded last) -->
-    <script type="module" src="../../js/components/form/complaintForm.js"></script>
+    <script type="module" src="../../js/components/form/complaintFormHierarchical.js"></script>
 </body>
 </html>

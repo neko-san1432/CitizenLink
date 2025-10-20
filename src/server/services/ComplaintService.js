@@ -24,7 +24,7 @@ class ComplaintService {
       }
     }
 
-    console.log('[COMPLAINT] Received departments:', departments);
+    // console.log removed for security
 
     // Map client field names to server field names
     const mappedData = {
@@ -46,15 +46,12 @@ class ComplaintService {
     const sanitizedData = complaint.sanitizeForInsert();
     const createdComplaint = await this.complaintRepo.create(sanitizedData);
 
-    console.log('[COMPLAINT] Created complaint with departments:', {
-      id: createdComplaint.id,
-      department_r: createdComplaint.department_r
-    });
+    // console.log removed for security
 
     try {
       await this._processWorkflow(createdComplaint, departments);
       await this._processFileUploads(createdComplaint.id, files);
-      
+
       // Send notification to citizen
       try {
         await this.notificationService.notifyComplaintSubmitted(
@@ -65,7 +62,7 @@ class ComplaintService {
       } catch (notifError) {
         console.warn('[COMPLAINT] Failed to send submission notification:', notifError.message);
       }
-      
+
       const finalComplaint = await this.complaintRepo.findById(createdComplaint.id);
       return finalComplaint;
     } catch (error) {
@@ -83,10 +80,7 @@ class ComplaintService {
           secondary_departments: departmentArray.slice(1),
           updated_at: new Date().toISOString()
         });
-        console.log('[WORKFLOW] Departments assigned:', {
-          primary: departmentArray[0],
-          secondary: departmentArray.slice(1)
-        });
+        // console.log removed for security
         // Create complaint_assignments for primary and secondary departments
         for (const deptCode of departmentArray) {
           try {
@@ -122,7 +116,7 @@ class ComplaintService {
       try {
         const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
         if (autoAssignResult && autoAssignResult.length > 0) {
-          console.log('[WORKFLOW] Auto-assignment successful:', autoAssignResult[0]);
+          // console.log removed for security
         }
       } catch (error) {
         console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
@@ -139,7 +133,7 @@ class ComplaintService {
             to_dept: targetDept,
             reason: 'Auto-assigned available coordinator'
           });
-          console.log('[WORKFLOW] Coordinator assigned:', coordinator.user_id);
+          // console.log removed for security
         }
       } catch (error) {
         console.warn('[WORKFLOW] Coordinator assignment failed:', error.message);
@@ -168,7 +162,7 @@ class ComplaintService {
     for (const file of files) {
       try {
         const fileName = `${complaintId}/${Date.now()}-${file.originalname}`;
-        
+
         const { data: uploadData, error: uploadError } = await this.complaintRepo.supabase.storage
           .from('complaint-evidence')
           .upload(fileName, file.buffer, {
@@ -193,7 +187,7 @@ class ComplaintService {
           publicUrl: publicUrl
         });
 
-        console.log('[FILE] File uploaded:', file.originalname);
+        // console.log removed for security
       } catch (error) {
         console.error('[FILE] Processing error:', error);
       }
@@ -233,7 +227,7 @@ class ComplaintService {
 
   async updateComplaintStatus(id, status, notes = null, userId = null) {
     const complaint = await this.getComplaintById(id);
-    
+
     const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid status');
@@ -286,7 +280,7 @@ class ComplaintService {
 
   async transferComplaint(complaintId, fromDept, toDept, reason, transferredBy) {
     const complaint = await this.getComplaintById(complaintId);
-    
+
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
       primary_department: toDept,
       assigned_coordinator_id: null
@@ -304,10 +298,10 @@ class ComplaintService {
     try {
       await this.complaintRepo.logAction(complaintId, 'transferred', {
         reason,
-        details: { 
-          from_dept: fromDept, 
-          to_dept: toDept, 
-          transferred_by: transferredBy 
+        details: {
+          from_dept: fromDept,
+          to_dept: toDept,
+          transferred_by: transferredBy
         }
       });
     } catch (error) {
@@ -319,7 +313,7 @@ class ComplaintService {
 
   async getComplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
-    
+
     let query = this.complaintRepo.supabase
       .from('complaints')
       .select('status, type, priority, submitted_at');
@@ -351,7 +345,7 @@ class ComplaintService {
       stats.by_status[complaint.status] = (stats.by_status[complaint.status] || 0) + 1;
       stats.by_type[complaint.type] = (stats.by_type[complaint.type] || 0) + 1;
       stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
-      
+
       const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
       stats.by_month[month] = (stats.by_month[month] || 0) + 1;
     });
@@ -360,49 +354,71 @@ class ComplaintService {
   }
 
   async getComplaintLocations(filters = {}) {
-    console.log('[COMPLAINT-SERVICE] getComplaintLocations called with filters:', filters);
-    
-    const { 
-      status, 
-      type, 
-      department, 
-      startDate, 
-      endDate, 
-      includeResolved = true 
+    // console.log removed for security
+
+    const {
+      status,
+      type,
+      category,
+      subcategory,
+      department,
+      startDate,
+      endDate,
+      includeResolved = true
     } = filters;
-    
+
     try {
       let query = this.complaintRepo.supabase
         .from('complaints')
-        .select('id, title, type, status, priority, latitude, longitude, location_text, submitted_at, primary_department')
+        .select('id, title, type, status, priority, latitude, longitude, location_text, submitted_at, primary_department, secondary_departments, department_r')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
-    // Filter by status
-    if (status) {
-      query = query.eq('status', status);
-    } else if (!includeResolved) {
-      query = query.neq('status', 'resolved').neq('status', 'closed');
-    }
+      // Filter by status
+      if (status) {
+        query = query.eq('status', status);
+      } else if (!includeResolved) {
+        query = query.neq('status', 'resolved').neq('status', 'closed');
+      }
 
-    // Filter by type
-    if (type) {
-      query = query.eq('type', type);
-    }
+      // Filter by type
+      if (type) {
+        query = query.eq('type', type);
+      }
 
-    // Filter by department
-    if (department) {
-      query = query.contains('department_r', [department]);
-    }
+      // Filter by department
+      if (department) {
+        query = query.contains('department_r', [department]);
+      }
 
-    // Filter by date range
-    if (startDate) {
-      query = query.gte('submitted_at', startDate);
-    }
+      // Filter by category and subcategory (if complaint has these fields)
+      if (category || subcategory) {
+        // For now, we'll filter by type as a proxy for category
+        // This would need to be updated when complaints table has category/subcategory fields
+        if (category) {
+          // Map category to complaint types for now
+          const categoryTypeMapping = {
+            'infrastructure': 'infrastructure',
+            'health': 'health',
+            'environmental': 'environmental',
+            'social': 'social',
+            'safety': 'public-safety'
+          };
+          const mappedType = categoryTypeMapping[category];
+          if (mappedType) {
+            query = query.eq('type', mappedType);
+          }
+        }
+      }
 
-    if (endDate) {
-      query = query.lte('submitted_at', endDate);
-    }
+      // Filter by date range
+      if (startDate) {
+        query = query.gte('submitted_at', startDate);
+      }
+
+      if (endDate) {
+        query = query.lte('submitted_at', endDate);
+      }
 
       const { data, error } = await query;
       if (error) {
@@ -410,7 +426,7 @@ class ComplaintService {
         throw error;
       }
 
-      console.log(`[COMPLAINT-SERVICE] Retrieved ${data.length} complaint locations`);
+      // console.log removed for security
 
       // Transform data for heatmap
       const transformedData = data.map(complaint => ({
@@ -423,10 +439,12 @@ class ComplaintService {
         lng: parseFloat(complaint.longitude),
         location: complaint.location_text,
         submittedAt: complaint.submitted_at,
-        department: complaint.primary_department
+        department: complaint.primary_department,
+        departments: complaint.department_r || [],
+        secondaryDepartments: complaint.secondary_departments || []
       }));
 
-      console.log('[COMPLAINT-SERVICE] Transformed data sample:', transformedData.slice(0, 2));
+      // console.log removed for security
       return transformedData;
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] getComplaintLocations error:', error);
@@ -436,3 +454,4 @@ class ComplaintService {
 }
 
 module.exports = ComplaintService;
+

@@ -20,6 +20,22 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
             <h1>LGU Admin Dashboard</h1>
+            <section id="quick-actions">
+                <div class="card-grid">
+                    <a class="btn btn-primary" href="/lgu-admin/publish?type=notices">Publish Notice</a>
+                    <a class="btn btn-primary" href="/lgu-admin/publish?type=events">Publish Upcoming Event</a>
+                    <a class="btn btn-primary" href="/lgu-admin/publish?type=news">Publish News</a>
+                </div>
+            </section>
+            <section id="dept-stats">
+                <div class="card">
+                    <div class="card-body">
+                        <h2>Received Complaints</h2>
+                        <div id="dept-complaint-count">Loading...</div>
+                        <div id="resolution-info" class="text-muted"></div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
@@ -29,5 +45,6 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/lgu-admin/dashboard.js"></script>
 </body>
 </html>

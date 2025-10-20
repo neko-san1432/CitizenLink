@@ -8,8 +8,10 @@ class HeatmapControls {
     this.controller = controller;
     this.currentFilters = {
       status: '',
-      type: '',
+      category: '',
+      subcategory: '',
       department: '',
+      timeRange: '',
       startDate: '',
       endDate: '',
       includeResolved: true
@@ -19,7 +21,7 @@ class HeatmapControls {
       minPts: 3
     };
     this.isVisible = true;
-    
+
     this.createControls();
   }
 
@@ -31,7 +33,7 @@ class HeatmapControls {
     controlsContainer.id = 'heatmap-controls';
     controlsContainer.className = 'map-controls';
     controlsContainer.innerHTML = this.getControlsHTML();
-    
+
     // Insert after the map container
     const mapContainer = document.getElementById('map');
     if (mapContainer && mapContainer.parentNode) {
@@ -39,6 +41,8 @@ class HeatmapControls {
     }
 
     this.setupEventListeners();
+    this.loadCategories();
+    this.loadDepartments();
   }
 
   /**
@@ -49,7 +53,6 @@ class HeatmapControls {
     return `
       <div class="control-section">
         <h3>🗺️ Heatmap Controls</h3>
-        
 
         <!-- Filters -->
         <div class="control-group">
@@ -65,14 +68,17 @@ class HeatmapControls {
         </div>
 
         <div class="control-group">
-          <label>Type Filter:</label>
-          <select id="type-filter">
-            <option value="">All Types</option>
-            <option value="infrastructure">Infrastructure</option>
-            <option value="environmental">Environmental</option>
-            <option value="social">Social</option>
-            <option value="safety">Safety</option>
-            <option value="other">Other</option>
+          <label>Category Filter:</label>
+          <select id="category-filter">
+            <option value="">All Categories</option>
+            <div id="category-options-loading">Loading categories...</div>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Subcategory Filter:</label>
+          <select id="subcategory-filter" disabled>
+            <option value="">Select a category first</option>
           </select>
         </div>
 
@@ -80,16 +86,25 @@ class HeatmapControls {
           <label>Department Filter:</label>
           <select id="department-filter">
             <option value="">All Departments</option>
-            <option value="WST">Water & Sanitation</option>
-            <option value="ENG">Engineering</option>
-            <option value="SOC">Social Services</option>
-            <option value="ENV">Environment</option>
-            <option value="SAF">Safety</option>
+            <div id="department-options-loading">Loading departments...</div>
           </select>
         </div>
 
         <div class="control-group">
-          <label>Date Range:</label>
+          <label>Time Range:</label>
+          <select id="time-range-filter">
+            <option value="">All Time</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last7days">Last 7 Days</option>
+            <option value="last30days">Last 30 Days</option>
+            <option value="last90days">Last 90 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+
+        <div class="control-group" id="custom-date-range" style="display: none;">
+          <label>Custom Date Range:</label>
           <input type="date" id="start-date" placeholder="Start Date">
           <input type="date" id="end-date" placeholder="End Date">
         </div>
@@ -110,16 +125,16 @@ class HeatmapControls {
               Enable DBSCAN Clustering
             </label>
           </div>
-          
+
           <div class="clustering-params" id="clustering-params" style="display: none;">
             <label>Epsilon (km):</label>
             <input type="range" id="eps-slider" min="0.005" max="0.05" step="0.005" value="0.01">
             <span id="eps-value">0.01</span>
-            
+
             <label>Min Points:</label>
             <input type="range" id="minpts-slider" min="2" max="10" step="1" value="3">
             <span id="minpts-value">3</span>
-            
+
             <button id="suggest-params" class="btn-small">Suggest Parameters</button>
           </div>
         </div>
@@ -222,8 +237,57 @@ class HeatmapControls {
       this.updateHeatmapIntensityValue(intensity);
       this.controller.setHeatmapIntensity(intensity);
     });
-  }
 
+    // Filter change listeners
+    document.getElementById('status-filter')?.addEventListener('change', () => {
+      this.applyFilters();
+    });
+
+    document.getElementById('category-filter')?.addEventListener('change', async (e) => {
+      const categoryId = e.target.value;
+      await this.loadSubcategories(categoryId);
+      this.currentFilters.category = categoryId;
+      this.currentFilters.subcategory = ''; // Reset subcategory when category changes
+      this.applyFilters();
+    });
+
+    document.getElementById('subcategory-filter')?.addEventListener('change', (e) => {
+      this.currentFilters.subcategory = e.target.value;
+      this.applyFilters();
+    });
+
+    document.getElementById('department-filter')?.addEventListener('change', () => {
+      this.applyFilters();
+    });
+
+    document.getElementById('time-range-filter')?.addEventListener('change', (e) => {
+      const timeRange = e.target.value;
+      this.currentFilters.timeRange = timeRange;
+      
+      // Show/hide custom date range
+      const customDateRange = document.getElementById('custom-date-range');
+      if (timeRange === 'custom') {
+        customDateRange.style.display = 'block';
+      } else {
+        customDateRange.style.display = 'none';
+        // Set date range based on selection
+        this.setDateRangeFromTimeRange(timeRange);
+      }
+      this.applyFilters();
+    });
+
+    document.getElementById('start-date')?.addEventListener('change', () => {
+      this.applyFilters();
+    });
+
+    document.getElementById('end-date')?.addEventListener('change', () => {
+      this.applyFilters();
+    });
+
+    document.getElementById('include-resolved')?.addEventListener('change', () => {
+      this.applyFilters();
+    });
+  }
 
   /**
    * Apply current filters
@@ -263,14 +327,56 @@ class HeatmapControls {
   }
 
   /**
+   * Set date range based on time range selection
+   * @param {string} timeRange - Selected time range
+   */
+  setDateRangeFromTimeRange(timeRange) {
+    const now = new Date();
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    
+    if (!startDateInput || !endDateInput) return;
+
+    let startDate, endDate;
+    
+    switch (timeRange) {
+      case 'today':
+        startDate = endDate = now;
+        break;
+      case 'yesterday':
+        startDate = endDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'last7days':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        endDate = now;
+        break;
+      case 'last30days':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        endDate = now;
+        break;
+      case 'last90days':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        endDate = now;
+        break;
+      default:
+        return;
+    }
+    
+    startDateInput.value = startDate.toISOString().split('T')[0];
+    endDateInput.value = endDate.toISOString().split('T')[0];
+  }
+
+  /**
    * Get current filter values
    * @returns {Object} Current filters
    */
   getCurrentFilters() {
     return {
       status: document.getElementById('status-filter')?.value || '',
-      type: document.getElementById('type-filter')?.value || '',
+      category: this.currentFilters.category || '',
+      subcategory: this.currentFilters.subcategory || '',
       department: document.getElementById('department-filter')?.value || '',
+      timeRange: this.currentFilters.timeRange || '',
       startDate: document.getElementById('start-date')?.value || '',
       endDate: document.getElementById('end-date')?.value || '',
       includeResolved: document.getElementById('include-resolved')?.checked || true
@@ -314,17 +420,16 @@ class HeatmapControls {
     this.clusteringParams.minPts = parseInt(value);
   }
 
-
   /**
    * Update clustering parameters
    */
   updateClusteringParams() {
     const eps = parseFloat(document.getElementById('eps-slider')?.value || 0.01);
     const minPts = parseInt(document.getElementById('minpts-slider')?.value || 3);
-    
+
     this.clusteringParams.eps = eps;
     this.clusteringParams.minPts = minPts;
-    
+
     this.controller.updateClusteringParameters(eps, minPts);
   }
 
@@ -343,12 +448,12 @@ class HeatmapControls {
     // Update sliders
     const epsSlider = document.getElementById('eps-slider');
     const minPtsSlider = document.getElementById('minpts-slider');
-    
+
     if (epsSlider) {
       epsSlider.value = suggested.eps;
       this.updateEpsValue(suggested.eps);
     }
-    
+
     if (minPtsSlider) {
       minPtsSlider.value = suggested.minPts;
       this.updateMinPtsValue(suggested.minPts);
@@ -415,14 +520,13 @@ class HeatmapControls {
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
-      
+
       // Hide after 5 seconds
       setTimeout(() => {
         errorDiv.style.display = 'none';
       }, 5000);
     }
   }
-
 
   /**
    * Toggle controls visibility
@@ -432,6 +536,122 @@ class HeatmapControls {
     if (controls) {
       this.isVisible = !this.isVisible;
       controls.style.display = this.isVisible ? 'block' : 'none';
+    }
+  }
+
+  /**
+   * Load categories dynamically
+   */
+  async loadCategories() {
+    try {
+      const { apiClient } = await import('../../config/apiClient.js');
+      const { data, error } = await apiClient.get('/api/department-structure/categories');
+      if (error) throw error;
+      
+      const categorySelect = document.getElementById('category-filter');
+      if (categorySelect) {
+        // Remove loading placeholder
+        const loadingEl = document.getElementById('category-options-loading');
+        if (loadingEl) {
+          loadingEl.remove();
+        }
+        
+        // Add category options
+        if (data && data.length > 0) {
+          data.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = `${category.icon} ${category.name}`;
+            categorySelect.appendChild(option);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading categories for heatmap:', error);
+      const categorySelect = document.getElementById('category-filter');
+      if (categorySelect) {
+        const loadingEl = document.getElementById('category-options-loading');
+        if (loadingEl) {
+          loadingEl.innerHTML = '<option value="">Error loading categories</option>';
+        }
+      }
+    }
+  }
+
+  /**
+   * Load subcategories for selected category
+   */
+  async loadSubcategories(categoryId) {
+    const subcategorySelect = document.getElementById('subcategory-filter');
+    if (!subcategorySelect) return;
+
+    try {
+      if (!categoryId) {
+        subcategorySelect.innerHTML = '<option value="">Select a category first</option>';
+        subcategorySelect.disabled = true;
+        return;
+      }
+
+      subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
+      subcategorySelect.disabled = true;
+
+      const { apiClient } = await import('../../config/apiClient.js');
+      const { data, error } = await apiClient.get(`/api/department-structure/categories/${categoryId}/subcategories`);
+      if (error) throw error;
+
+      subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+      
+      if (data && data.length > 0) {
+        data.forEach(subcategory => {
+          const option = document.createElement('option');
+          option.value = subcategory.id;
+          option.textContent = subcategory.name;
+          subcategorySelect.appendChild(option);
+        });
+        subcategorySelect.disabled = false;
+      } else {
+        subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
+      }
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
+      subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+    }
+  }
+
+  /**
+   * Load departments dynamically
+   */
+  async loadDepartments() {
+    try {
+      const { getDepartments } = await import('../../utils/departmentUtils.js');
+      const departments = await getDepartments();
+      
+      const departmentSelect = document.getElementById('department-filter');
+      if (departmentSelect) {
+        // Remove loading placeholder
+        const loadingEl = document.getElementById('department-options-loading');
+        if (loadingEl) {
+          loadingEl.remove();
+        }
+        
+        // Add department options
+        departments.forEach(dept => {
+          const option = document.createElement('option');
+          option.value = dept.code;
+          option.textContent = `${dept.name} (${dept.code})`;
+          departmentSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading departments for heatmap:', error);
+      // Fallback to basic options
+      const departmentSelect = document.getElementById('department-filter');
+      if (departmentSelect) {
+        const loadingEl = document.getElementById('department-options-loading');
+        if (loadingEl) {
+          loadingEl.innerHTML = '<option value="">Error loading departments</option>';
+        }
+      }
     }
   }
 

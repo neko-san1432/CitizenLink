@@ -12,7 +12,7 @@ window.complaintMap = null;
  * @param {Object} options - Map configuration options
  * @returns {L.Map} - Leaflet map instance
  */
-async function initializeComplaintLocationPicker(containerId = "complaint-map", options = {}) {
+async function initializeComplaintLocationPicker(containerId = 'complaint-map', options = {}) {
   try {
     // Check if map already exists
     if (window.complaintMap) {
@@ -86,17 +86,17 @@ async function initializeComplaintLocationPicker(containerId = "complaint-map", 
 
     // Add layer control
     const baseLayers = {
-      "Street Map": osmLayer,
-      "Satellite": satelliteLayer
+      'Street Map': osmLayer,
+      'Satellite': satelliteLayer
     };
-    
+
     const layerControl = L.control.layers(baseLayers, {}, {
-      position: "topright"
+      position: 'topright'
     }).addTo(map);
 
-    console.log("🗺️ Complaint location picker initialized");
-    console.log("📍 Initial map center:", map.getCenter());
-    console.log("🔍 Zoom range:", mapOptions.minZoom, "to", mapOptions.maxZoom);
+    // console.log removed for security
+    // console.log removed for security
+    // console.log removed for security
 
     // Expose globally
     window.complaintMap = map;
@@ -114,7 +114,7 @@ async function initializeComplaintLocationPicker(containerId = "complaint-map", 
     return map;
 
   } catch (error) {
-    console.error("Failed to initialize complaint location picker:", error);
+    console.error('Failed to initialize complaint location picker:', error);
     return null;
   }
 }
@@ -130,7 +130,7 @@ function setupLocationPicker(map) {
   const latInput = document.getElementById('latitude');
   const lngInput = document.getElementById('longitude');
   const locationInput = document.getElementById('location');
-  
+
   if (!latInput || !lngInput) {
     console.error('Latitude/longitude input fields not found');
     return;
@@ -149,7 +149,7 @@ function setupLocationPicker(map) {
   function updateCoordinates(lat, lng) {
     latInput.value = lat.toFixed(6);
     lngInput.value = lng.toFixed(6);
-    console.log(`📍 Coordinates updated: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    // console.log removed for security
   }
 
   // Update location text function
@@ -157,7 +157,7 @@ function setupLocationPicker(map) {
     if (!locationInput) return;
 
     try {
-      console.log(`🌍 Attempting reverse geocoding for: ${lat}, ${lng}`);
+      // console.log removed for security
 
       // Use server-side reverse geocoding endpoint to avoid CORS issues
       const response = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
@@ -167,21 +167,21 @@ function setupLocationPicker(map) {
       }
 
       const data = await response.json();
-      console.log('🌍 Reverse geocoding response:', data);
+      // console.log removed for security
 
       if (data && data.display_name) {
         locationInput.value = data.display_name;
-        console.log(`📍 Address found: ${data.display_name}`);
+        // console.log removed for security
       } else {
         // Fallback to coordinates
         locationInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        console.log(`📍 Using coordinates as fallback: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        // console.log removed for security
       }
     } catch (error) {
-      console.log('🌍 Reverse geocoding failed:', error);
+      // console.log removed for security
       // Fallback to coordinates
       locationInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-      console.log(`📍 Using coordinates as fallback: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      // console.log removed for security
 
       // Ensure location field is not empty for validation
       if (!locationInput.value.trim()) {
@@ -197,13 +197,13 @@ function setupLocationPicker(map) {
   // Marker drag events
   marker.on('drag', function(e) {
     const latlng = e.target.getLatLng();
-    console.log(`🔄 Marker being dragged to: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`);
+    // console.log removed for security
     updateCoordinates(latlng.lat, latlng.lng);
   });
 
   marker.on('dragend', function(e) {
     const latlng = e.target.getLatLng();
-    console.log(`📍 Marker drag ended at: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`);
+    // console.log removed for security
     updateCoordinates(latlng.lat, latlng.lng);
     updateLocationText(latlng.lat, latlng.lng);
   });
@@ -211,9 +211,9 @@ function setupLocationPicker(map) {
   // Map click events
   map.on('click', function(e) {
     if (isUserInteracting) return;
-    
+
     const { lat, lng } = e.latlng;
-    console.log(`🖱️ Map clicked at: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    // console.log removed for security
     marker.setLatLng([lat, lng]);
     updateCoordinates(lat, lng);
     updateLocationText(lat, lng);
@@ -222,18 +222,18 @@ function setupLocationPicker(map) {
   // Map move events (when user drags the map)
   map.on('movestart', function() {
     isUserInteracting = true;
-    console.log('🗺️ Map movement started');
+    // console.log removed for security
   });
 
   map.on('moveend', function() {
     if (!isUserInteracting) return;
-    
+
     const center = map.getCenter();
-    console.log(`🗺️ Map movement ended at center: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`);
+    // console.log removed for security
     marker.setLatLng([center.lat, center.lng]);
     updateCoordinates(center.lat, center.lng);
     updateLocationText(center.lat, center.lng);
-    
+
     isUserInteracting = false;
   });
 
@@ -243,33 +243,32 @@ function setupLocationPicker(map) {
     const div = L.DomUtil.create('div', 'geolocation-control');
     div.innerHTML = '<button type="button" title="Use my location">📍</button>';
     div.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px;';
-    
-    div.onclick = function() {
-      console.log('📍 Geolocation button clicked');
-      
+
+      // console.log removed for security
+
       if (navigator.geolocation) {
-        console.log('🌍 Geolocation API is available');
-        
+        // console.log removed for security
+
         // Check geolocation permissions
         if (navigator.permissions) {
           navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-            console.log('🔐 Geolocation permission status:', result.state);
+            // console.log removed for security
           });
         }
-        
-        console.log('🌍 Requesting current position...');
-        
+
+        // console.log removed for security
+
         const options = {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 300000 // 5 minutes
         };
-        
+
         navigator.geolocation.getCurrentPosition(
           function(position) {
-            console.log('✅ Geolocation success!');
-            console.log('📍 Raw position data:', position);
-            
+            // console.log removed for security
+            // console.log removed for security
+
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const accuracy = position.coords.accuracy;
@@ -277,52 +276,52 @@ function setupLocationPicker(map) {
             const heading = position.coords.heading;
             const speed = position.coords.speed;
             const timestamp = new Date(position.timestamp);
-            
-            console.log('📍 Geolocation details:');
-            console.log(`  Latitude: ${lat}`);
-            console.log(`  Longitude: ${lng}`);
-            console.log(`  Accuracy: ${accuracy} meters`);
-            console.log(`  Altitude: ${altitude ? altitude + ' meters' : 'Not available'}`);
-            console.log(`  Heading: ${heading ? heading + ' degrees' : 'Not available'}`);
-            console.log(`  Speed: ${speed ? speed + ' m/s' : 'Not available'}`);
-            console.log(`  Timestamp: ${timestamp.toISOString()}`);
-            
+
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+            // console.log removed for security
+
             // Check accuracy
             if (accuracy > 100) {
               console.warn(`⚠️ Low accuracy: ${accuracy}m. Location may not be precise.`);
             } else {
-              console.log(`✅ Good accuracy: ${accuracy}m`);
+              // console.log removed for security
             }
-            
-            console.log('🗺️ Updating map view and marker...');
+
+            // console.log removed for security
             map.setView([lat, lng], 16);
             marker.setLatLng([lat, lng]);
             updateCoordinates(lat, lng);
             updateLocationText(lat, lng);
-            
-            console.log('✅ Geolocation process completed successfully');
+
+            // console.log removed for security
           },
           function(error) {
             console.error('❌ Geolocation error:', error);
-            console.log('❌ Error details:');
-            
+            // console.log removed for security
+
             switch(error.code) {
-              case error.PERMISSION_DENIED:
-                console.log('  Error: Permission denied by user');
-                alert('Location access denied. Please allow location access or select manually on the map.');
-                break;
-              case error.POSITION_UNAVAILABLE:
-                console.log('  Error: Position information unavailable');
-                alert('Location information unavailable. Please select manually on the map.');
-                break;
-              case error.TIMEOUT:
-                console.log('  Error: Request timed out');
-                alert('Location request timed out. Please try again or select manually on the map.');
-                break;
-              default:
-                console.log('  Error: Unknown error occurred');
-                alert('Unable to get your location. Please select manually on the map.');
-                break;
+            case error.PERMISSION_DENIED:
+              // console.log removed for security
+              alert('Location access denied. Please allow location access or select manually on the map.');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              // console.log removed for security
+              alert('Location information unavailable. Please select manually on the map.');
+              break;
+            case error.TIMEOUT:
+              // console.log removed for security
+              alert('Location request timed out. Please try again or select manually on the map.');
+              break;
+            default:
+              // console.log removed for security
+              alert('Unable to get your location. Please select manually on the map.');
+              break;
             }
           },
           options
@@ -332,12 +331,12 @@ function setupLocationPicker(map) {
         alert('Geolocation is not supported by this browser. Please select manually on the map.');
       }
     };
-    
+
     return div;
   };
   geolocationButton.addTo(map);
 
-  console.log("📍 Location picker functionality setup complete");
+  // console.log removed for security
 }
 
 /**

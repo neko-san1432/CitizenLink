@@ -136,17 +136,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function runSearch(query) {
       if (!query || !query.trim()) return;
-      console.log('🔍 Searching for:', query);
+      // console.log removed for security
       try {
         resultsList.style.display = 'none';
         resultsList.innerHTML = '';
         // Bias search to Digos bounding box and exclude "Digos City" from results
         const viewbox = ['125.0,7.0','125.7,6.0']; // lon,lat pairs top-left and bottom-right
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&bounded=1&viewbox=${viewbox.join(',')}&q=${encodeURIComponent(query)}`;
-        console.log('🌐 API URL:', url);
+        // console.log removed for security
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
         const data = await res.json();
-        console.log('📊 Raw results:', data.length, 'items');
+        // console.log removed for security
         if (!Array.isArray(data) || data.length === 0) {
           resultsList.innerHTML = '';
           resultsList.style.display = 'none';
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return !Number.isNaN(lat) && !Number.isNaN(lon) && kmDistance(digosLat, digosLng, lat, lon) <= 15;
           });
         }
-        console.log('🚫 After filtering:', filtered.length, 'items');
+        // console.log removed for security
         const scored = filtered.map((item) => {
           const lat = parseFloat(item.lat);
           const lon = parseFloat(item.lon);
@@ -182,10 +182,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           const score = 0.6 * proximityScore + 0.3 * classScore + 0.1 * brevity;
           return { item, score };
         })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3); // show best 3
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3); // show best 3
 
-        console.log('⭐ Top results:', scored.map(s => ({ name: s.item.display_name, score: s.score.toFixed(3) })));
+        // console.log removed for security
 
         scored.forEach(({ item }) => {
           const resultItem = document.createElement('div');
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           resultItem.addEventListener('click', () => {
             const lat = parseFloat(item.lat);
             const lng = parseFloat(item.lon);
-            console.log('📍 Selected location:', item.display_name, 'at', lat, lng);
+            // console.log removed for security
             if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
               map.setView([lat, lng], Math.max(map.getZoom(), 16));
               resultsList.style.display = 'none';
@@ -306,5 +306,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Complaint map init error:', e);
   }
 });
-
-

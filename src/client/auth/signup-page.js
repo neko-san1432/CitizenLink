@@ -4,13 +4,13 @@ import { supabase } from '../config/config.js';
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
   try {
-    console.log('🔍 Checking if user is already logged in...');
+    // console.log removed for security
 
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (session && !error) {
-      console.log('✅ User is already logged in, redirecting to dashboard...');
+      // console.log removed for security
 
       // Get user metadata
       const user = session.user;
@@ -19,16 +19,16 @@ const checkAuthentication = async () => {
 
       // Check if user has completed registration
       if (role && name) {
-        console.log('🎯 Profile complete, redirecting to dashboard for role:', role);
+        // console.log removed for security
         window.location.href = '/dashboard';
         return;
       } else {
-        console.log('❌ User profile incomplete, redirecting to OAuth continuation');
+        // console.log removed for security
         window.location.href = '/oauth-continuation';
         return;
       }
     } else {
-      console.log('❌ No active session found, user can proceed with signup');
+      // console.log removed for security
     }
   } catch (error) {
     console.error('💥 Authentication check failed:', error);
@@ -43,11 +43,55 @@ const initializeSignupPage = () => {
 
   // Listen for auth state changes to update UI dynamically
   supabase.auth.onAuthStateChange((event, session) => {
-    console.log('🔄 Auth state changed on signup page:', event);
+    // console.log removed for security
     if (event === 'SIGNED_IN' && session) {
       checkAuthentication();
     }
   });
+
+  // Wire Terms & Privacy Modals
+  try {
+    const termsCheckbox = document.getElementById('terms-checkbox');
+    const openers = document.querySelectorAll('[data-open-modal]');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+
+    openers.forEach(opener => {
+      opener.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = opener.getAttribute('data-open-modal');
+        const modal = document.getElementById(targetId);
+        if (modal) modal.classList.add('open');
+      });
+    });
+
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = btn.closest('.modal');
+        if (modal) modal.classList.remove('open');
+      });
+    });
+
+    // Accept buttons
+    const acceptTerms = document.querySelector('[data-accept-terms]');
+    if (acceptTerms) {
+      acceptTerms.addEventListener('click', () => {
+        const modal = acceptTerms.closest('.modal');
+        if (modal) modal.classList.remove('open');
+        if (termsCheckbox) termsCheckbox.checked = true;
+      });
+    }
+
+    const acceptPrivacy = document.querySelector('[data-accept-privacy]');
+    if (acceptPrivacy) {
+      acceptPrivacy.addEventListener('click', () => {
+        const modal = acceptPrivacy.closest('.modal');
+        if (modal) modal.classList.remove('open');
+        if (termsCheckbox) termsCheckbox.checked = true; // consent covers both
+      });
+    }
+  } catch (err) {
+    // console.log removed for security
+  }
 };
 
 // Initialize when DOM is ready

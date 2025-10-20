@@ -1,10 +1,11 @@
 const DepartmentRepository = require('../repositories/DepartmentRepository');
 const ComplaintRepository = require('../repositories/ComplaintRepository');
+const { getCategoryToDepartmentMapping, getKeywordBasedSuggestions } = require('../utils/departmentMapping');
 
 /**
- * RuleBasedSuggestionService
- * Lightweight, explainable suggestions (no ML) for routing
- */
+* RuleBasedSuggestionService
+* Lightweight, explainable suggestions (no ML) for routing
+*/
 class RuleBasedSuggestionService {
   constructor() {
     this.departmentRepo = new DepartmentRepository();
@@ -12,38 +13,19 @@ class RuleBasedSuggestionService {
   }
 
   /**
-   * Compute department and coordinator suggestions for a complaint
-   * @param {object} complaint - complaint record (title, descriptive_su, type, location_text)
-   * @returns {object} suggestions
-   */
+  * Compute department and coordinator suggestions for a complaint
+  * @param {object} complaint - complaint record (title, descriptive_su, type, location_text)
+  * @returns {object} suggestions
+  */
   async computeSuggestions(complaint) {
     const text = [complaint.title, complaint.descriptive_su, complaint.location_text]
       .filter(Boolean)
-      .join(' ') 
+      .join(' ')
       .toLowerCase();
 
-    // Base rules: type → default dept list
-    const typeRules = {
-      'infrastructure': ['engineering', 'public-works'],
-      'public-safety': ['police', 'fire', 'emergency'],
-      'environmental': ['environment', 'health'],
-      'health': ['health', 'environment'],
-      'traffic': ['traffic', 'engineering'],
-      'utilities': ['utilities', 'engineering'],
-      'noise': ['police', 'environment'],
-      'services': ['general', 'public-works']
-    };
-
-    const keywordRules = [
-      { re: /(pothole|road|bridge|sidewalk|asphalt|concrete)/, depts: ['engineering', 'public-works'], reason: 'infrastructure keywords' },
-      { re: /(water outage|electric|utility|pipe|power)/, depts: ['utilities', 'engineering'], reason: 'utilities keywords' },
-      { re: /(garbage|trash|waste|sewage|pollution|smell)/, depts: ['environment', 'health'], reason: 'environment/health keywords' },
-      { re: /(noise|loud music|karaoke)/, depts: ['police', 'environment'], reason: 'noise keywords' },
-      { re: /(accident|theft|crime|assault|robbery)/, depts: ['police', 'emergency'], reason: 'public-safety keywords' },
-      { re: /(fire|smoke|burning)/, depts: ['fire', 'emergency'], reason: 'fire keywords' },
-      { re: /(traffic|congestion|gridlock)/, depts: ['traffic', 'engineering'], reason: 'traffic keywords' },
-      { re: /(clinic|hospital|fever|sick|disease)/, depts: ['health'], reason: 'health keywords' },
-    ];
+    // Get dynamic department mappings
+    const typeRules = await getCategoryToDepartmentMapping();
+    const keywordRules = await getKeywordBasedSuggestions();
 
     // Seed scores from type
     const scores = new Map(); // dept -> { score, reasons: [] }
@@ -97,9 +79,4 @@ class RuleBasedSuggestionService {
 }
 
 module.exports = RuleBasedSuggestionService;
-
-
-
-
-
 

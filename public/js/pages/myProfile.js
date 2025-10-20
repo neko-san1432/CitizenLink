@@ -1,5 +1,5 @@
-import { getUserRole, refreshMetaFromSession } from '../auth/authChecker.js'
-import showMessage from '../components/toast.js'
+import { getUserRole, refreshMetaFromSession } from '../../src/client/auth/authChecker.js'
+import showMessage from '../../src/client/components/toast.js'
 
 async function enforceCitizenOnly() {
   try {

@@ -3,6 +3,7 @@ const { ValidationError, ConflictError } = require('../middleware/errorHandler')
 const Database = require('../config/database');
 const db = new Database();
 const supabase = db.getClient();
+const { validatePasswordStrength } = require('../../shared/passwordValidation');
 
 class AuthController {
   /**
@@ -38,6 +39,16 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Passwords do not match'
+        });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 
@@ -125,8 +136,8 @@ class AuthController {
       const userId = authData.user.id;
 
       // Get user data from auth metadata
-      let user = await UserService.getUserById(userId);
-      
+      const user = await UserService.getUserById(userId);
+
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -151,8 +162,7 @@ class AuthController {
       res.cookie('sb_access_token', authData.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 4 * 60 * 60 * 1000 // 4 hours
+        sameSite: 'lax'
       });
 
       res.json({
@@ -268,10 +278,13 @@ class AuthController {
         });
       }
 
-      if (newPassword.length < 8) {
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'New password must be at least 8 characters'
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 
@@ -315,9 +328,9 @@ class AuthController {
         // Mark current session as ended
         await supabase
           .from('user_sessions')
-          .update({ 
-            is_active: false, 
-            ended_at: new Date().toISOString() 
+          .update({
+            is_active: false,
+            ended_at: new Date().toISOString()
           })
           .eq('user_id', userId)
           .eq('is_active', true);
@@ -333,110 +346,6 @@ class AuthController {
       res.status(500).json({
         success: false,
         error: 'Logout failed'
-      });
-    }
-  }
-
-  /**
-   * Complete OAuth registration with HR signup code
-   */
-  async completeOAuthHR(req, res) {
-    try {
-      const userId = req.user.id; // From auth middleware
-      const { name, mobile, signupCode } = req.body;
-
-      if (!name || !mobile || !signupCode) {
-        return res.status(400).json({
-          success: false,
-          error: 'Name, mobile number, and signup code are required'
-        });
-      }
-
-      // Validate mobile format
-      if (!/^[0-9]{10}$/.test(mobile)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Mobile number must be 10 digits'
-        });
-      }
-
-      // Validate signup code
-      const HRService = require('../services/HRService');
-      const hrService = new HRService();
-      const codeValidation = await hrService.validateSignupCode(signupCode);
-      
-      if (!codeValidation.valid) {
-        return res.status(400).json({
-          success: false,
-          error: codeValidation.error
-        });
-      }
-
-      const { role, department_code } = codeValidation.data;
-
-      const firstName = name.split(' ')[0] || '';
-      const lastName = name.split(' ').slice(1).join(' ') || '';
-      const mobileNumber = `+63${mobile}`;
-
-      // Update user metadata in auth.users with HR role and department
-      const completeMetadata = {
-        // Identity
-        name: name.trim(),
-        first_name: firstName,
-        last_name: lastName,
-        full_name: name.trim(),
-        
-        // Contact
-        mobile: mobileNumber,
-        phone: mobileNumber,
-        mobile_number: mobileNumber,
-        
-        // HR-specific
-        role: role,
-        department: department_code,
-        employee_id: null, // Will be filled later by HR
-        
-        // System
-        profile_complete: true,
-        registration_method: 'oauth_hr',
-        signup_code_used: signupCode,
-        
-        // Timestamps
-        profile_completed_at: new Date().toISOString(),
-        last_updated: new Date().toISOString()
-      };
-
-      // Update user metadata in Supabase
-      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-        user_metadata: completeMetadata
-      });
-
-      if (updateError) {
-        console.error('Error updating user metadata:', updateError);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to complete registration'
-        });
-      }
-
-      // Mark signup code as used
-      await hrService.markSignupCodeUsed(signupCode, userId);
-
-      res.json({
-        success: true,
-        message: 'HR registration completed successfully',
-        data: {
-          user_id: userId,
-          role: role,
-          department: department_code
-        }
-      });
-
-    } catch (error) {
-      console.error('Complete HR OAuth error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to complete HR registration'
       });
     }
   }
@@ -474,21 +383,21 @@ class AuthController {
         first_name: firstName,
         last_name: lastName,
         name: name,
-        
+
         // Contact
         mobile_number: mobileNumber,
         mobile: mobileNumber,
-        
+
         // Role & Status
         role: 'citizen',
         normalized_role: 'citizen',
         status: 'active',
-        
+
         // LGU Staff (null for citizens)
         department: null,
         employee_id: null,
         position: null,
-        
+
         // Address (optional, null for now)
         address_line_1: null,
         address_line_2: null,
@@ -496,24 +405,24 @@ class AuthController {
         province: null,
         postal_code: null,
         barangay: null,
-        
+
         // Verification
         email_verified: true,
         phone_verified: false,
-        
+
         // Preferences
         preferred_language: 'en',
         timezone: 'Asia/Manila',
         email_notifications: true,
         sms_notifications: false,
         push_notifications: true,
-        
+
         // Security
         banStrike: 0,
         banStarted: null,
         banDuration: null,
         permanentBan: false,
-        
+
         // Metadata
         is_oauth: true,
         oauth_providers: ['google', 'facebook'], // Will be set based on provider
@@ -569,7 +478,7 @@ class AuthController {
       const HRService = require('../services/HRService');
       const hrService = new HRService();
       const codeValidation = await hrService.validateSignupCode(signupCode);
-      
+
       if (!codeValidation.valid) {
         return res.status(400).json({
           success: false,
@@ -591,6 +500,16 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Passwords do not match'
+        });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
         });
       }
 

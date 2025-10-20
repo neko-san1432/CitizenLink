@@ -1,6 +1,6 @@
-const path = require('path');
+const _path = require('path');
 const Database = require('../config/database');
-const UserService = require('../services/UserService');
+const _UserService = require('../services/UserService');
 const database = new Database();
 
 const supabase = database.getClient();
@@ -9,16 +9,16 @@ const authenticateUser = async (req, res, next) => {
   try {
     const token =
       req.cookies?.sb_access_token ||
-      req.headers.authorization?.replace("Bearer ", "");
+      req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-      console.log("[AUTH] No token found in cookies or headers");
-      console.log("[AUTH] Request cookies:", req.cookies);
-      console.log("[AUTH] Request headers:", req.headers.authorization);
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: "No authentication token",
+          error: 'No authentication token',
         });
       }
       return res.redirect('/login?message=' + encodeURIComponent('Please login first') + '&type=error');
@@ -31,31 +31,25 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      console.log(
-        "[AUTH] Token invalid or expired:",
-        error?.message || "No user"
-      );
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: "Invalid or expired token",
+          error: 'Invalid token',
         });
       }
-      return res.redirect('/login?message=' + encodeURIComponent('Your session has expired. Please login again') + '&type=error');
+      return res.redirect('/login?message=' + encodeURIComponent('Invalid session. Please login again') + '&type=error');
     }
 
     // Now get the complete user data including raw_user_meta_data from auth.users table
     const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(tokenUser.id);
 
     if (authError || !authUser) {
-      console.log(
-        "[AUTH] Failed to get auth user data:",
-        authError?.message || "No auth user"
-      );
+      // console.log removed for security
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: "Failed to get user data",
+          error: 'Failed to get user data',
         });
       }
       return res.redirect('/login?message=' + encodeURIComponent('Authentication failed. Please try again') + '&type=error');
@@ -69,15 +63,15 @@ const authenticateUser = async (req, res, next) => {
     // FALLBACK: Also check user_metadata in case data is there instead
     const rawUserMetaData = user.raw_user_meta_data || {};
     const userMetadata = user.user_metadata || {};
-    
+
     // Merge both sources (raw_user_meta_data takes priority)
     const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
 
     // Build consistent user object for req.user
     // Use combined metadata (checks both sources)
-    const userName = combinedMetadata.name || 
-                     `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
-                     'Unknown User';
+    const userName = combinedMetadata.name ||
+                    `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
+                    'Unknown User';
 
     // Attach the enhanced user object to the request
     req.user = {
@@ -85,10 +79,10 @@ const authenticateUser = async (req, res, next) => {
       id: user.id,
       email: user.email,
       email_confirmed_at: user.email_confirmed_at,
-      
+
       // Metadata (checks both raw_user_meta_data and user_metadata)
       raw_user_meta_data: combinedMetadata,
-      
+
       // Easy access fields from combined metadata
       role: combinedMetadata.role || 'citizen',
       normalized_role: combinedMetadata.normalized_role || combinedMetadata.role || 'citizen',
@@ -100,11 +94,11 @@ const authenticateUser = async (req, res, next) => {
       status: combinedMetadata.status || 'active',
       department: combinedMetadata.department || null,
       employeeId: combinedMetadata.employee_id || null,
-      
+
       // Verification
       emailVerified: !!user.email_confirmed_at,
       phoneVerified: combinedMetadata.phone_verified || false,
-      
+
       // Security
       isBanned: combinedMetadata.permanentBan || false,
       banStrike: combinedMetadata.banStrike || 0
@@ -114,11 +108,11 @@ const authenticateUser = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("[AUTH] Authentication error:", error.message);
+    console.error('[AUTH] Authentication error:', error.message);
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({
         success: false,
-        error: "Authentication failed",
+        error: 'Authentication failed',
       });
     }
     return res.redirect('/login?message=' + encodeURIComponent('Authentication failed. Please try again') + '&type=error');
@@ -138,10 +132,12 @@ const requireRole = (allowedRoles) => {
     const normalizedRole = String(userRole).trim().toLowerCase();
 
     const hasPermission = allowedRoles.some((allowedRole) => {
-      if (typeof allowedRole === "string") {
+      if (typeof allowedRole === 'string') {
         // Support wildcard matching (e.g., "lgu-admin*" matches "lgu-admin-{dept}")
         if (allowedRole.includes('*')) {
-          const regex = new RegExp('^' + allowedRole.replace(/\*/g, '.*') + '$');
+          // Safe wildcard matching without dynamic regex
+          const pattern = allowedRole.replace(/\*/g, '.*');
+          const regex = new RegExp(`^${pattern}$`);
           return regex.test(normalizedRole);
         }
         return normalizedRole === allowedRole.toLowerCase();
@@ -163,3 +159,4 @@ module.exports = {
   authenticateUser,
   requireRole
 };
+

@@ -134,30 +134,30 @@ const NOTIFICATION_TYPES = {
   COMPLAINT_RESOLVED: 'complaint_resolved',
   COMPLAINT_REJECTED: 'complaint_rejected',
   OFFICER_UPDATE: 'officer_added_update',
-  
+
   // Officer notifications
   TASK_ASSIGNED: 'task_assigned',
   TASK_DEADLINE_APPROACHING: 'task_deadline_approaching',
   TASK_OVERDUE: 'task_overdue',
   TASK_PRIORITY_CHANGED: 'task_priority_changed',
   COORDINATOR_NOTE: 'coordinator_added_note',
-  
+
   // Coordinator notifications
   NEW_COMPLAINT_REVIEW: 'new_complaint_needs_review',
   DUPLICATE_DETECTED: 'duplicate_detected',
   SIMILAR_COMPLAINTS: 'similar_complaints_found',
   RESOLUTION_PENDING_APPROVAL: 'resolution_pending_approval',
-  
+
   // Admin notifications
   APPROVAL_REQUIRED: 'approval_required',
   OFFICER_ASSIGNED_DEPARTMENT: 'officer_assigned_to_department',
   COMPLAINT_ESCALATED: 'complaint_escalated',
-  
+
   // HR notifications
   STAFF_ADDED: 'staff_member_added',
   ROLE_CHANGE_COMPLETED: 'role_change_completed',
   DEPARTMENT_TRANSFER_COMPLETED: 'department_transfer_completed',
-  
+
   // System notifications
   SYSTEM_ALERT: 'system_alert',
   WELCOME: 'welcome'

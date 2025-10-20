@@ -49,7 +49,7 @@ class SettingsManager {
 
     const categories = ['all', ...new Set(this.settings.map(s => s.category))];
     const allItem = categoryList.querySelector('[data-category="all"]');
-    
+
     // Remove existing category items except "All"
     const existingItems = categoryList.querySelectorAll('[data-category]:not([data-category="all"])');
     existingItems.forEach(item => item.remove());
@@ -73,13 +73,13 @@ class SettingsManager {
 
   selectCategory(category) {
     this.currentCategory = category;
-    
+
     // Update active state
     document.querySelectorAll('.category-item').forEach(item => {
       item.classList.remove('active');
     });
     document.querySelector(`[data-category="${category}"]`).classList.add('active');
-    
+
     this.renderSettings();
   }
 
@@ -87,21 +87,33 @@ class SettingsManager {
     const content = document.getElementById('settingsContent');
     if (!content) return;
 
-    const filteredSettings = this.currentCategory === 'all' 
-      ? this.settings 
+    const filteredSettings = this.currentCategory === 'all'
+      ? this.settings
       : this.settings.filter(s => s.category === this.currentCategory);
 
     if (filteredSettings.length === 0) {
-      content.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: #6b7280;">
-          <p>No settings found in this category.</p>
-          <button class="btn btn-primary" onclick="openModal('add')">Add First Setting</button>
-        </div>
-      `;
+      content.innerHTML = '';
+      const noSettingsDiv = document.createElement('div');
+      noSettingsDiv.style.textAlign = 'center';
+      noSettingsDiv.style.padding = '2rem';
+      noSettingsDiv.style.color = '#6b7280';
+
+      const message = document.createElement('p');
+      message.textContent = 'No settings found in this category.';
+
+      const button = document.createElement('button');
+      button.className = 'btn btn-primary';
+      button.textContent = 'Add First Setting';
+      button.onclick = () => openModal('add');
+
+      noSettingsDiv.appendChild(message);
+      noSettingsDiv.appendChild(button);
+      content.appendChild(noSettingsDiv);
       return;
     }
 
-    content.innerHTML = filteredSettings.map(setting => `
+    // Create safe HTML content
+    const safeHtml = filteredSettings.map(setting => `
       <div class="setting-item">
         <div class="setting-header">
           <div>
@@ -124,6 +136,62 @@ class SettingsManager {
         </div>
       </div>
     `).join('');
+
+    // Use safer DOM manipulation instead of innerHTML
+    content.innerHTML = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.sanitizeHtml(safeHtml);
+    while (tempDiv.firstChild) {
+      content.appendChild(tempDiv.firstChild);
+    }
+  }
+
+  // Enhanced HTML sanitization function
+  sanitizeHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    
+    // Use DOMPurify for comprehensive sanitization
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'ul', 'ol', 'li', 'a', 'img'],
+        ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title', 'data-*'],
+        ALLOW_DATA_ATTR: true,
+        ALLOW_UNKNOWN_PROTOCOLS: false,
+        SANITIZE_DOM: true,
+        KEEP_CONTENT: true
+      });
+    }
+    
+    // Fallback sanitization if DOMPurify is not available
+    return html
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove event handlers
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      // Remove javascript: URLs
+      .replace(/javascript\s*:/gi, '')
+      // Remove vbscript: URLs
+      .replace(/vbscript\s*:/gi, '')
+      // Remove data: URLs (except safe image types)
+      .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
+      // Remove object tags
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      // Remove embed tags
+      .replace(/<embed\b[^<]*>/gi, '')
+      // Remove form tags
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // Remove input tags
+      .replace(/<input\b[^<]*>/gi, '')
+      // Remove button tags with onclick
+      .replace(/<button\b[^<]*onclick[^<]*>/gi, '<button>')
+      // Remove style attributes with javascript
+      .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, '')
+      // Remove href with javascript
+      .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+      // Remove src with javascript
+      .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
   }
 
   formatValue(setting) {
@@ -141,7 +209,7 @@ class SettingsManager {
 
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       key: formData.get('key'),
@@ -273,7 +341,8 @@ class SettingsManager {
     };
 
     if (helpElement) {
-      helpElement.textContent = helpTexts[type] || 'Enter the setting value';
+      const safeType = String(type || '').toLowerCase();
+      helpElement.textContent = helpTexts[safeType] || 'Enter the setting value';
     }
 
     // Adjust textarea size based on type
@@ -326,3 +395,4 @@ window.addEventListener('click', (e) => {
     window.settingsManager?.closeModal();
   }
 });
+

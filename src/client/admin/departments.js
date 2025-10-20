@@ -74,7 +74,9 @@ class DepartmentManager {
     const grid = document.getElementById('departmentGrid');
     if (!grid) return;
 
-    grid.innerHTML = this.departments.map(dept => `
+    // Use safer DOM manipulation instead of innerHTML
+    grid.innerHTML = '';
+    const safeHtml = this.departments.map(dept => `
       <div class="department-card">
         <div class="department-header">
           <span class="department-code">${dept.code}</span>
@@ -84,7 +86,7 @@ class DepartmentManager {
         </div>
         <h3>${dept.name}</h3>
         <p>${dept.description || 'No description provided'}</p>
-        
+
         <div class="officers-section" id="officers-${dept.id}">
           <div class="officers-header">
             <h4>Officers (${dept.officers ? dept.officers.length : 0})</h4>
@@ -93,8 +95,8 @@ class DepartmentManager {
             </button>
           </div>
           <div class="officers-list" style="display: ${dept.officersVisible ? 'grid' : 'none'}">
-            ${dept.officers && dept.officers.length > 0 ? 
-              dept.officers.map(officer => `
+            ${dept.officers && dept.officers.length > 0 ?
+    dept.officers.map(officer => `
                 <div class="officer-item">
                   <div class="officer-status">
                     <div class="officer-avatar">${officer.name.charAt(0).toUpperCase()}</div>
@@ -109,29 +111,84 @@ class DepartmentManager {
                     <p class="officer-last-seen">${officer.lastSeenText}</p>
                   </div>
                 </div>
-              `).join('') : 
-              '<div class="no-officers">No officers assigned to this department</div>'
-            }
+              `).join('') :
+    '<div class="no-officers">No officers assigned to this department</div>'
+}
           </div>
         </div>
-        
+
         <div class="department-actions">
           <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
             Edit
           </button>
-          <button class="btn btn-sm ${dept.is_active ? 'btn-warning' : 'btn-success'}" 
+          <button class="btn btn-sm ${dept.is_active ? 'btn-warning' : 'btn-success'}"
                   onclick="departmentManager.toggleStatus(${dept.id})">
             ${dept.is_active ? 'Deactivate' : 'Activate'}
           </button>
         </div>
       </div>
     `).join('');
+
+    // Use safer approach - create elements directly
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(this.sanitizeHtml(safeHtml), 'text/html');
+    const fragment = document.createDocumentFragment();
+    Array.from(doc.body.children).forEach(child => fragment.appendChild(child.cloneNode(true)));
+    grid.appendChild(fragment);
+  }
+
+  // Enhanced HTML sanitization function
+  sanitizeHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    
+    // Use DOMPurify for comprehensive sanitization
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'ul', 'ol', 'li', 'a', 'img'],
+        ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title', 'data-*'],
+        ALLOW_DATA_ATTR: true,
+        ALLOW_UNKNOWN_PROTOCOLS: false,
+        SANITIZE_DOM: true,
+        KEEP_CONTENT: true
+      });
+    }
+    
+    // Fallback sanitization if DOMPurify is not available
+    return html
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove event handlers
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      // Remove javascript: URLs
+      .replace(/javascript\s*:/gi, '')
+      // Remove vbscript: URLs
+      .replace(/vbscript\s*:/gi, '')
+      // Remove data: URLs (except safe image types)
+      .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
+      // Remove object tags
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      // Remove embed tags
+      .replace(/<embed\b[^<]*>/gi, '')
+      // Remove form tags
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // Remove input tags
+      .replace(/<input\b[^<]*>/gi, '')
+      // Remove button tags with onclick
+      .replace(/<button\b[^<]*onclick[^<]*>/gi, '<button>')
+      // Remove style attributes with javascript
+      .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, '')
+      // Remove href with javascript
+      .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+      // Remove src with javascript
+      .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
   }
 
   updateStats() {
     const totalElement = document.getElementById('totalCount');
     const activeElement = document.getElementById('activeCount');
-    
+
     if (totalElement) totalElement.textContent = this.departments.length;
     if (activeElement) {
       activeElement.textContent = this.departments.filter(d => d.is_active).length;
@@ -140,7 +197,7 @@ class DepartmentManager {
 
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
@@ -207,7 +264,7 @@ class DepartmentManager {
 
     const newStatus = !department.is_active;
     const action = newStatus ? 'activate' : 'deactivate';
-    
+
     if (!confirm(`Are you sure you want to ${action} "${department.name}"?`)) {
       return;
     }
@@ -237,35 +294,35 @@ class DepartmentManager {
 
   getLastSeenText(lastSignInAt) {
     if (!lastSignInAt) return 'Never';
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return lastSignIn.toLocaleDateString();
   }
 
   getStatusClass(isOnline, lastSignInAt) {
     if (isOnline) return 'status-online';
-    
+
     if (!lastSignInAt) return 'status-offline';
-    
+
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = (now - lastSignIn) / (1000 * 60);
-    
+
     // Consider "away" if last seen within 1 hour but not online
     if (diffInMinutes < 60) return 'status-away';
-    
+
     return 'status-offline';
   }
 
@@ -322,3 +379,4 @@ window.addEventListener('click', (e) => {
     window.departmentManager?.closeModal();
   }
 });
+

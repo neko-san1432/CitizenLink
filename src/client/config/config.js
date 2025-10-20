@@ -1,7 +1,7 @@
 // SECURITY: Environment variables are now handled securely
 // Auth operations use a limited client, database operations go through server API
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Fetch Supabase configuration securely from server
 let supabaseConfig = null;
@@ -39,10 +39,10 @@ const supabaseProxy = new Proxy({}, {
     if (supabase) {
       return supabase[prop];
     }
-    
+
     // Kick off initialization (single flight)
     initializeSupabase().catch(() => {});
-    
+
     // Return a promise-based method for async operations
     if (prop === 'auth') {
       return new Proxy({}, {
@@ -57,7 +57,7 @@ const supabaseProxy = new Proxy({}, {
         }
       });
     }
-    
+
     return target[prop];
   }
 });

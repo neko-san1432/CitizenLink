@@ -13,7 +13,7 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
 
-      console.log('[LGU_OFFICER] Fetching tasks for officer:', userId);
+      // console.log removed for security
 
       // Get all assignments for this officer
       const { data: assignments, error: assignmentError } = await supabase
@@ -55,7 +55,7 @@ class LguOfficerController {
       const assignmentsWithUsers = await Promise.all(
         (assignments || []).map(async (assignment) => {
           let assignedByName = 'Unknown';
-          
+
           if (assignment.assigned_by) {
             const { data: assignedByUser } = await supabase.auth.admin.getUserById(assignment.assigned_by);
             if (assignedByUser?.user) {
@@ -85,7 +85,6 @@ class LguOfficerController {
         })
       );
 
-
       return res.json({
         success: true,
         data: assignmentsWithUsers
@@ -109,7 +108,7 @@ class LguOfficerController {
       const { status, notes } = req.body;
       const userId = req.user.id;
 
-      console.log('[LGU_OFFICER] Updating task status:', { assignmentId, status });
+      // console.log removed for security
 
       // Verify this assignment belongs to the officer
       const { data: assignment, error: fetchError } = await supabase
@@ -165,7 +164,7 @@ class LguOfficerController {
 
       await supabase
         .from('complaints')
-        .update({ 
+        .update({
           status: complaintStatus,
           updated_at: new Date().toISOString()
         })
@@ -179,7 +178,7 @@ class LguOfficerController {
           message: `Officer updated task status to "${status}" for: ${assignment.complaints?.title}`,
           type: 'task_update',
           priority: 'info',
-          link: `/lgu-admin/assignments`,
+          link: '/lgu-admin/assignments',
           metadata: {
             assignment_id: assignmentId,
             complaint_id: assignment.complaint_id,
@@ -188,7 +187,7 @@ class LguOfficerController {
         });
       }
 
-      console.log('[LGU_OFFICER] Task status updated successfully');
+      // console.log removed for security
 
       return res.json({
         success: true,
@@ -213,7 +212,7 @@ class LguOfficerController {
       const { message, isPublic } = req.body;
       const userId = req.user.id;
 
-      console.log('[LGU_OFFICER] Adding progress update:', { assignmentId });
+      // console.log removed for security
 
       // Verify assignment belongs to officer
       const { data: assignment, error: fetchError } = await supabase
@@ -264,7 +263,7 @@ class LguOfficerController {
         });
       }
 
-      console.log('[LGU_OFFICER] Progress update added');
+      // console.log removed for security
 
       return res.json({
         success: true,
@@ -282,5 +281,3 @@ class LguOfficerController {
 }
 
 module.exports = new LguOfficerController();
-
-

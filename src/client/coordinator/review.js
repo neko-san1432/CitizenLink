@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadComplaint() {
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to load complaint');
     }
 
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to load complaint');
     }
@@ -55,7 +55,7 @@ async function loadComplaint() {
 async function renderComplaint() {
   const complaint = currentComplaint.complaint;
   const similarities = currentComplaint.similarities || [];
-  
+
   // Hide loading, show content
   document.getElementById('loading').style.display = 'none';
   document.getElementById('complaint-content').style.display = 'block';
@@ -64,7 +64,7 @@ async function renderComplaint() {
   document.getElementById('complaint-title').textContent = complaint.title;
   document.getElementById('complaint-id').textContent = complaint.id;
   document.getElementById('submitted-date').textContent = formatDate(complaint.submitted_at);
-  document.getElementById('submitter-name').textContent = 
+  document.getElementById('submitter-name').textContent =
     complaint.submitted_by_profile?.name || complaint.submitted_by_profile?.email || 'Unknown';
 
   // Status badge
@@ -90,17 +90,18 @@ async function renderComplaint() {
   if (preferenceEl) {
     const departments = complaint.department_r || [];
     if (departments.length > 0) {
-      const deptNames = {
-        'wst': 'Water, Sanitation & Treatment',
-        'engineering': 'Engineering',
-        'health': 'Health',
-        'social-welfare': 'Social Welfare',
-        'public-safety': 'Public Safety',
-        'environmental': 'Environmental Services',
-        'transportation': 'Transportation',
-        'public-works': 'Public Works'
-      };
-      const displayNames = departments.map(dept => deptNames[dept] || dept);
+      // Use dynamic department names
+      const displayNames = await Promise.all(
+        departments.map(async dept => {
+          try {
+            const { getDepartmentNameByCode } = await import('../utils/departmentUtils.js');
+            return await getDepartmentNameByCode(dept);
+          } catch (error) {
+            console.error('Error fetching department name:', error);
+            return dept; // Fallback to original code
+          }
+        })
+      );
       preferenceEl.textContent = displayNames.join(', ');
     } else {
       preferenceEl.textContent = 'No preference specified';
@@ -246,7 +247,7 @@ function renderEvidence(evidence) {
 function renderSimilarComplaints(similarities) {
   const list = document.getElementById('similar-list');
   const masterSelect = document.getElementById('master-complaint');
-  
+
   list.innerHTML = similarities.map(sim => `
     <div class="similar-item">
       <h4>${sim.similar_complaint?.title || 'Unknown'}</h4>
@@ -277,15 +278,15 @@ window.openAssignModal = function() {
   document.getElementById('assign-priority').value = currentComplaint.complaint.priority || 'medium';
 };
 
-window.openDuplicateModal = function() {
+window.showDuplicateModal = function() {
   document.getElementById('duplicate-modal').classList.add('active');
 };
 
-window.openRelatedModal = function() {
+window.linkRelatedComplaints = function() {
   Toast.info('Link related complaints feature coming soon');
 };
 
-window.openRejectModal = function() {
+window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
 };
 
@@ -432,7 +433,7 @@ window.markAsUnique = async function() {
     }
 
     Toast.success('Complaint marked as unique');
-    
+
     // Hide similar complaints section
     document.getElementById('similar-section').style.display = 'none';
     document.getElementById('duplicate-btn').style.display = 'none';
@@ -458,23 +459,22 @@ function showError(message) {
  */
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
-  
+
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
+
   if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
   if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-  
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
 }
-

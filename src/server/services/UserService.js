@@ -15,8 +15,8 @@ class UserService {
     return 'citizen';
   }
   /**
-   * Create a new user (stores everything in auth.users metadata)
-   */
+  * Create a new user (stores everything in auth.users metadata)
+  */
   async createUser(userData) {
     const {
       email,
@@ -164,8 +164,8 @@ class UserService {
   }
 
   /**
-   * Get user by ID (from auth.users metadata only)
-   */
+  * Get user by ID (from auth.users metadata only)
+  */
   async getUserById(userId) {
     try {
       const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
@@ -188,8 +188,8 @@ class UserService {
   }
 
   /**
-   * Update user profile (updates auth.users metadata)
-   */
+  * Update user profile (updates auth.users metadata)
+  */
   async updateUser(userId, updateData, updatedBy = null) {
     // Validate update data
     this.validateUpdateData(updateData);
@@ -228,9 +228,28 @@ class UserService {
   }
 
   /**
-   * Change user role (updates metadata and logs)
-   */
+  * Change user role (updates metadata and logs)
+  */
   async changeUserRole(userId, newRole, changedBy, reason = null) {
+    // Validate role parameter to prevent injection
+    const validRoles = [
+      'citizen', 'lgu', 'lgu-admin', 'lgu-hr', 'complaint-coordinator',
+      'super-admin', 'lgu-admin-health', 'lgu-admin-education',
+      'lgu-admin-social', 'lgu-admin-infrastructure', 'lgu-admin-environment',
+      'lgu-admin-agriculture', 'lgu-admin-tourism', 'lgu-admin-publicsafety',
+      'lgu-admin-economic', 'lgu-admin-legal', 'lgu-hr-health', 'lgu-hr-education'
+    ];
+
+    if (!newRole || typeof newRole !== 'string') {
+      throw new ValidationError('Role must be a valid string');
+    }
+
+    // Normalize and validate role
+    const normalizedRole = this.normalizeRole(newRole);
+    if (!validRoles.includes(normalizedRole)) {
+      throw new ValidationError(`Invalid role: ${newRole}. Must be one of: ${validRoles.join(', ')}`);
+    }
+
     // Get current user
     const currentUser = await this.getUserById(userId);
     if (!currentUser) {
@@ -238,23 +257,22 @@ class UserService {
     }
 
     const oldRole = currentUser.role;
-    const normalizedRole = this.normalizeRole(newRole);
 
     // Update role in metadata
     const updatedUser = await this.updateUser(userId, {
-      role: newRole,
+      role: normalizedRole,  // Use normalized role for consistency
       normalized_role: normalizedRole
     }, changedBy);
 
     // Log role change
-    await this.logRoleChange(userId, oldRole, newRole, changedBy, reason);
+    await this.logRoleChange(userId, oldRole, normalizedRole, changedBy, reason);
 
     return updatedUser;
   }
 
   /**
-   * Track user login
-   */
+  * Track user login
+  */
   async trackLogin(userId, ipAddress = null, userAgent = null) {
     try {
       const { error } = await supabase.rpc('update_user_login', {
@@ -272,8 +290,8 @@ class UserService {
   }
 
   /**
-   * Get users with filters and pagination (from auth.users)
-   */
+  * Get users with filters and pagination (from auth.users)
+  */
   async getUsers(filters = {}, pagination = {}) {
     const {
       role,
@@ -340,8 +358,8 @@ class UserService {
   }
 
   /**
-   * Sync auth user (no-op now since we only use auth.users)
-   */
+  * Sync auth user (no-op now since we only use auth.users)
+  */
   async syncAuthUser(authUserId) {
     // No longer needed - all data is in auth.users metadata
     return true;
@@ -380,11 +398,13 @@ class UserService {
       'first_name', 'last_name', 'mobile_number', 'date_of_birth', 'gender',
       'address_line_1', 'address_line_2', 'city', 'province', 'postal_code', 'barangay',
       'position', 'bio', 'avatar_url', 'preferred_language', 'timezone',
-      'email_notifications', 'sms_notifications', 'push_notifications'
+      'email_notifications', 'sms_notifications', 'push_notifications',
+      // Role-related fields for admin operations
+      'role', 'normalized_role'
     ];
 
     const invalidFields = Object.keys(updateData).filter(field => !allowedFields.includes(field));
-    
+
     if (invalidFields.length > 0) {
       throw new ValidationError(`Invalid fields: ${invalidFields.join(', ')}`);
     }

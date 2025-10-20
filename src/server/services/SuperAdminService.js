@@ -3,9 +3,9 @@ const { USER_ROLES } = require('../../shared/constants');
 const Database = require('../config/database');
 
 /**
- * SuperAdminService
- * Handles Super Admin operations: role swaps, department transfers, system logs
- */
+* SuperAdminService
+* Handles Super Admin operations: role swaps, department transfers, system logs
+*/
 class SuperAdminService {
   constructor() {
     this.roleService = new RoleManagementService();
@@ -14,9 +14,9 @@ class SuperAdminService {
   }
 
   /**
-   * Role Swap: Assign any role to any user
-   * Super Admin can change anyone's role (except other super admins)
-   */
+  * Role Swap: Assign any role to any user
+  * Super Admin can change anyone's role (except other super admins)
+  */
   async roleSwap(userId, newRole, superAdminId, reason) {
     try {
       // Validate super admin
@@ -62,9 +62,9 @@ class SuperAdminService {
   }
 
   /**
-   * Transfer user between departments
-   * Can transfer officers, admins, coordinators, HR across departments
-   */
+  * Transfer user between departments
+  * Can transfer officers, admins, coordinators, HR across departments
+  */
   async transferUserBetweenDepartments(userId, fromDepartment, toDepartment, superAdminId, reason) {
     try {
       // Validate super admin
@@ -75,14 +75,14 @@ class SuperAdminService {
 
       // Get current role - must be staff role
       const currentRole = await this.roleService.getUserRole(userId);
-      
+
       // Check if role is transferable (LGU officers, admins, coordinators, HR)
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
       const isLguHR = /^lgu-hr/.test(currentRole);
       const isCoordinator = currentRole === 'complaint-coordinator';
       const isTransferable = isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
-      
+
       if (!isTransferable) {
         throw new Error('Can only transfer staff members (LGU officers, admins, HR, coordinators) between departments');
       }
@@ -112,8 +112,8 @@ class SuperAdminService {
   }
 
   /**
-   * Promote citizen to any department
-   */
+  * Promote citizen to any department
+  */
   async assignCitizenToDepartment(userId, role, departmentId, superAdminId, reason) {
     try {
       // Validate super admin
@@ -134,7 +134,7 @@ class SuperAdminService {
       const isLguHR = /^lgu-hr/.test(role);
       const isCoordinator = role === 'complaint-coordinator';
       const isValidRole = isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
-      
+
       if (!isValidRole) {
         throw new Error('Invalid department role. Must be LGU officer (lgu-*), lgu-admin, lgu-hr, or complaint-coordinator');
       }
@@ -163,8 +163,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get all system logs
-   */
+  * Get all system logs
+  */
   async getSystemLogs(superAdminId, options = {}) {
     try {
       // Validate super admin
@@ -198,7 +198,7 @@ class SuperAdminService {
         if (date_to) query = query.lte('created_at', date_to);
 
         const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-        
+
         if (error) throw error;
         logs.role_changes = data || [];
       }
@@ -218,7 +218,7 @@ class SuperAdminService {
         if (date_to) query = query.lte('created_at', date_to);
 
         const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-        
+
         if (error) throw error;
         logs.department_transfers = data || [];
       }
@@ -234,7 +234,7 @@ class SuperAdminService {
         if (date_to) query = query.lte('created_at', date_to);
 
         const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-        
+
         if (error) throw error;
         logs.complaint_workflow = data || [];
       }
@@ -251,8 +251,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get system statistics
-   */
+  * Get system statistics
+  */
   async getSystemStatistics(superAdminId) {
     try {
       // Validate super admin
@@ -287,8 +287,8 @@ class SuperAdminService {
   }
 
   /**
-   * Helper: Get count from table
-   */
+  * Helper: Get count from table
+  */
   async getCount(tableName) {
     try {
       const { count, error } = await this.supabase
@@ -304,8 +304,8 @@ class SuperAdminService {
   }
 
   /**
-   * Get Super Admin dashboard
-   */
+  * Get Super Admin dashboard
+  */
   async getDashboard(superAdminId) {
     try {
       const [stats, recentLogs] = await Promise.all([
@@ -328,3 +328,4 @@ class SuperAdminService {
 }
 
 module.exports = SuperAdminService;
+
