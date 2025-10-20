@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateUser } = require('../middleware/auth');
 
 // Get all categories with their subcategories and departments
 router.get('/categories', async (req, res) => {
@@ -150,7 +150,7 @@ router.get('/complaint-form', async (req, res) => {
 });
 
 // Admin: Create new category
-router.post('/admin/categories', authenticateToken, async (req, res) => {
+router.post('/admin/categories', authenticateUser, async (req, res) => {
   try {
     const { name, code, description, icon, sort_order } = req.body;
 
@@ -182,7 +182,7 @@ router.post('/admin/categories', authenticateToken, async (req, res) => {
 });
 
 // Admin: Create new subcategory
-router.post('/admin/subcategories', authenticateToken, async (req, res) => {
+router.post('/admin/subcategories', authenticateUser, async (req, res) => {
   try {
     const { category_id, name, code, description, sort_order } = req.body;
 
@@ -214,7 +214,7 @@ router.post('/admin/subcategories', authenticateToken, async (req, res) => {
 });
 
 // Admin: Create new department
-router.post('/admin/departments', authenticateToken, async (req, res) => {
+router.post('/admin/departments', authenticateUser, async (req, res) => {
   try {
     const { 
       name, 
@@ -258,7 +258,7 @@ router.post('/admin/departments', authenticateToken, async (req, res) => {
 });
 
 // Admin: Map department to subcategory
-router.post('/admin/department-mapping', authenticateToken, async (req, res) => {
+router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
   try {
     const { department_id, subcategory_id, is_primary, response_priority } = req.body;
 
@@ -289,7 +289,7 @@ router.post('/admin/department-mapping', authenticateToken, async (req, res) => 
 });
 
 // Admin: Update category
-router.put('/admin/categories/:id', authenticateToken, async (req, res) => {
+router.put('/admin/categories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -320,7 +320,7 @@ router.put('/admin/categories/:id', authenticateToken, async (req, res) => {
 });
 
 // Admin: Update subcategory
-router.put('/admin/subcategories/:id', authenticateToken, async (req, res) => {
+router.put('/admin/subcategories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -351,7 +351,7 @@ router.put('/admin/subcategories/:id', authenticateToken, async (req, res) => {
 });
 
 // Admin: Update department
-router.put('/admin/departments/:id', authenticateToken, async (req, res) => {
+router.put('/admin/departments/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -382,7 +382,7 @@ router.put('/admin/departments/:id', authenticateToken, async (req, res) => {
 });
 
 // Admin: Delete category (soft delete)
-router.delete('/admin/categories/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/categories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -410,7 +410,7 @@ router.delete('/admin/categories/:id', authenticateToken, async (req, res) => {
 });
 
 // Admin: Delete subcategory (soft delete)
-router.delete('/admin/subcategories/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/subcategories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -438,7 +438,7 @@ router.delete('/admin/subcategories/:id', authenticateToken, async (req, res) =>
 });
 
 // Admin: Delete department (soft delete)
-router.delete('/admin/departments/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/departments/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 

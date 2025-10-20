@@ -61,14 +61,20 @@ class CitizenLinkApp {
     this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
         const token = req.body?.access_token;
+        const remember = Boolean(req.body?.remember);
         if (!token) {
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
-        res.cookie('sb_access_token', token, {
+        const cookieOptions = {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax'
-        });
+        };
+        if (remember) {
+          // 180 days persistent session
+          cookieOptions.maxAge = 180 * 24 * 60 * 60 * 1000; // ms
+        }
+        res.cookie('sb_access_token', token, cookieOptions);
         return res.json({ success: true });
       } catch (e) {
         return res.status(500).json({ success: false, error: 'Failed to set session' });

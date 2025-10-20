@@ -103,6 +103,12 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   const regPass = document.getElementById('regPassword').value;
   const reRegPass = document.getElementById('reRegPassword').value;
 
+  // Early password length checks
+  if (!regPass || regPass.length < 8) {
+    showMessage('error', 'Password must be at least 8 characters long');
+    return;
+  }
+
   // Validate form data
   const validationRules = {
     name: { required: true, minLength: 2, maxLength: 100 },
@@ -178,6 +184,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
+  const remember = document.getElementById('remember-me')?.checked || false;
 
   // Basic validation
   if (!email || !pass) {
@@ -209,29 +216,20 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       try {
         const accessToken = result.data?.session?.accessToken || null;
         if (accessToken) {
-          const resp = await fetch('/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: accessToken })
-          });
+          const ok = await setServerSessionCookie(accessToken, remember);
+          if (!ok) {
+            showMessage('error', 'Failed to establish session. Please try again.');
+            return;
+          }
           // Verify cookie by hitting a protected endpoint before redirecting
-          if (resp.ok) {
-            let ok = false;
-            try {
-              const check1 = await fetch('/api/user/role', { method: 'GET' });
-              ok = check1.ok;
-            } catch {}
-            if (!ok) {
-              await new Promise(r => setTimeout(r, 300));
-              try {
-                const check2 = await fetch('/api/user/role', { method: 'GET' });
-                ok = check2.ok;
-              } catch {}
-            }
-            if (!ok) {
-              showMessage('error', 'Session not ready. Please try again.');
-              return;
-            }
+          let resp = await fetch('/api/user/role', { method: 'GET' });
+          if (!resp.ok) {
+            await new Promise(r => setTimeout(r, 300));
+            resp = await fetch('/api/user/role', { method: 'GET' });
+          }
+          if (!resp.ok) {
+            showMessage('error', 'Session not ready. Please try again.');
+            return;
           }
         }
       } catch {}
@@ -336,3 +334,27 @@ if (fbBtn) {
 }
 
 // Email field remains empty and editable for both login and register
+
+// Utility to post session cookie with remember flag
+async function setServerSessionCookie(accessToken, remember) {
+  try {
+    const resp = await fetch('/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: accessToken, remember: !!remember })
+    });
+    return resp.ok;
+  } catch { return false; }
+}
+
+// If not remembered, clear cookie on unload (best-effort for session cleanup)
+(function setupEphemeralSessionCleanup(){
+  try {
+    const rememberCheckbox = document.getElementById('remember-me');
+    if (!rememberCheckbox) return;
+    if (rememberCheckbox.checked) return; // user wants persistent
+    window.addEventListener('beforeunload', async () => {
+      try { await fetch('/auth/session', { method: 'DELETE' }); } catch {}
+    });
+  } catch {}
+})();

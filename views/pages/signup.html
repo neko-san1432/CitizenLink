@@ -22,22 +22,8 @@
         <div class="auth-card">
             <!-- Header Section -->
             <div class="auth-header">
-                <div class="auth-logo">
-                    <div class="logo-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
-                            <path d="M8 12h16v2H8v-2zm0 4h16v2H8v-2zm0 4h12v2H8v-2z" fill="white"/>
-                            <defs>
-                                <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                    <stop stop-color="#3b82f6"/>
-                                    <stop offset="1" stop-color="#1d4ed8"/>
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                    </div>
-                    <h1 class="auth-title">Create your account</h1>
-                    <p class="auth-subtitle">Join CitizenLink to start making a difference in your community</p>
-                </div>
+                <h1 class="auth-title">Create your account</h1>
+                <p class="auth-subtitle">Join CitizenLink to start making a difference in your community</p>
             </div>
 
             <!-- Form Section -->
@@ -47,7 +33,7 @@
                     <div class="auth-main">
                         <form id="regForm" class="signup-form">
                             <!-- Name Field -->
-                            <div class="form-group">
+                            <div class="form-group form-full">
                                 <label for="name" class="form-label">Full Name</label>
                                 <div class="input-wrapper">
                                     <input 
@@ -69,7 +55,7 @@
                             </div>
 
                             <!-- Email Field -->
-                            <div class="form-group">
+                            <div class="form-group form-half">
                                 <label for="email" class="form-label">Email Address</label>
                                 <div class="input-wrapper">
                                     <input 
@@ -91,7 +77,7 @@
                             </div>
 
                             <!-- Phone Field -->
-                            <div class="form-group">
+                            <div class="form-group form-half">
                                 <label for="mobile" class="form-label">Phone Number</label>
                                 <div class="phone-input-wrapper">
                                     <div class="phone-prefix">+63</div>
@@ -110,7 +96,7 @@
                             </div>
 
                             <!-- Password Field -->
-                            <div class="form-group">
+                            <div class="form-group form-half">
                                 <label for="regPassword" class="form-label">Password</label>
                                 <div class="input-wrapper">
                                     <input 
@@ -139,7 +125,7 @@
                             </div>
 
                             <!-- Confirm Password Field -->
-                            <div class="form-group">
+                            <div class="form-group form-half">
                                 <label for="reRegPassword" class="form-label">Confirm Password</label>
                                 <div class="input-wrapper">
                                     <input 
@@ -162,7 +148,7 @@
                             </div>
 
                             <!-- Terms and Privacy -->
-                            <div class="form-group">
+                            <div class="form-group form-full">
                                 <label class="checkbox-wrapper terms-checkbox">
                                     <input type="checkbox" id="terms-checkbox" required>
                                     <span class="checkbox-custom"></span>
@@ -174,10 +160,10 @@
                             </div>
 
                             <!-- Captcha -->
-                            <div id="register-captcha" class="captcha-container"></div>
+                            <div id="register-captcha" class="captcha-container form-full"></div>
 
                             <!-- Submit Button -->
-                            <button class="btn btn-primary btn-lg w-full" type="submit">
+                            <button class="btn btn-primary btn-lg w-full form-full" type="submit">
                                 <span>Create Account</span>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

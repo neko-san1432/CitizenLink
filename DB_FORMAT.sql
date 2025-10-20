@@ -14,6 +14,18 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_logs_pkey PRIMARY KEY (id),
   CONSTRAINT audit_logs_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES auth.users(id)
 );
+CREATE TABLE public.categories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  code text NOT NULL UNIQUE,
+  description text,
+  icon text,
+  sort_order integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.complaint_assignments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   complaint_id uuid NOT NULL,
@@ -171,6 +183,17 @@ CREATE TABLE public.department_escalation_matrix (
   CONSTRAINT department_escalation_matrix_pkey PRIMARY KEY (id),
   CONSTRAINT department_escalation_matrix_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
+CREATE TABLE public.department_subcategory_mapping (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  department_id bigint NOT NULL,
+  subcategory_id uuid NOT NULL,
+  is_primary boolean DEFAULT false,
+  response_priority integer DEFAULT 1,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT department_subcategory_mapping_pkey PRIMARY KEY (id),
+  CONSTRAINT department_subcategory_mapping_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id),
+  CONSTRAINT department_subcategory_mapping_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
+);
 CREATE TABLE public.department_transfers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -191,7 +214,13 @@ CREATE TABLE public.departments (
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT departments_pkey PRIMARY KEY (id)
+  subcategory_id uuid,
+  level text DEFAULT 'LGU'::text CHECK (level = ANY (ARRAY['LGU'::text, 'NGA'::text])),
+  contact_info jsonb DEFAULT '{}'::jsonb,
+  response_time_hours integer DEFAULT 24,
+  escalation_time_hours integer DEFAULT 72,
+  CONSTRAINT departments_pkey PRIMARY KEY (id),
+  CONSTRAINT departments_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
 );
 CREATE TABLE public.events (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -323,6 +352,19 @@ CREATE TABLE public.signup_links (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT signup_links_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.subcategories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  category_id uuid NOT NULL,
+  name text NOT NULL,
+  code text NOT NULL,
+  description text,
+  sort_order integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT subcategories_pkey PRIMARY KEY (id),
+  CONSTRAINT subcategories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
 );
 CREATE TABLE public.task_forces (
   id bigint NOT NULL DEFAULT nextval('task_forces_id_seq'::regclass),
