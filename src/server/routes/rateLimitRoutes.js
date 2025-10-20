@@ -1,60 +1,77 @@
 const express = require('express');
 const router = express.Router();
-const { clearRateLimit, getRateLimitStatus, DISABLE_RATE_LIMITING } = require('../middleware/rateLimiting');
-// Admin endpoint to clear rate limits
-router.post('/clear', (req, res) => {
+
+// In-memory rate limit tracking (in production, use Redis)
+let rateLimitData = {
+  requests: 0,
+  windowStart: Date.now(),
+  remaining: 1000, // Default limit
+  resetTime: Date.now() + (60 * 1000) // Reset every minute
+};
+
+/**
+ * Rate limit status endpoint
+ * GET /api/rate-limit/status
+ */
+router.get('/status', (req, res) => {
   try {
-    const { ip } = req.body;
-    if (ip) {
-      clearRateLimit(ip);
-      res.json({
-        success: true,
-        message: `Rate limit cleared for IP: ${ip}`,
-        cleared: ip
-      });
-    } else {
-      clearRateLimit();
-      res.json({
-        success: true,
-        message: 'All rate limits cleared',
-        cleared: 'all'
-      });
+    const now = Date.now();
+    const windowDuration = 60 * 1000; // 1 minute window
+    
+    // Reset window if needed
+    if (now - rateLimitData.windowStart > windowDuration) {
+      rateLimitData = {
+        requests: 0,
+        windowStart: now,
+        remaining: 1000,
+        resetTime: now + windowDuration
+      };
     }
-  } catch (error) {
-    console.error('[RATE_LIMIT] Error clearing rate limits:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to clear rate limits'
-    });
-  }
-});
-// Admin endpoint to check rate limit status
-router.get('/status/:ip?', (req, res) => {
-  try {
-    const ip = req.params.ip || req.ip || req.connection.remoteAddress;
-    const status = getRateLimitStatus(ip);
+    
+    // Increment request count
+    rateLimitData.requests++;
+    rateLimitData.remaining = Math.max(0, 1000 - rateLimitData.requests);
+    
     res.json({
       success: true,
-      ip: ip,
-      disabled: DISABLE_RATE_LIMITING,
-      status: status,
-      environment: process.env.NODE_ENV
+      status: {
+        requests: rateLimitData.requests,
+        remaining: rateLimitData.remaining,
+        resetTime: rateLimitData.resetTime,
+        windowStart: rateLimitData.windowStart
+      }
     });
   } catch (error) {
-    console.error('[RATE_LIMIT] Error getting rate limit status:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get rate limit status'
+      error: error.message
     });
   }
 });
-// Admin endpoint to check if rate limiting is disabled
-router.get('/config', (req, res) => {
-  res.json({
-    success: true,
-    disabled: DISABLE_RATE_LIMITING,
-    environment: process.env.NODE_ENV,
-    disableEnvVar: process.env.DISABLE_RATE_LIMITING
-  });
+
+/**
+ * Reset rate limit (for testing)
+ * POST /api/rate-limit/reset
+ */
+router.post('/reset', (req, res) => {
+  try {
+    rateLimitData = {
+      requests: 0,
+      windowStart: Date.now(),
+      remaining: 1000,
+      resetTime: Date.now() + (60 * 1000)
+    };
+    
+    res.json({
+      success: true,
+      message: 'Rate limit reset successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
+
 module.exports = router;

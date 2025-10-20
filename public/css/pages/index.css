@@ -1,0 +1,172 @@
+/* Index page specific styles */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--gray-50) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(29, 78, 216, 0.1) 0%, transparent 50%);
+  z-index: 0;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.hero h1 {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-4);
+}
+
+.hero p {
+  font-size: 1.125rem;
+  color: var(--gray-600);
+  margin-bottom: var(--space-8);
+}
+
+.hero .btn {
+  margin: 0 var(--space-2);
+}
+
+.footer {
+  background: var(--gray-100);
+  padding: var(--space-8) 0;
+  text-align: center;
+  color: var(--gray-600);
+  border-top: 1px solid var(--gray-200);
+}
+
+.footer small {
+  font-size: 0.875rem;
+}
+
+/* Auth buttons styling */
+#auth-buttons {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 10;
+}
+
+#auth-buttons .btn {
+  margin-left: var(--space-2);
+}
+
+#unauthenticated-buttons {
+  display: flex;
+  gap: var(--space-3);
+}
+
+#authenticated-buttons {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* Grid layout for feature cards */
+.hero .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-12);
+}
+
+.hero .card {
+  background: white;
+  padding: var(--space-6);
+  text-align: left;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.hero .card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.hero .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-3);
+}
+
+.hero .card p {
+  font-size: 1rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .hero {
+    padding: var(--space-4) 0;
+  }
+  
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .hero p {
+    font-size: 1rem;
+  }
+  
+  #auth-buttons {
+    position: static;
+    margin-bottom: var(--space-6);
+    justify-content: center;
+  }
+  
+  .hero .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+  
+  .hero .card {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+  
+  .hero .btn {
+    display: block;
+    width: 100%;
+    margin: var(--space-2) 0;
+  }
+  
+  #auth-buttons {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .hero::before {
+    animation: none;
+  }
+}

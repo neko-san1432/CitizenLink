@@ -510,7 +510,23 @@ class HeatmapVisualization {
 
       // Check if complaint is assigned to user's department
       const complaintDepartment = complaint.department?.toUpperCase();
+      const complaintDepartments = complaint.departments || [];
+      const secondaryDepartments = complaint.secondaryDepartments || [];
+      
+      // Check primary department
       if (complaintDepartment === userDepartment) {
+        // console.log removed for security
+        return true;
+      }
+
+      // Check if user's department is in the departments array
+      if (complaintDepartments.includes(userDepartment)) {
+        // console.log removed for security
+        return true;
+      }
+
+      // Check if user's department is in secondary departments
+      if (secondaryDepartments.includes(userDepartment)) {
         // console.log removed for security
         return true;
       }

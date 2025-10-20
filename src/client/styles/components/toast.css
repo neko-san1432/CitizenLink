@@ -121,7 +121,6 @@
   height: 4px;
   background: linear-gradient(90deg, #3b82f6, #1d4ed8);
   border-radius: 0 0 16px 16px;
-  animation: toast-progress 4s linear forwards;
   z-index: 1;
   /* Enhanced floating progress bar */
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
@@ -219,14 +218,6 @@
 }
 
 /* Progress Animation */
-@keyframes toast-progress {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}
 
 /* Dark Mode Support - Enhanced Floating */
 @media (prefers-color-scheme: dark) {

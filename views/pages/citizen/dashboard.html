@@ -20,16 +20,25 @@
       <div id="sidebar" class="collapsible"></div>
       <div id="app" class="collapsible">
         <h1>Dashboard</h1>
-        <div id="news-updates">
-          <h2>News Updates</h2>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-            quos.
-          </p>
-        </div>
-        <div id="events">
-          <h2>Events</h2>
-        </div>
+        <section id="quick-actions" aria-label="Quick Links" style="margin-bottom: 1rem;">
+          <div class="card-grid">
+            <a class="btn btn-primary" href="/citizen/fileComplaint">File a Complaint</a>
+            <a class="btn" href="/myProfile">My Profile</a>
+          </div>
+        </section>
+        <section id="ongoing-complaint" aria-live="polite"></section>
+        <section id="news-section">
+          <h2>News</h2>
+          <div id="news-list"></div>
+        </section>
+        <section id="notices-section">
+          <h2>Notices</h2>
+          <div id="notices-list"></div>
+        </section>
+        <section id="upcoming-events-section">
+          <h2>Upcoming Events</h2>
+          <div id="events-list"></div>
+        </section>
       </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
@@ -38,5 +47,6 @@
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/citizen-dashboard.js"></script>
   </body>
 </html>

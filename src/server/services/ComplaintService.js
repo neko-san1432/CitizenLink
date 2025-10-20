@@ -359,6 +359,8 @@ class ComplaintService {
     const {
       status,
       type,
+      category,
+      subcategory,
       department,
       startDate,
       endDate,
@@ -368,7 +370,7 @@ class ComplaintService {
     try {
       let query = this.complaintRepo.supabase
         .from('complaints')
-        .select('id, title, type, status, priority, latitude, longitude, location_text, submitted_at, primary_department')
+        .select('id, title, type, status, priority, latitude, longitude, location_text, submitted_at, primary_department, secondary_departments, department_r')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
@@ -387,6 +389,26 @@ class ComplaintService {
       // Filter by department
       if (department) {
         query = query.contains('department_r', [department]);
+      }
+
+      // Filter by category and subcategory (if complaint has these fields)
+      if (category || subcategory) {
+        // For now, we'll filter by type as a proxy for category
+        // This would need to be updated when complaints table has category/subcategory fields
+        if (category) {
+          // Map category to complaint types for now
+          const categoryTypeMapping = {
+            'infrastructure': 'infrastructure',
+            'health': 'health',
+            'environmental': 'environmental',
+            'social': 'social',
+            'safety': 'public-safety'
+          };
+          const mappedType = categoryTypeMapping[category];
+          if (mappedType) {
+            query = query.eq('type', mappedType);
+          }
+        }
       }
 
       // Filter by date range
@@ -417,7 +439,9 @@ class ComplaintService {
         lng: parseFloat(complaint.longitude),
         location: complaint.location_text,
         submittedAt: complaint.submitted_at,
-        department: complaint.primary_department
+        department: complaint.primary_department,
+        departments: complaint.department_r || [],
+        secondaryDepartments: complaint.secondary_departments || []
       }));
 
       // console.log removed for security

@@ -35,10 +35,10 @@ const authenticateUser = async (req, res, next) => {
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid or expired token',
+          error: 'Invalid token',
         });
       }
-      return res.redirect('/login?message=' + encodeURIComponent('Your session has expired. Please login again') + '&type=error');
+      return res.redirect('/login?message=' + encodeURIComponent('Invalid session. Please login again') + '&type=error');
     }
 
     // Now get the complete user data including raw_user_meta_data from auth.users table

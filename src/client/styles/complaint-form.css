@@ -48,6 +48,114 @@
 
 /* ❌ Removed focus-within effect - form container stays static */
 
+/* Hierarchical Department Selection Styles */
+.department-selection-info {
+  margin-bottom: 15px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+}
+
+.info-text {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.department-section {
+  margin-bottom: 20px;
+}
+
+.department-section h4 {
+  margin: 0 0 10px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 5px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.checkbox-label span {
+  display: block;
+}
+
+.dept-code {
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.response-time {
+  color: #28a745;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.primary-badge {
+  color: #007bff;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.loading-placeholder,
+.no-departments,
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+/* Category and Subcategory Select Styles */
+select:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+select:disabled option {
+  color: #6c757d;
+}
+
 /* Make form more prominent when sidebar is collapsed */
 body:not(.sidebar-open) .complaint-form-container {
   max-width: 1000px;

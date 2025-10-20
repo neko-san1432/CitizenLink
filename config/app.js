@@ -41,8 +41,7 @@ class AppConfig {
 
     this.security = {
       bcryptRounds: 12,
-      tokenExpiry: '4h',
-      cookieMaxAge: 4 * 60 * 60 * 1000 // 4 hours
+      tokenExpiry: '4h'
     };
   }
 

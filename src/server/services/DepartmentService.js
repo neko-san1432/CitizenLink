@@ -1,4 +1,5 @@
 const DepartmentRepository = require('../repositories/DepartmentRepository');
+const { getDepartmentsByCategory } = require('../utils/departmentMapping');
 const Department = require('../models/Department');
 
 class DepartmentService {
@@ -79,26 +80,38 @@ class DepartmentService {
   }
 
   async getDepartmentsByType(type) {
-    const allDepartments = await this.getActiveDepartments();
+    try {
+      // Map complaint types to department structure categories
+      const typeToCategoryMapping = {
+        'infrastructure': 'Infrastructure & Public Works',
+        'health': 'Health & Social Services',
+        'security': 'Law Enforcement & Legal Affairs',
+        'environment': 'Environment & Sanitation',
+        'social': 'Health & Social Services',
+        'utilities': 'Infrastructure & Public Works'
+      };
 
-    const typeMapping = {
-      'infrastructure': ['DPWH', 'ENGINEERING', 'ROADS', 'BRIDGES'],
-      'health': ['DOH', 'HEALTH', 'MEDICAL', 'SANITATION'],
-      'security': ['PNP', 'SECURITY', 'PEACE_ORDER', 'TRAFFIC'],
-      'environment': ['DENR', 'ENVIRONMENT', 'WASTE_MANAGEMENT'],
-      'social': ['DSWD', 'SOCIAL_SERVICES', 'WELFARE'],
-      'utilities': ['UTILITIES', 'WATER', 'ELECTRICITY', 'TELECOM']
-    };
+      const categoryName = typeToCategoryMapping[type];
+      if (!categoryName) {
+        return await this.getActiveDepartments();
+      }
 
-    if (!typeMapping[type]) {
-      return allDepartments;
+      // Get departments from the new structure
+      const departments = await getDepartmentsByCategory(categoryName);
+      
+      // Convert to the expected format
+      return departments.map(dept => ({
+        id: dept.id,
+        name: dept.name,
+        code: dept.code,
+        description: dept.description || '',
+        is_active: true
+      }));
+    } catch (error) {
+      console.error('Error getting departments by type:', error);
+      // Fallback to all departments
+      return await this.getActiveDepartments();
     }
-
-    return allDepartments.filter(dept =>
-      typeMapping[type].some(keyword =>
-        dept.code.includes(keyword) || dept.name.toUpperCase().includes(keyword)
-      )
-    );
   }
 
   async getDepartmentOfficers(departmentId) {

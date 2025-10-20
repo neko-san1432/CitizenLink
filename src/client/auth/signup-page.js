@@ -48,6 +48,50 @@ const initializeSignupPage = () => {
       checkAuthentication();
     }
   });
+
+  // Wire Terms & Privacy Modals
+  try {
+    const termsCheckbox = document.getElementById('terms-checkbox');
+    const openers = document.querySelectorAll('[data-open-modal]');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+
+    openers.forEach(opener => {
+      opener.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = opener.getAttribute('data-open-modal');
+        const modal = document.getElementById(targetId);
+        if (modal) modal.classList.add('open');
+      });
+    });
+
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = btn.closest('.modal');
+        if (modal) modal.classList.remove('open');
+      });
+    });
+
+    // Accept buttons
+    const acceptTerms = document.querySelector('[data-accept-terms]');
+    if (acceptTerms) {
+      acceptTerms.addEventListener('click', () => {
+        const modal = acceptTerms.closest('.modal');
+        if (modal) modal.classList.remove('open');
+        if (termsCheckbox) termsCheckbox.checked = true;
+      });
+    }
+
+    const acceptPrivacy = document.querySelector('[data-accept-privacy]');
+    if (acceptPrivacy) {
+      acceptPrivacy.addEventListener('click', () => {
+        const modal = acceptPrivacy.closest('.modal');
+        if (modal) modal.classList.remove('open');
+        if (termsCheckbox) termsCheckbox.checked = true; // consent covers both
+      });
+    }
+  } catch (err) {
+    // console.log removed for security
+  }
 };
 
 // Initialize when DOM is ready

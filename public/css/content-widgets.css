@@ -19,7 +19,6 @@
 .events-widget:hover,
 .notices-widget:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
 }
 
 /* Widget Headers */
@@ -103,7 +102,6 @@
 
 .news-item:hover {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #667eea;
 }
@@ -200,7 +198,6 @@
 
 .event-item:hover {
   background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, rgba(39, 174, 96, 0.05) 100%);
-  transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #2ecc71;
 }
@@ -333,7 +330,6 @@
 
 .notice-item:hover {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(41, 128, 185, 0.05) 100%);
-  transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 

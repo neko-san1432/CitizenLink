@@ -162,8 +162,7 @@ class AuthController {
       res.cookie('sb_access_token', authData.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 4 * 60 * 60 * 1000 // 4 hours
+        sameSite: 'lax'
       });
 
       res.json({

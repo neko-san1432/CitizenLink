@@ -129,36 +129,10 @@ export const validateAndRefreshToken = async () => {
       return false;
     }
 
-    // Check if token is close to expiring (within 5 minutes)
-    // Supabase expires_at is a Unix timestamp in seconds, not milliseconds
-    const expiresAt = new Date((session.expires_at || session.expiresAt) * 1000);
-    const now = new Date();
-    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-    const fiveMinutes = 5 * 60 * 1000;
+    // Session expiration checks removed - sessions will persist indefinitely
 
     // console.log removed for security
 
-    if (timeUntilExpiry < fiveMinutes) {
-      // console.log removed for security
-      const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
-
-      if (refreshError || !newSession) {
-        // console.log removed for security
-        return false;
-      }
-
-      // Update server cookie with new token
-      try {
-        await fetch('/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: newSession.access_token })
-        });
-        // console.log removed for security
-      } catch (cookieError) {
-        console.error('Failed to update server cookie:', cookieError);
-      }
-    }
 
     return true;
   } catch (error) {
@@ -240,50 +214,7 @@ export const startTokenExpiryMonitoring = () => {
       // Debug: Log session structure to see available properties
       // console.log removed for security
 
-      // Check if token is expired or about to expire (within 1 minute)
-      // Supabase expires_at is a Unix timestamp in seconds, not milliseconds
-      const expiresAt = new Date((session.expires_at || session.expiresAt) * 1000);
-      const now = new Date();
-      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-      const oneMinute = 60 * 1000;
-
-      // console.log removed for security
-
-      if (timeUntilExpiry <= 0) {
-        // console.log removed for security
-        try { await supabase.auth.refreshSession(); } catch {}
-        tokenExpiryTimer = setTimeout(checkTokenExpiry, 2000);
-        return;
-      }
-
-      if (timeUntilExpiry <= oneMinute) {
-        // console.log removed for security
-        try {
-          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
-
-          if (refreshError || !newSession) {
-            // console.log removed for security
-            handleSessionExpired();
-            return;
-          }
-
-          // Update server cookie with new token
-          await fetch('/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: newSession.access_token })
-          });
-
-          // console.log removed for security
-          // Restart monitoring with new token
-          startTokenExpiryMonitoring();
-          return;
-        } catch (refreshError) {
-          console.error('Token refresh error:', refreshError);
-          handleSessionExpired();
-          return;
-        }
-      }
+      // Session expiration checks removed - sessions will persist indefinitely
 
       // Set timer for next check (check every 30 seconds)
       tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000);
@@ -331,15 +262,15 @@ const handleSessionExpired = () => {
 const showSessionExpiredToast = () => {
   // Import toast functionality
   import('../components/toast.js').then(({ showMessage }) => {
-    showMessage('error', 'Session expired. Please log in again.', 5000);
+    showMessage('error', 'Authentication failed. Please log in again.', 5000);
   }).catch(async () => {
     // Fallback if toast module fails - try to import and use toast
     try {
       const { default: showMessage } = await import('../components/toast.js');
-      showMessage('error', 'Session expired. Please log in again.');
+      showMessage('error', 'Authentication failed. Please log in again.');
     } catch (toastError) {
       // Final fallback - use console.error if toast also fails
-      console.error('Session expired. Please log in again.');
+      console.error('Authentication failed. Please log in again.');
     }
   });
 };

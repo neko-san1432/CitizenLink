@@ -90,17 +90,18 @@ async function renderComplaint() {
   if (preferenceEl) {
     const departments = complaint.department_r || [];
     if (departments.length > 0) {
-      const deptNames = {
-        'wst': 'Water, Sanitation & Treatment',
-        'engineering': 'Engineering',
-        'health': 'Health',
-        'social-welfare': 'Social Welfare',
-        'public-safety': 'Public Safety',
-        'environmental': 'Environmental Services',
-        'transportation': 'Transportation',
-        'public-works': 'Public Works'
-      };
-      const displayNames = departments.map(dept => deptNames[dept] || dept);
+      // Use dynamic department names
+      const displayNames = await Promise.all(
+        departments.map(async dept => {
+          try {
+            const { getDepartmentNameByCode } = await import('../utils/departmentUtils.js');
+            return await getDepartmentNameByCode(dept);
+          } catch (error) {
+            console.error('Error fetching department name:', error);
+            return dept; // Fallback to original code
+          }
+        })
+      );
       preferenceEl.textContent = displayNames.join(', ');
     } else {
       preferenceEl.textContent = 'No preference specified';

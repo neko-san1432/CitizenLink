@@ -299,8 +299,7 @@ router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) 
     res.cookie('sb_access_token', data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 4 * 60 * 60 * 1000 // 4 hours
+      sameSite: 'lax'
     });
 
     res.json({

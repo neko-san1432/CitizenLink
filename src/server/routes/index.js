@@ -22,6 +22,8 @@ const notificationRoutes = require('./notificationRoutes');
 const storageRoutes = require('./storageRoutes');
 const contentRoutes = require('./contentRoutes');
 const rateLimitRoutes = require('./rateLimitRoutes');
+const healthRoutes = require('./healthRoutes');
+const departmentStructureRoutes = require('./departmentStructureRoutes');
 
 const router = express.Router();
 
@@ -47,13 +49,8 @@ router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/content', contentRoutes);
 router.use('/rate-limit', rateLimitRoutes);
+router.use('/health', healthRoutes);
+router.use('/department-structure', departmentStructureRoutes);
 
-router.get('/health', apiLimiter, (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is healthy',
-    timestamp: new Date().toISOString()
-  });
-});
 
 module.exports = router;

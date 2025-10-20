@@ -1,5 +1,20 @@
 :root {
     --WHITE: #f7f2eb;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #1f2937;
+    --sidebar-hover: #f3f4f6;
+    --sidebar-active: #3b82f6;
+    --sidebar-border: #e5e7eb;
+    --sidebar-shadow: rgba(0, 0, 0, 0.1);
+}
+
+html.dark {
+    --sidebar-bg: #1f2937;
+    --sidebar-text: #f3f4f6;
+    --sidebar-hover: #374151;
+    --sidebar-active: #3b82f6;
+    --sidebar-border: #374151;
+    --sidebar-shadow: rgba(0, 0, 0, 0.3);
 }
 * {
     font-family: Arial, Helvetica, sans-serif;
@@ -37,8 +52,11 @@ a:hover {
 }
 
 .header-container {
-  position: relative;
-  z-index: 999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   background-color: var(--WHITE);
   width: 100%;
   height: 60px;
@@ -47,7 +65,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0;
   min-height: 60px;
   box-sizing: border-box;
   overflow: hidden;
@@ -57,28 +75,34 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 15px;
+  padding-left: var(--space-6);
 }
 
 #app {
   flex: 1;
-  padding: 2%  15%;
-  z-index: 1;
+  padding: 10px 10% 2% 10%;
+  z-index: 10;
   min-height: 0; /* Allow flex item to shrink */
   overflow-y: auto; /* Enable vertical scrolling when needed */
+  margin-top: 60px; /* Add space for fixed header */
+  position: relative;
 }
 
 #sidebar {
-    position: fixed;
+  position: fixed;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 280px;
   height: 100vh;
-  left: -100%;
-  transition: left 0.3s ease;
-  border-right: 1px solid #ccc;
-  background-color: #f5f5f5;
+  left: -280px;
+  top: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--sidebar-border);
+  background: var(--sidebar-bg);
   overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 4px 0 20px var(--sidebar-shadow);
 }
 
 #sidebar.open {
@@ -86,19 +110,30 @@ a:hover {
 }
 
 #sidebar > a {
-  color: #000;
+  color: white;
   text-decoration: none;
-  padding: 15px;
-  margin: 5px;
-  border-radius: 5px;
-  background-color: #fff;
+  padding: 15px 20px;
+  margin: 5px 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
   font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 #sidebar > a:hover {
-  color: #000;
+  color: white;
   text-decoration: none;
-  background-color: #ccc;
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#sidebar > a.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
 }
 
 #menu-toggle {
@@ -141,44 +176,116 @@ a:hover {
   text-decoration: none;
 }
 
+html.dark .brand-logo {
+  color: #f3f4f6 !important;
+}
+
+html.dark .brand-logo:hover {
+  color: #60a5fa !important;
+}
+
+/* Dark mode for header brand text specifically */
+html.dark .header-container .brand-logo {
+  color: #ffffff !important;
+}
+
+html.dark .header-container .brand-logo:hover {
+  color: #60a5fa !important;
+}
+
+/* Base styles for brand text */
+.brand-text {
+  color: #333333;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.brand-text:hover {
+  color: #000000;
+}
+
+/* Dark mode for brand text span specifically */
+html.dark .brand-text {
+  color: #ffffff !important;
+}
+
+html.dark .brand-text:hover {
+  color: #60a5fa !important;
+}
+
+html.dark .header-container .brand-text {
+  color: #ffffff !important;
+}
+
+html.dark .header-container .brand-text:hover {
+  color: #60a5fa !important;
+}
+
+/* Dark mode for notification button */
+html.dark .notification-btn {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  border-color: #4b5563;
+  color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .notification-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #3b82f6;
+  color: white;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+
 /* Notification Button */
 .notification-btn {
   position: relative;
-  background: none;
-  border: none;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid #e2e8f0;
   font-size: 12px;
   cursor: pointer;
-  padding: 2px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
+  padding: 8px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: 0;
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: #64748b;
+  z-index: 10;
+  overflow: visible;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .notification-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
 .notification-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background-color: #ff4444;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 11px;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  min-width: 18px;
+  font-weight: 700;
+  min-width: 20px;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulse-badge 2s infinite;
   line-height: 1;
 }
 
@@ -186,11 +293,23 @@ a:hover {
   display: none;
 }
 
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
 /* Header Right Container */
 .header-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding-right: var(--space-6);
 }
 
 /* Notification Panel */
@@ -363,13 +482,8 @@ a:hover {
   border: 2px solid #f3f3f3;
   border-top: 2px solid #007bff;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 .notification-loading span {
   font-size: 12px;
@@ -457,7 +571,6 @@ a:hover {
 }
 
 .notification-item.notification-urgent .notification-icon {
-  animation: pulse 2s infinite;
 }
 
 .notification-item.notification-warning {
@@ -469,14 +582,6 @@ a:hover {
   background-color: #fff4d9;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
 
 .notification-message {
   font-size: 12px;
@@ -522,6 +627,14 @@ a:hover {
 
 /* Responsive notification panel */
 @media (max-width: 600px) {
+  .header-left {
+    padding-left: var(--space-3);
+  }
+  
+  .header-right {
+    padding-right: var(--space-3);
+  }
+  
   .notification-panel {
     width: 280px;
     right: 5px;
@@ -659,14 +772,15 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 15px 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 20px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   margin-bottom: 10px;
-  background-color: #f8f9fa;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .brand-link {
-  color: #333 !important;
+  color: white !important;
   text-decoration: none !important;
   font-size: 18px;
   font-weight: bold;
@@ -677,26 +791,28 @@ a:hover {
 }
 
 .brand-link:hover {
-  color: #000 !important;
+  color: white !important;
   text-decoration: none !important;
   background-color: transparent !important;
 }
 
 .sidebar-close {
-        position: static;
+  position: static;
   background: none;
   border: none;
   font-size: 20px;
-  color: #666;
+  color: white;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 8px;
   line-height: 1;
   flex: 0 0 auto;
+  border-radius: 50%;
+  transition: all 0.3s ease;
 }
 
 .sidebar-close:hover {
-  color: #000;
-  background-color: rgba(0,0,0,0.1);
+  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
 }
 
@@ -723,18 +839,30 @@ a:hover {
   }
   
   #app {
-    padding: 5% 15% 0;
+    margin-top: 70px;
+  }
+  
+  .header-left {
+    padding-left: var(--space-4);
+  }
+  
+  .header-right {
+    padding-right: var(--space-4);
+  }
+  
+  #app {
+    padding: 10px 10% 0;
     min-height: 0;
     overflow-y: auto;
   }
   
   #sidebar {
-    width: 160px;
-    left: -160px;
+    width: 200px;
+    left: -200px;
   }
   
   #app.sidebar-open {
-    margin-left: 160px;
+    margin-left: 0;
   }
   
   #menu-toggle {
@@ -784,7 +912,11 @@ a:hover {
   }
   
   #app {
-    padding: 10% 15% 0;
+    margin-top: 80px;
+  }
+  
+  #app {
+    padding: 10px 10% 0;
     min-height: 0;
     overflow-y: auto;
   }
@@ -845,18 +977,22 @@ a:hover {
   }
   
   #app {
-    padding: 15% 15%;
+    margin-top: 100px;
+  }
+  
+  #app {
+    padding: 10px 10%;
     min-height: 0;
     overflow-y: auto;
   }
   
   #sidebar {
-    width: 200px;
-    left: -200px;
+    width: 250px;
+    left: -250px;
   }
   
   #app.sidebar-open {
-    margin-left: 200px;
+    margin-left: 0;
   }
   
   #menu-toggle {
@@ -1212,36 +1348,42 @@ html.dark body {
 }
 
 html.dark #sidebar {
-  background-color: #2d2d2d;
-  border-right: 1px solid #444;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border-right: 1px solid #3b82f6;
 }
 
 html.dark #sidebar > a {
-  background-color: #3a3a3a;
-  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 html.dark #sidebar > a:hover {
-  background-color: #4a4a4a;
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+html.dark #sidebar > a.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 html.dark .sidebar-brand {
-  background-color: #2d2d2d;
-  border-bottom: 1px solid #444;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 html.dark .brand-link {
-  color: #e0e0e0;
+  color: white !important;
 }
 
 html.dark .sidebar-close {
-  color: #e0e0e0;
+  color: #e2e8f0;
 }
 
 html.dark .sidebar-close:hover {
-  color: #fff;
-  background-color: rgba(255,255,255,0.1);
+  color: white;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 html.dark #menu-toggle {

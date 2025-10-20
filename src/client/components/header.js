@@ -148,12 +148,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeHeaderScroll();
     initializeDropdowns();
 
-    // Move dashboard clock into header-right to align with buttons
+    // Move dashboard clock into header-right to align with buttons (put it first)
     try {
       const headerRight = headerContainer.querySelector('.header-right');
       const clockEl = document.getElementById('dashboard-clock');
       if (headerRight && clockEl) {
-        headerRight.appendChild(clockEl);
+        headerRight.insertBefore(clockEl, headerRight.firstChild);
       }
     } catch {}
   }

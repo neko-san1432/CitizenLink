@@ -402,6 +402,23 @@ class CoordinatorService {
         throw new Error('No departments provided');
       }
 
+      // Validate department codes against dynamic directory
+      try {
+        const { validateDepartmentCodes } = require('../utils/departmentMapping');
+        const { validCodes, invalidCodes } = await validateDepartmentCodes(uniqueCodes);
+        if (invalidCodes.length > 0) {
+          const list = invalidCodes.join(', ');
+          const err = new Error(`Invalid department code(s): ${list}`);
+          err.code = 'INVALID_DEPARTMENT_CODES';
+          err.details = { invalidCodes };
+          throw err;
+        }
+      } catch (vErr) {
+        if (vErr.code === 'INVALID_DEPARTMENT_CODES') throw vErr;
+        // On validator failure (e.g., DB down), proceed with a safe fallback: reject to avoid bad data
+        throw new Error('Unable to validate department codes at this time');
+      }
+
       // Set primary to first, others as secondary array
       const primary = uniqueCodes[0];
       const secondary = uniqueCodes.slice(1);

@@ -30,8 +30,8 @@ const checkAuthenticationAndUpdateUI = async () => {
         // console.log removed for security
 
         // Hide login/signup buttons, show dashboard button
-        if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'none';
-        if (authenticatedButtons) authenticatedButtons.style.display = 'block';
+        if (unauthenticatedButtons) unauthenticatedButtons.classList.add('hidden');
+        if (authenticatedButtons) authenticatedButtons.classList.remove('hidden');
 
         // Add logout functionality (only once)
         if (logoutBtn && !logoutListenerAdded) {
@@ -44,15 +44,15 @@ const checkAuthenticationAndUpdateUI = async () => {
       } else {
         // console.log removed for security
         // Profile incomplete, keep showing login/signup for profile completion
-        if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'block';
-        if (authenticatedButtons) authenticatedButtons.style.display = 'none';
+        if (unauthenticatedButtons) unauthenticatedButtons.classList.remove('hidden');
+        if (authenticatedButtons) authenticatedButtons.classList.add('hidden');
       }
     } else {
       // console.log removed for security
 
       // Show login/signup buttons, hide dashboard button
-      if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'block';
-      if (authenticatedButtons) authenticatedButtons.style.display = 'none';
+      if (unauthenticatedButtons) unauthenticatedButtons.classList.remove('hidden');
+      if (authenticatedButtons) authenticatedButtons.classList.add('hidden');
     }
   } catch (error) {
     console.error('💥 Authentication check failed:', error);
@@ -61,8 +61,8 @@ const checkAuthenticationAndUpdateUI = async () => {
     const unauthenticatedButtons = document.getElementById('unauthenticated-buttons');
     const authenticatedButtons = document.getElementById('authenticated-buttons');
 
-    if (unauthenticatedButtons) unauthenticatedButtons.style.display = 'block';
-    if (authenticatedButtons) authenticatedButtons.style.display = 'none';
+    if (unauthenticatedButtons) unauthenticatedButtons.classList.remove('hidden');
+    if (authenticatedButtons) authenticatedButtons.classList.add('hidden');
   }
 };
 

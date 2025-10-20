@@ -67,8 +67,7 @@ class CitizenLinkApp {
         res.cookie('sb_access_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: config.security.cookieMaxAge
+          sameSite: 'lax'
         });
         return res.json({ success: true });
       } catch (e) {
@@ -129,6 +128,14 @@ class CitizenLinkApp {
       requireRole(['lgu-admin', 'super-admin']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'settings', 'index.html'));
+      }
+    );
+
+    this.app.get('/admin/department-structure',
+      authenticateUser,
+      requireRole(['super-admin']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'department-structure.html'));
       }
     );
 
