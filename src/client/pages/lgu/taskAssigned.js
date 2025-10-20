@@ -97,9 +97,23 @@ function sanitizeHtml(html) {
   }
   
   // Fallback sanitization if DOMPurify is not available
-  return html
-    // Remove script tags and their content
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  // Fallback sanitization: repeatedly remove dangerous tags to prevent incomplete replacement
+  let sanitized = html;
+  let previous;
+  do {
+    previous = sanitized;
+    sanitized = sanitized
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove object tags
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      // Remove form tags
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '');
+  } while (sanitized !== previous);
+  // Now single-pass removes for other dangerous features
+  return sanitized
     // Remove event handlers
     .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
     // Remove javascript: URLs
@@ -108,14 +122,8 @@ function sanitizeHtml(html) {
     .replace(/vbscript\s*:/gi, '')
     // Remove data: URLs (except safe image types)
     .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
-      // Remove iframe tags
-      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
-    // Remove object tags
-    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
     // Remove embed tags
     .replace(/<embed\b[^<]*>/gi, '')
-    // Remove form tags
-    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
     // Remove input tags
     .replace(/<input\b[^<]*>/gi, '')
     // Remove button tags with onclick
