@@ -21,16 +21,299 @@
     <link rel="stylesheet" href="../../css/heatmap.css" />
     <link rel="stylesheet" href="../../css/app.css" />
     <link rel="stylesheet" href="../../css/heatmap-redesign.css" />
+    <link rel="stylesheet" href="../../css/pages/heatmap-enhanced.css" />
 
   </head>
   <body>
     <div id="sidebar" class="collapsible"></div>
-    <button id="menu-toggle" class="heatmap-menu-btn">☰</button>
+    
+    <!-- Enhanced Header -->
+    <div class="heatmap-header">
+      <div class="header-left">
+        <button id="menu-toggle" class="heatmap-menu-btn">☰</button>
+        <div class="header-title">
+          <h1>🗺️ Complaint Heatmap</h1>
+          <p>Interactive visualization of complaint patterns and clusters</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-value" id="header-total-complaints">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="header-clusters">0</span>
+            <span class="stat-label">Clusters</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="header-density">0</span>
+            <span class="stat-label">Density</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-icon" id="toggle-controls" title="Toggle Controls">⚙️</button>
+          <button class="btn-icon" id="fullscreen-toggle" title="Fullscreen">⛶</button>
+          <button class="btn-icon" id="export-heatmap" title="Export">📊</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Map Container -->
     <div id="heatmap">
       <div id="map" style="width: 100%; height: 100%"></div>
+      
+      <!-- Map Overlay Controls -->
+      <div class="map-overlay-controls">
+        <div class="zoom-controls">
+          <button class="zoom-btn" id="zoom-in" title="Zoom In">+</button>
+          <button class="zoom-btn" id="zoom-out" title="Zoom Out">-</button>
+          <button class="zoom-btn" id="fit-bounds" title="Fit to Data">⌂</button>
+          <button class="zoom-btn" id="reset-view" title="Reset to Digos City">🏠</button>
+        </div>
+        
+        <div class="layer-controls">
+          <button class="layer-btn active" id="toggle-heatmap" title="Toggle Heatmap">🔥</button>
+          <button class="layer-btn" id="toggle-markers" title="Toggle Markers">📍</button>
+          <button class="layer-btn" id="toggle-clusters" title="Toggle Clusters">🔗</button>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="map-loading" class="map-loading">
+        <div class="loading-spinner"></div>
+        <p>Loading complaint data...</p>
+      </div>
+
+      <!-- Map Legend -->
+      <div class="map-legend">
+        <h4>Heatmap Intensity</h4>
+        <div class="legend-gradient">
+          <div class="legend-item">
+            <div class="legend-color" style="background: blue;"></div>
+            <span>Low</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: cyan;"></div>
+            <span>Medium</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: yellow;"></div>
+            <span>High</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: red;"></div>
+            <span>Very High</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Enhanced Controls Panel -->
+    <div id="heatmap-controls" class="map-controls enhanced-controls">
+      <div class="controls-header">
+        <h3>🎛️ Advanced Controls</h3>
+        <button class="btn-close" id="close-controls">×</button>
+      </div>
+
+      <div class="controls-content">
+        <!-- Quick Filters -->
+        <div class="control-section">
+          <h4>⚡ Quick Filters</h4>
+          <div class="quick-filters">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="urgent">Urgent</button>
+            <button class="filter-chip" data-filter="pending">Pending</button>
+            <button class="filter-chip" data-filter="resolved">Resolved</button>
+            <button class="filter-chip" data-filter="today">Today</button>
+            <button class="filter-chip" data-filter="week">This Week</button>
+          </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="control-section">
+          <h4>🔍 Advanced Filters</h4>
+          
+          <div class="filter-group">
+            <label>Status Filter:</label>
+            <select id="status-filter" class="filter-select">
+              <option value="">All Statuses</option>
+              <option value="pending review">Pending Review</option>
+              <option value="in progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Category Filter:</label>
+            <select id="category-filter" class="filter-select">
+              <option value="">All Categories</option>
+              <div id="category-options-loading">Loading categories...</div>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Subcategory Filter:</label>
+            <select id="subcategory-filter" class="filter-select" disabled>
+              <option value="">Select a category first</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Department Filter:</label>
+            <select id="department-filter" class="filter-select">
+              <option value="">All Departments</option>
+              <div id="department-options-loading">Loading departments...</div>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Time Range:</label>
+            <select id="time-range-filter" class="filter-select">
+              <option value="">All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="last7days">Last 7 Days</option>
+              <option value="last30days">Last 30 Days</option>
+              <option value="last90days">Last 90 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          <div class="filter-group" id="custom-date-range" style="display: none;">
+            <label>Custom Date Range:</label>
+            <div class="date-inputs">
+              <input type="date" id="start-date" class="date-input" placeholder="Start Date">
+              <input type="date" id="end-date" class="date-input" placeholder="End Date">
+            </div>
+          </div>
+
+          <div class="filter-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="include-resolved" checked>
+              <span class="checkmark"></span>
+              Include Resolved Complaints
+            </label>
+          </div>
+        </div>
+
+        <!-- Visualization Controls -->
+        <div class="control-section">
+          <h4>🎨 Visualization</h4>
+          
+          <div class="control-group">
+            <label>Heatmap Intensity:</label>
+            <div class="slider-container">
+              <input type="range" id="heatmap-intensity" min="0.1" max="2.0" step="0.1" value="1.0">
+              <span class="slider-value" id="heatmap-intensity-value">1.0</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Marker Size:</label>
+            <div class="slider-container">
+              <input type="range" id="marker-size" min="5" max="30" step="1" value="15">
+              <span class="slider-value" id="marker-size-value">15</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Zoom Threshold:</label>
+            <div class="slider-container">
+              <input type="range" id="zoom-threshold" min="10" max="18" step="1" value="14">
+              <span class="slider-value" id="zoom-threshold-value">14</span>
+            </div>
+            <small>Show markers at this zoom level</small>
+          </div>
+        </div>
+
+        <!-- Clustering Controls -->
+        <div class="control-section">
+          <h4>🔗 Clustering</h4>
+          
+          <div class="control-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enable-clustering">
+              <span class="checkmark"></span>
+              Enable DBSCAN Clustering
+            </label>
+          </div>
+
+          <div class="clustering-params" id="clustering-params" style="display: none;">
+            <div class="control-group">
+              <label>Epsilon (km):</label>
+              <div class="slider-container">
+                <input type="range" id="eps-slider" min="0.005" max="0.05" step="0.005" value="0.01">
+                <span class="slider-value" id="eps-value">0.01</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Min Points:</label>
+              <div class="slider-container">
+                <input type="range" id="minpts-slider" min="2" max="10" step="1" value="3">
+                <span class="slider-value" id="minpts-value">3</span>
+              </div>
+            </div>
+
+            <button id="suggest-params" class="btn-suggest">💡 Suggest Parameters</button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="control-section">
+          <h4>⚡ Actions</h4>
+          <div class="action-buttons">
+            <button id="apply-filters" class="btn-primary">Apply Filters</button>
+            <button id="reset-filters" class="btn-secondary">Reset All</button>
+            <button id="fit-to-complaints" class="btn-secondary">Fit to Data</button>
+            <button id="reset-view-btn" class="btn-reset">🏠 Reset View</button>
+            <button id="export-data" class="btn-export">📊 Export</button>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="control-section stats-section">
+          <h4>📊 Statistics</h4>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">📝</div>
+              <div class="stat-content">
+                <div class="stat-value" id="total-complaints">0</div>
+                <div class="stat-label">Total Complaints</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🔗</div>
+              <div class="stat-content">
+                <div class="stat-value" id="cluster-count">0</div>
+                <div class="stat-label">Clusters</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📍</div>
+              <div class="stat-content">
+                <div class="stat-value" id="noise-count">0</div>
+                <div class="stat-label">Noise Points</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-value" id="density-score">0</div>
+                <div class="stat-label">Density Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Display -->
+        <div id="error-display" class="error-message" style="display: none;"></div>
+      </div>
+    </div>
+
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../../js/components/toast.js"></script>
 
@@ -56,6 +339,7 @@
       type="module"
       src="../../js/components/map/boundaryGenerator.js"
     ></script>
+    <script type="module" src="../../js/pages/heatmap-enhanced.js"></script>
     <script type="module" src="../../js/pages/lgu-admin-heatmap.js"></script>
     </body>
   </html>

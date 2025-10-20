@@ -53,8 +53,11 @@ async function loadComplaint() {
  * Render complaint details
  */
 async function renderComplaint() {
+  // The service returns complaint in nested structure
   const complaint = currentComplaint.complaint;
-  const similarities = currentComplaint.similarities || [];
+  const similarities = currentComplaint.analysis?.duplicate_candidates || 
+                     currentComplaint.analysis?.similar_complaints || 
+                     currentComplaint.similarities || [];
 
   // Hide loading, show content
   document.getElementById('loading').style.display = 'none';
@@ -75,11 +78,16 @@ async function renderComplaint() {
   const priorityEl = document.getElementById('complaint-priority');
   priorityEl.innerHTML = `<span class="badge priority-${complaint.priority}">${complaint.priority}</span>`;
 
-  // Details
-  document.getElementById('complaint-type').textContent = complaint.type;
+  // Details - Handle both old and new hierarchical form structure
+  const typeText = complaint.type || complaint.category || 'Not specified';
+  const subtypeText = complaint.subtype || complaint.subcategory || '';
+  
+  document.getElementById('complaint-type').textContent = typeText;
   const subtypeEl = document.getElementById('complaint-subtype');
-  if (complaint.subtype) {
-    subtypeEl.textContent = ` - ${complaint.subtype}`;
+  if (subtypeText) {
+    subtypeEl.textContent = ` - ${subtypeText}`;
+  } else {
+    subtypeEl.textContent = '';
   }
 
   document.getElementById('complaint-description').textContent = complaint.descriptive_su;
@@ -145,7 +153,17 @@ async function renderComplaint() {
   // Evidence (always show section with fallback)
   const evidenceSection = document.getElementById('evidence-section');
   const evidenceEmpty = document.getElementById('evidence-empty');
-  const evidenceList = complaint.evidence && Array.isArray(complaint.evidence) ? complaint.evidence : [];
+  
+  // Handle different evidence field structures
+  let evidenceList = [];
+  if (complaint.evidence && Array.isArray(complaint.evidence)) {
+    evidenceList = complaint.evidence;
+  } else if (complaint.evidence_files && Array.isArray(complaint.evidence_files)) {
+    evidenceList = complaint.evidence_files;
+  } else if (complaint.files && Array.isArray(complaint.files)) {
+    evidenceList = complaint.files;
+  }
+  
   if (evidenceList.length > 0) {
     if (evidenceSection) evidenceSection.style.display = 'block';
     if (evidenceEmpty) evidenceEmpty.style.display = 'none';
@@ -158,12 +176,18 @@ async function renderComplaint() {
   }
 
   // Similar complaints
-  if (similarities.length > 0) {
+  if (similarities && similarities.length > 0) {
     document.getElementById('similar-section').style.display = 'block';
     document.getElementById('duplicate-btn').style.display = 'block';
     document.getElementById('related-btn').style.display = 'block';
     document.getElementById('unique-btn').style.display = 'block';
     renderSimilarComplaints(similarities);
+  } else {
+    // Hide similar complaints section if no similarities
+    document.getElementById('similar-section').style.display = 'none';
+    document.getElementById('duplicate-btn').style.display = 'none';
+    document.getElementById('related-btn').style.display = 'none';
+    document.getElementById('unique-btn').style.display = 'none';
   }
 }
 
@@ -275,7 +299,11 @@ function renderSimilarComplaints(similarities) {
 window.openAssignModal = function() {
   document.getElementById('assign-modal').classList.add('active');
   // Pre-fill priority from complaint
-  document.getElementById('assign-priority').value = currentComplaint.complaint.priority || 'medium';
+  const complaint = currentComplaint.complaint;
+  document.getElementById('assign-priority').value = complaint.priority || 'medium';
+  
+  // Load departments dynamically
+  loadDepartmentsForAssignment();
 };
 
 window.showDuplicateModal = function() {
@@ -444,6 +472,42 @@ window.markAsUnique = async function() {
     Toast.error(error.message);
   }
 };
+
+/**
+ * Load departments for assignment modal
+ */
+async function loadDepartmentsForAssignment() {
+  try {
+    const response = await fetch('/api/departments/active');
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      const departmentsList = document.getElementById('departments-list');
+      departmentsList.innerHTML = result.data.map(dept => `
+        <label>
+          <input type="checkbox" class="dept-check" value="${dept.id}">
+          ${dept.name} (${dept.code})
+        </label>
+      `).join('');
+    } else {
+      throw new Error(result.error || 'Failed to load departments');
+    }
+  } catch (error) {
+    console.error('Error loading departments:', error);
+    // Fallback to hardcoded list if API fails
+    const departmentsList = document.getElementById('departments-list');
+    departmentsList.innerHTML = `
+      <label><input type="checkbox" class="dept-check" value="wst"> Water, Sanitation & Treatment</label>
+      <label><input type="checkbox" class="dept-check" value="engineering"> Engineering</label>
+      <label><input type="checkbox" class="dept-check" value="health"> Health</label>
+      <label><input type="checkbox" class="dept-check" value="social-welfare"> Social Welfare</label>
+      <label><input type="checkbox" class="dept-check" value="public-safety"> Public Safety</label>
+      <label><input type="checkbox" class="dept-check" value="environmental"> Environmental Services</label>
+      <label><input type="checkbox" class="dept-check" value="transportation"> Transportation</label>
+      <label><input type="checkbox" class="dept-check" value="public-works"> Public Works</label>
+    `;
+  }
+}
 
 /**
  * Show error message

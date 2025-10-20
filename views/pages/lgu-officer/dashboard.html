@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>LGU Officer Dashboard - CitizenLink</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/toast.css">
+    <link rel="stylesheet" href="../../css/components/clock.css">
+    <link rel="stylesheet" href="../../css/components/sidebar.css">
+    <link rel="stylesheet" href="../../css/app.css">
+    <link rel="stylesheet" href="../../css/header-redesign.css">
+    <link rel="stylesheet" href="../../css/pages/dashboard-common.css">
+</head>
+<body>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        
+        <div id="app" class="collapsible lgu-officer-dashboard">
+            <div class="dashboard-header">
+                <h1>👮 LGU Officer Dashboard</h1>
+                <p class="dashboard-subtitle">Field operations and complaint management for local government officers</p>
+            </div>
+
+            <!-- Quick Actions Panel -->
+            <div class="quick-actions-panel">
+                <h2 class="section-title">⚡ Quick Actions</h2>
+                <div class="quick-actions-grid">
+                    <button class="quick-action-btn" onclick="viewAssignedTasks()">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-text">My Tasks</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="updateTaskStatus()">
+                        <div class="quick-action-icon">✅</div>
+                        <div class="quick-action-text">Update Status</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="addProgressNote()">
+                        <div class="quick-action-icon">📝</div>
+                        <div class="quick-action-text">Add Note</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="uploadEvidence()">
+                        <div class="quick-action-icon">📷</div>
+                        <div class="quick-action-text">Upload Evidence</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="requestSupport()">
+                        <div class="quick-action-icon">🆘</div>
+                        <div class="quick-action-text">Request Support</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="viewMap()">
+                        <div class="quick-action-icon">🗺️</div>
+                        <div class="quick-action-text">View Map</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="dashboard-grid">
+                <!-- My Tasks Overview -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📋 My Assigned Tasks</h2>
+                        <a href="/taskAssigned" class="btn btn-primary">View All Tasks</a>
+                    </div>
+                    <div id="tasks-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading your tasks...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Statistics -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📊 Task Statistics</h2>
+                        <button class="btn btn-secondary" onclick="refreshStats()">Refresh</button>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📝</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Assigned</div>
+                                <div class="stat-value" id="stat-total-assigned">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏳</div>
+                            <div class="stat-content">
+                                <div class="stat-label">In Progress</div>
+                                <div class="stat-value" id="stat-in-progress">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Completed</div>
+                                <div class="stat-value" id="stat-completed">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏰</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Overdue</div>
+                                <div class="stat-value" id="stat-overdue">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🕒 Recent Activity</h2>
+                        <button class="btn btn-secondary" onclick="refreshActivity()">Refresh</button>
+                    </div>
+                    <div id="activity-container" class="content-container">
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon">📝</div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Task #1234 assigned to you</div>
+                                    <div class="activity-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">✅</div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Task #1230 marked as completed</div>
+                                    <div class="activity-time">1 day ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">📷</div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Evidence uploaded for task #1228</div>
+                                    <div class="activity-time">2 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Updates -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🏢 Department Updates</h2>
+                        <button class="btn btn-secondary" onclick="refreshUpdates()">Refresh</button>
+                    </div>
+                    <div id="updates-container" class="content-container">
+                        <div class="updates-list">
+                            <div class="update-item">
+                                <div class="update-icon">📢</div>
+                                <div class="update-content">
+                                    <div class="update-title">New Guidelines Released</div>
+                                    <div class="update-text">Updated procedures for infrastructure complaints</div>
+                                    <div class="update-time">3 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="update-item">
+                                <div class="update-icon">🎯</div>
+                                <div class="update-content">
+                                    <div class="update-title">Performance Target</div>
+                                    <div class="update-text">Q4 target: 95% completion rate</div>
+                                    <div class="update-time">1 day ago</div>
+                                </div>
+                            </div>
+                            <div class="update-item">
+                                <div class="update-icon">📅</div>
+                                <div class="update-content">
+                                    <div class="update-title">Team Meeting</div>
+                                    <div class="update-text">Weekly team meeting scheduled for Friday</div>
+                                    <div class="update-time">2 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Reference -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📚 Quick Reference</h2>
+                    </div>
+                    <div class="reference-container">
+                        <div class="reference-item">
+                            <div class="reference-icon">📞</div>
+                            <div class="reference-content">
+                                <div class="reference-title">Emergency Contacts</div>
+                                <div class="reference-text">Police: 911 | Fire: 911 | Medical: 911</div>
+                            </div>
+                        </div>
+                        <div class="reference-item">
+                            <div class="reference-icon">📋</div>
+                            <div class="reference-content">
+                                <div class="reference-title">Standard Procedures</div>
+                                <div class="reference-text">Follow department protocols for all tasks</div>
+                            </div>
+                        </div>
+                        <div class="reference-item">
+                            <div class="reference-icon">⏰</div>
+                            <div class="reference-content">
+                                <div class="reference-title">Response Times</div>
+                                <div class="reference-text">Urgent: 2h | High: 24h | Medium: 72h</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📈 My Performance</h2>
+                        <select class="filter-select" id="performance-period">
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                        </select>
+                    </div>
+                    <div class="performance-metrics">
+                        <div class="metric-item">
+                            <div class="metric-label">Completion Rate</div>
+                            <div class="metric-value">94%</div>
+                            <div class="metric-bar">
+                                <div class="metric-fill" style="width: 94%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Avg Response Time</div>
+                            <div class="metric-value">1.8h</div>
+                            <div class="metric-bar">
+                                <div class="metric-fill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Quality Score</div>
+                            <div class="metric-value">4.7/5</div>
+                            <div class="metric-bar">
+                                <div class="metric-fill" style="width: 94%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/components/header.js"></script>
+    <script type="module" src="../../js/components/sidebar.js"></script>
+    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/lgu-officer-dashboard.js"></script>
+</body>
+</html>

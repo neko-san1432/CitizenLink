@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../../css/components/sidebar.css">
     <link rel="stylesheet" href="../../css/app.css">
     <link rel="stylesheet" href="../../css/header-redesign.css">
+    <link rel="stylesheet" href="../../css/pages/dashboard-common.css">
     <link rel="stylesheet" href="../../css/pages/hr-dashboard.css">
     <style>
         .department-stats-grid {
@@ -63,28 +64,81 @@
         <div id="sidebar" class="collapsible"></div>
         
         <div id="app" class="collapsible hr-dashboard">
-            <h1>HR Dashboard</h1>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">Manage staff roles, promotions, demotions, and department assignments</p>
+            <div class="dashboard-header">
+                <h1>👥 HR Dashboard</h1>
+                <p class="dashboard-subtitle">Comprehensive human resources management and staff oversight</p>
+            </div>
 
-            <!-- Statistics -->
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Officers</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-officers">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Admins</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-admins">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Promotions This Month</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-promotions">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Demotions This Month</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-demotions">0</div>
+            <!-- Quick Actions Panel -->
+            <div class="quick-actions-panel">
+                <h2 class="section-title">⚡ Quick Actions</h2>
+                <div class="quick-actions-grid">
+                    <button class="quick-action-btn" onclick="promoteUser()">
+                        <div class="quick-action-icon">⬆️</div>
+                        <div class="quick-action-text">Promote User</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="demoteUser()">
+                        <div class="quick-action-icon">⬇️</div>
+                        <div class="quick-action-text">Demote User</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="assignDepartment()">
+                        <div class="quick-action-icon">🏢</div>
+                        <div class="quick-action-text">Assign Department</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="viewRoleHistory()">
+                        <div class="quick-action-icon">📜</div>
+                        <div class="quick-action-text">Role History</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="generateReport()">
+                        <div class="quick-action-icon">📊</div>
+                        <div class="quick-action-text">Generate Report</div>
+                    </button>
+                    <button class="quick-action-btn" onclick="manageUsers()">
+                        <div class="quick-action-icon">👥</div>
+                        <div class="quick-action-text">Manage Users</div>
+                    </button>
                 </div>
             </div>
+
+            <!-- Main Content Grid -->
+            <div class="dashboard-grid">
+
+                <!-- Statistics Overview -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📊 Staff Statistics</h2>
+                    </div>
+                    <div class="stats-grid" id="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👮</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Officers</div>
+                                <div class="stat-value" id="stat-officers">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">👔</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Admins</div>
+                                <div class="stat-value" id="stat-admins">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⬆️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Promotions (Month)</div>
+                                <div class="stat-value" id="stat-promotions">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⬇️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Demotions (Month)</div>
+                                <div class="stat-value" id="stat-demotions">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             <!-- Department Statistics -->
             <div class="section-header">
