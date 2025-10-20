@@ -244,6 +244,8 @@ export const setupRealtimeValidation = (form) => {
     '#complaintTitle': { required: true, minLength: 3 },
     '#description': { required: true, minLength: 10 },
     '#location': { required: true },
+    '#complaintCategory': { required: true },
+    '#complaintSubcategory': { required: true },
   };
 
   const validateTarget = (selector) => {
@@ -303,6 +305,8 @@ export const extractComplaintFormData = (formElement) => {
     title: getVal('#complaintTitle'),
     type: getVal('#complaintType'),
     subtype: getVal('#complaintSubtype'),
+    category: getVal('#complaintCategory'),
+    subcategory: getVal('#complaintSubcategory'),
     description: getVal('#description'),
     location_text: getVal('#location'),
     latitude: parseNum('#latitude'),
@@ -325,6 +329,8 @@ export const validateComplaintForm = (data) => {
   const title = sanitizeString(data.title || '');
   const description = sanitizeString(data.description || '');
   const locationText = sanitizeString(data.location_text || '');
+  const category = sanitizeString(data.category || '');
+  const subcategory = sanitizeString(data.subcategory || '');
 
   if (!title) errors.push('Title is required');
   if (title && title.length < 3) errors.push('Title must be at least 3 characters');
@@ -333,6 +339,15 @@ export const validateComplaintForm = (data) => {
   if (description && description.length < 10) errors.push('Description must be at least 10 characters');
 
   if (!locationText) errors.push('Location is required');
+
+  // Validate hierarchical form fields
+  if (!category) errors.push('Category is required');
+  if (!subcategory) errors.push('Subcategory is required');
+
+  // Validate departments
+  if (!data.departments || data.departments.length === 0) {
+    errors.push('At least one department must be selected');
+  }
 
   // If one coordinate is provided, both should be valid numbers
   const hasLat = data.latitude !== null && data.latitude !== undefined;

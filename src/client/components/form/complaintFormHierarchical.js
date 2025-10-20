@@ -315,11 +315,7 @@ function showRoleSwitchRequired(form) {
 function setupFormValidation(form) {
   if (!form) return;
 
-  setupRealtimeValidation(form, {
-    title: { required: true, minLength: 5 },
-    description: { required: true, minLength: 10 },
-    location: { required: true, minLength: 3 }
-  });
+  setupRealtimeValidation(form);
 }
 
 /**
@@ -340,18 +336,37 @@ function setupFormSubmission(form, fileHandler) {
       return;
     }
 
-    // Prepare form data
-    const formData = new FormData(form);
-    formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
+    // Add selected departments to form data
+    selectedDepartments.forEach(deptId => {
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'departments';
+      hiddenInput.value = deptId;
+      form.appendChild(hiddenInput);
+    });
     
-    // Add category and subcategory info
+    // Add category and subcategory info as hidden inputs
     const categoryId = form.querySelector('#complaintCategory').value;
     const subcategoryId = form.querySelector('#complaintSubcategory').value;
-    formData.append('categoryId', categoryId);
-    formData.append('subcategoryId', subcategoryId);
+    
+    const categoryInput = document.createElement('input');
+    categoryInput.type = 'hidden';
+    categoryInput.name = 'categoryId';
+    categoryInput.value = categoryId;
+    form.appendChild(categoryInput);
+    
+    const subcategoryInput = document.createElement('input');
+    subcategoryInput.type = 'hidden';
+    subcategoryInput.name = 'subcategoryId';
+    subcategoryInput.value = subcategoryId;
+    form.appendChild(subcategoryInput);
 
     try {
-      await handleComplaintSubmit(formData, fileHandler);
+      // Get selected files from file handler
+      const selectedFiles = fileHandler.getFiles();
+      
+      // Submit the complaint using the correct parameters
+      await handleComplaintSubmit(form, selectedFiles);
     } catch (error) {
       console.error('Error submitting complaint:', error);
       showMessage('error', 'Failed to submit complaint');

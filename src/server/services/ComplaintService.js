@@ -13,8 +13,10 @@ class ComplaintService {
   }
 
   async createComplaint(userId, complaintData, files = []) {
-    // Parse departments if it's a JSON string
+    // Parse departments - handle both array and individual values
     let departments = complaintData.departments || complaintData.department_r || [];
+    
+    // If departments is a string, try to parse as JSON
     if (typeof departments === 'string') {
       try {
         departments = JSON.parse(departments);
@@ -22,6 +24,11 @@ class ComplaintService {
         console.warn('[COMPLAINT] Failed to parse departments JSON:', e);
         departments = [];
       }
+    }
+    
+    // If departments is not an array, convert it to array
+    if (!Array.isArray(departments)) {
+      departments = [departments].filter(Boolean);
     }
 
     // console.log removed for security

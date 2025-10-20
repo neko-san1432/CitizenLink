@@ -41,7 +41,10 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
         if (key === 'departments' && Array.isArray(value)) {
-          apiFormData.append(key, JSON.stringify(value));
+          // Handle departments array - append each department ID separately
+          value.forEach(deptId => {
+            apiFormData.append('departments', deptId);
+          });
         } else {
           apiFormData.append(key, String(value));
         }
