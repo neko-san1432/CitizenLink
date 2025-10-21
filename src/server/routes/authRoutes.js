@@ -295,11 +295,12 @@ router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) 
       });
     }
 
-    // Update session cookie
+    // Update session cookie with proper expiration
     res.cookie('sb_access_token', data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.json({

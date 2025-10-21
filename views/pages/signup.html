@@ -153,8 +153,8 @@
                                     <input type="checkbox" id="terms-checkbox" required>
                                     <span class="checkbox-custom"></span>
                                     <span class="checkbox-label">
-                                I agree to the <a href="#" id="toc" class="terms-link" data-open-modal="terms-modal">Terms and Conditions</a> 
-                                and <a href="#" id="pc" class="terms-link" data-open-modal="privacy-modal">Privacy Policy</a>
+                                I agree to the <a href="#" class="terms-link" data-open-terms>Terms and Conditions</a> 
+                                and <a href="#" class="terms-link" data-open-privacy>Privacy Policy</a>
                                     </span>
                                 </label>
                             </div>
@@ -214,40 +214,75 @@
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/signup-page.js"></script>
 
-    <!-- Terms & Conditions Modal -->
-    <div id="terms-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="terms-modal-title" aria-modal="true" style="display:none;">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <h3 id="terms-modal-title">Terms and Conditions</h3>
-                <button class="modal-close" data-close-modal>×</button>
+    <!-- Simple Modal HTML -->
+    <div id="termsModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Terms and Conditions</h3>
+                <button class="modal-close" data-modal="termsModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
             </div>
-            <div class="modal-body">
-                <p>By creating an account, you agree to use CitizenLink responsibly and to provide accurate information. You consent to our use of your data for the purpose of processing complaints and improving services. You agree not to submit unlawful, harmful, or misleading content. Violation may lead to account restriction or termination.</p>
-                <p>These terms may be updated from time to time. Continued use constitutes acceptance of updated terms.</p>
+            <div class="modal-body" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
+                <h4>By using CitizenLink, you agree to the following terms:</h4>
+                <ul>
+                    <li>Provide accurate information when filing complaints</li>
+                    <li>Use the platform responsibly and lawfully</li>
+                    <li>Respect other users and government officials</li>
+                    <li>Do not submit false or malicious reports</li>
+                    <li>Maintain the confidentiality of your account credentials</li>
+                    <li>Report any security concerns immediately</li>
+                </ul>
+                <p><strong>These terms may be updated periodically. Continued use constitutes acceptance of changes.</strong></p>
             </div>
-            <div class="modal-footer">
-                <button class="btn" data-close-modal>Close</button>
-                <button class="btn btn-primary" data-accept-terms>Accept</button>
+            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" data-modal="termsModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                <button class="btn btn-primary" data-accept="terms" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
             </div>
         </div>
     </div>
 
-    <!-- Privacy Policy Modal -->
-    <div id="privacy-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="privacy-modal-title" aria-modal="true" style="display:none;">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <h3 id="privacy-modal-title">Privacy Policy</h3>
-                <button class="modal-close" data-close-modal>×</button>
+    <div id="privacyModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Privacy Policy</h3>
+                <button class="modal-close" data-modal="privacyModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
             </div>
-            <div class="modal-body">
-                <p>We collect your name, email, phone number, and complaint details to verify your identity and process your submissions. We may share necessary information with relevant departments to resolve complaints. We do not sell your personal data. You can request access, correction, or deletion where applicable.</p>
-                <p>Security measures are in place to protect your data. For questions, contact our support channel.</p>
+            <div class="modal-body" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
+                <h4>We are committed to protecting your privacy:</h4>
+                
+                <h5>Information We Collect</h5>
+                <ul>
+                    <li>Personal information (name, email, phone number) for account verification</li>
+                    <li>Complaint details and supporting documents</li>
+                    <li>Usage data to improve our services</li>
+                    <li>Location data when relevant to your complaints</li>
+                </ul>
+
+                <h5>How We Use Your Information</h5>
+                <ul>
+                    <li>Process and track your complaints</li>
+                    <li>Communicate with you about your submissions</li>
+                    <li>Share necessary information with relevant government departments</li>
+                    <li>Improve our platform and services</li>
+                    <li>Ensure platform security and prevent abuse</li>
+                </ul>
+
+                <h5>Data Protection</h5>
+                <ul>
+                    <li>We use secure encryption for data protection</li>
+                    <li>Access to your data is restricted to authorized personnel</li>
+                    <li>We do not sell your personal data to third parties</li>
+                    <li>You may request access, correction, or deletion of your data</li>
+                </ul>
+
+                <p><strong>Contact us for privacy-related concerns or data requests.</strong></p>
             </div>
-            <div class="modal-footer">
-                <button class="btn" data-close-modal>Close</button>
-                <button class="btn btn-primary" data-accept-privacy>Accept</button>
+            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" data-modal="privacyModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                <button class="btn btn-primary" data-accept="privacy" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
             </div>
         </div>
     </div>
+
+    <script src="/js/signup-modal.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 @import url('/css/toast.css');
 @import url('/css/header-redesign.css');
 @import url('/css/pages/dashboard-redesign.css');
+@import url('/css/components/modal.css');
 :root {
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;

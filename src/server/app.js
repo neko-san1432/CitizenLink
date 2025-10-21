@@ -68,12 +68,9 @@ class CitizenLinkApp {
         const cookieOptions = {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
+          sameSite: 'lax',
+          maxAge: remember ? 180 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000 // 180 days if remember, 7 days default
         };
-        if (remember) {
-          // 180 days persistent session
-          cookieOptions.maxAge = 180 * 24 * 60 * 60 * 1000; // ms
-        }
         res.cookie('sb_access_token', token, cookieOptions);
         return res.json({ success: true });
       } catch (e) {
@@ -87,6 +84,32 @@ class CitizenLinkApp {
         return res.json({ success: true });
       } catch (e) {
         return res.status(500).json({ success: false, error: 'Failed to clear session' });
+      }
+    });
+
+    // Session health check endpoint
+    this.app.get('/auth/session/health', (req, res) => {
+      try {
+        const token = req.cookies?.sb_access_token;
+        if (!token) {
+          return res.status(401).json({ 
+            success: false, 
+            error: 'No session token found',
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        return res.json({ 
+          success: true, 
+          message: 'Session is valid',
+          timestamp: new Date().toISOString()
+        });
+      } catch (e) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Session health check failed',
+          timestamp: new Date().toISOString()
+        });
       }
     });
 

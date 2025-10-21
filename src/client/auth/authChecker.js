@@ -125,14 +125,37 @@ export const validateAndRefreshToken = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error || !session) {
-      // console.log removed for security
+      console.log('No valid session found:', error?.message || 'No session');
       return false;
     }
 
-    // Session expiration checks removed - sessions will persist indefinitely
-
-    // console.log removed for security
-
+    // Check if session is expired
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = session.expires_at;
+    
+    if (expiresAt && now >= expiresAt) {
+      console.log('Session expired, attempting refresh...');
+      
+      // Try to refresh the session
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshData.session) {
+        console.log('Session refresh failed:', refreshError?.message);
+        return false;
+      }
+      
+      // Update server cookie with new token
+      try {
+        await fetch('/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: refreshData.session.access_token })
+        });
+        console.log('Session refreshed successfully');
+      } catch (cookieError) {
+        console.error('Failed to update server cookie:', cookieError);
+      }
+    }
 
     return true;
   } catch (error) {
@@ -206,15 +229,39 @@ export const startTokenExpiryMonitoring = () => {
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error || !session) {
-        // No session yet; recheck soon instead of immediate logout
-        tokenExpiryTimer = setTimeout(checkTokenExpiry, 3000);
+        console.log('No session found during monitoring, checking again in 5 seconds...');
+        tokenExpiryTimer = setTimeout(checkTokenExpiry, 5000);
         return;
       }
 
-      // Debug: Log session structure to see available properties
-      // console.log removed for security
-
-      // Session expiration checks removed - sessions will persist indefinitely
+      // Check if session is expired
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = session.expires_at;
+      
+      if (expiresAt && now >= expiresAt) {
+        console.log('Session expired during monitoring, attempting refresh...');
+        
+        // Try to refresh the session
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.log('Session refresh failed during monitoring:', refreshError?.message);
+          handleSessionExpired();
+          return;
+        }
+        
+        // Update server cookie with new token
+        try {
+          await fetch('/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: refreshData.session.access_token })
+          });
+          console.log('Session refreshed successfully during monitoring');
+        } catch (cookieError) {
+          console.error('Failed to update server cookie during monitoring:', cookieError);
+        }
+      }
 
       // Set timer for next check (check every 30 seconds)
       tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000);

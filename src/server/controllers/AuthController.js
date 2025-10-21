@@ -158,12 +158,15 @@ class AuthController {
       const userAgent = req.get('User-Agent');
       await UserService.trackLogin(userId, ipAddress, userAgent);
 
-      // Set session cookie
-      res.cookie('sb_access_token', authData.session.access_token, {
+      // Set session cookie with proper expiration
+      const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      };
+      
+      res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
 
       res.json({
         success: true,
