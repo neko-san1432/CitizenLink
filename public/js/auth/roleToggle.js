@@ -203,14 +203,10 @@ export async function initializeRoleToggle() {
     const isInCitizenMode = userRole === 'citizen';
     const isStaff = userRole !== 'citizen'; // Any role that is not citizen is considered staff
     
-    // Show button for all users (including pure citizens)
-    // This allows citizens to see the role switcher for testing purposes
-    // If you want to hide it for pure citizens, uncomment the next block:
-    /*
+    // Hide role switcher for pure citizens (base_role is 'citizen')
     if (userRole === 'citizen' && (!baseRole || baseRole === 'citizen')) {
       return;
     }
-    */
 
     // Add button to header with current role and base role
     addButtonToHeader(userRole, baseRole);

@@ -189,19 +189,24 @@ function getMenuItemsForRole(role) {
       { url: '/admin/appoint-admins', icon: 'appointAdmins', label: 'Appoint Admins' },
       { url: '/admin/departments', icon: 'departments', label: 'Departments' },
       { url: '/admin/role-changer', icon: 'role-changer', label: 'Role Changer' },
-      { url: '/admin/settings', icon: 'settings', label: 'Settings' }
+      { url: '/admin/settings', icon: 'settings', label: 'Settings' },
+      { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'lgu-hr': [
       { url: '/hr/link-generator', icon: 'link-generator', label: 'Link Generator' },
-      { url: '/hr/role-changer', icon: 'role-changer', label: 'Role Changer' }
+      { url: '/hr/role-changer', icon: 'role-changer', label: 'Role Changer' },
+      { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'complaint-coordinator': [
       { url: '/coordinator/review-queue', icon: 'review-queue', label: 'Review Queue' },
-      { url: '/coordinator/assignments', icon: 'assignments', label: 'Assignments' }
+      { url: '/coordinator/assignments', icon: 'assignments', label: 'Assignments' },
+      { url: '/coordinator/heatmap', icon: 'heatmap', label: 'Heatmap' },
+      { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'lgu-admin': [
       { url: '/lgu-admin/heatmap', icon: 'heatmap', label: 'Heatmap' },
-      { url: '/lgu-admin/publish', icon: 'publish', label: 'Publish' }
+      { url: '/lgu-admin/publish', icon: 'publish', label: 'Publish' },
+      { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ]
   };
   
@@ -216,7 +221,8 @@ function getMenuItemsForRole(role) {
   
   if (role === 'lgu') {
     return [
-      { url: '/lgu-officer/task-assigned', icon: 'taskAssigned', label: 'Task Assigned' }
+      { url: '/lgu-officer/task-assigned', icon: 'taskAssigned', label: 'Task Assigned' },
+      { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ];
   }
   

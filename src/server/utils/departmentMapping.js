@@ -35,7 +35,12 @@ async function getDepartments() {
       `)
       .eq('is_active', true);
 
-    if (error) throw error;
+    if (error) {
+      console.error('[DEPARTMENT_MAPPING] Database error:', error);
+      throw error;
+    }
+
+    console.log('[DEPARTMENT_MAPPING] Raw database data:', data);
 
     // Process the departments data directly
     const departments = [];
@@ -50,6 +55,8 @@ async function getDepartments() {
         });
       });
     }
+
+    console.log('[DEPARTMENT_MAPPING] Processed departments:', departments);
 
     // Cache the result
     departmentCache = departments;
@@ -242,12 +249,36 @@ module.exports = {
     const input = Array.from(new Set((codes || []).filter(Boolean)));
     if (input.length === 0) return { validCodes: [], invalidCodes: [] };
     const departments = await getDepartments();
+    
+    // Debug logging
+    console.log('[DEPARTMENT_VALIDATION] Input codes:', input);
+    console.log('[DEPARTMENT_VALIDATION] Available departments:', departments.map(d => d.code));
+    
+    // If no departments found in database, use hardcoded fallback
     const validSet = new Set(departments.map(d => d.code));
+    if (validSet.size === 0) {
+      console.log('[DEPARTMENT_VALIDATION] No departments in database, using hardcoded fallback');
+      const hardcodedCodes = ['CEO', 'GSO', 'CPDC', 'CHO', 'CSWDO', 'CDRRMO', 'ENRO'];
+      const hardcodedSet = new Set(hardcodedCodes);
+      const validCodes = [];
+      const invalidCodes = [];
+      for (const c of input) {
+        if (hardcodedSet.has(c)) validCodes.push(c); else invalidCodes.push(c);
+      }
+      console.log('[DEPARTMENT_VALIDATION] Hardcoded validation - Valid codes:', validCodes);
+      console.log('[DEPARTMENT_VALIDATION] Hardcoded validation - Invalid codes:', invalidCodes);
+      return { validCodes, invalidCodes };
+    }
+    
     const validCodes = [];
     const invalidCodes = [];
     for (const c of input) {
       if (validSet.has(c)) validCodes.push(c); else invalidCodes.push(c);
     }
+    
+    console.log('[DEPARTMENT_VALIDATION] Valid codes:', validCodes);
+    console.log('[DEPARTMENT_VALIDATION] Invalid codes:', invalidCodes);
+    
     return { validCodes, invalidCodes };
   }
 };

@@ -411,7 +411,7 @@ class ComplaintService {
 
     let query = this.complaintRepo.supabase
       .from('complaints')
-      .select('workflow_status, type, priority, submitted_at');
+      .select('workflow_status, subtype, priority, submitted_at');
 
     if (department) {
       query = query.contains('department_r', [department]);
@@ -431,13 +431,14 @@ class ComplaintService {
     const stats = {
       total: data.length,
       by_status: {},
-      by_type: {},
+      by_subtype: {},
       by_priority: {},
       by_month: {}
     };
 
     data.forEach(complaint => {
       stats.by_status[complaint.workflow_status] = (stats.by_status[complaint.workflow_status] || 0) + 1;
+      stats.by_subtype[complaint.subtype] = (stats.by_subtype[complaint.subtype] || 0) + 1;
       stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
 
       const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
