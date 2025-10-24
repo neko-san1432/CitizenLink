@@ -3,19 +3,17 @@ class Complaint {
     this.id = data.id;
     this.submitted_by = data.submitted_by;
     this.title = data.title;
-    this.type = data.type;
-    this.subtype = data.subtype;
     this.descriptive_su = data.descriptive_su;
     this.location_text = data.location_text;
     this.latitude = data.latitude;
     this.longitude = data.longitude;
     this.department_r = data.department_r || [];
-    this.status = data.status || 'pending review';
     this.workflow_status = data.workflow_status || 'new';
     this.priority = data.priority || 'low';
-    this.evidence = data.evidence || [];
-    this.primary_department = data.primary_department;
-    this.secondary_departments = data.secondary_departments || [];
+    // Evidence is now handled separately - not stored in complaints table
+    // this.evidence = data.evidence || [];
+    // this.primary_department = data.primary_department; // Removed - derived from department_r
+    // this.secondary_departments = data.secondary_departments || []; // Removed - derived from department_r
     this.assigned_coordinator_id = data.assigned_coordinator_id;
     this.response_deadline = data.response_deadline;
     this.citizen_satisfaction_rating = data.citizen_satisfaction_rating;
@@ -76,19 +74,16 @@ class Complaint {
     return {
       submitted_by: this.submitted_by,
       title: this.title?.trim(),
-      type: this.type || null,
-      subtype: this.subtype || null,
       descriptive_su: this.descriptive_su?.trim(),
       location_text: this.location_text?.trim(),
       latitude: this.latitude ? parseFloat(this.latitude) : null,
       longitude: this.longitude ? parseFloat(this.longitude) : null,
       department_r: Array.isArray(this.department_r) ? this.department_r : [],
-      status: this.status || 'pending review',
       workflow_status: this.workflow_status || 'new',
       priority: this.priority || 'low',
-      evidence: this.evidence || [],
-      primary_department: this.primary_department || null,
-      secondary_departments: this.secondary_departments || [],
+      // evidence: this.evidence || [], // Evidence handled separately
+      // primary_department: this.primary_department || null, // Removed - derived from department_r
+      // secondary_departments: this.secondary_departments || [], // Removed - derived from department_r
       assigned_coordinator_id: this.assigned_coordinator_id || null,
       response_deadline: this.response_deadline || null,
       submitted_at: this.submitted_at || new Date().toISOString()
@@ -100,19 +95,16 @@ class Complaint {
       id: this.id,
       submitted_by: this.submitted_by,
       title: this.title,
-      type: this.type,
-      subtype: this.subtype,
       descriptive_su: this.descriptive_su,
       location_text: this.location_text,
       latitude: this.latitude,
       longitude: this.longitude,
       department_r: this.department_r,
-      status: this.status,
       workflow_status: this.workflow_status,
       priority: this.priority,
-      evidence: this.evidence,
-      primary_department: this.primary_department,
-      secondary_departments: this.secondary_departments,
+      // evidence: this.evidence, // Evidence handled separately
+      // primary_department: this.primary_department, // Removed - derived from department_r
+      // secondary_departments: this.secondary_departments, // Removed - derived from department_r
       assigned_coordinator_id: this.assigned_coordinator_id,
       response_deadline: this.response_deadline,
       citizen_satisfaction_rating: this.citizen_satisfaction_rating,

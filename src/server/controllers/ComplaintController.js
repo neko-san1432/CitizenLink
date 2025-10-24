@@ -28,9 +28,9 @@ class ComplaintController {
         message: 'Complaint submitted successfully'
       };
 
-      if (complaint.primary_department || complaint.assigned_coordinator_id) {
+      if (complaint.department_r && complaint.department_r.length > 0 || complaint.assigned_coordinator_id) {
         response.workflow = {
-          auto_assigned: !!complaint.primary_department,
+          auto_assigned: !!(complaint.department_r && complaint.department_r.length > 0),
           coordinator_assigned: !!complaint.assigned_coordinator_id,
           workflow_status: complaint.workflow_status
         };

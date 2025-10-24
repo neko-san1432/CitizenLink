@@ -33,7 +33,7 @@ class ComplaintRepository {
   }
 
   async findByUserId(userId, options = {}) {
-    const { page = 1, limit = 10, status, type } = options;
+    const { page = 1, limit = 10, status } = options;
     const offset = (page - 1) * limit;
 
     let query = this.supabase
@@ -65,18 +65,12 @@ class ComplaintRepository {
   }
 
   async findAll(options = {}) {
-    const { page = 1, limit = 20, status, type, department, search } = options;
+    const { page = 1, limit = 20, status, department, search } = options;
     const offset = (page - 1) * limit;
 
     let query = this.supabase
       .from('complaints')
-      .select(`
-        *,
-        submitted_by_profile:submitted_by (
-          email,
-          raw_user_meta_data
-        )
-      `)
+      .select('*')
       .order('submitted_at', { ascending: false });
 
     if (status) {
@@ -141,16 +135,40 @@ class ComplaintRepository {
     return new Complaint(data);
   }
 
-  async updateEvidence(id, evidence) {
-    const { data, error } = await this.supabase
-      .from('complaints')
-      .update({ evidence })
-      .eq('id', id)
-      .select()
-      .single();
+  async updateEvidence(id, evidence, userId = null) {
+    // Store evidence files in the complaint_evidence table
+    if (!evidence || evidence.length === 0) {
+      return { success: true };
+    }
 
-    if (error) throw error;
-    return new Complaint(data);
+    try {
+      const evidenceRecords = evidence.map(file => ({
+        complaint_id: id,
+        file_name: file.fileName,
+        file_path: file.filePath,
+        file_size: file.fileSize,
+        file_type: file.fileType,
+        mime_type: file.fileType,
+        uploaded_by: userId,
+        is_public: false
+        // Removed description, tags, metadata as they don't exist in the table schema
+      }));
+
+      const { data, error } = await this.supabase
+        .from('complaint_evidence')
+        .insert(evidenceRecords)
+        .select();
+
+      if (error) {
+        console.error('[COMPLAINT_REPO] Evidence storage error:', error);
+        throw error;
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Evidence update failed:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   async assignCoordinator(id, coordinatorId) {

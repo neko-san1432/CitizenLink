@@ -46,10 +46,11 @@ class LguAdminController {
         .select(`
           id, title, description, submitted_at, submitted_by, 
           status, priority, type, subtype, location_text,
-          primary_department, secondary_departments, preferred_departments,
+          // primary_department, secondary_departments, // Removed - derived from department_r
+          preferred_departments,
           last_activity_at, created_at
         `)
-        .or(`primary_department.eq.${departmentCode},secondary_departments.cs.{${departmentCode}}`)
+        .or(`department_r.cs.{${departmentCode}}`)
         .order('submitted_at', { ascending: false });
 
       // Apply filters
@@ -257,8 +258,8 @@ class LguAdminController {
       // Step 1: Get all complaints for this department with filters
       let query = supabase
         .from('complaints')
-        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, primary_department, workflow_status, subtype, priority')
-        .eq('primary_department', departmentCode)
+        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, subtype, priority')
+        .contains('department_r', [departmentCode])
         .order('submitted_at', { ascending: false });
 
       // Apply status filter
@@ -544,7 +545,7 @@ class LguAdminController {
             complaint_id: complaintId,
             assigned_to: officerId,
             assigned_by: userId,
-            department_id: null, // Department is tracked via complaint.primary_department
+            department_id: null, // Department is tracked via complaint.department_r
             priority: priority || 'medium',
             deadline: deadline || null,
             notes: notes || null,

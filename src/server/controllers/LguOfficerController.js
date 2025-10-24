@@ -38,8 +38,8 @@ class LguOfficerController {
             priority,
             submitted_at,
             location_text,
-            primary_department,
-            secondary_departments,
+            // primary_department, // Removed - derived from department_r
+            // secondary_departments, // Removed - derived from department_r
             last_activity_at
           )
         `)
@@ -96,8 +96,8 @@ class LguOfficerController {
             priority: assignment.priority,
             submitted_at: assignment.created_at,
             location_text: 'Location not available',
-            primary_department: 'Unknown',
-            secondary_departments: [],
+            // primary_department: 'Unknown', // Removed - derived from department_r
+            // secondary_departments: [], // Removed - derived from department_r
             last_activity_at: assignment.updated_at
           }
         }));
@@ -142,7 +142,7 @@ class LguOfficerController {
   async markAsResolved(req, res) {
     try {
       const { complaintId } = req.params;
-      const { resolution_notes, evidence } = req.body;
+      const { resolution_notes } = req.body; // evidence field removed
       const userId = req.user.id;
 
       if (!resolution_notes) {
@@ -259,7 +259,7 @@ class LguOfficerController {
             status,
             submitted_at,
             location,
-            primary_department
+            // primary_department // Removed - derived from department_r
           )
         `)
         .eq('assigned_to', userId)
@@ -290,7 +290,7 @@ class LguOfficerController {
             complaint_id: assignment.complaint_id,
             complaint_title: assignment.complaints?.title || 'Untitled',
             complaint_description: assignment.complaints?.descriptive_su || '',
-            complaint_type: assignment.complaints?.type || '',
+            complaint_type: 'complaint', // Default type since type field doesn't exist
             complaint_status: assignment.complaints?.workflow_status || '',
             complaint_location: assignment.complaints?.location || '',
             complaint_submitted_at: assignment.complaints?.submitted_at,

@@ -239,7 +239,7 @@ class CoordinatorRepository {
   async assignToDepartment(complaintId, departmentName, coordinatorId, options = {}) {
     try {
       const updateData = {
-        primary_department: departmentName,
+        // primary_department: departmentName, // Removed - derived from department_r
         status: 'in progress',
         workflow_status: 'assigned',
         updated_at: new Date().toISOString()
@@ -288,7 +288,7 @@ class CoordinatorRepository {
       const { data, error } = await this.supabase
         .from('complaints')
         .update({
-          primary_department: departmentName,
+          // primary_department: departmentName, // Removed - derived from department_r
           status: 'in progress',
           workflow_status: 'assigned',
           updated_at: new Date().toISOString()

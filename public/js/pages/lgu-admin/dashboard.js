@@ -1,4 +1,4 @@
-import { apiClient } from '../../config/apiClient.js';
+import apiClient from '../../config/apiClient.js';
 import { showToast } from '../../components/toast.js';
 
 async function fetchComplaintStats() {

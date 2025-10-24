@@ -14,20 +14,20 @@ class ComplaintService {
   }
 
   async createComplaint(userId, complaintData, files = []) {
-    // Parse departments - handle both array and individual values
-    let departments = complaintData.departments || complaintData.department_r || [];
+    // Parse department_r - handle both array and individual values
+    let departments = complaintData.department_r || [];
     
-    // If departments is a string, try to parse as JSON
+    // If department_r is a string, try to parse as JSON
     if (typeof departments === 'string') {
       try {
         departments = JSON.parse(departments);
       } catch (e) {
-        console.warn('[COMPLAINT] Failed to parse departments JSON:', e);
+        console.warn('[COMPLAINT] Failed to parse department_r JSON:', e);
         departments = [];
       }
     }
     
-    // If departments is not an array, convert it to array
+    // If department_r is not an array, convert it to array
     if (!Array.isArray(departments)) {
       departments = [departments].filter(Boolean);
     }
@@ -49,6 +49,9 @@ class ComplaintService {
     // Prepare data for insertion using utility functions
     const preparedData = prepareComplaintForInsert(mappedData);
     
+    // Debug: Log what fields are being sent to database
+    console.log('[COMPLAINT_SERVICE] Fields being sent to database:', Object.keys(preparedData));
+    
     // Validate data consistency
     const consistencyCheck = validateComplaintConsistency(preparedData);
     if (!consistencyCheck.isValid) {
@@ -69,7 +72,7 @@ class ComplaintService {
 
     try {
       await this._processWorkflow(createdComplaint, departments);
-      await this._processFileUploads(createdComplaint.id, files);
+      await this._processFileUploads(createdComplaint.id, files, userId);
 
       // Send notification to citizen
       try {
@@ -95,8 +98,8 @@ class ComplaintService {
     if (departmentArray.length > 0) {
       try {
         await this.complaintRepo.update(complaint.id, {
-          primary_department: departmentArray[0],
-          secondary_departments: departmentArray.slice(1),
+          // primary_department: departmentArray[0], // Removed - derived from department_r
+          // secondary_departments: departmentArray.slice(1), // Removed - derived from department_r
           updated_at: new Date().toISOString()
         });
         // console.log removed for security
@@ -131,19 +134,18 @@ class ComplaintService {
       }
     }
 
-    if (complaint.type) {
-      try {
-        const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
-        if (autoAssignResult && autoAssignResult.length > 0) {
-          // console.log removed for security
-        }
-      } catch (error) {
-        console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
+    // Auto-assignment based on complaint content (type field removed)
+    try {
+      const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
+      if (autoAssignResult && autoAssignResult.length > 0) {
+        // console.log removed for security
       }
+    } catch (error) {
+      console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
     }
 
-    if (complaint.primary_department || departmentArray.length > 0) {
-      const targetDept = complaint.primary_department || departmentArray[0];
+    if (departmentArray.length > 0) {
+      const targetDept = departmentArray[0];
       try {
         const coordinator = await this.complaintRepo.findActiveCoordinator(targetDept);
         if (coordinator) {
@@ -164,7 +166,6 @@ class ComplaintService {
         reason: 'Complaint submitted by citizen',
         details: {
           title: complaint.title,
-          type: complaint.type,
           departments: departmentArray,
           has_evidence: false
         }
@@ -174,18 +175,22 @@ class ComplaintService {
     }
   }
 
-  async _processFileUploads(complaintId, files) {
-    if (!files || files.length === 0) return [];
+  async _processFileUploads(complaintId, files, userId = null) {
+    if (!files || files.length === 0) {
+      return [];
+    }
 
     const evidenceFiles = [];
     for (const file of files) {
       try {
         const fileName = `${complaintId}/${Date.now()}-${file.originalname}`;
 
+        // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await this.complaintRepo.supabase.storage
           .from('complaint-evidence')
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
+            cacheControl: '3600',
             upsert: false
           });
 
@@ -200,7 +205,7 @@ class ComplaintService {
 
         evidenceFiles.push({
           fileName: file.originalname,
-          filePath: fileName,
+          filePath: uploadData.path,
           fileType: file.mimetype,
           fileSize: file.size,
           publicUrl: publicUrl
@@ -213,14 +218,14 @@ class ComplaintService {
     }
 
     if (evidenceFiles.length > 0) {
-      await this.complaintRepo.updateEvidence(complaintId, evidenceFiles);
+      await this.complaintRepo.updateEvidence(complaintId, evidenceFiles, userId);
     }
 
     return evidenceFiles;
   }
 
-  async addEvidence(complaintId, files) {
-    return this._processFileUploads(complaintId, files);
+  async addEvidence(complaintId, files, userId = null) {
+    return this._processFileUploads(complaintId, files, userId);
   }
 
   async getComplaintById(id, userId = null) {
@@ -367,7 +372,7 @@ class ComplaintService {
     const complaint = await this.getComplaintById(complaintId);
 
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
-      primary_department: toDept,
+      // primary_department: toDept, // Removed - derived from department_r
       assigned_coordinator_id: null
     });
 
@@ -428,7 +433,6 @@ class ComplaintService {
 
     data.forEach(complaint => {
       stats.by_status[complaint.workflow_status] = (stats.by_status[complaint.workflow_status] || 0) + 1;
-      stats.by_type[complaint.type] = (stats.by_type[complaint.type] || 0) + 1;
       stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
 
       const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
@@ -455,7 +459,7 @@ class ComplaintService {
     try {
       let query = this.complaintRepo.supabase
         .from('complaints')
-        .select('id, title, type, workflow_status, priority, latitude, longitude, location_text, submitted_at, primary_department, secondary_departments, department_r')
+        .select('id, title, type, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
@@ -517,16 +521,15 @@ class ComplaintService {
       const transformedData = data.map(complaint => ({
         id: complaint.id,
         title: complaint.title,
-        type: complaint.type,
         status: complaint.workflow_status,
         priority: complaint.priority,
         lat: parseFloat(complaint.latitude),
         lng: parseFloat(complaint.longitude),
         location: complaint.location_text,
         submittedAt: complaint.submitted_at,
-        department: complaint.primary_department,
+        department: complaint.department_r && complaint.department_r.length > 0 ? complaint.department_r[0] : 'Unknown',
         departments: complaint.department_r || [],
-        secondaryDepartments: complaint.secondary_departments || []
+        secondaryDepartments: complaint.department_r && complaint.department_r.length > 1 ? complaint.department_r.slice(1) : []
       }));
 
       // console.log removed for security
@@ -563,7 +566,6 @@ class ComplaintService {
       const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
         .from('complaints')
         .update({
-          status: 'cancelled',
           workflow_status: 'cancelled',
           cancelled_at: new Date().toISOString(),
           cancelled_by: userId,
@@ -780,7 +782,6 @@ class ComplaintService {
       const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
         .from('complaints')
         .update({
-          status: newStatus,
           workflow_status: newWorkflowStatus,
           confirmed_by_citizen: confirmed,
           citizen_confirmation_date: confirmed ? new Date().toISOString() : null,

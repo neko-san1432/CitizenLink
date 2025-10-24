@@ -74,10 +74,10 @@ function normalizeComplaintData(complaint) {
   
   // Derive primary and secondary departments from department_r
   normalized.primary_department = getPrimaryDepartment(complaint.department_r);
-  normalized.secondary_departments = getSecondaryDepartments(complaint.department_r);
+  // normalized.secondary_departments = getSecondaryDepartments(complaint.department_r); // Removed - derived from department_r
   
-  // Derive status from workflow_status
-  normalized.status = getStatusFromWorkflow(complaint.workflow_status);
+  // Derive status from workflow_status - removed as status field doesn't exist in database
+  // normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   
   // Ensure department_r is properly formatted
   if (!Array.isArray(normalized.department_r)) {
@@ -87,9 +87,9 @@ function normalizeComplaintData(complaint) {
   // If we have primary_department but no department_r, populate it
   if (complaint.primary_department && normalized.department_r.length === 0) {
     normalized.department_r = [complaint.primary_department];
-    if (complaint.secondary_departments && Array.isArray(complaint.secondary_departments)) {
-      normalized.department_r.push(...complaint.secondary_departments);
-    }
+    // if (complaint.secondary_departments && Array.isArray(complaint.secondary_departments)) {
+    //   normalized.department_r.push(...complaint.secondary_departments);
+    // }
   }
   
   return normalized;
@@ -111,9 +111,9 @@ function prepareComplaintForInsert(complaintData) {
   // Ensure department_r is populated from primary_department and secondary_departments
   if (complaintData.primary_department && (!complaintData.department_r || complaintData.department_r.length === 0)) {
     prepared.department_r = [complaintData.primary_department];
-    if (complaintData.secondary_departments && Array.isArray(complaintData.secondary_departments)) {
-      prepared.department_r.push(...complaintData.secondary_departments);
-    }
+    // if (complaintData.secondary_departments && Array.isArray(complaintData.secondary_departments)) {
+    //   prepared.department_r.push(...complaintData.secondary_departments);
+    // }
   }
   
   // Remove redundant fields that will be derived
@@ -122,6 +122,9 @@ function prepareComplaintForInsert(complaintData) {
   delete prepared.status;
   delete prepared.type; // Remove type field - not in current schema
   delete prepared.subtype; // Remove subtype field - not in current schema
+  delete prepared.evidence; // Remove evidence field - handled separately
+  delete prepared.categoryId; // Remove categoryId field - not in current schema
+  delete prepared.subcategoryId; // Remove subcategoryId field - not in current schema
   
   return prepared;
 }
@@ -195,14 +198,14 @@ function validateComplaintConsistency(complaint) {
   }
   
   // Check if secondary_departments match department_r[1:]
-  if (complaint.secondary_departments && complaint.department_r && Array.isArray(complaint.department_r)) {
-    const expectedSecondary = complaint.department_r.slice(1);
-    const actualSecondary = Array.isArray(complaint.secondary_departments) ? complaint.secondary_departments : [];
-    
-    if (JSON.stringify(expectedSecondary.sort()) !== JSON.stringify(actualSecondary.sort())) {
-      errors.push(`Secondary departments don't match department_r[1:]`);
-    }
-  }
+  // if (complaint.secondary_departments && complaint.department_r && Array.isArray(complaint.department_r)) {
+  //   const expectedSecondary = complaint.department_r.slice(1);
+  //   const actualSecondary = Array.isArray(complaint.secondary_departments) ? complaint.secondary_departments : [];
+  //   
+  //   if (JSON.stringify(expectedSecondary.sort()) !== JSON.stringify(actualSecondary.sort())) {
+  //     errors.push(`Secondary departments don't match department_r[1:]`);
+  //   }
+  // }
   
   return {
     isValid: errors.length === 0,

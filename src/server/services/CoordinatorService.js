@@ -519,8 +519,8 @@ class CoordinatorService {
       const { data: updated, error: updErr } = await this.coordinatorRepo.supabase
         .from('complaints')
         .update({
-          primary_department: primary,
-          secondary_departments: secondary,
+          // primary_department: primary, // Removed - derived from department_r
+          // secondary_departments: secondary, // Removed - derived from department_r
           status: 'in progress',
           workflow_status: 'assigned',
           priority: options.priority || undefined,
