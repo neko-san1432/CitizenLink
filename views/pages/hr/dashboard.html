@@ -15,8 +15,9 @@
     <link rel="stylesheet" href="../../css/header-redesign.css">
     <link rel="stylesheet" href="../../css/pages/dashboard-common.css">
     <link rel="stylesheet" href="../../css/pages/hr-dashboard.css">
+    <link rel="stylesheet" href="../../css/viewport-fix.css">
     <style>
-        .department-stats-grid {
+        .office-stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
@@ -83,7 +84,7 @@
                     </button>
                     <button class="quick-action-btn" onclick="assignDepartment()">
                         <div class="quick-action-icon">🏢</div>
-                        <div class="quick-action-text">Assign Department</div>
+                        <div class="quick-action-text">Assign Office</div>
                     </button>
                     <button class="quick-action-btn" onclick="viewRoleHistory()">
                         <div class="quick-action-icon">📜</div>
@@ -142,11 +143,11 @@
 
             <!-- Department Statistics -->
             <div class="section-header">
-                <h2 class="section-title">Department Breakdown</h2>
+                <h2 class="section-title">Office Breakdown</h2>
             </div>
-            <div id="department-stats" class="department-stats-grid">
+            <div id="department-stats" class="office-stats-grid">
                 <div class="loading-placeholder">
-                    <p style="color: #7f8c8d; text-align: center; padding: 20px;">Loading department statistics...</p>
+                    <p style="color: #7f8c8d; text-align: center; padding: 20px;">Loading office statistics...</p>
                 </div>
             </div>
 
@@ -166,7 +167,7 @@
                             <div class="help-text">User must be a citizen</div>
                         </div>
                         <div class="form-group">
-                            <label>Department</label>
+                            <label>Office</label>
                             <input type="text" id="promote-officer-dept" placeholder="e.g., engineering" required>
                         </div>
                         <div class="form-group">
@@ -187,7 +188,7 @@
                             <div class="help-text">User must be an LGU Officer</div>
                         </div>
                         <div class="form-group">
-                            <label>Department</label>
+                            <label>Office</label>
                             <input type="text" id="promote-admin-dept" placeholder="e.g., engineering">
                         </div>
                         <div class="form-group">
@@ -234,17 +235,17 @@
 
                 <!-- Assign Department -->
                 <div class="action-card">
-                    <h3>🏢 Assign to Department</h3>
+                    <h3>🏢 Assign to Office</h3>
                     <form id="assign-dept-form">
                         <div class="form-group">
                             <label>User ID / Email</label>
                             <input type="text" id="assign-dept-user" placeholder="Enter user ID or email" required>
                         </div>
                         <div class="form-group">
-                            <label>Department ID</label>
+                            <label>Office ID</label>
                             <input type="text" id="assign-dept-id" placeholder="e.g., engineering" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Assign Department</button>
+                        <button type="submit" class="btn btn-primary">Assign Office</button>
                     </form>
                 </div>
 

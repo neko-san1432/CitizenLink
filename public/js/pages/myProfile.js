@@ -1,5 +1,5 @@
-import { getUserRole, refreshMetaFromSession } from '../../src/client/auth/authChecker.js'
-import showMessage from '../../src/client/components/toast.js'
+import { getUserRole, refreshMetaFromSession } from '../auth/authChecker.js'
+import showMessage from '../components/toast.js'
 
 async function enforceCitizenOnly() {
   try {
@@ -63,7 +63,7 @@ function renderComplaints(list) {
           <div class="font-semibold">${c.title || c.type || 'Complaint'}</div>
           <div class="text-sm text-gray-600">Status: ${c.status || '—'} • ${submittedAt}</div>
         </div>
-        <a class="btn-secondary" href="/citizen/dashboard#complaint-${c.id}">View</a>
+        <a class="btn-secondary" href="/complaint-details?id=${c.id}">View</a>
       </div>
     `
     container.appendChild(item)

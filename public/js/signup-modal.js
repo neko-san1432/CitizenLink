@@ -1,29 +1,3 @@
-/**
- * Signup Modal JavaScript
- * External file to avoid CSP issues
- */
-
-console.log('Signup modal script loaded');
-
-// Debug: Check if modals exist in DOM
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, checking for modals...');
-    const termsModal = document.getElementById('termsModal');
-    const privacyModal = document.getElementById('privacyModal');
-    console.log('Terms modal in DOM:', !!termsModal);
-    console.log('Privacy modal in DOM:', !!privacyModal);
-    
-    if (termsModal) {
-        console.log('Terms modal current display:', termsModal.style.display);
-        console.log('Terms modal computed display:', window.getComputedStyle(termsModal).display);
-    }
-    if (privacyModal) {
-        console.log('Privacy modal current display:', privacyModal.style.display);
-        console.log('Privacy modal computed display:', window.getComputedStyle(privacyModal).display);
-    }
-});
-
-
 document.addEventListener('click', function(e) {
     console.log('Click detected on:', e.target.tagName, e.target.className, e.target.getAttribute('data-open-terms'), e.target.getAttribute('data-open-privacy'));
     
@@ -45,21 +19,15 @@ document.addEventListener('click', function(e) {
             termsModal.style.height = '100%';
             termsModal.style.zIndex = '9999999';
             termsModal.style.backgroundColor = 'rgba(0,0,0,0.5)'; // Proper dark overlay
-            // Don't change body overflow - this causes layout issues
-            // document.body.style.overflow = 'hidden';
-            console.log('Terms modal displayed');
-        } else {
-            console.error('Terms modal not found!');
-        }
+
+        } 
         return; // Important: return to prevent other handlers
     }
     
     // Check for privacy link
     if (e.target.matches('[data-open-privacy]') || e.target.closest('[data-open-privacy]')) {
-        console.log('Opening privacy modal');
         e.preventDefault();
         const privacyModal = document.getElementById('privacyModal');
-        console.log('Privacy modal found:', !!privacyModal);
         if (privacyModal) {
             privacyModal.style.display = 'block';
             privacyModal.style.visibility = 'visible';
@@ -71,29 +39,18 @@ document.addEventListener('click', function(e) {
             privacyModal.style.height = '100%';
             privacyModal.style.zIndex = '9999999';
             privacyModal.style.backgroundColor = 'rgba(0,0,0,0.5)'; // Proper dark overlay
-            // Don't change body overflow - this causes layout issues
-            // document.body.style.overflow = 'hidden';
-            console.log('Privacy modal displayed');
-        } else {
-            console.error('Privacy modal not found!');
         }
         return; // Important: return to prevent other handlers
     }
     
     if (e.target.matches('[data-modal]')) {
-        console.log('Closing modal:', e.target.getAttribute('data-modal'));
         document.getElementById(e.target.getAttribute('data-modal')).style.display = 'none';
-        // Don't restore body overflow - this causes layout issues
-        // document.body.style.overflow = 'auto';
     }
     
     if (e.target.matches('[data-accept]')) {
-        console.log('Accepting:', e.target.getAttribute('data-accept'));
         document.getElementById('terms-checkbox').checked = true;
         const modalId = e.target.getAttribute('data-accept') === 'terms' ? 'termsModal' : 'privacyModal';
         document.getElementById(modalId).style.display = 'none';
-        // Don't restore body overflow - this causes layout issues
-        // document.body.style.overflow = 'auto';
         alert('Accepted!');
     }
 });
@@ -102,8 +59,6 @@ document.addEventListener('click', function(e) {
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
-        // Don't restore body overflow - this causes layout issues
-        // document.body.style.overflow = 'auto';
     }
 };
 

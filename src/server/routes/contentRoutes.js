@@ -12,7 +12,7 @@ router.get('/news', async (req, res) => {
   try {
     const { limit = 10, offset = 0, category } = req.query;
 
-    let query = Database.supabase
+    let query = Database.getClient()
       .from('news')
       .select('*')
       .eq('status', 'published')
@@ -46,7 +46,7 @@ router.get('/news/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('news')
       .select('*')
       .eq('id', id)
@@ -99,7 +99,7 @@ router.post('/news', async (req, res) => {
       author_id: req.user?.id
     };
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('news')
       .insert([newsData])
       .select()
@@ -129,7 +129,7 @@ router.get('/events', async (req, res) => {
   try {
     const { limit = 10, offset = 0, status = 'upcoming' } = req.query;
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('events')
       .select('*')
       .in('status', status.split(','))
@@ -158,7 +158,7 @@ router.get('/events/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('events')
       .select('*')
       .eq('id', id)
@@ -226,7 +226,7 @@ router.post('/events', async (req, res) => {
       created_by: req.user?.id
     };
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('events')
       .insert([eventData])
       .select()
@@ -256,7 +256,7 @@ router.get('/notices', async (req, res) => {
   try {
     const { limit = 10, offset = 0, priority } = req.query;
 
-    let query = Database.supabase
+    let query = Database.getClient()
       .from('notices')
       .select('*')
       .eq('status', 'active')
@@ -292,7 +292,7 @@ router.get('/notices/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('notices')
       .select('*')
       .eq('id', id)
@@ -354,7 +354,7 @@ router.post('/notices', async (req, res) => {
       created_by: req.user?.id
     };
 
-    const { data, error } = await Database.supabase
+    const { data, error } = await Database.getClient()
       .from('notices')
       .insert([noticeData])
       .select()

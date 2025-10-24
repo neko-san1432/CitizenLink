@@ -1,5 +1,5 @@
-import { apiClient } from '../../../src/client/config/apiClient.js';
-import { showToast } from '../../../src/client/components/toast.js';
+import { apiClient } from '../../config/apiClient.js';
+import { showToast } from '../../components/toast.js';
 
 async function fetchComplaintStats() {
   try {

@@ -16,12 +16,15 @@ class CoordinatorRepository {
    */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
+      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Getting review queue for coordinator:`, coordinatorId);
+      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Filters:`, filters);
+      
       let query = this.supabase
         .from('complaints')
         .select(`
           *
         `)
-        .eq('status', 'pending review')
+        .eq('workflow_status', 'new')
         .order('submitted_at', { ascending: false });
 
       // Apply filters
@@ -39,6 +42,8 @@ class CoordinatorRepository {
       }
 
       const { data, error } = await query.limit(filters.limit || 50);
+
+      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Database query result:`, { dataCount: data?.length, error: error?.message });
 
       if (error) throw error;
 
@@ -125,7 +130,7 @@ class CoordinatorRepository {
         if (similarComplaintIds.length > 0) {
           const { data: similarComplaints } = await this.supabase
             .from('complaints')
-            .select('id, title, type, status, submitted_at, location_text, latitude, longitude')
+            .select('id, title, type, workflow_status, submitted_at, location_text, latitude, longitude')
             .in('id', similarComplaintIds);
 
           // Create a map for quick lookup
@@ -456,7 +461,7 @@ class CoordinatorRepository {
       const { count, error } = await this.supabase
         .from('complaints')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending review');
+        .eq('workflow_status', 'new');
 
       if (error) throw error;
 

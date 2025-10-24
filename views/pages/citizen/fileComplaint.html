@@ -5,6 +5,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <title>File Complaint</title>
     <link rel="stylesheet" href="../../css/style.css" />
     <link rel="stylesheet" href="../../css/toast.css" />
@@ -28,30 +29,34 @@
                 type="text"
                 id="complaintTitle"
                 name="complaintTitle"
-                required
                 placeholder="Enter a descriptive title for your complaint"
               />
             </div>
+            
             <div class="form-group">
-              <label for="complaintCategory">Complaint Category *</label>
-              <select id="complaintCategory" name="complaintCategory" required>
-                <option value="">Select a category</option>
-                <div class="loading-placeholder">Loading categories...</div>
+              <label for="complaintCategory">Category *</label>
+              <select id="complaintCategory" name="complaintCategory">
+                <option value="">Select a category...</option>
               </select>
             </div>
+            
             <div class="form-group">
-              <label for="complaintSubcategory">Complaint Subcategory *</label>
-              <select id="complaintSubcategory" name="complaintSubcategory" required disabled>
-                <option value="">Select a subcategory</option>
+              <label for="complaintSubcategory">Subcategory *</label>
+              <select id="complaintSubcategory" name="complaintSubcategory">
+                <option value="">Select a subcategory...</option>
               </select>
             </div>
+            
+            <!-- Type field removed - all submissions are complaints -->
+            
+            <!-- Subtype field removed - not needed in current schema -->
             <div class="form-group">
-              <label>Relevant Departments</label>
+              <label>Relevant Offices</label>
               <div class="department-selection-info">
-                <p class="info-text">Departments will be automatically selected based on your subcategory choice. You can modify the selection if needed.</p>
+                <p class="info-text">Offices will be automatically selected based on your subcategory choice. You can modify the selection if needed.</p>
               </div>
               <div id="departmentCheckboxes" class="checkbox-group">
-                <div class="loading-placeholder">Select a subcategory to see relevant departments</div>
+                <div class="loading-placeholder">Select a subcategory to see relevant offices</div>
               </div>
             </div>
             <div class="form-group">
@@ -59,7 +64,6 @@
               <textarea
                 id="description"
                 name="description"
-                required
                 placeholder="Please provide a detailed description of your complaint..."
                 rows="5"
               ></textarea>
@@ -70,7 +74,6 @@
                 type="text"
                 id="location"
                 name="location"
-                required
                 placeholder="Enter the specific location of the complaint"
               />
             </div>
@@ -119,19 +122,19 @@
     </div>
     <div id="toast-container" class="toast-container"></div>
     <!-- Core Scripts -->
-    <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
     
     <!-- Citizen-Only Access Check -->
-    <script type="module" src="../../js/pages/citizen-file-complaint-access.js"></script>
+    <script type="module" src="/js/pages/citizen-file-complaint-access.js"></script>
     
     <!-- Map Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../../js/components/map/complaintLocationPicker.js"></script>
+    <script src="/js/components/map/complaintLocationPicker.js"></script>
     
     <!-- Complaint Form Scripts (loaded last) -->
-    <script type="module" src="../../js/components/form/complaintFormHierarchical.js"></script>
+    <script type="module" src="/js/components/form/complaintFormHierarchical.js"></script>
 </body>
 </html>

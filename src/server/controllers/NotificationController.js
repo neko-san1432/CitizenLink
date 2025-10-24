@@ -1,37 +1,44 @@
-const NotificationService = require('../services/NotificationService');
-
 /**
- * NotificationController
- * Handles HTTP requests for notifications
+ * Notification Controller
+ * Handles notification-related HTTP requests
  */
-class NotificationController {
-  constructor() {
-    this.notificationService = new NotificationService();
-  }
 
+const Database = require('../config/database');
+const supabase = Database.getClient();
+
+class NotificationController {
   /**
-   * Get user's notifications (paginated)
-   * GET /api/notifications?page=0&limit=10
+   * Get unread notifications for user
    */
-  async getNotifications(req, res) {
+  async getUnreadNotifications(req, res) {
     try {
       const userId = req.user.id;
-      const page = parseInt(req.query.page) || 0;
-      const limit = parseInt(req.query.limit) || 10;
+      const { limit = 50, offset = 0 } = req.query;
 
-      // Validate limits
-      if (limit > 50) {
-        return res.status(400).json({
+      const { data: notifications, error } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('[NOTIFICATION] Error fetching unread notifications:', error);
+        return res.status(500).json({
           success: false,
-          error: 'Limit cannot exceed 50'
+          error: 'Failed to fetch notifications'
         });
       }
 
-      const result = await this.notificationService.getUserNotifications(userId, page, limit);
+      res.json({
+        success: true,
+        notifications: notifications || [],
+        count: notifications?.length || 0
+      });
 
-      res.json(result);
     } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Get notifications error:', error);
+      console.error('[NOTIFICATION] Get unread notifications error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to fetch notifications'
@@ -40,18 +47,34 @@ class NotificationController {
   }
 
   /**
-   * Get unread notification count
-   * GET /api/notifications/count
+   * Get notification count for user
    */
-  async getUnreadCount(req, res) {
+  async getNotificationCount(req, res) {
     try {
       const userId = req.user.id;
+      console.log('[NOTIFICATION] Getting notification count for user:', userId);
 
-      const result = await this.notificationService.getUnreadCount(userId);
+      const { count, error } = await supabase
+        .from('notification')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('read', false);
 
-      res.json(result);
+      if (error) {
+        console.error('[NOTIFICATION] Error fetching notification count:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch notification count'
+        });
+      }
+
+      res.json({
+        success: true,
+        count: count || 0
+      });
+
     } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Get unread count error:', error);
+      console.error('[NOTIFICATION] Get notification count error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to fetch notification count'
@@ -61,18 +84,42 @@ class NotificationController {
 
   /**
    * Mark notification as read
-   * PUT /api/notifications/:id/read
    */
   async markAsRead(req, res) {
     try {
+      const { id } = req.params;
       const userId = req.user.id;
-      const notificationId = req.params.id;
 
-      const result = await this.notificationService.markAsRead(notificationId, userId);
+      const { data, error } = await supabase
+        .from('notification')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
 
-      res.json(result);
+      if (error) {
+        console.error('[NOTIFICATION] Error marking notification as read:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to mark notification as read'
+        });
+      }
+
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          error: 'Notification not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Notification marked as read'
+      });
+
     } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Mark as read error:', error);
+      console.error('[NOTIFICATION] Mark as read error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to mark notification as read'
@@ -82,17 +129,32 @@ class NotificationController {
 
   /**
    * Mark all notifications as read
-   * PUT /api/notifications/read-all
    */
   async markAllAsRead(req, res) {
     try {
       const userId = req.user.id;
 
-      const result = await this.notificationService.markAllAsRead(userId);
+      const { error } = await supabase
+        .from('notification')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('read', false);
 
-      res.json(result);
+      if (error) {
+        console.error('[NOTIFICATION] Error marking all notifications as read:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to mark all notifications as read'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'All notifications marked as read'
+      });
+
     } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Mark all as read error:', error);
+      console.error('[NOTIFICATION] Mark all as read error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to mark all notifications as read'
@@ -101,45 +163,96 @@ class NotificationController {
   }
 
   /**
-   * Delete notification
-   * DELETE /api/notifications/:id
+   * Get notification stream (Server-Sent Events)
    */
-  async deleteNotification(req, res) {
+  async getNotificationStream(req, res) {
     try {
       const userId = req.user.id;
-      const notificationId = req.params.id;
 
-      const result = await this.notificationService.deleteNotification(notificationId, userId);
-
-      res.json(result);
-    } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Delete notification error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete notification'
+      // Set SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
       });
-    }
-  }
 
-  /**
-   * Get notification summary (for email digest)
-   * GET /api/notifications/summary
-   */
-  async getSummary(req, res) {
-    try {
-      const userId = req.user.id;
+      // Send initial connection message
+      res.write(`data: ${JSON.stringify({
+        type: 'connected',
+        message: 'Connected to notification stream',
+        timestamp: new Date().toISOString()
+      })}\n\n`);
 
-      const result = await this.notificationService.getNotificationSummary(userId);
+      // Set up real-time subscription to notifications
+      const subscription = supabase
+        .channel('notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notification',
+          filter: `user_id=eq.${userId}`
+        }, (payload) => {
+          console.log('[NOTIFICATION] Real-time notification received:', payload);
+          
+          const notification = payload.new;
+          const notificationData = {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            priority: notification.priority,
+            metadata: notification.metadata,
+            created_at: notification.created_at
+          };
 
-      res.json(result);
+          // Send notification to client
+          res.write(`data: ${JSON.stringify(notificationData)}\n\n`);
+        })
+        .subscribe();
+
+      // Handle client disconnect
+      req.on('close', () => {
+        // Only log in development mode to reduce production noise
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[NOTIFICATION] Client disconnected from stream');
+        }
+        subscription.unsubscribe();
+        res.end();
+      });
+
+      // Keep connection alive with periodic ping
+      const keepAlive = setInterval(() => {
+        if (res.destroyed) {
+          clearInterval(keepAlive);
+          return;
+        }
+        res.write(`data: ${JSON.stringify({
+          type: 'ping',
+          timestamp: new Date().toISOString()
+        })}\n\n`);
+      }, 30000); // Ping every 30 seconds
+
+      // Clean up on error
+      req.on('error', (error) => {
+        // Only log non-connection errors to reduce noise
+        if (error.code !== 'ECONNRESET' && error.code !== 'EPIPE') {
+          console.error('[NOTIFICATION] Stream error:', error);
+        }
+        clearInterval(keepAlive);
+        subscription.unsubscribe();
+        res.end();
+      });
+
     } catch (error) {
-      console.error('[NOTIFICATION_CONTROLLER] Get summary error:', error);
+      console.error('[NOTIFICATION] Get notification stream error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch notification summary'
+        error: 'Failed to establish notification stream'
       });
     }
   }
 }
 
-module.exports = new NotificationController();
+module.exports = NotificationController;

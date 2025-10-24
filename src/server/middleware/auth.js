@@ -1,68 +1,58 @@
 const _path = require('path');
 const Database = require('../config/database');
 const _UserService = require('../services/UserService');
-const database = new Database();
+const { validateUserRole, extractDepartmentCode } = require('../utils/roleValidation');
 
-const supabase = database.getClient();
+const supabase = Database.getClient();
 
 const authenticateUser = async (req, res, next) => {
   try {
+    // Extract token from cookies or headers
     const token =
       req.cookies?.sb_access_token ||
+      req.cookies?.sb_access_token_debug ||
       req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[AUTH] ${new Date().toISOString()} ❌ No token found for:`, req.path);
+      }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: 'No authentication token',
+          error: 'No authentication token'
         });
       }
       return res.redirect('/login?message=' + encodeURIComponent('Please login first') + '&type=error');
     }
 
-    // First verify the token is valid
+    // Validate token with Supabase
     const {
       data: { user: tokenUser },
       error,
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      // console.log removed for security
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[AUTH] ${new Date().toISOString()} ❌ Token validation failed:`, error?.message);
+      }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid token',
+          error: 'Invalid token'
         });
       }
       return res.redirect('/login?message=' + encodeURIComponent('Invalid session. Please login again') + '&type=error');
     }
 
-    // Now get the complete user data including raw_user_meta_data from auth.users table
-    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(tokenUser.id);
-
-    if (authError || !authUser) {
-      // console.log removed for security
-      if (req.path.startsWith('/api/')) {
-        return res.status(401).json({
-          success: false,
-          error: 'Failed to get user data',
-        });
-      }
-      return res.redirect('/login?message=' + encodeURIComponent('Authentication failed. Please try again') + '&type=error');
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[AUTH] ${new Date().toISOString()} ✅ Token validated successfully for user:`, tokenUser.id);
     }
 
-    // Use the complete auth user data which includes raw_user_meta_data
-    const user = authUser.user;
-
-    // SINGLE SOURCE OF TRUTH: raw_user_meta_data
-    // This is where Supabase stores custom metadata set during signup
-    // FALLBACK: Also check user_metadata in case data is there instead
-    const rawUserMetaData = user.raw_user_meta_data || {};
-    const userMetadata = user.user_metadata || {};
+    // Get user metadata from the token itself instead of using admin API
+    // The token already contains user metadata that we can use
+    const userMetadata = tokenUser.user_metadata || {};
+    const rawUserMetaData = tokenUser.raw_user_meta_data || {};
 
     // Merge both sources (raw_user_meta_data takes priority)
     const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
@@ -71,20 +61,44 @@ const authenticateUser = async (req, res, next) => {
     // Use combined metadata (checks both sources)
     const userName = combinedMetadata.name ||
                     `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
+                    tokenUser.email?.split('@')[0] || // Fallback to email username
                     'Unknown User';
+
+    // Validate user role and department code
+    const userRole = combinedMetadata.role || 'citizen';
+    const roleValidation = await validateUserRole(userRole);
+    
+    if (!roleValidation.isValid) {
+      console.error('[AUTH] ❌ Invalid role:', {
+        role: userRole,
+        error: roleValidation.error,
+        userId: tokenUser.id
+      });
+      
+      if (req.path.startsWith('/api/')) {
+        return res.status(403).json({
+          success: false,
+          error: `Invalid role: ${roleValidation.error}`
+        });
+      }
+      return res.redirect('/login?message=' + encodeURIComponent(`Invalid role: ${roleValidation.error}`) + '&type=error');
+    }
+
+    // Extract department code for LGU roles
+    const departmentCode = extractDepartmentCode(userRole);
 
     // Attach the enhanced user object to the request
     req.user = {
       // Supabase auth fields
-      id: user.id,
-      email: user.email,
-      email_confirmed_at: user.email_confirmed_at,
+      id: tokenUser.id,
+      email: tokenUser.email,
+      email_confirmed_at: tokenUser.email_confirmed_at,
 
       // Metadata (checks both raw_user_meta_data and user_metadata)
       raw_user_meta_data: combinedMetadata,
 
       // Easy access fields from combined metadata
-      role: combinedMetadata.role || 'citizen',
+      role: userRole,
       normalized_role: combinedMetadata.normalized_role || combinedMetadata.role || 'citizen',
       name: userName,
       fullName: userName,
@@ -92,11 +106,15 @@ const authenticateUser = async (req, res, next) => {
       lastName: combinedMetadata.last_name || '',
       mobileNumber: combinedMetadata.mobile_number || combinedMetadata.mobile || null,
       status: combinedMetadata.status || 'active',
-      department: combinedMetadata.department || null,
+      department: departmentCode || combinedMetadata.department || null,
       employeeId: combinedMetadata.employee_id || null,
 
+      // Role validation info
+      roleType: roleValidation.roleType,
+      departmentCode: departmentCode,
+
       // Verification
-      emailVerified: !!user.email_confirmed_at,
+      emailVerified: !!tokenUser.email_confirmed_at,
       phoneVerified: combinedMetadata.phone_verified || false,
 
       // Security
@@ -104,15 +122,13 @@ const authenticateUser = async (req, res, next) => {
       banStrike: combinedMetadata.banStrike || 0
     };
 
-    // Removed verbose logs
-
     next();
   } catch (error) {
-    console.error('[AUTH] Authentication error:', error.message);
+    console.error(`[AUTH] ${new Date().toISOString()} Authentication error:`, error.message);
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({
         success: false,
-        error: 'Authentication failed',
+        error: 'Authentication failed'
       });
     }
     return res.redirect('/login?message=' + encodeURIComponent('Authentication failed. Please try again') + '&type=error');
@@ -123,13 +139,23 @@ const requireRole = (allowedRoles) => {
   return (req, res, next) => {
     // SINGLE SOURCE: req.user.role (already processed in authenticateUser)
     const userRole = req.user?.role;
+    const baseRole = req.user?.raw_user_meta_data?.base_role;
 
     if (!userRole) {
-
+      console.log('[AUTH] ❌ No user role found');
+      console.log('[AUTH] User object:', {
+        id: req.user?.id,
+        email: req.user?.email,
+        hasRole: !!req.user?.role,
+        hasMetadata: !!req.user?.raw_user_meta_data,
+        metadataKeys: Object.keys(req.user?.raw_user_meta_data || {}),
+        userMetadataKeys: Object.keys(req.user?.user_metadata || {})
+      });
       return res.redirect('/login?message=' + encodeURIComponent('Authentication incomplete: missing role. Please contact support.') + '&type=error');
     }
 
     const normalizedRole = String(userRole).trim().toLowerCase();
+    const normalizedBaseRole = baseRole ? String(baseRole).trim().toLowerCase() : null;
 
     const hasPermission = allowedRoles.some((allowedRole) => {
       if (typeof allowedRole === 'string') {
@@ -138,11 +164,11 @@ const requireRole = (allowedRoles) => {
           // Safe wildcard matching without dynamic regex
           const pattern = allowedRole.replace(/\*/g, '.*');
           const regex = new RegExp(`^${pattern}$`);
-          return regex.test(normalizedRole);
+          return regex.test(normalizedRole) || (normalizedBaseRole && regex.test(normalizedBaseRole));
         }
-        return normalizedRole === allowedRole.toLowerCase();
+        return normalizedRole === allowedRole.toLowerCase() || (normalizedBaseRole && normalizedBaseRole === allowedRole.toLowerCase());
       } else if (allowedRole instanceof RegExp) {
-        return allowedRole.test(normalizedRole);
+        return allowedRole.test(normalizedRole) || (normalizedBaseRole && allowedRole.test(normalizedBaseRole));
       }
       return false;
     });

@@ -13,6 +13,219 @@ const notificationService = new NotificationService();
 
 class LguAdminController {
   /**
+   * Get department queue
+   * Returns complaints assigned to the admin's department
+   */
+  async getDepartmentQueue(req, res) {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const { status, priority, limit } = req.query;
+
+      // Extract department from role (e.g., lgu-admin-{dept} -> {dept})
+      const departmentCode = userRole.replace('lgu-admin-', '');
+
+      // Get the department ID
+      const { data: department, error: deptError } = await supabase
+        .from('departments')
+        .select('id, name, code')
+        .eq('code', departmentCode)
+        .single();
+
+      if (deptError || !department) {
+        console.error('[LGU_ADMIN] Department not found:', { departmentCode, error: deptError });
+        return res.status(404).json({
+          success: false,
+          error: 'Department not found'
+        });
+      }
+
+      // Build query for complaints assigned to this department
+      let query = supabase
+        .from('complaints')
+        .select(`
+          id, title, description, submitted_at, submitted_by, 
+          status, priority, type, subtype, location_text,
+          primary_department, secondary_departments, preferred_departments,
+          last_activity_at, created_at
+        `)
+        .or(`primary_department.eq.${departmentCode},secondary_departments.cs.{${departmentCode}}`)
+        .order('submitted_at', { ascending: false });
+
+      // Apply filters
+      if (status) {
+        query = query.eq('workflow_status', status);
+      }
+      if (priority) {
+        query = query.eq('priority', priority);
+      }
+      if (limit) {
+        query = query.limit(parseInt(limit));
+      }
+
+      const { data: complaints, error } = await query;
+
+      if (error) {
+        console.error('[LGU_ADMIN] Error fetching department queue:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch department queue'
+        });
+      }
+
+      // Get assignment details for each complaint
+      const complaintsWithAssignments = await Promise.all(
+        complaints.map(async (complaint) => {
+          const { data: assignments } = await supabase
+            .from('complaint_assignments')
+            .select('assigned_to, status, assigned_at, assigned_by')
+            .eq('complaint_id', complaint.id)
+            .eq('department_id', department.id);
+
+          return {
+            ...complaint,
+            assignments: assignments || []
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        data: complaintsWithAssignments,
+        count: complaintsWithAssignments.length,
+        department: {
+          id: department.id,
+          name: department.name,
+          code: department.code
+        }
+      });
+
+    } catch (error) {
+      console.error('[LGU_ADMIN] Get department queue error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch department queue'
+      });
+    }
+  }
+
+  /**
+   * Assign complaint to officer
+   */
+  async assignToOfficer(req, res) {
+    try {
+      const { complaintId } = req.params;
+      const { officerId, priority, deadline, notes } = req.body;
+      const userId = req.user.id;
+      const userRole = req.user.role;
+
+      if (!officerId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Officer ID is required'
+        });
+      }
+
+      // Extract department from role
+      const departmentCode = userRole.replace('lgu-admin-', '');
+
+      // Get department info
+      const { data: department, error: deptError } = await supabase
+        .from('departments')
+        .select('id, name, code')
+        .eq('code', departmentCode)
+        .single();
+
+      if (deptError || !department) {
+        return res.status(404).json({
+          success: false,
+          error: 'Department not found'
+        });
+      }
+
+      // Update complaint status
+      const { data: updatedComplaint, error: updateError } = await supabase
+        .from('complaints')
+        .update({
+          status: 'assigned to officer',
+          workflow_status: 'in_progress',
+          last_activity_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('[LGU_ADMIN] Error updating complaint:', updateError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to update complaint status'
+        });
+      }
+
+      // Update or create assignment record
+      const { data: assignment, error: assignError } = await supabase
+        .from('complaint_assignments')
+        .upsert({
+          complaint_id: complaintId,
+          department_id: department.id,
+          assigned_to: officerId,
+          assigned_by: userId,
+          status: 'assigned',
+          priority: priority || 'medium',
+          deadline: deadline || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (assignError) {
+        console.error('[LGU_ADMIN] Error creating assignment:', assignError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create assignment'
+        });
+      }
+
+      // Notify officer
+      try {
+        await notificationService.createNotification(
+          officerId,
+          'task_assigned',
+          'New Task Assigned',
+          `You've been assigned complaint: "${updatedComplaint.title}"`,
+          {
+            priority: priority === 'urgent' ? 'urgent' : 'info',
+            link: `/lgu-officer/tasks/${complaintId}`,
+            metadata: {
+              complaint_id: complaintId,
+              priority: priority || 'medium',
+              deadline: deadline || null
+            }
+          }
+        );
+      } catch (notifError) {
+        console.warn('[LGU_ADMIN] Failed to notify officer:', notifError.message);
+      }
+
+      res.json({
+        success: true,
+        message: 'Complaint assigned to officer successfully',
+        assignment: assignment
+      });
+
+    } catch (error) {
+      console.error('[LGU_ADMIN] Assign to officer error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to assign complaint to officer'
+      });
+    }
+  }
+
+  /**
    * Get department assignments
    * Returns complaints assigned to the admin's department that need officer assignment
    */
@@ -44,16 +257,16 @@ class LguAdminController {
       // Step 1: Get all complaints for this department with filters
       let query = supabase
         .from('complaints')
-        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, primary_department, status, subtype, priority')
+        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, primary_department, workflow_status, subtype, priority')
         .eq('primary_department', departmentCode)
         .order('submitted_at', { ascending: false });
 
       // Apply status filter
       if (status && status !== 'all') {
-        query = query.eq('status', status);
+        query = query.eq('workflow_status', status);
       } else {
-        // Default: show pending review and in progress
-        query = query.in('status', ['pending review', 'in progress']);
+        // Default: show new and in progress
+        query = query.in('workflow_status', ['new', 'in_progress']);
       }
 
       // Apply other filters
@@ -394,4 +607,4 @@ class LguAdminController {
   }
 }
 
-module.exports = new LguAdminController();
+module.exports = LguAdminController;

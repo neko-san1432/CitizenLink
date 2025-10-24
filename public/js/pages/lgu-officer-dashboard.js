@@ -3,7 +3,7 @@
  * Field operations and task management for local government officers
  */
 
-import showMessage from '../../js/components/toast.js';
+import showMessage from '../components/toast.js';
 
 // Dashboard state
 let dashboardData = null;

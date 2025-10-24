@@ -36,6 +36,12 @@ async function getCaptchaKey() {
 }
 
 async function renderCaptchaWidgetsIfAny() {
+  // Skip reCAPTCHA in development mode
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('[AUTH] reCAPTCHA disabled for development');
+    return;
+  }
+
   if (!window.grecaptcha) return;
 
   // Fetch CAPTCHA key if not already loaded
@@ -62,6 +68,12 @@ renderCaptchaWidgetsIfAny();
 setTimeout(renderCaptchaWidgetsIfAny, 500);
 
 async function verifyCaptchaOrFail(widgetId) {
+  // Skip reCAPTCHA verification in development mode
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('[AUTH] reCAPTCHA verification skipped for development');
+    return { ok: true };
+  }
+
   if (!widgetId && widgetId !== 0) {
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };
@@ -206,7 +218,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
+      body: JSON.stringify({ email, password: pass, remember })
     });
 
     const result = await response.json();
@@ -215,22 +227,93 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       // Persist access token to HttpOnly cookie for server-protected pages
       try {
         const accessToken = result.data?.session?.accessToken || null;
+        console.log('[CLIENT AUTH] Access token received:', !!accessToken);
+        console.log('[CLIENT AUTH] Remember me:', remember);
+        
         if (accessToken) {
+          console.log('[CLIENT AUTH] 🔑 Setting server session cookie...');
+          console.log('[CLIENT AUTH] Access token length:', accessToken?.length);
+
           const ok = await setServerSessionCookie(accessToken, remember);
+          console.log('[CLIENT AUTH] Server session cookie set:', ok);
           if (!ok) {
+            console.error('[CLIENT AUTH] ❌ Failed to establish session');
             showMessage('error', 'Failed to establish session. Please try again.');
             return;
           }
+
+          console.log('[CLIENT AUTH] ⏳ Waiting for cookie to be set...');
+          // Wait a moment for cookie to be set
+          await new Promise(r => setTimeout(r, 100));
+
+          console.log('[CLIENT AUTH] 🍪 Checking available cookies:', document.cookie);
+          console.log('[CLIENT AUTH] 🔍 Looking for sb_access_token cookie...');
+
           // Verify cookie by hitting a protected endpoint before redirecting
-          let resp = await fetch('/api/user/role', { method: 'GET' });
+          console.log('[CLIENT AUTH] ✅ Verifying session cookie...');
+          let resp = await fetch('/api/user/role', {
+            method: 'GET',
+            credentials: 'include', // Ensure cookies are sent
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('[CLIENT AUTH] First verification response:', {
+            status: resp.status,
+            statusText: resp.statusText,
+            ok: resp.ok
+          });
+
           if (!resp.ok) {
-            await new Promise(r => setTimeout(r, 300));
-            resp = await fetch('/api/user/role', { method: 'GET' });
+            console.log('[CLIENT AUTH] ⚠️ First role check failed, retrying...');
+            const errorData = await resp.json().catch(() => ({}));
+            console.log('[CLIENT AUTH] Error details:', errorData);
+
+            // Try one more time with a longer wait
+            console.log('[CLIENT AUTH] ⏳ Retrying session verification...');
+            await new Promise(r => setTimeout(r, 1000));
+
+            const retryResp = await fetch('/api/user/role', {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            console.log('[CLIENT AUTH] Retry response:', {
+              status: retryResp.status,
+              statusText: retryResp.statusText,
+              ok: retryResp.ok
+            });
+
+            if (retryResp.ok) {
+              console.log('[CLIENT AUTH] ✅ Session verified on retry');
+            } else {
+              const retryErrorData = await retryResp.json().catch(() => ({}));
+              console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
+              
+              // Enhanced error message based on specific error
+              let errorMessage = 'Session verification failed. ';
+              if (retryResp.status === 401) {
+                errorMessage += 'Your session has expired. Please log in again.';
+              } else if (retryResp.status === 403) {
+                errorMessage += 'Access denied. Please contact support.';
+              } else if (retryResp.status >= 500) {
+                errorMessage += 'Server error. Please try again later.';
+              } else {
+                errorMessage += 'Please try logging in again.';
+              }
+              
+              showMessage('error', errorMessage);
+              return;
+            }
           }
-          if (!resp.ok) {
-            showMessage('error', 'Session not ready. Please try again.');
-            return;
-          }
+
+          console.log('[CLIENT AUTH] ✅ Session verified successfully');
         }
       } catch {}
 
@@ -338,13 +421,35 @@ if (fbBtn) {
 // Utility to post session cookie with remember flag
 async function setServerSessionCookie(accessToken, remember) {
   try {
+    console.log('[CLIENT AUTH] 🔧 Setting server session cookie...');
+    console.log('[CLIENT AUTH] Access token length:', accessToken?.length);
+
     const resp = await fetch('/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ access_token: accessToken, remember: !!remember })
     });
-    return resp.ok;
-  } catch { return false; }
+
+    console.log('[CLIENT AUTH] Server session response:', {
+      status: resp.status,
+      statusText: resp.statusText,
+      ok: resp.ok
+    });
+
+    const responseData = await resp.json();
+    console.log('[CLIENT AUTH] Server session response data:', responseData);
+
+    if (!resp.ok) {
+      console.error('[CLIENT AUTH] ❌ Failed to set session cookie:', responseData);
+      return false;
+    }
+
+    return responseData.success === true;
+  } catch (error) {
+    console.error('[CLIENT AUTH] 💥 Server session cookie error:', error);
+    return false;
+  }
 }
 
 // If not remembered, clear cookie on unload (best-effort for session cleanup)

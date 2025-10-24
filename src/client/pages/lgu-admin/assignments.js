@@ -44,10 +44,7 @@ function initializeEventListeners() {
     loadAssignments();
   });
 
-  document.getElementById('subtype-filter')?.addEventListener('change', (e) => {
-    currentFilters.sub_type = e.target.value;
-    loadAssignments();
-  });
+  // subtype filter removed - not needed in current schema
 
   document.getElementById('priority-filter')?.addEventListener('change', (e) => {
     currentFilters.priority = e.target.value;

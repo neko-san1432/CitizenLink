@@ -3,7 +3,10 @@
  * Comprehensive citizen engagement and complaint management
  */
 
-import showMessage from '../../js/components/toast.js';
+import showMessage from '../components/toast.js';
+import { initializeRoleToggle } from '../auth/roleToggle.js';
+
+// Citizen dashboard script loaded
 
 // Dashboard state
 let dashboardData = null;
@@ -16,6 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadMyComplaints();
   await loadStatistics();
   setupEventListeners();
+  
+  // Initialize role switcher for staff members
+  try {
+    await initializeRoleToggle();
+  } catch (error) {
+    console.error('[CITIZEN_DASHBOARD] Error initializing role toggle:', error);
+  }
 });
 
 /**
@@ -40,7 +50,7 @@ async function loadDashboardData() {
  */
 async function loadMyComplaints() {
   try {
-    const response = await fetch('/api/complaints/my-complaints?limit=5');
+    const response = await fetch('/api/complaints/my?limit=5');
     const result = await response.json();
 
     if (result.success) {
@@ -388,8 +398,7 @@ window.viewAllComplaints = function() {
 };
 
 window.viewComplaintDetail = function(complaintId) {
-  showMessage('info', `Viewing complaint ${complaintId}...`);
-  // TODO: Implement complaint detail view
+  window.location.href = `/complaint-details?id=${complaintId}`;
 };
 
 window.refreshNews = async function() {

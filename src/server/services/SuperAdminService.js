@@ -9,7 +9,7 @@ const Database = require('../config/database');
 class SuperAdminService {
   constructor() {
     this.roleService = new RoleManagementService();
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
 
@@ -185,42 +185,78 @@ class SuperAdminService {
 
       // Get role changes
       if (log_type === 'all' || log_type === 'role_changes') {
-        let query = this.supabase
-          .from('role_changes')
-          .select(`
-            *,
-            user:user_id (email, raw_user_meta_data),
-            performer:performed_by (email, raw_user_meta_data)
-          `)
-          .order('created_at', { ascending: false });
+        try {
+          let query = this.supabase
+            .from('role_changes')
+            .select(`
+              *,
+              user:user_id (email, raw_user_meta_data),
+              performer:changed_by (email, raw_user_meta_data)
+            `)
+            .order('created_at', { ascending: false });
 
-        if (date_from) query = query.gte('created_at', date_from);
-        if (date_to) query = query.lte('created_at', date_to);
+          if (date_from) query = query.gte('created_at', date_from);
+          if (date_to) query = query.lte('created_at', date_to);
 
-        const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
+          const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
 
-        if (error) throw error;
-        logs.role_changes = data || [];
+          if (error) {
+            console.warn('[SUPER_ADMIN] Role changes query failed, using fallback:', error.message);
+            // Fallback: get role changes without joins
+            const { data: fallbackData, error: fallbackError } = await this.supabase
+              .from('role_changes')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(limit)
+              .range(offset, offset + limit - 1);
+            
+            if (fallbackError) throw fallbackError;
+            logs.role_changes = fallbackData || [];
+          } else {
+            logs.role_changes = data || [];
+          }
+        } catch (error) {
+          console.warn('[SUPER_ADMIN] Role changes not available:', error.message);
+          logs.role_changes = [];
+        }
       }
 
       // Get department transfers
       if (log_type === 'all' || log_type === 'department_transfers') {
-        let query = this.supabase
-          .from('department_transfers')
-          .select(`
-            *,
-            user:user_id (email, raw_user_meta_data),
-            performer:performed_by (email, raw_user_meta_data)
-          `)
-          .order('created_at', { ascending: false });
+        try {
+          let query = this.supabase
+            .from('department_transfers')
+            .select(`
+              *,
+              user:user_id (email, raw_user_meta_data),
+              performer:performed_by (email, raw_user_meta_data)
+            `)
+            .order('created_at', { ascending: false });
 
-        if (date_from) query = query.gte('created_at', date_from);
-        if (date_to) query = query.lte('created_at', date_to);
+          if (date_from) query = query.gte('created_at', date_from);
+          if (date_to) query = query.lte('created_at', date_to);
 
-        const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
+          const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
 
-        if (error) throw error;
-        logs.department_transfers = data || [];
+          if (error) {
+            console.warn('[SUPER_ADMIN] Department transfers query failed, using fallback:', error.message);
+            // Fallback: get department transfers without joins
+            const { data: fallbackData, error: fallbackError } = await this.supabase
+              .from('department_transfers')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(limit)
+              .range(offset, offset + limit - 1);
+            
+            if (fallbackError) throw fallbackError;
+            logs.department_transfers = fallbackData || [];
+          } else {
+            logs.department_transfers = data || [];
+          }
+        } catch (error) {
+          console.warn('[SUPER_ADMIN] Department transfers not available:', error.message);
+          logs.department_transfers = [];
+        }
       }
 
       // Get complaint workflow logs
@@ -268,8 +304,8 @@ class SuperAdminService {
         departmentTransfersCount
       ] = await Promise.all([
         this.getCount('complaints'),
-        this.getCount('role_changes'),
-        this.getCount('department_transfers')
+        this.getCount('role_changes').catch(() => 0),
+        this.getCount('department_transfers').catch(() => 0)
       ]);
 
       return {

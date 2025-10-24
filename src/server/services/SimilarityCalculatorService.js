@@ -31,7 +31,7 @@ class SimilarityCalculatorService {
       }
 
       if (filters.status) {
-        query = query.eq('status', filters.status);
+        query = query.eq('workflow_status', filters.status);
       }
 
       if (filters.dateFrom) {

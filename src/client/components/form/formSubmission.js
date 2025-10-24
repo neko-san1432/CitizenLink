@@ -32,8 +32,6 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
       throw new Error(validation.errors.join('. '));
     }
 
-    // console.log removed for security
-
     // Create FormData for API submission
     const apiFormData = new FormData();
 
@@ -98,11 +96,7 @@ export function resetComplaintForm(formElement, clearFiles) {
     input.setCustomValidity('');
   });
 
-  // Reset subtype dropdown
-  const subtypeSelect = formElement.querySelector('#complaintSubtype');
-  if (subtypeSelect) {
-    subtypeSelect.innerHTML = '<option value="">Select complaint subtype (optional)</option>';
-  }
+  // Subtype field removed - not needed in current schema
 
   // Clear files if function provided
   if (typeof clearFiles === 'function') {

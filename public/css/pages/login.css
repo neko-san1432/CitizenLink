@@ -101,7 +101,6 @@ html, body {
   border: 2px solid var(--gray-200);
   border-radius: 0.5rem;
   font-size: 16px; /* Prevent iOS zoom */
-  transition: border-color 0.2s ease;
 }
 
 .input:focus {
@@ -129,6 +128,10 @@ html, body {
   width: 18px;
   height: 18px;
   pointer-events: none;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn {
@@ -143,7 +146,6 @@ html, body {
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s ease;
   min-height: 3rem;
 }
 
@@ -155,7 +157,6 @@ html, body {
 
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
-  transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
@@ -200,7 +201,6 @@ html, body {
   border-radius: 0.5rem;
   color: var(--gray-700);
   text-decoration: none;
-  transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -208,11 +208,9 @@ html, body {
   background: var(--gray-50);
   border-color: var(--gray-400);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
 }
 
 .oauth-btn:active {
-  transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -277,7 +275,6 @@ html, body {
   border-radius: 0.25rem;
   background: #ffffff;
   position: relative;
-  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -294,9 +291,7 @@ html, body {
   height: 10px;
   border: solid transparent;
   border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .checkbox-wrapper input[type="checkbox"]:checked + .checkbox-custom {
@@ -312,7 +307,6 @@ html, body {
   border: solid white;
   border-width: 0 2px 2px 0;
   opacity: 1;
-  transform: rotate(45deg);
 }
 
 .checkbox-wrapper input[type="checkbox"]:focus-visible + .checkbox-custom {
@@ -329,7 +323,6 @@ html, body {
 .forgot-link {
   color: var(--primary-600);
   text-decoration: none;
-  transition: color 0.2s ease;
   font-size: 0.875rem;
 }
 

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/header-redesign.css" />
     <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
   </head>
   <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
@@ -49,6 +50,10 @@
               <div class="quick-action-icon">🗺️</div>
               <div class="quick-action-text">View Map</div>
             </button>
+            <a class="quick-action-btn" href="/citizen/departments">
+              <div class="quick-action-icon">🏢</div>
+              <div class="quick-action-text">Departments</div>
+            </a>
             <button class="quick-action-btn" onclick="getHelp()">
               <div class="quick-action-icon">❓</div>
               <div class="quick-action-text">Get Help</div>
@@ -216,7 +221,7 @@
                 <div class="tip-icon">⏰</div>
                 <div class="tip-content">
                   <h4>Response Times</h4>
-                  <p>Most complaints are reviewed within 24-48 hours and assigned to appropriate departments.</p>
+                  <p>Most complaints are reviewed within 24-48 hours and assigned to appropriate offices.</p>
                 </div>
               </div>
               <div class="tip-item">
@@ -236,6 +241,7 @@
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
     <script type="module" src="../../js/pages/citizen-dashboard.js"></script>
   </body>

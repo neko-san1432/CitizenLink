@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../config/database');
+const Database = require('../config/database');
 const { authenticateUser } = require('../middleware/auth');
 
 // Get all categories with their subcategories and departments
 router.get('/categories', async (req, res) => {
   try {
-    const { data: categories, error: categoriesError } = await supabase
+    const { data: categories, error: categoriesError } = await Database.getClient()
       .from('categories')
       .select(`
         *,
@@ -44,7 +45,7 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
   try {
     const { categoryId } = req.params;
     
-    const { data: subcategories, error } = await supabase
+    const { data: subcategories, error } = await Database.getClient()
       .from('subcategories')
       .select(`
         *,
@@ -79,25 +80,53 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
 router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
   try {
     const { subcategoryId } = req.params;
+    console.log('[DEPT-API] Fetching departments for subcategory:', subcategoryId);
     
-    const { data: departments, error } = await supabase
+    const supabase = Database.getClient();
+
+    // 1) Get department mappings for this subcategory
+    const { data: mappings, error: mapError } = await supabase
+      .from('department_subcategory_mapping')
+      .select('department_id,is_primary,response_priority')
+      .eq('subcategory_id', subcategoryId);
+
+    if (mapError) {
+      console.error('[DEPT-API] Mapping query error:', mapError);
+      throw mapError;
+    }
+
+    if (!mappings || mappings.length === 0) {
+      console.log('[DEPT-API] No mappings found for subcategory:', subcategoryId);
+      return res.json({ success: true, data: [] });
+    }
+
+    const departmentIds = mappings.map(m => m.department_id).filter(Boolean);
+
+    // 2) Fetch departments by IDs
+    const { data: departments, error: deptError } = await supabase
       .from('departments')
-      .select(`
-        *,
-        department_subcategory_mapping (
-          is_primary,
-          response_priority
-        )
-      `)
-      .or(`subcategory_id.eq.${subcategoryId},department_subcategory_mapping.subcategory_id.eq.${subcategoryId}`)
+      .select('*')
+      .in('id', departmentIds)
       .eq('is_active', true)
       .order('name');
 
-    if (error) throw error;
+    if (deptError) {
+      console.error('[DEPT-API] Departments query error:', deptError);
+      throw deptError;
+    }
+
+    // 3) Attach mapping info to each department result
+    const mapByDeptId = new Map(mappings.map(m => [m.department_id, m]));
+    const enriched = (departments || []).map(d => ({
+      ...d,
+      department_subcategory_mapping: mapByDeptId.get(d.id) || null
+    }));
+
+    console.log('[DEPT-API] Returning', enriched.length, 'departments for subcategory:', subcategoryId);
 
     res.json({
       success: true,
-      data: departments
+      data: enriched
     });
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -111,7 +140,7 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
 // Get department structure for complaint form (simplified)
 router.get('/complaint-form', async (req, res) => {
   try {
-    const { data: categories, error } = await supabase
+    const { data: categories, error } = await Database.getClient()
       .from('categories')
       .select(`
         id,
@@ -154,7 +183,7 @@ router.post('/admin/categories', authenticateUser, async (req, res) => {
   try {
     const { name, code, description, icon, sort_order } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('categories')
       .insert({
         name,
@@ -186,7 +215,7 @@ router.post('/admin/subcategories', authenticateUser, async (req, res) => {
   try {
     const { category_id, name, code, description, sort_order } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('subcategories')
       .insert({
         category_id,
@@ -227,7 +256,7 @@ router.post('/admin/departments', authenticateUser, async (req, res) => {
       contact_info 
     } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('departments')
       .insert({
         name,
@@ -262,7 +291,7 @@ router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
   try {
     const { department_id, subcategory_id, is_primary, response_priority } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('department_subcategory_mapping')
       .insert({
         department_id,
@@ -294,7 +323,7 @@ router.put('/admin/categories/:id', authenticateUser, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('categories')
       .update({
         ...updates,
@@ -325,7 +354,7 @@ router.put('/admin/subcategories/:id', authenticateUser, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('subcategories')
       .update({
         ...updates,
@@ -356,7 +385,7 @@ router.put('/admin/departments/:id', authenticateUser, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await Database.getClient()
       .from('departments')
       .update({
         ...updates,
@@ -386,7 +415,7 @@ router.delete('/admin/categories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
+    const { error } = await Database.getClient()
       .from('categories')
       .update({
         is_active: false,
@@ -414,7 +443,7 @@ router.delete('/admin/subcategories/:id', authenticateUser, async (req, res) => 
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
+    const { error } = await Database.getClient()
       .from('subcategories')
       .update({
         is_active: false,
@@ -442,7 +471,7 @@ router.delete('/admin/departments/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
+    const { error } = await Database.getClient()
       .from('departments')
       .update({
         is_active: false,

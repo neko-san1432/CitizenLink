@@ -187,6 +187,91 @@ class DepartmentService {
 
     return lastSignIn.toLocaleDateString();
   }
+
+  /**
+   * Get all departments with their subcategory mappings
+   */
+  async getDepartmentsWithMappings() {
+    const Database = require('../config/database');
+    const supabase = Database.getClient();
+
+    try {
+      // Get all departments
+      const { data: departments, error: deptError } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (deptError) throw deptError;
+
+      // Get department-subcategory mappings
+      const { data: mappings, error: mapError } = await supabase
+        .from('department_subcategory_mapping')
+        .select(`
+          department_id,
+          subcategory_id,
+          is_primary,
+          response_priority,
+          departments (code),
+          subcategories (code)
+        `);
+
+      if (mapError) throw mapError;
+
+      return {
+        departments,
+        mappings
+      };
+    } catch (error) {
+      console.error('Error getting departments with mappings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get departments by subcategory
+   */
+  async getDepartmentsBySubcategory(subcategoryId) {
+    const Database = require('../config/database');
+    const supabase = Database.getClient();
+
+    try {
+      const { data, error } = await supabase
+        .from('department_subcategory_mapping')
+        .select(`
+          department_id,
+          is_primary,
+          response_priority,
+          departments (
+            id,
+            code,
+            name,
+            description,
+            response_time_hours,
+            level
+          )
+        `)
+        .eq('subcategory_id', subcategoryId)
+        .order('response_priority');
+
+      if (error) throw error;
+
+      // Flatten the structure
+      return data.map(item => ({
+        department_id: item.department_id,
+        department_code: item.departments.code,
+        department_name: item.departments.name,
+        is_primary: item.is_primary,
+        response_priority: item.response_priority,
+        response_time_hours: item.departments.response_time_hours,
+        level: item.departments.level
+      }));
+    } catch (error) {
+      console.error('Error getting departments by subcategory:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = DepartmentService;

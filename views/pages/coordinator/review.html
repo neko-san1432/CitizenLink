@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/coordinator-review.css">
+    <link rel="stylesheet" href="../../styles/false-complaint-marker.css">
 </head>
 <body>
     <div class="app-container">
@@ -129,6 +130,9 @@
                                     <button class="btn btn-danger" onclick="openRejectModal()">
                                         ❌ Reject Complaint
                                     </button>
+                                    <button class="btn btn-danger" onclick="openFalseComplaintModal()" id="false-complaint-btn" title="Mark as false/fake complaint">
+                                        🚫 Mark as False
+                                    </button>
                                 </div>
 
                                 <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
@@ -243,7 +247,27 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
+    <script src="../../components/complaint/falseComplaintMarker.js"></script>
     <script type="module" src="../../js/coordinator/review.js"></script>
+    <script>
+        // Function to open false complaint modal
+        function openFalseComplaintModal() {
+            if (window.falseComplaintMarker && window.complaintId) {
+                window.falseComplaintMarker.open(window.complaintId, (updatedComplaint) => {
+                    // Reload the page after marking as false
+                    window.location.reload();
+                });
+            } else {
+                alert('Unable to open false complaint marker. Please refresh the page.');
+            }
+        }
+        
+        // Make complaint ID available globally
+        document.addEventListener('DOMContentLoaded', () => {
+            const pathParts = window.location.pathname.split('/');
+            window.complaintId = pathParts[pathParts.length - 1];
+        });
+    </script>
 </body>
 </html>
 

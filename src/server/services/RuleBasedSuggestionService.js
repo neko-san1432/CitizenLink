@@ -29,7 +29,7 @@ class RuleBasedSuggestionService {
 
     // Seed scores from type
     const scores = new Map(); // dept -> { score, reasons: [] }
-    const seed = typeRules[complaint.type] || [];
+    const seed = typeRules[complaint.category] || [];
     for (const d of seed) scores.set(d, { score: 2.0, reasons: ['type match'] });
 
     // Apply keyword rules

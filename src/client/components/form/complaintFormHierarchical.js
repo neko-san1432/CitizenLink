@@ -9,6 +9,7 @@ import { createComplaintFileHandler, setupDragAndDrop } from '../../utils/fileHa
 import showMessage from '../toast.js';
 import apiClient from '../../config/apiClient.js';
 import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/roleToggle.js';
+import { getUserRole } from '../../auth/authChecker.js';
 
 /**
  * Initialize hierarchical complaint form
@@ -21,7 +22,15 @@ export async function initializeComplaintForm() {
   }
 
   // Check if user is citizen or in citizen mode
-  const activeRole = getActiveRole();
+  // Try to get role from authChecker first (same as sidebar)
+  let activeRole = null;
+  try {
+    activeRole = await getUserRole({ refresh: true });
+  } catch (error) {
+    console.warn('[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:', error);
+    activeRole = getActiveRole();
+  }
+  
   const inCitizenMode = isInCitizenMode();
 
   if (activeRole !== 'citizen' && !inCitizenMode) {
@@ -123,7 +132,7 @@ async function loadCategories() {
       data.forEach(category => {
         const option = document.createElement('option');
         option.value = category.id;
-        option.textContent = `${category.icon} ${category.name}`;
+        option.textContent = category.name;
         categorySelect.appendChild(option);
       });
     }
@@ -193,7 +202,7 @@ async function loadDepartments(subcategoryId, departmentCheckboxes) {
         lguSection.innerHTML = '<h4>Local Government Units (LGU)</h4>';
         
         lguDepartments.forEach(dept => {
-          const isPrimary = dept.department_subcategory_mapping?.some(mapping => mapping.is_primary);
+          const isPrimary = dept.department_subcategory_mapping?.is_primary || false;
           const checkbox = createDepartmentCheckbox(dept, isPrimary);
           lguSection.appendChild(checkbox);
         });
@@ -208,7 +217,7 @@ async function loadDepartments(subcategoryId, departmentCheckboxes) {
         ngaSection.innerHTML = '<h4>National Government Agencies (NGA)</h4>';
         
         ngaDepartments.forEach(dept => {
-          const isPrimary = dept.department_subcategory_mapping?.some(mapping => mapping.is_primary);
+          const isPrimary = dept.department_subcategory_mapping?.is_primary || false;
           const checkbox = createDepartmentCheckbox(dept, isPrimary);
           ngaSection.appendChild(checkbox);
         });

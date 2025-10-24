@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Review Queue - CitizenLink</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/toast.css">
     <link rel="stylesheet" href="/css/components/sidebar.css">
@@ -100,14 +101,29 @@
     </div>
 
     <!-- Toast container -->
-    <div id="toast-container"></div>
+    <div id="toast-container" class="toast-container"></div>
 
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/services/toastNotificationService.js"></script>
+    <script type="module" src="../../js/coordinator/department-selection-modal.js"></script>
     <script type="module" src="../../js/coordinator/review-queue.js"></script>
+    
+    <script type="module">
+        // Initialize toast notification service
+        import toastNotificationService from '../../js/services/toastNotificationService.js';
+        
+        // Start listening for real-time notifications
+        toastNotificationService.startListening();
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            toastNotificationService.stopListening();
+        });
+    </script>
 </body>
 </html>
 

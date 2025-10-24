@@ -87,8 +87,8 @@ class InputSanitizer {
 
     // Check for potential security threats first
     if (InputSanitizer.detectThreats(stringValue, fieldName)) {
-      console.warn(`[SANITIZER] Potential threat detected in field: ${fieldName}, value: ${stringValue.substring(0, 50)}...`);
-      return ''; // Return empty string for detected threats
+      // Silenced noisy sanitizer warnings per request; still sanitize by returning empty string
+      return '';
     }
 
     // Skip sanitization for certain field types that shouldn't be modified

@@ -1,0 +1,376 @@
+/* Complaint Form Styling */
+
+.complaint-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #ffffff;
+}
+
+/* Description textarea specific typography */
+#description {
+  font-family: "Source Sans 3", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Only show validation errors after user interaction */
+.form-group.touched input:invalid,
+.form-group.touched select:invalid,
+.form-group.touched textarea:invalid {
+  border-color: #ef4444;
+}
+
+/* Removed automatic :valid styling to prevent green borders on empty fields */
+
+/* File Upload Styling */
+.file-upload-container {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.file-upload-container:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+}
+
+.file-upload-container.dragover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.drop-zone-content {
+  color: #6b7280;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.file-types {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
+
+/* Department Selection */
+.department-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.department-section h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.checkbox-wrapper:hover {
+  background-color: #f3f4f6;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.75rem;
+  margin-bottom: 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+}
+
+.checkbox-label span:first-child {
+  font-weight: 500;
+  color: #374151;
+}
+
+.checkbox-label span:last-child {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  background-color: #e5e7eb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Map Container */
+.map-container {
+  height: 300px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Submit Button */
+.submit-button {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading States */
+.loading-placeholder {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Error Messages */
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+}
+
+/* Dark Mode Styles */
+html.dark .complaint-form-container {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+html.dark .form-group label {
+  color: #d1d5db;
+}
+
+html.dark .form-group input,
+html.dark .form-group select,
+html.dark .form-group textarea {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+html.dark .form-group input:focus,
+html.dark .form-group select:focus,
+html.dark .form-group textarea:focus {
+  border-color: #3b82f6;
+  background-color: #4b5563;
+}
+
+html.dark .department-section {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+html.dark .department-section h4 {
+  color: #d1d5db;
+}
+
+html.dark .checkbox-wrapper:hover {
+  background-color: #4b5563;
+}
+
+html.dark .checkbox-label span:first-child {
+  color: #d1d5db;
+}
+
+html.dark .checkbox-label span:last-child {
+  background-color: #4b5563;
+  color: #9ca3af;
+}
+
+html.dark .file-upload-container {
+  border-color: #4b5563;
+  background-color: #374151;
+}
+
+html.dark .file-upload-container:hover {
+  border-color: #3b82f6;
+  background-color: #4b5563;
+}
+
+html.dark .file-upload-container.dragover {
+  border-color: #3b82f6;
+  background-color: #1e40af;
+}
+
+html.dark .drop-zone-content {
+  color: #9ca3af;
+}
+
+html.dark .file-types {
+  color: #6b7280;
+}
+
+/* File Preview Styles */
+.file-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  min-height: 60px;
+}
+
+.file-preview-item {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.file-preview-item:hover {
+  transform: scale(1.05);
+}
+
+.add-file-button {
+  transition: all 0.2s ease;
+}
+
+.add-file-button:hover {
+  transform: scale(1.05);
+}
+
+html.dark .loading-placeholder {
+  color: #9ca3af;
+}
+
+.error-message::before {
+  content: "⚠️";
+  margin-right: 0.5rem;
+}
+
+/* Success Messages */
+.success-message {
+  color: #10b981;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.success-message::before {
+  content: "✅";
+  margin-right: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .complaint-form-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.625rem;
+  }
+  
+  .file-upload-container {
+    padding: 1.5rem;
+  }
+  
+  .department-section {
+    padding: 0.75rem;
+  }
+}
+
+/* Form Validation States */
+.form-group input:focus:invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Removed :focus:valid styling to prevent green borders on empty fields */
+
+/* Disabled States */
+.form-group select:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Required Field Indicator - disabled (show asterisks only where written in HTML) */
+/* .form-group label::after {
+  content: " *";
+  color: #ef4444;
+  font-weight: bold;
+} */
+
+/* Custom Select Styling */
+.form-group select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  appearance: none;
+}

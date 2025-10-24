@@ -34,7 +34,7 @@ class LinkGenerator {
 
         // Get user role to determine department restrictions
         const userRole = await this.getUserRole();
-        this.filterDepartmentsByRole(userRole);
+        await this.filterDepartmentsByRole(userRole);
 
         this.populateDepartmentSelect();
         this.setupRoleRestrictions(userRole);
@@ -54,17 +54,26 @@ class LinkGenerator {
     }
   }
 
-  getHRDepartment(userRole) {
-    if (userRole && userRole.startsWith('lgu-hr-')) {
-      return userRole.split('-')[2]?.toUpperCase() || 'WST';
+  async getHRDepartment(userRole) {
+    if (userRole && userRole === 'lgu-hr') {
+      // Get department from user metadata
+      try {
+        const { supabase } = await import('../../config/config.js');
+        const { data: { session } } = await supabase.auth.getSession();
+        const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+        return metadata.dpt || metadata.department || 'WST'; // Fallback to WST if not found
+      } catch (error) {
+        console.warn('Failed to get department from metadata:', error);
+        return 'WST'; // Default fallback
+      }
     }
     return null;
   }
 
-  filterDepartmentsByRole(userRole) {
+  async filterDepartmentsByRole(userRole) {
     // If user is LGU-HR, filter to only their department
-    if (userRole.startsWith('lgu-hr-')) {
-      const userDepartment = userRole.split('-')[2]; // Extract department from lgu-hr-DEPT
+    if (userRole === 'lgu-hr') {
+      const userDepartment = await this.getHRDepartment(userRole);
       this.departments = this.departments.filter(dept =>
         dept.code === userDepartment.toUpperCase()
       );
@@ -79,7 +88,7 @@ class LinkGenerator {
     const roleInfo = document.getElementById('role-info');
     const roleDescription = document.getElementById('role-description');
 
-    if (userRole.startsWith('lgu-hr-')) {
+    if (userRole === 'lgu-hr') {
       // LGU-HR can only create officer or admin roles
       const options = roleSelect.querySelectorAll('option');
       options.forEach(option => {
@@ -249,8 +258,8 @@ class LinkGenerator {
 
     // Automatically get department based on user role
     let departmentCode = null;
-    if (userRole.startsWith('lgu-hr-')) {
-      departmentCode = this.getHRDepartment(userRole);
+    if (userRole === 'lgu-hr') {
+      departmentCode = await this.getHRDepartment(userRole);
       // console.log removed for security
     } else {
       // For coordinators and super-admin, use form data

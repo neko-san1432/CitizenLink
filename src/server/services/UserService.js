@@ -1,6 +1,5 @@
 const Database = require('../config/database');
-const db = new Database();
-const supabase = db.getClient();
+const supabase = Database.getClient();
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 
 class UserService {
@@ -8,8 +7,8 @@ class UserService {
   normalizeRole(rawRole) {
     if (!rawRole) return 'citizen';
     const role = String(rawRole).toLowerCase();
-    if (role.startsWith('lgu-admin')) return 'lgu-admin';
-    if (role.startsWith('lgu')) return 'lgu';
+    if (role === 'lgu-admin') return 'lgu-admin';
+    if (role === 'lgu') return 'lgu';
     if (role === 'super-admin' || role === 'superadmin') return 'super-admin';
     if (role === 'citizen') return 'citizen';
     return 'citizen';
@@ -171,7 +170,7 @@ class UserService {
       const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
 
       if (error) {
-        console.error('[AUTH] Failed to fetch user:', error);
+        console.error('[AUTH] Failed to fetch user via admin API:', error);
         return null;
       }
 

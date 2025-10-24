@@ -110,30 +110,57 @@ export async function getLegacyDepartmentMapping() {
     const legacyCode = dept.code.toLowerCase();
     mapping[legacyCode] = dept.name;
     
-    // Also map by partial name matching for common patterns
-    if (legacyCode.includes('wst') || dept.name.toLowerCase().includes('water')) {
-      mapping['wst'] = dept.name;
+    // Also map by partial name matching for common patterns - Updated for new department codes
+    if (legacyCode.includes('ceo') || dept.name.toLowerCase().includes('engineering')) {
+      mapping['ceo'] = dept.name;
     }
-    if (legacyCode.includes('eng') || dept.name.toLowerCase().includes('engineering')) {
-      mapping['engineering'] = dept.name;
+    if (legacyCode.includes('gso') || dept.name.toLowerCase().includes('general services')) {
+      mapping['gso'] = dept.name;
     }
-    if (legacyCode.includes('health') || dept.name.toLowerCase().includes('health')) {
-      mapping['health'] = dept.name;
+    if (legacyCode.includes('cpdc') || dept.name.toLowerCase().includes('planning')) {
+      mapping['cpdc'] = dept.name;
     }
-    if (legacyCode.includes('social') || dept.name.toLowerCase().includes('social')) {
-      mapping['social-welfare'] = dept.name;
+    if (legacyCode.includes('cho') || dept.name.toLowerCase().includes('health')) {
+      mapping['cho'] = dept.name;
     }
-    if (legacyCode.includes('safety') || dept.name.toLowerCase().includes('safety')) {
-      mapping['public-safety'] = dept.name;
+    if (legacyCode.includes('cswdo') || dept.name.toLowerCase().includes('social welfare')) {
+      mapping['cswdo'] = dept.name;
     }
-    if (legacyCode.includes('env') || dept.name.toLowerCase().includes('environment')) {
-      mapping['environmental'] = dept.name;
+    if (legacyCode.includes('cdrrmo') || dept.name.toLowerCase().includes('disaster')) {
+      mapping['cdrrmo'] = dept.name;
     }
-    if (legacyCode.includes('transport') || dept.name.toLowerCase().includes('transport')) {
-      mapping['transportation'] = dept.name;
+    if (legacyCode.includes('enro') || dept.name.toLowerCase().includes('environment')) {
+      mapping['enro'] = dept.name;
     }
-    if (legacyCode.includes('works') || dept.name.toLowerCase().includes('works')) {
-      mapping['public-works'] = dept.name;
+    if (legacyCode.includes('cto') || dept.name.toLowerCase().includes('treasurer')) {
+      mapping['cto'] = dept.name;
+    }
+    if (legacyCode.includes('ceeo') || dept.name.toLowerCase().includes('economic enterprise')) {
+      mapping['ceeo'] = dept.name;
+    }
+    if (legacyCode.includes('hrmo') || dept.name.toLowerCase().includes('human resource')) {
+      mapping['hrmo'] = dept.name;
+    }
+    if (legacyCode.includes('pnp') || dept.name.toLowerCase().includes('police')) {
+      mapping['pnp'] = dept.name;
+    }
+    if (legacyCode.includes('clo') || dept.name.toLowerCase().includes('legal')) {
+      mapping['clo'] = dept.name;
+    }
+    if (legacyCode.includes('ocm') || dept.name.toLowerCase().includes('mayor')) {
+      mapping['ocm'] = dept.name;
+    }
+    if (legacyCode.includes('pad') || dept.name.toLowerCase().includes('assistance desk')) {
+      mapping['pad'] = dept.name;
+    }
+    if (legacyCode.includes('oca') || dept.name.toLowerCase().includes('administrator')) {
+      mapping['oca'] = dept.name;
+    }
+    if (legacyCode.includes('cio') || dept.name.toLowerCase().includes('information')) {
+      mapping['cio'] = dept.name;
+    }
+    if (legacyCode.includes('cao') || dept.name.toLowerCase().includes('accountant')) {
+      mapping['cao'] = dept.name;
     }
   });
   

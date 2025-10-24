@@ -10,7 +10,6 @@
   z-index: var(--z-modal-backdrop);
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
 }
 
 .modal-overlay.active {
@@ -31,7 +30,6 @@
   padding: var(--space-4);
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
 }
 
 .modal.active {
@@ -46,13 +44,10 @@
   max-height: 90vh;
   width: 100%;
   max-width: 500px;
-  transform: scale(0.95) translateY(20px);
-  transition: all var(--transition-normal);
   overflow: hidden;
 }
 
 .modal.active .modal-dialog {
-  transform: scale(1) translateY(0);
 }
 
 /* Modal Sizes */
@@ -103,7 +98,6 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--gray-500);
-  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,14 +147,9 @@
   border: 3px solid var(--gray-200);
   border-top: 3px solid var(--primary-600);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
   margin-bottom: var(--space-4);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 /* Content Styling */
 .terms-content,
@@ -353,21 +342,6 @@ body.modal-open {
   }
 }
 
-/* Animation for modal content */
-.modal-body > * {
-  animation: fadeInUp 0.3s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* Focus management */
 .modal[aria-hidden="false"] {

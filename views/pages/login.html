@@ -84,7 +84,7 @@
                                 <a href="/resetPassword" class="forgot-link">Forgot password?</a>
                             </div>
 
-                            <div id="login-captcha" class="captcha-container"></div>
+                            <div id="login-captcha" class="captcha-container" style="display: none;"></div>
 
                             <button class="btn btn-primary btn-lg w-full" type="submit" name="Login">
                                 <span>Sign in</span>
@@ -133,7 +133,8 @@
     
     <!-- Scripts -->
     <script type="module" src="./js/components/toast.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
+    <!-- reCAPTCHA disabled for development -->
+    <!-- <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script> -->
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/login-page.js"></script>
 </body>

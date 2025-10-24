@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Departments - CitizenLink</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/pages/index.css">
+    <link rel="stylesheet" href="/css/components/sidebar.css">
+    <link rel="stylesheet" href="/css/components/modal.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <style>
+        .departments-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .departments-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .departments-header h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .departments-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .departments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .department-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .department-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .department-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .department-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: white;
+        }
+        
+        .department-title {
+            flex: 1;
+        }
+        
+        .department-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .department-code {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin: 0;
+        }
+        
+        .department-description {
+            color: #5a6c7d;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .department-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-right: 0.5rem;
+        }
+        
+        .detail-value {
+            color: #5a6c7d;
+        }
+        
+        .department-contact {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .contact-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .contact-icon {
+            margin-right: 0.5rem;
+            color: #3498db;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #e74c3c;
+        }
+        
+        .back-to-dashboard {
+            display: inline-flex;
+            align-items: center;
+            color: #3498db;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        
+        .back-to-dashboard:hover {
+            color: #2980b9;
+        }
+        
+        .back-icon {
+            margin-right: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .departments-container {
+                padding: 1rem;
+            }
+            
+            .departments-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .department-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="departments-container">
+        <a href="/dashboard" class="back-to-dashboard">
+            <span class="back-icon">←</span>
+            Back to Dashboard
+        </a>
+        
+        <div class="departments-header">
+            <h1>Government Departments</h1>
+            <p>Learn about the different government offices that handle citizen complaints and services in Digos City</p>
+        </div>
+        
+        <div id="departments-content">
+            <div class="loading">
+                <p>Loading departments...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/config/apiClient.js"></script>
+    <script>
+        // Department icons mapping
+        const departmentIcons = {
+            'CEO': '🏗️',
+            'GSO': '🔧',
+            'CPDC': '📋',
+            'CHO': '🏥',
+            'CSWDO': '🤝',
+            'CDRRMO': '🚨',
+            'ENRO': '🌿',
+            'CTO': '💰',
+            'CEEO': '💼',
+            'HRMO': '👥',
+            'PNP': '👮',
+            'CLO': '⚖️',
+            'OCM': '🏛️',
+            'PAD': '📞',
+            'OCA': '📋',
+            'CIO': '📢',
+            'CAO': '📊'
+        };
+
+        // Department colors mapping
+        const departmentColors = {
+            'CEO': '#e74c3c',
+            'GSO': '#f39c12',
+            'CPDC': '#9b59b6',
+            'CHO': '#e91e63',
+            'CSWDO': '#3498db',
+            'CDRRMO': '#e67e22',
+            'ENRO': '#27ae60',
+            'CTO': '#f1c40f',
+            'CEEO': '#34495e',
+            'HRMO': '#16a085',
+            'PNP': '#2c3e50',
+            'CLO': '#8e44ad',
+            'OCM': '#c0392b',
+            'PAD': '#2980b9',
+            'OCA': '#d35400',
+            'CIO': '#1abc9c',
+            'CAO': '#7f8c8d'
+        };
+
+        async function loadDepartments() {
+            try {
+                const response = await fetch('/api/departments/active');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    renderDepartments(result.data);
+                } else {
+                    showError('Failed to load departments');
+                }
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                showError('Error loading departments. Please try again.');
+            }
+        }
+
+        function renderDepartments(departments) {
+            const content = document.getElementById('departments-content');
+            
+            if (departments.length === 0) {
+                content.innerHTML = '<div class="error"><p>No departments found.</p></div>';
+                return;
+            }
+
+            const departmentsHTML = `
+                <div class="departments-grid">
+                    ${departments.map(dept => createDepartmentCard(dept)).join('')}
+                </div>
+            `;
+            
+            content.innerHTML = departmentsHTML;
+        }
+
+        function createDepartmentCard(department) {
+            const icon = departmentIcons[department.code] || '🏢';
+            const color = departmentColors[department.code] || '#3498db';
+            const contactInfo = department.contact_info ? JSON.parse(department.contact_info) : {};
+            
+            return `
+                <div class="department-card">
+                    <div class="department-header">
+                        <div class="department-icon" style="background-color: ${color}">
+                            ${icon}
+                        </div>
+                        <div class="department-title">
+                            <h3 class="department-name">${department.name}</h3>
+                            <p class="department-code">Code: ${department.code}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="department-description">
+                        ${department.description || 'No description available.'}
+                    </div>
+                    
+                    <div class="department-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Level:</span>
+                            <span class="detail-value">${department.level}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response Time:</span>
+                            <span class="detail-value">${department.response_time_hours}h</span>
+                        </div>
+                    </div>
+                    
+                    ${contactInfo.email || contactInfo.phone ? `
+                        <div class="department-contact">
+                            <div class="contact-title">Contact Information</div>
+                            <div class="contact-info">
+                                ${contactInfo.email ? `
+                                    <div class="contact-item">
+                                        <span class="contact-icon">📧</span>
+                                        <span>${contactInfo.email}</span>
+                                    </div>
+                                ` : ''}
+                                ${contactInfo.phone ? `
+                                    <div class="contact-item">
+                                        <span class="contact-icon">📞</span>
+                                        <span>${contactInfo.phone}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const content = document.getElementById('departments-content');
+            content.innerHTML = `<div class="error"><p>${message}</p></div>`;
+        }
+
+        // Load departments when page loads
+        document.addEventListener('DOMContentLoaded', loadDepartments);
+    </script>
+</body>
+</html>
+
+
+

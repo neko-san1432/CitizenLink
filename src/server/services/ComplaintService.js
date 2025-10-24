@@ -3,6 +3,7 @@ const ComplaintAssignmentRepository = require('../repositories/ComplaintAssignme
 const DepartmentRepository = require('../repositories/DepartmentRepository');
 const Complaint = require('../models/Complaint');
 const NotificationService = require('./NotificationService');
+const { normalizeComplaintData, prepareComplaintForInsert, validateComplaintConsistency } = require('../utils/complaintUtils');
 
 class ComplaintService {
   constructor() {
@@ -37,13 +38,24 @@ class ComplaintService {
     const mappedData = {
       ...complaintData,
       submitted_by: userId,
+      // All submissions are complaints - no need for user to choose type
+      type: 'complaint',
       // Map 'description' from client to 'descriptive_su' expected by server model
       descriptive_su: complaintData.description || complaintData.descriptive_su,
       // Map 'departments' to 'department_r' for database
       department_r: departments
     };
 
-    const complaint = new Complaint(mappedData);
+    // Prepare data for insertion using utility functions
+    const preparedData = prepareComplaintForInsert(mappedData);
+    
+    // Validate data consistency
+    const consistencyCheck = validateComplaintConsistency(preparedData);
+    if (!consistencyCheck.isValid) {
+      console.warn('[COMPLAINT] Data consistency issues:', consistencyCheck.errors);
+    }
+
+    const complaint = new Complaint(preparedData);
 
     const validation = Complaint.validate(complaint);
     if (!validation.isValid) {
@@ -228,38 +240,104 @@ class ComplaintService {
     return this.complaintRepo.findByUserId(userId, options);
   }
 
+  async getUserStatistics(userId) {
+    try {
+      const supabase = this.complaintRepo.supabase;
+      
+      // Get total complaints count
+      const { count: totalComplaints, error: totalError } = await supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId);
+
+      if (totalError) throw totalError;
+
+      // Get complaints by workflow_status
+      const { data: statusData, error: statusError } = await supabase
+        .from('complaints')
+        .select('workflow_status')
+        .eq('submitted_by', userId);
+
+      if (statusError) throw statusError;
+
+      // Count by workflow_status
+      const statusCounts = statusData.reduce((acc, complaint) => {
+        acc[complaint.workflow_status] = (acc[complaint.workflow_status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Get complaints by category (more meaningful than type)
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('complaints')
+        .select('category')
+        .eq('submitted_by', userId);
+
+      if (categoryError) throw categoryError;
+
+      // Count by category
+      const categoryCounts = categoryData.reduce((acc, complaint) => {
+        const category = complaint.category || 'Uncategorized';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Get recent activity (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { count: recentComplaints, error: recentError } = await supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId)
+        .gte('submitted_at', thirtyDaysAgo.toISOString());
+
+      if (recentError) throw recentError;
+
+      return {
+        totalComplaints: totalComplaints || 0,
+        recentComplaints: recentComplaints || 0,
+        statusCounts,
+        categoryCounts, // Changed from typeCounts to categoryCounts
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Error fetching user statistics:', error);
+      throw error;
+    }
+  }
+
   async getAllComplaints(options = {}) {
     return this.complaintRepo.findAll(options);
   }
 
-  async updateComplaintStatus(id, status, notes = null, userId = null) {
+  async updateComplaintStatus(id, workflowStatus, notes = null, userId = null) {
     const complaint = await this.getComplaintById(id);
 
-    const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
-    if (!validStatuses.includes(status)) {
-      throw new Error('Invalid status');
+    const validStatuses = ['new', 'assigned', 'in_progress', 'completed', 'cancelled'];
+    if (!validStatuses.includes(workflowStatus)) {
+      throw new Error('Invalid workflow status');
     }
 
-    const updatedComplaint = await this.complaintRepo.updateStatus(id, status, notes);
+    const updatedComplaint = await this.complaintRepo.updateStatus(id, workflowStatus, notes);
 
     try {
       await this.complaintRepo.logAction(id, 'status_updated', {
-        reason: `Status changed to ${status}`,
-        details: { old_status: complaint.status, new_status: status, notes }
+        reason: `Workflow status changed to ${workflowStatus}`,
+        details: { old_status: complaint.workflow_status, new_status: workflowStatus, notes }
       });
     } catch (error) {
       console.warn('[AUDIT] Status update logging failed:', error.message);
     }
 
     // Send notification to citizen if status changed
-    if (complaint.status !== status) {
+    if (complaint.workflow_status !== workflowStatus) {
       try {
         await this.notificationService.notifyComplaintStatusChanged(
           complaint.submitted_by,
           id,
           complaint.title,
-          status,
-          complaint.status
+          workflowStatus,
+          complaint.workflow_status
         );
       } catch (notifError) {
         console.warn('[COMPLAINT] Failed to send status change notification:', notifError.message);
@@ -323,7 +401,7 @@ class ComplaintService {
 
     let query = this.complaintRepo.supabase
       .from('complaints')
-      .select('status, type, priority, submitted_at');
+      .select('workflow_status, type, priority, submitted_at');
 
     if (department) {
       query = query.contains('department_r', [department]);
@@ -349,7 +427,7 @@ class ComplaintService {
     };
 
     data.forEach(complaint => {
-      stats.by_status[complaint.status] = (stats.by_status[complaint.status] || 0) + 1;
+      stats.by_status[complaint.workflow_status] = (stats.by_status[complaint.workflow_status] || 0) + 1;
       stats.by_type[complaint.type] = (stats.by_type[complaint.type] || 0) + 1;
       stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
 
@@ -377,15 +455,15 @@ class ComplaintService {
     try {
       let query = this.complaintRepo.supabase
         .from('complaints')
-        .select('id, title, type, status, priority, latitude, longitude, location_text, submitted_at, primary_department, secondary_departments, department_r')
+        .select('id, title, type, workflow_status, priority, latitude, longitude, location_text, submitted_at, primary_department, secondary_departments, department_r')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
-      // Filter by status
+      // Filter by workflow_status
       if (status) {
-        query = query.eq('status', status);
+        query = query.eq('workflow_status', status);
       } else if (!includeResolved) {
-        query = query.neq('status', 'resolved').neq('status', 'closed');
+        query = query.neq('workflow_status', 'completed').neq('workflow_status', 'cancelled');
       }
 
       // Filter by type
@@ -440,7 +518,7 @@ class ComplaintService {
         id: complaint.id,
         title: complaint.title,
         type: complaint.type,
-        status: complaint.status,
+        status: complaint.workflow_status,
         priority: complaint.priority,
         lat: parseFloat(complaint.latitude),
         lng: parseFloat(complaint.longitude),
@@ -456,6 +534,497 @@ class ComplaintService {
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] getComplaintLocations error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Cancel complaint
+   */
+  async cancelComplaint(complaintId, userId, reason) {
+    try {
+      // Get complaint and verify ownership
+      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      if (complaint.submitted_by !== userId) {
+        throw new Error('Not authorized to cancel this complaint');
+      }
+
+      // Check if complaint can be cancelled
+      const cancellableStatuses = ['new', 'assigned', 'in_progress'];
+      if (!cancellableStatuses.includes(complaint.workflow_status)) {
+        throw new Error('Complaint cannot be cancelled in its current status');
+      }
+
+      // Update complaint status
+      const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
+        .from('complaints')
+        .update({
+          status: 'cancelled',
+          workflow_status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: userId,
+          cancellation_reason: reason,
+          last_activity_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error('Failed to cancel complaint');
+      }
+
+      // Notify relevant parties
+      try {
+        // Notify coordinator if assigned
+        if (complaint.assigned_coordinator_id) {
+          await this.notificationService.createNotification(
+            complaint.assigned_coordinator_id,
+            'complaint_cancelled',
+            'Complaint Cancelled',
+            `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+            {
+              priority: 'info',
+              link: `/coordinator/review-queue`,
+              metadata: { complaint_id: complaintId, reason }
+            }
+          );
+        }
+
+        // Notify assigned departments
+        const departments = complaint.department_r || [];
+        for (const deptCode of departments) {
+          try {
+            const { data: dept } = await this.complaintRepo.supabase
+              .from('departments')
+              .select('id')
+              .eq('code', deptCode)
+              .single();
+
+            if (dept) {
+              // Get department admins and notify them
+              const { data: assignments } = await this.complaintRepo.supabase
+                .from('complaint_assignments')
+                .select('assigned_by')
+                .eq('complaint_id', complaintId)
+                .eq('department_id', dept.id);
+
+              for (const assignment of assignments || []) {
+                if (assignment.assigned_by) {
+                  await this.notificationService.createNotification(
+                    assignment.assigned_by,
+                    'complaint_cancelled',
+                    'Complaint Cancelled',
+                    `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+                    {
+                      priority: 'info',
+                      link: `/lgu-admin/department-queue`,
+                      metadata: { complaint_id: complaintId, reason }
+                    }
+                  );
+                }
+              }
+            }
+          } catch (deptError) {
+            console.warn('[COMPLAINT-SERVICE] Failed to notify department:', deptError.message);
+          }
+        }
+      } catch (notifError) {
+        console.warn('[COMPLAINT-SERVICE] Failed to send cancellation notifications:', notifError.message);
+      }
+
+      return updatedComplaint;
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Cancel complaint error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send reminder for complaint
+   */
+  async sendReminder(complaintId, userId) {
+    try {
+      // Get complaint and verify ownership
+      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      if (complaint.submitted_by !== userId) {
+        throw new Error('Not authorized to send reminder for this complaint');
+      }
+
+      // Check if reminder can be sent (not cancelled, closed, or resolved)
+      const reminderBlockedStatuses = ['cancelled', 'completed'];
+      if (reminderBlockedStatuses.includes(complaint.workflow_status)) {
+        throw new Error('Cannot send reminder for complaint in current status');
+      }
+
+      // Check cooldown period (24 hours)
+      const { data: lastReminder } = await this.complaintRepo.supabase
+        .from('complaint_reminders')
+        .select('reminded_at')
+        .eq('complaint_id', complaintId)
+        .order('reminded_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (lastReminder) {
+        const lastReminderTime = new Date(lastReminder.reminded_at);
+        const now = new Date();
+        const hoursSinceLastReminder = (now - lastReminderTime) / (1000 * 60 * 60);
+
+        if (hoursSinceLastReminder < 24) {
+          const remainingHours = Math.ceil(24 - hoursSinceLastReminder);
+          throw new Error(`Please wait ${remainingHours} more hours before sending another reminder`);
+        }
+      }
+
+      // Create reminder record
+      const { data: reminder, error: reminderError } = await this.complaintRepo.supabase
+        .from('complaint_reminders')
+        .insert({
+          complaint_id: complaintId,
+          reminded_by: userId,
+          reminder_type: 'manual',
+          reminded_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (reminderError) {
+        throw new Error('Failed to create reminder record');
+      }
+
+      // Notify assigned departments/officers
+      try {
+        const { data: assignments } = await this.complaintRepo.supabase
+          .from('complaint_assignments')
+          .select('assigned_to, assigned_by, department_id')
+          .eq('complaint_id', complaintId);
+
+        for (const assignment of assignments || []) {
+          // Notify assigned officer
+          if (assignment.assigned_to) {
+            await this.notificationService.createNotification(
+              assignment.assigned_to,
+              'complaint_reminder',
+              'Complaint Reminder',
+              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              {
+                priority: 'warning',
+                link: `/lgu-officer/tasks/${complaintId}`,
+                metadata: { complaint_id: complaintId }
+              }
+            );
+          }
+
+          // Notify department admin
+          if (assignment.assigned_by) {
+            await this.notificationService.createNotification(
+              assignment.assigned_by,
+              'complaint_reminder',
+              'Complaint Reminder',
+              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              {
+                priority: 'warning',
+                link: `/lgu-admin/department-queue`,
+                metadata: { complaint_id: complaintId }
+              }
+            );
+          }
+        }
+      } catch (notifError) {
+        console.warn('[COMPLAINT-SERVICE] Failed to send reminder notifications:', notifError.message);
+      }
+
+      return reminder;
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Send reminder error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Confirm resolution
+   */
+  async confirmResolution(complaintId, userId, confirmed, feedback) {
+    try {
+      // Get complaint and verify ownership
+      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      if (complaint.submitted_by !== userId) {
+        throw new Error('Not authorized to confirm resolution for this complaint');
+      }
+
+      // Check if complaint is in resolved status
+      if (complaint.workflow_status !== 'completed') {
+        throw new Error('Complaint must be completed by officer before citizen can confirm');
+      }
+
+      // Update complaint status
+      const newStatus = confirmed ? 'confirmed by citizen' : 'reopened';
+      const newWorkflowStatus = confirmed ? 'completed' : 'in_progress';
+
+      const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
+        .from('complaints')
+        .update({
+          status: newStatus,
+          workflow_status: newWorkflowStatus,
+          confirmed_by_citizen: confirmed,
+          citizen_confirmation_date: confirmed ? new Date().toISOString() : null,
+          citizen_feedback: feedback || null,
+          last_activity_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error('Failed to update complaint status');
+      }
+
+      // Notify relevant parties
+      try {
+        if (confirmed) {
+          // Notify officer who resolved it
+          if (complaint.resolved_by) {
+            await this.notificationService.createNotification(
+              complaint.resolved_by,
+              'resolution_confirmed',
+              'Resolution Confirmed',
+              `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
+              {
+                priority: 'success',
+                link: `/lgu-officer/tasks`,
+                metadata: { complaint_id: complaintId, feedback }
+              }
+            );
+          }
+
+          // Notify department admin
+          const { data: assignments } = await this.complaintRepo.supabase
+            .from('complaint_assignments')
+            .select('assigned_by')
+            .eq('complaint_id', complaintId)
+            .limit(1)
+            .single();
+
+          if (assignments?.assigned_by) {
+            await this.notificationService.createNotification(
+              assignments.assigned_by,
+              'resolution_confirmed',
+              'Resolution Confirmed',
+              `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
+              {
+                priority: 'success',
+                link: `/lgu-admin/department-queue`,
+                metadata: { complaint_id: complaintId, feedback }
+              }
+            );
+          }
+        } else {
+          // Notify officer that resolution was rejected
+          if (complaint.resolved_by) {
+            await this.notificationService.createNotification(
+              complaint.resolved_by,
+              'resolution_rejected',
+              'Resolution Rejected',
+              `Citizen has rejected the resolution of complaint: "${complaint.title}". Feedback: ${feedback || 'No feedback provided'}`,
+              {
+                priority: 'warning',
+                link: `/lgu-officer/tasks/${complaintId}`,
+                metadata: { complaint_id: complaintId, feedback }
+              }
+            );
+          }
+        }
+      } catch (notifError) {
+        console.warn('[COMPLAINT-SERVICE] Failed to send confirmation notifications:', notifError.message);
+      }
+
+      return updatedComplaint;
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Confirm resolution error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get normalized complaint data with derived fields
+   * @param {string} complaintId - Complaint ID
+   * @returns {Object} Normalized complaint data
+   */
+  async getNormalizedComplaint(complaintId) {
+    try {
+      const complaint = await this.complaintRepo.findById(complaintId);
+      if (!complaint) {
+        return null;
+      }
+      
+      return normalizeComplaintData(complaint);
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Error getting normalized complaint:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all complaints with normalized data
+   * @param {Object} filters - Filter options
+   * @returns {Array} Array of normalized complaint data
+   */
+  async getNormalizedComplaints(filters = {}) {
+    try {
+      const complaints = await this.complaintRepo.findAll(filters);
+      return complaints.map(complaint => normalizeComplaintData(complaint));
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Error getting normalized complaints:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark a complaint as false
+   * @param {string} complaintId - Complaint ID
+   * @param {string} coordinatorId - Coordinator marking as false
+   * @param {string} reason - Reason for marking as false
+   * @returns {Promise<Object>} Result object
+   */
+  async markAsFalseComplaint(complaintId, coordinatorId, reason) {
+    try {
+      // Get complaint
+      const complaint = await this.complaintRepo.findById(complaintId);
+      if (!complaint) {
+        return {
+          success: false,
+          error: 'Complaint not found'
+        };
+      }
+
+      // Check if already marked as false
+      if (complaint.is_false_complaint) {
+        return {
+          success: false,
+          error: 'Complaint is already marked as false'
+        };
+      }
+
+      // Update complaint
+      const updatedComplaint = await this.complaintRepo.update(complaintId, {
+        is_false_complaint: true,
+        false_complaint_reason: reason,
+        false_complaint_marked_by: coordinatorId,
+        false_complaint_marked_at: new Date().toISOString(),
+        workflow_status: 'rejected_false'
+      });
+
+      // Log audit
+      await this.auditRepo.logAction(
+        'complaint_marked_false',
+        coordinatorId,
+        'complaint',
+        complaintId,
+        {
+          reason: reason,
+          previous_status: complaint.workflow_status
+        }
+      );
+
+      return {
+        success: true,
+        data: updatedComplaint,
+        message: 'Complaint marked as false successfully'
+      };
+
+    } catch (error) {
+      console.error('Error marking complaint as false:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get false complaint statistics
+   * @returns {Promise<Object>} Statistics object
+   */
+  async getFalseComplaintStatistics() {
+    try {
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
+
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_false_complaint', true);
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        data: {
+          total_false_complaints: data?.length || 0
+        }
+      };
+
+    } catch (error) {
+      console.error('Error getting false complaint statistics:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get all false complaints
+   * @param {Object} filters - Filter options
+   * @returns {Promise<Object>} List of false complaints
+   */
+  async getFalseComplaints(filters = {}) {
+    try {
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
+
+      let query = supabase
+        .from('complaints')
+        .select('*')
+        .eq('is_false_complaint', true)
+        .order('false_complaint_marked_at', { ascending: false });
+
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        data: data || []
+      };
+
+    } catch (error) {
+      console.error('Error getting false complaints:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 }

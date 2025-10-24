@@ -69,7 +69,7 @@ class DuplicationDetectionService {
       .from('complaints')
       .select('*')
       .neq('id', complaint.id)
-      .eq('type', complaint.type) // Same type
+      .eq('category', complaint.category) // Same category
       .gte('submitted_at', this.getTimeThreshold(30)) // Last 30 days
       .limit(50);
 
@@ -178,7 +178,7 @@ class DuplicationDetectionService {
       .from('complaints')
       .select('*')
       .neq('id', complaint.id)
-      .eq('type', complaint.type)
+      .eq('category', complaint.category)
       .gte('submitted_at', beforeDate.toISOString())
       .lte('submitted_at', afterDate.toISOString())
       .limit(50);

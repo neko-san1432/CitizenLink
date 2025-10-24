@@ -491,13 +491,17 @@ class HeatmapVisualization {
         return true;
       }
 
-      // Extract user's department from role
+      // With simplified roles, department is stored separately in metadata
       let userDepartment = null;
-      if (userRole && userRole.startsWith('lgu-')) {
-        // Extract department from roles like lgu-admin-{dept}, lgu-officer-{dept}, lgu-hr-{dept}
-        const roleParts = userRole.split('-');
-        if (roleParts.length >= 3) {
-          userDepartment = roleParts[2].toUpperCase();
+      if (userRole && ['lgu', 'lgu-admin', 'lgu-hr'].includes(userRole)) {
+        // Get department from user metadata
+        try {
+          const { supabase } = await import('../../config/config.js');
+          const { data: { session } } = await supabase.auth.getSession();
+          const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+          userDepartment = metadata.dpt || metadata.department;
+        } catch (error) {
+          console.warn('Failed to get department from metadata:', error);
         }
       }
 

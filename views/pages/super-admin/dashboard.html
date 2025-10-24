@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/super-admin-dashboard.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
     <style>
         .superadmin-dashboard {
             padding: 20px;
@@ -187,7 +188,7 @@
         
         <div id="app" class="collapsible superadmin-dashboard">
             <h1>🔐 Super Admin Dashboard</h1>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">Complete system control - role swaps, department transfers, and audit logs</p>
+            <p style="color: #7f8c8d; margin-bottom: 30px;">Complete system control - role swaps, office transfers, and audit logs</p>
 
             <!-- Statistics -->
             <div class="stats-grid" id="stats-grid">
@@ -200,7 +201,7 @@
                     <div class="stat-value" id="stat-role-changes">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Department Transfers</div>
+                    <div class="stat-label">Office Transfers</div>
                     <div class="stat-value" id="stat-dept-transfers">-</div>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
@@ -241,9 +242,9 @@
                                 <option value="complaint-coordinator">Complaint Coordinator</option>
                                 <option value="lgu-hr">LGU HR</option>
                                 <option value="super-admin">Super Admin</option>
-                                <div id="department-roles-loading">Loading department roles...</div>
+                                <div id="department-roles-loading">Loading office roles...</div>
                             </select>
-                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Department roles will be loaded dynamically</div>
+                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Office roles will be loaded dynamically</div>
                         </div>
                         <div class="form-group">
                             <label>Reason</label>
@@ -253,35 +254,35 @@
                     </form>
                 </div>
 
-                <!-- Department Transfer -->
+                <!-- Office Transfer -->
                 <div class="action-card">
-                    <h3>🏢 Department Transfer</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 20px;">Transfer staff between departments</p>
+                    <h3>🏢 Office Transfer</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;">Transfer staff between offices</p>
                     <form id="dept-transfer-form">
                         <div class="form-group">
                             <label>User ID / Email</label>
                             <input type="text" id="dept-transfer-user" placeholder="Enter user ID or email" required>
                         </div>
                         <div class="form-group">
-                            <label>From Department</label>
+                            <label>From Office</label>
                             <input type="text" id="dept-transfer-from" placeholder="e.g., engineering" required>
                         </div>
                         <div class="form-group">
-                            <label>To Department</label>
+                            <label>To Office</label>
                             <input type="text" id="dept-transfer-to" placeholder="e.g., public-works" required>
                         </div>
                         <div class="form-group">
                             <label>Reason</label>
                             <textarea id="dept-transfer-reason" placeholder="Enter reason for transfer" required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Transfer Department</button>
+                        <button type="submit" class="btn btn-primary">Transfer Office</button>
                     </form>
                 </div>
 
                 <!-- Assign Citizen -->
                 <div class="action-card">
-                    <h3>➕ Assign Citizen to Department</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 20px;">Directly assign a citizen to any department role</p>
+                    <h3>➕ Assign Citizen to Office</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;">Directly assign a citizen to any office role</p>
                     <form id="assign-citizen-form">
                         <div class="form-group">
                             <label>User ID / Email</label>
@@ -294,12 +295,12 @@
                                 <option value="">Select role</option>
                                 <option value="complaint-coordinator">Complaint Coordinator</option>
                                 <option value="lgu-hr">LGU HR</option>
-                                <div id="assign-citizen-roles-loading">Loading department roles...</div>
+                                <div id="assign-citizen-roles-loading">Loading office roles...</div>
                             </select>
-                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Department roles will be loaded dynamically</div>
+                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Office roles will be loaded dynamically</div>
                         </div>
                         <div class="form-group">
-                            <label>Department</label>
+                            <label>Office</label>
                             <input type="text" id="assign-citizen-dept" placeholder="e.g., engineering" required>
                         </div>
                         <div class="form-group">
@@ -368,7 +369,7 @@
                         <select id="log-type-filter" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-right: 10px;">
                             <option value="all">All Logs</option>
                             <option value="role_changes">Role Changes</option>
-                            <option value="department_transfers">Department Transfers</option>
+                            <option value="department_transfers">Office Transfers</option>
                             <option value="complaint_workflow">Complaint Workflow</option>
                         </select>
                         <button class="btn btn-info" onclick="loadLogs()">Refresh</button>

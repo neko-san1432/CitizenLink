@@ -26,7 +26,12 @@ class CoordinatorService {
   */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
+      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Getting review queue for coordinator:`, coordinatorId);
+      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Filters:`, filters);
+      
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
+      
+      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Retrieved ${complaints.length} complaints from repository`);
 
       // Enhance with algorithm confidence levels
       const enhanced = complaints.map(complaint => {
@@ -78,7 +83,7 @@ class CoordinatorService {
             complaint.latitude,
             complaint.longitude,
             0.5, // 500m radius
-            { type: complaint.type }
+            { category: complaint.category }
           );
         } catch (nearbyError) {
           console.warn('[COORDINATOR_SERVICE] Nearby search failed:', nearbyError);
@@ -119,6 +124,29 @@ class CoordinatorService {
   async processDecision(complaintId, decision, coordinatorId, data = {}) {
     try {
       switch (decision) {
+        case 'approve':
+          // New workflow: approve with department assignment
+          if (!data.departments || data.departments.length === 0) {
+            throw new Error('Departments required for approval');
+          }
+          return await this.approveComplaint(
+            complaintId,
+            data.departments,
+            coordinatorId,
+            data.options || {}
+          );
+
+        case 'reject':
+          // New workflow: reject complaint
+          if (!data.reason) {
+            throw new Error('Rejection reason required');
+          }
+          return await this.rejectComplaint(
+            complaintId,
+            coordinatorId,
+            data.reason
+          );
+
         case 'mark_duplicate':
           if (!data.masterComplaintId) {
             throw new Error('Master complaint ID required');
@@ -163,21 +191,85 @@ class CoordinatorService {
             coordinatorId
           );
 
-        case 'reject':
-          if (!data.reason) {
-            throw new Error('Rejection reason required');
-          }
-          return await this.rejectComplaint(
-            complaintId,
-            coordinatorId,
-            data.reason
-          );
-
         default:
           throw new Error('Invalid decision type');
       }
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Process decision error:', error);
+      throw error;
+    }
+  }
+
+  /**
+  * Approve complaint with department assignment
+  */
+  async approveComplaint(complaintId, departments, coordinatorId, options = {}) {
+    try {
+      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Approving complaint ${complaintId} with departments:`, departments);
+      
+      // Update complaint status to approved
+      const { data: updated, error: updateError } = await this.coordinatorRepo.supabase
+        .from('complaints')
+        .update({
+          status: 'approved',
+          workflow_status: 'assigned',
+          coordinator_notes: options.notes || null,
+          last_activity_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Assign to departments using existing method
+      const assignResult = await this.assignToDepartments(
+        complaintId,
+        departments,
+        coordinatorId,
+        options
+      );
+
+      // Log action
+      await this.coordinatorRepo.logAction(
+        complaintId,
+        'approved',
+        coordinatorId,
+        { 
+          departments,
+          notes: options.notes,
+          message: 'Complaint approved and assigned to departments'
+        }
+      );
+
+      // Notify citizen about approval
+      if (updated.submitted_by) {
+        await this.notificationService.createNotification(
+          updated.submitted_by,
+          'complaint_approved',
+          'Complaint Approved',
+          `Your complaint "${updated.title}" has been approved and assigned to ${departments.length} department(s).`,
+          {
+            priority: 'success',
+            link: `/citizen/complaints/${complaintId}`,
+            metadata: { 
+              complaint_id: complaintId, 
+              departments,
+              status: 'approved'
+            }
+          }
+        );
+      }
+
+      return {
+        success: true,
+        message: `Complaint approved and assigned to ${departments.length} department(s)`,
+        complaint: updated,
+        ...assignResult
+      };
+    } catch (error) {
+      console.error('[COORDINATOR_SERVICE] Approve complaint error:', error);
       throw error;
     }
   }

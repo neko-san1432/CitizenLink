@@ -1,11 +1,20 @@
     // Citizen File Complaint Access Check
-import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../src/client/auth/roleToggle.js';
-import showMessage from '../../src/client/components/toast.js';
+import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../auth/roleToggle.js';
+import { getUserRole } from '../auth/authChecker.js';
+import showMessage from '../components/toast.js';
 
 // Check access on page load
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const activeRole = getActiveRole();
+    // Try to get role from authChecker first (same as sidebar)
+    let activeRole = null;
+    try {
+      activeRole = await getUserRole({ refresh: true });
+    } catch (error) {
+      console.warn('[FILE_COMPLAINT] Failed to get role from authChecker, trying roleToggle:', error);
+      activeRole = getActiveRole();
+    }
+    
     const inCitizenMode = isInCitizenMode();
     
     console.log('[FILE_COMPLAINT] Access check - Role:', activeRole, 'Citizen mode:', inCitizenMode);

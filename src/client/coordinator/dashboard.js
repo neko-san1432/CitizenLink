@@ -337,25 +337,21 @@ function filterReviewQueue() {
  * Render analytics
  */
 function renderAnalytics(data) {
-  // Mock analytics data - replace with real data
-  const analyticsData = {
-    reviewTrends: [
-      { date: '2024-01-01', reviews: 12, assignments: 8 },
-      { date: '2024-01-02', reviews: 15, assignments: 10 },
-      { date: '2024-01-03', reviews: 18, assignments: 12 },
-      { date: '2024-01-04', reviews: 14, assignments: 9 },
-      { date: '2024-01-05', reviews: 20, assignments: 15 }
-    ],
-    departmentPerformance: [
-      { department: 'Engineering', efficiency: 85, responseTime: '2.1h' },
-      { department: 'Health', efficiency: 92, responseTime: '1.8h' },
-      { department: 'Public Works', efficiency: 78, responseTime: '3.2h' },
-      { department: 'Social Welfare', efficiency: 88, responseTime: '2.5h' }
-    ]
-  };
+  // Use real data from API
+  if (!data || !data.analytics) {
+    console.log('[COORDINATOR] No analytics data available');
+    return;
+  }
   
-  renderReviewTrendsChart(analyticsData.reviewTrends);
-  renderDepartmentPerformanceChart(analyticsData.departmentPerformance);
+  const analyticsData = data.analytics;
+  
+  if (analyticsData.reviewTrends) {
+    renderReviewTrendsChart(analyticsData.reviewTrends);
+  }
+  
+  if (analyticsData.departmentPerformance) {
+    renderDepartmentPerformanceChart(analyticsData.departmentPerformance);
+  }
 }
 
 /**
@@ -428,34 +424,16 @@ function renderActivity(data) {
   const container = document.getElementById('activity-container');
   if (!container) return;
   
-  // Mock activity data - replace with real data
-  const activities = [
-    {
-      icon: '📋',
-      text: 'New complaint #1234 assigned to Engineering',
-      time: '2 minutes ago',
-      type: 'assignment'
-    },
-    {
-      icon: '🔗',
-      text: 'Complaint #1230 marked as duplicate',
-      time: '15 minutes ago',
-      type: 'duplicate'
-    },
-    {
-      icon: '📍',
-      text: 'New cluster detected in Barangay 1',
-      time: '1 hour ago',
-      type: 'cluster'
-    },
-    {
-      icon: '📊',
-      text: 'Weekly report generated',
-      time: '2 hours ago',
-      type: 'report'
+  // Use real data from API
+  if (!data || !data.activities || data.activities.length === 0) {
+    const activityList = container.querySelector('.activity-list');
+    if (activityList) {
+      activityList.innerHTML = '<div class="no-activities">No recent activities</div>';
     }
-  ];
+    return;
+  }
   
+  const activities = data.activities;
   const activityList = container.querySelector('.activity-list');
   if (activityList) {
     activityList.innerHTML = activities.map(activity => `

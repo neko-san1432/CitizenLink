@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/components/clock.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/dashboard-common.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
 </head>
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
@@ -61,7 +62,7 @@
                 <!-- Department Statistics -->
                 <div class="dashboard-section">
                     <div class="section-header">
-                        <h2 class="section-title">📊 Department Statistics</h2>
+                        <h2 class="section-title">📊 Office Statistics</h2>
                         <button class="btn btn-secondary" onclick="refreshStats()">Refresh</button>
                     </div>
                     <div class="stats-grid">
@@ -113,9 +114,9 @@
                 <!-- Department Performance -->
                 <div class="dashboard-section">
                     <div class="section-header">
-                        <h2 class="section-title">🏢 Department Performance</h2>
+                        <h2 class="section-title">🏢 Office Performance</h2>
                         <select class="filter-select" id="dept-filter">
-                            <option value="all">All Departments</option>
+                            <option value="all">All Offices</option>
                             <option value="engineering">Engineering</option>
                             <option value="health">Health</option>
                             <option value="public-works">Public Works</option>
@@ -201,7 +202,7 @@
                             <div class="quick-stat-icon">🏢</div>
                             <div class="quick-stat-content">
                                 <div class="quick-stat-value">8</div>
-                                <div class="quick-stat-label">Departments</div>
+                                <div class="quick-stat-label">Offices</div>
                             </div>
                         </div>
                         <div class="quick-stat-item">
@@ -249,7 +250,7 @@
                                 <div class="alert-icon">📊</div>
                                 <div class="alert-content">
                                     <div class="alert-title">Weekly Report Ready</div>
-                                    <div class="alert-text">Department performance report is available</div>
+                                    <div class="alert-text">Office performance report is available</div>
                                     <div class="alert-time">2 hours ago</div>
                                 </div>
                             </div>

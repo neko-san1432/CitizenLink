@@ -80,12 +80,12 @@ async function renderComplaint() {
 
   // Details - Handle both old and new hierarchical form structure
   const typeText = complaint.type || complaint.category || 'Not specified';
-  const subtypeText = complaint.subtype || complaint.subcategory || '';
+  const subcategoryText = complaint.subcategory || '';
   
   document.getElementById('complaint-type').textContent = typeText;
   const subtypeEl = document.getElementById('complaint-subtype');
-  if (subtypeText) {
-    subtypeEl.textContent = ` - ${subtypeText}`;
+  if (subcategoryText) {
+    subtypeEl.textContent = ` - ${subcategoryText}`;
   } else {
     subtypeEl.textContent = '';
   }
@@ -494,17 +494,26 @@ async function loadDepartmentsForAssignment() {
     }
   } catch (error) {
     console.error('Error loading departments:', error);
-    // Fallback to hardcoded list if API fails
+    // Fallback to hardcoded list if API fails - Updated with new department codes
     const departmentsList = document.getElementById('departments-list');
     departmentsList.innerHTML = `
-      <label><input type="checkbox" class="dept-check" value="wst"> Water, Sanitation & Treatment</label>
-      <label><input type="checkbox" class="dept-check" value="engineering"> Engineering</label>
-      <label><input type="checkbox" class="dept-check" value="health"> Health</label>
-      <label><input type="checkbox" class="dept-check" value="social-welfare"> Social Welfare</label>
-      <label><input type="checkbox" class="dept-check" value="public-safety"> Public Safety</label>
-      <label><input type="checkbox" class="dept-check" value="environmental"> Environmental Services</label>
-      <label><input type="checkbox" class="dept-check" value="transportation"> Transportation</label>
-      <label><input type="checkbox" class="dept-check" value="public-works"> Public Works</label>
+      <label><input type="checkbox" class="dept-check" value="CEO"> City Engineering Office</label>
+      <label><input type="checkbox" class="dept-check" value="GSO"> City General Services Office</label>
+      <label><input type="checkbox" class="dept-check" value="CPDC"> City Planning and Development Coordinator</label>
+      <label><input type="checkbox" class="dept-check" value="CHO"> Digos City Health Office</label>
+      <label><input type="checkbox" class="dept-check" value="CSWDO"> City Social Welfare and Development Office</label>
+      <label><input type="checkbox" class="dept-check" value="CDRRMO"> City Disaster Risk Reduction and Management Office</label>
+      <label><input type="checkbox" class="dept-check" value="ENRO"> City Environment and Natural Resources Office</label>
+      <label><input type="checkbox" class="dept-check" value="CTO"> City Treasurer's Office</label>
+      <label><input type="checkbox" class="dept-check" value="CEEO"> City Economic Enterprise Office</label>
+      <label><input type="checkbox" class="dept-check" value="HRMO"> Human Resource Management Office</label>
+      <label><input type="checkbox" class="dept-check" value="PNP"> Philippine National Police - Digos City Station</label>
+      <label><input type="checkbox" class="dept-check" value="CLO"> City Legal Office</label>
+      <label><input type="checkbox" class="dept-check" value="OCM"> Office of the City Mayor</label>
+      <label><input type="checkbox" class="dept-check" value="PAD"> Public Assistance Desk</label>
+      <label><input type="checkbox" class="dept-check" value="OCA"> Office of the City Administrator</label>
+      <label><input type="checkbox" class="dept-check" value="CIO"> City Information Office</label>
+      <label><input type="checkbox" class="dept-check" value="CAO"> City Accountant's Office</label>
     `;
   }
 }

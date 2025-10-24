@@ -267,13 +267,19 @@ export const setupRealtimeValidation = (form) => {
   Object.keys(rules).forEach((selector) => {
     const input = form.querySelector(selector);
     if (!input) return;
+    const formGroup = input.closest('.form-group');
+    
     ['input', 'change', 'blur'].forEach((evt) => {
-      input.addEventListener(evt, () => validateTarget(selector));
+      input.addEventListener(evt, () => {
+        // Add touched class when user interacts with the field
+        if (formGroup) formGroup.classList.add('touched');
+        validateTarget(selector);
+      });
     });
   });
 
-  // Initial pass
-  Object.keys(rules).forEach(validateTarget);
+  // Initial pass - removed to prevent immediate validation errors
+  // Object.keys(rules).forEach(validateTarget);
 };
 
 /**
@@ -303,8 +309,8 @@ export const extractComplaintFormData = (formElement) => {
 
   return {
     title: getVal('#complaintTitle'),
-    type: getVal('#complaintType'),
-    subtype: getVal('#complaintSubtype'),
+    // type field removed - not in current schema
+    // subtype field removed - not in current schema
     category: getVal('#complaintCategory'),
     subcategory: getVal('#complaintSubcategory'),
     description: getVal('#description'),

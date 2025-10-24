@@ -4,8 +4,7 @@ const { authenticateUser } = require('../middleware/auth');
 const { ErrorHandler } = require('../middleware/errorHandler');
 const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
 const Database = require('../config/database');
-const db = new Database();
-const supabase = db.getClient();
+const supabase = Database.getClient();
 const { loginLimiter, passwordResetLimiter, authLimiter } = require('../middleware/rateLimiting');
 
 const router = express.Router();
@@ -300,7 +299,8 @@ router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) 
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      path: '/',
+      maxAge: 4 * 60 * 60 * 1000 // 4 hours
     });
 
     res.json({

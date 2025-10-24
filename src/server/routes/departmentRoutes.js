@@ -10,6 +10,16 @@ router.get('/active',
   (req, res) => departmentController.getActiveDepartments(req, res)
 );
 
+router.get('/with-mappings',
+  authenticateUser,
+  (req, res) => departmentController.getDepartmentsWithMappings(req, res)
+);
+
+router.get('/by-subcategory/:subcategoryId',
+  authenticateUser,
+  (req, res) => departmentController.getDepartmentsBySubcategory(req, res)
+);
+
 router.get('/type/:type',
   authenticateUser,
   (req, res) => departmentController.getDepartmentsByType(req, res)

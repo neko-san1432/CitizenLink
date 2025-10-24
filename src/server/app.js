@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const config = require('../../config/app');
 const Database = require('./config/database');
-const database = new Database();
 const routes = require('./routes');
 const { authenticateUser, requireRole } = require('./middleware/auth');
 const { ErrorHandler } = require('./middleware/errorHandler');
@@ -48,6 +47,11 @@ class CitizenLinkApp {
     this.app.use('/assets', express.static(path.join(config.rootDir, 'src', 'client', 'assets')));
     this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
+    
+    // Serve favicon
+    this.app.get('/favicon.ico', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'public', 'favicon.ico'));
+    });
 
     // Serve node_modules for browser imports
     this.app.use('/node_modules', express.static(path.join(config.rootDir, 'node_modules')));
@@ -60,20 +64,49 @@ class CitizenLinkApp {
     // Session cookie helpers for client
     this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
+        console.log('[SERVER SESSION] 🍪 Session cookie request received');
+        console.log('[SERVER SESSION] Request details:', {
+          path: req.path,
+          method: req.method,
+          hasBody: !!req.body,
+          contentType: req.get('Content-Type')
+        });
+
         const token = req.body?.access_token;
         const remember = Boolean(req.body?.remember);
+
+        console.log('[SERVER SESSION] Token details:', {
+          hasToken: !!token,
+          tokenLength: token?.length,
+          remember: remember
+        });
+
         if (!token) {
+          console.log('[SERVER SESSION] ❌ No token provided in request body');
+          console.log('[SERVER SESSION] Request body keys:', Object.keys(req.body || {}));
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
-        const cookieOptions = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: remember ? 180 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000 // 180 days if remember, 7 days default
-        };
+
+            const cookieOptions = {
+              httpOnly: true, // Set back to true for security
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 315360000000 // 10 years for development (permanent)
+            };
+
+        console.log('[SERVER SESSION] 🍪 Setting cookie with options:', cookieOptions);
+        console.log('[SERVER SESSION] Token prefix:', token.substring(0, 20) + '...');
+
         res.cookie('sb_access_token', token, cookieOptions);
+
+        console.log('[SERVER SESSION] ✅ Cookie set successfully');
+        console.log('[SERVER SESSION] Response status: 200');
+
         return res.json({ success: true });
       } catch (e) {
+        console.error('[SERVER SESSION] 💥 Error setting session cookie:', e);
+        console.error('[SERVER SESSION] Error stack:', e.stack);
         return res.status(500).json({ success: false, error: 'Failed to set session' });
       }
     });
@@ -87,31 +120,22 @@ class CitizenLinkApp {
       }
     });
 
-    // Session health check endpoint
-    this.app.get('/auth/session/health', (req, res) => {
-      try {
-        const token = req.cookies?.sb_access_token;
-        if (!token) {
-          return res.status(401).json({ 
-            success: false, 
-            error: 'No session token found',
-            timestamp: new Date().toISOString()
-          });
+    // Debug endpoint (development only)
+    if (process.env.NODE_ENV === 'development') {
+      this.app.get('/debug/auth', async (req, res) => {
+        try {
+          const diagnostics = {
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV,
+            hasSupabaseUrl: !!process.env.SUPABASE_URL,
+            hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+          };
+          res.json({ success: true, diagnostics });
+        } catch (error) {
+          res.status(500).json({ success: false, error: error.message });
         }
-        
-        return res.json({ 
-          success: true, 
-          message: 'Session is valid',
-          timestamp: new Date().toISOString()
-        });
-      } catch (e) {
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Session health check failed',
-          timestamp: new Date().toISOString()
-        });
-      }
-    });
+      });
+    }
 
     // Protected Pages (must come before public routes and 404 handler)
     this.setupProtectedRoutes();
@@ -141,6 +165,16 @@ class CitizenLinkApp {
     // File Complaint page (citizen only or staff in citizen mode)
     this.app.get('/citizen/fileComplaint', authenticateUser, (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'fileComplaint.html'));
+    });
+
+    // Departments page (citizen only or staff in citizen mode)
+    this.app.get('/citizen/departments', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'departments.html'));
+    });
+
+    // Complaint Details page (authenticated users only)
+    this.app.get('/complaint-details', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'complaint-details.html'));
     });
 
     // Admin pages
@@ -180,7 +214,7 @@ class CitizenLinkApp {
     // LGU Admin specific pages
     this.app.get('/lgu-admin/heatmap',
       authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
       }
@@ -189,7 +223,7 @@ class CitizenLinkApp {
     // Redirect /heatmap to /lgu-admin/heatmap for convenience
     this.app.get('/heatmap',
       authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/]),
+      requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
       (req, res) => {
         res.redirect('/lgu-admin/heatmap');
       }
@@ -346,12 +380,12 @@ class CitizenLinkApp {
           role: targetRole
         };
 
-        // If switching to citizen, store previous role as actual_role for UI logic
+        // If switching to citizen, store previous role as base_role for UI logic
         if (targetRole === 'citizen' && previousRole) {
-          newMetadata.actual_role = previousRole;
+          newMetadata.base_role = previousRole;
         }
 
-        const { data, error } = await database.supabase.auth.admin.updateUserById(user.id, {
+        const { data, error } = await Database.getClient().auth.admin.updateUserById(user.id, {
           user_metadata: newMetadata
         });
 
@@ -383,9 +417,13 @@ class CitizenLinkApp {
     this.app.get('/api/user/role-info', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       const role = user.role || 'citizen';
-      const metaActual = user.raw_user_meta_data?.actual_role || null;
-      // If no meta actual_role is stored, assume staff's actual role equals their current role (not citizen)
-      const actualRole = metaActual || (role !== 'citizen' ? role : null);
+      const metaBase = user.raw_user_meta_data?.base_role || null;
+      // If no meta base_role is stored, assume staff's base role equals their current role (not citizen)
+      const baseRole = metaBase || (role !== 'citizen' ? role : null);
+      
+      // Debug logging
+      console.log('[API] User role:', role, 'metaBase:', metaBase, 'baseRole:', baseRole);
+      console.log('[API] User metadata:', JSON.stringify(user.raw_user_meta_data, null, 2));
       res.json({
         success: true,
         data: {
@@ -393,9 +431,293 @@ class CitizenLinkApp {
           name: user.name || 'Unknown',
           email: user.email,
           metadata: user.raw_user_meta_data,
-          actual_role: actualRole
+          base_role: baseRole,
+          actual_role: baseRole  // Add this for compatibility with frontend
         }
       });
+    });
+
+    // Debug endpoint for role switcher
+    this.app.get('/debug-role-switcher', authenticateUser, (req, res) => {
+      const { user } = req;
+      const role = user.role || 'citizen';
+      const metaBase = user.raw_user_meta_data?.base_role || null;
+      const baseRole = metaBase || (role !== 'citizen' ? role : null);
+      const isInCitizen = role === 'citizen' && baseRole && baseRole !== 'citizen';
+      
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Role Switcher</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Role Switcher Debug</h1>
+    
+    <div class="info">
+        <h3>API Response:</h3>
+        <pre>${JSON.stringify({
+          success: true,
+          data: {
+            role: role,
+            name: user.name || 'Unknown',
+            email: user.email,
+            metadata: user.raw_user_meta_data,
+            base_role: baseRole,
+            actual_role: baseRole
+          }
+        }, null, 2)}</pre>
+    </div>
+    
+    <div class="info">
+        <h3>Role Analysis:</h3>
+        <p><strong>Current Role:</strong> ${role}</p>
+        <p><strong>Base Role:</strong> ${baseRole}</p>
+        <p><strong>Is in Citizen Mode:</strong> ${isInCitizen}</p>
+        <p><strong>Should Show Button:</strong> ${isInCitizen}</p>
+    </div>
+    
+    <div class="info">
+        <h3>Role Switcher Button:</h3>
+        ${isInCitizen ? 
+          `<button class="button" onclick="switchRole()">Switch to ${baseRole.toUpperCase()}</button>` : 
+          '<p>No button should appear - user is not in citizen mode with base role</p>'
+        }
+    </div>
+
+    <script>
+        async function switchRole() {
+            try {
+                const response = await fetch('/api/user/switch-role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        targetRole: '${baseRole}',
+                        previousRole: 'citizen'
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Role switched successfully! Page will reload...');
+                    window.location.reload();
+                } else {
+                    alert('Failed to switch role');
+                }
+            } catch (error) {
+                alert('Error switching role: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>`;
+      
+      res.send(html);
+    });
+
+    // Session health endpoint for monitoring (public - no auth required)
+    this.app.get('/auth/session/health', async (req, res) => {
+      try {
+        console.log('[SESSION HEALTH] Checking session health...');
+        
+        // Check if user has valid session cookie
+        const token = req.cookies?.sb_access_token;
+        
+        if (!token) {
+          console.log('[SESSION HEALTH] No session token found');
+          return res.status(401).json({
+            success: false,
+            error: 'No session token found',
+            data: {
+              authenticated: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        console.log('[SESSION HEALTH] Token found, validating with Supabase...');
+        
+        // Try to validate token with Supabase using the correct method
+        const { data: { user }, error } = await Database.getClient().auth.getUser(token);
+        
+        if (error || !user) {
+          console.log('[SESSION HEALTH] Token validation failed:', error?.message);
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid session token',
+            data: {
+              authenticated: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        console.log('[SESSION HEALTH] Token valid, extracting user data...');
+
+        // Extract role from user metadata
+        const userMetadata = user.user_metadata || {};
+        const rawUserMetaData = user.raw_user_meta_data || {};
+        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const role = combinedMetadata.role || 'citizen';
+        const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+
+        console.log('[SESSION HEALTH] User data extracted:', { role, name });
+
+        res.json({
+          success: true,
+          data: {
+            authenticated: true,
+            userId: user.id,
+            email: user.email,
+            role: role,
+            name: name,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('[SESSION HEALTH] Error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Session health check failed',
+          data: {
+            authenticated: false,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    });
+
+    // Session refresh endpoint (public - no auth required)
+    this.app.post('/auth/session/refresh', async (req, res) => {
+      try {
+        // Check if user has existing session cookie
+        const existingToken = req.cookies?.sb_access_token;
+        
+        if (!existingToken) {
+          return res.status(401).json({
+            success: false,
+            error: 'No existing session to refresh',
+            data: {
+              refreshed: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        // Try to get fresh session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error || !session) {
+          return res.status(401).json({
+            success: false,
+            error: 'No valid Supabase session found',
+            debug: {
+              error: error?.message,
+              hasSession: !!session
+            }
+          });
+        }
+
+        // Update server cookie with fresh session
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 4 * 60 * 60 * 1000 // 4 hours
+        };
+
+        res.cookie('sb_access_token', session.access_token, cookieOptions);
+
+        // Extract user info from session
+        const user = session.user;
+        const userMetadata = user.user_metadata || {};
+        const rawUserMetaData = user.raw_user_meta_data || {};
+        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const role = combinedMetadata.role || 'citizen';
+        const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+
+        res.json({
+          success: true,
+          data: {
+            userId: user.id,
+            email: user.email,
+            role: role,
+            name: name,
+            refreshed: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('[SESSION REFRESH] Error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Session refresh failed',
+          debug: {
+            error: error.message
+          }
+        });
+      }
+    });
+
+    // Simple authentication test endpoint (public)
+    this.app.get('/auth/test', (req, res) => {
+      try {
+        const token = req.cookies?.sb_access_token;
+        
+        if (!token) {
+          return res.json({
+            success: false,
+            authenticated: false,
+            message: 'No session token found',
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        // Try to validate token
+        supabase.auth.getUser(token).then(({ data: { user }, error }) => {
+          if (error || !user) {
+            return res.json({
+              success: false,
+              authenticated: false,
+              message: 'Invalid session token',
+              error: error?.message,
+              timestamp: new Date().toISOString()
+            });
+          }
+
+          res.json({
+            success: true,
+            authenticated: true,
+            message: 'Session is valid',
+            userId: user.id,
+            email: user.email,
+            timestamp: new Date().toISOString()
+          });
+        }).catch(error => {
+          res.json({
+            success: false,
+            authenticated: false,
+            message: 'Token validation failed',
+            error: error.message,
+            timestamp: new Date().toISOString()
+          });
+        });
+      } catch (error) {
+        res.json({
+          success: false,
+          authenticated: false,
+          message: 'Authentication test failed',
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
     });
   }
 
@@ -470,11 +792,11 @@ class CitizenLinkApp {
       'super-admin': path.join(config.rootDir, 'views', 'pages', 'super-admin', 'dashboard.html'),
     };
 
-    // Check for department-specific roles (e.g., lgu-hr-{dept}, lgu-admin-{dept})
-    if (userRole.startsWith('lgu-hr-')) {
+    // Check for simplified LGU roles
+    if (userRole === 'lgu-hr') {
       return path.join(config.rootDir, 'views', 'pages', 'hr', 'dashboard.html');
     }
-    if (userRole.startsWith('lgu-admin-')) {
+    if (userRole === 'lgu-admin') {
       return path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'dashboard.html');
     }
 
@@ -492,13 +814,20 @@ class CitizenLinkApp {
   async start(port = 3001) {
     try {
       // Test database connection
-      const isConnected = await database.testConnection();
+      const isConnected = await Database.getInstance().testConnection();
       if (!isConnected) {
         throw new Error('Database connection failed');
       }
 
+      // Initialize reminder service
+      const ReminderService = require('./services/ReminderService');
+      const reminderService = new ReminderService();
+      reminderService.startScheduler();
+      console.log('📅 Reminder service started');
+
       this.app.listen(port, () => {
-        // Server started
+        console.log(`✅ Server started on port ${port}`);
+        console.log(`🌐 Server URL: http://localhost:${port}`);
       });
     } catch (error) {
       console.error('Failed to start server:', error);

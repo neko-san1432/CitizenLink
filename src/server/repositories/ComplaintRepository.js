@@ -3,7 +3,7 @@ const Complaint = require('../models/Complaint');
 
 class ComplaintRepository {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
 
@@ -43,7 +43,7 @@ class ComplaintRepository {
       .order('submitted_at', { ascending: false });
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('workflow_status', status);
     }
 
     if (type) {
@@ -80,7 +80,7 @@ class ComplaintRepository {
       .order('submitted_at', { ascending: false });
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('workflow_status', status);
     }
 
     if (type) {

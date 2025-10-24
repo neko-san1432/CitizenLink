@@ -52,67 +52,49 @@ export function createHeader() {
                 </svg>
               </button>
             </div>
-            <div class="dropdown-content">
-              <div id="notification-content">
-                <!-- Notifications will be loaded here -->
-              </div>
-              <div id="notification-loading" class="hidden" style="padding: 2rem; text-align: center; color: var(--gray-500);">
-                <div style="width: 24px; height: 24px; border: 2px solid var(--gray-300); border-top: 2px solid var(--primary-500); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-                <span>Loading notifications...</span>
-              </div>
-              <div id="notification-error" class="hidden" style="padding: 2rem; text-align: center; color: var(--error-600);">
-                <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
-                <div style="margin-bottom: 1rem;">Failed to load notifications</div>
-                <button id="retry-notifications" class="btn btn-sm btn-outline">Retry</button>
-              </div>
-            </div>
-            <div class="dropdown-footer">
-              <button id="mark-all-read" class="btn btn-sm btn-ghost">Mark all as read</button>
-              <button id="show-more-notifications" class="btn btn-sm btn-primary">Show More</button>
+            <div id="notification-content" class="dropdown-content">
+              <div class="no-notifications">No notifications yet</div>
             </div>
           </div>
         </div>
 
         <div class="profile-container">
           <button id="profile-btn" class="header-action profile-btn" title="Profile">
-            <div class="profile-avatar">U</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
           </button>
           <div id="profile-panel" class="header-dropdown profile-panel">
             <div class="dropdown-header">
               <h3 class="dropdown-title">Profile</h3>
-              <button id="close-profile" class="dropdown-close" aria-label="Close profile">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
             </div>
             <div class="dropdown-content">
-              <div class="profile-item" id="my-profile-item">
-                <div class="profile-item-icon">
+              <a href="/myProfile" class="dropdown-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                </div>
-                <div class="profile-item-content">
-                  <div class="profile-item-title">My Profile</div>
-                  <div class="profile-item-subtitle">View and edit your profile</div>
-                </div>
-              </div>
-              <div class="profile-item" id="logout-item">
-                <div class="profile-item-icon">
+                My Profile
+              </a>
+              <a href="/citizen/fileComplaint" class="dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14,2 14,8 20,8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+                File Complaint
+              </a>
+              <button id="logout-btn" class="dropdown-item logout-btn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16,17 21,12 16,7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                   </svg>
-                </div>
-                <div class="profile-item-content">
-                  <div class="profile-item-title">Logout</div>
-                  <div class="profile-item-subtitle">Sign out of your account</div>
-                </div>
-              </div>
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -121,175 +103,124 @@ export function createHeader() {
   `;
 }
 
-// Initialize menu toggle functionality
+// Initialize global click handler to close dropdowns
+function initializeGlobalClickHandler() {
+  console.log('[HEADER] Initializing global click handler...');
+  
+  document.addEventListener('click', function(e) {
+    const notificationPanel = document.getElementById('notification-panel');
+    const profilePanel = document.getElementById('profile-panel');
+    const notificationBtn = document.getElementById('notification-btn');
+    const profileBtn = document.getElementById('profile-btn');
+    
+    // Close notification panel if clicking outside
+    if (notificationPanel && notificationPanel.classList.contains('show')) {
+      if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
+        notificationPanel.classList.remove('show');
+        notificationPanel.style.opacity = '0';
+        notificationPanel.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          notificationPanel.style.display = 'none';
+        }, 300);
+      }
+    }
+    
+    // Close profile panel if clicking outside
+    if (profilePanel && profilePanel.classList.contains('show')) {
+      if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
+        profilePanel.classList.remove('show');
+        profilePanel.style.opacity = '0';
+        profilePanel.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          profilePanel.style.display = 'none';
+        }, 300);
+      }
+    }
+  });
+}
+
+// Initialize notification button - using imported function from notification.js
+
+// Initialize profile button
+function initializeProfileButton() {
+  console.log('[HEADER] Initializing profile button...');
+  const profileBtn = document.getElementById('profile-btn');
+  if (!profileBtn) {
+    console.warn('[HEADER] Profile button not found');
+    return;
+  }
+
+  profileBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const notificationPanel = document.getElementById('notification-panel');
+    if (notificationPanel && notificationPanel.classList.contains('show')) {
+      notificationPanel.classList.remove('show');
+      notificationPanel.style.opacity = '0';
+      notificationPanel.style.transform = 'translateY(-10px)';
+      setTimeout(() => { notificationPanel.style.display = 'none'; }, 300);
+    }
+    
+    const profilePanel = document.getElementById('profile-panel');
+    if (profilePanel.classList.contains('show')) {
+      profilePanel.classList.remove('show');
+      profilePanel.style.opacity = '0';
+      profilePanel.style.transform = 'translateY(-10px)';
+      setTimeout(() => { profilePanel.style.display = 'none'; }, 300);
+    } else {
+      profilePanel.classList.add('show');
+      profilePanel.style.display = 'block';
+      setTimeout(() => {
+        profilePanel.style.opacity = '1';
+        profilePanel.style.transform = 'translateY(0)';
+      }, 10);
+    }
+  });
+}
+
+// Initialize menu toggle
 function initializeMenuToggle() {
+  console.log('[HEADER] Initializing menu toggle...');
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
 
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', function() {
       sidebar.classList.toggle('open');
+      menuToggle.classList.toggle('active');
     });
-    // console.log removed for security
   } else {
     console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
   }
 }
 
-// Initialize header when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  const headerContainer = document.querySelector('.header-container');
-  if (headerContainer) {
-    headerContainer.innerHTML = createHeader();
-    initializeNotificationButton();
-    initializeProfileButton();
-    initializeMenuToggle(); // Initialize menu toggle after header HTML is created
-    initializeThemeToggle();
-    initializeHeaderScroll();
-    initializeDropdowns();
-
-    // Move dashboard clock into header-right to align with buttons (put it first)
-    try {
-      const headerRight = headerContainer.querySelector('.header-right');
-      const clockEl = document.getElementById('dashboard-clock');
-      if (headerRight && clockEl) {
-        headerRight.insertBefore(clockEl, headerRight.firstChild);
-      }
-    } catch {}
-  }
-});
-
-// Initialize header scroll effects
-function initializeHeaderScroll() {
-  const headerContainer = document.querySelector('.header-container');
-  if (!headerContainer) return;
-
-  let lastScrollY = window.scrollY;
-
-  window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-
-    if (currentScrollY > 10) {
-      headerContainer.classList.add('scrolled');
-    } else {
-      headerContainer.classList.remove('scrolled');
-    }
-
-    lastScrollY = currentScrollY;
-  });
-}
-
-// Initialize dropdown functionality
-function initializeDropdowns() {
-  // Close dropdowns when clicking outside
-  document.addEventListener('click', function(e) {
-    const dropdowns = document.querySelectorAll('.header-dropdown');
-    dropdowns.forEach(dropdown => {
-      const button = dropdown.previousElementSibling;
-      if (!dropdown.contains(e.target) && !button.contains(e.target)) {
-        dropdown.classList.remove('show');
-      }
-    });
-  });
-
-  // Close dropdowns when pressing Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      const dropdowns = document.querySelectorAll('.header-dropdown');
-      dropdowns.forEach(dropdown => {
-        dropdown.classList.remove('show');
-      });
-    }
-  });
-}
-
-// Initialize profile button functionality
-function initializeProfileButton() {
-  const profileBtn = document.getElementById('profile-btn');
-  const profilePanel = document.getElementById('profile-panel');
-  const closeBtn = document.getElementById('close-profile');
-  const myProfileItem = document.getElementById('my-profile-item');
-  const logoutItem = document.getElementById('logout-item');
-
-  if (profileBtn && profilePanel) {
-    // Toggle profile panel
-    profileBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      profilePanel.classList.toggle('show');
-
-      // Close notification panel when profile is opened
-      closeNotificationPanel();
-    });
-
-    // Close panel when close button is clicked
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        profilePanel.classList.remove('show');
-      });
-    }
-
-    // My Profile functionality
-    if (myProfileItem) {
-      myProfileItem.addEventListener('click', function() {
-        window.location.href = '/myProfile';
-        profilePanel.classList.remove('show');
-      });
-    }
-
-    // Logout functionality
-    if (logoutItem) {
-      logoutItem.addEventListener('click', async function() {
-        try {
-          // Import and use the logout function from authChecker
-          const { logout } = await import('../auth/authChecker.js');
-          await logout();
-        } catch (error) {
-          console.error('Logout error:', error);
-          // Fallback: redirect to login
-          window.location.href = '/login';
-        }
-        profilePanel.classList.remove('show');
-      });
-    }
-  }
-}
-
-// Theme toggle with persisted preference and a11y-friendly approach
+// Initialize theme toggle
 function initializeThemeToggle() {
-  const THEME_KEY = 'citizenlink_theme';
-  const rootElement = document.documentElement; // apply .dark at the html element
+  console.log('[HEADER] Initializing theme toggle...');
   const themeToggleBtn = document.getElementById('theme-toggle');
-
-  // Determine initial theme: localStorage -> system preference -> light
-  const stored = (localStorage.getItem(THEME_KEY) || '').toLowerCase();
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const initialIsDark = stored ? stored === 'dark' : prefersDark;
-
-  applyTheme(initialIsDark ? 'dark' : 'light');
-
-  if (themeToggleBtn) {
-    updateThemeToggleLabel();
-    themeToggleBtn.addEventListener('click', () => {
-      const isDark = rootElement.classList.contains('dark');
-      const next = isDark ? 'light' : 'dark';
-      applyTheme(next);
-      localStorage.setItem(THEME_KEY, next);
-      updateThemeToggleLabel();
-    });
+  if (!themeToggleBtn) {
+    console.warn('[HEADER] Theme toggle button not found');
+    return;
   }
 
-  // Reflect current theme in button label/title for screen readers
-  function updateThemeToggleLabel() {
+  // Load saved theme
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  themeToggleBtn.addEventListener('click', function() {
+    const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
-    if (themeToggleBtn) {
-      themeToggleBtn.setAttribute('aria-pressed', String(isDark));
-      themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-      themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
-    }
-  }
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Update button appearance
+    themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+    themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
+  });
 
   function applyTheme(theme) {
+    const rootElement = document.documentElement;
     if (theme === 'dark') {
       rootElement.classList.add('dark');
     } else {
@@ -297,3 +228,131 @@ function initializeThemeToggle() {
     }
   }
 }
+
+// Initialize header scroll behavior
+function initializeHeaderScroll() {
+  console.log('[HEADER] Initializing header scroll behavior...');
+  let lastScrollY = window.scrollY;
+
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    const header = document.querySelector('.header-content');
+    
+    if (header) {
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down
+        header.style.transform = 'translateY(-100%)';
+    } else {
+        // Scrolling up
+        header.style.transform = 'translateY(0)';
+      }
+    }
+
+    lastScrollY = currentScrollY;
+  });
+}
+
+// Initialize dropdowns
+function initializeDropdowns() {
+  console.log('[HEADER] Initializing dropdowns...');
+  // Move dropdowns to body to avoid container issues
+  const notificationPanel = document.getElementById('notification-panel');
+  const profilePanel = document.getElementById('profile-panel');
+  
+  if (notificationPanel) {
+    notificationPanel.remove();
+    document.body.appendChild(notificationPanel);
+    // CSS classes will handle the styling now
+  }
+  
+  if (profilePanel) {
+    profilePanel.remove();
+    document.body.appendChild(profilePanel);
+    // CSS classes will handle the styling now
+  }
+}
+
+// Initialize header when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Add a small delay to ensure all elements are ready
+  setTimeout(() => {
+    console.log('[HEADER] Initializing header...');
+    let headerContainer = document.querySelector('.header-container');
+    let headerElement = document.querySelector('#header');
+    
+    console.log('[HEADER] Header container element:', headerContainer);
+    console.log('[HEADER] Header element:', headerElement);
+    
+    // Try .header-container first, then fall back to #header
+    if (headerContainer) {
+      console.log('[HEADER] Header container found, creating header...');
+      const headerHTML = createHeader();
+      console.log('[HEADER] Created header HTML:', headerHTML.substring(0, 100) + '...');
+      headerContainer.innerHTML = headerHTML;
+    } else if (headerElement) {
+      console.log('[HEADER] Header element found, creating header...');
+      const headerHTML = createHeader();
+      console.log('[HEADER] Created header HTML:', headerHTML.substring(0, 100) + '...');
+      headerElement.innerHTML = headerHTML;
+    } else {
+      console.warn('[HEADER] No header container or header element found!');
+      // Try to create a header container as a fallback
+      const body = document.body;
+      if (body) {
+        console.log('[HEADER] Creating fallback header container...');
+        const fallbackHeader = document.createElement('div');
+        fallbackHeader.className = 'header-container';
+        fallbackHeader.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000;';
+        body.insertBefore(fallbackHeader, body.firstChild);
+        
+        const headerHTML = createHeader();
+        fallbackHeader.innerHTML = headerHTML;
+        console.log('[HEADER] Fallback header created');
+      } else {
+        console.error('[HEADER] Cannot create fallback header - body not found');
+        return;
+      }
+    }
+    
+    // Test if buttons were created
+    const testNotificationBtn = document.getElementById('notification-btn');
+    const testProfileBtn = document.getElementById('profile-btn');
+    console.log('[HEADER] Buttons after HTML insertion:', {
+      notificationBtn: !!testNotificationBtn,
+      profileBtn: !!testProfileBtn
+    });
+    
+    // Fix dropdown positioning by ensuring parent containers have relative positioning
+    const notificationContainer = document.querySelector('.notification-container');
+    const profileContainer = document.querySelector('.profile-container');
+    
+    if (notificationContainer) {
+      notificationContainer.style.position = 'relative';
+    }
+    if (profileContainer) {
+      profileContainer.style.position = 'relative';
+    }
+    
+    // Move dashboard clock into header-right to align with buttons (put it first)
+    try {
+      const headerRight = document.querySelector('.header-right');
+      const clockEl = document.getElementById('dashboard-clock');
+      if (headerRight && clockEl) {
+        headerRight.insertBefore(clockEl, headerRight.firstChild);
+      }
+    } catch (e) {
+      console.warn('[HEADER] Clock positioning failed:', e);
+    }
+    
+    // Add a small delay to ensure DOM is fully updated
+    setTimeout(() => {
+      initializeNotificationButton();
+      initializeProfileButton();
+      initializeMenuToggle(); // Initialize menu toggle after header HTML is created
+      initializeThemeToggle();
+      initializeHeaderScroll();
+      initializeDropdowns();
+      initializeGlobalClickHandler();
+    }, 50);
+  }, 100); // Close setTimeout
+}); // Close DOMContentLoaded

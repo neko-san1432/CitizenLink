@@ -1,5 +1,6 @@
 const RoleManagementService = require('./RoleManagementService');
 const { USER_ROLES } = require('../../shared/constants');
+const { validateUserRole, isValidDepartmentCode } = require('../utils/roleValidation');
 
 /**
 * HRService
@@ -286,7 +287,7 @@ class HRService {
   async getUserRoleHistory(userId, hrId) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { data, error } = await supabase
@@ -328,11 +329,9 @@ class HRService {
         throw new Error('Failed to get HR user information');
       }
 
-      // Extract department from HR role (e.g., lgu-hr-wst -> WST)
+      // With simplified roles, department is stored separately in metadata
       let hrDepartment = null;
-      if (hrRole.startsWith('lgu-hr-')) {
-        hrDepartment = hrRole.split('-')[2]?.toUpperCase();
-      } else if (hrRole === 'lgu-hr') {
+      if (hrRole === 'lgu-hr') {
         // Fallback to metadata if role is just 'lgu-hr'
         const hrMetadata = hrUser.user.raw_user_meta_data || {};
         hrDepartment = hrMetadata.department;
@@ -365,8 +364,16 @@ class HRService {
         throw new Error('Invalid role specified');
       }
 
+      // Validate department code if provided
+      if (departmentCode) {
+        const isValidDept = await isValidDepartmentCode(departmentCode);
+        if (!isValidDept) {
+          throw new Error(`Invalid department code: ${departmentCode}. Must be one of the active departments.`);
+        }
+      }
+
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       // Get HR user info for metadata
@@ -452,7 +459,7 @@ class HRService {
       }
 
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       let query = supabase
@@ -514,7 +521,7 @@ class HRService {
       }
 
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       // console.log removed for security
@@ -548,7 +555,7 @@ class HRService {
   async validateSignupCode(code) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { data: link, error } = await supabase
@@ -592,7 +599,7 @@ class HRService {
   async markSignupCodeUsed(code, userId) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { error } = await supabase

@@ -9,6 +9,7 @@ import { createComplaintFileHandler, setupDragAndDrop } from '../../utils/fileHa
 import showMessage from '../toast.js';
 import apiClient from '../../config/apiClient.js';
 import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/roleToggle.js';
+import { getUserRole } from '../../auth/authChecker.js';
 
 // Complaint type and subtype mapping
 const COMPLAINT_SUBTYPES = {
@@ -75,7 +76,15 @@ export async function initializeComplaintForm() {
   // console.log removed for security
 
   // Check if user is citizen or in citizen mode
-  const activeRole = getActiveRole();
+  // Try to get role from authChecker first (same as sidebar)
+  let activeRole = null;
+  try {
+    activeRole = await getUserRole({ refresh: true });
+  } catch (error) {
+    console.warn('[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:', error);
+    activeRole = getActiveRole();
+  }
+  
   const inCitizenMode = isInCitizenMode();
 
   // console.log removed for security

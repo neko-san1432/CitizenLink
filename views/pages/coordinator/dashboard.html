@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Coordinator Dashboard - CitizenLink</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/toast.css">
     <link rel="stylesheet" href="/css/components/clock.css">
@@ -15,6 +16,7 @@
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/dashboard-common.css">
     <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
 </head>
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
@@ -106,7 +108,7 @@
                     </button>
                     <button class="quick-action-btn" onclick="manageDepartments()">
                         <div class="quick-action-icon">🏢</div>
-                        <div class="quick-action-text">Manage Departments</div>
+                        <div class="quick-action-text">Manage Offices</div>
                     </button>
                 </div>
             </div>
@@ -174,7 +176,7 @@
                                 <div id="review-trends-chart" class="chart-placeholder">Loading chart...</div>
                             </div>
                             <div class="analytics-chart">
-                                <h4>Department Performance</h4>
+                                <h4>Office Performance</h4>
                                 <div id="department-performance-chart" class="chart-placeholder">Loading chart...</div>
                             </div>
                         </div>
@@ -221,6 +223,7 @@
 
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/services/toastNotificationService.js"></script>
 
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
@@ -228,5 +231,18 @@
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
     <script type="module" src="../../js/coordinator/dashboard.js"></script>
+    
+    <script type="module">
+        // Initialize toast notification service
+        import toastNotificationService from '../../js/services/toastNotificationService.js';
+        
+        // Start listening for real-time notifications
+        toastNotificationService.startListening();
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            toastNotificationService.stopListening();
+        });
+    </script>
 </body>
 </html>

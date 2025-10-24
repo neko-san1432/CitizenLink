@@ -42,15 +42,21 @@ router.get('/my',
   (req, res) => complaintController.getMyComplaints(req, res)
 );
 
+router.get('/my-statistics',
+  authenticateUser,
+  requireRole(['citizen']),
+  (req, res) => complaintController.getMyStatistics(req, res)
+);
+
 router.get('/stats',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
+  requireRole([/^lgu-/, 'super-admin', 'complaint-coordinator']),
   (req, res) => complaintController.getComplaintStats(req, res)
 );
 
 router.get('/locations',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
+  requireRole([/^lgu-/, 'super-admin', 'complaint-coordinator']),
   (req, res) => complaintController.getComplaintLocations(req, res)
 );
 
@@ -89,6 +95,44 @@ router.patch('/:id/transfer',
   authenticateUser,
   requireRole(['lgu-admin', 'super-admin']),
   (req, res) => complaintController.transferComplaint(req, res)
+);
+
+// Citizen-specific endpoints
+router.post('/:id/cancel',
+  authenticateUser,
+  requireRole(['citizen']),
+  (req, res) => complaintController.cancelComplaint(req, res)
+);
+
+router.post('/:id/remind',
+  authenticateUser,
+  requireRole(['citizen']),
+  (req, res) => complaintController.sendReminder(req, res)
+);
+
+router.post('/:id/confirm-resolution',
+  authenticateUser,
+  requireRole(['citizen']),
+  (req, res) => complaintController.confirmResolution(req, res)
+);
+
+// False complaint endpoints (coordinator only)
+router.post('/:id/mark-false',
+  authenticateUser,
+  requireRole(['complaint-coordinator']),
+  (req, res) => complaintController.markAsFalseComplaint(req, res)
+);
+
+router.get('/false-reports',
+  authenticateUser,
+  requireRole(['complaint-coordinator', 'super-admin']),
+  (req, res) => complaintController.getFalseComplaints(req, res)
+);
+
+router.get('/false-reports/statistics',
+  authenticateUser,
+  requireRole(['complaint-coordinator', 'super-admin']),
+  (req, res) => complaintController.getFalseComplaintStatistics(req, res)
 );
 
 module.exports = router;

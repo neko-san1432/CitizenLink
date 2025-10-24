@@ -3,6 +3,8 @@
 @import url('/css/header-redesign.css');
 @import url('/css/pages/dashboard-redesign.css');
 @import url('/css/components/modal.css');
+@import url('/css/components/sidebar.css');
+@import url('/css/components/header-dropdowns.css');
 :root {
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
@@ -130,7 +132,6 @@ p {
 a {
   color: var(--primary-600);
   text-decoration: none;
-  transition: color var(--transition-fast);
 }
 
 a:hover {
@@ -150,7 +151,6 @@ a:hover {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
   user-select: none;
   white-space: nowrap;
   min-height: 2.5rem;
@@ -179,7 +179,6 @@ a:hover {
   background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
   border-color: var(--primary-700);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -253,7 +252,6 @@ a:hover {
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all var(--transition-normal);
 }
 
 .card:hover {
@@ -287,8 +285,11 @@ a:hover {
 }
 
 .dashboard-container {
-  padding: 0 10%;
-  min-height: 100vh;
+  padding: 0 var(--space-4);
+  min-height: calc(100vh - 64px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .hidden { display: none !important; }
@@ -345,13 +346,6 @@ a:hover {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 
 @media (prefers-contrast: high) {
   .btn, .input, .select, .textarea {

@@ -11,7 +11,7 @@ const {
 */
 class NotificationService {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
 

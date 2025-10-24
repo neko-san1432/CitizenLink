@@ -46,10 +46,12 @@
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "autoprefixer": "^10.4.21",
+    "cross-fetch": "^4.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-no-unsanitized": "^4.1.4",
     "eslint-plugin-security": "^3.0.1",
     "gzip-cli": "^1.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18"
