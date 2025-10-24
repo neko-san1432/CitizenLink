@@ -109,4 +109,19 @@ function formatMetadata(metadata) {
   return String(metadata);
 }
 
+// Export additional methods
+export const Toast = {
+  success: (message, options = {}) => showMessage('success', message, options.durationMs || 4000, options),
+  error: (message, options = {}) => showMessage('error', message, options.durationMs || 4000, options),
+  warning: (message, options = {}) => showMessage('warning', message, options.durationMs || 4000, options),
+  info: (message, options = {}) => showMessage('info', message, options.durationMs || 4000, options),
+  message: (message, options = {}) => showMessage('message', message, options.durationMs || 4000, options),
+  clear: () => {
+    const container = document.querySelector('.toast-container');
+    if (container) {
+      container.innerHTML = '';
+    }
+  }
+};
+
 

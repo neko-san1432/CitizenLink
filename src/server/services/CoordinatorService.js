@@ -521,7 +521,7 @@ class CoordinatorService {
         .update({
           // primary_department: primary, // Removed - derived from department_r
           // secondary_departments: secondary, // Removed - derived from department_r
-          status: 'in progress',
+          // status: 'in progress', // Removed - derived from workflow_status
           workflow_status: 'assigned',
           priority: options.priority || undefined,
           response_deadline: options.deadline || undefined,

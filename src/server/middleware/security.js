@@ -32,7 +32,8 @@ const cspConfig = {
       'https://*.basemaps.cartocdn.com',
       'https://*.tile.opentopomap.org',
       'https://unpkg.com',
-      'https://unpkg.com/leaflet@*/dist/images/*'
+      'https://unpkg.com/leaflet@*/dist/images/*',
+      'https://*.supabase.co'
     ],
     connectSrc: [
       '\'self\'',

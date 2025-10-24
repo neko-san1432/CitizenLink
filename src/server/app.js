@@ -48,6 +48,10 @@ class CitizenLinkApp {
     this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
     
+    // Additional static file serving for coordinator review system
+    this.app.use('/components', express.static(path.join(config.rootDir, 'public', 'components')));
+    this.app.use('/styles', express.static(path.join(config.rootDir, 'public', 'styles')));
+    
     // Serve favicon
     this.app.get('/favicon.ico', (req, res) => {
       res.sendFile(path.join(config.rootDir, 'public', 'favicon.ico'));

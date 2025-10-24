@@ -1,12 +1,12 @@
 import apiClient from '../../config/apiClient.js';
-import { showToast } from '../../components/toast.js';
+import showMessage from '../../components/toast.js';
 
 async function fetchComplaintStats() {
   try {
     const { data } = await apiClient.get('/api/complaints/stats');
     return data && data.success ? data : null;
   } catch (e) {
-    showToast('Failed to load complaint stats', 'error');
+    showMessage('error', 'Failed to load complaint stats');
     return null;
   }
 }

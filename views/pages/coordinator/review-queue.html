@@ -49,7 +49,7 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
+                <!-- Enhanced Filters -->
                 <div class="filters">
                     <div class="filter-group">
                         <label for="filter-priority">Priority</label>
@@ -62,9 +62,9 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="filter-type">Type</label>
+                        <label for="filter-type">Category</label>
                         <select id="filter-type" onchange="applyFilters()">
-                            <option value="">All Types</option>
+                            <option value="">All Categories</option>
                             <option value="Infrastructure">Infrastructure</option>
                             <option value="Sanitation">Sanitation</option>
                             <option value="Community">Community</option>
@@ -79,6 +79,10 @@
                             <option value="yes">With Similar Complaints</option>
                             <option value="no">No Duplicates</option>
                         </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="search-input">Search</label>
+                        <input type="text" id="search-input" placeholder="Search complaints..." oninput="applyFilters()">
                     </div>
                 </div>
 

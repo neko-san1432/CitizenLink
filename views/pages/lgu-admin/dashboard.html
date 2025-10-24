@@ -123,31 +123,9 @@
                         </select>
                     </div>
                     <div id="dept-performance-container" class="content-container">
-                        <div class="performance-list">
-                            <div class="performance-item">
-                                <div class="performance-header">
-                                    <span class="dept-name">Engineering</span>
-                                    <span class="efficiency">85%</span>
-                                </div>
-                                <div class="performance-bar">
-                                    <div class="efficiency-bar" style="width: 85%"></div>
-                                </div>
-                                <div class="performance-meta">
-                                    <span>Avg Response: 2.1h | 12 complaints</span>
-                                </div>
-                            </div>
-                            <div class="performance-item">
-                                <div class="performance-header">
-                                    <span class="dept-name">Health</span>
-                                    <span class="efficiency">92%</span>
-                                </div>
-                                <div class="performance-bar">
-                                    <div class="efficiency-bar" style="width: 92%"></div>
-                                </div>
-                                <div class="performance-meta">
-                                    <span>Avg Response: 1.8h | 8 complaints</span>
-                                </div>
-                            </div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading department performance...</p>
                         </div>
                     </div>
                 </div>
@@ -159,28 +137,9 @@
                         <button class="btn btn-secondary" onclick="refreshActivity()">Refresh</button>
                     </div>
                     <div id="activity-container" class="content-container">
-                        <div class="activity-list">
-                            <div class="activity-item">
-                                <div class="activity-icon">📝</div>
-                                <div class="activity-content">
-                                    <div class="activity-text">New complaint assigned to Engineering</div>
-                                    <div class="activity-time">5 minutes ago</div>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">✅</div>
-                                <div class="activity-content">
-                                    <div class="activity-text">Complaint #1234 resolved by Health Dept</div>
-                                    <div class="activity-time">1 hour ago</div>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">📢</div>
-                                <div class="activity-content">
-                                    <div class="activity-text">New notice published</div>
-                                    <div class="activity-time">2 hours ago</div>
-                                </div>
-                            </div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading recent activity...</p>
                         </div>
                     </div>
                 </div>
@@ -190,34 +149,10 @@
                     <div class="section-header">
                         <h2 class="section-title">📈 Quick Stats</h2>
                     </div>
-                    <div class="quick-stats-grid">
-                        <div class="quick-stat-item">
-                            <div class="quick-stat-icon">👥</div>
-                            <div class="quick-stat-content">
-                                <div class="quick-stat-value">24</div>
-                                <div class="quick-stat-label">Active Officers</div>
-                            </div>
-                        </div>
-                        <div class="quick-stat-item">
-                            <div class="quick-stat-icon">🏢</div>
-                            <div class="quick-stat-content">
-                                <div class="quick-stat-value">8</div>
-                                <div class="quick-stat-label">Offices</div>
-                            </div>
-                        </div>
-                        <div class="quick-stat-item">
-                            <div class="quick-stat-icon">⏰</div>
-                            <div class="quick-stat-content">
-                                <div class="quick-stat-value">2.3h</div>
-                                <div class="quick-stat-label">Avg Response</div>
-                            </div>
-                        </div>
-                        <div class="quick-stat-item">
-                            <div class="quick-stat-icon">⭐</div>
-                            <div class="quick-stat-content">
-                                <div class="quick-stat-value">4.8</div>
-                                <div class="quick-stat-label">Satisfaction</div>
-                            </div>
+                    <div id="quick-stats-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading quick stats...</p>
                         </div>
                     </div>
                 </div>
@@ -229,31 +164,9 @@
                         <button class="btn btn-secondary" onclick="markAllRead()">Mark All Read</button>
                     </div>
                     <div id="alerts-container" class="content-container">
-                        <div class="alert-list">
-                            <div class="alert-item urgent">
-                                <div class="alert-icon">⚠️</div>
-                                <div class="alert-content">
-                                    <div class="alert-title">High Priority Complaint</div>
-                                    <div class="alert-text">Complaint #1235 requires immediate attention</div>
-                                    <div class="alert-time">10 minutes ago</div>
-                                </div>
-                            </div>
-                            <div class="alert-item warning">
-                                <div class="alert-icon">⏰</div>
-                                <div class="alert-content">
-                                    <div class="alert-title">Overdue Assignment</div>
-                                    <div class="alert-text">3 complaints are past due date</div>
-                                    <div class="alert-time">1 hour ago</div>
-                                </div>
-                            </div>
-                            <div class="alert-item info">
-                                <div class="alert-icon">📊</div>
-                                <div class="alert-content">
-                                    <div class="alert-title">Weekly Report Ready</div>
-                                    <div class="alert-text">Office performance report is available</div>
-                                    <div class="alert-time">2 hours ago</div>
-                                </div>
-                            </div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading alerts and notifications...</p>
                         </div>
                     </div>
                 </div>

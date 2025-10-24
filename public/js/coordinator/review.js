@@ -3,7 +3,7 @@
  * Handles loading and reviewing individual complaints
  */
 
-import { Toast } from '../../public/js/components/toast.js';
+import { Toast } from '../components/toast.js';
 
 let currentComplaint = null;
 let complaintId = null;
@@ -72,7 +72,8 @@ async function renderComplaint() {
 
   // Status badge
   const statusEl = document.getElementById('complaint-status');
-  statusEl.innerHTML = `<span class="badge status-${complaint.status.replace(' ', '-')}">${complaint.status}</span>`;
+  const status = complaint.workflow_status || complaint.status || 'unknown';
+  statusEl.innerHTML = `<span class="badge status-${status.replace(' ', '-')}">${status}</span>`;
 
   // Priority badge
   const priorityEl = document.getElementById('complaint-priority');
@@ -98,53 +99,113 @@ async function renderComplaint() {
   if (preferenceEl) {
     const departments = complaint.department_r || [];
     if (departments.length > 0) {
-      // Use dynamic department names
-      const displayNames = await Promise.all(
-        departments.map(async dept => {
-          try {
-            const { getDepartmentNameByCode } = await import('../utils/departmentUtils.js');
-            return await getDepartmentNameByCode(dept);
-          } catch (error) {
-            console.error('Error fetching department name:', error);
-            return dept; // Fallback to original code
-          }
-        })
-      );
+      // Handle both numeric IDs and department codes
+      const displayNames = departments.map(dept => {
+        // Check if it's a numeric ID (like "79") or a department code (like "CEO")
+        if (typeof dept === 'number' || /^\d+$/.test(dept)) {
+          // Numeric department ID mapping
+          const numericDeptNames = {
+            '69': 'City Engineering Office',
+            '70': 'City General Services Office',
+            '71': 'City Planning and Development Coordinator',
+            '72': 'Digos City Health Office',
+            '73': 'City Social Welfare and Development Office',
+            '74': 'City Disaster Risk Reduction and Management Office',
+            '75': 'City Environment and Natural Resources Office',
+            '76': 'City Treasurer\'s Office',
+            '77': 'City Economic Enterprise Office',
+            '78': 'Human Resource Management Office',
+            '79': 'Philippine National Police - Digos City Station',
+            '80': 'City Legal Office',
+            '81': 'Office of the City Mayor',
+            '82': 'Public Assistance Desk',
+            '83': 'Office of the City Administrator',
+            '84': 'City Information Office',
+            '85': 'City Accountant\'s Office'
+          };
+          return numericDeptNames[dept.toString()] || `Department ${dept}`;
+        } else {
+          // Department code mapping (fallback for existing codes)
+          const deptNames = {
+            'CEO': 'City Engineering Office',
+            'GSO': 'City General Services Office', 
+            'CPDC': 'City Planning and Development Coordinator',
+            'CHO': 'Digos City Health Office',
+            'CSWDO': 'City Social Welfare and Development Office',
+            'CDRRMO': 'City Disaster Risk Reduction and Management Office',
+            'ENRO': 'City Environment and Natural Resources Office'
+          };
+          return deptNames[dept] || dept;
+        }
+      });
       preferenceEl.textContent = displayNames.join(', ');
     } else {
       preferenceEl.textContent = 'No preference specified';
     }
   }
 
-  // Map preview (read-only)
+  // Map preview using ComplaintMap component
   try {
     const mapEl = document.getElementById('location-map');
     const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
     const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
+    
+    console.log('[REVIEW] Map setup:', { 
+      mapEl: !!mapEl, 
+      hasLat, 
+      hasLng, 
+      lat: complaint.latitude, 
+      lng: complaint.longitude,
+      latType: typeof complaint.latitude,
+      lngType: typeof complaint.longitude
+    });
+    
     if (mapEl && (hasLat || hasLng)) {
-      const ensureLeaflet = () => typeof L !== 'undefined' ? Promise.resolve() : new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        s.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-        s.crossOrigin = '';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-
-      await ensureLeaflet();
-      const lat = Number(complaint.latitude);
-      const lng = Number(complaint.longitude);
-      const valid = !Number.isNaN(lat) && !Number.isNaN(lng);
-      const center = valid ? [lat, lng] : [6.75, 125.35];
-      const map = L.map('location-map', { zoomControl: true }).setView(center, valid ? 15 : 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-      if (valid) {
-        L.marker(center).addTo(map);
+      // Use ComplaintMap component
+      if (window.ComplaintMap) {
+        console.log('[REVIEW] Creating ComplaintMap...');
+        const complaintMap = new window.ComplaintMap('location-map');
+        
+        if (hasLat && hasLng) {
+          console.log('[REVIEW] Setting location:', complaint.latitude, complaint.longitude);
+          // Add a small delay to ensure map is fully initialized
+          setTimeout(() => {
+            complaintMap.setLocation(
+              complaint.latitude,
+              complaint.longitude,
+              complaint.title || 'Complaint Location',
+              complaint.location_text || ''
+            );
+            console.log('[REVIEW] Location set on map');
+          }, 500);
+        }
+      } else {
+        console.warn('[REVIEW] ComplaintMap component not loaded, trying fallback...');
+        // Fallback to basic Leaflet map
+        try {
+          if (typeof L !== 'undefined') {
+            const lat = Number(complaint.latitude);
+            const lng = Number(complaint.longitude);
+            const center = [lat, lng];
+            const map = L.map('location-map').setView(center, 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            const marker = L.marker(center).addTo(map);
+            marker.bindPopup(`<b>${complaint.title || 'Complaint Location'}</b><br>${complaint.location_text || ''}`);
+            console.log('[REVIEW] Fallback map created with marker');
+          } else {
+            console.warn('[REVIEW] Leaflet not available for fallback');
+          }
+        } catch (fallbackError) {
+          console.error('[REVIEW] Fallback map failed:', fallbackError);
+        }
       }
-      setTimeout(() => map.invalidateSize(), 200);
+    } else {
+      console.log('[REVIEW] Map not created - missing coordinates or element');
+      if (mapEl) {
+        mapEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
+      }
     }
   } catch (e) {
     console.warn('[REVIEW] Map init failed:', e);
@@ -192,19 +253,21 @@ async function renderComplaint() {
 }
 
 /**
- * Render evidence images
+ * Render evidence images with preview functionality
  */
 function renderEvidence(evidence) {
   const grid = document.getElementById('evidence-grid');
 
   const normalize = (item) => {
     // Support both DB_FORMAT.sql (snake_case) and existing code (camelCase)
-    const url = item.publicUrl || item.url || item.public_url || null;
+    // Also support signedUrl from coordinator repository
+    const url = item.publicUrl || item.signedUrl || item.url || item.public_url || null;
     const fileName = item.fileName || item.file_name || item.name || 'file';
     const filePath = item.filePath || item.file_path || item.path || null;
     const fileType = item.fileType || item.file_type || item.type || '';
     const fileSize = item.fileSize || item.file_size || item.size || null;
-    return { url, fileName, filePath, fileType, fileSize };
+    const mimeType = item.mimeType || item.mime_type || item.fileType || '';
+    return { url, fileName, filePath, fileType, fileSize, mimeType };
   };
 
   const isImage = (type, name) => {
@@ -231,39 +294,62 @@ function renderEvidence(evidence) {
     return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
   };
 
-  grid.innerHTML = evidence.map(raw => {
+  const getFileIcon = (type, name) => {
+    if (isImage(type, name)) return '🖼️';
+    if (isVideo(type, name)) return '🎥';
+    if (isPdf(type, name)) return '📄';
+    if (type && type.startsWith('audio/')) return '🎵';
+    return '📎';
+  };
+
+  grid.innerHTML = evidence.map((raw, index) => {
     const item = normalize(raw);
-    const href = item.url || (item.filePath ? item.filePath : '#');
     const sizeText = item.fileSize ? ` · ${formatSize(item.fileSize)}` : '';
-    const typeText = item.fileType ? item.fileType : '';
-
-    if (isImage(item.fileType, item.fileName) && item.url) {
-      return `
-    <a class="evidence-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${item.fileName}">
-      <img src="${item.url}" alt="${item.fileName}">
-    </a>`;
-    }
-
-    if (isVideo(item.fileType, item.fileName) && item.url) {
-      return `
-    <a class="evidence-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${item.fileName}" style="display:flex;align-items:center;justify-content:center;">
-      🎥 ${item.fileName}
-    </a>`;
-    }
-
-    if (isPdf(item.fileType, item.fileName)) {
-      return `
-    <a class="evidence-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${item.fileName}" style="display:flex;align-items:center;justify-content:center;">
-      📄 ${item.fileName}
-    </a>`;
-    }
+    const icon = getFileIcon(item.fileType, item.fileName);
 
     return `
-    <a class="evidence-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${item.fileName}" style="display:flex;align-items:center;justify-content:center;">
-      📎 ${item.fileName}${typeText || sizeText ? `<div style='position:absolute;left:8px;bottom:8px;font-size:12px;color:#333;background:#fff;padding:2px 6px;border-radius:4px;'>${[typeText, sizeText].filter(Boolean).join(' ')}</div>` : ''}
-    </a>`;
+      <div class="evidence-item" onclick="openEvidencePreview(${index})" style="cursor: pointer;">
+        <div class="evidence-preview">
+          ${isImage(item.fileType, item.fileName) && item.url ? 
+            `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">` :
+            `<div class="evidence-icon" style="display: flex; align-items: center; justify-content: center; height: 120px; font-size: 48px; background: #f3f4f6; border-radius: 8px;">${icon}</div>`
+          }
+          <div class="evidence-info" style="padding: 8px;">
+            <div class="evidence-name" style="font-weight: 500; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.fileName}">${item.fileName}</div>
+            <div class="evidence-meta" style="font-size: 12px; color: #6b7280;">${item.fileType || 'Unknown type'}${sizeText}</div>
+          </div>
+        </div>
+      </div>
+    `;
   }).join('');
+
+  // Store evidence data globally for preview
+  window.evidenceData = evidence.map(normalize);
+  console.log('[REVIEW] Evidence data stored:', window.evidenceData);
+  
+  // Test evidence preview functionality
+  console.log('[REVIEW] Evidence preview available:', !!window.evidencePreview);
+  console.log('[REVIEW] Evidence data length:', window.evidenceData.length);
 }
+
+/**
+ * Open evidence preview modal
+ */
+window.openEvidencePreview = function(index) {
+  console.log('[REVIEW] Opening evidence preview:', { 
+    index, 
+    hasPreview: !!window.evidencePreview, 
+    hasData: !!window.evidenceData, 
+    dataLength: window.evidenceData?.length,
+    evidence: window.evidenceData?.[index]
+  });
+  
+  if (window.evidencePreview && window.evidenceData && window.evidenceData[index]) {
+    window.evidencePreview.show(window.evidenceData[index]);
+  } else {
+    console.error('[REVIEW] Cannot open evidence preview - missing components or data');
+  }
+};
 
 /**
  * Render similar complaints
@@ -276,8 +362,8 @@ function renderSimilarComplaints(similarities) {
     <div class="similar-item">
       <h4>${sim.similar_complaint?.title || 'Unknown'}</h4>
       <div class="similar-meta">
-        ${sim.similar_complaint?.type || ''} | 
-        ${sim.similar_complaint?.status || ''} | 
+        ${sim.similar_complaint?.category || sim.similar_complaint?.type || ''} | 
+        ${sim.similar_complaint?.workflow_status || sim.similar_complaint?.status || ''} | 
         ${formatDate(sim.similar_complaint?.submitted_at)}
         <span class="similarity-score">${Math.round(sim.similarity_score * 100)}% match</span>
       </div>
@@ -485,7 +571,7 @@ async function loadDepartmentsForAssignment() {
       const departmentsList = document.getElementById('departments-list');
       departmentsList.innerHTML = result.data.map(dept => `
         <label>
-          <input type="checkbox" class="dept-check" value="${dept.id}">
+          <input type="checkbox" class="dept-check" value="${dept.code}">
           ${dept.name} (${dept.code})
         </label>
       `).join('');

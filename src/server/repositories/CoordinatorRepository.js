@@ -114,6 +114,51 @@ class CoordinatorRepository {
         }
       }
 
+      // Get evidence files
+      const { data: evidence, error: evidenceError } = await this.supabase
+        .from('complaint_evidence')
+        .select('*')
+        .eq('complaint_id', complaintId)
+        .order('uploaded_at', { ascending: false });
+
+      if (evidenceError) {
+        console.warn('[COORDINATOR_REPO] Could not fetch evidence:', evidenceError.message);
+        complaint.evidence = [];
+      } else {
+        // Transform evidence data for frontend
+        complaint.evidence = await Promise.all((evidence || []).map(async (ev) => {
+          let signedUrl = null;
+          
+          // Generate signed URL for private bucket access
+          if (ev.file_path) {
+            try {
+              const { data: signedUrlData, error: signedUrlError } = await this.supabase.storage
+                .from('complaint-evidence')
+                .createSignedUrl(ev.file_path, 3600); // 1 hour expiry
+              
+              if (!signedUrlError && signedUrlData) {
+                signedUrl = signedUrlData.signedUrl;
+              }
+            } catch (urlError) {
+              console.warn('[COORDINATOR_REPO] Failed to generate signed URL for evidence:', urlError.message);
+            }
+          }
+          
+          return {
+            id: ev.id,
+            fileName: ev.file_name,
+            filePath: ev.file_path,
+            fileType: ev.file_type,
+            fileSize: ev.file_size,
+            mimeType: ev.mime_type,
+            uploadedAt: ev.uploaded_at,
+            isPublic: ev.is_public,
+            // Use signed URL for private bucket access
+            publicUrl: signedUrl
+          };
+        }));
+      }
+
       // Get similarities
       const { data: similarities, error: simError } = await this.supabase
         .from('complaint_similarities')
@@ -240,7 +285,7 @@ class CoordinatorRepository {
     try {
       const updateData = {
         // primary_department: departmentName, // Removed - derived from department_r
-        status: 'in progress',
+        // status: 'in progress', // Removed - derived from workflow_status
         workflow_status: 'assigned',
         updated_at: new Date().toISOString()
       };
@@ -289,7 +334,7 @@ class CoordinatorRepository {
         .from('complaints')
         .update({
           // primary_department: departmentName, // Removed - derived from department_r
-          status: 'in progress',
+          // status: 'in progress', // Removed - derived from workflow_status
           workflow_status: 'assigned',
           updated_at: new Date().toISOString()
         })

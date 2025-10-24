@@ -3,7 +3,10 @@
  * Provides dynamic department mapping for server-side services
  */
 
-const { supabase } = require('../config/database');
+const Database = require('../config/database');
+
+const db = new Database();
+const supabase = db.getClient();
 
 // Cache for department data
 let departmentCache = null;
@@ -23,48 +26,28 @@ async function getDepartments() {
 
   try {
     const { data, error } = await supabase
-      .from('categories')
+      .from('departments')
       .select(`
         id,
         name,
         code,
-        subcategories (
-          id,
-          name,
-          code,
-          departments (
-            id,
-            name,
-            code,
-            level
-          )
-        )
+        level
       `)
       .eq('is_active', true);
 
     if (error) throw error;
 
-    // Flatten the hierarchical structure into a simple array
+    // Process the departments data directly
     const departments = [];
     
     if (data) {
-      data.forEach(category => {
-        if (category.subcategories) {
-          category.subcategories.forEach(subcategory => {
-            if (subcategory.departments) {
-              subcategory.departments.forEach(dept => {
-                departments.push({
-                  id: dept.id,
-                  code: dept.code,
-                  name: dept.name,
-                  level: dept.level,
-                  subcategory: subcategory.name,
-                  category: category.name
-                });
-              });
-            }
-          });
-        }
+      data.forEach(dept => {
+        departments.push({
+          id: dept.id,
+          code: dept.code,
+          name: dept.name,
+          level: dept.level
+        });
       });
     }
 

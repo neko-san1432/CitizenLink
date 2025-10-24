@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/coordinator-review.css">
-    <link rel="stylesheet" href="../../styles/false-complaint-marker.css">
+    <link rel="stylesheet" href="/styles/false-complaint-marker.css">
+    <link rel="stylesheet" href="/css/components/evidence-preview.css">
 </head>
 <body>
     <div class="app-container">
@@ -247,20 +248,30 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
-    <script src="../../components/complaint/falseComplaintMarker.js"></script>
-    <script type="module" src="../../js/coordinator/review.js"></script>
-    <script>
+    <script type="module" src="/components/complaint/falseComplaintMarker.js"></script>
+    <script type="module" src="/components/complaint/evidencePreview.js"></script>
+    <script type="module" src="/components/complaint/complaintMap.js"></script>
+    <script type="module" src="/js/coordinator/review.js"></script>
+    <script type="module">
+        import FalseComplaintMarker from '/components/complaint/falseComplaintMarker.js';
+        
+        // Initialize false complaint marker
+        const falseComplaintMarker = new FalseComplaintMarker();
+        
         // Function to open false complaint modal
-        function openFalseComplaintModal() {
-            if (window.falseComplaintMarker && window.complaintId) {
-                window.falseComplaintMarker.open(window.complaintId, (updatedComplaint) => {
+        window.openFalseComplaintModal = function() {
+            const pathParts = window.location.pathname.split('/');
+            const complaintId = pathParts[pathParts.length - 1];
+            
+            if (complaintId && complaintId !== 'review') {
+                falseComplaintMarker.show(complaintId, (result) => {
                     // Reload the page after marking as false
                     window.location.reload();
                 });
             } else {
-                alert('Unable to open false complaint marker. Please refresh the page.');
+                alert('Unable to open false complaint marker. Invalid complaint ID.');
             }
-        }
+        };
         
         // Make complaint ID available globally
         document.addEventListener('DOMContentLoaded', () => {

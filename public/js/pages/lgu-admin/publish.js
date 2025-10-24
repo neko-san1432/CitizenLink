@@ -1,5 +1,5 @@
 import apiClient from '../../config/apiClient.js';
-import { showToast } from '../../components/toast.js';
+import showMessage from '../../components/toast.js';
 
 function renderForm(type) {
   const container = document.getElementById('publish-form');
@@ -116,13 +116,13 @@ function wireFormHandlers(type) {
         };
         const { data } = await apiClient.post('/api/content/news', payload);
         if (data && data.success) {
-          showToast('News published', 'success');
+          showMessage('success', 'News published');
           form.reset();
         } else {
-          showToast('Failed to publish news', 'error');
+          showMessage('error', 'Failed to publish news');
         }
       } catch (err) {
-        showToast('Failed to publish news', 'error');
+        showMessage('error', 'Failed to publish news');
       }
     });
   }
@@ -143,13 +143,13 @@ function wireFormHandlers(type) {
         };
         const { data } = await apiClient.post('/api/content/events', payload);
         if (data && data.success) {
-          showToast('Event published', 'success');
+          showMessage('success', 'Event published');
           form.reset();
         } else {
-          showToast('Failed to publish event', 'error');
+          showMessage('error', 'Failed to publish event');
         }
       } catch (err) {
-        showToast('Failed to publish event', 'error');
+        showMessage('error', 'Failed to publish event');
       }
     });
   }
@@ -170,13 +170,13 @@ function wireFormHandlers(type) {
         };
         const { data } = await apiClient.post('/api/content/notices', payload);
         if (data && data.success) {
-          showToast('Notice published', 'success');
+          showMessage('success', 'Notice published');
           form.reset();
         } else {
-          showToast('Failed to publish notice', 'error');
+          showMessage('error', 'Failed to publish notice');
         }
       } catch (err) {
-        showToast('Failed to publish notice', 'error');
+        showMessage('error', 'Failed to publish notice');
       }
     });
   }

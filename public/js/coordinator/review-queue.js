@@ -8,8 +8,9 @@ class ReviewQueue {
         this.currentPage = 1;
         this.itemsPerPage = 10;
         this.filters = {
-            status: 'all',
-            category: 'all',
+            priority: '',
+            category: '',
+            duplicates: '',
             search: ''
         };
         
@@ -23,28 +24,36 @@ class ReviewQueue {
 
     setupEventListeners() {
         // Filter controls
-        const statusFilter = document.getElementById('status-filter');
-        const categoryFilter = document.getElementById('category-filter');
+        const priorityFilter = document.getElementById('filter-priority');
+        const categoryFilter = document.getElementById('filter-type');
+        const duplicateFilter = document.getElementById('filter-similar');
         const searchInput = document.getElementById('search-input');
 
-        if (statusFilter) {
-            statusFilter.addEventListener('change', (e) => {
-                this.filters.status = e.target.value;
-                this.loadComplaints();
+        if (priorityFilter) {
+            priorityFilter.addEventListener('change', (e) => {
+                this.filters.priority = e.target.value;
+                this.applyFilters();
             });
         }
 
         if (categoryFilter) {
             categoryFilter.addEventListener('change', (e) => {
                 this.filters.category = e.target.value;
-                this.loadComplaints();
+                this.applyFilters();
+            });
+        }
+
+        if (duplicateFilter) {
+            duplicateFilter.addEventListener('change', (e) => {
+                this.filters.duplicates = e.target.value;
+                this.applyFilters();
             });
         }
 
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.filters.search = e.target.value;
-                this.debounce(() => this.loadComplaints(), 300)();
+                this.debounce(() => this.applyFilters(), 300)();
             });
         }
 
@@ -59,6 +68,11 @@ class ReviewQueue {
         if (nextBtn) {
             nextBtn.addEventListener('click', () => this.nextPage());
         }
+    }
+
+    applyFilters() {
+        this.currentPage = 1; // Reset to first page when filtering
+        this.renderComplaints();
     }
 
     async loadComplaints() {
@@ -125,37 +139,7 @@ class ReviewQueue {
         complaintList.style.display = 'block';
         if (emptyState) emptyState.style.display = 'none';
 
-        complaintList.innerHTML = paginatedComplaints.map(complaint => `
-            <div class="complaint-card">
-                <div class="complaint-header">
-                    <div class="complaint-id">#${complaint.id}</div>
-                    <div class="complaint-status status-${complaint.status?.toLowerCase() || 'pending'}">
-                        ${complaint.status || 'Pending'}
-                    </div>
-                </div>
-                <div class="complaint-content">
-                    <h3 class="complaint-title">${complaint.title || 'Untitled Complaint'}</h3>
-                    <p class="complaint-description">${complaint.description || 'No description provided'}</p>
-                    <div class="complaint-meta">
-                        <span class="complaint-category category-${complaint.priority?.toLowerCase() || 'medium'}">
-                            ${complaint.category || 'General'}
-                        </span>
-                        <span class="complaint-date">${this.formatDate(complaint.created_at)}</span>
-                    </div>
-                </div>
-                <div class="complaint-actions">
-                    <button class="btn btn-primary view-btn" data-complaint-id="${complaint.id}">
-                        View Details
-                    </button>
-                    <button class="btn btn-success approve-btn" data-complaint-id="${complaint.id}">
-                        Approve
-                    </button>
-                    <button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
-                        Reject
-                    </button>
-                </div>
-            </div>
-        `).join('');
+        complaintList.innerHTML = paginatedComplaints.map(complaint => this.createComplaintCard(complaint)).join('');
 
         this.updatePagination(filteredComplaints.length);
         this.attachEventListeners();
@@ -187,17 +171,79 @@ class ReviewQueue {
         });
     }
 
+    createComplaintCard(complaint) {
+        const priorityBadge = this.getPriorityBadgeClass(complaint.priority);
+        const algorithmFlags = complaint.algorithm_flags || {};
+        
+        let flagHTML = '';
+        if (algorithmFlags.high_confidence_duplicate) {
+            flagHTML = `
+                <div class="algorithm-flag high-confidence">
+                    ⚠️ High confidence duplicate detected
+                </div>
+            `;
+        } else if (algorithmFlags.has_duplicates) {
+            flagHTML = `
+                <div class="algorithm-flag">
+                    🔍 ${algorithmFlags.similarity_count} potential duplicate(s) found
+                </div>
+            `;
+        }
+
+        return `
+            <div class="complaint-card" data-complaint-id="${complaint.id}">
+                <div class="complaint-header">
+                    <div class="complaint-id">#${complaint.id}</div>
+                    <div class="complaint-status status-${complaint.workflow_status?.toLowerCase() || complaint.status?.toLowerCase() || 'pending'}">
+                        ${complaint.workflow_status || complaint.status || 'Pending'}
+                    </div>
+                </div>
+                <div class="complaint-content">
+                    <h3 class="complaint-title">${complaint.title || 'Untitled Complaint'}</h3>
+                    <p class="complaint-description">${complaint.descriptive_su || complaint.description || 'No description provided'}</p>
+                    <div class="complaint-meta">
+                        <span class="badge ${priorityBadge}">${complaint.priority || 'Medium'}</span>
+                        <span class="badge badge-medium">${complaint.category || 'General'}</span>
+                        <span class="complaint-date">${this.formatTimeAgo(complaint.submitted_at || complaint.created_at)}</span>
+                    </div>
+                    ${flagHTML}
+                </div>
+                <div class="complaint-actions">
+                    <button class="btn btn-primary view-btn" data-complaint-id="${complaint.id}">
+                        View Details
+                    </button>
+                    <button class="btn btn-success approve-btn" data-complaint-id="${complaint.id}">
+                        Approve
+                    </button>
+                    <button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
+                        Reject
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
     getFilteredComplaints() {
         return this.complaints.filter(complaint => {
-            const matchesStatus = this.filters.status === 'all' || 
-                                complaint.status?.toLowerCase() === this.filters.status.toLowerCase();
-            const matchesCategory = this.filters.category === 'all' || 
+            // Priority filter
+            const matchesPriority = !this.filters.priority || this.filters.priority === '' || 
+                                  complaint.priority?.toLowerCase() === this.filters.priority.toLowerCase();
+            
+            // Category filter
+            const matchesCategory = !this.filters.category || this.filters.category === '' || 
                                   complaint.category?.toLowerCase() === this.filters.category.toLowerCase();
-            const matchesSearch = this.filters.search === '' || 
+            
+            // Duplicate filter
+            const matchesDuplicates = !this.filters.duplicates || this.filters.duplicates === '' || 
+                                    (this.filters.duplicates === 'yes' && complaint.algorithm_flags?.has_duplicates) ||
+                                    (this.filters.duplicates === 'no' && !complaint.algorithm_flags?.has_duplicates);
+            
+            // Search filter
+            const matchesSearch = !this.filters.search || this.filters.search === '' || 
                                 complaint.title?.toLowerCase().includes(this.filters.search.toLowerCase()) ||
-                                complaint.description?.toLowerCase().includes(this.filters.search.toLowerCase());
+                                (complaint.descriptive_su || complaint.description)?.toLowerCase().includes(this.filters.search.toLowerCase());
 
-            return matchesStatus && matchesCategory && matchesSearch;
+            return matchesPriority && matchesCategory && matchesDuplicates && matchesSearch;
         });
     }
 
@@ -209,14 +255,14 @@ class ReviewQueue {
 
     updateStats() {
         const totalComplaints = this.complaints.length;
-        const pendingComplaints = this.complaints.filter(c => c.status?.toLowerCase() === 'pending').length;
-        const approvedComplaints = this.complaints.filter(c => c.status?.toLowerCase() === 'approved').length;
-        const rejectedComplaints = this.complaints.filter(c => c.status?.toLowerCase() === 'rejected').length;
+        const urgentComplaints = this.complaints.filter(c => c.priority?.toLowerCase() === 'urgent').length;
+        const highPriorityComplaints = this.complaints.filter(c => c.priority?.toLowerCase() === 'high').length;
+        const duplicateComplaints = this.complaints.filter(c => c.algorithm_flags?.has_duplicates).length;
 
-        this.updateStatCard('total-complaints', totalComplaints);
-        this.updateStatCard('pending-complaints', pendingComplaints);
-        this.updateStatCard('approved-complaints', approvedComplaints);
-        this.updateStatCard('rejected-complaints', rejectedComplaints);
+        this.updateStatCard('stat-total', totalComplaints);
+        this.updateStatCard('stat-urgent', urgentComplaints);
+        this.updateStatCard('stat-high', highPriorityComplaints);
+        this.updateStatCard('stat-similar', duplicateComplaints);
     }
 
     updateStatCard(id, value) {
@@ -262,24 +308,11 @@ class ReviewQueue {
 
     async viewComplaint(complaintId) {
         try {
-            const response = await fetch(`/api/coordinator/review-queue/${complaintId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            this.showComplaintModal(data.complaint);
-            
+            // Redirect to the dedicated complaint review page
+            window.location.href = `/coordinator/review/${complaintId}`;
         } catch (error) {
-            console.error('Error viewing complaint:', error);
-            this.showError('Failed to load complaint details.');
+            console.error('Error redirecting to complaint details:', error);
+            this.showError('Failed to navigate to complaint details.');
         }
     }
 
@@ -330,50 +363,6 @@ class ReviewQueue {
         }
     }
 
-    showComplaintModal(complaint) {
-        // Create modal HTML
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Complaint #${complaint.id}</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div class="complaint-details">
-                        <h3>${complaint.title}</h3>
-                        <p><strong>Description:</strong> ${complaint.description}</p>
-                        <p><strong>Category:</strong> ${complaint.category || 'General'}</p>
-                        <p><strong>Status:</strong> ${complaint.status || 'Pending'}</p>
-                        <p><strong>Priority:</strong> ${complaint.priority || 'Medium'}</p>
-                        <p><strong>Created:</strong> ${this.formatDate(complaint.created_at)}</p>
-                        ${complaint.location ? `<p><strong>Location:</strong> ${complaint.location}</p>` : ''}
-                        ${complaint.attachments ? `<p><strong>Attachments:</strong> ${complaint.attachments.length} files</p>` : ''}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success" onclick="reviewQueue.approveComplaint(${complaint.id}); this.closest('.modal').remove();">
-                        Approve
-                    </button>
-                    <button class="btn btn-danger" onclick="reviewQueue.rejectComplaint(${complaint.id}); this.closest('.modal').remove();">
-                        Reject
-                    </button>
-                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove();">
-                        Close
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // Close modal handlers
-        modal.querySelector('.close').onclick = () => modal.remove();
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
-        };
-    }
 
     showLoading() {
         const loading = document.getElementById('loading');
@@ -387,6 +376,30 @@ class ReviewQueue {
 
     showError(message) {
         showToast(message, 'error');
+    }
+
+    getPriorityBadgeClass(priority) {
+        const map = {
+            'urgent': 'badge-urgent',
+            'high': 'badge-high',
+            'medium': 'badge-medium',
+            'low': 'badge-low'
+        };
+        return map[priority] || 'badge-medium';
+    }
+
+    formatTimeAgo(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+
+        if (seconds < 60) return 'Just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+        if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+        return date.toLocaleDateString();
     }
 
     formatDate(dateString) {

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { supabase } = require('../config/database');
 const Database = require('../config/database');
 const { authenticateUser } = require('../middleware/auth');
 

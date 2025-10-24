@@ -180,13 +180,18 @@ class ComplaintService {
       return [];
     }
 
+    // Use the same Database instance to ensure consistent client
+    const Database = require('../config/database');
+    const db = new Database();
+    const supabase = db.getClient();
+
     const evidenceFiles = [];
     for (const file of files) {
       try {
         const fileName = `${complaintId}/${Date.now()}-${file.originalname}`;
 
         // Upload file to Supabase storage
-        const { data: uploadData, error: uploadError } = await this.complaintRepo.supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('complaint-evidence')
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
@@ -199,7 +204,7 @@ class ComplaintService {
           continue;
         }
 
-        const { data: { publicUrl } } = this.complaintRepo.supabase.storage
+        const { data: { publicUrl } } = supabase.storage
           .from('complaint-evidence')
           .getPublicUrl(fileName);
 
