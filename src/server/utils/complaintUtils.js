@@ -123,8 +123,7 @@ function prepareComplaintForInsert(complaintData) {
   delete prepared.type; // Remove type field - not in current schema
   delete prepared.subtype; // Remove subtype field - not in current schema
   delete prepared.evidence; // Remove evidence field - handled separately
-  delete prepared.categoryId; // Remove categoryId field - not in current schema
-  delete prepared.subcategoryId; // Remove subcategoryId field - not in current schema
+  // Keep category and subcategory fields - they are now part of the schema
   
   return prepared;
 }

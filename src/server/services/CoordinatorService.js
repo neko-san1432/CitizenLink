@@ -637,11 +637,12 @@ class CoordinatorService {
               { status: 'pending' }
             );
           }
-          await this.notificationService.notifyDepartmentAdminsByCode(
-            departmentName,
-            assigned[0]?.id,
-            assigned[0]?.title || 'New Complaints'
-          );
+          // TODO: Fix notifyDepartmentAdminsByCode RPC function
+          // await this.notificationService.notifyDepartmentAdminsByCode(
+          //   departmentName,
+          //   assigned[0]?.id,
+          //   assigned[0]?.title || 'New Complaints'
+          // );
         }
       } catch (e) {
         console.warn('[COORDINATOR_SERVICE] Bulk assignment/notification post-step failed:', e.message);

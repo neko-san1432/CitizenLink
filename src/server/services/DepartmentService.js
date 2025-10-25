@@ -211,7 +211,6 @@ class DepartmentService {
         .select(`
           department_id,
           subcategory_id,
-          is_primary,
           response_priority,
           departments (code),
           subcategories (code)
@@ -241,7 +240,6 @@ class DepartmentService {
         .from('department_subcategory_mapping')
         .select(`
           department_id,
-          is_primary,
           response_priority,
           departments (
             id,
@@ -262,7 +260,6 @@ class DepartmentService {
         department_id: item.department_id,
         department_code: item.departments.code,
         department_name: item.departments.name,
-        is_primary: item.is_primary,
         response_priority: item.response_priority,
         response_time_hours: item.departments.response_time_hours,
         level: item.departments.level

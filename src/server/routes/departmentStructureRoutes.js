@@ -15,7 +15,6 @@ router.get('/categories', async (req, res) => {
           departments (
             *,
             department_subcategory_mapping (
-              is_primary,
               response_priority
             )
           )
@@ -51,7 +50,6 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
         departments (
           *,
           department_subcategory_mapping (
-            is_primary,
             response_priority
           )
         )
@@ -79,33 +77,14 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
 router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
   try {
     const { subcategoryId } = req.params;
-    console.log('[DEPT-API] Fetching departments for subcategory:', subcategoryId);
+    console.log('[DEPT-API] Fetching ALL departments for subcategory:', subcategoryId);
     
     const supabase = Database.getClient();
 
-    // 1) Get department mappings for this subcategory
-    const { data: mappings, error: mapError } = await supabase
-      .from('department_subcategory_mapping')
-      .select('department_id,is_primary,response_priority')
-      .eq('subcategory_id', subcategoryId);
-
-    if (mapError) {
-      console.error('[DEPT-API] Mapping query error:', mapError);
-      throw mapError;
-    }
-
-    if (!mappings || mappings.length === 0) {
-      console.log('[DEPT-API] No mappings found for subcategory:', subcategoryId);
-      return res.json({ success: true, data: [] });
-    }
-
-    const departmentIds = mappings.map(m => m.department_id).filter(Boolean);
-
-    // 2) Fetch departments by IDs
-    const { data: departments, error: deptError } = await supabase
+    // 1) Get ALL active departments (not just mapped ones)
+    const { data: allDepartments, error: deptError } = await supabase
       .from('departments')
       .select('*')
-      .in('id', departmentIds)
       .eq('is_active', true)
       .order('name');
 
@@ -114,9 +93,20 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
       throw deptError;
     }
 
-    // 3) Attach mapping info to each department result
-    const mapByDeptId = new Map(mappings.map(m => [m.department_id, m]));
-    const enriched = (departments || []).map(d => ({
+    // 2) Get department mappings for this subcategory (for reference)
+    const { data: mappings, error: mapError } = await supabase
+      .from('department_subcategory_mapping')
+      .select('department_id,response_priority')
+      .eq('subcategory_id', subcategoryId);
+
+    if (mapError) {
+      console.error('[DEPT-API] Mapping query error:', mapError);
+      // Don't throw - mappings are optional
+    }
+
+    // 3) Attach mapping info to each department result (if mapped)
+    const mapByDeptId = new Map((mappings || []).map(m => [m.department_id, m]));
+    const enriched = (allDepartments || []).map(d => ({
       ...d,
       department_subcategory_mapping: mapByDeptId.get(d.id) || null
     }));
@@ -129,6 +119,40 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching departments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch departments'
+    });
+  }
+});
+
+// Get ALL departments (for showing all departments regardless of category)
+router.get('/departments/all', async (req, res) => {
+  try {
+    console.log('[DEPT-API] Fetching ALL departments');
+    
+    const supabase = Database.getClient();
+
+    // Get ALL active departments
+    const { data: allDepartments, error: deptError } = await supabase
+      .from('departments')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+
+    if (deptError) {
+      console.error('[DEPT-API] Departments query error:', deptError);
+      throw deptError;
+    }
+
+    console.log('[DEPT-API] Returning', allDepartments.length, 'departments');
+
+    res.json({
+      success: true,
+      data: allDepartments
+    });
+  } catch (error) {
+    console.error('Error fetching all departments:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch departments'
@@ -288,14 +312,13 @@ router.post('/admin/departments', authenticateUser, async (req, res) => {
 // Admin: Map department to subcategory
 router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
   try {
-    const { department_id, subcategory_id, is_primary, response_priority } = req.body;
+    const { department_id, subcategory_id, response_priority } = req.body;
 
     const { data, error } = await Database.getClient()
       .from('department_subcategory_mapping')
       .insert({
         department_id,
         subcategory_id,
-        is_primary: is_primary || false,
         response_priority: response_priority || 1
       })
       .select()

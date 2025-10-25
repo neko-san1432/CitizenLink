@@ -102,10 +102,15 @@
   font-size: 0.8rem;
   font-weight: 500}
 
-.primary-badge {
-  color: #007bff;
+.suggested-badge {
+  color: #28a745;
   font-weight: 600;
-  font-size: 0.8rem}
+  font-size: 0.8rem;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
 
 .loading-placeholder,
 .no-departments,

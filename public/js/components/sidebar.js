@@ -204,6 +204,8 @@ function getMenuItemsForRole(role) {
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'lgu-admin': [
+      { url: '/lgu-admin/dashboard', icon: 'dashboard', label: 'Dashboard' },
+      { url: '/lgu-admin/assignments', icon: 'assignments', label: 'Assignments' },
       { url: '/lgu-admin/heatmap', icon: 'heatmap', label: 'Heatmap' },
       { url: '/lgu-admin/publish', icon: 'publish', label: 'Publish' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }

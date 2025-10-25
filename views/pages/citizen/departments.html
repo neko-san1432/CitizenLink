@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Government Departments - CitizenLink</title>
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/pages/index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/components/clock.css">
     <link rel="stylesheet" href="/css/components/sidebar.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
     <link rel="stylesheet" href="/css/components/modal.css">
-    <link rel="stylesheet" href="/css/components/toast.css">
     <style>
         .departments-container {
             max-width: 1200px;
@@ -191,26 +198,36 @@
     </style>
 </head>
 <body>
-    <div class="departments-container">
-        <a href="/dashboard" class="back-to-dashboard">
-            <span class="back-icon">←</span>
-            Back to Dashboard
-        </a>
-        
-        <div class="departments-header">
-            <h1>Government Departments</h1>
-            <p>Learn about the different government offices that handle citizen complaints and services in Digos City</p>
-        </div>
-        
-        <div id="departments-content">
-            <div class="loading">
-                <p>Loading departments...</p>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible citizen-dashboard">
+            <div class="departments-container">
+                <a href="/dashboard" class="back-to-dashboard">
+                    <span class="back-icon">←</span>
+                    Back to Dashboard
+                </a>
+                
+                <div class="departments-header">
+                    <h1>Government Departments</h1>
+                    <p>Learn about the different government offices that handle citizen complaints and services in Digos City</p>
+                </div>
+                
+                <div id="departments-content">
+                    <div class="loading">
+                        <p>Loading departments...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/components/toast.js"></script>
-    <script src="/js/config/apiClient.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/config/apiClient.js"></script>
     <script>
         // Department icons mapping
         const departmentIcons = {

@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.department_subcategory_mapping (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   department_id bigint NOT NULL,
   subcategory_id uuid NOT NULL,
-  is_primary boolean DEFAULT false, -- primary department for this subcategory
+  -- is_primary column removed - all departments are equal
   response_priority integer DEFAULT 1, -- 1 = highest priority
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT department_subcategory_mapping_pkey PRIMARY KEY (id),
@@ -190,14 +190,14 @@ INSERT INTO public.departments (name, code, description, subcategory_id, level, 
 ON CONFLICT (code) DO NOTHING;
 
 -- Create department-subcategory mappings for departments that handle multiple subcategories
-INSERT INTO public.department_subcategory_mapping (department_id, subcategory_id, is_primary, response_priority) VALUES
+INSERT INTO public.department_subcategory_mapping (department_id, subcategory_id, response_priority) VALUES
 -- City Treasurer's Office handles both tax collection and financial review
-((SELECT id FROM departments WHERE code = 'CTO'), (SELECT id FROM subcategories WHERE code = 'TAX'), true, 1),
-((SELECT id FROM departments WHERE code = 'CTO'), (SELECT id FROM subcategories WHERE code = 'FINANCIAL_REVIEW'), false, 2),
+((SELECT id FROM departments WHERE code = 'CTO'), (SELECT id FROM subcategories WHERE code = 'TAX'), 1),
+((SELECT id FROM departments WHERE code = 'CTO'), (SELECT id FROM subcategories WHERE code = 'FINANCIAL_REVIEW'), 2),
 
 -- Office of the City Administrator handles both routing and executive oversight
-((SELECT id FROM departments WHERE code = 'OCA'), (SELECT id FROM subcategories WHERE code = 'ROUTING'), true, 1),
-((SELECT id FROM departments WHERE code = 'OCA'), (SELECT id FROM subcategories WHERE code = 'EXECUTIVE'), false, 2)
+((SELECT id FROM departments WHERE code = 'OCA'), (SELECT id FROM subcategories WHERE code = 'ROUTING'), 1),
+((SELECT id FROM departments WHERE code = 'OCA'), (SELECT id FROM subcategories WHERE code = 'EXECUTIVE'), 2)
 ON CONFLICT (department_id, subcategory_id) DO NOTHING;
 
 -- Create indexes for better performance

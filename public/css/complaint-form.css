@@ -374,3 +374,80 @@ html.dark .loading-placeholder {
   padding-right: 2.5rem;
   appearance: none;
 }
+
+/* Department Search Styling */
+.department-search-container {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.department-search-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.department-search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.search-results-info {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Department sections with search */
+.department-section {
+  margin-bottom: 1.5rem;
+}
+
+.department-section h4 {
+  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+/* Checkbox wrapper for search filtering */
+.checkbox-wrapper {
+  transition: opacity 0.2s ease;
+}
+
+.checkbox-wrapper[style*="display: none"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Search highlight effect */
+.department-search-input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}

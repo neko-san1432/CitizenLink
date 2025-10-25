@@ -145,6 +145,12 @@
   height: 20px;
 }
 
+.notification-container,
+.profile-container {
+  position: relative;
+  display: inline-block;
+}
+
 .notification-btn {
   position: relative;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -317,7 +323,11 @@
 }
 
 .notification-panel {
-  max-height: 600px;
+  position: fixed !important;
+  top: 70px !important;
+  right: 20px !important;
+  left: auto !important;
+  max-height: 500px;
   width: 380px;
   background: white;
   border-radius: 16px;
@@ -325,8 +335,9 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  overflow: hidden;
+  overflow-y: auto;
   opacity: 0;
+  z-index: 1000;
 }
 
 .notification-panel.show {

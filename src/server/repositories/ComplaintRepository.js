@@ -33,7 +33,7 @@ class ComplaintRepository {
   }
 
   async findByUserId(userId, options = {}) {
-    const { page = 1, limit = 10, status } = options;
+    const { page = 1, limit = 10, status, type } = options;
     const offset = (page - 1) * limit;
 
     let query = this.supabase

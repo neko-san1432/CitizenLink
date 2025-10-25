@@ -26,6 +26,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
 
     // Extract and validate form data
     const formData = extractComplaintFormData(formElement);
+    console.log('[FORM] Extracted form data:', formData);
     const validation = validateComplaintForm(formData);
 
     if (!validation.valid) {
@@ -39,9 +40,14 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
         if (key === 'departments' && Array.isArray(value)) {
-          // Handle departments array - send as department_r for backend
+          // Map 'departments' from form to 'preferred_departments' for backend
           value.forEach(deptId => {
-            apiFormData.append('department_r', deptId);
+            apiFormData.append('preferred_departments', deptId);
+          });
+        } else if (key === 'preferred_departments' && Array.isArray(value)) {
+          // Handle preferred_departments array - send as preferred_departments for backend
+          value.forEach(deptId => {
+            apiFormData.append('preferred_departments', deptId);
           });
         } else {
           apiFormData.append(key, String(value));
@@ -53,6 +59,12 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     selectedFiles.forEach(file => {
       apiFormData.append('evidenceFiles', file);
     });
+
+    // Debug: Log what's being sent to API
+    console.log('[FORM] FormData contents:');
+    for (let [key, value] of apiFormData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
 
     // Submit via API client (CSRF token handled internally)
     const result = await apiClient.submitComplaint(apiFormData);

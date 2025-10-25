@@ -8,6 +8,9 @@ class Complaint {
     this.latitude = data.latitude;
     this.longitude = data.longitude;
     this.department_r = data.department_r || [];
+    this.preferred_departments = data.preferred_departments || [];
+    this.category = data.category;
+    this.subcategory = data.subcategory;
     this.workflow_status = data.workflow_status || 'new';
     this.priority = data.priority || 'low';
     // Evidence is now handled separately - not stored in complaints table
@@ -79,11 +82,11 @@ class Complaint {
       latitude: this.latitude ? parseFloat(this.latitude) : null,
       longitude: this.longitude ? parseFloat(this.longitude) : null,
       department_r: Array.isArray(this.department_r) ? this.department_r : [],
+      preferred_departments: Array.isArray(this.preferred_departments) ? this.preferred_departments : [],
+      category: this.category,
+      subcategory: this.subcategory,
       workflow_status: this.workflow_status || 'new',
-      priority: this.priority || 'low',
-      // evidence: this.evidence || [], // Evidence handled separately
-      // primary_department: this.primary_department || null, // Removed - derived from department_r
-      // secondary_departments: this.secondary_departments || [], // Removed - derived from department_r
+      priority: this.priority || 'low', 
       assigned_coordinator_id: this.assigned_coordinator_id || null,
       response_deadline: this.response_deadline || null,
       submitted_at: this.submitted_at || new Date().toISOString()
@@ -100,11 +103,11 @@ class Complaint {
       latitude: this.latitude,
       longitude: this.longitude,
       department_r: this.department_r,
+      preferred_departments: this.preferred_departments,
+      category: this.category,
+      subcategory: this.subcategory,
       workflow_status: this.workflow_status,
       priority: this.priority,
-      // evidence: this.evidence, // Evidence handled separately
-      // primary_department: this.primary_department, // Removed - derived from department_r
-      // secondary_departments: this.secondary_departments, // Removed - derived from department_r
       assigned_coordinator_id: this.assigned_coordinator_id,
       response_deadline: this.response_deadline,
       citizen_satisfaction_rating: this.citizen_satisfaction_rating,

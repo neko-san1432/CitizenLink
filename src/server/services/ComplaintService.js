@@ -14,25 +14,34 @@ class ComplaintService {
   }
 
   async createComplaint(userId, complaintData, files = []) {
-    // Parse department_r - handle both array and individual values
-    let departments = complaintData.department_r || [];
+    // Debug: Log received complaint data
+    console.log('[COMPLAINT_SERVICE] Received complaint data:', {
+      preferred_departments: complaintData.preferred_departments,
+      departments: complaintData.departments,
+      keys: Object.keys(complaintData)
+    });
     
-    // If department_r is a string, try to parse as JSON
-    if (typeof departments === 'string') {
+    // Parse preferred_departments - handle both array and individual values
+    let preferredDepartments = complaintData.preferred_departments || [];
+    
+    // If preferred_departments is a string, check if it's JSON or just a single value
+    if (typeof preferredDepartments === 'string') {
+      // Try to parse as JSON first
       try {
-        departments = JSON.parse(departments);
+        preferredDepartments = JSON.parse(preferredDepartments);
       } catch (e) {
-        console.warn('[COMPLAINT] Failed to parse department_r JSON:', e);
-        departments = [];
+        // If JSON parsing fails, treat it as a single department code
+        console.log('[COMPLAINT] Treating preferred_departments as single value:', preferredDepartments);
+        preferredDepartments = [preferredDepartments].filter(Boolean);
       }
     }
     
-    // If department_r is not an array, convert it to array
-    if (!Array.isArray(departments)) {
-      departments = [departments].filter(Boolean);
+    // If preferred_departments is not an array, convert it to array
+    if (!Array.isArray(preferredDepartments)) {
+      preferredDepartments = [preferredDepartments].filter(Boolean);
     }
 
-    // console.log removed for security
+    console.log('[COMPLAINT_SERVICE] Processed preferred_departments:', preferredDepartments);
 
     // Map client field names to server field names
     const mappedData = {
@@ -42,8 +51,10 @@ class ComplaintService {
       type: 'complaint',
       // Map 'description' from client to 'descriptive_su' expected by server model
       descriptive_su: complaintData.description || complaintData.descriptive_su,
-      // Map 'departments' to 'department_r' for database
-      department_r: departments
+      // Store user's preferred departments
+      preferred_departments: preferredDepartments,
+      // Initially empty - will be populated by coordinator assignment
+      department_r: []
     };
 
     // Prepare data for insertion using utility functions
@@ -71,7 +82,7 @@ class ComplaintService {
     // console.log removed for security
 
     try {
-      await this._processWorkflow(createdComplaint, departments);
+      await this._processWorkflow(createdComplaint, preferredDepartments);
       await this._processFileUploads(createdComplaint.id, files, userId);
 
       // Send notification to citizen
@@ -83,6 +94,24 @@ class ComplaintService {
         );
       } catch (notifError) {
         console.warn('[COMPLAINT] Failed to send submission notification:', notifError.message);
+      }
+
+      // Send notification to complaint coordinator
+      try {
+        // Find active complaint coordinator
+        const coordinator = await this.complaintRepo.findActiveCoordinator('GENERAL');
+        if (coordinator) {
+          await this.notificationService.notifyNewComplaintReview(
+            coordinator.user_id,
+            createdComplaint.id,
+            createdComplaint.title
+          );
+          console.log('[COMPLAINT] Coordinator notification sent for complaint:', createdComplaint.id);
+        } else {
+          console.warn('[COMPLAINT] No active coordinator found for notification');
+        }
+      } catch (coordNotifError) {
+        console.warn('[COMPLAINT] Failed to send coordinator notification:', coordNotifError.message);
       }
 
       const finalComplaint = await this.complaintRepo.findById(createdComplaint.id);
@@ -114,16 +143,17 @@ class ComplaintService {
                 complaint.submitted_by,
                 { status: 'pending' }
               );
+              // TODO: Fix notifyDepartmentAdminsByCode RPC function
               // Notify department admins about new assignment
-              try {
-                await this.notificationService.notifyDepartmentAdminsByCode(
-                  deptCode,
-                  complaint.id,
-                  complaint.title
-                );
-              } catch (notifErr) {
-                console.warn('[WORKFLOW] Notify admins failed:', notifErr.message);
-              }
+              // try {
+              //   await this.notificationService.notifyDepartmentAdminsByCode(
+              //     deptCode,
+              //     complaint.id,
+              //     complaint.title
+              //   );
+              // } catch (notifErr) {
+              //   console.warn('[WORKFLOW] Notify admins failed:', notifErr.message);
+              // }
             }
           } catch (assignErr) {
             console.warn('[WORKFLOW] Assignment creation failed for dept:', deptCode, assignErr.message);
@@ -135,14 +165,15 @@ class ComplaintService {
     }
 
     // Auto-assignment based on complaint content (type field removed)
-    try {
-      const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
-      if (autoAssignResult && autoAssignResult.length > 0) {
-        // console.log removed for security
-      }
-    } catch (error) {
-      console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
-    }
+    // TODO: Implement auto_assign_departments RPC function
+    // try {
+    //   const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
+    //   if (autoAssignResult && autoAssignResult.length > 0) {
+    //     // console.log removed for security
+    //   }
+    // } catch (error) {
+    //   console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
+    // }
 
     if (departmentArray.length > 0) {
       const targetDept = departmentArray[0];
@@ -150,10 +181,11 @@ class ComplaintService {
         const coordinator = await this.complaintRepo.findActiveCoordinator(targetDept);
         if (coordinator) {
           await this.complaintRepo.assignCoordinator(complaint.id, coordinator.user_id);
-          await this.complaintRepo.logAction(complaint.id, 'coordinator_assigned', {
-            to_dept: targetDept,
-            reason: 'Auto-assigned available coordinator'
-          });
+          // TODO: Fix log_complaint_action RPC function parameter types
+          // await this.complaintRepo.logAction(complaint.id, 'coordinator_assigned', {
+          //   to_dept: targetDept,
+          //   reason: 'Auto-assigned available coordinator'
+          // });
           // console.log removed for security
         }
       } catch (error) {
@@ -161,18 +193,19 @@ class ComplaintService {
       }
     }
 
-    try {
-      await this.complaintRepo.logAction(complaint.id, 'created', {
-        reason: 'Complaint submitted by citizen',
-        details: {
-          title: complaint.title,
-          departments: departmentArray,
-          has_evidence: false
-        }
-      });
-    } catch (error) {
-      console.warn('[WORKFLOW] Audit logging failed:', error.message);
-    }
+    // TODO: Fix log_complaint_action RPC function parameter types
+    // try {
+    //   await this.complaintRepo.logAction(complaint.id, 'created', {
+    //     reason: 'Complaint submitted by citizen',
+    //     details: {
+    //       title: complaint.title,
+    //       departments: departmentArray,
+    //       has_evidence: false
+    //     }
+    //   });
+    // } catch (error) {
+    //   console.warn('[WORKFLOW] Audit logging failed:', error.message);
+    // }
   }
 
   async _processFileUploads(complaintId, files, userId = null) {

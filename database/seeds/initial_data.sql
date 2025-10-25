@@ -96,7 +96,14 @@
     ('City Information Office', 'CIO', 'Public information and communication', 'LGU', '{"email":"cio@digoscity.gov.ph","phone":"(082) 553-1249"}', 24, 48),
     
     -- Finance & Revenue
-    ('City Accountant''s Office', 'CAO', 'Financial review and accounting services', 'LGU', '{"email":"cao@digoscity.gov.ph","phone":"(082) 553-1250"}', 48, 96)
+    ('City Accountant''s Office', 'CAO', 'Financial review and accounting services', 'LGU', '{"email":"cao@digoscity.gov.ph","phone":"(082) 553-1250"}', 48, 96),
+    
+    -- Additional NGA Departments (Missing from original seed)
+    ('Department of Education – Digos City Division', 'DEPED', 'Educational services and support', 'NGA', '{"email":"deped.digos@deped.gov.ph","phone":"(082) 553-1251"}', 48, 96),
+    ('DENR – CENRO Digos', 'DENR', 'Environmental regulation and compliance', 'NGA', '{"email":"cenro.digos@denr.gov.ph","phone":"(082) 553-1252"}', 48, 96),
+    ('Department of Trade and Industry – Digos', 'DTI', 'Business regulation and trade services', 'NGA', '{"email":"dti.digos@dti.gov.ph","phone":"(082) 553-1253"}', 24, 48),
+    ('Land Transportation Office – Digos', 'LTO', 'Vehicle registration and transport licensing', 'NGA', '{"email":"lto.digos@lto.gov.ph","phone":"(082) 553-1254"}', 12, 24),
+    ('Department of Labor and Employment – Digos', 'DOLE', 'Labor regulation and employment services', 'NGA', '{"email":"dole.digos@dole.gov.ph","phone":"(082) 553-1255"}', 24, 48)
     ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
@@ -148,43 +155,43 @@
     sub AS (
         SELECT id, code FROM public.subcategories
     )
-    INSERT INTO public.department_subcategory_mapping (department_id, subcategory_id, is_primary, response_priority)
+    INSERT INTO public.department_subcategory_mapping (department_id, subcategory_id, response_priority)
     SELECT * FROM (VALUES
     -- Infrastructure & Public Works
-    ((SELECT id FROM dept WHERE code = 'CEO'), (SELECT id FROM sub WHERE code = 'ROADS_CONSTRUCTION'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CEO'), (SELECT id FROM sub WHERE code = 'FACILITIES_MAINTENANCE'), false, 2),
-    ((SELECT id FROM dept WHERE code = 'GSO'), (SELECT id FROM sub WHERE code = 'FACILITIES_MAINTENANCE'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CPDC'), (SELECT id FROM sub WHERE code = 'LAND_USE_PLANNING'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'CEO'), (SELECT id FROM sub WHERE code = 'ROADS_CONSTRUCTION'), 1),
+    ((SELECT id FROM dept WHERE code = 'CEO'), (SELECT id FROM sub WHERE code = 'FACILITIES_MAINTENANCE'), 2),
+    ((SELECT id FROM dept WHERE code = 'GSO'), (SELECT id FROM sub WHERE code = 'FACILITIES_MAINTENANCE'), 1),
+    ((SELECT id FROM dept WHERE code = 'CPDC'), (SELECT id FROM sub WHERE code = 'LAND_USE_PLANNING'), 1),
     
     -- Health & Social Services
-    ((SELECT id FROM dept WHERE code = 'CHO'), (SELECT id FROM sub WHERE code = 'PUBLIC_HEALTH'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CSWDO'), (SELECT id FROM sub WHERE code = 'SOCIAL_WELFARE'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CDRRMO'), (SELECT id FROM sub WHERE code = 'EMERGENCY_RESPONSE'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'CHO'), (SELECT id FROM sub WHERE code = 'PUBLIC_HEALTH'), 1),
+    ((SELECT id FROM dept WHERE code = 'CSWDO'), (SELECT id FROM sub WHERE code = 'SOCIAL_WELFARE'), 1),
+    ((SELECT id FROM dept WHERE code = 'CDRRMO'), (SELECT id FROM sub WHERE code = 'EMERGENCY_RESPONSE'), 1),
     
     -- Environment & Sanitation
-    ((SELECT id FROM dept WHERE code = 'ENRO'), (SELECT id FROM sub WHERE code = 'WASTE_MANAGEMENT'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'ENRO'), (SELECT id FROM sub WHERE code = 'WASTE_MANAGEMENT'), 1),
     
     -- Licensing, Permits & Business
-    ((SELECT id FROM dept WHERE code = 'CTO'), (SELECT id FROM sub WHERE code = 'TAX_FEES'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CEEO'), (SELECT id FROM sub WHERE code = 'ECONOMIC_ENTERPRISES'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'CTO'), (SELECT id FROM sub WHERE code = 'TAX_FEES'), 1),
+    ((SELECT id FROM dept WHERE code = 'CEEO'), (SELECT id FROM sub WHERE code = 'ECONOMIC_ENTERPRISES'), 1),
     
     -- Labor & Employment
-    ((SELECT id FROM dept WHERE code = 'HRMO'), (SELECT id FROM sub WHERE code = 'PERSONNEL_STAFF'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'HRMO'), (SELECT id FROM sub WHERE code = 'PERSONNEL_STAFF'), 1),
     
     -- Law Enforcement & Legal Affairs
-    ((SELECT id FROM dept WHERE code = 'PNP'), (SELECT id FROM sub WHERE code = 'POLICE_SECURITY'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CLO'), (SELECT id FROM sub WHERE code = 'LEGAL_INVESTIGATION'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'OCM'), (SELECT id FROM sub WHERE code = 'EXECUTIVE_OVERSIGHT'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'PNP'), (SELECT id FROM sub WHERE code = 'POLICE_SECURITY'), 1),
+    ((SELECT id FROM dept WHERE code = 'CLO'), (SELECT id FROM sub WHERE code = 'LEGAL_INVESTIGATION'), 1),
+    ((SELECT id FROM dept WHERE code = 'OCM'), (SELECT id FROM sub WHERE code = 'EXECUTIVE_OVERSIGHT'), 1),
     
     -- Public Assistance & Communication
-    ((SELECT id FROM dept WHERE code = 'PAD'), (SELECT id FROM sub WHERE code = 'FRONTLINE_ASSISTANCE'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'OCA'), (SELECT id FROM sub WHERE code = 'COMPLAINT_ROUTING'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CIO'), (SELECT id FROM sub WHERE code = 'INFORMATION_FEEDBACK'), true, 1),
+    ((SELECT id FROM dept WHERE code = 'PAD'), (SELECT id FROM sub WHERE code = 'FRONTLINE_ASSISTANCE'), 1),
+    ((SELECT id FROM dept WHERE code = 'OCA'), (SELECT id FROM sub WHERE code = 'COMPLAINT_ROUTING'), 1),
+    ((SELECT id FROM dept WHERE code = 'CIO'), (SELECT id FROM sub WHERE code = 'INFORMATION_FEEDBACK'), 1),
     
     -- Finance & Revenue
-    ((SELECT id FROM dept WHERE code = 'CTO'), (SELECT id FROM sub WHERE code = 'TAX_COLLECTION'), true, 1),
-    ((SELECT id FROM dept WHERE code = 'CAO'), (SELECT id FROM sub WHERE code = 'FINANCIAL_REVIEW'), true, 1)
-    ) AS v(department_id, subcategory_id, is_primary, response_priority)
+    ((SELECT id FROM dept WHERE code = 'CTO'), (SELECT id FROM sub WHERE code = 'TAX_COLLECTION'), 1),
+    ((SELECT id FROM dept WHERE code = 'CAO'), (SELECT id FROM sub WHERE code = 'FINANCIAL_REVIEW'), 1)
+    ) AS v(department_id, subcategory_id, response_priority)
     WHERE NOT EXISTS (
         SELECT 1 FROM public.department_subcategory_mapping 
         WHERE department_id = v.department_id 

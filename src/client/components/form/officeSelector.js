@@ -208,9 +208,9 @@ class OfficeSelectorComponent {
       // Clear previous auto-selections
       this.autoSelectedDepartments.clear();
 
-      // Auto-select primary departments
+      // Auto-select departments that are mapped to this subcategory (suggestive)
       mappedDepartments.forEach(mapping => {
-        if (mapping.is_primary) {
+        if (mapping.response_priority) {
           this.autoSelectedDepartments.add(mapping.department_code);
           this.selectedDepartments.add(mapping.department_code);
         }

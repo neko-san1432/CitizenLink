@@ -31,7 +31,7 @@ async function isStaffMember() {
     if (!result.success) {
       return false;
     }
-    
+
     const userRole = result.data.role;
     const baseRole = result.data.base_role || result.data.actual_role;
     const isStaff = userRole !== 'citizen' || (userRole === 'citizen' && baseRole);
@@ -135,7 +135,7 @@ async function switchRole(targetRole) {
     });
 
     const result = await response.json();
-    
+
     if (result.success) {
       window.location.reload();
     } else {
@@ -165,10 +165,10 @@ function addButtonToHeader(currentRole = 'lgu', baseRole = null) {
       header.appendChild(rightSection);
       headerRight = rightSection;
     } else {
-      return false;
-    }
+    return false;
   }
-  
+}
+
   // Create and add button with current role and base role
   const button = createRoleButton(currentRole, baseRole);
   headerRight.appendChild(button);
@@ -228,8 +228,8 @@ export async function canSwitchToCitizen() {
       return baseRole && baseRole !== 'citizen';
     }
 
-    const response = await fetch('/api/user/role-info', {
-      credentials: 'include',
+      const response = await fetch('/api/user/role-info', {
+        credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
     
@@ -238,13 +238,13 @@ export async function canSwitchToCitizen() {
       return false;
     }
 
-    // Cache the result
-    roleInfoCache = result;
-    roleInfoCacheTime = now;
+      // Cache the result
+      roleInfoCache = result;
+      roleInfoCacheTime = now;
 
     const baseRole = result.data.base_role;
     return baseRole && baseRole !== 'citizen';
-    
+
   } catch (error) {
     console.error('[ROLE_TOGGLE] Error checking citizen switch:', error);
     return false;
@@ -315,7 +315,7 @@ export async function switchToCitizenMode() {
     
     if (result.success) {
       window.location.reload();
-    } else {
+  } else {
       console.error('Failed to switch to citizen mode:', result.message);
     }
     

@@ -51,19 +51,9 @@ export function initializeNotificationButton() {
       if (notificationPanel.classList.contains('show')) {
         // Close
         notificationPanel.classList.remove('show');
-        notificationPanel.style.opacity = '0';
-        notificationPanel.style.transform = 'translateY(-10px)';
-        setTimeout(() => {
-          notificationPanel.style.display = 'none';
-        }, 300);
       } else {
         // Open
         notificationPanel.classList.add('show');
-        notificationPanel.style.display = 'block';
-        setTimeout(() => {
-          notificationPanel.style.opacity = '1';
-          notificationPanel.style.transform = 'translateY(0)';
-        }, 10);
       }
       
       console.log('[NOTIFICATION] Notification panel classes after toggle:', notificationPanel.className);
