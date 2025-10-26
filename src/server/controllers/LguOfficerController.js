@@ -14,117 +14,108 @@ class LguOfficerController {
       const userId = req.user.id;
       const { status, priority, limit } = req.query;
 
-      // Get all assignments for this officer
-      let query = supabase
+      // Get assignments for this officer (using separate queries to avoid relationship issues)
+      let assignmentQuery = supabase
         .from('complaint_assignments')
-        .select(`
-          id,
-          complaint_id,
-          assigned_by,
-          status,
-          notes,
-          priority,
-          deadline,
-          created_at,
-          updated_at,
-          completed_at,
-          complaints:complaint_id (
-            id,
-            title,
-            description,
-            type,
-            subtype,
-            status,
-            priority,
-            submitted_at,
-            location_text,
-            // primary_department, // Removed - derived from department_r
-            // secondary_departments, // Removed - derived from department_r
-            last_activity_at
-          )
-        `)
+        .select('*')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
 
       // Apply filters
       if (status) {
-        query = query.eq('workflow_status', status);
+        assignmentQuery = assignmentQuery.eq('status', status);
       }
       if (priority) {
-        query = query.eq('priority', priority);
+        assignmentQuery = assignmentQuery.eq('priority', priority);
       }
       if (limit) {
-        query = query.limit(parseInt(limit));
+        assignmentQuery = assignmentQuery.limit(parseInt(limit));
       }
 
-      const { data: assignments, error: assignmentError } = await query;
+      const { data: assignments, error: assignmentError } = await assignmentQuery;
+
+      console.log('[LGU_OFFICER] Assignments query result:', { 
+        userId, 
+        assignmentsCount: assignments?.length || 0,
+        hasError: !!assignmentError,
+        errorDetails: assignmentError 
+      });
 
       if (assignmentError) {
-        console.warn('[LGU_OFFICER] Assignments query failed, using fallback:', assignmentError.message);
-        // Fallback: get assignments without joins
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('complaint_assignments')
-          .select('*')
-          .eq('assigned_to', userId)
-          .order('created_at', { ascending: false });
-        
-        if (fallbackError) {
-          console.error('[LGU_OFFICER] Fallback query also failed:', fallbackError);
-          return res.status(500).json({
-            success: false,
-            error: 'Failed to fetch assignments'
-          });
-        }
-        
-        // Transform fallback data
-        const transformedAssignments = fallbackData.map(assignment => ({
-          id: assignment.id,
-          complaint_id: assignment.complaint_id,
-          status: assignment.status,
-          priority: assignment.priority,
-          notes: assignment.notes,
-          deadline: assignment.deadline,
-          created_at: assignment.created_at,
-          updated_at: assignment.updated_at,
-          complaints: {
-            id: assignment.complaint_id,
-            title: 'Complaint Details',
-            description: 'Details not available',
-            type: 'complaint',
-            subtype: 'general',
-            status: assignment.status,
-            priority: assignment.priority,
-            submitted_at: assignment.created_at,
-            location_text: 'Location not available',
-            // primary_department: 'Unknown', // Removed - derived from department_r
-            // secondary_departments: [], // Removed - derived from department_r
-            last_activity_at: assignment.updated_at
-          }
-        }));
-        
-        return res.json({
-          success: true,
-          data: transformedAssignments
+        console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch assignments'
         });
       }
 
-      // Transform data for easier frontend consumption
-      const tasks = assignments.map(assignment => ({
-        assignment_id: assignment.id,
-        complaint_id: assignment.complaint_id,
-        status: assignment.status,
-        priority: assignment.priority,
-        deadline: assignment.deadline,
-        notes: assignment.notes,
-        assigned_at: assignment.created_at,
-        completed_at: assignment.completed_at,
-        complaint: assignment.complaints
-      }));
+      if (!assignments || assignments.length === 0) {
+        console.log('[LGU_OFFICER] No assignments found for user:', userId);
+        return res.json({
+          success: true,
+          data: []
+        });
+      }
 
-      res.json({
+      // Get complaint details for each assignment
+      const complaintIds = assignments.map(a => a.complaint_id);
+      const { data: complaints, error: complaintError } = await supabase
+        .from('complaints')
+        .select('id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, last_activity_at')
+        .in('id', complaintIds);
+
+      if (complaintError) {
+        console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch complaint details'
+        });
+      }
+
+      // Combine assignments with complaint data
+      const combinedData = assignments.map(assignment => {
+        const complaint = complaints?.find(c => c.id === assignment.complaint_id);
+        return {
+          id: assignment.id,
+          complaint_id: assignment.complaint_id,
+          assigned_by: assignment.assigned_by,
+          status: assignment.status,
+          notes: assignment.notes,
+          priority: assignment.priority,
+          deadline: assignment.deadline,
+          assigned_at: assignment.created_at, // Map created_at to assigned_at for frontend
+          created_at: assignment.created_at,
+          updated_at: assignment.updated_at,
+          completed_at: assignment.completed_at,
+          complaint: complaint ? {
+            id: complaint.id,
+            title: complaint.title,
+            description: complaint.descriptive_su, // Map descriptive_su to description for frontend
+            category: complaint.category,
+            subcategory: complaint.subcategory,
+            status: complaint.status,
+            priority: complaint.priority,
+            submitted_at: complaint.submitted_at,
+            location_text: complaint.location_text,
+            last_activity_at: complaint.last_activity_at
+          } : {
+            id: assignment.complaint_id,
+            title: 'Complaint Details Not Available',
+            description: 'Details could not be loaded',
+            category: 'General',
+            subcategory: 'unknown',
+            status: 'unknown',
+            priority: 'medium',
+            submitted_at: assignment.created_at,
+            location_text: 'Location not available',
+            last_activity_at: assignment.updated_at
+          }
+        };
+      });
+
+      return res.json({
         success: true,
-        data: tasks,
-        count: tasks.length
+        data: combinedData
       });
 
     } catch (error) {
@@ -235,33 +226,10 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
 
-      // console.log removed for security
-
-      // Get all assignments for this officer
+      // Get all assignments for this officer (using separate queries to avoid relationship issues)
       const { data: assignments, error: assignmentError } = await supabase
         .from('complaint_assignments')
-        .select(`
-          id,
-          complaint_id,
-          assigned_by,
-          status,
-          notes,
-          priority,
-          deadline,
-          created_at,
-          updated_at,
-          completed_at,
-          complaints:complaint_id (
-            id,
-            title,
-            descriptive_su,
-            type,
-            status,
-            submitted_at,
-            location,
-            // primary_department // Removed - derived from department_r
-          )
-        `)
+        .select('id, complaint_id, assigned_by, status, notes, priority, deadline, created_at, updated_at, completed_at')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
 
@@ -273,9 +241,31 @@ class LguOfficerController {
         });
       }
 
+      if (!assignments || assignments.length === 0) {
+        return res.json({
+          success: true,
+          data: []
+        });
+      }
+
+      // Get complaint details for each assignment
+      const complaintIds = assignments.map(a => a.complaint_id);
+      const { data: complaints, error: complaintError } = await supabase
+        .from('complaints')
+        .select('id, title, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at')
+        .in('id', complaintIds);
+
+      if (complaintError) {
+        console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch complaint details'
+        });
+      }
+
       // Get assigned_by user info for each assignment
       const assignmentsWithUsers = await Promise.all(
-        (assignments || []).map(async (assignment) => {
+        assignments.map(async (assignment) => {
           let assignedByName = 'Unknown';
 
           if (assignment.assigned_by) {
@@ -285,15 +275,18 @@ class LguOfficerController {
             }
           }
 
+          // Find the corresponding complaint
+          const complaint = complaints?.find(c => c.id === assignment.complaint_id);
+
           return {
             id: assignment.id,
             complaint_id: assignment.complaint_id,
-            complaint_title: assignment.complaints?.title || 'Untitled',
-            complaint_description: assignment.complaints?.descriptive_su || '',
+            complaint_title: complaint?.title || 'Untitled',
+            complaint_description: complaint?.descriptive_su || '',
             complaint_type: 'complaint', // Default type since type field doesn't exist
-            complaint_status: assignment.complaints?.workflow_status || '',
-            complaint_location: assignment.complaints?.location || '',
-            complaint_submitted_at: assignment.complaints?.submitted_at,
+            complaint_status: complaint?.status || '',
+            complaint_location: complaint?.location_text || '',
+            complaint_submitted_at: complaint?.submitted_at,
             assignment_status: assignment.status,
             assigned_by: assignment.assigned_by,
             assigned_by_name: assignedByName,
@@ -335,7 +328,7 @@ class LguOfficerController {
       // Verify this assignment belongs to the officer
       const { data: assignment, error: fetchError } = await supabase
         .from('complaint_assignments')
-        .select('*, complaints:complaint_id(id, title, workflow_status)')
+        .select('id, complaint_id, assigned_by, status')
         .eq('id', assignmentId)
         .eq('assigned_to', userId)
         .single();
@@ -377,10 +370,8 @@ class LguOfficerController {
       }
 
       // Update complaint workflow_status based on assignment status
-      let complaintWorkflowStatus = assignment.complaints.workflow_status;
-      if (status === 'in_progress' && complaintWorkflowStatus === 'new') {
-        complaintWorkflowStatus = 'in_progress';
-      } else if (status === 'completed') {
+      let complaintWorkflowStatus = 'in_progress'; // Default status
+      if (status === 'completed') {
         complaintWorkflowStatus = 'completed';
       }
 
@@ -394,19 +385,21 @@ class LguOfficerController {
 
       // Send notification to admin about status change
       if (assignment.assigned_by) {
-        await notificationService.createNotification({
-          userId: assignment.assigned_by,
-          title: 'Task Status Updated',
-          message: `Officer updated task status to "${status}" for: ${assignment.complaints?.title}`,
-          type: 'task_update',
-          priority: 'info',
-          link: '/lgu-admin/assignments',
-          metadata: {
-            assignment_id: assignmentId,
-            complaint_id: assignment.complaint_id,
-            new_status: status
+        await notificationService.createNotification(
+          assignment.assigned_by,
+          'task_update',
+          'Task Status Updated',
+          `Officer updated task status to "${status}" for complaint ${assignment.complaint_id}`,
+          {
+            priority: 'info',
+            link: '/lgu-admin/assignments',
+            metadata: {
+              assignment_id: assignmentId,
+              complaint_id: assignment.complaint_id,
+              new_status: status
+            }
           }
-        });
+        );
       }
 
       // console.log removed for security
@@ -439,7 +432,7 @@ class LguOfficerController {
       // Verify assignment belongs to officer
       const { data: assignment, error: fetchError } = await supabase
         .from('complaint_assignments')
-        .select('*, complaints:complaint_id(id, title, submitted_by)')
+        .select('id, complaint_id')
         .eq('id', assignmentId)
         .eq('assigned_to', userId)
         .single();
@@ -470,19 +463,30 @@ class LguOfficerController {
       }
 
       // If public, notify the citizen
-      if (isPublic && assignment.complaints?.submitted_by) {
-        await notificationService.createNotification({
-          userId: assignment.complaints.submitted_by,
-          title: 'Update on Your Complaint',
-          message: `Officer added an update: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`,
-          type: 'officer_update',
-          priority: 'info',
-          link: `/complaint/${assignment.complaint_id}`,
-          metadata: {
-            complaint_id: assignment.complaint_id,
-            assignment_id: assignmentId
-          }
-        });
+      if (isPublic) {
+        // Get complaint details to find the submitted_by user
+        const { data: complaint, error: complaintError } = await supabase
+          .from('complaints')
+          .select('submitted_by')
+          .eq('id', assignment.complaint_id)
+          .single();
+
+        if (!complaintError && complaint?.submitted_by) {
+          await notificationService.createNotification(
+            complaint.submitted_by,
+            'officer_update',
+            'Update on Your Complaint',
+            `Officer added an update: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`,
+            {
+              priority: 'info',
+              link: `/complaint/${assignment.complaint_id}`,
+              metadata: {
+                complaint_id: assignment.complaint_id,
+                assignment_id: assignmentId
+              }
+            }
+          );
+        }
       }
 
       // console.log removed for security
@@ -609,7 +613,7 @@ class LguOfficerController {
       const transformedActivities = activities.map(activity => ({
         id: activity.id,
         type: 'task_update',
-        description: `Task "${activity.complaints?.title || 'Unknown'}" status updated to ${activity.status}`,
+        description: `Task status updated to ${activity.status}`,
         created_at: activity.updated_at
       }));
 
@@ -639,25 +643,9 @@ class LguOfficerController {
       const userRole = req.user.role;
       const departmentCode = userRole.split('-')[1]; // Extract department from lgu-{dept}
 
-      // Get department updates (mock data for now)
-      const updates = [
-        {
-          id: 1,
-          title: 'Department Meeting Scheduled',
-          content: 'Monthly department meeting scheduled for next Friday at 2:00 PM.',
-          priority: 'medium',
-          author: 'Department Head',
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: 2,
-          title: 'New Procedures Update',
-          content: 'Updated procedures for complaint handling. Please review the new guidelines.',
-          priority: 'high',
-          author: 'Admin',
-          created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
+      // For now, return empty array - department updates will be implemented later
+      // This removes the mock data and provides a clean foundation for future implementation
+      const updates = [];
 
       return res.json({
         success: true,

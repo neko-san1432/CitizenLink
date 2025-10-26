@@ -86,6 +86,27 @@ const authenticateUser = async (req, res, next) => {
 
     // Extract department code for LGU roles
     const departmentCode = extractDepartmentCode(userRole);
+    
+    // For simplified roles, extract department from metadata
+    const userDepartment = departmentCode || 
+                          combinedMetadata.department || 
+                          combinedMetadata.dpt ||
+                          combinedMetadata.raw_user_meta_data?.department ||
+                          combinedMetadata.raw_user_meta_data?.dpt;
+
+    // Debug logging for department extraction
+    if (process.env.NODE_ENV === 'development' && userRole === 'lgu-admin') {
+      console.log('[AUTH] Department extraction debug:', {
+        userRole,
+        departmentCode,
+        combinedMetadata: {
+          department: combinedMetadata.department,
+          dpt: combinedMetadata.dpt,
+          raw_user_meta_data: combinedMetadata.raw_user_meta_data
+        },
+        extractedDepartment: userDepartment
+      });
+    }
 
     // Attach the enhanced user object to the request
     req.user = {
@@ -106,7 +127,7 @@ const authenticateUser = async (req, res, next) => {
       lastName: combinedMetadata.last_name || '',
       mobileNumber: combinedMetadata.mobile_number || combinedMetadata.mobile || null,
       status: combinedMetadata.status || 'active',
-      department: departmentCode || combinedMetadata.department || null,
+      department: userDepartment,
       employeeId: combinedMetadata.employee_id || null,
 
       // Role validation info

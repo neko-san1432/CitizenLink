@@ -161,6 +161,12 @@ class CoordinatorService {
         case 'mark_unique':
           return await this.markAsUnique(complaintId, coordinatorId);
 
+        case 'mark_false':
+          if (!data.reason) {
+            throw new Error('Please select a reason for marking this complaint as false.');
+          }
+          return await this.markAsFalse(complaintId, coordinatorId, data.reason);
+
         case 'assign_department':
         // Support single or multiple departments
           if (!data.department && (!data.departments || data.departments.length === 0)) {
@@ -348,8 +354,67 @@ class CoordinatorService {
   }
 
   /**
-  * Reject complaint
-  */
+   * Mark complaint as false
+   */
+  async markAsFalse(complaintId, coordinatorId, reason) {
+    try {
+      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Marking complaint ${complaintId} as false with reason:`, reason);
+      
+      // Update complaint status to false
+      const { data, error } = await this.coordinatorRepo.supabase
+        .from('complaints')
+        .update({
+          status: 'false',
+          workflow_status: 'cancelled',
+          coordinator_notes: reason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[COORDINATOR_SERVICE] Mark false error:', error);
+        throw error;
+      }
+
+      // Log action
+      await this.coordinatorRepo.logAction(
+        complaintId,
+        'marked_false',
+        coordinatorId,
+        { 
+          message: 'Complaint marked as false',
+          reason: reason
+        }
+      );
+
+      // Send notification to complainant
+      try {
+        await this.notificationService.notifyComplaintStatusChange(
+          data.submitted_by,
+          complaintId,
+          'false',
+          'Your complaint has been marked as false by the coordinator.',
+          { reason }
+        );
+      } catch (notifError) {
+        console.warn('[COORDINATOR_SERVICE] Failed to send notification:', notifError.message);
+      }
+
+      return {
+        success: true,
+        message: 'Complaint marked as false'
+      };
+    } catch (error) {
+      console.error('[COORDINATOR_SERVICE] Mark false error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reject complaint
+   */
   async rejectComplaint(complaintId, coordinatorId, reason) {
     try {
       // Update complaint status to rejected
@@ -793,7 +858,9 @@ class CoordinatorService {
   */
   async notifyDepartmentAdmins(departmentCode, complaintId, complaintTitle) {
     try {
-      // Get all users with lgu-admin-{department_code} role
+      console.log(`[COORDINATOR_SERVICE] Notifying department admins for ${departmentCode} about complaint ${complaintId}`);
+      
+      // Get all users with lgu-admin role and matching department
       const { data: users, error } = await this.coordinatorRepo.supabase.auth.admin.listUsers();
 
       if (error) {
@@ -801,29 +868,45 @@ class CoordinatorService {
         return;
       }
 
-      const adminRole = `lgu-admin-${departmentCode}`;
-      const admins = users.users.filter(user =>
-        user.user_metadata?.role === adminRole ||
-        user.raw_user_meta_data?.role === adminRole
-      );
+      // Find LGU admins for this specific department
+      const admins = users.users.filter(user => {
+        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
+        const userDept = user.user_metadata?.dpt || user.raw_user_meta_data?.dpt || 
+                        user.user_metadata?.department || user.raw_user_meta_data?.department;
+        
+        return userRole === 'lgu-admin' && userDept === departmentCode;
+      });
 
-      // Create notifications for each admin
-      for (const admin of admins) {
+      console.log(`[COORDINATOR_SERVICE] Found ${admins.length} LGU admins for department ${departmentCode}`);
+
+      if (admins.length === 0) {
+        console.warn(`[COORDINATOR_SERVICE] No LGU admins found for department ${departmentCode}`);
+        return;
+      }
+
+      // Create notifications for all admins using bulk method
+      if (admins.length > 0) {
         try {
-          await this.notificationService.createNotification(
-            admin.id,
+          const userIds = admins.map(admin => admin.id);
+          const result = await this.notificationService.notifyMultipleUsers(
+            userIds,
             'approval_required',
             'New Complaint Assigned to Your Department',
-            `"${complaintTitle}" has been assigned to ${departmentCode}.`,
+            `"${complaintTitle}" has been assigned to ${departmentCode}. Please review and assign to an officer.`,
             {
               priority: 'info',
               link: '/lgu-admin/assignments',
-              metadata: { complaint_id: complaintId, department: departmentCode }
+              metadata: { 
+                complaint_id: complaintId, 
+                department: departmentCode,
+                assigned_at: new Date().toISOString()
+              }
             }
           );
-          // console.log removed for security
+          
+          console.log(`[COORDINATOR_SERVICE] Notification results: ${result.notifications.length} sent, ${result.duplicates} duplicates, ${result.errors} errors`);
         } catch (notifError) {
-          console.warn(`[COORDINATOR_SERVICE] Failed to notify admin ${admin.email}:`, notifError.message);
+          console.warn(`[COORDINATOR_SERVICE] Failed to send bulk notifications:`, notifError.message);
         }
       }
     } catch (error) {

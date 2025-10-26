@@ -59,43 +59,7 @@
 
             <!-- Main Content Grid -->
             <div class="dashboard-grid">
-                <!-- Department Statistics -->
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">📊 Office Statistics</h2>
-                        <button class="btn btn-secondary" onclick="refreshStats()">Refresh</button>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">📝</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Complaints</div>
-                                <div class="stat-value" id="stat-total-complaints">-</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">⏳</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Pending</div>
-                                <div class="stat-value" id="stat-pending">-</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">✅</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Resolved</div>
-                                <div class="stat-value" id="stat-resolved">-</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">📈</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Resolution Rate</div>
-                                <div class="stat-value" id="stat-resolution-rate">-</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Statistics section removed -->
 
                 <!-- Recent Assignments -->
                 <div class="dashboard-section">
@@ -111,24 +75,6 @@
                     </div>
                 </div>
 
-                <!-- Department Performance -->
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">🏢 Office Performance</h2>
-                        <select class="filter-select" id="dept-filter">
-                            <option value="all">All Offices</option>
-                            <option value="engineering">Engineering</option>
-                            <option value="health">Health</option>
-                            <option value="public-works">Public Works</option>
-                        </select>
-                    </div>
-                    <div id="dept-performance-container" class="content-container">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <p>Loading department performance...</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Recent Activity -->
                 <div class="dashboard-section">
@@ -144,18 +90,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Stats -->
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">📈 Quick Stats</h2>
-                    </div>
-                    <div id="quick-stats-container" class="content-container">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <p>Loading quick stats...</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Alerts & Notifications -->
                 <div class="dashboard-section">

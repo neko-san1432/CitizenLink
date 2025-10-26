@@ -3,8 +3,22 @@ import { supabase } from './config.js';
 // API client with automatic JWT token handling
 class ApiClient {
   async getAuthHeaders() {
+    // Try to get token from Supabase session first
     const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    let token = session?.access_token;
+    
+    // If no session token, try to get from cookies (for server-side auth)
+    if (!token) {
+      // Check if we're in a browser environment
+      if (typeof document !== 'undefined') {
+        const cookies = document.cookie.split(';');
+        const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('sb_access_token='));
+        if (tokenCookie) {
+          token = tokenCookie.split('=')[1];
+        }
+      }
+    }
+    
     const headers = { 'Content-Type': 'application/json' };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;

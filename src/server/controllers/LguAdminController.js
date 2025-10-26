@@ -22,8 +22,41 @@ class LguAdminController {
       const userRole = req.user.role;
       const { status, priority, limit } = req.query;
 
-      // Extract department from role (e.g., lgu-admin-{dept} -> {dept})
-      const departmentCode = userRole.replace('lgu-admin-', '');
+      // Debug logging to see what we're receiving
+      console.log('[LGU_ADMIN] Request received:', {
+        userId,
+        userRole,
+        department: req.user.department,
+        metadata: req.user.metadata,
+        rawMetadata: req.user.raw_user_meta_data,
+        path: req.path
+      });
+
+      // Extract department from user metadata (check multiple possible field names)
+      const departmentCode = req.user.department || 
+                           req.user.metadata?.department || 
+                           req.user.raw_user_meta_data?.department ||
+                           req.user.raw_user_meta_data?.dpt;
+
+      if (!departmentCode) {
+        console.error('[LGU_ADMIN] No department found in user metadata:', { 
+          userRole, 
+          department: req.user.department,
+          metadata: req.user.metadata, 
+          rawMetadata: req.user.raw_user_meta_data 
+        });
+        return res.status(400).json({
+          success: false,
+          error: 'Department not specified in user metadata. Please contact administrator to set your department.',
+          details: {
+            userRole,
+            hasMetadata: !!req.user.metadata,
+            hasRawMetadata: !!req.user.raw_user_meta_data,
+            metadataKeys: Object.keys(req.user.metadata || {}),
+            rawMetadataKeys: Object.keys(req.user.raw_user_meta_data || {})
+          }
+        });
+      }
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -44,13 +77,12 @@ class LguAdminController {
       let query = supabase
         .from('complaints')
         .select(`
-          id, title, description, submitted_at, submitted_by, 
-          status, priority, type, subtype, location_text,
-          // primary_department, secondary_departments, // Removed - derived from department_r
-          preferred_departments,
-          last_activity_at, created_at
+          id, title, descriptive_su, submitted_at, submitted_by, 
+          workflow_status, priority, location_text,
+          preferred_departments, department_r,
+          last_activity_at, updated_at
         `)
-        .or(`department_r.cs.{${departmentCode}}`)
+        .contains('department_r', [departmentCode])
         .order('submitted_at', { ascending: false });
 
       // Apply filters
@@ -116,19 +148,33 @@ class LguAdminController {
   async assignToOfficer(req, res) {
     try {
       const { complaintId } = req.params;
-      const { officerId, priority, deadline, notes } = req.body;
+      const { officerIds, officerId, priority, deadline, notes } = req.body;
       const userId = req.user.id;
       const userRole = req.user.role;
-
-      if (!officerId) {
+      
+      // Support both single officer (officerId) and multiple officers (officerIds)
+      const officersToAssign = officerIds && Array.isArray(officerIds) ? officerIds : 
+                              (officerId ? [officerId] : []);
+      
+      if (officersToAssign.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Officer ID is required'
+          error: 'No officers specified for assignment'
         });
       }
 
-      // Extract department from role
-      const departmentCode = userRole.replace('lgu-admin-', '');
+      // Extract department from user metadata (check multiple possible field names)
+      const departmentCode = req.user.department || 
+                           req.user.metadata?.department || 
+                           req.user.raw_user_meta_data?.department ||
+                           req.user.raw_user_meta_data?.dpt;
+
+      if (!departmentCode) {
+        return res.status(400).json({
+          success: false,
+          error: 'Department not specified in user metadata. Please contact administrator to set your department.'
+        });
+      }
 
       // Get department info
       const { data: department, error: deptError } = await supabase
@@ -141,6 +187,98 @@ class LguAdminController {
         return res.status(404).json({
           success: false,
           error: 'Department not found'
+        });
+      }
+
+      // Verify complaint exists and is assigned to this department
+      const { data: complaint, error: complaintError } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('id', complaintId)
+        .single();
+
+      if (complaintError || !complaint) {
+        return res.status(404).json({
+          success: false,
+          error: 'Complaint not found'
+        });
+      }
+
+      // Check if complaint is assigned to this department
+      if (!complaint.department_r || !complaint.department_r.includes(departmentCode)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Complaint is not assigned to your department'
+        });
+      }
+
+      // Generate a unique assignment group ID for this multi-officer assignment
+      const assignmentGroupId = require('crypto').randomUUID();
+      const assignmentType = officersToAssign.length > 1 ? 'multi' : 'single';
+
+      // Create assignment records for each officer
+      const assignments = [];
+      for (let i = 0; i < officersToAssign.length; i++) {
+        const officerId = officersToAssign[i];
+        
+        // Verify officer exists and belongs to this department
+        const { data: officerData, error: officerError } = await supabase.auth.admin.getUserById(officerId);
+        
+        if (officerError || !officerData?.user) {
+          console.error('[LGU_ADMIN] Officer not found:', { officerId, error: officerError });
+          continue; // Skip this officer but continue with others
+        }
+        
+        const officer = officerData.user;
+
+        // Debug: Log officer metadata structure
+        console.log('[LGU_ADMIN] Officer metadata debug:', {
+          officerId,
+          officerEmail: officer.email,
+          raw_user_meta_data: officer.raw_user_meta_data,
+          user_metadata: officer.user_metadata,
+          app_metadata: officer.app_metadata
+        });
+
+        // Check if officer belongs to this department
+        const officerDept = officer.raw_user_meta_data?.dpt || 
+                           officer.raw_user_meta_data?.department ||
+                           officer.user_metadata?.dpt ||
+                           officer.user_metadata?.department ||
+                           officer.app_metadata?.dpt ||
+                           officer.app_metadata?.department;
+        
+        console.log('[LGU_ADMIN] Officer department extraction:', {
+          officerId,
+          officerDept,
+          departmentCode,
+          matches: officerDept === departmentCode
+        });
+        
+        if (officerDept !== departmentCode) {
+          console.error('[LGU_ADMIN] Officer does not belong to department:', { officerId, officerDept, departmentCode });
+          continue; // Skip this officer but continue with others
+        }
+
+        assignments.push({
+          complaint_id: complaintId,
+          assigned_to: officerId,
+          assigned_by: userId,
+          status: 'assigned',
+          priority: priority || 'medium',
+          deadline: deadline || null,
+          notes: notes || null,
+          assignment_type: assignmentType,
+          assignment_group_id: assignmentGroupId,
+          officer_order: i + 1,
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      if (assignments.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No valid officers found for assignment'
         });
       }
 
@@ -165,56 +303,57 @@ class LguAdminController {
         });
       }
 
-      // Update or create assignment record
-      const { data: assignment, error: assignError } = await supabase
+      // Create assignment records for all officers
+      const { data: createdAssignments, error: assignError } = await supabase
         .from('complaint_assignments')
-        .upsert({
-          complaint_id: complaintId,
-          department_id: department.id,
-          assigned_to: officerId,
-          assigned_by: userId,
-          status: 'assigned',
-          priority: priority || 'medium',
-          deadline: deadline || null,
-          notes: notes || null,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+        .insert(assignments)
+        .select();
 
       if (assignError) {
-        console.error('[LGU_ADMIN] Error creating assignment:', assignError);
+        console.error('[LGU_ADMIN] Error creating assignments:', assignError);
         return res.status(500).json({
           success: false,
-          error: 'Failed to create assignment'
+          error: 'Failed to create assignments'
         });
       }
 
-      // Notify officer
-      try {
-        await notificationService.createNotification(
-          officerId,
-          'task_assigned',
-          'New Task Assigned',
-          `You've been assigned complaint: "${updatedComplaint.title}"`,
-          {
-            priority: priority === 'urgent' ? 'urgent' : 'info',
-            link: `/lgu-officer/tasks/${complaintId}`,
-            metadata: {
-              complaint_id: complaintId,
-              priority: priority || 'medium',
-              deadline: deadline || null
+      // Notify all assigned officers
+      const notificationPromises = [];
+      for (const assignment of createdAssignments) {
+        notificationPromises.push(
+          notificationService.createNotification(
+            assignment.assigned_to,
+            'task_assigned',
+            'New Task Assigned',
+            `You've been assigned complaint: "${updatedComplaint.title}"${officersToAssign.length > 1 ? ' (Multi-officer assignment)' : ''}`,
+            {
+              priority: priority === 'urgent' ? 'urgent' : 'info',
+              link: `/lgu-officer/tasks/${complaintId}`,
+              metadata: {
+                complaint_id: complaintId,
+                priority: priority || 'medium',
+                deadline: deadline || null,
+                assignment_group_id: assignmentGroupId,
+                officer_order: assignment.officer_order,
+                total_officers: officersToAssign.length
+              }
             }
-          }
+          ).catch(notifError => {
+            console.warn('[LGU_ADMIN] Failed to notify officer:', notifError.message);
+          })
         );
-      } catch (notifError) {
-        console.warn('[LGU_ADMIN] Failed to notify officer:', notifError.message);
       }
+
+      // Wait for all notifications to be sent (but don't fail if some fail)
+      await Promise.allSettled(notificationPromises);
 
       res.json({
         success: true,
-        message: 'Complaint assigned to officer successfully',
-        assignment: assignment
+        message: `Complaint assigned to ${createdAssignments.length} officer(s) successfully`,
+        assignments: createdAssignments,
+        assignment_group_id: assignmentGroupId,
+        assignment_type: assignmentType,
+        total_officers: createdAssignments.length
       });
 
     } catch (error) {
@@ -237,8 +376,76 @@ class LguAdminController {
       const metadata = req.user.metadata || {};
       const { status, sub_type, priority } = req.query; // Get filters from query params
 
-      // Extract department from role (e.g., lgu-admin-{dept} -> {dept})
-      const departmentCode = userRole.replace('lgu-admin-', '');
+      // Enhanced debug logging
+      console.log('[LGU_ADMIN] Request received:', {
+        userId,
+        userRole,
+        department: req.user.department,
+        metadata,
+        rawMetadata: req.user.raw_user_meta_data,
+        path: req.path,
+        fullUserObject: req.user
+      });
+
+      // Extract department from user metadata (check multiple possible field names)
+      const departmentCode = req.user.department || 
+                           req.user.metadata?.department || 
+                           req.user.raw_user_meta_data?.department ||
+                           req.user.raw_user_meta_data?.dpt;
+
+      console.log('[LGU_ADMIN] Department extraction debug:', {
+        'req.user.department': req.user.department,
+        'req.user.metadata?.department': req.user.metadata?.department,
+        'req.user.raw_user_meta_data?.department': req.user.raw_user_meta_data?.department,
+        'req.user.raw_user_meta_data?.dpt': req.user.raw_user_meta_data?.dpt,
+        'final departmentCode': departmentCode,
+        'departmentCode type': typeof departmentCode,
+        'departmentCode length': departmentCode?.length,
+        'departmentCode truthy': !!departmentCode,
+        'departmentCode === "PNP"': departmentCode === 'PNP',
+        'departmentCode !== null': departmentCode !== null,
+        'departmentCode !== undefined': departmentCode !== undefined
+      });
+
+      console.log('[LGU_ADMIN] About to check departmentCode condition...');
+      console.log('[LGU_ADMIN] departmentCode value:', JSON.stringify(departmentCode));
+      console.log('[LGU_ADMIN] !departmentCode result:', !departmentCode);
+
+      if (!departmentCode) {
+        console.error('[LGU_ADMIN] No department found in user metadata:', { 
+          userRole, 
+          department: req.user.department,
+          metadata: req.user.metadata, 
+          rawMetadata: req.user.raw_user_meta_data 
+        });
+        
+        // For debugging, let's try to find any department and use it temporarily
+        console.log('[LGU_ADMIN] Attempting to find a default department...');
+        const { data: defaultDept } = await supabase
+          .from('departments')
+          .select('id, name, code')
+          .eq('is_active', true)
+          .eq('level', 'LGU')
+          .limit(1)
+          .single();
+          
+        if (defaultDept) {
+          console.log('[LGU_ADMIN] Using default department:', defaultDept);
+          // Continue with the default department for testing
+        } else {
+          return res.status(400).json({
+            success: false,
+            error: 'Department not specified in user metadata. Please contact administrator to set your department.',
+            details: {
+              userRole,
+              hasMetadata: !!req.user.metadata,
+              hasRawMetadata: !!req.user.raw_user_meta_data,
+              metadataKeys: Object.keys(req.user.metadata || {}),
+              rawMetadataKeys: Object.keys(req.user.raw_user_meta_data || {})
+            }
+          });
+        }
+      }
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -258,7 +465,7 @@ class LguAdminController {
       // Step 1: Get all complaints for this department with filters
       let query = supabase
         .from('complaints')
-        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, subtype, priority')
+        .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority')
         .contains('department_r', [departmentCode])
         .order('submitted_at', { ascending: false });
 
@@ -266,14 +473,15 @@ class LguAdminController {
       if (status && status !== 'all') {
         query = query.eq('workflow_status', status);
       } else {
-        // Default: show new and in progress
-        query = query.in('workflow_status', ['new', 'in_progress']);
+        // Default: show new, in progress, and assigned complaints
+        query = query.in('workflow_status', ['new', 'in_progress', 'assigned']);
       }
 
       // Apply other filters
-      if (sub_type && sub_type !== 'all') {
-        query = query.eq('subtype', sub_type);
-      }
+      // Note: subtype filter removed as column doesn't exist
+      // if (sub_type && sub_type !== 'all') {
+      //   query = query.eq('subtype', sub_type);
+      // }
       if (priority && priority !== 'all') {
         query = query.eq('priority', priority);
       }
@@ -381,6 +589,14 @@ class LguAdminController {
         notes: assignment.notes
       }));
 
+      console.log('[LGU_ADMIN] Final response data:', {
+        departmentCode,
+        departmentId: department?.id,
+        totalComplaints: departmentComplaints?.length || 0,
+        totalAssignments: formattedAssignments?.length || 0,
+        sampleAssignment: formattedAssignments?.[0] || null
+      });
+
       return res.json({
         success: true,
         data: formattedAssignments
@@ -403,8 +619,30 @@ class LguAdminController {
     try {
       const userRole = req.user.role;
 
-      // Extract department from role
-      const departmentCode = userRole.replace('lgu-admin-', '');
+      // Extract department from user metadata (check multiple possible field names)
+      const departmentCode = req.user.department || 
+                           req.user.metadata?.department || 
+                           req.user.raw_user_meta_data?.department ||
+                           req.user.raw_user_meta_data?.dpt;
+
+      if (!departmentCode) {
+        console.error('[LGU_ADMIN] No department found in user metadata:', { 
+          userRole, 
+          metadata: req.user.metadata, 
+          rawMetadata: req.user.raw_user_meta_data 
+        });
+        return res.status(400).json({
+          success: false,
+          error: 'Department not specified in user metadata. Please contact administrator to set your department.',
+          details: {
+            userRole,
+            hasMetadata: !!req.user.metadata,
+            hasRawMetadata: !!req.user.raw_user_meta_data,
+            metadataKeys: Object.keys(req.user.metadata || {}),
+            rawMetadataKeys: Object.keys(req.user.raw_user_meta_data || {})
+          }
+        });
+      }
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase
@@ -421,39 +659,69 @@ class LguAdminController {
         });
       }
 
-      // Get all users with lgu-* officer role in this department
-      // Officer roles follow pattern: lgu-wst, lgu-engineering, lgu-health, etc.
+      // Get all users and filter for LGU officers in this department
       const { data: allUsers } = await supabase.auth.admin.listUsers();
 
-      const allLguUsers = allUsers.users.filter(user => {
-        const metadata = user.user_metadata || {};
-        const role = metadata.role || '';
-        return /^lgu-(?!admin|hr)/.test(role);
-      });
+      console.log('[LGU_ADMIN] Scanning for officers in department:', departmentCode);
+      console.log('[LGU_ADMIN] Total users found:', allUsers.users.length);
 
       const officers = allUsers.users
         .filter(user => {
           const metadata = user.user_metadata || {};
-          const role = metadata.role || '';
-          // Match lgu-* but exclude lgu-admin-* and lgu-hr-*
-          const isOfficer = /^lgu-(?!admin|hr)/.test(role);
-
-          // Check if the role contains the department code (e.g., lgu-wst for wst department)
+          const rawMetadata = user.raw_user_meta_data || {};
+          const role = metadata.role || rawMetadata.role || '';
+          
+          // Debug logging for each user
+          console.log('[LGU_ADMIN] Checking user:', {
+            id: user.id,
+            email: user.email,
+            role: role,
+            metadata: metadata,
+            rawMetadata: rawMetadata,
+            hasDpt: !!(metadata.dpt || rawMetadata.dpt),
+            dptValue: metadata.dpt || rawMetadata.dpt
+          });
+          
+          // Check for simplified role system: lgu with department in metadata
+          const isLguOfficer = role === 'lgu' || role === 'lgu-officer';
+          const hasCorrectDepartment = (metadata.dpt === departmentCode) || 
+                                      (rawMetadata.dpt === departmentCode) ||
+                                      (metadata.department === departmentCode) ||
+                                      (rawMetadata.department === departmentCode);
+          
+          // Check for legacy role system: lgu-{departmentCode}
+          const isLegacyOfficer = /^lgu-(?!admin|hr)/.test(role);
           const roleContainsDepartment = role.includes(`-${departmentCode}`);
-          const hasCorrectDepartment = metadata.department === departmentCode;
+          const hasLegacyDepartment = metadata.department === departmentCode || rawMetadata.department === departmentCode;
 
-          // console.log removed for security
-
-          // Match if role contains department code OR if department field matches
-          return isOfficer && (roleContainsDepartment || hasCorrectDepartment);
+          const isMatch = (isLguOfficer && hasCorrectDepartment) || 
+                         (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
+          
+          if (isMatch) {
+            console.log('[LGU_ADMIN] Found matching officer:', {
+              id: user.id,
+              email: user.email,
+              role: role,
+              department: metadata.dpt || rawMetadata.dpt
+            });
+          }
+          
+          return isMatch;
         })
         .map(user => ({
           id: user.id,
-          name: user.user_metadata?.name || user.email,
+          name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email,
           email: user.email,
-          employee_id: user.user_metadata?.employee_id,
-          mobile: user.user_metadata?.mobile
+          employee_id: user.user_metadata?.employee_id || user.raw_user_meta_data?.employee_id,
+          mobile: user.user_metadata?.mobile || user.raw_user_meta_data?.mobile
         }));
+
+      console.log('[LGU_ADMIN] Officers response:', {
+        departmentCode,
+        departmentId: department?.id,
+        totalOfficers: officers?.length || 0,
+        sampleOfficer: officers?.[0] || null
+      });
 
       return res.json({
         success: true,
@@ -485,8 +753,30 @@ class LguAdminController {
         });
       }
 
-      // Extract department from role
-      const departmentCode = userRole.replace('lgu-admin-', '');
+      // Extract department from user metadata (check multiple possible field names)
+      const departmentCode = req.user.department || 
+                           req.user.metadata?.department || 
+                           req.user.raw_user_meta_data?.department ||
+                           req.user.raw_user_meta_data?.dpt;
+
+      if (!departmentCode) {
+        console.error('[LGU_ADMIN] No department found in user metadata:', { 
+          userRole, 
+          metadata: req.user.metadata, 
+          rawMetadata: req.user.raw_user_meta_data 
+        });
+        return res.status(400).json({
+          success: false,
+          error: 'Department not specified in user metadata. Please contact administrator to set your department.',
+          details: {
+            userRole,
+            hasMetadata: !!req.user.metadata,
+            hasRawMetadata: !!req.user.raw_user_meta_data,
+            metadataKeys: Object.keys(req.user.metadata || {}),
+            rawMetadataKeys: Object.keys(req.user.raw_user_meta_data || {})
+          }
+        });
+      }
 
       // Get the department ID
       const { data: department, error: deptError } = await supabase

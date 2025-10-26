@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Assignments Module</title>
+</head>
+<body>
+    <h1>Test Assignments Module</h1>
+    <div id="assignments-container"></div>
+    
+    <script type="module">
+        console.log('Testing assignments module loading...');
+        
+        try {
+            // Test importing the assignments module
+            console.log('Importing assignments module...');
+            const { default: LguAdminAssignments } = await import('/js/pages/lgu-admin/assignments.js');
+            console.log('Assignments module imported successfully:', LguAdminAssignments);
+            
+            // Test creating an instance
+            console.log('Creating assignments instance...');
+            const assignmentsPage = new LguAdminAssignments();
+            console.log('Assignments instance created:', assignmentsPage);
+            
+            // Test initializing
+            console.log('Initializing assignments...');
+            await assignmentsPage.init();
+            console.log('Assignments initialized successfully');
+            
+        } catch (error) {
+            console.error('Module loading error:', error);
+            document.getElementById('assignments-container').innerHTML = `
+                <p style="color: red;">Module loading error: ${error.message}</p>
+                <pre>${error.stack}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -66,6 +66,12 @@ router.get('/',
   (req, res) => complaintController.getAllComplaints(req, res)
 );
 
+router.get('/:complaintId/evidence',
+  authenticateUser,
+  requireRole(['citizen', 'coordinator', 'lgu-admin', 'lgu-officer', 'hr', 'super-admin']),
+  (req, res) => complaintController.getComplaintEvidence(req, res)
+);
+
 router.get('/:id',
   authenticateUser,
   (req, res) => complaintController.getComplaintById(req, res)

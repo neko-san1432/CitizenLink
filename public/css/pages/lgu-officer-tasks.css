@@ -1,5 +1,22 @@
 /* LGU Officer Tasks Page Styles */
 
+/* Override global app.css padding for this page */
+#app {
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.main-content {
+    padding: 20px !important;
+    margin-top: 0 !important;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 .page-header {
     margin-bottom: 32px;
 }
@@ -453,6 +470,14 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .main-content {
+        padding: 15px !important;
+    }
+    
+    .container {
+        padding: 0 15px;
+    }
+
     .filters-section {
         flex-direction: column;
         gap: 16px;
@@ -485,5 +510,19 @@
     .modal-content {
         width: 95%;
         margin: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px !important;
+    }
+    
+    .container {
+        padding: 0 10px;
+    }
+    
+    .stats-section {
+        grid-template-columns: 1fr;
     }
 }

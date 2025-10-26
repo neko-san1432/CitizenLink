@@ -1,5 +1,22 @@
 /* Complaint Details Page Styles */
 
+/* Override global app.css padding for this page */
+#app {
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.main-content {
+    padding: 20px !important;
+    margin-top: 0 !important;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 .complaint-details {
     max-width: 1000px;
     margin: 0 auto;
@@ -264,6 +281,149 @@
     color: #6b7280;
 }
 
+/* Complaint Map */
+.complaint-map {
+    width: 100%;
+    height: 300px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-top: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.map-popup {
+    min-width: 200px;
+}
+
+.map-popup h4 {
+    margin: 0 0 8px 0;
+    color: #1f2937;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.map-popup p {
+    margin: 0 0 4px 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.map-popup p:last-child {
+    margin-bottom: 0;
+}
+
+/* Route Controls */
+.route-controls {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    min-width: 200px;
+}
+
+.route-control-panel h4 {
+    margin: 0 0 12px 0;
+    color: #1f2937;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.route-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.route-btn:hover {
+    background: #2563eb;
+}
+
+.route-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.route-btn i {
+    font-size: 1rem;
+}
+
+.route-info {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.route-info p {
+    margin: 0 0 4px 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.route-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* Custom Markers */
+.marker-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-marker {
+    background: #10b981;
+    color: white;
+}
+
+.complaint-marker {
+    background: #ef4444;
+    color: white;
+}
+
+/* Route Line Styling */
+.leaflet-routing-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-routing-alt {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.leaflet-routing-alt h3 {
+    font-size: 0.875rem;
+    margin: 0 0 8px 0;
+    color: #1f2937;
+}
+
+.leaflet-routing-alt table {
+    font-size: 0.75rem;
+}
+
+.leaflet-routing-alt td {
+    padding: 2px 4px;
+}
+
 /* Departments List */
 .departments-list {
     display: flex;
@@ -383,6 +543,14 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .main-content {
+        padding: 15px !important;
+    }
+
+    .container {
+        padding: 0 15px;
+    }
+
     .complaint-header {
         flex-direction: column;
         gap: 16px;
@@ -414,5 +582,33 @@
 
     .attachments-list {
         flex-direction: column;
+    }
+
+    .complaint-map {
+        height: 250px;
+    }
+
+    .route-controls {
+        min-width: 150px;
+        padding: 8px;
+    }
+
+    .route-control-panel h4 {
+        font-size: 0.75rem;
+    }
+
+    .route-btn {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px !important;
+    }
+
+    .container {
+        padding: 0 10px;
     }
 }

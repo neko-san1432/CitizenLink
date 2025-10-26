@@ -23,7 +23,6 @@ class LguAdminDashboard {
   async loadDashboardData() {
     try {
       await Promise.all([
-        this.loadStats(),
         this.loadAssignments(),
         this.loadActivities()
       ]);
@@ -33,37 +32,24 @@ class LguAdminDashboard {
     }
   }
 
-  async loadStats() {
-    try {
-      console.log('[LGU_ADMIN_DASHBOARD] Loading statistics...');
-      
-      const { data } = await apiClient.get('/api/lgu-admin/department-assignments');
-      
-      if (data && data.success) {
-        this.stats = this.calculateStats(data.data || []);
-        this.renderStats();
-      } else {
-        throw new Error(data?.error || 'Failed to load statistics');
-      }
-    } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Load stats error:', error);
-      this.stats = this.getDefaultStats();
-      this.renderStats();
-    }
-  }
+  // Statistics loading removed - no longer needed
 
   async loadAssignments() {
     try {
       console.log('[LGU_ADMIN_DASHBOARD] Loading recent assignments...');
       
-      const { data } = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
+      // For now, show empty state until API is fixed
+      this.assignments = [];
+      this.renderAssignments();
       
-      if (data && data.success) {
-        this.assignments = data.data || [];
-        this.renderAssignments();
-      } else {
-        throw new Error(data?.error || 'Failed to load assignments');
-      }
+      // TODO: Re-enable when API is working
+      // const { data } = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
+      // if (data && data.success) {
+      //   this.assignments = data.data || [];
+      //   this.renderAssignments();
+      // } else {
+      //   throw new Error(data?.error || 'Failed to load assignments');
+      // }
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load assignments error:', error);
       this.assignments = [];
@@ -75,10 +61,13 @@ class LguAdminDashboard {
     try {
       console.log('[LGU_ADMIN_DASHBOARD] Loading recent activities...');
       
-      // For now, we'll use assignments as activities
-      // In the future, this could be a separate activities endpoint
-      this.activities = this.assignments.slice(0, 5);
+      // For now, show empty state until API is fixed
+      this.activities = [];
       this.renderActivities();
+      
+      // TODO: Re-enable when API is working
+      // this.activities = this.assignments.slice(0, 5);
+      // this.renderActivities();
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load activities error:', error);
       this.activities = [];
@@ -86,48 +75,7 @@ class LguAdminDashboard {
     }
   }
 
-  calculateStats(assignments) {
-    const total = assignments.length;
-    const unassigned = assignments.filter(a => a.status === 'unassigned').length;
-    const assigned = assignments.filter(a => a.status === 'assigned' || a.status === 'active').length;
-    const completed = assignments.filter(a => a.status === 'completed').length;
-    const resolutionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return {
-      total,
-      unassigned,
-      assigned,
-      completed,
-      resolutionRate
-    };
-  }
-
-  getDefaultStats() {
-    return {
-      total: 0,
-      unassigned: 0,
-      assigned: 0,
-      completed: 0,
-      resolutionRate: 0
-    };
-  }
-
-  renderStats() {
-    if (!this.stats) return;
-
-    // Update stat cards
-    this.updateStatCard('stat-total-complaints', this.stats.total);
-    this.updateStatCard('stat-pending', this.stats.unassigned);
-    this.updateStatCard('stat-resolved', this.stats.completed);
-    this.updateStatCard('stat-resolution-rate', `${this.stats.resolutionRate}%`);
-  }
-
-  updateStatCard(elementId, value) {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.textContent = value;
-    }
-  }
+  // Statistics methods removed - no longer needed
 
   renderAssignments() {
     const container = document.getElementById('assignments-container');
@@ -226,14 +174,9 @@ class LguAdminDashboard {
 
   setupEventListeners() {
     // Refresh buttons
-    const refreshStatsBtn = document.getElementById('refresh-stats');
     const refreshActivityBtn = document.getElementById('refresh-activity');
 
-    if (refreshStatsBtn) {
-      refreshStatsBtn.addEventListener('click', () => {
-        this.loadStats();
-      });
-    }
+    // Statistics refresh removed - no longer needed
 
     if (refreshActivityBtn) {
       refreshActivityBtn.addEventListener('click', () => {

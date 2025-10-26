@@ -94,10 +94,59 @@ async function renderComplaint() {
   document.getElementById('complaint-description').textContent = complaint.descriptive_su;
   document.getElementById('complaint-location').textContent = complaint.location_text;
 
+  // Show preferred departments in main details
+  const preferredDeptsEl = document.getElementById('preferred-departments-list');
+  if (preferredDeptsEl) {
+    const departments = complaint.preferred_departments || [];
+    if (departments.length > 0) {
+      const displayNames = departments.map(dept => {
+        // Check if it's a numeric ID (like "79") or a department code (like "CEO")
+        if (typeof dept === 'number' || /^\d+$/.test(dept)) {
+          // Numeric department ID mapping
+          const numericDeptNames = {
+            '69': 'City Engineering Office',
+            '70': 'City General Services Office',
+            '71': 'City Planning and Development Coordinator',
+            '72': 'Digos City Health Office',
+            '73': 'City Social Welfare and Development Office',
+            '74': 'City Disaster Risk Reduction and Management Office',
+            '75': 'City Environment and Natural Resources Office',
+            '76': 'City Treasurer\'s Office',
+            '77': 'City Economic Enterprise Office',
+            '78': 'Human Resource Management Office',
+            '79': 'Philippine National Police - Digos City Station',
+            '80': 'City Legal Office',
+            '81': 'Office of the City Mayor',
+            '82': 'Public Assistance Desk',
+            '83': 'Office of the City Administrator',
+            '84': 'City Information Office',
+            '85': 'City Accountant\'s Office'
+          };
+          return numericDeptNames[dept.toString()] || `Department ${dept}`;
+        } else {
+          // Department code mapping (fallback for existing codes)
+          const deptNames = {
+            'CEO': 'City Engineering Office',
+            'GSO': 'City General Services Office', 
+            'CPDC': 'City Planning and Development Coordinator',
+            'CHO': 'Digos City Health Office',
+            'CSWDO': 'City Social Welfare and Development Office',
+            'CDRRMO': 'City Disaster Risk Reduction and Management Office',
+            'ENRO': 'City Environment and Natural Resources Office'
+          };
+          return deptNames[dept] || dept;
+        }
+      });
+      preferredDeptsEl.innerHTML = displayNames.map(name => `<span class="dept-badge">${name}</span>`).join(' ');
+    } else {
+      preferredDeptsEl.textContent = 'No departments selected by citizen';
+    }
+  }
+
   // Show complainant's department preference
   const preferenceEl = document.getElementById('complainant-preference');
   if (preferenceEl) {
-    const departments = complaint.department_r || [];
+    const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
       // Handle both numeric IDs and department codes
       const displayNames = departments.map(dept => {
@@ -404,6 +453,10 @@ window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
 };
 
+window.openFalseComplaintModal = function() {
+  document.getElementById('false-complaint-modal').classList.add('active');
+};
+
 window.closeModal = function(modalId) {
   document.getElementById(modalId).classList.remove('active');
 };
@@ -522,6 +575,52 @@ window.handleReject = async function(event) {
     }, 1500);
   } catch (error) {
     console.error('[REVIEW] Reject error:', error);
+    Toast.error(error.message);
+  }
+};
+
+/**
+ * Handle mark as false complaint
+ */
+window.handleFalseComplaint = async function(event) {
+  event.preventDefault();
+
+  const reason = document.getElementById('false-complaint-reason').value;
+  const notes = document.getElementById('false-complaint-notes').value;
+
+  // Validate that a reason is selected
+  if (!reason) {
+    Toast.error('Please select a reason for marking this complaint as false.');
+    return;
+  }
+
+  // Combine reason and notes
+  const fullReason = notes ? `${reason}: ${notes}` : reason;
+
+  try {
+    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'mark_false',
+        data: {
+          reason: fullReason
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to mark as false complaint');
+    }
+
+    Toast.success('Complaint marked as false');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1500);
+  } catch (error) {
+    console.error('[REVIEW] False complaint error:', error);
     Toast.error(error.message);
   }
 };

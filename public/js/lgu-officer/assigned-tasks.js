@@ -90,7 +90,7 @@ class AssignedTasks {
             if (this.filters.search) queryParams.append('search', this.filters.search);
             queryParams.append('limit', this.itemsPerPage);
 
-            const response = await fetch(`/api/lgu-officer/assigned-tasks?${queryParams}`, {
+            const response = await fetch(`/api/lgu/assigned-tasks?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -110,7 +110,7 @@ class AssignedTasks {
 
             this.tasks = data.data || [];
             this.renderTasks();
-            this.updateStats();
+            await this.loadStatistics();
             
         } catch (error) {
             console.error('Error loading tasks:', error);
@@ -182,7 +182,7 @@ class AssignedTasks {
                         </div>
                         <div class="task-detail">
                             <span>🏷️</span>
-                            <span>${task.complaint?.type || 'General'}</span>
+                            <span>${task.complaint?.category || 'General'}</span>
                         </div>
                         ${task.deadline ? `
                             <div class="task-detail">
@@ -281,7 +281,7 @@ class AssignedTasks {
 
     async viewComplaint(complaintId) {
         // Redirect to complaint details page
-        window.location.href = `/complaint-details?id=${complaintId}`;
+        window.location.href = `/complaint-details/${complaintId}`;
     }
 
     showResolutionModal(complaintId) {
@@ -306,7 +306,7 @@ class AssignedTasks {
         }
 
         try {
-            const response = await fetch(`/api/lgu-officer/complaints/${complaintId}/resolve`, {
+            const response = await fetch(`/api/lgu/complaints/${complaintId}/resolve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -371,7 +371,47 @@ class AssignedTasks {
         return tasks.slice(startIndex, endIndex);
     }
 
-    updateStats() {
+    async loadStatistics() {
+        try {
+            console.log('[LGU_OFFICER_TASKS] Loading statistics...');
+            const response = await fetch('/api/lgu/statistics', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            console.log('[LGU_OFFICER_TASKS] Statistics response:', response.status, response.statusText);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('[LGU_OFFICER_TASKS] Statistics data:', data);
+            
+            if (data.success) {
+                this.updateStats(data.data);
+            } else {
+                throw new Error(data.error || 'Failed to load statistics');
+            }
+        } catch (error) {
+            console.error('[LGU_OFFICER_TASKS] Error loading statistics:', error);
+            // Fallback to local calculation
+            this.updateStatsFromTasks();
+        }
+    }
+
+    updateStats(stats) {
+        console.log('[LGU_OFFICER_TASKS] Updating stats with:', stats);
+        document.getElementById('total-tasks').textContent = stats.total_tasks || 0;
+        document.getElementById('pending-tasks').textContent = stats.pending_tasks || 0;
+        document.getElementById('in-progress-tasks').textContent = stats.in_progress_tasks || 0;
+        document.getElementById('completed-tasks').textContent = stats.completed_tasks || 0;
+    }
+
+    updateStatsFromTasks() {
         const total = this.tasks.length;
         const pending = this.tasks.filter(t => t.status === 'assigned').length;
         const inProgress = this.tasks.filter(t => t.status === 'in_progress').length;

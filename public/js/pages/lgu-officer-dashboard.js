@@ -42,7 +42,7 @@ async function loadDashboardData() {
  */
 async function loadMyTasks() {
   try {
-    const response = await fetch('/api/lgu-officer/my-tasks?limit=5');
+    const response = await fetch('/api/lgu/my-tasks?limit=5');
     const result = await response.json();
 
     if (result.success) {
@@ -61,7 +61,7 @@ async function loadMyTasks() {
  */
 async function loadStatistics() {
   try {
-    const response = await fetch('/api/lgu-officer/statistics');
+    const response = await fetch('/api/lgu/statistics');
     const result = await response.json();
 
     if (result.success) {
@@ -80,7 +80,7 @@ async function loadStatistics() {
  */
 async function loadActivity() {
   try {
-    const response = await fetch('/api/lgu-officer/activity?limit=5');
+    const response = await fetch('/api/lgu/activities?limit=5');
     const result = await response.json();
 
     if (result.success) {
@@ -96,7 +96,7 @@ async function loadActivity() {
  */
 async function loadUpdates() {
   try {
-    const response = await fetch('/api/lgu-officer/updates?limit=5');
+    const response = await fetch('/api/lgu/updates?limit=5');
     const result = await response.json();
 
     if (result.success) {
@@ -227,13 +227,6 @@ function renderUpdates(updates) {
  * Setup event listeners
  */
 function setupEventListeners() {
-  // Performance period filter
-  const performancePeriod = document.getElementById('performance-period');
-  if (performancePeriod) {
-    performancePeriod.addEventListener('change', (e) => {
-      loadPerformanceMetrics(e.target.value);
-    });
-  }
 }
 
 /**
@@ -378,13 +371,3 @@ window.refreshTasks = async function() {
   showMessage('success', 'Tasks refreshed');
 };
 
-window.loadPerformanceMetrics = async function(period) {
-  try {
-    showMessage('info', `Loading performance metrics for ${period}...`);
-    // TODO: Implement performance metrics loading
-    showMessage('success', 'Performance metrics loaded');
-  } catch (error) {
-    console.error('[LGU_OFFICER] Load performance metrics error:', error);
-    showMessage('error', 'Failed to load performance metrics');
-  }
-};

@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/css/pages/coordinator-review.css">
     <link rel="stylesheet" href="/styles/false-complaint-marker.css">
     <link rel="stylesheet" href="/css/components/evidence-preview.css">
+    <link rel="stylesheet" href="/css/components/modal.css">
 </head>
 <body>
     <div class="app-container">
@@ -98,6 +99,13 @@
                                         <div class="location-map" id="location-map"></div>
                                     </div>
 
+                                    <div class="detail-row" id="preferred-departments-section">
+                                        <div class="detail-label">Citizen's Preferred Departments</div>
+                                        <div class="detail-value" id="preferred-departments">
+                                            <div id="preferred-departments-list" style="color:#666;font-size:0.95rem;">Loading...</div>
+                                        </div>
+                                    </div>
+
                                     <div class="detail-row" id="evidence-section">
                                         <div class="detail-label">Evidence</div>
                                         <div id="evidence-empty" style="color:#666;font-size:0.95rem;">No evidence uploaded.</div>
@@ -128,7 +136,7 @@
                                     <button class="btn btn-secondary" onclick="openRelatedModal()" id="related-btn" style="display: none;">
                                         📎 Link Related Complaints
                                     </button>
-                                    <button class="btn btn-danger" onclick="openRejectModal()">
+                                    <button class="btn btn-danger" onclick="showRejectModal()">
                                         ❌ Reject Complaint
                                     </button>
                                     <button class="btn btn-danger" onclick="openFalseComplaintModal()" id="false-complaint-btn" title="Mark as false/fake complaint">
@@ -151,12 +159,14 @@
 
     <!-- Assign to Department Modal -->
     <div id="assign-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Assign to Department</h2>
-                <button class="modal-close" onclick="closeModal('assign-modal')">&times;</button>
-            </div>
-            <form id="assign-form" onsubmit="handleAssign(event)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Assign to Department</h2>
+                    <button class="modal-close" onclick="closeModal('assign-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                <form id="assign-form" onsubmit="handleAssign(event)">
                 <div class="form-group">
                     <label>Departments *</label>
                     <div id="departments-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -191,17 +201,21 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('assign-modal')">Cancel</button>
                 </div>
             </form>
+            </div>
+            </div>
         </div>
     </div>
 
     <!-- Mark as Duplicate Modal -->
     <div id="duplicate-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Mark as Duplicate</h2>
-                <button class="modal-close" onclick="closeModal('duplicate-modal')">&times;</button>
-            </div>
-            <form id="duplicate-form" onsubmit="handleDuplicate(event)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Mark as Duplicate</h2>
+                    <button class="modal-close" onclick="closeModal('duplicate-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                <form id="duplicate-form" onsubmit="handleDuplicate(event)">
                 <div class="form-group">
                     <label for="master-complaint">Master Complaint ID *</label>
                     <select id="master-complaint" required>
@@ -217,26 +231,68 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('duplicate-modal')">Cancel</button>
                 </div>
             </form>
+            </div>
+            </div>
         </div>
     </div>
 
     <!-- Reject Modal -->
     <div id="reject-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Reject Complaint</h2>
-                <button class="modal-close" onclick="closeModal('reject-modal')">&times;</button>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Reject Complaint</h2>
+                    <button class="modal-close" onclick="closeModal('reject-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="reject-form" onsubmit="handleReject(event)">
+                        <div class="form-group">
+                            <label for="reject-reason">Reason for Rejection *</label>
+                            <textarea id="reject-reason" required placeholder="Please provide a reason for rejecting this complaint..."></textarea>
+                        </div>
+                        <div class="decision-buttons">
+                            <button type="submit" class="btn btn-danger">Reject Complaint</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('reject-modal')">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <form id="reject-form" onsubmit="handleReject(event)">
-                <div class="form-group">
-                    <label for="reject-reason">Reason for Rejection *</label>
-                    <textarea id="reject-reason" required placeholder="Please provide a reason for rejecting this complaint..."></textarea>
+        </div>
+    </div>
+
+    <!-- False Complaint Modal -->
+    <div id="false-complaint-modal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Mark as False Complaint</h2>
+                    <button class="modal-close" onclick="closeModal('false-complaint-modal')">&times;</button>
                 </div>
-                <div class="decision-buttons">
-                    <button type="submit" class="btn btn-danger">Reject Complaint</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('reject-modal')">Cancel</button>
-                </div>
-            </form>
+                <div class="modal-body">
+                <form id="false-complaint-form" onsubmit="handleFalseComplaint(event)">
+                    <div class="form-group">
+                        <label for="false-complaint-reason">Reason for marking as false *</label>
+                        <select id="false-complaint-reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="Spam or irrelevant content">Spam or irrelevant content</option>
+                            <option value="False information">False information</option>
+                            <option value="Duplicate complaint">Duplicate complaint</option>
+                            <option value="Inappropriate content">Inappropriate content</option>
+                            <option value="Not a valid complaint">Not a valid complaint</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="false-complaint-notes">Additional Notes</label>
+                        <textarea id="false-complaint-notes" placeholder="Additional details (optional)..."></textarea>
+                    </div>
+                    <div class="decision-buttons">
+                        <button type="submit" class="btn btn-danger">Mark as False</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('false-complaint-modal')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            </div>
         </div>
     </div>
 

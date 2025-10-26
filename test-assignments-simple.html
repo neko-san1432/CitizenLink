@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Assignments Simple</title>
+</head>
+<body>
+    <h1>Test Assignments Simple</h1>
+    <div id="assignments-container"></div>
+    
+    <script type="module">
+        console.log('Testing assignments module...');
+        
+        try {
+            // Test the API directly
+            const response = await fetch('/api/lgu-admin/department-assignments', {
+                headers: {
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjR1eHpyek44RU9MTlpLd1YiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2l4aWJrY3dxYWx4ZmpncnVpenZhLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI0MGRlMjdlZi1lYmYxLTQ2ZmEtOTQ3ZS0zZmM4ZWU3ZWFhNWMiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzYxNDU2MTI2LCJpYXQiOjE3NjE0NDE3MjYsImVtYWlsIjoicG5wYWRtaW5AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJiYXNlX3JvbGUiOiJsZ3UtYWRtaW4iLCJkcHQiOiJQTlAiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibW9iaWxlX251bWJlciI6Iis2MzkxNzEyMzQ1NzUiLCJuYW1lIjoiUE5QIEFkbWluIiwibm9ybWFsaXplZF9yb2xlIjoibGd1LWFkbWluIiwicm9sZSI6ImxndS1hZG1pbiIsInN0YXR1cyI6ImFjdGl2ZSJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzYxNDQxNzI2fV0sInNlc3Npb25faWQiOiJkM2ZmMTRkNi0yZTMwLTQ0YWYtODZjNi1kMmM0ZGM4MDUzZGMiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.XcMLmfDHxqvOdrB2-j3djUcnqSYQ_6tpNxd3kuFw4Pg'
+                }
+            });
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            const container = document.getElementById('assignments-container');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = `
+                    <h2>Found ${data.data.length} assignments:</h2>
+                    ${data.data.map(assignment => `
+                        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+                            <h3>${assignment.title}</h3>
+                            <p><strong>ID:</strong> ${assignment.complaint_id}</p>
+                            <p><strong>Description:</strong> ${assignment.description}</p>
+                            <p><strong>Status:</strong> ${assignment.status}</p>
+                            <p><strong>Priority:</strong> ${assignment.priority}</p>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                container.innerHTML = `
+                    <h2>No assignments found</h2>
+                    <p>Success: ${data.success}</p>
+                    <p>Data: ${JSON.stringify(data.data)}</p>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('assignments-container').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>

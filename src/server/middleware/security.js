@@ -75,11 +75,11 @@ if (process.env.NODE_ENV === 'production') {
 const securityHeaders = helmet({
   contentSecurityPolicy: cspConfig,
   crossOriginEmbedderPolicy: false, // Disable for now due to compatibility issues
-  hsts: {
+  hsts: process.env.NODE_ENV === 'production' ? {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true
-  },
+  } : false, // Disable HSTS in development to prevent SSL redirects
   noSniff: true,
   frameguard: { action: 'deny' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -95,7 +95,7 @@ const customSecurityHeaders = (req, res, next) => {
 
   // Permissions Policy (formerly Feature Policy)
   res.setHeader('Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
+    'camera=(), microphone=(), geolocation=(self), payment=()'
   );
 
   next();

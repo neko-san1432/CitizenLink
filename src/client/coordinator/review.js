@@ -96,7 +96,7 @@ async function renderComplaint() {
   // Show complainant's department preference
   const preferenceEl = document.getElementById('complainant-preference');
   if (preferenceEl) {
-    const departments = complaint.department_r || [];
+    const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
       // Use dynamic department names
       const displayNames = await Promise.all(
@@ -318,6 +318,10 @@ window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
 };
 
+window.openFalseComplaintModal = function() {
+  document.getElementById('false-complaint-modal').classList.add('active');
+};
+
 window.closeModal = function(modalId) {
   document.getElementById(modalId).classList.remove('active');
 };
@@ -436,6 +440,52 @@ window.handleReject = async function(event) {
     }, 1500);
   } catch (error) {
     console.error('[REVIEW] Reject error:', error);
+    Toast.error(error.message);
+  }
+};
+
+/**
+ * Handle mark as false complaint
+ */
+window.handleFalseComplaint = async function(event) {
+  event.preventDefault();
+
+  const reason = document.getElementById('false-complaint-reason').value;
+  const notes = document.getElementById('false-complaint-notes').value;
+
+  // Validate that a reason is selected
+  if (!reason) {
+    Toast.error('Please select a reason for marking this complaint as false.');
+    return;
+  }
+
+  // Combine reason and notes
+  const fullReason = notes ? `${reason}: ${notes}` : reason;
+
+  try {
+    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'mark_false',
+        data: {
+          reason: fullReason
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to mark as false complaint');
+    }
+
+    Toast.success('Complaint marked as false');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1500);
+  } catch (error) {
+    console.error('[REVIEW] False complaint error:', error);
     Toast.error(error.message);
   }
 };

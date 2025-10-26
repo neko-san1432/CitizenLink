@@ -7,18 +7,36 @@ class ComplaintDetails {
         this.complaintId = null;
         this.complaint = null;
         this.userRole = null;
+        this.map = null;
+        this.routingControl = null;
+        this.userLocation = null;
         this.init();
+        
+        // Cleanup map when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            if (this.map) {
+                this.map.remove();
+            }
+        });
     }
 
     async init() {
         try {
-            // Get complaint ID from URL
+            // Get complaint ID from URL - try both path parameter and query parameter
             const pathParts = window.location.pathname.split('/');
-            this.complaintId = pathParts[pathParts.length - 1];
+            let complaintId = pathParts[pathParts.length - 1];
             
-            if (!this.complaintId || this.complaintId === 'complaint-details') {
+            // If the last part is 'complaint-details', try query parameter
+            if (!complaintId || complaintId === 'complaint-details') {
+                const urlParams = new URLSearchParams(window.location.search);
+                complaintId = urlParams.get('id');
+            }
+            
+            if (!complaintId || complaintId === 'complaint-details') {
                 throw new Error('Invalid complaint ID');
             }
+            
+            this.complaintId = complaintId;
 
             // Get user role
             this.userRole = await this.getUserRole();
@@ -80,6 +98,10 @@ class ComplaintDetails {
             }
 
             this.complaint = data.data;
+            
+            // Load evidence/attachments separately
+            await this.loadComplaintEvidence();
+            
             this.renderComplaintDetails();
             
         } catch (error) {
@@ -87,6 +109,32 @@ class ComplaintDetails {
             this.showError('Failed to load complaint details: ' + error.message);
         } finally {
             this.hideLoading();
+        }
+    }
+
+    async loadComplaintEvidence() {
+        try {
+            const response = await fetch(`/api/complaints/${this.complaintId}/evidence`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.complaint.attachments = data.data || [];
+                } else {
+                    this.complaint.attachments = [];
+                }
+            } else {
+                this.complaint.attachments = [];
+            }
+        } catch (error) {
+            console.error('Error loading complaint evidence:', error);
+            this.complaint.attachments = [];
         }
     }
 
@@ -101,7 +149,7 @@ class ComplaintDetails {
         document.getElementById('complaint-status').className = `complaint-status status-${(this.complaint.status || 'pending').toLowerCase().replace(' ', '-')}`;
         document.getElementById('complaint-priority').textContent = this.complaint.priority || 'Medium';
         document.getElementById('complaint-priority').className = `complaint-priority priority-${(this.complaint.priority || 'medium').toLowerCase()}`;
-        document.getElementById('complaint-description').textContent = this.complaint.description || 'No description provided';
+        document.getElementById('complaint-description').textContent = this.complaint.descriptive_su || 'No description provided';
 
         // Populate location
         this.renderLocation();
@@ -123,22 +171,292 @@ class ComplaintDetails {
         const locationContainer = document.getElementById('complaint-location');
         if (!locationContainer) return;
 
-        if (this.complaint.address) {
+        if (this.complaint.location_text) {
             locationContainer.innerHTML = `
-                <div class="location-address">${this.complaint.address}</div>
+                <div class="location-address">${this.complaint.location_text}</div>
                 ${this.complaint.latitude && this.complaint.longitude ? 
-                    `<div class="location-coordinates">${this.complaint.latitude}, ${this.complaint.longitude}</div>` : 
+                    `<div class="location-coordinates">${this.complaint.latitude}, ${this.complaint.longitude}</div>
+                     <div id="complaint-map" class="complaint-map"></div>` : 
                     ''
                 }
             `;
+            
+            // Initialize map if coordinates are available
+            if (this.complaint.latitude && this.complaint.longitude) {
+                this.initializeMap();
+            }
         } else {
             locationContainer.innerHTML = '<p>No location information provided</p>';
         }
     }
 
+    initializeMap() {
+        // Wait a bit for the DOM to be ready
+        setTimeout(() => {
+            const mapContainer = document.getElementById('complaint-map');
+            if (!mapContainer) return;
+
+            try {
+                // Initialize the map
+                const map = L.map('complaint-map').setView(
+                    [this.complaint.latitude, this.complaint.longitude], 
+                    15
+                );
+
+                // Add OpenStreetMap tiles
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19
+                }).addTo(map);
+
+                // Add a marker for the complaint location
+                const complaintMarker = L.marker([this.complaint.latitude, this.complaint.longitude]).addTo(map);
+                
+                // Add popup with complaint information
+                complaintMarker.bindPopup(`
+                    <div class="map-popup">
+                        <h4>${this.complaint.title || 'Complaint Location'}</h4>
+                        <p><strong>Address:</strong> ${this.complaint.location_text}</p>
+                        <p><strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude}</p>
+                    </div>
+                `).openPopup();
+
+                // Store map reference for potential cleanup
+                this.map = map;
+
+                // Add route controls for LGU users
+                this.addRouteControls(map);
+
+                // Try to get user location and show route (non-blocking)
+                // If geolocation fails, the map will still show the complaint location
+                setTimeout(() => {
+                    this.getUserLocationAndShowRoute(map);
+                }, 500);
+
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                mapContainer.innerHTML = '<p>Unable to load map. Coordinates: ' + 
+                    this.complaint.latitude + ', ' + this.complaint.longitude + '</p>';
+            }
+        }, 100);
+    }
+
+    addRouteControls(map) {
+        // Only show route controls for LGU users
+        if (this.userRole !== 'lgu' && this.userRole !== 'lgu-admin') {
+            return;
+        }
+
+        // Create control container
+        const routeControlContainer = L.control({ position: 'topright' });
+        
+        routeControlContainer.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'route-controls');
+            div.innerHTML = `
+                <div class="route-control-panel">
+                    <h4>Route Options</h4>
+                    <button id="get-route-btn" class="route-btn">
+                        <i class="icon-navigation"></i> Get Route
+                    </button>
+                    <button id="clear-route-btn" class="route-btn" style="display: none;">
+                        <i class="icon-close"></i> Clear Route
+                    </button>
+                    <div id="route-info" class="route-info" style="display: none;">
+                        <p id="route-distance"></p>
+                        <p id="route-duration"></p>
+                    </div>
+                </div>
+            `;
+            return div;
+        };
+
+        routeControlContainer.addTo(map);
+
+        // Add event listeners
+        document.getElementById('get-route-btn').addEventListener('click', () => {
+            this.getUserLocationAndShowRoute(map);
+        });
+
+        document.getElementById('clear-route-btn').addEventListener('click', () => {
+            this.clearRoute();
+        });
+    }
+
+    getUserLocationAndShowRoute(map) {
+        if (!navigator.geolocation) {
+            showToast('Geolocation is not supported by this browser.', 'error');
+            return;
+        }
+
+        const getRouteBtn = document.getElementById('get-route-btn');
+        const clearRouteBtn = document.getElementById('clear-route-btn');
+        const routeInfo = document.getElementById('route-info');
+
+        if (getRouteBtn) {
+            getRouteBtn.textContent = 'Getting Location...';
+            getRouteBtn.disabled = true;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                this.showRoute(map);
+                
+                if (getRouteBtn) {
+                    getRouteBtn.textContent = 'Update Route';
+                    getRouteBtn.disabled = false;
+                }
+                if (clearRouteBtn) clearRouteBtn.style.display = 'inline-block';
+                if (routeInfo) routeInfo.style.display = 'block';
+
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                
+                let errorMessage = 'Unable to get your location. ';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage += 'Location access was denied. Please enable location permissions in your browser settings.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += 'Location information is unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += 'Location request timed out. Please try again.';
+                        break;
+                    default:
+                        errorMessage += 'An unknown error occurred.';
+                        break;
+                }
+                
+                showToast(errorMessage, 'error');
+                
+                if (getRouteBtn) {
+                    getRouteBtn.textContent = 'Get Route';
+                    getRouteBtn.disabled = false;
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000, // Increased timeout
+                maximumAge: 300000 // 5 minutes
+            }
+        );
+    }
+
+    showRoute(map) {
+        if (!this.userLocation || !this.complaint.latitude || !this.complaint.longitude) {
+            return;
+        }
+
+        // Clear existing route
+        this.clearRoute();
+
+        try {
+            // Create routing control
+            this.routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(this.userLocation.lat, this.userLocation.lng),
+                    L.latLng(this.complaint.latitude, this.complaint.longitude)
+                ],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                createMarker: function(i, waypoint, n) {
+                    // Custom markers
+                    if (i === 0) {
+                        // User location marker
+                        return L.marker(waypoint.latLng, {
+                            icon: L.divIcon({
+                                className: 'user-location-marker',
+                                html: '<div class="marker-icon user-marker">📍</div>',
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 15]
+                            })
+                        }).bindPopup('Your Location');
+                    } else {
+                        // Complaint location marker
+                        return L.marker(waypoint.latLng, {
+                            icon: L.divIcon({
+                                className: 'complaint-location-marker',
+                                html: '<div class="marker-icon complaint-marker">🚨</div>',
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 15]
+                            })
+                        }).bindPopup(`
+                            <div class="map-popup">
+                                <h4>${this.complaint.title || 'Complaint Location'}</h4>
+                                <p><strong>Address:</strong> ${this.complaint.location_text}</p>
+                            </div>
+                        `);
+                    }
+                }.bind(this),
+                lineOptions: {
+                    styles: [
+                        {
+                            color: '#3b82f6',
+                            weight: 6,
+                            opacity: 0.8
+                        }
+                    ]
+                }
+            }).addTo(map);
+
+            // Listen for route calculation
+            this.routingControl.on('routesfound', (e) => {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                
+                // Update route info
+                const distanceEl = document.getElementById('route-distance');
+                const durationEl = document.getElementById('route-duration');
+                
+                if (distanceEl) {
+                    distanceEl.textContent = `Distance: ${(summary.totalDistance / 1000).toFixed(2)} km`;
+                }
+                if (durationEl) {
+                    durationEl.textContent = `Duration: ${Math.round(summary.totalTime / 60)} minutes`;
+                }
+
+                showToast('Route calculated successfully!', 'success');
+            });
+
+            this.routingControl.on('routingerror', (e) => {
+                console.error('Routing error:', e);
+                showToast('Unable to calculate route. Please try again.', 'error');
+            });
+
+        } catch (error) {
+            console.error('Error creating route:', error);
+            showToast('Error creating route. Please try again.', 'error');
+        }
+    }
+
+    clearRoute() {
+        if (this.routingControl) {
+            this.map.removeControl(this.routingControl);
+            this.routingControl = null;
+        }
+
+        const clearRouteBtn = document.getElementById('clear-route-btn');
+        const routeInfo = document.getElementById('route-info');
+        
+        if (clearRouteBtn) clearRouteBtn.style.display = 'none';
+        if (routeInfo) routeInfo.style.display = 'none';
+    }
+
     renderDepartments() {
         const departmentsContainer = document.getElementById('assigned-departments');
         if (!departmentsContainer) return;
+
+        // Hide departments section for LGU officers
+        if (this.userRole === 'lgu') {
+            departmentsContainer.style.display = 'none';
+            return;
+        }
 
         const departments = this.complaint.assigned_departments || this.complaint.department_r || [];
         const preferredDepartments = this.complaint.preferred_departments || [];
@@ -294,8 +612,9 @@ class ComplaintDetails {
                 returnLink.href = '/lgu-admin/assignments';
                 returnText.textContent = 'Return to Assigned Complaints';
                 break;
+            case 'lgu':
             case 'lgu-officer':
-                returnLink.href = '/lgu-officer/tasks';
+                returnLink.href = '/lgu-officer/assigned-tasks';
                 returnText.textContent = 'Return to Assigned Tasks';
                 break;
             case 'citizen':
@@ -330,6 +649,7 @@ class ComplaintDetails {
                 }
                 break;
 
+            case 'lgu':
             case 'lgu-officer':
                 if (this.complaint.status === 'assigned' || this.complaint.status === 'in progress') {
                     actions.push(
@@ -448,7 +768,7 @@ class ComplaintDetails {
         if (!notes) return;
 
         try {
-            const response = await fetch(`/api/lgu-officer/complaints/${this.complaintId}/resolve`, {
+            const response = await fetch(`/api/lgu/complaints/${this.complaintId}/resolve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

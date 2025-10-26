@@ -532,6 +532,31 @@ class ComplaintController {
       });
     }
   }
+
+  /**
+   * Get complaint evidence files
+   */
+  async getComplaintEvidence(req, res) {
+    try {
+      const { complaintId } = req.params;
+      const { user } = req;
+
+      console.log(`[COMPLAINT] Getting evidence for complaint ${complaintId} by user ${user.id}`);
+
+      const evidence = await this.complaintService.getComplaintEvidence(complaintId, user);
+      
+      res.json({
+        success: true,
+        data: evidence
+      });
+    } catch (error) {
+      console.error('[COMPLAINT] Get evidence error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = ComplaintController;

@@ -55,7 +55,6 @@
 .stat-card.warning::before { background: linear-gradient(90deg, #feca57, #ff9ff3)}
 .stat-card.success::before { background: linear-gradient(90deg, #48dbfb, #0abde3)}
 .stat-card.info::before { background: linear-gradient(90deg, #a55eea, #26de81)}
-.stat-card.performance::before { background: linear-gradient(90deg, #ff9ff3, #54a0ff)}
 .stat-card.accuracy::before { background: linear-gradient(90deg, #5f27cd, #00d2d3)}
 
 .stat-card {
@@ -290,48 +289,6 @@
 .legend-color.assignments {
   background: linear-gradient(135deg, #48dbfb, #0abde3)}
 
-/* Performance List */
-.performance-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem}
-
-.performance-item {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  border: 1px solid #e9ecef}
-
-.performance-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem}
-
-.dept-name {
-  font-weight: 600;
-  color: #2c3e50}
-
-.efficiency {
-  font-weight: 700;
-  color: #667eea;
-  font-size: 1.1rem}
-
-.performance-bar {
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 0.5rem}
-
-.efficiency-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  border-radius: 4px}
-
-.performance-meta {
-  font-size: 0.8rem;
-  color: #7f8c8d}
 
 /* Activity Feed */
 .activity-list {

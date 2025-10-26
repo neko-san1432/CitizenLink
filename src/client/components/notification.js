@@ -312,7 +312,7 @@ async function fetchNotifications(page, limit) {
     const formattedNotifications = response.notifications.map(notif => ({
       ...notif,
       time: formatRelativeTime(notif.created_at),
-      read: notif.is_read
+      read: notif.read
     }));
 
     return {

@@ -17,6 +17,9 @@ router.use(authenticateUser);
 // Get unread notifications
 router.get('/unread', notificationController.getUnreadNotifications.bind(notificationController));
 
+// Get all notifications (paginated)
+router.get('/', notificationController.getAllNotifications.bind(notificationController));
+
 // Get notification count
 router.get('/count', notificationController.getNotificationCount.bind(notificationController));
 

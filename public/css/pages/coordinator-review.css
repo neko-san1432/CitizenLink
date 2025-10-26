@@ -8,6 +8,19 @@
   min-height: 100vh;
 }
 
+/* Department badges for preferred departments */
+.dept-badge {
+  display: inline-block;
+  background: #e6f3ff;
+  color: #1a73e8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+  border: 1px solid #b3d9ff;
+}
+
 .review-header {
   background: white;
   border-radius: 12px;
@@ -184,6 +197,15 @@
 
 .btn-success:hover {
   background: #2f855a;
+}
+
+.btn-warning {
+  background: #ed8936;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #dd6b20;
 }
 
 .evidence-section {

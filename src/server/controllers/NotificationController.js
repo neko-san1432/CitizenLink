@@ -47,6 +47,44 @@ class NotificationController {
   }
 
   /**
+   * Get all notifications for user (paginated)
+   */
+  async getAllNotifications(req, res) {
+    try {
+      const userId = req.user.id;
+      const { limit = 20, offset = 0 } = req.query;
+
+      const { data: notifications, error } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('[NOTIFICATION] Error fetching all notifications:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch notifications'
+        });
+      }
+
+      res.json({
+        success: true,
+        notifications: notifications || [],
+        count: notifications?.length || 0
+      });
+
+    } catch (error) {
+      console.error('[NOTIFICATION] Get all notifications error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch notifications'
+      });
+    }
+  }
+
+  /**
    * Get notification count for user
    */
   async getNotificationCount(req, res) {

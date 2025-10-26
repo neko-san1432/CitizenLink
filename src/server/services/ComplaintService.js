@@ -276,7 +276,8 @@ class ComplaintService {
       throw new Error('Access denied');
     }
 
-    return complaint;
+    // Return normalized complaint data for frontend compatibility
+    return normalizeComplaintData(complaint);
   }
 
   async getUserComplaints(userId, options = {}) {
@@ -1065,6 +1066,151 @@ class ComplaintService {
         success: false,
         error: error.message
       };
+    }
+  }
+
+  /**
+   * Get complaint evidence files from Supabase storage
+   * @param {string} complaintId - Complaint ID
+   * @param {Object} user - User object requesting the evidence
+   * @returns {Promise<Array>} Array of evidence files with signed URLs
+   */
+  async getComplaintEvidence(complaintId, user) {
+    try {
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
+
+      console.log(`[COMPLAINT_SERVICE] Getting evidence for complaint ${complaintId}`);
+
+      // First, verify the user has access to this complaint
+      console.log(`[COMPLAINT_SERVICE] Querying complaint with ID: ${complaintId}`);
+      const { data: complaint, error: complaintError } = await supabase
+        .from('complaints')
+        .select('id, submitted_by, department_r, assigned_coordinator_id')
+        .eq('id', complaintId)
+        .single();
+
+      console.log(`[COMPLAINT_SERVICE] Complaint query result:`, { 
+        complaint, 
+        error: complaintError,
+        hasComplaint: !!complaint,
+        hasError: !!complaintError 
+      });
+
+      if (complaintError || !complaint) {
+        console.error(`[COMPLAINT_SERVICE] Complaint not found:`, complaintError);
+        // Return empty array instead of throwing error - complaint might have been deleted
+        console.log(`[COMPLAINT_SERVICE] Returning empty evidence array for non-existent complaint`);
+        return [];
+      }
+
+      // Check if user has access to this complaint
+      const hasAccess = await this.checkComplaintAccess(complaint, user);
+      if (!hasAccess) {
+        throw new Error('Access denied to complaint evidence');
+      }
+
+      // List files in the complaint-evidence bucket for this complaint
+      const bucketName = 'complaint-evidence';
+      const folderPath = `${complaintId}/`;
+
+      const { data: files, error: listError } = await supabase.storage
+        .from(bucketName)
+        .list(folderPath);
+
+      if (listError) {
+        console.error('[COMPLAINT_SERVICE] Error listing files:', listError);
+        throw new Error('Failed to list evidence files');
+      }
+
+      if (!files || files.length === 0) {
+        return [];
+      }
+
+      // Generate signed URLs for each file
+      const evidenceFiles = await Promise.all(
+        files.map(async (file) => {
+          const filePath = `${folderPath}${file.name}`;
+          
+          const { data: signedUrl, error: urlError } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+          if (urlError) {
+            console.error(`[COMPLAINT_SERVICE] Error creating signed URL for ${filePath}:`, urlError);
+            return null;
+          }
+
+          return {
+            name: file.name,
+            size: file.metadata?.size || 0,
+            url: signedUrl.signedUrl,
+            path: filePath,
+            lastModified: file.updated_at || file.created_at
+          };
+        })
+      );
+
+      // Filter out any null results (files that failed to get signed URLs)
+      return evidenceFiles.filter(file => file !== null);
+
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error getting complaint evidence:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if user has access to a complaint
+   * @param {Object} complaint - Complaint object
+   * @param {Object} user - User object
+   * @returns {Promise<boolean>} Whether user has access
+   */
+  async checkComplaintAccess(complaint, user) {
+    try {
+      // Extract user details from the user object passed from auth middleware
+      const userRole = user.role || user.roleType;
+      const userDepartment = user.department || user.departmentCode;
+
+      console.log('[COMPLAINT_SERVICE] Access check debug:', {
+        userId: user.id,
+        userRole,
+        userDepartment,
+        complaintDepartmentR: complaint.department_r,
+        complaintSubmittedBy: complaint.submitted_by,
+        hasAccess: complaint.department_r && complaint.department_r.includes(userDepartment)
+      });
+
+      // Citizens can only access their own complaints
+      if (userRole === 'citizen') {
+        return complaint.submitted_by === user.id;
+      }
+
+      // Coordinators can access all complaints
+      if (userRole === 'complaint-coordinator') {
+        return true;
+      }
+
+      // LGU admins can access complaints assigned to their department
+      if (userRole === 'lgu-admin') {
+        return complaint.department_r && complaint.department_r.includes(userDepartment);
+      }
+
+      // LGU officers can access complaints assigned to their department
+      if (userRole === 'lgu-officer') {
+        return complaint.department_r && complaint.department_r.includes(userDepartment);
+      }
+
+      // HR and Super Admin can access all complaints
+      if (userRole === 'hr' || userRole === 'super-admin') {
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error checking complaint access:', error);
+      return false;
     }
   }
 }

@@ -76,8 +76,8 @@ function normalizeComplaintData(complaint) {
   normalized.primary_department = getPrimaryDepartment(complaint.department_r);
   // normalized.secondary_departments = getSecondaryDepartments(complaint.department_r); // Removed - derived from department_r
   
-  // Derive status from workflow_status - removed as status field doesn't exist in database
-  // normalized.status = getStatusFromWorkflow(complaint.workflow_status);
+  // Derive status from workflow_status for frontend compatibility
+  normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   
   // Ensure department_r is properly formatted
   if (!Array.isArray(normalized.department_r)) {

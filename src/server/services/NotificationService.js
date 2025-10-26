@@ -44,7 +44,7 @@ class NotificationService {
   }
 
   /**
-  * Create a new notification
+  * Create a new notification with deduplication
   * Supports both object and individual parameter syntax
   * @param {string|object} userIdOrOptions - User ID or options object
   * @param {string} type - Notification type from NOTIFICATION_TYPES
@@ -69,7 +69,8 @@ class NotificationService {
           priority: opts.priority,
           link: opts.link,
           metadata: opts.metadata,
-          icon: opts.icon
+          icon: opts.icon,
+          deduplicate: opts.deduplicate !== false // Default to true
         };
       } else {
         // Individual parameter syntax: createNotification(userId, type, title, message, options)
@@ -84,8 +85,28 @@ class NotificationService {
         priority = NOTIFICATION_PRIORITY.INFO,
         link = null,
         metadata = {},
-        icon = NOTIFICATION_ICONS[notifType] || '📢'
+        icon = NOTIFICATION_ICONS[notifType] || '📢',
+        deduplicate = true
       } = notifOptions;
+
+      // Check for duplicates if deduplication is enabled
+      if (deduplicate) {
+        const duplicateCheck = await this.checkDuplicateNotification(
+          userId, 
+          notifType, 
+          notifTitle, 
+          metadata
+        );
+        
+        if (duplicateCheck.exists) {
+          console.log(`[NOTIFICATION] Duplicate notification prevented for user ${userId}: ${notifTitle}`);
+          return {
+            success: true,
+            notification: duplicateCheck.notification,
+            duplicate: true
+          };
+        }
+      }
 
       const { data, error } = await this.supabase
         .from('notification')
@@ -104,11 +125,12 @@ class NotificationService {
 
       if (error) throw error;
 
-      // console.log removed for security
+      console.log(`[NOTIFICATION] Created notification for user ${userId}: ${notifTitle}`);
 
       return {
         success: true,
-        notification: data
+        notification: data,
+        duplicate: false
       };
     } catch (error) {
       console.error('[NOTIFICATION] Create error:', error);
@@ -117,37 +139,144 @@ class NotificationService {
   }
 
   /**
-  * Create multiple notifications (bulk)
-  * @param {Array} notifications - Array of notification objects
-  */
-  async createBulkNotifications(notifications) {
+   * Check for duplicate notifications
+   * @param {string} userId - User ID
+   * @param {string} type - Notification type
+   * @param {string} title - Notification title
+   * @param {object} metadata - Notification metadata
+   * @returns {object} Duplicate check result
+   */
+  async checkDuplicateNotification(userId, type, title, metadata = {}) {
     try {
-      const notificationsData = notifications.map(notif => ({
-        user_id: notif.userId,
-        type: notif.type,
-        priority: notif.priority || NOTIFICATION_PRIORITY.INFO,
-        title: notif.title,
-        message: notif.message,
-        icon: notif.icon || NOTIFICATION_ICONS[notif.type] || '📢',
-        link: notif.link || null,
-        metadata: notif.metadata || {}
-      }));
-
       const { data, error } = await this.supabase
         .from('notification')
-        .insert(notificationsData)
-        .select();
+        .select('*')
+        .eq('user_id', userId)
+        .eq('type', type)
+        .eq('title', title)
+        .eq('read', false) // Only check unread notifications
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Within last 24 hours
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (error) throw error;
-
-      // console.log removed for security
+      if (error) {
+        console.warn('[NOTIFICATION] Duplicate check error:', error.message);
+        return { exists: false };
+      }
 
       return {
-        success: true,
-        notifications: data
+        exists: data && data.length > 0,
+        notification: data && data.length > 0 ? data[0] : null
       };
     } catch (error) {
+      console.warn('[NOTIFICATION] Duplicate check error:', error.message);
+      return { exists: false };
+    }
+  }
+
+  /**
+  * Create multiple notifications (bulk) with deduplication
+  * @param {Array} notifications - Array of notification objects
+  * @param {boolean} deduplicate - Whether to check for duplicates (default: true)
+  */
+  async createBulkNotifications(notifications, deduplicate = true) {
+    try {
+      if (!deduplicate) {
+        // Simple bulk insert without deduplication
+        const notificationsData = notifications.map(notif => ({
+          user_id: notif.userId,
+          type: notif.type,
+          priority: notif.priority || NOTIFICATION_PRIORITY.INFO,
+          title: notif.title,
+          message: notif.message,
+          icon: notif.icon || NOTIFICATION_ICONS[notif.type] || '📢',
+          link: notif.link || null,
+          metadata: notif.metadata || {}
+        }));
+
+        const { data, error } = await this.supabase
+          .from('notification')
+          .insert(notificationsData)
+          .select();
+
+        if (error) throw error;
+
+        console.log(`[NOTIFICATION] Created ${data.length} bulk notifications`);
+
+        return {
+          success: true,
+          notifications: data,
+          count: data.length,
+          duplicates: 0
+        };
+      }
+
+      // With deduplication - process each notification individually
+      const results = {
+        success: true,
+        notifications: [],
+        duplicates: 0,
+        errors: 0
+      };
+
+      for (const notif of notifications) {
+        try {
+          const result = await this.createNotification({
+            userId: notif.userId,
+            type: notif.type,
+            title: notif.title,
+            message: notif.message,
+            priority: notif.priority,
+            link: notif.link,
+            metadata: notif.metadata,
+            icon: notif.icon,
+            deduplicate: true
+          });
+
+          if (result.duplicate) {
+            results.duplicates++;
+          } else {
+            results.notifications.push(result.notification);
+          }
+        } catch (error) {
+          console.warn(`[NOTIFICATION] Failed to create notification for user ${notif.userId}:`, error.message);
+          results.errors++;
+        }
+      }
+
+      console.log(`[NOTIFICATION] Bulk notification results: ${results.notifications.length} created, ${results.duplicates} duplicates, ${results.errors} errors`);
+
+      return results;
+    } catch (error) {
       console.error('[NOTIFICATION] Bulk create error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Notify multiple users about the same event with deduplication
+   * @param {Array} userIds - Array of user IDs
+   * @param {string} type - Notification type
+   * @param {string} title - Notification title
+   * @param {string} message - Notification message
+   * @param {object} options - Additional options
+   * @returns {object} Notification results
+   */
+  async notifyMultipleUsers(userIds, type, title, message, options = {}) {
+    try {
+      console.log(`[NOTIFICATION] Notifying ${userIds.length} users: ${title}`);
+
+      const notifications = userIds.map(userId => ({
+        userId,
+        type,
+        title,
+        message,
+        ...options
+      }));
+
+      return await this.createBulkNotifications(notifications, true);
+    } catch (error) {
+      console.error('[NOTIFICATION] Notify multiple users error:', error);
       throw error;
     }
   }
