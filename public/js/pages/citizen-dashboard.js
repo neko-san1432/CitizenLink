@@ -144,17 +144,22 @@ function renderMyComplaints(complaints) {
         <div class="empty-state-icon">📝</div>
         <h3>No Complaints Yet</h3>
         <p>You haven't filed any complaints yet. Click "File Complaint" to get started!</p>
-        <a href="/citizen/fileComplaint" class="btn btn-primary">File Your First Complaint</a>
+        <a href="/fileComplaint" class="btn btn-primary">File Your First Complaint</a>
       </div>
     `;
     return;
   }
 
-  const html = complaints.map(complaint => `
+  const html = complaints.map(complaint => {
+    const status = complaint.workflow_status || complaint.status || 'new';
+    const statusClass = status.toLowerCase().replace(/[_\s]/g, '-');
+    const statusLabel = formatStatus(status);
+    
+    return `
     <div class="complaint-item" onclick="viewComplaintDetail('${complaint.id}')">
       <div class="complaint-header">
         <h4 class="complaint-title">${escapeHtml(complaint.title)}</h4>
-        <span class="complaint-status status-${complaint.status}">${complaint.status}</span>
+        <span class="complaint-status status-${statusClass}">${statusLabel}</span>
       </div>
       <div class="complaint-meta">
         <span class="complaint-type">${escapeHtml(complaint.type || complaint.category)}</span>
@@ -162,12 +167,13 @@ function renderMyComplaints(complaints) {
       </div>
       <div class="complaint-progress">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: ${getProgressWidth(complaint.status)}%"></div>
+          <div class="progress-fill" style="width: ${getProgressWidth(status)}%"></div>
         </div>
-        <span class="progress-text">${getProgressText(complaint.status)}</span>
+        <span class="progress-text">${getProgressText(status)}</span>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   container.innerHTML = html;
 }
@@ -291,24 +297,47 @@ function setupEventListeners() {
 /**
  * Helper functions
  */
+function formatStatus(status) {
+  if (!status) return 'New';
+  return status.split('_').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+}
+
 function getProgressWidth(status) {
   const progressMap = {
+    'new': 20,
+    'assigned': 40,
+    'in_progress': 75,
+    'pending_approval': 85,
+    'completed': 100,
+    'cancelled': 0,
     'submitted': 25,
     'under_review': 50,
-    'in_progress': 75,
-    'resolved': 100,
+    'resolved': 90,
+    'waiting_for_responders': 90,
+    'waiting_for_complainant': 90,
+    'confirmed': 100,
     'closed': 100
   };
-  return progressMap[status] || 0;
+  return progressMap[status] || 20;
 }
 
 function getProgressText(status) {
   const textMap = {
+    'new': 'New Complaint',
+    'assigned': 'Assigned to Coordinator',
+    'in_progress': 'Being Processed by Officers',
+    'pending_approval': 'Pending Approval',
+    'completed': 'Completed - Awaiting Your Confirmation',
+    'cancelled': 'Cancelled',
     'submitted': 'Submitted',
     'under_review': 'Under Review',
-    'in_progress': 'In Progress',
     'resolved': 'Resolved',
-    'closed': 'Closed'
+    'closed': 'Closed',
+    'waiting_for_responders': 'Waiting for responders\' confirmation',
+    'waiting_for_complainant': 'Waiting for your confirmation',
+    'confirmed': 'Confirmed by you - Resolution Complete'
   };
   return textMap[status] || 'Unknown';
 }
@@ -398,7 +427,7 @@ window.viewAllComplaints = function() {
 };
 
 window.viewComplaintDetail = function(complaintId) {
-  window.location.href = `/complaint-details?id=${complaintId}`;
+  window.location.href = `/complaint-details/${complaintId}`;
 };
 
 window.refreshNews = async function() {

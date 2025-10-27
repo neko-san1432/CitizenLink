@@ -7,11 +7,20 @@ const supabase = Database.getClient();
 
 const authenticateUser = async (req, res, next) => {
   try {
+    console.log('[AUTH] authenticateUser called for path:', req.path);
+
     // Extract token from cookies or headers
     const token =
       req.cookies?.sb_access_token ||
       req.cookies?.sb_access_token_debug ||
       req.headers.authorization?.replace('Bearer ', '');
+
+    console.log('[AUTH] Token extraction result:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      hasCookie: !!(req.cookies?.sb_access_token || req.cookies?.sb_access_token_debug),
+      hasAuthHeader: !!req.headers.authorization
+    });
 
     if (!token) {
       if (process.env.NODE_ENV === 'development') {
@@ -31,6 +40,14 @@ const authenticateUser = async (req, res, next) => {
       data: { user: tokenUser },
       error,
     } = await supabase.auth.getUser(token);
+
+    console.log('[AUTH] Token validation result:', {
+      hasUser: !!tokenUser,
+      userId: tokenUser?.id,
+      userEmail: tokenUser?.email,
+      hasError: !!error,
+      errorMessage: error?.message
+    });
 
     if (error || !tokenUser) {
       if (process.env.NODE_ENV === 'development') {
@@ -195,6 +212,33 @@ const requireRole = (allowedRoles) => {
     });
 
     if (!hasPermission) {
+      console.log('[AUTH] ❌ Access denied:', {
+        userRole,
+        baseRole,
+        allowedRoles,
+        path: req.path,
+        originalUrl: req.originalUrl,
+        method: req.method
+      });
+      
+      // Check if this is an API request - look at both path and originalUrl
+      const isApiRequest = req.path.startsWith('/api/') || 
+                           req.originalUrl.startsWith('/api/') ||
+                           req.url.startsWith('/api/');
+      
+      if (isApiRequest) {
+        console.log('[AUTH] Returning JSON error for API request');
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied. You do not have permission to access this resource.',
+          debug: {
+            userRole,
+            allowedRoles,
+            path: req.path
+          }
+        });
+      }
+      
       return res.redirect('/login?message=' + encodeURIComponent('Access denied. You do not have permission to access this resource.') + '&type=error');
     }
 

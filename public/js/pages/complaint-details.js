@@ -23,7 +23,7 @@ class ComplaintDetails {
     async init() {
         try {
             // Get complaint ID from URL - try both path parameter and query parameter
-            const pathParts = window.location.pathname.split('/');
+                const pathParts = window.location.pathname.split('/');
             let complaintId = pathParts[pathParts.length - 1];
             
             // If the last part is 'complaint-details', try query parameter
@@ -68,7 +68,8 @@ class ComplaintDetails {
             }
 
             const data = await response.json();
-            return data.role;
+            console.log('getUserRole API response:', data);
+            return data.data.role;
         } catch (error) {
             console.error('Error getting user role:', error);
             return 'citizen'; // Default fallback
@@ -113,49 +114,102 @@ class ComplaintDetails {
     }
 
     async loadComplaintEvidence() {
+        // Skip evidence loading if we're getting SSL errors to prevent infinite redirects
+        if (window.location.protocol === 'https:' && window.location.hostname === 'localhost') {
+            console.log('Skipping evidence loading due to HTTPS redirect issue');
+            this.complaint.attachments = [];
+            return;
+        }
+
         try {
-            const response = await fetch(`/api/complaints/${this.complaintId}/evidence`, {
+            // Use absolute HTTP URL to avoid any protocol issues
+            const baseUrl = 'http://localhost:3000';
+            const response = await fetch(`${baseUrl}/api/complaints/${this.complaintId}/evidence`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                credentials: 'include'
+                credentials: 'include',
+                mode: 'cors'
             });
 
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
                     this.complaint.attachments = data.data || [];
+                    console.log('Evidence loaded successfully:', this.complaint.attachments.length, 'files');
                 } else {
+                    console.log('Evidence API returned error:', data.message);
+                    this.complaint.attachments = [];
+                }
+            } else {
+                console.log('Evidence API request failed with status:', response.status);
+                this.complaint.attachments = [];
+            }
+        } catch (error) {
+            console.error('Error loading complaint evidence:', error);
+            
+            // If the error is due to HTTPS redirect or SSL issues, try with relative URL
+            if (error.message.includes('SSL') || error.message.includes('HTTPS') || error.message.includes('ERR_SSL_PROTOCOL_ERROR')) {
+                try {
+                    console.log('Attempting fallback with relative URL...');
+                    const response = await fetch(`/api/complaints/${this.complaintId}/evidence`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            this.complaint.attachments = data.data || [];
+                            console.log('Fallback request successful');
+                        } else {
+                            this.complaint.attachments = [];
+                        }
+                    } else {
+                        this.complaint.attachments = [];
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback request also failed:', fallbackError);
                     this.complaint.attachments = [];
                 }
             } else {
                 this.complaint.attachments = [];
             }
-        } catch (error) {
-            console.error('Error loading complaint evidence:', error);
-            this.complaint.attachments = [];
         }
     }
 
-    renderComplaintDetails() {
+    async renderComplaintDetails() {
         const detailsContainer = document.getElementById('complaint-details');
         if (!detailsContainer) return;
 
         // Populate basic complaint info
         document.getElementById('complaint-title').textContent = this.complaint.title || 'Untitled Complaint';
         document.getElementById('complaint-id').textContent = `#${this.complaint.id}`;
-        document.getElementById('complaint-status').textContent = this.complaint.status || 'Unknown';
-        document.getElementById('complaint-status').className = `complaint-status status-${(this.complaint.status || 'pending').toLowerCase().replace(' ', '-')}`;
+
+        // Use confirmation_status if available, otherwise fall back to legacy status
+        const displayStatus = this.complaint.confirmation_status || this.complaint.status || 'Unknown';
+        const statusClass = this.getStatusClass(displayStatus);
+        document.getElementById('complaint-status').textContent = this.getStatusDisplayText(displayStatus);
+        document.getElementById('complaint-status').className = `complaint-status ${statusClass}`;
+
         document.getElementById('complaint-priority').textContent = this.complaint.priority || 'Medium';
         document.getElementById('complaint-priority').className = `complaint-priority priority-${(this.complaint.priority || 'medium').toLowerCase()}`;
         document.getElementById('complaint-description').textContent = this.complaint.descriptive_su || 'No description provided';
 
+        // Display assignment progress if available
+        this.displayAssignmentProgress();
+
+        // Load and display confirmation message
+        await this.loadConfirmationMessage();
+
         // Populate location
         this.renderLocation();
-
-        // Populate departments
-        this.renderDepartments();
 
         // Populate attachments
         this.renderAttachments();
@@ -165,6 +219,170 @@ class ComplaintDetails {
 
         // Show the details
         detailsContainer.style.display = 'block';
+    }
+
+    getStatusClass(status) {
+        const statusMap = {
+            'pending': 'status-pending',
+            'waiting_for_responders': 'status-warning',
+            'waiting_for_complainant': 'status-info',
+            'confirmed': 'status-success',
+            'disputed': 'status-danger',
+            'in progress': 'status-info',
+            'resolved': 'status-success',
+            'cancelled': 'status-secondary',
+            'rejected': 'status-danger'
+        };
+
+        return statusMap[status] || 'status-pending';
+    }
+
+    getStatusDisplayText(status) {
+        const displayMap = {
+            'pending': 'Pending',
+            'waiting_for_responders': 'Waiting for LGU Responders',
+            'waiting_for_complainant': 'Ready for Your Confirmation',
+            'confirmed': 'Resolution Confirmed by You',
+            'disputed': 'Disputed',
+            'in progress': 'In Progress',
+            'resolved': 'Resolved',
+            'cancelled': 'Cancelled',
+            'rejected': 'Rejected',
+            'new': 'New Complaint',
+            'assigned': 'Assigned to Coordinator',
+            'completed': 'Completed - Awaiting Confirmation'
+        };
+
+        return displayMap[status] || status || 'Unknown';
+    }
+
+    displayAssignmentProgress() {
+        const progress = this.complaint.assignment_progress;
+        if (!progress || progress.totalAssignments === 0) {
+            return; // No assignments to show progress for
+        }
+
+        // Find or create assignment progress element
+        let progressElement = document.getElementById('assignment-progress');
+        if (!progressElement) {
+            const statusElement = document.getElementById('complaint-status');
+            if (statusElement && statusElement.parentNode) {
+                progressElement = document.createElement('div');
+                progressElement.id = 'assignment-progress';
+                progressElement.className = 'assignment-progress';
+                statusElement.parentNode.insertBefore(progressElement, statusElement.nextSibling);
+            }
+        }
+
+        if (progressElement) {
+            const isCompleted = progress.completedAssignments === progress.totalAssignments;
+            const progressBar = `
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-text">${progress.progressText}</span>
+                        <span class="progress-percentage">${progress.progressPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${isCompleted ? 'completed' : ''}"
+                             style="width: ${progress.progressPercentage}%"></div>
+                    </div>
+                </div>
+            `;
+            progressElement.innerHTML = progressBar;
+        }
+    }
+
+    async loadConfirmationMessage() {
+        try {
+            const response = await fetch(`/api/complaints/${this.complaintId}/confirmation-message`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data.message) {
+                    this.displayConfirmationMessage(data.data.message);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading confirmation message:', error);
+        }
+    }
+
+    shouldShowConfirmationButton() {
+        // Match backend validation logic exactly
+        // Show confirmation button ONLY after coordinator has assigned to officers
+
+        // 1. Check if citizen already confirmed
+        if (this.complaint.confirmed_by_citizen) {
+            return false;
+        }
+
+        // 2. Check workflow status - show button after coordinator assigns to officers
+        // The confirm resolution should appear as soon as coordinator assigns the complaint
+        const coordinatorAssignedStatuses = ['assigned', 'in_progress', 'pending_approval', 'completed'];
+        if (!coordinatorAssignedStatuses.includes(this.complaint.workflow_status)) {
+            return false;
+        }
+
+        // 3. Check confirmation status - prevent confirmation when pending
+        if (this.complaint.confirmation_status === 'pending') {
+            return false;
+        }
+
+        // 4. Check if confirmation status allows confirmation
+        const validConfirmationStatuses = ['waiting_for_complainant', 'confirmed', 'disputed'];
+        if (!validConfirmationStatuses.includes(this.complaint.confirmation_status)) {
+            return false;
+        }
+
+        // 5. Additional check: if assignments exist and all assignments are complete
+        const progress = this.complaint.assignment_progress;
+        if (progress && progress.totalAssignments > 0) {
+            if (progress.completedAssignments !== progress.totalAssignments) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    displayConfirmationMessage(message) {
+        // Find or create confirmation status element
+        let confirmationElement = document.getElementById('confirmation-status');
+        if (!confirmationElement) {
+            // Create confirmation status element after the complaint status
+            const statusElement = document.getElementById('complaint-status');
+            if (statusElement && statusElement.parentNode) {
+                confirmationElement = document.createElement('div');
+                confirmationElement.id = 'confirmation-status';
+                confirmationElement.className = 'confirmation-status';
+                statusElement.parentNode.insertBefore(confirmationElement, statusElement.nextSibling);
+            }
+        }
+
+        if (confirmationElement) {
+            confirmationElement.textContent = message;
+
+            // Add appropriate styling based on message content and complaint status
+            let cssClass = 'confirmation-status';
+
+            if (message.includes('Please confirm') || message.includes('Waiting for your')) {
+                cssClass += ' action-required';
+            } else if (message.includes('confirmed') || message.includes('Completed')) {
+                cssClass += ' confirmed';
+            } else if (message.includes('Waiting for')) {
+                cssClass += ' waiting';
+            } else {
+                cssClass += ' info';
+            }
+
+            confirmationElement.className = cssClass;
+        }
     }
 
     renderLocation() {
@@ -225,13 +443,25 @@ class ComplaintDetails {
                 this.map = map;
 
                 // Add route controls for LGU users
-                this.addRouteControls(map);
+                // this.addRouteControls(map);
 
-                // Try to get user location and show route (non-blocking)
-                // If geolocation fails, the map will still show the complaint location
-                setTimeout(() => {
-                    this.getUserLocationAndShowRoute(map);
-                }, 500);
+        // Try to get user location and show route (non-blocking)
+        // If geolocation fails, the map will still show the complaint location
+        // setTimeout(() => {
+        //     this.getUserLocationAndShowRoute(map);
+        // }, 1000);
+
+        // Show a helpful message about geolocation after a delay
+        // setTimeout(() => {
+        //     if (!this.userLocation) {
+        //         console.log('Geolocation not available - map will show complaint location only');
+        //         // Show a subtle notification that geolocation is not available
+        //         const routeBtn = document.getElementById('get-route-btn');
+        //         if (routeBtn && routeBtn.textContent === 'Get Route') {
+        //             routeBtn.title = 'Click to try getting your location for route calculation';
+        //         }
+        //     }
+        // }, 3000);
 
             } catch (error) {
                 console.error('Error initializing map:', error);
@@ -247,24 +477,33 @@ class ComplaintDetails {
             return;
         }
 
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+            console.log('Geolocation not supported, skipping route controls');
+            return;
+        }
+
         // Create control container
         const routeControlContainer = L.control({ position: 'topright' });
         
         routeControlContainer.onAdd = function(map) {
             const div = L.DomUtil.create('div', 'route-controls');
             div.innerHTML = `
-                <div class="route-control-panel">
-                    <h4>Route Options</h4>
-                    <button id="get-route-btn" class="route-btn">
-                        <i class="icon-navigation"></i> Get Route
-                    </button>
-                    <button id="clear-route-btn" class="route-btn" style="display: none;">
-                        <i class="icon-close"></i> Clear Route
-                    </button>
-                    <div id="route-info" class="route-info" style="display: none;">
-                        <p id="route-distance"></p>
-                        <p id="route-duration"></p>
-                    </div>
+                     <div class="route-control-panel">
+                         <h4>Route Options</h4>
+                         <button id="get-route-btn" class="route-btn">
+                             <i class="icon-navigation"></i> Get Route
+                         </button>
+                         <button id="clear-route-btn" class="route-btn" style="display: none;">
+                             <i class="icon-close"></i> Clear Route
+                         </button>
+                         <div id="route-info" class="route-info" style="display: none;">
+                             <p id="route-distance"></p>
+                             <p id="route-duration"></p>
+                         </div>
+                         <div id="manual-location" class="manual-location" style="display: none;">
+                             <p>Location not available. You can still view the complaint location on the map.</p>
+                         </div>
                 </div>
             `;
             return div;
@@ -272,18 +511,26 @@ class ComplaintDetails {
 
         routeControlContainer.addTo(map);
 
-        // Add event listeners
-        document.getElementById('get-route-btn').addEventListener('click', () => {
-            this.getUserLocationAndShowRoute(map);
-        });
-
-        document.getElementById('clear-route-btn').addEventListener('click', () => {
-            this.clearRoute();
-        });
+        // Add event listeners with error handling
+        const getRouteBtn = document.getElementById('get-route-btn');
+        const clearRouteBtn = document.getElementById('clear-route-btn');
+        
+        if (getRouteBtn) {
+            getRouteBtn.addEventListener('click', () => {
+                this.getUserLocationAndShowRoute(map);
+            });
+        }
+        
+        if (clearRouteBtn) {
+            clearRouteBtn.addEventListener('click', () => {
+                this.clearRoute();
+            });
+        }
     }
 
     getUserLocationAndShowRoute(map) {
         if (!navigator.geolocation) {
+            console.log('Geolocation is not supported by this browser');
             showToast('Geolocation is not supported by this browser.', 'error');
             return;
         }
@@ -297,8 +544,39 @@ class ComplaintDetails {
             getRouteBtn.disabled = true;
         }
 
+        // Check if geolocation is available and not blocked
+        if (navigator.permissions) {
+            navigator.permissions.query({name: 'geolocation'}).then((result) => {
+                if (result.state === 'denied') {
+                    console.log('Geolocation permission denied');
+                    showToast('Location access is denied. Please enable location permissions in your browser settings.', 'error');
+                    if (getRouteBtn) {
+                        getRouteBtn.textContent = 'Get Route';
+                        getRouteBtn.disabled = false;
+                    }
+                    
+                    // Show manual location message
+                    const manualLocation = document.getElementById('manual-location');
+                    if (manualLocation) {
+                        manualLocation.style.display = 'block';
+                    }
+                    return;
+                }
+                this.attemptGeolocation(map, getRouteBtn, clearRouteBtn, routeInfo);
+            }).catch(() => {
+                // Fallback if permissions API is not supported
+                this.attemptGeolocation(map, getRouteBtn, clearRouteBtn, routeInfo);
+            });
+        } else {
+            // Fallback if permissions API is not supported
+            this.attemptGeolocation(map, getRouteBtn, clearRouteBtn, routeInfo);
+        }
+    }
+
+    attemptGeolocation(map, getRouteBtn, clearRouteBtn, routeInfo) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                console.log('Location obtained successfully');
                 this.userLocation = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
@@ -313,6 +591,7 @@ class ComplaintDetails {
                 if (clearRouteBtn) clearRouteBtn.style.display = 'inline-block';
                 if (routeInfo) routeInfo.style.display = 'block';
 
+                showToast('Location obtained successfully!', 'success');
             },
             (error) => {
                 console.error('Error getting location:', error);
@@ -320,16 +599,16 @@ class ComplaintDetails {
                 let errorMessage = 'Unable to get your location. ';
                 switch(error.code) {
                     case error.PERMISSION_DENIED:
-                        errorMessage += 'Location access was denied. Please enable location permissions in your browser settings.';
+                        errorMessage += 'Location access was denied. Please enable location permissions in your browser settings and try again.';
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        errorMessage += 'Location information is unavailable.';
+                        errorMessage += 'Location information is unavailable. This might be due to GPS being disabled, poor signal, or browser security policies.';
                         break;
                     case error.TIMEOUT:
                         errorMessage += 'Location request timed out. Please try again.';
                         break;
                     default:
-                        errorMessage += 'An unknown error occurred.';
+                        errorMessage += 'An unknown error occurred. Please try again.';
                         break;
                 }
                 
@@ -339,11 +618,17 @@ class ComplaintDetails {
                     getRouteBtn.textContent = 'Get Route';
                     getRouteBtn.disabled = false;
                 }
+                
+                // Show manual location message
+                const manualLocation = document.getElementById('manual-location');
+                if (manualLocation) {
+                    manualLocation.style.display = 'block';
+                }
             },
             {
-                enableHighAccuracy: true,
-                timeout: 15000, // Increased timeout
-                maximumAge: 300000 // 5 minutes
+                enableHighAccuracy: false, // Changed to false for better compatibility
+                timeout: 10000, // Reduced timeout
+                maximumAge: 60000 // 1 minute
             }
         );
     }
@@ -448,33 +733,6 @@ class ComplaintDetails {
         if (routeInfo) routeInfo.style.display = 'none';
     }
 
-    renderDepartments() {
-        const departmentsContainer = document.getElementById('assigned-departments');
-        if (!departmentsContainer) return;
-
-        // Hide departments section for LGU officers
-        if (this.userRole === 'lgu') {
-            departmentsContainer.style.display = 'none';
-            return;
-        }
-
-        const departments = this.complaint.assigned_departments || this.complaint.department_r || [];
-        const preferredDepartments = this.complaint.preferred_departments || [];
-
-        if (departments.length === 0) {
-            departmentsContainer.innerHTML = '<p>No departments assigned</p>';
-            return;
-        }
-
-        departmentsContainer.innerHTML = departments.map(dept => {
-            const isPreferred = preferredDepartments.includes(dept);
-            return `
-                <div class="department-badge ${isPreferred ? 'preferred' : ''}">
-                    ${dept}
-                </div>
-            `;
-        }).join('');
-    }
 
     renderAttachments() {
         const attachmentsContainer = document.getElementById('complaint-attachments');
@@ -482,17 +740,73 @@ class ComplaintDetails {
 
         const attachments = this.complaint.attachments || [];
 
+        // Separate attachments by type
+        const initialEvidence = attachments.filter(att => att.type === 'initial');
+        const completionEvidence = attachments.filter(att => att.type === 'completion');
+
         if (attachments.length === 0) {
             attachmentsContainer.innerHTML = '<p>No attachments</p>';
             return;
         }
 
-        attachmentsContainer.innerHTML = attachments.map(attachment => `
-            <a href="${attachment.url}" class="attachment-item" target="_blank">
-                <span class="attachment-icon">📎</span>
-                <span>${attachment.name || 'Attachment'}</span>
-            </a>
-        `).join('');
+        let html = '';
+
+        // Render Initial Evidence section
+        if (initialEvidence.length > 0) {
+            html += `
+                <div class="evidence-section">
+                    <h4 class="evidence-type-title">📎 Initial Evidence (Submitted with Complaint)</h4>
+                    <div class="evidence-list">
+                        ${initialEvidence.map(attachment => `
+                            <a href="${attachment.url}" class="attachment-item" target="_blank" rel="noopener noreferrer">
+                                <span class="attachment-icon">📎</span>
+                                <span class="attachment-name">${attachment.name || 'Attachment'}</span>
+                                <span class="attachment-size">${this.formatFileSize(attachment.size || 0)}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Completion Evidence section
+        if (completionEvidence.length > 0) {
+            html += `
+                <div class="evidence-section">
+                    <h4 class="evidence-type-title">✅ Completion Evidence (Uploaded by Officers/Admins)</h4>
+                    <div class="evidence-list">
+                        ${completionEvidence.map(attachment => `
+                            <a href="${attachment.url}" class="attachment-item completion-evidence" target="_blank" rel="noopener noreferrer">
+                                <span class="attachment-icon">✅</span>
+                                <span class="attachment-name">${attachment.name || 'Attachment'}</span>
+                                <span class="attachment-size">${this.formatFileSize(attachment.size || 0)}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // If no attachments categorized, show all
+        if (html === '') {
+            html = attachments.map(attachment => `
+                <a href="${attachment.url}" class="attachment-item" target="_blank" rel="noopener noreferrer">
+                    <span class="attachment-icon">📎</span>
+                    <span class="attachment-name">${attachment.name || 'Attachment'}</span>
+                    <span class="attachment-size">${this.formatFileSize(attachment.size || 0)}</span>
+                </a>
+            `).join('');
+        }
+
+        attachmentsContainer.innerHTML = html;
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
     renderTimeline() {
@@ -535,7 +849,7 @@ class ComplaintDetails {
             });
         }
 
-        if (this.complaint.status === 'assigned') {
+        if (this.complaint.status === 'assigned' && this.userRole !== 'lgu') {
             timeline.push({
                 icon: '🏢',
                 title: 'Assigned to Department',
@@ -548,7 +862,7 @@ class ComplaintDetails {
             timeline.push({
                 icon: '👷',
                 title: 'Work in Progress',
-                description: 'Department is working on the complaint',
+                description: this.userRole === 'lgu' ? 'You are working on this complaint' : 'Department is working on the complaint',
                 date: this.formatDate(this.complaint.updated_at)
             });
         }
@@ -557,7 +871,7 @@ class ComplaintDetails {
             timeline.push({
                 icon: '✅',
                 title: 'Resolved',
-                description: 'Complaint has been resolved by department',
+                description: this.userRole === 'lgu' ? 'You have resolved this complaint' : 'Complaint has been resolved by department',
                 date: this.formatDate(this.complaint.resolved_at || this.complaint.updated_at)
             });
         }
@@ -664,7 +978,8 @@ class ComplaintDetails {
                         { text: 'Cancel Complaint', class: 'btn btn-warning', action: 'cancel' }
                     );
                 }
-                if (this.complaint.status === 'resolved') {
+                // Show confirmation button when all assignments are complete and citizen hasn't confirmed
+                if (this.shouldShowConfirmationButton()) {
                     actions.push(
                         { text: 'Confirm Resolution', class: 'btn btn-success', action: 'confirm-resolution' }
                     );
@@ -857,12 +1172,17 @@ class ComplaintDetails {
             }
 
             const result = await response.json();
-            
+
             if (result.success) {
                 showToast('Resolution confirmed successfully', 'success');
-                this.loadComplaintDetails(); // Refresh
+                this.loadComplaintDetails(); // Refresh to update UI
             } else {
-                throw new Error(result.error || 'Failed to confirm resolution');
+                // Show the specific backend validation error to the user
+                showToast(result.error || 'Failed to confirm resolution', 'error');
+                console.log('Backend validation error:', result.error);
+
+                // Optionally refresh the complaint details to update the UI state
+                this.loadComplaintDetails();
             }
         } catch (error) {
             console.error('Error confirming resolution:', error);

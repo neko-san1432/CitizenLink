@@ -369,19 +369,10 @@ class LguOfficerController {
         });
       }
 
-      // Update complaint workflow_status based on assignment status
-      let complaintWorkflowStatus = 'in_progress'; // Default status
-      if (status === 'completed') {
-        complaintWorkflowStatus = 'completed';
-      }
-
-      await supabase
-        .from('complaints')
-        .update({
-          workflow_status: complaintWorkflowStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', assignment.complaint_id);
+      // Update complaint confirmation status using the database function (instead of manual workflow_status update)
+      await supabase.rpc('update_complaint_confirmation_status', {
+        complaint_uuid: assignment.complaint_id
+      });
 
       // Send notification to admin about status change
       if (assignment.assigned_by) {

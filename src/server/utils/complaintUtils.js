@@ -69,21 +69,28 @@ function getWorkflowFromStatus(status) {
  */
 function normalizeComplaintData(complaint) {
   if (!complaint) return null;
-  
+
   const normalized = { ...complaint };
-  
+
   // Derive primary and secondary departments from department_r
   normalized.primary_department = getPrimaryDepartment(complaint.department_r);
   // normalized.secondary_departments = getSecondaryDepartments(complaint.department_r); // Removed - derived from department_r
-  
+
   // Derive status from workflow_status for frontend compatibility
   normalized.status = getStatusFromWorkflow(complaint.workflow_status);
-  
+
+  // Include confirmation status for proper workflow display
+  normalized.confirmation_status = complaint.confirmation_status || 'pending';
+
+  // Add assignment progress information
+  const progressInfo = getAssignmentProgress(complaint);
+  normalized.assignment_progress = progressInfo;
+
   // Ensure department_r is properly formatted
   if (!Array.isArray(normalized.department_r)) {
     normalized.department_r = [];
   }
-  
+
   // If we have primary_department but no department_r, populate it
   if (complaint.primary_department && normalized.department_r.length === 0) {
     normalized.department_r = [complaint.primary_department];
@@ -91,8 +98,46 @@ function normalizeComplaintData(complaint) {
     //   normalized.department_r.push(...complaint.secondary_departments);
     // }
   }
-  
+
   return normalized;
+}
+
+/**
+ * Get assignment progress information for a complaint
+ * @param {Object} complaint - Complaint data with assignments
+ * @returns {Object} Progress information
+ */
+function getAssignmentProgress(complaint) {
+  if (!complaint.assignments || !Array.isArray(complaint.assignments)) {
+    return {
+      totalAssignments: 0,
+      completedAssignments: 0,
+      progressPercentage: 0,
+      progressText: 'No assignments'
+    };
+  }
+
+  const totalAssignments = complaint.assignments.length;
+  const completedAssignments = complaint.assignments.filter(a => a.status === 'completed').length;
+  const progressPercentage = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
+
+  let progressText = '';
+  if (totalAssignments === 0) {
+    progressText = 'No assignments';
+  } else if (completedAssignments === 0) {
+    progressText = 'No officers have completed yet';
+  } else if (completedAssignments === totalAssignments) {
+    progressText = 'All officers completed';
+  } else {
+    progressText = `${completedAssignments}/${totalAssignments} officers completed`;
+  }
+
+  return {
+    totalAssignments,
+    completedAssignments,
+    progressPercentage,
+    progressText
+  };
 }
 
 /**
@@ -220,5 +265,6 @@ module.exports = {
   normalizeComplaintData,
   prepareComplaintForInsert,
   getComplaintStatistics,
-  validateComplaintConsistency
+  validateComplaintConsistency,
+  getAssignmentProgress
 };

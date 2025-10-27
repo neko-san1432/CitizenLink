@@ -29,39 +29,81 @@ class ComplaintRepository {
       if (error.code === 'PGRST116') return null;
       throw error;
     }
-    return new Complaint(data);
+
+    const complaint = new Complaint(data);
+
+    // Get assignment data for progress tracking
+    const { data: assignments } = await this.supabase
+      .from('complaint_assignments')
+      .select('*')
+      .eq('complaint_id', id)
+      .order('officer_order', { ascending: true });
+
+    // Add assignments to complaint object
+    complaint.assignments = assignments || [];
+
+    return complaint;
   }
 
   async findByUserId(userId, options = {}) {
-    const { page = 1, limit = 10, status, type } = options;
-    const offset = (page - 1) * limit;
+    try {
+      console.log('[COMPLAINT_REPO] findByUserId called:', { userId, options });
 
-    let query = this.supabase
-      .from('complaints')
-      .select('*')
-      .eq('submitted_by', userId)
-      .order('submitted_at', { ascending: false });
+      const { page = 1, limit = 10, status, type } = options;
+      const offset = (page - 1) * limit;
 
-    if (status) {
-      query = query.eq('workflow_status', status);
+      let query = this.supabase
+        .from('complaints')
+        .select('*')
+        .eq('submitted_by', userId)
+        .order('submitted_at', { ascending: false });
+
+      if (status) {
+        query = query.eq('workflow_status', status);
+      }
+
+      if (type) {
+        query = query.eq('type', type);
+      }
+
+      console.log('[COMPLAINT_REPO] Executing query with:', {
+        userId,
+        page,
+        limit,
+        offset,
+        status,
+        type,
+        sql: query.toString()
+      });
+
+      const { data, error, count } = await query
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('[COMPLAINT_REPO] Database query error:', error);
+        throw error;
+      }
+
+      console.log('[COMPLAINT_REPO] Query result:', {
+        dataCount: data?.length || 0,
+        count,
+        page,
+        limit,
+        offset
+      });
+
+      return {
+        complaints: data || [],
+        total: count || 0,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil((count || 0) / limit)
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Error in findByUserId:', error);
+      console.error('[COMPLAINT_REPO] Error stack:', error.stack);
+      throw error;
     }
-
-    if (type) {
-      query = query.eq('type', type);
-    }
-
-    const { data, error, count } = await query
-      .range(offset, offset + limit - 1);
-
-    if (error) throw error;
-
-    return {
-      complaints: data.map(complaint => new Complaint(complaint)),
-      total: count,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(count / limit)
-    };
   }
 
   async findAll(options = {}) {

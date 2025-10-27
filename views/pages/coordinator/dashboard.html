@@ -80,13 +80,24 @@
                         <div class="stat-trend" id="accuracy-trend"></div>
                     </div>
                 </div>
+                <!-- Debug Card -->
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <div class="stat-content">
+                        <div class="stat-label">🧪 Debug Panel</div>
+                        <div class="stat-value">
+                            <button class="btn btn-sm btn-secondary" onclick="testCoordinatorStats()">Test API</button>
+                            <button class="btn btn-sm btn-primary" onclick="window.coordinatorDashboard?.loadStats()">Refresh Stats</button>
+                            <button class="btn btn-sm btn-warning" onclick="console.log('Dashboard instance:', window.coordinatorDashboard)">Check Instance</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Quick Actions Panel -->
             <div class="quick-actions-panel">
                 <h2 class="section-title">⚡ Quick Actions</h2>
                 <div class="quick-actions-grid">
-                    <button class="quick-action-btn" onclick="window.location.href='/coordinator/review-queue'">
+                    <button class="quick-action-btn" onclick="window.location.href='/review-queue'">
                         <div class="quick-action-icon">📋</div>
                         <div class="quick-action-text">Review Queue</div>
                     </button>
@@ -126,7 +137,7 @@
                                 <option value="high">High Priority</option>
                                 <option value="duplicates">Potential Duplicates</option>
                             </select>
-                            <button class="btn btn-primary" onclick="window.location.href='/coordinator/review-queue'">
+                            <button class="btn btn-primary" onclick="window.location.href='/review-queue'">
                                 View Full Queue
                             </button>
                         </div>

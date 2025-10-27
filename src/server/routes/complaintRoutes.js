@@ -122,6 +122,48 @@ router.post('/:id/confirm-resolution',
   (req, res) => complaintController.confirmResolution(req, res)
 );
 
+// Configure multer for completion evidence uploads
+const completionUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+    files: 5
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'), false);
+    }
+  }
+}).fields([
+  { name: 'completionEvidence', maxCount: 5 }
+]);
+
+// LGU Officer/Admin endpoints for assignment completion
+// Admins can also complete assignments they've created
+router.post('/:id/mark-complete',
+  authenticateUser,
+  requireRole(['lgu', 'lgu-admin', /^lgu-(?!hr)/]), // Allow officers and admins but exclude HR
+  completionUpload,
+  (req, res) => complaintController.markAssignmentComplete(req, res)
+);
+
+// Separate route for admin completion
+router.post('/:id/mark-complete-admin',
+  authenticateUser,
+  requireRole(['lgu-admin', /^lgu-admin/]), // Allow admins
+  completionUpload,
+  (req, res) => complaintController.markAssignmentComplete(req, res)
+);
+
+// Get confirmation message for any user
+router.get('/:id/confirmation-message',
+  authenticateUser,
+  (req, res) => complaintController.getConfirmationMessage(req, res)
+);
+
 // False complaint endpoints (coordinator only)
 router.post('/:id/mark-false',
   authenticateUser,

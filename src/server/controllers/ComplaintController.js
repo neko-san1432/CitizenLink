@@ -147,6 +147,13 @@ class ComplaintController {
 
   async getMyComplaints(req, res) {
     try {
+      console.log('[COMPLAINT_CONTROLLER] getMyComplaints called:', {
+        userId: req.user?.id,
+        userRole: req.user?.role,
+        userEmail: req.user?.email,
+        queryParams: req.query
+      });
+
       const { user } = req;
       const options = {
         page: req.query.page || 1,
@@ -155,7 +162,18 @@ class ComplaintController {
         type: req.query.type
       };
 
+      console.log('[COMPLAINT_CONTROLLER] Query options:', options);
+
       const result = await this.complaintService.getUserComplaints(user.id, options);
+
+      console.log('[COMPLAINT_CONTROLLER] Query result:', {
+        complaintsCount: result.complaints?.length || 0,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      });
+
       res.json({
         success: true,
         data: result.complaints,
@@ -167,10 +185,19 @@ class ComplaintController {
         }
       });
     } catch (error) {
-      console.error('Error fetching user complaints:', error);
+      console.error('[COMPLAINT_CONTROLLER] Error fetching user complaints:', error);
+      console.error('[COMPLAINT_CONTROLLER] Error stack:', error.stack);
+      console.error('[COMPLAINT_CONTROLLER] Request details:', {
+        userId: req.user?.id,
+        userRole: req.user?.role,
+        queryParams: req.query,
+        headers: req.headers
+      });
+
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch complaints'
+        error: 'Failed to fetch complaints',
+        details: error.message
       });
     }
   }
@@ -534,26 +561,183 @@ class ComplaintController {
   }
 
   /**
-   * Get complaint evidence files
+   * Mark assignment as complete (LGU Officer)
    */
-  async getComplaintEvidence(req, res) {
+  async markAssignmentComplete(req, res) {
     try {
-      const { complaintId } = req.params;
+      const { id: complaintId } = req.params;
+      const { notes } = req.body;
       const { user } = req;
 
-      console.log(`[COMPLAINT] Getting evidence for complaint ${complaintId} by user ${user.id}`);
+      // Extract completion evidence files if uploaded
+      const files = (req.files && req.files.completionEvidence) ? req.files.completionEvidence : [];
 
-      const evidence = await this.complaintService.getComplaintEvidence(complaintId, user);
-      
+      const result = await this.complaintService.markAssignmentComplete(
+        complaintId,
+        user.id,
+        notes,
+        files
+      );
+
       res.json({
         success: true,
-        data: evidence
+        message: 'Assignment marked as complete successfully',
+        data: result
       });
+
     } catch (error) {
-      console.error('[COMPLAINT] Get evidence error:', error);
-      res.status(500).json({
+      console.error('[COMPLAINT] Mark assignment complete error:', error);
+      const status = error.message.includes('not found') ? 404 : 
+                    error.message.includes('not authorized') ? 403 : 500;
+      res.status(status).json({
         success: false,
         error: error.message
+      });
+    }
+  }
+
+  /**
+   * Confirm resolution (Citizen side)
+   */
+  async confirmResolution(req, res) {
+    try {
+      const { id: complaintId } = req.params;
+      const { confirmed, feedback } = req.body;
+      const { user } = req;
+
+      if (typeof confirmed !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: 'Confirmed status is required (true/false)'
+        });
+      }
+
+      // First, get the complaint to check its current status
+      const complaint = await this.complaintService.getComplaintById(complaintId, user.id);
+
+      // Check if complaint has been assigned by coordinator
+      // Allow confirmation attempts as soon as coordinator assigns to officers
+      const coordinatorAssignedStatuses = ['assigned', 'in_progress', 'pending_approval', 'completed'];
+      if (!coordinatorAssignedStatuses.includes(complaint.workflow_status)) {
+        return res.status(400).json({
+          success: false,
+          error: `Cannot confirm resolution for a complaint with status '${complaint.workflow_status}'. Please wait for the coordinator to assign the complaint to officers.`
+        });
+      }
+
+      // Check if complaint confirmation status prevents confirmation
+      if (complaint.confirmation_status === 'pending') {
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot confirm resolution for a complaint that is not ready for confirmation. Please wait for all responders to complete their tasks.'
+        });
+      }
+
+      // Check if confirmation status allows confirmation
+      const validConfirmationStatuses = ['waiting_for_complainant', 'confirmed', 'disputed'];
+      if (!validConfirmationStatuses.includes(complaint.confirmation_status)) {
+        return res.status(400).json({
+          success: false,
+          error: `Cannot confirm resolution for a complaint with confirmation status '${complaint.confirmation_status}'.`
+        });
+      }
+
+      // Additional check: if assignments exist, ensure all assignments are complete before allowing confirmation
+      const progress = complaint.assignment_progress;
+      if (progress && progress.totalAssignments > 0) {
+        if (progress.completedAssignments !== progress.totalAssignments) {
+          return res.status(400).json({
+            success: false,
+            error: `Cannot confirm resolution until all assigned officers complete their work. ${progress.completedAssignments} of ${progress.totalAssignments} assignments completed.`
+          });
+        }
+      }
+
+      const result = await this.complaintService.confirmResolution(
+        complaintId,
+        user.id,
+        confirmed,
+        feedback
+      );
+
+      res.json({
+        success: true,
+        message: confirmed ? 'Resolution confirmed successfully' : 'Resolution rejected',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('[COMPLAINT] Confirm resolution error:', error);
+      const status = error.message.includes('not found') ? 404 :
+                    error.message.includes('not authorized') ? 403 : 500;
+      res.status(status).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get current user's complaints (Citizen endpoint)
+   */
+  async getMyComplaints(req, res) {
+    try {
+      const { user } = req;
+      const {
+        page = 1,
+        limit = 10,
+        status,
+        type
+      } = req.query;
+
+      const options = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        status,
+        type
+      };
+
+      const result = await this.complaintService.getUserComplaints(user.id, options);
+
+      res.json({
+        success: true,
+        data: result.complaints,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages
+        }
+      });
+
+    } catch (error) {
+      console.error('[COMPLAINT-CONTROLLER] Error getting user complaints:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch complaints'
+      });
+    }
+  }
+
+  /**
+   * Get current user's complaint statistics (Citizen endpoint)
+   */
+  async getMyStatistics(req, res) {
+    try {
+      const { user } = req;
+
+      const stats = await this.complaintService.getUserStatistics(user.id);
+
+      res.json({
+        success: true,
+        data: stats
+      });
+
+    } catch (error) {
+      console.error('[COMPLAINT-CONTROLLER] Error getting user statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch statistics'
       });
     }
   }

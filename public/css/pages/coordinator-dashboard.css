@@ -1,4 +1,71 @@
-/* Enhanced Coordinator Dashboard Styles */
+/* Loaded state for stat values */
+.stat-value.loaded {
+    color: #28a745;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.stat-value.loaded::after {
+    content: ' ✓';
+    color: #28a745;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* Error message styling */
+.error-message {
+    grid-column: 1 / -1;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    color: #721c24;
+}
+
+.error-message h3 {
+    margin: 0 0 1rem 0;
+    color: #dc3545;
+}
+
+.error-message details {
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.error-message pre {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Loading animation */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 /* Dashboard Header */
 .dashboard-header {
@@ -72,7 +139,7 @@
 .stat-label {
   color: #7f8c8d;
   font-size: 0.9rem;
-  text-
+  text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.5rem;
   font-weight: 600}
@@ -136,7 +203,7 @@
 .quick-action-btn:hover {
   border-color: #667eea;
   background: #f8f9ff;
-  
+  transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2)}
 
 .quick-action-icon {
@@ -347,7 +414,7 @@
   cursor: pointer}
 
 .complaint-card:hover {
-  
+  transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   border-color: #667eea}
 
@@ -372,7 +439,7 @@
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
-  text-
+  text-transform: uppercase;
   letter-spacing: 0.5px}
 
 .badge-urgent {
@@ -415,7 +482,7 @@
   border: 1px solid #e9ecef}
 
 .cluster-card:hover {
-  
+  transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1)}
 
 .cluster-header {
@@ -429,7 +496,7 @@
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
-  text-
+  text-transform: uppercase;
   letter-spacing: 0.5px}
 
 .cluster-badge.cluster-pattern {
@@ -451,10 +518,12 @@
   border: 4px solid #e9ecef;
   border-top: 4px solid #667eea;
   border-radius: 50%;
-  
+  animation: spin 1s linear infinite;
   margin-bottom: 1rem}
 
-  100% {}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Empty States */

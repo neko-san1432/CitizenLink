@@ -12,6 +12,80 @@
     <link rel="stylesheet" href="../css/app.css">
     <link rel="stylesheet" href="../css/components/clock.css">
     <link rel="stylesheet" href="../css/header-redesign.css">
+    <style>
+      .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 2rem;
+      }
+      .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+      .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+      }
+      .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+      }
+      .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.5rem;
+      }
+      .complaint-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+      }
+      .complaint-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(4px);
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .status-new { background: #dbeafe; color: #1e40af; }
+      .status-assigned { background: #fef3c7; color: #92400e; }
+      .status-in_progress { background: #ddd6fe; color: #5b21b6; }
+      .status-pending_approval { background: #fde047; color: #713f12; }
+      .status-completed { background: #d1fae5; color: #065f46; }
+      .status-resolved { background: #d1fae5; color: #065f46; }
+      .status-cancelled { background: #fee2e2; color: #991b1b; }
+      .status-unknown { background: #e5e7eb; color: #374151; }
+    </style>
   </head>
   <body>
     <div class="app-container">
@@ -19,46 +93,72 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
         <div id="app" class="collapsible">
-          <div class="card">
+          <!-- Profile Header -->
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <div id="profile-initial">—</div>
+            </div>
+            <h1 id="profile-name" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">Loading...</h1>
+            <p id="profile-email" style="opacity: 0.9;">Loading...</p>
+          </div>
+
+          <!-- Profile Information Card -->
+          <div class="card" style="margin-bottom: 2rem;">
             <div class="card-header">
-              <h1 class="card-title">My Profile</h1>
+              <h2 class="card-title">Personal Information</h2>
             </div>
             <div class="card-body space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="form-label">Name</label>
-                  <div id="profile-name" class="input read-only"></div>
-                </div>
-                <div>
-                  <label class="form-label">Email</label>
-                  <div id="profile-email" class="input read-only"></div>
-                </div>
-                <div>
                   <label class="form-label">Mobile Number</label>
-                  <div id="profile-mobile" class="input read-only"></div>
+                  <div id="profile-mobile" class="input read-only">—</div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <hr>
+          <!-- Statistics Cards -->
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-value" id="total-complaints">0</div>
+              <div class="stat-label">Total Complaints</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="active-complaints">0</div>
+              <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="resolved-complaints">0</div>
+              <div class="stat-label">Resolved</div>
+            </div>
+          </div>
 
+          <!-- Change Password Card -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+              <h2 class="card-title">Change Password</h2>
+            </div>
+            <div class="card-body">
               <form id="change-password-form" class="space-y-3">
-                <h2 class="text-lg font-semibold">Change Password</h2>
                 <input id="current-password" class="input" type="password" placeholder="Current password" autocomplete="current-password">
                 <input id="new-password" class="input" type="password" placeholder="New password" autocomplete="new-password">
                 <input id="confirm-new-password" class="input" type="password" placeholder="Confirm new password" autocomplete="new-password">
                 <button id="change-password-btn" class="btn-primary w-full md:w-auto" type="submit">Update Password</button>
               </form>
+            </div>
+          </div>
 
-              <hr>
-
-              <div>
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-semibold">My Complaints</h2>
-                  <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
-                </div>
-                <div id="my-complaints" class="mt-3 space-y-2"></div>
-                <div id="complaints-empty" class="text-sm text-gray-500 hidden">No complaints yet.</div>
+          <!-- Complaints Card -->
+          <div class="card">
+            <div class="card-header">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h2 class="card-title" style="margin: 0;">My Complaints</h2>
+                <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
               </div>
+            </div>
+            <div class="card-body">
+              <div id="my-complaints" class="mt-3 space-y-2"></div>
+              <div id="complaints-empty" class="text-sm text-gray-500 hidden">No complaints yet.</div>
             </div>
           </div>
         </div>

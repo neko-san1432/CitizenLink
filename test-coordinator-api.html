@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coordinator API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Coordinator API Test</h1>
+
+    <div class="test-section">
+        <h3>1. Server Status</h3>
+        <button onclick="testServerStatus()">Test Server Connection</button>
+        <div id="server-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Coordinator Status</h3>
+        <button onclick="testCoordinatorStatus()">Test Coordinator Status</button>
+        <div id="coordinator-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Dashboard Data</h3>
+        <button onclick="testDashboardData()">Test Dashboard API</button>
+        <div id="dashboard-data"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Review Queue</h3>
+        <button onclick="testReviewQueue()">Test Review Queue API</button>
+        <div id="review-queue"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Create Test Data</h3>
+        <button onclick="createTestData()">Create Test Coordinator & Complaint</button>
+        <div id="test-data"></div>
+    </div>
+
+    <script>
+        async function makeRequest(url, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                };
+
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+
+                return {
+                    status: response.status,
+                    ok: response.ok,
+                    result
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    ok: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testServerStatus() {
+            const statusDiv = document.getElementById('server-status');
+            statusDiv.innerHTML = '<p>Testing...</p>';
+
+            const result = await makeRequest('/api/health');
+
+            if (result.ok) {
+                statusDiv.innerHTML = '<div class="success"><p>✅ Server is running</p></div>';
+            } else {
+                statusDiv.innerHTML = `<div class="error"><p>❌ Server error: ${result.error || 'Connection failed'}</p></div>`;
+            }
+        }
+
+        async function testCoordinatorStatus() {
+            const statusDiv = document.getElementById('coordinator-status');
+            statusDiv.innerHTML = '<p>Testing...</p>';
+
+            const result = await makeRequest('/api/coordinator/status');
+
+            if (result.ok && result.result.success) {
+                statusDiv.innerHTML = `<div class="success"><p>✅ Coordinator status: ${JSON.stringify(result.result.data, null, 2)}</p></div>`;
+            } else {
+                const error = result.result?.error || result.error || 'Unknown error';
+                statusDiv.innerHTML = `<div class="error"><p>❌ Coordinator status failed: ${error}</p></div>`;
+            }
+        }
+
+        async function testDashboardData() {
+            const statusDiv = document.getElementById('dashboard-data');
+            statusDiv.innerHTML = '<p>Testing...</p>';
+
+            const result = await makeRequest('/api/coordinator/dashboard');
+
+            if (result.ok && result.result.success) {
+                statusDiv.innerHTML = `<div class="success"><p>✅ Dashboard data loaded</p><pre>${JSON.stringify(result.result.data, null, 2)}</pre></div>`;
+            } else {
+                const error = result.result?.error || result.error || 'Unknown error';
+                statusDiv.innerHTML = `<div class="error"><p>❌ Dashboard API failed: ${error}</p></div>`;
+            }
+        }
+
+        async function testReviewQueue() {
+            const statusDiv = document.getElementById('review-queue');
+            statusDiv.innerHTML = '<p>Testing...</p>';
+
+            const result = await makeRequest('/api/coordinator/review-queue?limit=5');
+
+            if (result.ok && result.result.success) {
+                statusDiv.innerHTML = `<div class="success"><p>✅ Review queue loaded: ${result.result.data.length} complaints</p><pre>${JSON.stringify(result.result.data, null, 2)}</pre></div>`;
+            } else {
+                const error = result.result?.error || result.error || 'Unknown error';
+                statusDiv.innerHTML = `<div class="error"><p>❌ Review queue failed: ${error}</p></div>`;
+            }
+        }
+
+        async function createTestData() {
+            const statusDiv = document.getElementById('test-data');
+            statusDiv.innerHTML = '<p>Creating test data...</p>';
+
+            try {
+                // First check if we can access the database
+                const dbResult = await makeRequest('/api/coordinator/dashboard');
+
+                if (dbResult.ok && dbResult.result.success) {
+                    statusDiv.innerHTML = '<div class="warning"><p>⚠️ Test data creation requires database access. Please check console for details.</p></div>';
+                    console.log('Database appears to be working. You may need to manually create test data.');
+                } else {
+                    statusDiv.innerHTML = `<div class="error"><p>❌ Database not accessible: ${dbResult.result?.error || 'Connection failed'}</p></div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error"><p>❌ Test data creation failed: ${error.message}</p></div>`;
+            }
+        }
+
+        // Auto-test server status on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testServerStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

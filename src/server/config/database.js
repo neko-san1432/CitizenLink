@@ -34,6 +34,7 @@ class Database {
       return;
     }
 
+    // Service role key automatically bypasses RLS policies
     this.supabase = createClient(supabaseUrl, serviceRoleKey);
     this._initialized = true;
   }

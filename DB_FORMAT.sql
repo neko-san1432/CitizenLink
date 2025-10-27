@@ -40,9 +40,13 @@ CREATE TABLE public.complaint_assignments (
   priority text DEFAULT 'medium'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   deadline timestamp with time zone,
   completed_at timestamp with time zone,
+  assignment_type text DEFAULT 'single'::text CHECK (assignment_type = ANY (ARRAY['single'::text, 'multi'::text])),
+  assignment_group_id uuid DEFAULT gen_random_uuid(),
+  officer_order integer DEFAULT 1,
   CONSTRAINT complaint_assignments_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_assignments_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_assignments_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id)
+  CONSTRAINT complaint_assignments_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id),
+  CONSTRAINT complaint_assignments_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
 );
 CREATE TABLE public.complaint_clusters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -91,12 +95,9 @@ CREATE TABLE public.complaint_evidence (
   uploaded_by uuid NOT NULL,
   uploaded_at timestamp with time zone DEFAULT now(),
   is_public boolean DEFAULT false,
-  description text,
-  tags text[] DEFAULT '{}'::text[],
-  is_primary boolean DEFAULT false,
+  evidence_type text DEFAULT 'initial'::text CHECK (evidence_type = ANY (ARRAY['initial'::text, 'completion'::text])),
   CONSTRAINT complaint_evidence_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_evidence_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id) ON DELETE CASCADE
+  CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_history (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -153,7 +154,7 @@ CREATE TABLE public.complaints (
   subcategory text,
   department_r ARRAY DEFAULT '{}'::text[],
   preferred_departments jsonb DEFAULT '[]'::jsonb,
-  workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text, 'rejected_false'::text])),
+  workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text])),
   priority text DEFAULT 'low'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   assigned_coordinator_id uuid,
   response_deadline timestamp with time zone,
@@ -173,18 +174,16 @@ CREATE TABLE public.complaints (
   cancelled_at timestamp with time zone,
   cancellation_reason text,
   cancelled_by uuid,
-  -- False complaint handling fields
-  is_false_complaint boolean DEFAULT false,
-  false_complaint_reason text,
-  false_complaint_marked_by uuid,
-  false_complaint_marked_at timestamp with time zone,
+  status character varying DEFAULT 'pending'::character varying,
+  all_responders_confirmed boolean DEFAULT false,
+  responders_confirmation_date timestamp with time zone,
+  confirmation_status text DEFAULT 'pending'::text CHECK (confirmation_status = ANY (ARRAY['pending'::text, 'waiting_for_responders'::text, 'waiting_for_complainant'::text, 'confirmed'::text, 'disputed'::text])),
   CONSTRAINT complaints_pkey PRIMARY KEY (id),
   CONSTRAINT complaints_assigned_coordinator_id_fkey FOREIGN KEY (assigned_coordinator_id) REFERENCES auth.users(id),
   CONSTRAINT complaints_master_complaint_id_fkey FOREIGN KEY (master_complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaints_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES auth.users(id),
   CONSTRAINT complaints_cancelled_by_fkey FOREIGN KEY (cancelled_by) REFERENCES auth.users(id),
-  CONSTRAINT complaints_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id),
-  CONSTRAINT complaints_false_complaint_marked_by_fkey FOREIGN KEY (false_complaint_marked_by) REFERENCES auth.users(id)
+  CONSTRAINT complaints_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.department_escalation_matrix (
   id bigint NOT NULL DEFAULT nextval('department_escalation_matrix_id_seq'::regclass),

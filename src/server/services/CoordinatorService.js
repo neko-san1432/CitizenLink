@@ -702,12 +702,8 @@ class CoordinatorService {
               { status: 'pending' }
             );
           }
-          // TODO: Fix notifyDepartmentAdminsByCode RPC function
-          // await this.notificationService.notifyDepartmentAdminsByCode(
-          //   departmentName,
-          //   assigned[0]?.id,
-          //   assigned[0]?.title || 'New Complaints'
-          // );
+          // Notify department admins using the working method
+          await this.notifyDepartmentAdmins(departmentName, assigned[0]?.id, assigned[0]?.title || 'New Complaints');
         }
       } catch (e) {
         console.warn('[COORDINATOR_SERVICE] Bulk assignment/notification post-step failed:', e.message);
@@ -725,33 +721,31 @@ class CoordinatorService {
   }
 
   /**
-  * Get coordinator dashboard data
-  */
+   * Get coordinator dashboard data
+   */
   async getDashboardData(coordinatorId) {
     try {
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Getting dashboard data for coordinator: ${coordinatorId}`);
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      // console.log removed for security
-      const pendingCount = await this.coordinatorRepo.getPendingReviewsCount(coordinatorId);
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Date range: ${weekAgo.toISOString()} to ${today.toISOString()}`);
 
-      // console.log removed for security
+      const pendingCount = await this.coordinatorRepo.getPendingReviewsCount(coordinatorId);
+      console.log(`[COORDINATOR_SERVICE] Pending count: ${pendingCount}`);
+
       const stats = await this.coordinatorRepo.getCoordinatorStats(
         coordinatorId,
         weekAgo.toISOString(),
         today.toISOString()
       );
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Stats:`, stats);
 
-      // console.log removed for security
       const recentQueue = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 10 });
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Recent queue: ${recentQueue.length} complaints`);
 
-      // console.log removed for security
       const clusters = await this.coordinatorRepo.getActiveClusters({ limit: 5 });
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Active clusters: ${clusters.length}`);
 
       const result = {
         pending_reviews: pendingCount,
@@ -763,7 +757,13 @@ class CoordinatorService {
         active_clusters: clusters
       };
 
-      // console.log removed for security
+      console.log(`[COORDINATOR_SERVICE] Final dashboard result:`, {
+        pending_reviews: result.pending_reviews,
+        stats: result.stats,
+        recent_queue_count: result.recent_queue.length,
+        active_clusters_count: result.active_clusters.length
+      });
+
       return result;
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Get dashboard error:', error);
@@ -773,8 +773,8 @@ class CoordinatorService {
   }
 
   /**
-  * Detect clusters in area
-  */
+   * Detect clusters in area
+   */
   async detectClusters(options = {}) {
     try {
       const clusters = await this.similarityService.detectClusters(options);

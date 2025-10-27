@@ -154,6 +154,71 @@ class CitizenLinkApp {
   }
 
   setupProtectedRoutes() {
+    // Redirects from role-prefixed URLs to simplified URLs (backward compatibility)
+    this.app.get('/citizen/fileComplaint', authenticateUser, (req, res) => {
+      res.redirect('/fileComplaint');
+    });
+
+    this.app.get('/citizen/departments', authenticateUser, (req, res) => {
+      res.redirect('/departments');
+    });
+
+    this.app.get('/admin/appoint-admins', authenticateUser, (req, res) => {
+      res.redirect('/appoint-admins');
+    });
+
+    this.app.get('/admin/departments', authenticateUser, (req, res) => {
+      res.redirect('/departments');
+    });
+
+    this.app.get('/admin/role-changer', authenticateUser, (req, res) => {
+      res.redirect('/role-changer');
+    });
+
+    this.app.get('/admin/settings', authenticateUser, (req, res) => {
+      res.redirect('/settings');
+    });
+
+    this.app.get('/hr/link-generator', authenticateUser, (req, res) => {
+      res.redirect('/link-generator');
+    });
+
+    this.app.get('/hr/role-changer', authenticateUser, (req, res) => {
+      res.redirect('/role-changer');
+    });
+
+    this.app.get('/coordinator/review-queue', authenticateUser, (req, res) => {
+      res.redirect('/review-queue');
+    });
+
+    this.app.get('/coordinator/assignments', authenticateUser, (req, res) => {
+      res.redirect('/assignments');
+    });
+
+    this.app.get('/coordinator/heatmap', authenticateUser, (req, res) => {
+      res.redirect('/heatmap');
+    });
+
+    this.app.get('/lgu-admin/dashboard', authenticateUser, (req, res) => {
+      res.redirect('/dashboard');
+    });
+
+    this.app.get('/lgu-admin/assignments', authenticateUser, (req, res) => {
+      res.redirect('/assignments');
+    });
+
+    this.app.get('/lgu-admin/heatmap', authenticateUser, (req, res) => {
+      res.redirect('/heatmap');
+    });
+
+    this.app.get('/lgu-admin/publish', authenticateUser, (req, res) => {
+      res.redirect('/publish');
+    });
+
+    this.app.get('/lgu-officer/task-assigned', authenticateUser, (req, res) => {
+      res.redirect('/task-assigned');
+    });
+
     // Dashboard route - protected and routed by role
     this.app.get('/dashboard', authenticateUser, (req, res) => {
       const userRole = req.user?.role || 'citizen';
@@ -161,19 +226,24 @@ class CitizenLinkApp {
       res.sendFile(dashboardPath);
     });
 
-    // General protected pages
+    // General protected pages (simplified URLs)
     this.app.get('/myProfile', authenticateUser, (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'myProfile.html'));
     });
 
     // File Complaint page (citizen only or staff in citizen mode)
-    this.app.get('/citizen/fileComplaint', authenticateUser, (req, res) => {
+    this.app.get('/fileComplaint', authenticateUser, (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'fileComplaint.html'));
     });
 
-    // Departments page (citizen only or staff in citizen mode)
-    this.app.get('/citizen/departments', authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'departments.html'));
+    // Departments page (role-aware)
+    this.app.get('/departments', authenticateUser, (req, res) => {
+      const userRole = req.user?.role || 'citizen';
+      if (userRole === 'super-admin') {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'departments', 'index.html'));
+      } else {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'departments.html'));
+      }
     });
 
     // Complaint Details page (authenticated users only)
@@ -186,16 +256,16 @@ class CitizenLinkApp {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'complaint-details.html'));
     });
 
-    // Admin pages
-    this.app.get('/admin/departments',
+    // Admin pages (simplified URLs)
+    this.app.get('/appoint-admins',
       authenticateUser,
       requireRole(['super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'departments', 'index.html'));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'appointAdmins.html'));
       }
     );
 
-    this.app.get('/admin/settings',
+    this.app.get('/settings',
       authenticateUser,
       requireRole(['lgu-admin', 'super-admin']),
       (req, res) => {
@@ -203,38 +273,42 @@ class CitizenLinkApp {
       }
     );
 
-    this.app.get('/admin/department-structure',
+    this.app.get('/role-changer',
       authenticateUser,
-      requireRole(['super-admin']),
+      requireRole(['super-admin', 'lgu-hr']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'department-structure.html'));
+        const userRole = req.user?.role || 'citizen';
+        if (userRole === 'super-admin') {
+          res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'role-changer.html'));
+        } else {
+          res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'role-changer.html'));
+        }
       }
     );
 
-    // LGU-specific pages
-    this.app.get('/taskAssigned',
+    // LGU-specific pages (simplified URLs)
+    this.app.get('/task-assigned',
       authenticateUser,
       requireRole([/^lgu-(?!admin|hr)/]),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu', 'taskAssigned.html'));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
       }
     );
 
-    // LGU Admin specific pages
-    this.app.get('/lgu-admin/heatmap',
+    // LGU Admin specific pages (simplified URLs)
+    this.app.get('/assignments',
       authenticateUser,
       requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'assignments.html'));
       }
     );
 
-    // Redirect /heatmap to /lgu-admin/heatmap for convenience
     this.app.get('/heatmap',
       authenticateUser,
       requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
       (req, res) => {
-        res.redirect('/lgu-admin/heatmap');
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
       }
     );
 
@@ -243,22 +317,6 @@ class CitizenLinkApp {
       requireRole(['lgu-admin', /^lgu-admin/]),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'publish.html'));
-      }
-    );
-
-    this.app.get('/appointMembers',
-      authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'appointMembers.html'));
-      }
-    );
-
-    this.app.get('/lgu-admin/assignments',
-      authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'assignments.html'));
       }
     );
 
@@ -284,8 +342,17 @@ class CitizenLinkApp {
       res.redirect('/dashboard');
     });
 
-    // Coordinator review queue list page
-    this.app.get('/coordinator/review-queue',
+    // HR specific pages (simplified URLs)
+    this.app.get('/link-generator',
+      authenticateUser,
+      requireRole(['lgu-hr', /^lgu-hr/]),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'link-generator.html'));
+      }
+    );
+
+    // Coordinator review queue list page (simplified URLs)
+    this.app.get('/review-queue',
       authenticateUser,
       requireRole(['complaint-coordinator']),
       (req, res) => {
@@ -302,23 +369,6 @@ class CitizenLinkApp {
       }
     );
 
-    this.app.get('/hr', authenticateUser, requireRole(['lgu-hr', /^lgu-hr/]), (req, res) => {
-      res.redirect('/dashboard');
-    });
-
-    this.app.get('/hr/link-generator', authenticateUser, requireRole(['lgu-hr', /^lgu-hr/]), (req, res) => {
-      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'link-generator.html'));
-    });
-
-    // HR Role Changer dedicated page
-    this.app.get('/hr/role-changer',
-      authenticateUser,
-      requireRole(['lgu-hr', /^lgu-hr/]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'role-changer.html'));
-      }
-    );
-
     // Complete Position Signup page (public - no auth required)
     this.app.get('/complete-position-signup', (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'auth', 'complete-position-signup.html'));
@@ -328,21 +378,7 @@ class CitizenLinkApp {
       res.redirect('/dashboard');
     });
 
-    // LGU Officer routes
-    this.app.get('/lgu-officer', authenticateUser, requireRole(['lgu', /^lgu-(?!admin|hr)/]), (req, res) => {
-      res.redirect('/dashboard');
-    });
-
-    // LGU Officer assigned tasks page
-    this.app.get('/lgu-officer/task-assigned',
-      authenticateUser,
-      requireRole(['lgu', /^lgu-(?!admin|hr)/]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
-      }
-    );
-
-    // LGU Officer dashboard page
+    // LGU Officer routes (simplified URLs)
     this.app.get('/lgu-officer/dashboard',
       authenticateUser,
       requireRole(['lgu', /^lgu-(?!admin|hr)/]),
@@ -359,10 +395,6 @@ class CitizenLinkApp {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
       }
     );
-
-    this.app.get('/super-admin', authenticateUser, requireRole(['super-admin']), (req, res) => {
-      res.redirect('/dashboard');
-    });
 
     // Super Admin Role Changer dedicated page
     this.app.get('/super-admin/role-changer',

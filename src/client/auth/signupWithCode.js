@@ -147,9 +147,9 @@ if (signupForm) {
       const result = await response.json();
 
       if (result.success) {
-        showMessage('success', 'Account created successfully! Please check your email to verify your account.');
+        showMessage('success', 'Account created successfully! Redirecting to dashboard...');
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = '/dashboard';
         }, 3000);
       } else {
         // Check if it's an expired code

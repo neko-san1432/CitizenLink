@@ -59,8 +59,8 @@ SELECT
      WHERE ca2.assignment_group_id = ca.assignment_group_id) as total_officers_in_group
 FROM complaint_assignments ca
 LEFT JOIN complaints c ON ca.complaint_id = c.id
-LEFT JOIN auth.users au ON ca.assigned_to_officer_id = au.id
-LEFT JOIN auth.users assigner ON ca.assigned_by_lgu_admin_id = assigner.id
+LEFT JOIN auth.users au ON ca.assigned_to = au.id
+LEFT JOIN auth.users assigner ON ca.assigned_by = assigner.id
 ORDER BY ca.complaint_id, ca.assignment_group_id, ca.officer_order;
 
 -- Add RLS policies for the view
@@ -92,7 +92,7 @@ BEGIN
         assigner.name as assigned_by_name,
         jsonb_agg(
             jsonb_build_object(
-                'officer_id', ca.assigned_to_officer_id,
+                'officer_id', ca.assigned_to,
                 'officer_name', au.name,
                 'officer_email', au.email,
                 'officer_phone', au.raw_user_meta_data->>'mobile_number',
@@ -102,8 +102,8 @@ BEGIN
             ) ORDER BY ca.officer_order
         ) as officers
     FROM complaint_assignments ca
-    LEFT JOIN auth.users au ON ca.assigned_to_officer_id = au.id
-    LEFT JOIN auth.users assigner ON ca.assigned_by_lgu_admin_id = assigner.id
+    LEFT JOIN auth.users au ON ca.assigned_to = au.id
+    LEFT JOIN auth.users assigner ON ca.assigned_by = assigner.id
     WHERE ca.complaint_id = complaint_uuid
     GROUP BY ca.assignment_group_id, ca.assignment_type, ca.priority, ca.response_deadline, ca.notes, ca.assigned_at, assigner.name
     ORDER BY ca.assigned_at DESC;

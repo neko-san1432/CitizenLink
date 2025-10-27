@@ -69,6 +69,9 @@ const cspConfig = {
 // Add upgrade-insecure-requests only in production
 if (process.env.NODE_ENV === 'production') {
   cspConfig.directives.upgradeInsecureRequests = true;
+} else {
+  // Explicitly remove upgrade-insecure-requests in development
+  delete cspConfig.directives.upgradeInsecureRequests;
 }
 
 // Enhanced security headers using helmet
@@ -94,8 +97,10 @@ const customSecurityHeaders = (req, res, next) => {
   res.removeHeader('X-Powered-By');
 
   // Permissions Policy (formerly Feature Policy)
+  // Allow geolocation in development, restrict in production
+  const geolocationPolicy = process.env.NODE_ENV === 'production' ? 'geolocation=(self)' : 'geolocation=*';
   res.setHeader('Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(self), payment=()'
+    `camera=(), microphone=(), ${geolocationPolicy}, payment=()`
   );
 
   next();

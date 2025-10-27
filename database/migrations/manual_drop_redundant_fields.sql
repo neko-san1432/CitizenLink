@@ -188,3 +188,6 @@ COMMENT ON VIEW public.complaints_legacy IS 'Legacy view for backward compatibil
 
 
 
+
+
+

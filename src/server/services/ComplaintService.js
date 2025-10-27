@@ -3,7 +3,7 @@ const ComplaintAssignmentRepository = require('../repositories/ComplaintAssignme
 const DepartmentRepository = require('../repositories/DepartmentRepository');
 const Complaint = require('../models/Complaint');
 const NotificationService = require('./NotificationService');
-const { normalizeComplaintData, prepareComplaintForInsert, validateComplaintConsistency } = require('../utils/complaintUtils');
+const { normalizeComplaintData, prepareComplaintForInsert, validateComplaintConsistency, getAssignmentProgress } = require('../utils/complaintUtils');
 
 class ComplaintService {
   constructor() {
@@ -129,6 +129,8 @@ class ComplaintService {
         await this.complaintRepo.update(complaint.id, {
           // primary_department: departmentArray[0], // Removed - derived from department_r
           // secondary_departments: departmentArray.slice(1), // Removed - derived from department_r
+          // Ensure workflow status is 'new' for coordinator review
+          workflow_status: 'new',
           updated_at: new Date().toISOString()
         });
         // console.log removed for security
@@ -221,7 +223,8 @@ class ComplaintService {
     const evidenceFiles = [];
     for (const file of files) {
       try {
-        const fileName = `${complaintId}/${Date.now()}-${file.originalname}`;
+        // Store in evidence subfolder for initial evidence
+        const fileName = `${complaintId}/evidence/${Date.now()}-${file.originalname}`;
 
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -249,6 +252,29 @@ class ComplaintService {
           publicUrl: publicUrl
         });
 
+        // Store evidence metadata in database with evidence_type='initial'
+        try {
+          const { error: dbError } = await supabase
+            .from('complaint_evidence')
+            .insert({
+              complaint_id: complaintId,
+              file_name: file.originalname,
+              file_path: uploadData.path,
+              file_size: file.size,
+              file_type: file.mimetype,
+              mime_type: file.mimetype,
+              uploaded_by: userId,
+              evidence_type: 'initial',
+              is_public: false
+            });
+
+          if (dbError) {
+            console.error('[FILE] Evidence metadata storage error:', dbError);
+          }
+        } catch (dbErr) {
+          console.error('[FILE] Evidence metadata storage failed:', dbErr);
+        }
+
         // console.log removed for security
       } catch (error) {
         console.error('[FILE] Processing error:', error);
@@ -266,6 +292,81 @@ class ComplaintService {
     return this._processFileUploads(complaintId, files, userId);
   }
 
+  /**
+   * Process completion evidence files and upload to storage
+   * Stores files in {complaintId}/completion/ subfolder
+   */
+  async _processCompletionEvidence(complaintId, files, userId = null) {
+    if (!files || files.length === 0) {
+      return [];
+    }
+
+    const Database = require('../config/database');
+    const db = new Database();
+    const supabase = db.getClient();
+
+    const evidenceFiles = [];
+    for (const file of files) {
+      try {
+        // Store in completion subfolder
+        const fileName = `${complaintId}/completion/${Date.now()}-${file.originalname}`;
+
+        // Upload file to Supabase storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('complaint-evidence')
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('[FILE] Completion evidence upload error:', uploadError);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('complaint-evidence')
+          .getPublicUrl(fileName);
+
+        evidenceFiles.push({
+          fileName: file.originalname,
+          filePath: uploadData.path,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          publicUrl: publicUrl
+        });
+
+        // Store evidence metadata in database with evidence_type='completion'
+        try {
+          const { error: dbError } = await supabase
+            .from('complaint_evidence')
+            .insert({
+              complaint_id: complaintId,
+              file_name: file.originalname,
+              file_path: uploadData.path,
+              file_size: file.size,
+              file_type: file.mimetype,
+              mime_type: file.mimetype,
+              uploaded_by: userId,
+              evidence_type: 'completion',
+              is_public: false
+            });
+
+          if (dbError) {
+            console.error('[FILE] Evidence metadata storage error:', dbError);
+          }
+        } catch (dbErr) {
+          console.error('[FILE] Evidence metadata storage failed:', dbErr);
+        }
+      } catch (error) {
+        console.error('[FILE] Processing completion evidence error:', error);
+      }
+    }
+
+    return evidenceFiles;
+  }
+
   async getComplaintById(id, userId = null) {
     const complaint = await this.complaintRepo.findById(id);
     if (!complaint) {
@@ -276,12 +377,40 @@ class ComplaintService {
       throw new Error('Access denied');
     }
 
+    // Get assignment data for progress tracking
+    const { data: assignments } = await this.complaintRepo.supabase
+      .from('complaint_assignments')
+      .select('*')
+      .eq('complaint_id', id)
+      .order('officer_order', { ascending: true });
+
+    // Add assignments to complaint data
+    complaint.assignments = assignments || [];
+
     // Return normalized complaint data for frontend compatibility
     return normalizeComplaintData(complaint);
   }
 
   async getUserComplaints(userId, options = {}) {
-    return this.complaintRepo.findByUserId(userId, options);
+    try {
+      console.log('[COMPLAINT_SERVICE] getUserComplaints called:', { userId, options });
+
+      const result = await this.complaintRepo.findByUserId(userId, options);
+
+      console.log('[COMPLAINT_SERVICE] getUserComplaints result:', {
+        complaintsCount: result.complaints?.length || 0,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      });
+
+      return result;
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error in getUserComplaints:', error);
+      console.error('[COMPLAINT_SERVICE] Error stack:', error.stack);
+      throw error;
+    }
   }
 
   async getUserStatistics(userId) {
@@ -795,7 +924,7 @@ class ComplaintService {
   }
 
   /**
-   * Confirm resolution
+   * Confirm resolution (Citizen side)
    */
   async confirmResolution(complaintId, userId, confirmed, feedback) {
     try {
@@ -810,22 +939,12 @@ class ComplaintService {
         throw new Error('Not authorized to confirm resolution for this complaint');
       }
 
-      // Check if complaint is in resolved status
-      if (complaint.workflow_status !== 'completed') {
-        throw new Error('Complaint must be completed by officer before citizen can confirm');
-      }
-
-      // Update complaint status
-      const newStatus = confirmed ? 'confirmed by citizen' : 'reopened';
-      const newWorkflowStatus = confirmed ? 'completed' : 'in_progress';
-
+      // Update complaint with citizen confirmation
       const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
         .from('complaints')
         .update({
-          workflow_status: newWorkflowStatus,
           confirmed_by_citizen: confirmed,
           citizen_confirmation_date: confirmed ? new Date().toISOString() : null,
-          citizen_feedback: feedback || null,
           last_activity_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -837,59 +956,72 @@ class ComplaintService {
         throw new Error('Failed to update complaint status');
       }
 
+      // Update confirmation status using the database function
+      await this.complaintRepo.supabase.rpc('update_complaint_confirmation_status', {
+        complaint_uuid: complaintId
+      });
+
       // Notify relevant parties
       try {
         if (confirmed) {
-          // Notify officer who resolved it
-          if (complaint.resolved_by) {
-            await this.notificationService.createNotification(
-              complaint.resolved_by,
-              'resolution_confirmed',
-              'Resolution Confirmed',
-              `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
-              {
-                priority: 'success',
-                link: `/lgu-officer/tasks`,
-                metadata: { complaint_id: complaintId, feedback }
-              }
-            );
-          }
-
-          // Notify department admin
+          // Notify all assigned officers
           const { data: assignments } = await this.complaintRepo.supabase
             .from('complaint_assignments')
-            .select('assigned_by')
-            .eq('complaint_id', complaintId)
-            .limit(1)
-            .single();
+            .select('assigned_to_officer_id, assigned_by_lgu_admin_id')
+            .eq('complaint_id', complaintId);
 
-          if (assignments?.assigned_by) {
-            await this.notificationService.createNotification(
-              assignments.assigned_by,
-              'resolution_confirmed',
-              'Resolution Confirmed',
-              `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
-              {
-                priority: 'success',
-                link: `/lgu-admin/department-queue`,
-                metadata: { complaint_id: complaintId, feedback }
-              }
-            );
+          for (const assignment of assignments || []) {
+            // Notify assigned officer
+            if (assignment.assigned_to_officer_id) {
+              await this.notificationService.createNotification(
+                assignment.assigned_to_officer_id,
+                'resolution_confirmed',
+                'Resolution Confirmed',
+                `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
+                {
+                  priority: 'success',
+                  link: `/lgu-officer/assigned-tasks`,
+                  metadata: { complaint_id: complaintId, feedback }
+                }
+              );
+            }
+
+            // Notify department admin
+            if (assignment.assigned_by_lgu_admin_id) {
+              await this.notificationService.createNotification(
+                assignment.assigned_by_lgu_admin_id,
+                'resolution_confirmed',
+                'Resolution Confirmed',
+                `Citizen has confirmed the resolution of complaint: "${complaint.title}"`,
+                {
+                  priority: 'success',
+                  link: `/lgu-admin/assignments`,
+                  metadata: { complaint_id: complaintId, feedback }
+                }
+              );
+            }
           }
         } else {
-          // Notify officer that resolution was rejected
-          if (complaint.resolved_by) {
-            await this.notificationService.createNotification(
-              complaint.resolved_by,
-              'resolution_rejected',
-              'Resolution Rejected',
-              `Citizen has rejected the resolution of complaint: "${complaint.title}". Feedback: ${feedback || 'No feedback provided'}`,
-              {
-                priority: 'warning',
-                link: `/lgu-officer/tasks/${complaintId}`,
-                metadata: { complaint_id: complaintId, feedback }
-              }
-            );
+          // Notify officers that resolution was rejected
+          const { data: assignments } = await this.complaintRepo.supabase
+            .from('complaint_assignments')
+            .select('assigned_to_officer_id')
+            .eq('complaint_id', complaintId);
+
+          for (const assignment of assignments || []) {
+            if (assignment.assigned_to_officer_id) {
+              await this.notificationService.createNotification(
+                assignment.assigned_to_officer_id,
+                'resolution_rejected',
+                'Resolution Rejected',
+                `Citizen has rejected the resolution of complaint: "${complaint.title}". Feedback: ${feedback || 'No feedback provided'}`,
+                {
+                  priority: 'warning',
+                  link: `/lgu-officer/assigned-tasks`,
+                  metadata: { complaint_id: complaintId, feedback }
+                }
+              );
+            }
           }
         }
       } catch (notifError) {
@@ -900,6 +1032,223 @@ class ComplaintService {
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] Confirm resolution error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Mark assignment as complete (LGU Officer side)
+   */
+  async markAssignmentComplete(complaintId, officerId, notes = null, files = []) {
+    try {
+      // Debug logging
+      console.log('[COMPLAINT_SERVICE] markAssignmentComplete called:', { complaintId, officerId, hasNotes: !!notes, hasFiles: files?.length || 0 });
+
+      // Get user info for role checking
+      const { data: userInfo } = await this.complaintRepo.supabase.auth.admin.getUserById(officerId);
+      const userRole = userInfo?.user?.raw_user_meta_data?.role || userInfo?.user?.user_metadata?.role;
+      console.log('[COMPLAINT_SERVICE] User role:', { officerId, userRole, userEmail: userInfo?.user?.email });
+      
+      const { data: assignments, error: assignmentError } = await this.complaintRepo.supabase
+        .from('complaint_assignments')
+        .select('*')
+        .eq('complaint_id', complaintId)
+        .eq('assigned_to', officerId)
+        .order('created_at', { ascending: false }); // Get most recent first
+
+      console.log('[COMPLAINT_SERVICE] Assignment query result:', { 
+        found: !!assignments && assignments.length > 0, 
+        error: assignmentError,
+        count: assignments?.length || 0,
+        assignments 
+      });
+
+      // Log assignment details for debugging
+      if (assignments && assignments.length > 0) {
+        assignments.forEach((ass, idx) => {
+          console.log(`[COMPLAINT_SERVICE] Assignment ${idx}:`, {
+            id: ass.id,
+            assigned_to: ass.assigned_to,
+            assigned_by: ass.assigned_by,
+            status: ass.status,
+            complaint_id: ass.complaint_id
+          });
+        });
+      } else {
+        console.log('[COMPLAINT_SERVICE] No assignments found for officer:', { complaintId, officerId });
+      }
+      
+      // Select the first (most recent) assignment or check if admin
+      let assignment = assignments && assignments.length > 0 ? assignments[0] : null;
+      let authorized = true;
+      
+      if (!assignment) {
+        console.log('[COMPLAINT_SERVICE] No assignment found, checking if admin...');
+        
+        // Check if user is admin who assigned the task
+        const { data: adminAssignments, error: adminError } = await this.complaintRepo.supabase
+          .from('complaint_assignments')
+          .select('*')
+          .eq('complaint_id', complaintId)
+          .eq('assigned_by', officerId)
+          .order('created_at', { ascending: false });
+        
+        console.log('[COMPLAINT_SERVICE] Admin assignments query result:', { 
+          found: !!adminAssignments && adminAssignments.length > 0,
+          error: adminError,
+          count: adminAssignments?.length || 0
+        });
+        
+        if (!adminAssignments || adminAssignments.length === 0) {
+          // Get all assignments to debug why none match
+          const { data: allAssignments } = await this.complaintRepo.supabase
+            .from('complaint_assignments')
+            .select('*')
+            .eq('complaint_id', complaintId);
+
+          console.log('[COMPLAINT_SERVICE] All assignments for this complaint:', allAssignments);
+          console.log('[COMPLAINT_SERVICE] User role check:', {
+            userRole,
+            isLguOfficer: userRole === 'lgu',
+            isLguAdmin: userRole === 'lgu-admin',
+            isLguRole: userRole?.startsWith('lgu-')
+          });
+
+          throw new Error(`Assignment not found or not authorized. User role: ${userRole}, Complaint ID: ${complaintId}`);
+        }
+        
+        assignment = adminAssignments[0]; // Get first admin assignment
+        authorized = false; // Flag that this is admin completing their own assignment
+      }
+
+      // Process and upload completion evidence if provided
+      if (files && files.length > 0) {
+        await this._processCompletionEvidence(complaintId, files, officerId);
+      }
+
+      // Update assignment status
+      let updatedAssignment = assignment;
+      if (authorized && assignment) {
+        // Normal officer completing their assignment
+        const { data, error: updateError } = await this.complaintRepo.supabase
+          .from('complaint_assignments')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            notes: notes || assignment.notes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', assignment.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw new Error('Failed to update assignment status');
+        }
+        updatedAssignment = data;
+      } else if (!authorized) {
+        // Admin completing without an assignment - create a completion record
+        const { data: adminAssignment } = await this.complaintRepo.supabase
+          .from('complaint_assignments')
+          .select('*')
+          .eq('complaint_id', complaintId)
+          .eq('assigned_by', officerId)
+          .limit(1)
+          .single();
+        
+        if (adminAssignment) {
+          const { data, error: updateError } = await this.complaintRepo.supabase
+            .from('complaint_assignments')
+            .update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              notes: notes || adminAssignment.notes,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', adminAssignment.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            throw new Error('Failed to update assignment status');
+          }
+          updatedAssignment = data;
+        }
+      }
+
+      // Update complaint confirmation status using the database function
+      await this.complaintRepo.supabase.rpc('update_complaint_confirmation_status', {
+        complaint_uuid: complaintId
+      });
+
+      // Get updated complaint for notifications
+      const { data: complaint } = await this.complaintRepo.supabase
+        .from('complaints')
+        .select('title, submitted_by')
+        .eq('id', complaintId)
+        .single();
+
+      // Notify relevant parties
+      try {
+        // Notify citizen
+        if (complaint?.submitted_by) {
+          await this.notificationService.createNotification(
+            complaint.submitted_by,
+            'assignment_completed',
+            'Assignment Completed',
+            `An officer has completed their assignment for complaint: "${complaint.title}"`,
+            {
+              priority: 'info',
+              link: `/complaint-details/${complaintId}`,
+              metadata: { complaint_id: complaintId }
+            }
+          );
+        }
+
+        // Notify department admin
+        if (assignment.assigned_by) {
+          await this.notificationService.createNotification(
+            assignment.assigned_by,
+            'assignment_completed',
+            'Assignment Completed',
+            `Officer has completed assignment for complaint: "${complaint?.title}"`,
+            {
+              priority: 'info',
+              link: `/lgu-admin/assignments`,
+              metadata: { complaint_id: complaintId }
+            }
+          );
+        }
+      } catch (notifError) {
+        console.warn('[COMPLAINT-SERVICE] Failed to send completion notifications:', notifError.message);
+      }
+
+      return updatedAssignment;
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Mark assignment complete error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get confirmation message for a complaint
+   */
+  async getConfirmationMessage(complaintId, userRole) {
+    try {
+      const { data: message, error } = await this.complaintRepo.supabase
+        .rpc('get_complaint_confirmation_message', {
+          complaint_uuid: complaintId,
+          user_role: userRole
+        });
+
+      if (error) {
+        console.error('[COMPLAINT-SERVICE] Error getting confirmation message:', error);
+        return 'Status unavailable';
+      }
+
+      return message || 'Status unavailable';
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Error getting confirmation message:', error);
+      return 'Status unavailable';
     }
   }
 
@@ -1110,49 +1459,79 @@ class ComplaintService {
         throw new Error('Access denied to complaint evidence');
       }
 
+      // Get evidence metadata from database to distinguish between types
+      const { data: evidenceMetadata, error: metadataError } = await supabase
+        .from('complaint_evidence')
+        .select('*')
+        .eq('complaint_id', complaintId)
+        .order('uploaded_at', { ascending: false });
+
+      if (metadataError) {
+        console.warn('[COMPLAINT_SERVICE] Error fetching evidence metadata:', metadataError);
+      }
+
       // List files in the complaint-evidence bucket for this complaint
       const bucketName = 'complaint-evidence';
-      const folderPath = `${complaintId}/`;
-
-      const { data: files, error: listError } = await supabase.storage
+      
+      // Get initial evidence files
+      const initialFolderPath = `${complaintId}/evidence/`;
+      const { data: initialFiles } = await supabase.storage
         .from(bucketName)
-        .list(folderPath);
+        .list(initialFolderPath);
 
-      if (listError) {
-        console.error('[COMPLAINT_SERVICE] Error listing files:', listError);
-        throw new Error('Failed to list evidence files');
-      }
+      // Get completion evidence files
+      const completionFolderPath = `${complaintId}/completion/`;
+      const { data: completionFiles } = await supabase.storage
+        .from(bucketName)
+        .list(completionFolderPath);
 
-      if (!files || files.length === 0) {
-        return [];
-      }
-
-      // Generate signed URLs for each file
-      const evidenceFiles = await Promise.all(
-        files.map(async (file) => {
-          const filePath = `${folderPath}${file.name}`;
+      const allFiles = [];
+      
+      // Process initial evidence
+      if (initialFiles && initialFiles.length > 0) {
+        for (const file of initialFiles) {
+          const filePath = `${initialFolderPath}${file.name}`;
           
-          const { data: signedUrl, error: urlError } = await supabase.storage
+          const { data: signedUrl } = await supabase.storage
             .from(bucketName)
-            .createSignedUrl(filePath, 3600); // 1 hour expiry
-
-          if (urlError) {
-            console.error(`[COMPLAINT_SERVICE] Error creating signed URL for ${filePath}:`, urlError);
-            return null;
+            .createSignedUrl(filePath, 3600);
+          
+          if (signedUrl) {
+            allFiles.push({
+              name: file.name,
+              size: file.metadata?.size || 0,
+              url: signedUrl.signedUrl,
+              path: filePath,
+              type: 'initial',
+              lastModified: file.updated_at || file.created_at
+            });
           }
+        }
+      }
 
-          return {
-            name: file.name,
-            size: file.metadata?.size || 0,
-            url: signedUrl.signedUrl,
-            path: filePath,
-            lastModified: file.updated_at || file.created_at
-          };
-        })
-      );
+      // Process completion evidence
+      if (completionFiles && completionFiles.length > 0) {
+        for (const file of completionFiles) {
+          const filePath = `${completionFolderPath}${file.name}`;
+          
+          const { data: signedUrl } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 3600);
+          
+          if (signedUrl) {
+            allFiles.push({
+              name: file.name,
+              size: file.metadata?.size || 0,
+              url: signedUrl.signedUrl,
+              path: filePath,
+              type: 'completion',
+              lastModified: file.updated_at || file.created_at
+            });
+          }
+        }
+      }
 
-      // Filter out any null results (files that failed to get signed URLs)
-      return evidenceFiles.filter(file => file !== null);
+      return allFiles;
 
     } catch (error) {
       console.error('[COMPLAINT_SERVICE] Error getting complaint evidence:', error);
@@ -1161,56 +1540,74 @@ class ComplaintService {
   }
 
   /**
-   * Check if user has access to a complaint
-   * @param {Object} complaint - Complaint object
-   * @param {Object} user - User object
-   * @returns {Promise<boolean>} Whether user has access
+   * Confirm resolution (Citizen side)
+   * @param {string} complaintId - Complaint ID
+   * @param {string} citizenId - Citizen user ID
+   * @param {boolean} confirmed - Whether citizen confirms the resolution
+   * @param {string} feedback - Optional feedback from citizen
+   * @returns {Promise<Object>} Result of confirmation
    */
-  async checkComplaintAccess(complaint, user) {
+  async confirmResolution(complaintId, citizenId, confirmed, feedback = null) {
     try {
-      // Extract user details from the user object passed from auth middleware
-      const userRole = user.role || user.roleType;
-      const userDepartment = user.department || user.departmentCode;
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
 
-      console.log('[COMPLAINT_SERVICE] Access check debug:', {
-        userId: user.id,
-        userRole,
-        userDepartment,
-        complaintDepartmentR: complaint.department_r,
-        complaintSubmittedBy: complaint.submitted_by,
-        hasAccess: complaint.department_r && complaint.department_r.includes(userDepartment)
-      });
+      // First, verify the complaint exists and citizen has access
+      const { data: complaint, error: complaintError } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('id', complaintId)
+        .eq('submitted_by', citizenId)
+        .single();
 
-      // Citizens can only access their own complaints
-      if (userRole === 'citizen') {
-        return complaint.submitted_by === user.id;
+      if (complaintError || !complaint) {
+        throw new Error('Complaint not found or access denied');
       }
 
-      // Coordinators can access all complaints
-      if (userRole === 'complaint-coordinator') {
-        return true;
+      // Update the complaint with citizen's confirmation
+      const updateData = {
+        confirmed_by_citizen: confirmed,
+        citizen_confirmation_date: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Add feedback if provided
+      if (feedback) {
+        updateData.citizen_feedback = feedback;
       }
 
-      // LGU admins can access complaints assigned to their department
-      if (userRole === 'lgu-admin') {
-        return complaint.department_r && complaint.department_r.includes(userDepartment);
+      // Update the complaint
+      const { data: updatedComplaint, error: updateError } = await supabase
+        .from('complaints')
+        .update(updateData)
+        .eq('id', complaintId)
+        .eq('submitted_by', citizenId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error('Failed to update complaint confirmation');
       }
 
-      // LGU officers can access complaints assigned to their department
-      if (userRole === 'lgu-officer') {
-        return complaint.department_r && complaint.department_r.includes(userDepartment);
+      // Call the database function to update confirmation status
+      const { data: statusResult, error: statusError } = await supabase
+        .rpc('update_complaint_confirmation_status', {
+          complaint_uuid: complaintId
+        });
+
+      if (statusError) {
+        console.warn('[COMPLAINT_SERVICE] Error updating confirmation status:', statusError);
       }
 
-      // HR and Super Admin can access all complaints
-      if (userRole === 'hr' || userRole === 'super-admin') {
-        return true;
-      }
-
-      return false;
+      return {
+        success: true,
+        data: updatedComplaint,
+        message: confirmed ? 'Resolution confirmed successfully' : 'Resolution feedback recorded'
+      };
 
     } catch (error) {
-      console.error('[COMPLAINT_SERVICE] Error checking complaint access:', error);
-      return false;
+      console.error('[COMPLAINT_SERVICE] Error confirming resolution:', error);
+      throw error;
     }
   }
 }

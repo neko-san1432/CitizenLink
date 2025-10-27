@@ -29,19 +29,24 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadComplaint() {
   try {
+    console.log('[REVIEW] Loading complaint:', complaintId);
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}`);
 
+    console.log('[REVIEW] API response status:', response.status);
+
     if (!response.ok) {
-      throw new Error('Failed to load complaint');
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('[REVIEW] API response data:', result);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to load complaint');
     }
 
     currentComplaint = result.data;
+    console.log('[REVIEW] Complaint loaded successfully:', currentComplaint);
     renderComplaint();
   } catch (error) {
     console.error('[REVIEW] Load error:', error);

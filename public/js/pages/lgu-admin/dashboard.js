@@ -230,7 +230,10 @@ class LguAdminDashboard {
       'active': 'status-active',
       'in_progress': 'status-in-progress',
       'completed': 'status-completed',
-      'cancelled': 'status-cancelled'
+      'cancelled': 'status-cancelled',
+      'waiting_for_responders': 'status-waiting',
+      'waiting_for_complainant': 'status-waiting',
+      'confirmed': 'status-confirmed'
     };
     return statusClasses[status] || 'status-unknown';
   }
@@ -242,7 +245,10 @@ class LguAdminDashboard {
       'active': 'Active',
       'in_progress': 'In Progress',
       'completed': 'Completed',
-      'cancelled': 'Cancelled'
+      'cancelled': 'Cancelled',
+      'waiting_for_responders': 'Waiting for responders\' confirmation',
+      'waiting_for_complainant': 'Waiting for complainant\'s confirmation',
+      'confirmed': 'Confirmed by both parties'
     };
     return statusTexts[status] || status;
   }

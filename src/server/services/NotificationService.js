@@ -20,27 +20,52 @@ class NotificationService {
   * Department matching by code suffix in role (e.g., lgu-admin-{dept}) and/or profile metadata
   */
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
-    // Secure lookup via RPC (SECURITY DEFINER)
-    const { data: targets, error } = await this.supabase
-      .rpc('get_department_admin_ids', { p_department_code: departmentCode });
+    try {
+      console.log(`[NOTIFICATION] Looking up LGU admins for department: ${departmentCode}`);
 
-    if (error) {
-      console.warn('[NOTIFICATION] Admin RPC failed:', error.message);
-      return { success: false };
+      // Get all users with lgu-admin role and matching department (using the working method from CoordinatorService)
+      const { data: users, error } = await this.supabase.auth.admin.listUsers();
+
+      if (error) {
+        console.warn('[NOTIFICATION] Failed to get users for notification:', error.message);
+        return { success: false };
+      }
+
+      // Find LGU admins for this specific department
+      const admins = users.users.filter(user => {
+        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
+        const userDept = user.user_metadata?.dpt || user.raw_user_meta_data?.dpt ||
+                        user.user_metadata?.department || user.raw_user_meta_data?.department;
+
+        return userRole === 'lgu-admin' && userDept === departmentCode;
+      });
+
+      console.log(`[NOTIFICATION] Found ${admins.length} LGU admins for department ${departmentCode}`);
+
+      if (admins.length === 0) {
+        console.warn(`[NOTIFICATION] No LGU admins found for department ${departmentCode}`);
+        return { success: true, count: 0 };
+      }
+
+      const notifications = admins.map((admin) => ({
+        userId: admin.id,
+        type: NOTIFICATION_TYPES.APPROVAL_REQUIRED,
+        title: 'New Complaint Assigned to Your Department',
+        message: `"${complaintTitle}" has been assigned to ${departmentCode}. Please review and assign to an officer.`,
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/lgu-admin/assignments`,
+        metadata: {
+          complaint_id: complaintId,
+          department: departmentCode,
+          assigned_at: new Date().toISOString()
+        }
+      }));
+
+      return this.createBulkNotifications(notifications);
+    } catch (error) {
+      console.error('[NOTIFICATION] notifyDepartmentAdminsByCode error:', error);
+      return { success: false, error: error.message };
     }
-    if (targets.length === 0) return { success: true, count: 0 };
-
-    const notifications = targets.map((userId) => ({
-      userId,
-      type: NOTIFICATION_TYPES.APPROVAL_REQUIRED,
-      title: 'New Complaint Assigned to Your Department',
-      message: `"${complaintTitle}" has been assigned to ${departmentCode}.`,
-      priority: NOTIFICATION_PRIORITY.INFO,
-      link: `/lgu/department/${departmentCode}/complaints/${complaintId}`,
-      metadata: { complaint_id: complaintId, department: departmentCode }
-    }));
-
-    return this.createBulkNotifications(notifications);
   }
 
   /**

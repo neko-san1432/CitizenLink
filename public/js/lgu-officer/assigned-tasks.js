@@ -214,7 +214,7 @@ class AssignedTasks {
         // Mark as resolved button (if not completed)
         if (task.status !== 'completed') {
             buttons.push(`
-                <button class="btn btn-success" data-action="resolve" data-complaint-id="${task.complaint_id}">
+                <button class="btn btn-success" data-action="resolve" data-complaint-id="${task.complaint_id}" data-assignment-id="${task.id}">
                     Mark as Resolved
                 </button>
             `);
@@ -262,8 +262,12 @@ class AssignedTasks {
     }
 
     attachActionEventListeners() {
+        console.log('[LGU_OFFICER] Attaching action event listeners...');
+        
         // View details buttons
-        document.querySelectorAll('[data-action="view"]').forEach(btn => {
+        const viewButtons = document.querySelectorAll('[data-action="view"]');
+        console.log('[LGU_OFFICER] Found view buttons:', viewButtons.length);
+        viewButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const complaintId = e.target.getAttribute('data-complaint-id');
                 this.viewComplaint(complaintId);
@@ -271,10 +275,33 @@ class AssignedTasks {
         });
 
         // Mark as resolved buttons
-        document.querySelectorAll('[data-action="resolve"]').forEach(btn => {
+        const resolveButtons = document.querySelectorAll('[data-action="resolve"]');
+        console.log('[LGU_OFFICER] Found resolve buttons:', resolveButtons.length);
+        
+        if (resolveButtons.length === 0) {
+            console.error('[LGU_OFFICER] No resolve buttons found in DOM!');
+        }
+        
+        resolveButtons.forEach((btn, index) => {
+            console.log(`[LGU_OFFICER] Attaching listener to resolve button ${index + 1}`);
+            console.log('[LGU_OFFICER] Button element:', btn);
+            console.log('[LGU_OFFICER] Button complaint ID:', btn.getAttribute('data-complaint-id'));
+            
             btn.addEventListener('click', (e) => {
-                const complaintId = e.target.getAttribute('data-complaint-id');
-                this.showResolutionModal(complaintId);
+                console.log('[LGU_OFFICER] Resolve button clicked!');
+                e.preventDefault();
+                e.stopPropagation();
+                const complaintId = e.target.getAttribute('data-complaint-id') || btn.getAttribute('data-complaint-id');
+                const assignmentId = e.target.getAttribute('data-assignment-id') || btn.getAttribute('data-assignment-id');
+                console.log('[LGU_OFFICER] IDs from button:', { complaintId, assignmentId });
+                if (!complaintId) {
+                    console.error('[LGU_OFFICER] No complaint ID found!');
+                    return;
+                }
+                // Always use complaint ID for the modal - the API expects complaint IDs
+                const id = complaintId;
+                const type = assignmentId ? 'assignment' : 'complaint';
+                this.showResolutionModal(id, type);
             });
         });
     }
@@ -284,21 +311,40 @@ class AssignedTasks {
         window.location.href = `/complaint-details/${complaintId}`;
     }
 
-    showResolutionModal(complaintId) {
-        // Set complaint ID
-        document.getElementById('resolution-complaint-id').value = complaintId;
-
-        // Show modal
-        const modal = document.getElementById('resolution-modal');
-        if (modal) {
-            modal.style.display = 'flex';
+    showResolutionModal(id, type = 'complaint') {
+        console.log('[LGU_OFFICER] Showing resolution modal for:', { id, type });
+        
+        // Set complaint/assignment ID
+        const complaintIdInput = document.getElementById('resolution-complaint-id');
+        if (!complaintIdInput) {
+            console.error('[LGU_OFFICER] resolution-complaint-id input not found!');
+            return;
         }
+        complaintIdInput.value = id;
+        
+        // Store type for later use
+        complaintIdInput.dataset.idType = type;
+
+        // Show modal by adding 'active' class (required by modal.css)
+        const modal = document.getElementById('resolution-modal');
+        if (!modal) {
+            console.error('[LGU_OFFICER] resolution-modal not found!');
+            return;
+        }
+        modal.classList.add('active');
+        console.log('[LGU_OFFICER] Modal displayed with active class');
     }
 
     async confirmResolution() {
-        const complaintId = document.getElementById('resolution-complaint-id').value;
+        console.log('[LGU_OFFICER] confirmResolution called');
+        
+        const complaintIdInput = document.getElementById('resolution-complaint-id');
+        const id = complaintIdInput.value;
+        const idType = complaintIdInput.dataset.idType || 'complaint';
         const resolutionNotes = document.getElementById('resolution-notes').value;
-        const evidence = document.getElementById('resolution-evidence').files;
+        const evidenceInput = document.getElementById('resolution-evidence');
+        
+        console.log('[LGU_OFFICER] Resolution details:', { id, idType, hasNotes: !!resolutionNotes, hasFiles: !!evidenceInput?.files?.length });
 
         if (!resolutionNotes.trim()) {
             showToast('Please provide resolution notes', 'error');
@@ -306,41 +352,55 @@ class AssignedTasks {
         }
 
         try {
-            const response = await fetch(`/api/lgu/complaints/${complaintId}/resolve`, {
+            console.log('[LGU_OFFICER] Preparing FormData...');
+            
+            // Create FormData to handle files
+            const formData = new FormData();
+            formData.append('notes', resolutionNotes.trim());
+
+            // Add files if selected
+            if (evidenceInput && evidenceInput.files && evidenceInput.files.length > 0) {
+                Array.from(evidenceInput.files).forEach((file, index) => {
+                    formData.append(`completionEvidence`, file);
+                });
+                console.log('[LGU_OFFICER] Attaching', evidenceInput.files.length, 'evidence file(s)');
+            }
+
+            console.log('[LGU_OFFICER] Calling API with ID:', id, 'Type:', idType);
+            const response = await fetch(`/api/complaints/${id}/mark-complete`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 credentials: 'include',
-                body: JSON.stringify({
-                    resolution_notes: resolutionNotes.trim(),
-                    evidence: evidence.length > 0 ? Array.from(evidence).map(f => f.name) : null
-                })
+                body: formData  // Don't set Content-Type header - browser will set it with boundary
             });
 
+            console.log('[LGU_OFFICER] API response status:', response.status);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('[LGU_OFFICER] API error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
 
             const result = await response.json();
+            console.log('[LGU_OFFICER] API result:', result);
             
             if (result.success) {
-                showToast('Complaint marked as resolved successfully', 'success');
+                showToast('Assignment marked as complete successfully', 'success');
                 this.hideModal();
                 this.loadTasks(); // Refresh the list
             } else {
-                throw new Error(result.error || 'Failed to mark as resolved');
+                throw new Error(result.error || 'Failed to mark assignment as complete');
             }
         } catch (error) {
-            console.error('Error marking as resolved:', error);
-            showToast('Failed to mark as resolved: ' + error.message, 'error');
+            console.error('[LGU_OFFICER] Error marking assignment as complete:', error);
+            showToast('Failed to mark assignment as complete: ' + error.message, 'error');
         }
     }
 
     hideModal() {
         const modal = document.getElementById('resolution-modal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('active');
         }
 
         // Reset form
