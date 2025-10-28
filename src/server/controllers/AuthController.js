@@ -168,17 +168,11 @@ class AuthController {
         raw_user_meta_data: rawUserMetaData
       };
 
-      console.log('[LOGIN] User object created:', {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        hasName: !!user.name,
-        status: user.status
-      });
+      // console.log removed for security
 
       // Check if user is active (skip for pending_verification on first login)
       if (user.status && user.status !== 'active' && user.status !== 'pending_verification') {
-        console.log('[LOGIN] ❌ User account not active:', user.status);
+        // console.log removed for security
         return res.status(403).json({
           success: false,
           error: `Account is ${user.status}. Please contact support.`
@@ -188,11 +182,11 @@ class AuthController {
       // Track login (continue even if tracking fails)
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.get('User-Agent');
-      console.log('[LOGIN] 📊 Tracking login for user:', userId);
+      // console.log removed for security
 
       try {
         await UserService.trackLogin(userId, ipAddress, userAgent);
-        console.log('[LOGIN] ✅ Login tracking successful');
+        // console.log removed for security
       } catch (trackError) {
         console.warn('[LOGIN] ⚠️ Login tracking failed:', trackError.message);
       }
@@ -207,18 +201,18 @@ class AuthController {
           // Removed domain to use default
         };
 
-      console.log('[LOGIN] 🍪 Setting session cookie with options:', cookieOptions);
-      console.log('[LOGIN] Token length:', authData.session.access_token?.length);
-      console.log('[LOGIN] Token preview:', authData.session.access_token?.substring(0, 20) + '...');
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
 
       // Set the cookie
-      console.log('[LOGIN] 🍪 Setting session cookie...');
+      // console.log removed for security
       res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
-      console.log('[LOGIN] 🍪 Session cookie set');
+      // console.log removed for security
       
       // Also set a non-httpOnly cookie for debugging (remove in production)
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[LOGIN] 🍪 Setting debug cookie...');
+        // console.log removed for security
         res.cookie('sb_access_token_debug', authData.session.access_token, {
           httpOnly: false,
           secure: false,
@@ -227,13 +221,13 @@ class AuthController {
           maxAge: 315360000000 // 10 years for development (permanent)
           // Removed domain to use default
         });
-        console.log('[LOGIN] 🍪 Debug cookie set');
+        // console.log removed for security
       }
 
       // Verify cookies are set in response headers
-      console.log('[LOGIN] 🍪 Response headers after cookie setting:', res.getHeaders());
+      // console.log removed for security
       
-      console.log('[LOGIN] ✅ Login successful, sending response');
+      // console.log removed for security
 
       res.json({
         success: true,

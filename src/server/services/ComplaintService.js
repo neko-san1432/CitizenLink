@@ -15,11 +15,7 @@ class ComplaintService {
 
   async createComplaint(userId, complaintData, files = []) {
     // Debug: Log received complaint data
-    console.log('[COMPLAINT_SERVICE] Received complaint data:', {
-      preferred_departments: complaintData.preferred_departments,
-      departments: complaintData.departments,
-      keys: Object.keys(complaintData)
-    });
+    // console.log removed for security
     
     // Parse preferred_departments - handle both array and individual values
     let preferredDepartments = complaintData.preferred_departments || [];
@@ -31,7 +27,7 @@ class ComplaintService {
         preferredDepartments = JSON.parse(preferredDepartments);
       } catch (e) {
         // If JSON parsing fails, treat it as a single department code
-        console.log('[COMPLAINT] Treating preferred_departments as single value:', preferredDepartments);
+        // console.log removed for security
         preferredDepartments = [preferredDepartments].filter(Boolean);
       }
     }
@@ -41,7 +37,7 @@ class ComplaintService {
       preferredDepartments = [preferredDepartments].filter(Boolean);
     }
 
-    console.log('[COMPLAINT_SERVICE] Processed preferred_departments:', preferredDepartments);
+    // console.log removed for security
 
     // Map client field names to server field names
     const mappedData = {
@@ -61,7 +57,7 @@ class ComplaintService {
     const preparedData = prepareComplaintForInsert(mappedData);
     
     // Debug: Log what fields are being sent to database
-    console.log('[COMPLAINT_SERVICE] Fields being sent to database:', Object.keys(preparedData));
+    // console.log removed for security
     
     // Validate data consistency
     const consistencyCheck = validateComplaintConsistency(preparedData);
@@ -106,7 +102,7 @@ class ComplaintService {
             createdComplaint.id,
             createdComplaint.title
           );
-          console.log('[COMPLAINT] Coordinator notification sent for complaint:', createdComplaint.id);
+          // console.log removed for security
         } else {
           console.warn('[COMPLAINT] No active coordinator found for notification');
         }
@@ -393,17 +389,11 @@ class ComplaintService {
 
   async getUserComplaints(userId, options = {}) {
     try {
-      console.log('[COMPLAINT_SERVICE] getUserComplaints called:', { userId, options });
+      // console.log removed for security
 
       const result = await this.complaintRepo.findByUserId(userId, options);
 
-      console.log('[COMPLAINT_SERVICE] getUserComplaints result:', {
-        complaintsCount: result.complaints?.length || 0,
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: result.totalPages
-      });
+      // console.log removed for security
 
       return result;
     } catch (error) {
@@ -1041,12 +1031,12 @@ class ComplaintService {
   async markAssignmentComplete(complaintId, officerId, notes = null, files = []) {
     try {
       // Debug logging
-      console.log('[COMPLAINT_SERVICE] markAssignmentComplete called:', { complaintId, officerId, hasNotes: !!notes, hasFiles: files?.length || 0 });
+      // console.log removed for security
 
       // Get user info for role checking
       const { data: userInfo } = await this.complaintRepo.supabase.auth.admin.getUserById(officerId);
       const userRole = userInfo?.user?.raw_user_meta_data?.role || userInfo?.user?.user_metadata?.role;
-      console.log('[COMPLAINT_SERVICE] User role:', { officerId, userRole, userEmail: userInfo?.user?.email });
+      // console.log removed for security
       
       const { data: assignments, error: assignmentError } = await this.complaintRepo.supabase
         .from('complaint_assignments')
@@ -1055,26 +1045,15 @@ class ComplaintService {
         .eq('assigned_to', officerId)
         .order('created_at', { ascending: false }); // Get most recent first
 
-      console.log('[COMPLAINT_SERVICE] Assignment query result:', { 
-        found: !!assignments && assignments.length > 0, 
-        error: assignmentError,
-        count: assignments?.length || 0,
-        assignments 
-      });
+      // console.log removed for security
 
       // Log assignment details for debugging
       if (assignments && assignments.length > 0) {
         assignments.forEach((ass, idx) => {
-          console.log(`[COMPLAINT_SERVICE] Assignment ${idx}:`, {
-            id: ass.id,
-            assigned_to: ass.assigned_to,
-            assigned_by: ass.assigned_by,
-            status: ass.status,
-            complaint_id: ass.complaint_id
-          });
+          // console.log removed for security
         });
       } else {
-        console.log('[COMPLAINT_SERVICE] No assignments found for officer:', { complaintId, officerId });
+        // console.log removed for security
       }
       
       // Select the first (most recent) assignment or check if admin
@@ -1082,7 +1061,7 @@ class ComplaintService {
       let authorized = true;
       
       if (!assignment) {
-        console.log('[COMPLAINT_SERVICE] No assignment found, checking if admin...');
+        // console.log removed for security
         
         // Check if user is admin who assigned the task
         const { data: adminAssignments, error: adminError } = await this.complaintRepo.supabase
@@ -1092,11 +1071,7 @@ class ComplaintService {
           .eq('assigned_by', officerId)
           .order('created_at', { ascending: false });
         
-        console.log('[COMPLAINT_SERVICE] Admin assignments query result:', { 
-          found: !!adminAssignments && adminAssignments.length > 0,
-          error: adminError,
-          count: adminAssignments?.length || 0
-        });
+        // console.log removed for security
         
         if (!adminAssignments || adminAssignments.length === 0) {
           // Get all assignments to debug why none match
@@ -1105,13 +1080,8 @@ class ComplaintService {
             .select('*')
             .eq('complaint_id', complaintId);
 
-          console.log('[COMPLAINT_SERVICE] All assignments for this complaint:', allAssignments);
-          console.log('[COMPLAINT_SERVICE] User role check:', {
-            userRole,
-            isLguOfficer: userRole === 'lgu',
-            isLguAdmin: userRole === 'lgu-admin',
-            isLguRole: userRole?.startsWith('lgu-')
-          });
+          // console.log removed for security
+          // console.log removed for security
 
           throw new Error(`Assignment not found or not authorized. User role: ${userRole}, Complaint ID: ${complaintId}`);
         }
@@ -1429,27 +1399,22 @@ class ComplaintService {
       const Database = require('../config/database');
       const supabase = Database.getClient();
 
-      console.log(`[COMPLAINT_SERVICE] Getting evidence for complaint ${complaintId}`);
+      // console.log removed for security
 
       // First, verify the user has access to this complaint
-      console.log(`[COMPLAINT_SERVICE] Querying complaint with ID: ${complaintId}`);
+      // console.log removed for security
       const { data: complaint, error: complaintError } = await supabase
         .from('complaints')
         .select('id, submitted_by, department_r, assigned_coordinator_id')
         .eq('id', complaintId)
         .single();
 
-      console.log(`[COMPLAINT_SERVICE] Complaint query result:`, { 
-        complaint, 
-        error: complaintError,
-        hasComplaint: !!complaint,
-        hasError: !!complaintError 
-      });
+      // console.log removed for security
 
       if (complaintError || !complaint) {
         console.error(`[COMPLAINT_SERVICE] Complaint not found:`, complaintError);
         // Return empty array instead of throwing error - complaint might have been deleted
-        console.log(`[COMPLAINT_SERVICE] Returning empty evidence array for non-existent complaint`);
+        // console.log removed for security
         return [];
       }
 

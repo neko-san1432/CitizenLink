@@ -339,7 +339,7 @@ function filterReviewQueue() {
 function renderAnalytics(data) {
   // Use real data from API
   if (!data || !data.analytics) {
-    console.log('[COORDINATOR] No analytics data available');
+    // console.log removed for security
     return;
   }
   

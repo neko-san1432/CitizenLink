@@ -6,11 +6,7 @@ const run = async () => {
     // After OAuth or email confirmation, Supabase sets a session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    console.log('[SUCCESS] Session check:', {
-      hasSession: !!session,
-      hasError: !!sessionError,
-      sessionError: sessionError?.message
-    });
+    // console.log removed for security
 
     const user = session?.user;
     const accessToken = session?.access_token || null;
@@ -18,21 +14,13 @@ const run = async () => {
     const name = user?.user_metadata?.name || null;
     const email = user?.email || null;
 
-    console.log('[SUCCESS] User data:', {
-      hasUser: !!user,
-      email: email,
-      role: role,
-      name: name,
-      userMetadata: user?.user_metadata,
-      hasMobile: !!user?.user_metadata?.mobile,
-      mobile: user?.user_metadata?.mobile
-    });
+    // console.log removed for security
 
     if (role || name) saveUserMeta({ role, name });
 
     // Track provider
     const provider = user?.identities?.[0]?.provider || null;
-    console.log('[SUCCESS] Provider:', provider);
+    // console.log removed for security
 
     if (provider) {
       setOAuthContext({ provider, email });
@@ -57,7 +45,7 @@ const run = async () => {
           body: JSON.stringify({ access_token: accessToken })
         });
 
-        console.log('[SUCCESS] Session cookie response:', resp.ok);
+        // console.log removed for security
 
         // Verify cookie by hitting a protected endpoint before redirecting
         if (resp.ok) {
@@ -65,7 +53,7 @@ const run = async () => {
           try {
             const check1 = await fetch('/api/user/role', { method: 'GET' });
             ok = check1.ok;
-            console.log('[SUCCESS] First role check:', check1.ok);
+            // console.log removed for security
           } catch (error) {
             console.error('[SUCCESS] First role check error:', error);
           }
@@ -75,14 +63,14 @@ const run = async () => {
             try {
               const check2 = await fetch('/api/user/role', { method: 'GET' });
               ok = check2.ok;
-              console.log('[SUCCESS] Second role check:', check2.ok);
+              // console.log removed for security
             } catch (error) {
               console.error('[SUCCESS] Second role check error:', error);
             }
           }
 
           if (!ok) {
-            console.log('[SUCCESS] Cookie verification failed, staying on page');
+            // console.log removed for security
             // If cannot verify, stay on page and let user refresh
             return;
           }
@@ -93,10 +81,7 @@ const run = async () => {
     }
 
     // redirect based on registration status
-    console.log('[SUCCESS] Redirect decision:', {
-      provider: provider,
-      hasMobile: !!user?.user_metadata?.mobile
-    });
+    // console.log removed for security
 
     // Check if user needs to complete OAuth registration
     // Mobile could be in different places: user_metadata.mobile, user_metadata.phone, etc.
@@ -105,21 +90,15 @@ const run = async () => {
                      user?.user_metadata?.phone_number ||
                      user?.phone;
 
-    console.log('[SUCCESS] Mobile check details:', {
-      mobile: user?.user_metadata?.mobile,
-      phone: user?.user_metadata?.phone,
-      phone_number: user?.user_metadata?.phone_number,
-      user_phone: user?.phone,
-      final_hasMobile: !!hasMobile
-    });
+    // console.log removed for security
 
     if (provider && !hasMobile) {
       // OAuth user needs to complete registration (no phone number)
-      console.log('[SUCCESS] Redirecting to OAuth continuation');
+      // console.log removed for security
       window.location.href = '/oauth-continuation';
     } else {
       // Regular user or OAuth user with complete profile (has phone number)
-      console.log('[SUCCESS] Redirecting to dashboard');
+      // console.log removed for security
       window.location.href = '/dashboard';
     }
   } catch (error) {

@@ -47,7 +47,7 @@ class OfficeSelectorComponent {
       this.departments = result.data.departments || [];
       this.departmentMappings = result.data.mappings || {};
       
-      console.log('[OFFICE-SELECTOR] Loaded departments:', this.departments.length);
+      // console.log removed for security
       
     } catch (error) {
       console.error('[OFFICE-SELECTOR] Error loading departments:', error);
@@ -216,7 +216,7 @@ class OfficeSelectorComponent {
         }
       });
 
-      console.log('[OFFICE-SELECTOR] Auto-selected departments:', Array.from(this.autoSelectedDepartments));
+      // console.log removed for security
 
       // Re-render to show auto-selections
       this.render();

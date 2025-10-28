@@ -35,11 +35,11 @@ class SessionManager {
         const isValid = await this.validateSession();
 
         if (isValid) {
-          console.log('[SESSION] Valid existing session found');
+          // console.log removed for security
           // Redirect to dashboard if we're on auth pages
           this.redirectIfOnAuthPage();
         } else {
-          console.log('[SESSION] Invalid existing session, clearing');
+          // console.log removed for security
           await this.clearSession();
         }
       }
@@ -72,7 +72,7 @@ class SessionManager {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       const response = await fetch('/api/user/role', {
         method: 'GET',
         credentials: 'include',
@@ -114,7 +114,7 @@ class SessionManager {
       try {
         const isValid = await this.validateSession();
         if (!isValid) {
-          console.log('[SESSION] Session expired, redirecting to login');
+          // console.log removed for security
           await this.clearSession();
           window.location.href = '/login';
         }

@@ -90,7 +90,7 @@ class NotificationController {
   async getNotificationCount(req, res) {
     try {
       const userId = req.user.id;
-      console.log('[NOTIFICATION] Getting notification count for user:', userId);
+      // console.log removed for security
 
       const { count, error } = await supabase
         .from('notification')
@@ -232,7 +232,7 @@ class NotificationController {
           table: 'notification',
           filter: `user_id=eq.${userId}`
         }, (payload) => {
-          console.log('[NOTIFICATION] Real-time notification received:', payload);
+          // console.log removed for security
           
           const notification = payload.new;
           const notificationData = {
@@ -254,7 +254,7 @@ class NotificationController {
       req.on('close', () => {
         // Only log in development mode to reduce production noise
         if (process.env.NODE_ENV === 'development') {
-          console.log('[NOTIFICATION] Client disconnected from stream');
+          // console.log removed for security
         }
         subscription.unsubscribe();
         res.end();

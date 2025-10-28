@@ -7,7 +7,7 @@ const supabase = Database.getClient();
 
 const authenticateUser = async (req, res, next) => {
   try {
-    console.log('[AUTH] authenticateUser called for path:', req.path);
+    // console.log removed for security
 
     // Extract token from cookies or headers
     const token =
@@ -15,16 +15,11 @@ const authenticateUser = async (req, res, next) => {
       req.cookies?.sb_access_token_debug ||
       req.headers.authorization?.replace('Bearer ', '');
 
-    console.log('[AUTH] Token extraction result:', {
-      hasToken: !!token,
-      tokenLength: token?.length,
-      hasCookie: !!(req.cookies?.sb_access_token || req.cookies?.sb_access_token_debug),
-      hasAuthHeader: !!req.headers.authorization
-    });
+    // console.log removed for security
 
     if (!token) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[AUTH] ${new Date().toISOString()} ❌ No token found for:`, req.path);
+        // console.log removed for security
       }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -41,17 +36,11 @@ const authenticateUser = async (req, res, next) => {
       error,
     } = await supabase.auth.getUser(token);
 
-    console.log('[AUTH] Token validation result:', {
-      hasUser: !!tokenUser,
-      userId: tokenUser?.id,
-      userEmail: tokenUser?.email,
-      hasError: !!error,
-      errorMessage: error?.message
-    });
+    // console.log removed for security
 
     if (error || !tokenUser) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[AUTH] ${new Date().toISOString()} ❌ Token validation failed:`, error?.message);
+        // console.log removed for security
       }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -63,7 +52,7 @@ const authenticateUser = async (req, res, next) => {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[AUTH] ${new Date().toISOString()} ✅ Token validated successfully for user:`, tokenUser.id);
+      // console.log removed for security
     }
 
     // Get user metadata from the token itself instead of using admin API
@@ -113,16 +102,7 @@ const authenticateUser = async (req, res, next) => {
 
     // Debug logging for department extraction
     if (process.env.NODE_ENV === 'development' && userRole === 'lgu-admin') {
-      console.log('[AUTH] Department extraction debug:', {
-        userRole,
-        departmentCode,
-        combinedMetadata: {
-          department: combinedMetadata.department,
-          dpt: combinedMetadata.dpt,
-          raw_user_meta_data: combinedMetadata.raw_user_meta_data
-        },
-        extractedDepartment: userDepartment
-      });
+      // console.log removed for security
     }
 
     // Attach the enhanced user object to the request
@@ -180,15 +160,8 @@ const requireRole = (allowedRoles) => {
     const baseRole = req.user?.raw_user_meta_data?.base_role;
 
     if (!userRole) {
-      console.log('[AUTH] ❌ No user role found');
-      console.log('[AUTH] User object:', {
-        id: req.user?.id,
-        email: req.user?.email,
-        hasRole: !!req.user?.role,
-        hasMetadata: !!req.user?.raw_user_meta_data,
-        metadataKeys: Object.keys(req.user?.raw_user_meta_data || {}),
-        userMetadataKeys: Object.keys(req.user?.user_metadata || {})
-      });
+      // console.log removed for security
+      // console.log removed for security
       return res.redirect('/login?message=' + encodeURIComponent('Authentication incomplete: missing role. Please contact support.') + '&type=error');
     }
 
@@ -212,14 +185,7 @@ const requireRole = (allowedRoles) => {
     });
 
     if (!hasPermission) {
-      console.log('[AUTH] ❌ Access denied:', {
-        userRole,
-        baseRole,
-        allowedRoles,
-        path: req.path,
-        originalUrl: req.originalUrl,
-        method: req.method
-      });
+      // console.log removed for security
       
       // Check if this is an API request - look at both path and originalUrl
       const isApiRequest = req.path.startsWith('/api/') || 
@@ -227,7 +193,7 @@ const requireRole = (allowedRoles) => {
                            req.url.startsWith('/api/');
       
       if (isApiRequest) {
-        console.log('[AUTH] Returning JSON error for API request');
+        // console.log removed for security
         return res.status(403).json({
           success: false,
           error: 'Access denied. You do not have permission to access this resource.',

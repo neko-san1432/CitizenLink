@@ -135,7 +135,7 @@ export const validateAndRefreshToken = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error || !session) {
-      console.log('No valid session found:', error?.message || 'No session');
+      // console.log removed for security
       return false;
     }
 
@@ -144,13 +144,13 @@ export const validateAndRefreshToken = async () => {
     const expiresAt = session.expires_at;
     
     if (expiresAt && now >= expiresAt) {
-      console.log('Session expired, attempting refresh...');
+      // console.log removed for security
       
       // Try to refresh the session
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError || !refreshData.session) {
-        console.log('Session refresh failed:', refreshError?.message);
+        // console.log removed for security
         return false;
       }
       
@@ -161,7 +161,7 @@ export const validateAndRefreshToken = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: refreshData.session.access_token })
         });
-        console.log('Session refreshed successfully');
+        // console.log removed for security
       } catch (cookieError) {
         console.error('Failed to update server cookie:', cookieError);
       }
@@ -242,7 +242,7 @@ export const startTokenExpiryMonitoring = () => {
     try {
       // Check if we're on an auth page - if so, stop monitoring
       if (isAuthPage()) {
-        console.log('On auth page, stopping token monitoring');
+        // console.log removed for security
         tokenExpiryTimer = null;
         return;
       }
@@ -259,10 +259,10 @@ export const startTokenExpiryMonitoring = () => {
       if (!response.ok) {
         noSessionAttempts++;
         if (noSessionAttempts < MAX_NO_SESSION_ATTEMPTS) {
-          console.log(`No session found during monitoring (attempt ${noSessionAttempts}/${MAX_NO_SESSION_ATTEMPTS}), checking again in 30 seconds...`);
+          // console.log removed for security
           tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000); // Wait 30 seconds instead of 5
         } else {
-          console.log('No session found after multiple attempts, stopping monitoring.');
+          // console.log removed for security
           tokenExpiryTimer = null;
           // Don't redirect if we're on a page that might be loading
           if (!window.location.pathname.includes('/review-queue')) {

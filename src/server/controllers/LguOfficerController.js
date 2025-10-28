@@ -34,12 +34,7 @@ class LguOfficerController {
 
       const { data: assignments, error: assignmentError } = await assignmentQuery;
 
-      console.log('[LGU_OFFICER] Assignments query result:', { 
-        userId, 
-        assignmentsCount: assignments?.length || 0,
-        hasError: !!assignmentError,
-        errorDetails: assignmentError 
-      });
+      // console.log removed for security
 
       if (assignmentError) {
         console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
@@ -50,7 +45,7 @@ class LguOfficerController {
       }
 
       if (!assignments || assignments.length === 0) {
-        console.log('[LGU_OFFICER] No assignments found for user:', userId);
+        // console.log removed for security
         return res.json({
           success: true,
           data: []

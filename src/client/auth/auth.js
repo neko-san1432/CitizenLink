@@ -38,7 +38,7 @@ async function getCaptchaKey() {
 async function renderCaptchaWidgetsIfAny() {
   // Skip reCAPTCHA in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('[AUTH] reCAPTCHA disabled for development');
+    // console.log removed for security
     return;
   }
 
@@ -70,7 +70,7 @@ setTimeout(renderCaptchaWidgetsIfAny, 500);
 async function verifyCaptchaOrFail(widgetId) {
   // Skip reCAPTCHA verification in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('[AUTH] reCAPTCHA verification skipped for development');
+    // console.log removed for security
     return { ok: true };
   }
 
@@ -227,30 +227,30 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       // Persist access token to HttpOnly cookie for server-protected pages
       try {
         const accessToken = result.data?.session?.accessToken || null;
-        console.log('[CLIENT AUTH] Access token received:', !!accessToken);
-        console.log('[CLIENT AUTH] Remember me:', remember);
+        // console.log removed for security
+        // console.log removed for security
         
         if (accessToken) {
-          console.log('[CLIENT AUTH] 🔑 Setting server session cookie...');
-          console.log('[CLIENT AUTH] Access token length:', accessToken?.length);
+          // console.log removed for security
+          // console.log removed for security
 
           const ok = await setServerSessionCookie(accessToken, remember);
-          console.log('[CLIENT AUTH] Server session cookie set:', ok);
+          // console.log removed for security
           if (!ok) {
             console.error('[CLIENT AUTH] ❌ Failed to establish session');
             showMessage('error', 'Failed to establish session. Please try again.');
             return;
           }
 
-          console.log('[CLIENT AUTH] ⏳ Waiting for cookie to be set...');
+          // console.log removed for security
           // Wait a moment for cookie to be set
           await new Promise(r => setTimeout(r, 100));
 
-          console.log('[CLIENT AUTH] 🍪 Checking available cookies:', document.cookie);
-          console.log('[CLIENT AUTH] 🔍 Looking for sb_access_token cookie...');
+          // console.log removed for security
+          // console.log removed for security
 
           // Verify cookie by hitting a protected endpoint before redirecting
-          console.log('[CLIENT AUTH] ✅ Verifying session cookie...');
+          // console.log removed for security
           let resp = await fetch('/api/user/role', {
             method: 'GET',
             credentials: 'include', // Ensure cookies are sent
@@ -260,19 +260,15 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
             }
           });
 
-          console.log('[CLIENT AUTH] First verification response:', {
-            status: resp.status,
-            statusText: resp.statusText,
-            ok: resp.ok
-          });
+          // console.log removed for security
 
           if (!resp.ok) {
-            console.log('[CLIENT AUTH] ⚠️ First role check failed, retrying...');
+            // console.log removed for security
             const errorData = await resp.json().catch(() => ({}));
-            console.log('[CLIENT AUTH] Error details:', errorData);
+            // console.log removed for security
 
             // Try one more time with a longer wait
-            console.log('[CLIENT AUTH] ⏳ Retrying session verification...');
+            // console.log removed for security
             await new Promise(r => setTimeout(r, 1000));
 
             const retryResp = await fetch('/api/user/role', {
@@ -284,14 +280,10 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               }
             });
 
-            console.log('[CLIENT AUTH] Retry response:', {
-              status: retryResp.status,
-              statusText: retryResp.statusText,
-              ok: retryResp.ok
-            });
+            // console.log removed for security
 
             if (retryResp.ok) {
-              console.log('[CLIENT AUTH] ✅ Session verified on retry');
+              // console.log removed for security
             } else {
               const retryErrorData = await retryResp.json().catch(() => ({}));
               console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
@@ -313,7 +305,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
             }
           }
 
-          console.log('[CLIENT AUTH] ✅ Session verified successfully');
+          // console.log removed for security
         }
       } catch {}
 
@@ -421,8 +413,8 @@ if (fbBtn) {
 // Utility to post session cookie with remember flag
 async function setServerSessionCookie(accessToken, remember) {
   try {
-    console.log('[CLIENT AUTH] 🔧 Setting server session cookie...');
-    console.log('[CLIENT AUTH] Access token length:', accessToken?.length);
+    // console.log removed for security
+    // console.log removed for security
 
     const resp = await fetch('/auth/session', {
       method: 'POST',
@@ -431,14 +423,10 @@ async function setServerSessionCookie(accessToken, remember) {
       body: JSON.stringify({ access_token: accessToken, remember: !!remember })
     });
 
-    console.log('[CLIENT AUTH] Server session response:', {
-      status: resp.status,
-      statusText: resp.statusText,
-      ok: resp.ok
-    });
+    // console.log removed for security
 
     const responseData = await resp.json();
-    console.log('[CLIENT AUTH] Server session response data:', responseData);
+    // console.log removed for security
 
     if (!resp.ok) {
       console.error('[CLIENT AUTH] ❌ Failed to set session cookie:', responseData);

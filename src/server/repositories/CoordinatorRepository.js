@@ -16,8 +16,8 @@ class CoordinatorRepository {
    */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
-      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Getting review queue for coordinator:`, coordinatorId);
-      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Filters:`, filters);
+      // console.log removed for security
+      // console.log removed for security
 
       // Look for complaints that need coordinator review:
       // 1. New complaints (workflow_status = 'new')
@@ -47,7 +47,7 @@ class CoordinatorRepository {
 
       const { data, error } = await query.limit(filters.limit || 50);
 
-      console.log(`[COORDINATOR_REPO] ${new Date().toISOString()} Database query result:`, { dataCount: data?.length, error: error?.message });
+      // console.log removed for security
 
       if (error) throw error;
 
@@ -448,7 +448,7 @@ class CoordinatorRepository {
    */
   async getPendingReviewsCount(coordinatorId) {
     try {
-      console.log(`[COORDINATOR_REPO] Getting pending count for coordinator: ${coordinatorId}`);
+      // console.log removed for security
 
       const { count, error } = await this.supabase
         .from('complaints')
@@ -460,7 +460,7 @@ class CoordinatorRepository {
         throw error;
       }
 
-      console.log(`[COORDINATOR_REPO] Pending count result: ${count || 0}`);
+      // console.log removed for security
       return count || 0;
     } catch (error) {
       console.error('[COORDINATOR_REPO] Get pending count error:', error);
@@ -473,8 +473,8 @@ class CoordinatorRepository {
    */
   async getCoordinatorStats(coordinatorId, startDate, endDate) {
     try {
-      console.log(`[COORDINATOR_REPO] Getting stats for coordinator: ${coordinatorId}`);
-      console.log(`[COORDINATOR_REPO] Date range: ${startDate} to ${endDate}`);
+      // console.log removed for security
+      // console.log removed for security
 
       // Get complaints that this coordinator can review (new complaints)
       const { data: reviewableComplaints, error: reviewError } = await this.supabase
@@ -489,7 +489,7 @@ class CoordinatorRepository {
         throw reviewError;
       }
 
-      console.log(`[COORDINATOR_REPO] Found ${reviewableComplaints?.length || 0} reviewable complaints`);
+      // console.log removed for security
 
       // Count by workflow status
       const statusCounts = (reviewableComplaints || []).reduce((acc, complaint) => {
@@ -498,7 +498,7 @@ class CoordinatorRepository {
         return acc;
       }, {});
 
-      console.log(`[COORDINATOR_REPO] Status breakdown:`, statusCounts);
+      // console.log removed for security
 
       // Get duplicate decisions made by this coordinator
       const { data: duplicates, error: dupError } = await this.supabase
@@ -514,7 +514,7 @@ class CoordinatorRepository {
         throw dupError;
       }
 
-      console.log(`[COORDINATOR_REPO] Found ${duplicates?.length || 0} duplicates merged`);
+      // console.log removed for security
 
       // Get assignments made by this coordinator (from workflow logs or assignment records)
       const { data: assignments, error: assignError } = await this.supabase
@@ -529,7 +529,7 @@ class CoordinatorRepository {
         throw assignError;
       }
 
-      console.log(`[COORDINATOR_REPO] Found ${assignments?.length || 0} assignments made`);
+      // console.log removed for security
 
       const result = {
         total_reviews: reviewableComplaints?.length || 0,
@@ -538,7 +538,7 @@ class CoordinatorRepository {
         status_breakdown: statusCounts
       };
 
-      console.log(`[COORDINATOR_REPO] Final stats:`, result);
+      // console.log removed for security
       return result;
     } catch (error) {
       console.error('[COORDINATOR_REPO] Get stats error:', error);

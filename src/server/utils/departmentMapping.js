@@ -40,7 +40,7 @@ async function getDepartments() {
       throw error;
     }
 
-    console.log('[DEPARTMENT_MAPPING] Raw database data:', data);
+    // console.log removed for security
 
     // Process the departments data directly
     const departments = [];
@@ -56,7 +56,7 @@ async function getDepartments() {
       });
     }
 
-    console.log('[DEPARTMENT_MAPPING] Processed departments:', departments);
+    // console.log removed for security
 
     // Cache the result
     departmentCache = departments;
@@ -251,13 +251,13 @@ module.exports = {
     const departments = await getDepartments();
     
     // Debug logging
-    console.log('[DEPARTMENT_VALIDATION] Input codes:', input);
-    console.log('[DEPARTMENT_VALIDATION] Available departments:', departments.map(d => d.code));
+    // console.log removed for security
+    // console.log removed for security
     
     // If no departments found in database, use hardcoded fallback
     const validSet = new Set(departments.map(d => d.code));
     if (validSet.size === 0) {
-      console.log('[DEPARTMENT_VALIDATION] No departments in database, using hardcoded fallback');
+      // console.log removed for security
       const hardcodedCodes = ['CEO', 'GSO', 'CPDC', 'CHO', 'CSWDO', 'CDRRMO', 'ENRO'];
       const hardcodedSet = new Set(hardcodedCodes);
       const validCodes = [];
@@ -265,8 +265,8 @@ module.exports = {
       for (const c of input) {
         if (hardcodedSet.has(c)) validCodes.push(c); else invalidCodes.push(c);
       }
-      console.log('[DEPARTMENT_VALIDATION] Hardcoded validation - Valid codes:', validCodes);
-      console.log('[DEPARTMENT_VALIDATION] Hardcoded validation - Invalid codes:', invalidCodes);
+      // console.log removed for security
+      // console.log removed for security
       return { validCodes, invalidCodes };
     }
     
@@ -276,8 +276,8 @@ module.exports = {
       if (validSet.has(c)) validCodes.push(c); else invalidCodes.push(c);
     }
     
-    console.log('[DEPARTMENT_VALIDATION] Valid codes:', validCodes);
-    console.log('[DEPARTMENT_VALIDATION] Invalid codes:', invalidCodes);
+    // console.log removed for security
+    // console.log removed for security
     
     return { validCodes, invalidCodes };
   }

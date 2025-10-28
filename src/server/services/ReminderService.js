@@ -26,7 +26,7 @@ class ReminderService {
    * Start the reminder scheduler
    */
   startScheduler() {
-    console.log('[REMINDER_SERVICE] Starting reminder scheduler...');
+    // console.log removed for security
     
     // Check for reminders every hour
     setInterval(() => {
@@ -42,12 +42,12 @@ class ReminderService {
    */
   async processReminders() {
     try {
-      console.log('[REMINDER_SERVICE] Processing reminders...');
+      // console.log removed for security
       
       const now = new Date();
       const reminders = await this.getPendingReminders(now);
       
-      console.log(`[REMINDER_SERVICE] Found ${reminders.length} complaints needing reminders`);
+      // console.log removed for security
       
       for (const complaint of reminders) {
         await this.sendReminder(complaint);
@@ -179,7 +179,7 @@ class ReminderService {
    */
   async sendReminder(complaint) {
     try {
-      console.log(`[REMINDER_SERVICE] Sending ${complaint.reminderLevel} reminder for complaint ${complaint.id}`);
+      // console.log removed for security
       
       // Get department information
       const departments = await this.getComplaintDepartments(complaint);
@@ -190,7 +190,7 @@ class ReminderService {
       // Send notifications to relevant parties
       await this.sendReminderNotifications(complaint, departments, complaint.reminderLevel);
       
-      console.log(`[REMINDER_SERVICE] Successfully sent reminder for complaint ${complaint.id}`);
+      // console.log removed for security
       
     } catch (error) {
       console.error(`[REMINDER_SERVICE] Error sending reminder for complaint ${complaint.id}:`, error);
@@ -410,7 +410,7 @@ class ReminderService {
    * Stop the reminder scheduler
    */
   stopScheduler() {
-    console.log('[REMINDER_SERVICE] Stopping reminder scheduler...');
+    // console.log removed for security
     // Note: In a real implementation, you'd store the interval ID and clear it here
   }
 }

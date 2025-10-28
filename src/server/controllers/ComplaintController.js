@@ -147,12 +147,7 @@ class ComplaintController {
 
   async getMyComplaints(req, res) {
     try {
-      console.log('[COMPLAINT_CONTROLLER] getMyComplaints called:', {
-        userId: req.user?.id,
-        userRole: req.user?.role,
-        userEmail: req.user?.email,
-        queryParams: req.query
-      });
+      // console.log removed for security
 
       const { user } = req;
       const options = {
@@ -162,17 +157,11 @@ class ComplaintController {
         type: req.query.type
       };
 
-      console.log('[COMPLAINT_CONTROLLER] Query options:', options);
+      // console.log removed for security
 
       const result = await this.complaintService.getUserComplaints(user.id, options);
 
-      console.log('[COMPLAINT_CONTROLLER] Query result:', {
-        complaintsCount: result.complaints?.length || 0,
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: result.totalPages
-      });
+      // console.log removed for security
 
       res.json({
         success: true,

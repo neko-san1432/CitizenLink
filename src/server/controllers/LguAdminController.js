@@ -23,14 +23,7 @@ class LguAdminController {
       const { status, priority, limit } = req.query;
 
       // Debug logging to see what we're receiving
-      console.log('[LGU_ADMIN] Request received:', {
-        userId,
-        userRole,
-        department: req.user.department,
-        metadata: req.user.metadata,
-        rawMetadata: req.user.raw_user_meta_data,
-        path: req.path
-      });
+      // console.log removed for security
 
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department || 
@@ -232,13 +225,7 @@ class LguAdminController {
         const officer = officerData.user;
 
         // Debug: Log officer metadata structure
-        console.log('[LGU_ADMIN] Officer metadata debug:', {
-          officerId,
-          officerEmail: officer.email,
-          raw_user_meta_data: officer.raw_user_meta_data,
-          user_metadata: officer.user_metadata,
-          app_metadata: officer.app_metadata
-        });
+        // console.log removed for security
 
         // Check if officer belongs to this department
         const officerDept = officer.raw_user_meta_data?.dpt || 
@@ -248,12 +235,7 @@ class LguAdminController {
                            officer.app_metadata?.dpt ||
                            officer.app_metadata?.department;
         
-        console.log('[LGU_ADMIN] Officer department extraction:', {
-          officerId,
-          officerDept,
-          departmentCode,
-          matches: officerDept === departmentCode
-        });
+        // console.log removed for security
         
         if (officerDept !== departmentCode) {
           console.error('[LGU_ADMIN] Officer does not belong to department:', { officerId, officerDept, departmentCode });
@@ -377,15 +359,7 @@ class LguAdminController {
       const { status, sub_type, priority } = req.query; // Get filters from query params
 
       // Enhanced debug logging
-      console.log('[LGU_ADMIN] Request received:', {
-        userId,
-        userRole,
-        department: req.user.department,
-        metadata,
-        rawMetadata: req.user.raw_user_meta_data,
-        path: req.path,
-        fullUserObject: req.user
-      });
+      // console.log removed for security
 
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department || 
@@ -393,23 +367,11 @@ class LguAdminController {
                            req.user.raw_user_meta_data?.department ||
                            req.user.raw_user_meta_data?.dpt;
 
-      console.log('[LGU_ADMIN] Department extraction debug:', {
-        'req.user.department': req.user.department,
-        'req.user.metadata?.department': req.user.metadata?.department,
-        'req.user.raw_user_meta_data?.department': req.user.raw_user_meta_data?.department,
-        'req.user.raw_user_meta_data?.dpt': req.user.raw_user_meta_data?.dpt,
-        'final departmentCode': departmentCode,
-        'departmentCode type': typeof departmentCode,
-        'departmentCode length': departmentCode?.length,
-        'departmentCode truthy': !!departmentCode,
-        'departmentCode === "PNP"': departmentCode === 'PNP',
-        'departmentCode !== null': departmentCode !== null,
-        'departmentCode !== undefined': departmentCode !== undefined
-      });
+      // console.log removed for security
 
-      console.log('[LGU_ADMIN] About to check departmentCode condition...');
-      console.log('[LGU_ADMIN] departmentCode value:', JSON.stringify(departmentCode));
-      console.log('[LGU_ADMIN] !departmentCode result:', !departmentCode);
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
 
       if (!departmentCode) {
         console.error('[LGU_ADMIN] No department found in user metadata:', { 
@@ -420,7 +382,7 @@ class LguAdminController {
         });
         
         // For debugging, let's try to find any department and use it temporarily
-        console.log('[LGU_ADMIN] Attempting to find a default department...');
+        // console.log removed for security
         const { data: defaultDept } = await supabase
           .from('departments')
           .select('id, name, code')
@@ -430,7 +392,7 @@ class LguAdminController {
           .single();
           
         if (defaultDept) {
-          console.log('[LGU_ADMIN] Using default department:', defaultDept);
+          // console.log removed for security
           // Continue with the default department for testing
         } else {
           return res.status(400).json({
@@ -589,13 +551,7 @@ class LguAdminController {
         notes: assignment.notes
       }));
 
-      console.log('[LGU_ADMIN] Final response data:', {
-        departmentCode,
-        departmentId: department?.id,
-        totalComplaints: departmentComplaints?.length || 0,
-        totalAssignments: formattedAssignments?.length || 0,
-        sampleAssignment: formattedAssignments?.[0] || null
-      });
+      // console.log removed for security
 
       return res.json({
         success: true,
@@ -662,8 +618,8 @@ class LguAdminController {
       // Get all users and filter for LGU officers in this department
       const { data: allUsers } = await supabase.auth.admin.listUsers();
 
-      console.log('[LGU_ADMIN] Scanning for officers in department:', departmentCode);
-      console.log('[LGU_ADMIN] Total users found:', allUsers.users.length);
+      // console.log removed for security
+      // console.log removed for security
 
       const officers = allUsers.users
         .filter(user => {
@@ -672,15 +628,7 @@ class LguAdminController {
           const role = metadata.role || rawMetadata.role || '';
           
           // Debug logging for each user
-          console.log('[LGU_ADMIN] Checking user:', {
-            id: user.id,
-            email: user.email,
-            role: role,
-            metadata: metadata,
-            rawMetadata: rawMetadata,
-            hasDpt: !!(metadata.dpt || rawMetadata.dpt),
-            dptValue: metadata.dpt || rawMetadata.dpt
-          });
+          // console.log removed for security
           
           // Check for simplified role system: lgu with department in metadata
           const isLguOfficer = role === 'lgu' || role === 'lgu-officer';
@@ -698,12 +646,7 @@ class LguAdminController {
                          (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
           
           if (isMatch) {
-            console.log('[LGU_ADMIN] Found matching officer:', {
-              id: user.id,
-              email: user.email,
-              role: role,
-              department: metadata.dpt || rawMetadata.dpt
-            });
+            // console.log removed for security
           }
           
           return isMatch;
@@ -716,12 +659,7 @@ class LguAdminController {
           mobile: user.user_metadata?.mobile || user.raw_user_meta_data?.mobile
         }));
 
-      console.log('[LGU_ADMIN] Officers response:', {
-        departmentCode,
-        departmentId: department?.id,
-        totalOfficers: officers?.length || 0,
-        sampleOfficer: officers?.[0] || null
-      });
+      // console.log removed for security
 
       return res.json({
         success: true,

@@ -47,7 +47,7 @@ class ComplaintRepository {
 
   async findByUserId(userId, options = {}) {
     try {
-      console.log('[COMPLAINT_REPO] findByUserId called:', { userId, options });
+      // console.log removed for security
 
       const { page = 1, limit = 10, status, type } = options;
       const offset = (page - 1) * limit;
@@ -66,15 +66,7 @@ class ComplaintRepository {
         query = query.eq('type', type);
       }
 
-      console.log('[COMPLAINT_REPO] Executing query with:', {
-        userId,
-        page,
-        limit,
-        offset,
-        status,
-        type,
-        sql: query.toString()
-      });
+      // console.log removed for security
 
       const { data, error, count } = await query
         .range(offset, offset + limit - 1);
@@ -84,13 +76,7 @@ class ComplaintRepository {
         throw error;
       }
 
-      console.log('[COMPLAINT_REPO] Query result:', {
-        dataCount: data?.length || 0,
-        count,
-        page,
-        limit,
-        offset
-      });
+      // console.log removed for security
 
       return {
         complaints: data || [],

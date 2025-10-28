@@ -213,7 +213,7 @@ async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckbo
         }
       });
       
-      console.log('[FORM] Auto-selected', mappedDepartments.length, 'departments for subcategory');
+      // console.log removed for security
       
       // Show helpful message
       if (mappedDepartments.length > 0) {
@@ -302,7 +302,7 @@ async function loadAllDepartments(departmentCheckboxes) {
       }
 
       // Show all departments but don't auto-select any (make it optional)
-      console.log('[FORM] Loaded', data.length, 'departments for subcategory');
+      // console.log removed for security
       
       // Show helpful message to user about optional selection
       const suggestionMessage = document.createElement('div');
@@ -423,7 +423,7 @@ function setupFormSubmission(form, fileHandler) {
       .map(checkbox => checkbox.value);
     
     // Department selection is now optional - no validation required
-    console.log('[FORM] Selected departments:', selectedDepartments.length > 0 ? selectedDepartments : 'None');
+    // console.log removed for security
 
     // Add selected departments as preferred_departments (user's choice)
     if (selectedDepartments.length > 0) {

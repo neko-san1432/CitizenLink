@@ -48,7 +48,7 @@ class Database {
   }
 
   async testConnection() {
-    console.log('[DB] Testing database connection...');
+    // console.log removed for security
     this._initialize();
     if (!this.supabase) {
       console.error('❌ Database not configured');
@@ -57,7 +57,7 @@ class Database {
     }
 
     try {
-      console.log('[DB] Attempting to connect to Supabase...');
+      // console.log removed for security
       // Test basic connection by checking if we can list tables
       // This is more reliable than querying a specific table that might not exist
       const { data, error } = await this.supabase
@@ -65,18 +65,18 @@ class Database {
 
       // If the RPC function doesn't exist, try a simple query that should work
       if (error && error.message.includes('function')) {
-        console.log('[DB] RPC function not available, trying alternative connection test...');
+        // console.log removed for security
         // Fallback: try to query a system table or use a basic auth check
         const { data: authData, error: authError } = await this.supabase.auth.getSession();
         if (authError && authError.message.includes('JWT')) {
           console.error('[DB] Authentication test failed:', authError.message);
           throw new Error('Invalid Supabase configuration');
         }
-        console.log('[DB] Authentication test passed');
+        // console.log removed for security
         return true;
       }
 
-      console.log('[DB] Connection test successful');
+      // console.log removed for security
       return true;
     } catch (error) {
       console.error('[DB] Database connection failed:', error.message);

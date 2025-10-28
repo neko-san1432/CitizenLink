@@ -27,7 +27,7 @@ class TermsPrivacyModal {
       const response = await fetch('/api/settings/public');
       if (response.ok) {
         const responseData = await response.json();
-        console.log('Settings API response:', responseData); // Debug log
+        // console.log removed for security // Debug log
         
         // Handle the API response format: { success: true, data: [...] }
         if (responseData.success && Array.isArray(responseData.data)) {
@@ -71,26 +71,26 @@ class TermsPrivacyModal {
    * Create the modal elements
    */
   createModals() {
-    console.log('Creating modals...');
+    // console.log removed for security
     
     // Create Terms and Conditions Modal
     if (!document.getElementById('terms-conditions-modal')) {
-      console.log('Creating terms modal...');
+      // console.log removed for security
       const termsModal = this.createTermsModal();
       document.body.appendChild(termsModal);
-      console.log('Terms modal created and added to DOM');
+      // console.log removed for security
     } else {
-      console.log('Terms modal already exists');
+      // console.log removed for security
     }
 
     // Create Privacy Policy Modal
     if (!document.getElementById('privacy-policy-modal')) {
-      console.log('Creating privacy modal...');
+      // console.log removed for security
       const privacyModal = this.createPrivacyModal();
       document.body.appendChild(privacyModal);
-      console.log('Privacy modal created and added to DOM');
+      // console.log removed for security
     } else {
-      console.log('Privacy modal already exists');
+      // console.log removed for security
     }
   }
 
@@ -176,12 +176,12 @@ class TermsPrivacyModal {
    * Setup event listeners
    */
   setupEventListeners() {
-    console.log('Setting up event listeners...');
+    // console.log removed for security
     
     // Terms and Conditions link
     document.addEventListener('click', (e) => {
       if (e.target.matches('[data-open-terms]') || e.target.closest('[data-open-terms]')) {
-        console.log('Terms link clicked!');
+        // console.log removed for security
         e.preventDefault();
         this.openTermsModal();
       }
@@ -190,7 +190,7 @@ class TermsPrivacyModal {
     // Privacy Policy link
     document.addEventListener('click', (e) => {
       if (e.target.matches('[data-open-privacy]') || e.target.closest('[data-open-privacy]')) {
-        console.log('Privacy link clicked!');
+        // console.log removed for security
         e.preventDefault();
         this.openPrivacyModal();
       }
@@ -412,9 +412,9 @@ class TermsPrivacyModal {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Initializing TermsPrivacyModal...');
+  // console.log removed for security
   window.termsPrivacyModal = new TermsPrivacyModal();
-  console.log('TermsPrivacyModal initialized:', window.termsPrivacyModal);
+  // console.log removed for security
 });
 
 // Export for module usage
