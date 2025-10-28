@@ -5,12 +5,15 @@
 
 import apiClient from '../../config/apiClient.js';
 import showMessage from '../../components/toast.js';
+import getCurrentUser from '../../utils/authUtils.js';
 
 class LguAdminAssignments {
   constructor() {
     this.assignments = [];
     this.officers = [];
+    this.complaints = [];
     this.currentComplaintId = null;
+    this.selectedComplaint = null;
     this.filters = {
       status: 'all',
       priority: 'all',
@@ -18,9 +21,11 @@ class LguAdminAssignments {
     };
     this.currentPage = 1;
     this.itemsPerPage = 10;
+    
+    this.initialize();
   }
 
-  async init() {
+  async initialize() {
     console.log('[LGU_ADMIN_ASSIGNMENTS] Initializing...');
     console.log('[LGU_ADMIN_ASSIGNMENTS] Document ready state:', document.readyState);
     console.log('[LGU_ADMIN_ASSIGNMENTS] Current URL:', window.location.href);
@@ -29,14 +34,14 @@ class LguAdminAssignments {
     this.showLoadingState();
     
     try {
-      console.log('[LGU_ADMIN_ASSIGNMENTS] Step 1: Loading assignments...');
-      await this.loadAssignments();
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Step 1: Loading complaints...');
+      await this.loadComplaints();
       
       console.log('[LGU_ADMIN_ASSIGNMENTS] Step 2: Loading officers...');
       await this.loadOfficers();
       
-      console.log('[LGU_ADMIN_ASSIGNMENTS] Step 3: Setting up event listeners...');
-      this.setupEventListeners();
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Step 3: Loading assignments...');
+      await this.loadAssignments();
       
       console.log('[LGU_ADMIN_ASSIGNMENTS] Step 4: Rendering assignments...');
       this.renderAssignments();
@@ -49,19 +54,28 @@ class LguAdminAssignments {
     }
   }
 
-  showLoadingState() {
-    const loadingState = document.getElementById('loading-state');
-    const assignmentsList = document.getElementById('assignments-list');
-    const emptyState = document.getElementById('empty-state');
-    
-    if (loadingState) loadingState.style.display = 'block';
-    if (assignmentsList) assignmentsList.style.display = 'none';
-    if (emptyState) emptyState.style.display = 'none';
-  }
-
-  hideLoadingState() {
-    const loadingState = document.getElementById('loading-state');
-    if (loadingState) loadingState.style.display = 'none';
+  async loadComplaints() {
+    try {
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Loading complaints...');
+      
+      const response = await apiClient.get('/api/complaints');
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response received:', response);
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response data:', response?.data);
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response success:', response?.success);
+      
+      if (response && response.success) {
+        this.complaints = response.data || [];
+        console.log('[LGU_ADMIN_ASSIGNMENTS] Loaded complaints:', this.complaints.length);
+        console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints data:', this.complaints);
+      } else {
+        throw new Error(response?.error || 'Failed to load complaints');
+      }
+    } catch (error) {
+      console.error('[LGU_ADMIN_ASSIGNMENTS] Load complaints error:', error);
+      this.hideLoadingState();
+      showMessage('error', 'Failed to load complaints');
+      this.complaints = [];
+    }
   }
 
   async loadAssignments() {
@@ -120,7 +134,34 @@ class LguAdminAssignments {
     }
   }
 
+  showLoadingState() {
+    const loadingState = document.getElementById('loading-state');
+    const assignmentsList = document.getElementById('assignments-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (loadingState) loadingState.style.display = 'block';
+    if (assignmentsList) assignmentsList.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
+  }
+
+  hideLoadingState() {
+    const loadingState = document.getElementById('loading-state');
+    if (loadingState) loadingState.style.display = 'none';
+  }
+
   setupEventListeners() {
+    // Event delegation for complaint items
+    document.getElementById('assignments-list').addEventListener('click', (event) => {
+      const item = event.target.closest('.assignment-card');
+      if (item) {
+        const complaintId = item.dataset.complaintId;
+        const complaint = this.assignments.find(a => a.complaint_id === complaintId);
+        if (complaint) {
+          this.selectComplaint(complaint);
+        }
+      }
+    });
+    
     // Filter controls
     const statusFilter = document.getElementById('status-filter');
     const priorityFilter = document.getElementById('priority-filter');
@@ -156,6 +197,18 @@ class LguAdminAssignments {
 
     // Assignment modal
     this.setupAssignmentModal();
+
+    // Assignment button
+    const assignButton = document.getElementById('assign-button');
+    if (assignButton !== null) {
+      assignButton.addEventListener('click', () => {
+        if (!this.selectedComplaint) {
+          showMessage('error', 'Please select a complaint first');
+          return;
+        }
+        this.handleAssignment();
+      });
+    }
   }
 
   setupAssignmentModal() {
@@ -253,6 +306,9 @@ class LguAdminAssignments {
 
     // Add event listeners to assignment cards
     this.setupAssignmentCardListeners();
+
+    // Setup event listeners AFTER rendering
+    this.setupEventListeners();
   }
 
   getPaginatedAssignments() {
@@ -387,6 +443,19 @@ class LguAdminAssignments {
         this.viewComplaintDetails(complaintId);
       });
     });
+
+    // Select complaint buttons
+    document.querySelectorAll('.assignment-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('assignment-card')) {
+          const complaintId = e.target.dataset.complaintId;
+          const complaint = this.assignments.find(a => a.complaint_id === complaintId);
+          if (complaint) {
+            this.selectComplaint(complaint);
+          }
+        }
+      });
+    });
   }
 
   openAssignmentModal(complaintId, isReassign = false) {
@@ -477,6 +546,11 @@ class LguAdminAssignments {
     }
   }
 
+  getSelectedOfficers() {
+    const checkboxes = document.querySelectorAll('#officer-checkboxes input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(checkbox => checkbox.value);
+  }
+
   openComplaintDetailsPanel(complaintId) {
     console.log('[LGU_ADMIN_ASSIGNMENTS] Opening complaint details panel for:', complaintId);
     
@@ -550,11 +624,14 @@ class LguAdminAssignments {
         <div class="details-header">
           <div class="complaint-title-section">
             <h4>${this.escapeHtml(complaint.title || 'Untitled Complaint')}</h4>
-            <span class="priority-badge ${priorityClass}">${complaint.priority || 'Medium'}</span>
+            <div class="complaint-meta">
+              <span class="complaint-id">ID: #${complaint.complaint_id.slice(-8)}</span>
+              <span class="submission-date">Submitted: ${submittedDate}</span>
+            </div>
           </div>
-          <div class="complaint-meta">
-            <span class="complaint-id">ID: #${complaint.complaint_id.slice(-8)}</span>
-            <span class="submission-date">Submitted: ${submittedDate}</span>
+          <div class="complaint-status">
+            <span class="status-badge ${this.getStatusClass(complaint.status)}">${this.getStatusText(complaint.status)}</span>
+            <span class="priority-badge ${priorityClass}">${complaint.priority}</span>
           </div>
         </div>
 
@@ -768,6 +845,21 @@ class LguAdminAssignments {
 
     } catch (error) {
       console.error('[LGU_ADMIN_ASSIGNMENTS] Error loading evidence:', error);
+      
+      // Try to extract detailed error message
+      let errorMessage = 'Failed to load evidence files';
+      if (error.response?.data?.details) {
+        const details = error.response.data.details;
+        if (details.rejectedOfficers && details.rejectedOfficers.length > 0) {
+          const reasons = details.rejectedOfficers.map(o => 
+            `${o.email || o.id}: ${o.reason}${o.officerDept ? ` (has: ${o.officerDept}, needs: ${o.requiredDept})` : ''}`
+          ).join('; ');
+          errorMessage = `Cannot assign: ${reasons}`;
+        }
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
       const evidenceContainer = document.getElementById(`evidence-container-${complaintId}`);
       if (evidenceContainer) {
         evidenceContainer.innerHTML = `
@@ -868,6 +960,55 @@ class LguAdminAssignments {
     }
   }
 
+  selectComplaint(complaint) {
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Selecting complaint:', complaint);
+    this.selectedComplaint = complaint;
+    this.currentComplaintId = complaint.complaint_id;
+
+    // Update UI to show selected complaint - with null checks
+    const assignButton = document.getElementById('assign-button');
+    const complaintDetailsBtn = document.getElementById('complaint-details-btn');
+    
+    if (assignButton) assignButton.disabled = false;
+    if (complaintDetailsBtn) complaintDetailsBtn.disabled = false;
+
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Current selected complaint:', this.selectedComplaint);
+  }
+
+  async handleAssignment() {
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Handling assignment...');
+    const officerIds = this.getSelectedOfficers();
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Selected officer IDs:', officerIds);
+    
+    if (officerIds.length === 0) {
+      showMessage('error', 'Please select at least one officer');
+      return;
+    }
+    
+    try {
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Sending assignment request for complaint:', this.currentComplaintId);
+      
+      const response = await apiClient.post(`/api/complaints/${this.currentComplaintId}/assign`, {
+        officerIds
+      });
+      
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Assignment response:', response);
+      
+      if (response && response.success) {
+        showMessage('success', 'Assignment created successfully');
+        this.closeAssignmentModal();
+        this.refreshData();
+      } else {
+        const errorMsg = response?.error || 'Failed to create assignment';
+        console.error('[LGU_ADMIN_ASSIGNMENTS] Assignment error:', errorMsg);
+        showMessage('error', errorMsg);
+      }
+    } catch (error) {
+      console.error('[LGU_ADMIN_ASSIGNMENTS] Assignment exception:', error);
+      showMessage('error', 'Failed to create assignment');
+    }
+  }
+
   getPriorityClass(priority) {
     const priorityClasses = {
       'low': 'priority-low',
@@ -876,105 +1017,6 @@ class LguAdminAssignments {
       'urgent': 'priority-urgent'
     };
     return priorityClasses[priority] || 'priority-medium';
-  }
-
-
-  async handleAssignment() {
-    const form = document.getElementById('assignment-form');
-    if (!form) return;
-
-    // Get selected officers from checkboxes
-    const selectedOfficers = Array.from(document.querySelectorAll('input[name="officers"]:checked'))
-      .map(checkbox => checkbox.value);
-    
-    const prioritySelect = document.getElementById('priority-select');
-    const deadlineInput = document.getElementById('deadline-input');
-    const notesInput = document.getElementById('notes-input');
-    
-    const priority = prioritySelect?.value;
-    const deadline = deadlineInput?.value;
-    const notes = notesInput?.value;
-    
-    // Get complaint ID from the complaint summary or find it from current assignment
-    const complaintSummary = document.getElementById('complaint-summary');
-    const complaintId = complaintSummary?.dataset?.complaintId || this.currentComplaintId;
-
-    if (!complaintId || selectedOfficers.length === 0) {
-      showMessage('error', 'Please select at least one officer');
-      return;
-    }
-
-    try {
-      console.log('[LGU_ADMIN_ASSIGNMENTS] Assigning complaint:', { 
-        complaintId, 
-        officerIds: selectedOfficers, 
-        priority, 
-        deadline, 
-        notes 
-      });
-      
-      // Send all officer IDs in a single request
-      const response = await apiClient.post(`/api/lgu-admin/complaints/${complaintId}/assign`, {
-        officerIds: selectedOfficers,
-        priority,
-        deadline: deadline || null,
-        notes: notes || null
-      });
-
-      if (response && response.success) {
-        const message = response.total_officers > 1 
-          ? `Complaint assigned to ${response.total_officers} officers successfully`
-          : 'Complaint assigned successfully';
-        
-        showMessage('success', message);
-        this.closeAssignmentModal();
-        await this.refreshData();
-      } else {
-        throw new Error(response?.error || 'Failed to assign complaint');
-      }
-    } catch (error) {
-      console.error('[LGU_ADMIN_ASSIGNMENTS] Assignment error:', error);
-      showMessage('error', 'Failed to assign complaint');
-    }
-  }
-
-  viewComplaintDetails(complaintId) {
-    // Navigate to complaint details page
-    window.location.href = `/complaint-details?id=${complaintId}`;
-  }
-
-  renderPagination() {
-    const totalPages = Math.ceil(this.assignments.length / this.itemsPerPage);
-    if (totalPages <= 1) return '';
-
-    return `
-      <div class="pagination">
-        <button class="btn btn-outline" ${this.currentPage === 1 ? 'disabled' : ''} onclick="assignmentsPage.previousPage()">
-          Previous
-        </button>
-        <span class="pagination-info">
-          Page ${this.currentPage} of ${totalPages}
-        </span>
-        <button class="btn btn-outline" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="assignmentsPage.nextPage()">
-          Next
-        </button>
-      </div>
-    `;
-  }
-
-  nextPage() {
-    const totalPages = Math.ceil(this.assignments.length / this.itemsPerPage);
-    if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.renderAssignments();
-    }
-  }
-
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.renderAssignments();
-    }
   }
 
   getStatusClass(status) {
@@ -1001,16 +1043,6 @@ class LguAdminAssignments {
     return statusTexts[status] || status;
   }
 
-  getPriorityClass(priority) {
-    const priorityClasses = {
-      'low': 'priority-low',
-      'medium': 'priority-medium',
-      'high': 'priority-high',
-      'urgent': 'priority-urgent'
-    };
-    return priorityClasses[priority] || 'priority-medium';
-  }
-
   escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -1026,5 +1058,5 @@ const assignmentsPage = new LguAdminAssignments();
 window.assignmentsPage = assignmentsPage;
 
 document.addEventListener('DOMContentLoaded', () => {
-  assignmentsPage.init();
+  assignmentsPage.initialize();
 });

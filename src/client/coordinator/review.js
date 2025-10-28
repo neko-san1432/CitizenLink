@@ -54,9 +54,9 @@ async function loadComplaint() {
  */
 async function renderComplaint() {
   // The service returns complaint in nested structure
-  const complaint = currentComplaint.complaint;
-  const similarities = currentComplaint.analysis?.duplicate_candidates || 
-                     currentComplaint.analysis?.similar_complaints || 
+  const {complaint} = currentComplaint;
+  const similarities = currentComplaint.analysis?.duplicate_candidates ||
+                     currentComplaint.analysis?.similar_complaints ||
                      currentComplaint.similarities || [];
 
   // Hide loading, show content
@@ -81,7 +81,7 @@ async function renderComplaint() {
   // Details - Handle both old and new hierarchical form structure
   const typeText = complaint.type || complaint.category || 'Not specified';
   const subcategoryText = complaint.subcategory || '';
-  
+
   document.getElementById('complaint-type').textContent = typeText;
   const subtypeEl = document.getElementById('complaint-subtype');
   if (subcategoryText) {
@@ -153,7 +153,7 @@ async function renderComplaint() {
   // Evidence (always show section with fallback)
   const evidenceSection = document.getElementById('evidence-section');
   const evidenceEmpty = document.getElementById('evidence-empty');
-  
+
   // Handle different evidence field structures
   let evidenceList = [];
   if (complaint.evidence && Array.isArray(complaint.evidence)) {
@@ -163,7 +163,7 @@ async function renderComplaint() {
   } else if (complaint.files && Array.isArray(complaint.files)) {
     evidenceList = complaint.files;
   }
-  
+
   if (evidenceList.length > 0) {
     if (evidenceSection) evidenceSection.style.display = 'block';
     if (evidenceEmpty) evidenceEmpty.style.display = 'none';
@@ -285,12 +285,12 @@ function renderSimilarComplaints(similarities) {
   `).join('');
 
   // Populate master complaint dropdown
-  masterSelect.innerHTML = '<option value="">Select master complaint...</option>' +
+  masterSelect.innerHTML = `<option value="">Select master complaint...</option>${
     similarities.map(sim => `
       <option value="${sim.similar_complaint_id}">
         ${sim.similar_complaint?.title} (${Math.round(sim.similarity_score * 100)}% match)
       </option>
-    `).join('');
+    `).join('')}`;
 }
 
 /**
@@ -299,9 +299,9 @@ function renderSimilarComplaints(similarities) {
 window.openAssignModal = function() {
   document.getElementById('assign-modal').classList.add('active');
   // Pre-fill priority from complaint
-  const complaint = currentComplaint.complaint;
+  const {complaint} = currentComplaint;
   document.getElementById('assign-priority').value = complaint.priority || 'medium';
-  
+
   // Load departments dynamically
   loadDepartmentsForAssignment();
 };
@@ -530,7 +530,7 @@ async function loadDepartmentsForAssignment() {
   try {
     const response = await fetch('/api/departments/active');
     const result = await response.json();
-    
+
     if (result.success && result.data) {
       const departmentsList = document.getElementById('departments-list');
       departmentsList.innerHTML = result.data.map(dept => `

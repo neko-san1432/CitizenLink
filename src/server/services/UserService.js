@@ -51,7 +51,7 @@ class UserService {
           first_name: firstNameFinal,
           last_name: lastNameFinal,
           name: displayName,
-          role: role,
+          role,
           normalized_role: normalizedRole,
           mobile_number: mobileNumber || null,
           is_oauth: isOAuth,
@@ -64,7 +64,7 @@ class UserService {
           postal_code: address.postalCode || null,
           barangay: address.barangay || null,
           // LGU staff fields
-          department: department,
+          department,
           employee_id: employeeId,
           position: null,
           // Verification
@@ -84,7 +84,7 @@ class UserService {
           first_name: firstNameFinal,
           last_name: lastNameFinal,
           name: displayName,
-          role: role,
+          role,
           normalized_role: normalizedRole,
           mobile_number: mobileNumber || null,
           mobile: mobileNumber || null, // Also store as 'mobile' for compatibility
@@ -98,7 +98,7 @@ class UserService {
           postal_code: address.postalCode || null,
           barangay: address.barangay || null,
           // LGU staff fields
-          department: department,
+          department,
           employee_id: employeeId,
           position: null,
           // Verification
@@ -418,7 +418,7 @@ class UserService {
           old_role: oldRole,
           new_role: newRole,
           changed_by: changedBy,
-          reason: reason
+          reason
         });
     } catch (error) {
       console.warn('Role change logging failed:', error);
@@ -462,7 +462,7 @@ class UserService {
       employeeId: combined.employee_id,
 
       verification: {
-        email: !!authUser.email_confirmed_at,
+        email: Boolean(authUser.email_confirmed_at),
         mobile: combined.mobile_verified || false,
         id: combined.id_verified || false
       },

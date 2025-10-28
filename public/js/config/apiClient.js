@@ -101,64 +101,35 @@ class ApiClient {
 
   async post(url, data) {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(url, {
+      let headers = await this.getAuthHeaders();
+      let response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(data)
       });
 
       if (response.status === 401) {
-        // Try to refresh token before redirecting
-        try {
-          // console.log removed for security
-          const { data: { session }, error } = await supabase.auth.refreshSession();
-
-          if (error || !session) {
-            // console.log removed for security
-            const { showMessage } = await import('../components/toast.js');
-            showMessage('error', 'Session expired. Please log in again.', 5000);
-            setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
-            }, 3000);
-            return;
-          }
-
-          // Update server cookie with new token
-          await fetch('/auth/session', {
+        console.warn('Token expired, attempting refresh');
+        const refreshed = await supabase.auth.refreshSession();
+        
+        if (refreshed) {
+          // Update local storage with new session
+          localStorage.setItem('access_token', refreshed.session.access_token);
+          localStorage.setItem('refresh_token', refreshed.session.refresh_token);
+          
+          // Retry with new token
+          headers = await this.getAuthHeaders();
+          response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: session.access_token })
-          });
-
-          // Retry the original request with new token
-          // console.log removed for security
-          const newHeaders = await this.getAuthHeaders();
-          const retryResponse = await fetch(url, {
-            method: 'POST',
-            headers: newHeaders,
+            headers,
             body: JSON.stringify(data)
           });
-
-          if (retryResponse.status === 401) {
-            // console.log removed for security
-            const { showMessage } = await import('../components/toast.js');
-            showMessage('error', 'Session expired. Please log in again.', 5000);
-            setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
-            }, 3000);
-            return;
-          }
-
-          return await retryResponse.json();
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
+        } else {
+          console.error('Token refresh failed');
           const { showMessage } = await import('../components/toast.js');
-          showMessage('error', 'Session expired. Please log in again.', 5000);
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 3000);
-          return;
+          showMessage('error', 'Session expired. Please log in again.');
+          setTimeout(() => { window.location.href = '/login'; }, 3000);
+          return null;
         }
       }
 
@@ -316,6 +287,20 @@ class ApiClient {
     } catch (error) {
       console.error('API DELETE error:', error);
       throw error;
+    }
+  }
+
+  async refreshToken() {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      
+      // Update local storage with new session
+      localStorage.setItem('access_token', data.session.access_token);
+      return true;
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      return false;
     }
   }
 

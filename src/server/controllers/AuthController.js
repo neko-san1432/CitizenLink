@@ -161,7 +161,7 @@ class AuthController {
         department: combinedMetadata.department || null,
         employeeId: combinedMetadata.employee_id || null,
         mobileNumber: combinedMetadata.mobile_number || combinedMetadata.mobile || null,
-        emailVerified: !!authData.user.email_confirmed_at,
+        emailVerified: Boolean(authData.user.email_confirmed_at),
         phoneVerified: combinedMetadata.phone_verified || false,
         // Include raw metadata for reference
         user_metadata: userMetadata,
@@ -172,7 +172,7 @@ class AuthController {
         id: user.id,
         email: user.email,
         role: user.role,
-        hasName: !!user.name,
+        hasName: Boolean(user.name),
         status: user.status
       });
 
@@ -198,24 +198,24 @@ class AuthController {
       }
 
       // Set session cookie with proper expiration
-        const cookieOptions = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 315360000000, // 10 years for development (permanent)
-          // Removed domain to use default
-        };
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 315360000000, // 10 years for development (permanent)
+        // Removed domain to use default
+      };
 
       console.log('[LOGIN] 🍪 Setting session cookie with options:', cookieOptions);
       console.log('[LOGIN] Token length:', authData.session.access_token?.length);
-      console.log('[LOGIN] Token preview:', authData.session.access_token?.substring(0, 20) + '...');
+      console.log('[LOGIN] Token preview:', `${authData.session.access_token?.substring(0, 20)  }...`);
 
       // Set the cookie
       console.log('[LOGIN] 🍪 Setting session cookie...');
       res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
       console.log('[LOGIN] 🍪 Session cookie set');
-      
+
       // Also set a non-httpOnly cookie for debugging (remove in production)
       if (process.env.NODE_ENV !== 'production') {
         console.log('[LOGIN] 🍪 Setting debug cookie...');
@@ -232,13 +232,13 @@ class AuthController {
 
       // Verify cookies are set in response headers
       console.log('[LOGIN] 🍪 Response headers after cookie setting:', res.getHeaders());
-      
+
       console.log('[LOGIN] ✅ Login successful, sending response');
 
       res.json({
         success: true,
         data: {
-          user: user,
+          user,
           session: {
             accessToken: authData.session.access_token,
             refreshToken: authData.session.refresh_token,
@@ -608,14 +608,14 @@ class AuthController {
         mobile_number: mobile || req.user?.mobileNumber || null,
         mobile: mobile || req.user?.mobileNumber || null,
         // Role fields (department-specific role allowed in role; normalized_role is general bucket)
-        role: role,
+        role,
         normalized_role: (role || '') === 'lgu-admin' ? 'lgu-admin' : (role || '') === 'lgu' ? 'lgu' : role || 'citizen',
         department: department_code || null,
         // Flags
         is_oauth: true,
         status: 'active',
         email_verified: true,
-        phone_verified: !!mobile,
+        phone_verified: Boolean(mobile),
         updated_at: new Date().toISOString()
       };
 

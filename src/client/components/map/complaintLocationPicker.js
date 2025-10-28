@@ -195,13 +195,13 @@ function setupLocationPicker(map) {
   updateLocationText(initialCenter.lat, initialCenter.lng);
 
   // Marker drag events
-  marker.on('drag', function(e) {
+  marker.on('drag', (e) => {
     const latlng = e.target.getLatLng();
     // console.log removed for security
     updateCoordinates(latlng.lat, latlng.lng);
   });
 
-  marker.on('dragend', function(e) {
+  marker.on('dragend', (e) => {
     const latlng = e.target.getLatLng();
     // console.log removed for security
     updateCoordinates(latlng.lat, latlng.lng);
@@ -209,7 +209,7 @@ function setupLocationPicker(map) {
   });
 
   // Map click events
-  map.on('click', function(e) {
+  map.on('click', (e) => {
     if (isUserInteracting) return;
 
     const { lat, lng } = e.latlng;
@@ -220,12 +220,12 @@ function setupLocationPicker(map) {
   });
 
   // Map move events (when user drags the map)
-  map.on('movestart', function() {
+  map.on('movestart', () => {
     isUserInteracting = true;
     // console.log removed for security
   });
 
-  map.on('moveend', function() {
+  map.on('moveend', () => {
     if (!isUserInteracting) return;
 
     const center = map.getCenter();
@@ -252,7 +252,7 @@ function setupLocationPicker(map) {
 
         // Check geolocation permissions
         if (navigator.permissions) {
-          navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+          navigator.permissions.query({ name: 'geolocation' }).then((result) => {
             // console.log removed for security
           });
         }
@@ -266,16 +266,16 @@ function setupLocationPicker(map) {
         };
 
         navigator.geolocation.getCurrentPosition(
-          function(position) {
+          (position) => {
             // console.log removed for security
             // console.log removed for security
 
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            const altitude = position.coords.altitude;
-            const heading = position.coords.heading;
-            const speed = position.coords.speed;
+            const {accuracy} = position.coords;
+            const {altitude} = position.coords;
+            const {heading} = position.coords;
+            const {speed} = position.coords;
             const timestamp = new Date(position.timestamp);
 
             // console.log removed for security
@@ -302,27 +302,27 @@ function setupLocationPicker(map) {
 
             // console.log removed for security
           },
-          function(error) {
+          (error) => {
             console.error('❌ Geolocation error:', error);
             // console.log removed for security
 
             switch(error.code) {
-            case error.PERMISSION_DENIED:
+              case error.PERMISSION_DENIED:
               // console.log removed for security
-              alert('Location access denied. Please allow location access or select manually on the map.');
-              break;
-            case error.POSITION_UNAVAILABLE:
+                alert('Location access denied. Please allow location access or select manually on the map.');
+                break;
+              case error.POSITION_UNAVAILABLE:
               // console.log removed for security
-              alert('Location information unavailable. Please select manually on the map.');
-              break;
-            case error.TIMEOUT:
+                alert('Location information unavailable. Please select manually on the map.');
+                break;
+              case error.TIMEOUT:
               // console.log removed for security
-              alert('Location request timed out. Please try again or select manually on the map.');
-              break;
-            default:
+                alert('Location request timed out. Please try again or select manually on the map.');
+                break;
+              default:
               // console.log removed for security
-              alert('Unable to get your location. Please select manually on the map.');
-              break;
+                alert('Unable to get your location. Please select manually on the map.');
+                break;
             }
           },
           options

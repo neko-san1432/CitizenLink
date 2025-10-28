@@ -21,7 +21,7 @@ const checkAuthenticationAndUpdateUI = async () => {
       // console.log removed for security
 
       // Get user metadata
-      const user = session.user;
+      const {user} = session;
       const role = user?.user_metadata?.role || '';
       const name = user?.user_metadata?.name || '';
 

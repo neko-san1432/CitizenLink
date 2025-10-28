@@ -32,10 +32,10 @@ export function initializeNotificationButton() {
     console.log('[NOTIFICATION] Notification button:', notificationBtn);
     console.log('[NOTIFICATION] Notification panel:', notificationPanel);
     // Toggle notification panel with smooth animations
-    notificationBtn.addEventListener('click', function(e) {
+    notificationBtn.addEventListener('click', (e) => {
       console.log('[NOTIFICATION] Notification button clicked!');
       e.stopPropagation();
-      
+
       // Close profile panel if open
       const profilePanel = document.getElementById('profile-panel');
       if (profilePanel && profilePanel.classList.contains('show')) {
@@ -46,7 +46,7 @@ export function initializeNotificationButton() {
           profilePanel.style.display = 'none';
         }, 300);
       }
-      
+
       // Toggle notification panel with smooth animation
       if (notificationPanel.classList.contains('show')) {
         // Close
@@ -65,10 +65,10 @@ export function initializeNotificationButton() {
           notificationPanel.style.transform = 'translateY(0)';
         }, 10);
       }
-      
+
       console.log('[NOTIFICATION] Notification panel classes after toggle:', notificationPanel.className);
       console.log('[NOTIFICATION] Notification panel has show class:', notificationPanel.classList.contains('show'));
-      
+
       // Debug positioning
       if (notificationPanel.classList.contains('show')) {
         const rect = notificationPanel.getBoundingClientRect();
@@ -99,7 +99,7 @@ export function initializeNotificationButton() {
 
     // Close panel when close button is clicked
     if (closeBtn) {
-      closeBtn.addEventListener('click', function(e) {
+      closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         notificationPanel.classList.remove('show');
       });
@@ -107,27 +107,27 @@ export function initializeNotificationButton() {
 
     // Mark all as read functionality
     if (markAllReadBtn) {
-      markAllReadBtn.addEventListener('click', function() {
+      markAllReadBtn.addEventListener('click', () => {
         markAllNotificationsAsRead();
       });
     }
 
     // Show more notifications
     if (showMoreBtn) {
-      showMoreBtn.addEventListener('click', function() {
+      showMoreBtn.addEventListener('click', () => {
         loadNotifications(false, false); // Don't show loading for "Show More"
       });
     }
 
     // Retry loading notifications
     if (retryBtn) {
-      retryBtn.addEventListener('click', function() {
+      retryBtn.addEventListener('click', () => {
         loadNotifications(true, true); // Show loading for retry
       });
     }
 
     // Close panel when clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', (e) => {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
         notificationPanel.classList.remove('show');
       }
@@ -194,24 +194,24 @@ async function checkForNewNotifications() {
 
     // Fetch only the latest notification to check if there are new ones
     const response = await apiClient.get('/api/notifications/latest?limit=1');
-    
+
     if (response.success && response.notifications && response.notifications.length > 0) {
       const latestNotification = response.notifications[0];
-      
+
       // If this is a new notification (different ID than our last one)
       if (latestNotification.id !== notificationState.lastNotificationId) {
         console.log('[NOTIFICATION] New notification detected, adding to top of list');
-        
+
         // Add the new notification to the top of the list
         notificationState.notifications.unshift(latestNotification);
-        
+
         // Update the last notification ID
         notificationState.lastNotificationId = latestNotification.id;
-        
+
         // Re-render notifications
         renderNotifications();
         updateNotificationCount(notificationState.notifications.filter(n => !n.read).length);
-        
+
         // Show a subtle indicator that new notifications were added
         showNewNotificationIndicator();
       }
@@ -225,7 +225,7 @@ async function checkForNewNotifications() {
 function showNewNotificationIndicator() {
   const notificationPanel = document.getElementById('notification-panel');
   if (!notificationPanel) return;
-  
+
   // Add a subtle animation to indicate new content
   notificationPanel.style.transform = 'scale(1.02)';
   setTimeout(() => {
@@ -246,7 +246,7 @@ async function loadNotifications(reset = false, showLoading = true) {
   if (!notificationState.hasMore) return;
 
   notificationState.loading = true;
-  
+
   // Only show loading indicator on first load or when explicitly requested
   if (showLoading) {
     showLoadingState(true);
@@ -259,7 +259,7 @@ async function loadNotifications(reset = false, showLoading = true) {
 
     if (response.success) {
       const newNotifications = response.data.notifications;
-      const hasMore = response.data.hasMore;
+      const {hasMore} = response.data;
 
       // Add new notifications to the top of the list
       if (reset) {
@@ -270,10 +270,10 @@ async function loadNotifications(reset = false, showLoading = true) {
         const trulyNewNotifications = newNotifications.filter(n => !existingIds.has(n.id));
         notificationState.notifications = [...trulyNewNotifications, ...notificationState.notifications];
       }
-      
+
       notificationState.hasMore = hasMore;
       notificationState.page++;
-      
+
       // Update last notification ID for future checks
       if (newNotifications.length > 0) {
         notificationState.lastNotificationId = newNotifications[0].id;
@@ -282,7 +282,7 @@ async function loadNotifications(reset = false, showLoading = true) {
       renderNotifications();
       updateShowMoreButton();
       updateNotificationCount(notificationState.notifications.filter(n => !n.read).length);
-      
+
       // Mark first load as complete
       notificationState.isFirstLoad = false;
     } else {
@@ -361,7 +361,7 @@ function renderNotifications() {
       notification.priority === 'warning' ? 'notification-warning' : '';
 
     const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
-    
+
     // Add "new" indicator for recent notifications (first 3 items)
     const isNew = index < 3 && !notification.read;
     const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : '';
@@ -387,7 +387,7 @@ function renderNotifications() {
   content.querySelectorAll('.notification-item[data-link]').forEach(item => {
     item.addEventListener('click', async function() {
       const notifId = this.dataset.id;
-      const link = this.dataset.link;
+      const {link} = this.dataset;
 
       // Mark as read
       try {

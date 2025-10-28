@@ -62,7 +62,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
 
     // Debug: Log what's being sent to API
     console.log('[FORM] FormData contents:');
-    for (let [key, value] of apiFormData.entries()) {
+    for (const [key, value] of apiFormData.entries()) {
       console.log(`  ${key}:`, value);
     }
 

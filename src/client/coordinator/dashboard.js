@@ -56,11 +56,11 @@ function renderStatistics(data) {
   document.getElementById('stat-reviews').textContent = data.stats.total_reviews || 0;
   document.getElementById('stat-duplicates').textContent = data.stats.duplicates_merged || 0;
   document.getElementById('stat-assignments').textContent = data.stats.assignments_made || 0;
-  
+
   // Enhanced stats
   document.getElementById('stat-response-time').textContent = data.stats.avg_response_time || '2.5h';
   document.getElementById('stat-accuracy').textContent = data.stats.accuracy_rate || '94%';
-  
+
   // Trends
   updateTrend('pending-trend', data.trends?.pending_change || 0);
   updateTrend('reviews-trend', data.trends?.reviews_change || 0);
@@ -76,7 +76,7 @@ function renderStatistics(data) {
 function updateTrend(elementId, change) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  
+
   if (change > 0) {
     element.innerHTML = `↗️ +${change}%`;
     element.className = 'stat-trend positive';
@@ -313,9 +313,9 @@ function setupEventListeners() {
  */
 function filterReviewQueue() {
   if (!dashboardData?.recent_queue) return;
-  
+
   const queue = dashboardData.recent_queue;
-  
+
   switch (currentFilter) {
     case 'urgent':
       filteredQueue = queue.filter(c => c.priority === 'urgent');
@@ -329,7 +329,7 @@ function filterReviewQueue() {
     default:
       filteredQueue = queue;
   }
-  
+
   renderReviewQueue(filteredQueue);
 }
 
@@ -342,13 +342,13 @@ function renderAnalytics(data) {
     console.log('[COORDINATOR] No analytics data available');
     return;
   }
-  
+
   const analyticsData = data.analytics;
-  
+
   if (analyticsData.reviewTrends) {
     renderReviewTrendsChart(analyticsData.reviewTrends);
   }
-  
+
   if (analyticsData.departmentPerformance) {
     renderDepartmentPerformanceChart(analyticsData.departmentPerformance);
   }
@@ -360,11 +360,11 @@ function renderAnalytics(data) {
 function renderReviewTrendsChart(data) {
   const container = document.getElementById('review-trends-chart');
   if (!container) return;
-  
+
   // Simple chart implementation
   const maxReviews = Math.max(...data.map(d => d.reviews));
   const maxAssignments = Math.max(...data.map(d => d.assignments));
-  
+
   container.innerHTML = `
     <div class="chart-container">
       <div class="chart-bars">
@@ -396,7 +396,7 @@ function renderReviewTrendsChart(data) {
 function renderDepartmentPerformanceChart(data) {
   const container = document.getElementById('department-performance-chart');
   if (!container) return;
-  
+
   container.innerHTML = `
     <div class="performance-list">
       ${data.map(dept => `
@@ -423,7 +423,7 @@ function renderDepartmentPerformanceChart(data) {
 function renderActivity(data) {
   const container = document.getElementById('activity-container');
   if (!container) return;
-  
+
   // Use real data from API
   if (!data || !data.activities || data.activities.length === 0) {
     const activityList = container.querySelector('.activity-list');
@@ -432,8 +432,8 @@ function renderActivity(data) {
     }
     return;
   }
-  
-  const activities = data.activities;
+
+  const {activities} = data;
   const activityList = container.querySelector('.activity-list');
   if (activityList) {
     activityList.innerHTML = activities.map(activity => `

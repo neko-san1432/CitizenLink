@@ -86,7 +86,7 @@ export const getUserRole = async (options = {}) => {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     const response = await fetch('/api/user/role', {
       method: 'GET',
       headers
@@ -142,18 +142,18 @@ export const validateAndRefreshToken = async () => {
     // Check if session is expired
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = session.expires_at;
-    
+
     if (expiresAt && now >= expiresAt) {
       console.log('Session expired, attempting refresh...');
-      
+
       // Try to refresh the session
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
+
       if (refreshError || !refreshData.session) {
         console.log('Session refresh failed:', refreshError?.message);
         return false;
       }
-      
+
       // Update server cookie with new token
       try {
         await fetch('/auth/session', {

@@ -34,11 +34,11 @@ class LguOfficerController {
 
       const { data: assignments, error: assignmentError } = await assignmentQuery;
 
-      console.log('[LGU_OFFICER] Assignments query result:', { 
-        userId, 
+      console.log('[LGU_OFFICER] Assignments query result:', {
+        userId,
         assignmentsCount: assignments?.length || 0,
-        hasError: !!assignmentError,
-        errorDetails: assignmentError 
+        hasError: Boolean(assignmentError),
+        errorDetails: assignmentError
       });
 
       if (assignmentError) {
@@ -149,7 +149,7 @@ class LguOfficerController {
         .update({
           status: 'resolved by officer',
           workflow_status: 'pending_approval',
-          resolution_notes: resolution_notes,
+          resolution_notes,
           resolved_by: userId,
           resolved_at: new Date().toISOString(),
           last_activity_at: new Date().toISOString(),
@@ -195,7 +195,7 @@ class LguOfficerController {
             link: `/citizen/complaints/${complaintId}`,
             metadata: {
               complaint_id: complaintId,
-              resolution_notes: resolution_notes,
+              resolution_notes,
               resolved_by: userId
             }
           }
@@ -583,9 +583,9 @@ class LguOfficerController {
           .eq('assigned_to', userId)
           .order('updated_at', { ascending: false })
           .limit(parseInt(limit));
-        
+
         if (fallbackError) throw fallbackError;
-        
+
         // Transform fallback data
         const transformedActivities = fallbackData.map(activity => ({
           id: activity.id,
@@ -593,7 +593,7 @@ class LguOfficerController {
           description: `Task status updated to ${activity.status}`,
           created_at: activity.updated_at
         }));
-        
+
         return res.json({
           success: true,
           data: transformedActivities

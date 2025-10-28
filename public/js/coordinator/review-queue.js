@@ -154,14 +154,6 @@ class ReviewQueue {
             });
         });
 
-        // Approve buttons
-        document.querySelectorAll('.approve-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const complaintId = e.target.getAttribute('data-complaint-id');
-                this.approveComplaint(complaintId);
-            });
-        });
-
         // Reject buttons
         document.querySelectorAll('.reject-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -211,9 +203,6 @@ class ReviewQueue {
                 <div class="complaint-actions">
                     <button class="btn btn-primary view-btn" data-complaint-id="${complaint.id}">
                         View Details
-                    </button>
-                    <button class="btn btn-success approve-btn" data-complaint-id="${complaint.id}">
-                        Approve
                     </button>
                     <button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
                         Reject
@@ -313,23 +302,6 @@ class ReviewQueue {
         } catch (error) {
             console.error('Error redirecting to complaint details:', error);
             this.showError('Failed to navigate to complaint details.');
-        }
-    }
-
-    async approveComplaint(complaintId) {
-        try {
-            // Get complaint details to show preferred departments
-            const complaint = this.complaints.find(c => c.id === complaintId);
-            const preferredDepartments = complaint?.preferred_departments || complaint?.department_r || [];
-            
-            // Show department selection modal
-            const modal = new DepartmentSelectionModal();
-            await modal.show(complaintId, preferredDepartments, () => {
-                this.loadComplaints(); // Refresh the list after approval
-            });
-        } catch (error) {
-            console.error('Error showing approval modal:', error);
-            showToast('Failed to load approval options: ' + error.message, 'error');
         }
     }
 

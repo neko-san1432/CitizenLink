@@ -132,14 +132,14 @@ class CoordinatorRepository {
         // Transform evidence data for frontend
         complaint.evidence = await Promise.all((evidence || []).map(async (ev) => {
           let signedUrl = null;
-          
+
           // Generate signed URL for private bucket access
           if (ev.file_path) {
             try {
               const { data: signedUrlData, error: signedUrlError } = await this.supabase.storage
                 .from('complaint-evidence')
                 .createSignedUrl(ev.file_path, 3600); // 1 hour expiry
-              
+
               if (!signedUrlError && signedUrlData) {
                 signedUrl = signedUrlData.signedUrl;
               }
@@ -147,7 +147,7 @@ class CoordinatorRepository {
               console.warn('[COORDINATOR_REPO] Failed to generate signed URL for evidence:', urlError.message);
             }
           }
-          
+
           return {
             id: ev.id,
             fileName: ev.file_name,
@@ -593,6 +593,7 @@ class CoordinatorRepository {
         .from('complaints')
         .update({
           workflow_status: 'assigned',
+          department_r: [departmentCode], // CRITICAL: Set department_r array so LGU admins can see assigned complaints
           updated_at: new Date().toISOString()
         })
         .in('id', complaintIds)
@@ -638,7 +639,7 @@ class CoordinatorRepository {
       }
 
       return {
-        isCoordinator: !!data,
+        isCoordinator: Boolean(data),
         department: data?.department || null,
         details: data || null
       };
@@ -659,7 +660,7 @@ class CoordinatorRepository {
           complaint_id: complaintId,
           action_type: actionType,
           performed_by: userId,
-          details: details,
+          details,
           created_at: new Date().toISOString()
         });
 
@@ -761,6 +762,7 @@ class CoordinatorRepository {
         .from('complaints')
         .update({
           workflow_status: 'assigned',
+          department_r: [departmentCode], // CRITICAL: Set department_r array so LGU admins can see assigned complaints
           coordinator_notes: options.notes || null,
           updated_at: new Date().toISOString()
         })

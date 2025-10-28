@@ -41,7 +41,7 @@ function getStatusFromWorkflow(workflowStatus) {
     'completed': 'resolved',
     'cancelled': 'rejected'
   };
-  
+
   return statusMap[workflowStatus] || 'pending review';
 }
 
@@ -58,7 +58,7 @@ function getWorkflowFromStatus(status) {
     'rejected': 'cancelled',
     'closed': 'cancelled'
   };
-  
+
   return workflowMap[status] || 'new';
 }
 
@@ -147,12 +147,12 @@ function getAssignmentProgress(complaint) {
  */
 function prepareComplaintForInsert(complaintData) {
   const prepared = { ...complaintData };
-  
+
   // Ensure workflow_status is set based on status if provided
   if (complaintData.status && !complaintData.workflow_status) {
     prepared.workflow_status = getWorkflowFromStatus(complaintData.status);
   }
-  
+
   // Ensure department_r is populated from primary_department and secondary_departments
   if (complaintData.primary_department && (!complaintData.department_r || complaintData.department_r.length === 0)) {
     prepared.department_r = [complaintData.primary_department];
@@ -160,7 +160,7 @@ function prepareComplaintForInsert(complaintData) {
     //   prepared.department_r.push(...complaintData.secondary_departments);
     // }
   }
-  
+
   // Remove redundant fields that will be derived
   delete prepared.primary_department;
   delete prepared.secondary_departments;
@@ -169,7 +169,7 @@ function prepareComplaintForInsert(complaintData) {
   delete prepared.subtype; // Remove subtype field - not in current schema
   delete prepared.evidence; // Remove evidence field - handled separately
   // Keep category and subcategory fields - they are now part of the schema
-  
+
   return prepared;
 }
 
@@ -187,34 +187,34 @@ function getComplaintStatistics(complaints) {
     byCategory: {}, // Changed from byType to byCategory
     byDepartment: {}
   };
-  
+
   complaints.forEach(complaint => {
     const normalized = normalizeComplaintData(complaint);
-    
+
     // Count by status
-    const status = normalized.status;
+    const {status} = normalized;
     stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-    
+
     // Count by workflow status
     const workflowStatus = complaint.workflow_status;
     stats.byWorkflowStatus[workflowStatus] = (stats.byWorkflowStatus[workflowStatus] || 0) + 1;
-    
+
     // Count by priority
-    const priority = complaint.priority;
+    const {priority} = complaint;
     stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
-    
+
     // Count by category (more meaningful than type)
     const category = complaint.category || 'Uncategorized';
     stats.byCategory = stats.byCategory || {};
     stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
-    
+
     // Count by primary department
     const primaryDept = normalized.primary_department;
     if (primaryDept) {
       stats.byDepartment[primaryDept] = (stats.byDepartment[primaryDept] || 0) + 1;
     }
   });
-  
+
   return stats;
 }
 
@@ -225,7 +225,7 @@ function getComplaintStatistics(complaints) {
  */
 function validateComplaintConsistency(complaint) {
   const errors = [];
-  
+
   // Check if status and workflow_status are consistent
   if (complaint.status && complaint.workflow_status) {
     const derivedStatus = getStatusFromWorkflow(complaint.workflow_status);
@@ -233,24 +233,24 @@ function validateComplaintConsistency(complaint) {
       errors.push(`Status '${complaint.status}' doesn't match workflow_status '${complaint.workflow_status}' (should be '${derivedStatus}')`);
     }
   }
-  
+
   // Check if primary_department matches department_r[0]
   if (complaint.primary_department && complaint.department_r && Array.isArray(complaint.department_r)) {
     if (complaint.department_r.length > 0 && complaint.primary_department !== complaint.department_r[0]) {
       errors.push(`Primary department '${complaint.primary_department}' doesn't match department_r[0] '${complaint.department_r[0]}'`);
     }
   }
-  
+
   // Check if secondary_departments match department_r[1:]
   // if (complaint.secondary_departments && complaint.department_r && Array.isArray(complaint.department_r)) {
   //   const expectedSecondary = complaint.department_r.slice(1);
   //   const actualSecondary = Array.isArray(complaint.secondary_departments) ? complaint.secondary_departments : [];
-  //   
+  //
   //   if (JSON.stringify(expectedSecondary.sort()) !== JSON.stringify(actualSecondary.sort())) {
   //     errors.push(`Secondary departments don't match department_r[1:]`);
   //   }
   // }
-  
+
   return {
     isValid: errors.length === 0,
     errors

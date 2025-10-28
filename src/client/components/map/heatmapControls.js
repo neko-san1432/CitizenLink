@@ -263,7 +263,7 @@ class HeatmapControls {
     document.getElementById('time-range-filter')?.addEventListener('change', (e) => {
       const timeRange = e.target.value;
       this.currentFilters.timeRange = timeRange;
-      
+
       // Show/hide custom date range
       const customDateRange = document.getElementById('custom-date-range');
       if (timeRange === 'custom') {
@@ -334,11 +334,11 @@ class HeatmapControls {
     const now = new Date();
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
-    
+
     if (!startDateInput || !endDateInput) return;
 
     let startDate, endDate;
-    
+
     switch (timeRange) {
       case 'today':
         startDate = endDate = now;
@@ -361,7 +361,7 @@ class HeatmapControls {
       default:
         return;
     }
-    
+
     startDateInput.value = startDate.toISOString().split('T')[0];
     endDateInput.value = endDate.toISOString().split('T')[0];
   }
@@ -547,7 +547,7 @@ class HeatmapControls {
       const { apiClient } = await import('../../config/apiClient.js');
       const { data, error } = await apiClient.get('/api/department-structure/categories');
       if (error) throw error;
-      
+
       const categorySelect = document.getElementById('category-filter');
       if (categorySelect) {
         // Remove loading placeholder
@@ -555,7 +555,7 @@ class HeatmapControls {
         if (loadingEl) {
           loadingEl.remove();
         }
-        
+
         // Add category options
         if (data && data.length > 0) {
           data.forEach(category => {
@@ -600,7 +600,7 @@ class HeatmapControls {
       if (error) throw error;
 
       subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
-      
+
       if (data && data.length > 0) {
         data.forEach(subcategory => {
           const option = document.createElement('option');
@@ -625,7 +625,7 @@ class HeatmapControls {
     try {
       const { getDepartments } = await import('../../utils/departmentUtils.js');
       const departments = await getDepartments();
-      
+
       const departmentSelect = document.getElementById('department-filter');
       if (departmentSelect) {
         // Remove loading placeholder
@@ -633,7 +633,7 @@ class HeatmapControls {
         if (loadingEl) {
           loadingEl.remove();
         }
-        
+
         // Add department options
         departments.forEach(dept => {
           const option = document.createElement('option');

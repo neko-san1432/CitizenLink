@@ -17,7 +17,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
  */
 async function getValidDepartmentCodes() {
   const now = Date.now();
-  
+
   // Return cached data if still valid
   if (departmentCodesCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
     return departmentCodesCache;
@@ -32,11 +32,11 @@ async function getValidDepartmentCodes() {
     if (error) throw error;
 
     const codes = data ? data.map(dept => dept.code) : [];
-    
+
     // Cache the result
     departmentCodesCache = codes;
     cacheTimestamp = now;
-    
+
     return codes;
   } catch (error) {
     console.error('Error fetching department codes:', error);
@@ -52,7 +52,7 @@ async function getValidDepartmentCodes() {
  */
 async function isValidDepartmentCode(code) {
   if (!code || typeof code !== 'string') return false;
-  
+
   const validCodes = await getValidDepartmentCodes();
   return validCodes.includes(code.toUpperCase());
 }
@@ -73,11 +73,11 @@ async function validateUserRole(role) {
   }
 
   const roleLower = role.toLowerCase().trim();
-  
+
   // Check for valid role patterns
   let roleType = null;
   let departmentCode = null;
-  
+
   // Simplified LGU roles
   if (roleLower === 'lgu-admin') {
     roleType = 'lgu-admin';
@@ -137,9 +137,9 @@ async function validateUserRole(role) {
  */
 function extractDepartmentCode(role) {
   if (!role || typeof role !== 'string') return null;
-  
+
   const roleLower = role.toLowerCase().trim();
-  
+
   // With simplified roles, department is stored separately in metadata
   // This function now returns null as department is not extracted from role
   return null;
@@ -152,7 +152,7 @@ function extractDepartmentCode(role) {
  */
 async function getDepartmentByCode(code) {
   if (!code) return null;
-  
+
   try {
     const { data, error } = await supabase
       .from('departments')
@@ -206,6 +206,4 @@ module.exports = {
   clearDepartmentCodesCache,
   getValidDepartments
 };
-
-
 

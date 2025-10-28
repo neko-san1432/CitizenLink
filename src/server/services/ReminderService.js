@@ -27,7 +27,7 @@ class ReminderService {
    */
   startScheduler() {
     console.log('[REMINDER_SERVICE] Starting reminder scheduler...');
-    
+
     // Check for reminders every hour
     setInterval(() => {
       this.processReminders();
@@ -43,16 +43,16 @@ class ReminderService {
   async processReminders() {
     try {
       console.log('[REMINDER_SERVICE] Processing reminders...');
-      
+
       const now = new Date();
       const reminders = await this.getPendingReminders(now);
-      
+
       console.log(`[REMINDER_SERVICE] Found ${reminders.length} complaints needing reminders`);
-      
+
       for (const complaint of reminders) {
         await this.sendReminder(complaint);
       }
-      
+
     } catch (error) {
       console.error('[REMINDER_SERVICE] Error processing reminders:', error);
     }
@@ -101,8 +101,8 @@ class ReminderService {
 
       for (const complaint of allComplaints) {
         const lastReminder = await this.getLastReminder(complaint.id);
-        const timeSinceLastReminder = lastReminder ? 
-          now.getTime() - new Date(lastReminder.reminded_at).getTime() : 
+        const timeSinceLastReminder = lastReminder ?
+          now.getTime() - new Date(lastReminder.reminded_at).getTime() :
           now.getTime() - new Date(complaint.submitted_at).getTime();
 
         // Determine which reminder level this should be
@@ -117,7 +117,7 @@ class ReminderService {
 
         // Check if we should send this reminder level
         const shouldRemind = this.shouldSendReminder(complaint, reminderLevel, lastReminder);
-        
+
         if (shouldRemind) {
           complaintsNeedingReminders.push({
             ...complaint,
@@ -139,8 +139,8 @@ class ReminderService {
    */
   shouldSendReminder(complaint, reminderLevel, lastReminder) {
     const now = new Date();
-    const timeSinceLastReminder = lastReminder ? 
-      now.getTime() - new Date(lastReminder.reminded_at).getTime() : 
+    const timeSinceLastReminder = lastReminder ?
+      now.getTime() - new Date(lastReminder.reminded_at).getTime() :
       now.getTime() - new Date(complaint.submitted_at).getTime();
 
     // Don't send reminders more than once per day
@@ -180,18 +180,18 @@ class ReminderService {
   async sendReminder(complaint) {
     try {
       console.log(`[REMINDER_SERVICE] Sending ${complaint.reminderLevel} reminder for complaint ${complaint.id}`);
-      
+
       // Get department information
       const departments = await this.getComplaintDepartments(complaint);
-      
+
       // Create reminder record
       await this.createReminderRecord(complaint.id, complaint.reminderLevel);
-      
+
       // Send notifications to relevant parties
       await this.sendReminderNotifications(complaint, departments, complaint.reminderLevel);
-      
+
       console.log(`[REMINDER_SERVICE] Successfully sent reminder for complaint ${complaint.id}`);
-      
+
     } catch (error) {
       console.error(`[REMINDER_SERVICE] Error sending reminder for complaint ${complaint.id}:`, error);
     }
@@ -202,14 +202,14 @@ class ReminderService {
    */
   async getComplaintDepartments(complaint) {
     const departments = [];
-    
+
     // Get departments from department_r array
     if (complaint.department_r && complaint.department_r.length > 0) {
       const { data: deptData } = await supabase
         .from('departments')
         .select('id, name, code')
         .in('code', complaint.department_r);
-      
+
       if (deptData) {
         departments.push(...deptData);
       }
@@ -221,7 +221,7 @@ class ReminderService {
         .from('departments')
         .select('id, name, code')
         .in('code', complaint.preferred_departments);
-      
+
       if (preferredDepts) {
         departments.push(...preferredDepts);
       }

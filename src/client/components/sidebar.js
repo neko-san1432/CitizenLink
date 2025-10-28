@@ -52,7 +52,7 @@ const menuIcons = {
 async function setSidebarRole() {
   try {
     console.log('Setting up sidebar...');
-    
+
     // Get user role with better error handling
     let role = null;
     try {
@@ -75,7 +75,7 @@ async function setSidebarRole() {
         console.error('Failed to get role from session:', sessionError);
       }
     }
-    
+
     // If still no role, try to get it from localStorage
     if (!role) {
       try {
@@ -87,20 +87,20 @@ async function setSidebarRole() {
         console.error('Failed to get role from localStorage:', error);
       }
     }
-    
+
     if (!role) {
       console.error('No role found, redirecting to login');
-      window.location.href = '/login?message=' + encodeURIComponent('Unable to determine user role. Please log in again.') + '&type=error';
+      window.location.href = `/login?message=${  encodeURIComponent('Unable to determine user role. Please log in again.')  }&type=error`;
       return;
     }
-    
+
     const roleLower = role.toLowerCase();
     console.log('Processing role:', roleLower);
-    
+
     // Define menu items based on role
     const menuItems = getMenuItemsForRole(roleLower);
     console.log('Menu items for role:', menuItems);
-    
+
     // Build sidebar HTML
 
     if (_sidebarEl) {
@@ -148,13 +148,13 @@ async function setSidebarRole() {
           </div>
         </div>
       `;
-      
+
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
       initializeSidebarSearch();
       // Theme toggle is handled by header.js
       initializeLogout();
-      
+
       console.log('Sidebar initialized successfully');
     }
   } catch (error) {
@@ -177,7 +177,7 @@ async function setSidebarRole() {
 
 function getMenuItemsForRole(role) {
   console.log('Getting menu items for role:', role);
-  
+
   const menuItems = {
     'citizen': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -211,23 +211,23 @@ function getMenuItemsForRole(role) {
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ]
   };
-  
+
   // Handle simplified LGU roles
   if (role === 'lgu-hr') {
     return menuItems['lgu-hr'] || [];
   }
-  
+
   if (role === 'lgu-admin') {
     return menuItems['lgu-admin'] || [];
   }
-  
+
   if (role === 'lgu') {
     return [
       { url: '/task-assigned', icon: 'taskAssigned', label: 'Task Assigned' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ];
   }
-  
+
   // Return menu items for exact role match
   const items = menuItems[role] || [];
   console.log('Returning menu items:', items);
@@ -240,7 +240,7 @@ function initializeSidebarSearch() {
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
       const menuItems = document.querySelectorAll('.sidebar-menu a');
-      
+
       menuItems.forEach(item => {
         const text = item.textContent.toLowerCase();
         if (text.includes(query)) {
@@ -279,18 +279,18 @@ function initializeLogout() {
   if (logoutLink) {
     logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
-      
+
       try {
         // Clear server session
         await fetch('/auth/session', { method: 'DELETE' });
-        
+
         // Clear Supabase session
         const { supabase } = await import('../config/config.js');
         await supabase.auth.signOut();
-        
+
         // Clear local storage
         localStorage.clear();
-        
+
         // Redirect to login
         window.location.href = '/login';
       } catch (error) {
@@ -306,7 +306,7 @@ function initializeLogout() {
 function setActiveMenuItem() {
   const currentPath = window.location.pathname;
   const menuItems = document.querySelectorAll('.sidebar-menu a');
-  
+
   menuItems.forEach(item => {
     const href = item.getAttribute('href');
     if (href && currentPath.includes(href.replace(root, ''))) {

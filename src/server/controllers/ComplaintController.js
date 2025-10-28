@@ -30,8 +30,8 @@ class ComplaintController {
 
       if (complaint.department_r && complaint.department_r.length > 0 || complaint.assigned_coordinator_id) {
         response.workflow = {
-          auto_assigned: !!(complaint.department_r && complaint.department_r.length > 0),
-          coordinator_assigned: !!complaint.assigned_coordinator_id,
+          auto_assigned: Boolean(complaint.department_r && complaint.department_r.length > 0),
+          coordinator_assigned: Boolean(complaint.assigned_coordinator_id),
           workflow_status: complaint.workflow_status
         };
       }
@@ -74,8 +74,8 @@ class ComplaintController {
 
     } catch (error) {
       console.error('[COMPLAINT] Cancel complaint error:', error);
-      const status = error.message.includes('not found') ? 404 : 
-                    error.message.includes('not authorized') ? 403 : 500;
+      const status = error.message.includes('not found') ? 404 :
+        error.message.includes('not authorized') ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -101,8 +101,8 @@ class ComplaintController {
 
     } catch (error) {
       console.error('[COMPLAINT] Send reminder error:', error);
-      const status = error.message.includes('not found') ? 404 : 
-                    error.message.includes('not authorized') ? 403 : 500;
+      const status = error.message.includes('not found') ? 404 :
+        error.message.includes('not authorized') ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -136,8 +136,8 @@ class ComplaintController {
 
     } catch (error) {
       console.error('[COMPLAINT] Confirm resolution error:', error);
-      const status = error.message.includes('not found') ? 404 : 
-                    error.message.includes('not authorized') ? 403 : 500;
+      const status = error.message.includes('not found') ? 404 :
+        error.message.includes('not authorized') ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -270,10 +270,11 @@ class ComplaintController {
         }
       });
     } catch (error) {
-      console.error('Error fetching all complaints:', error);
+      console.error('Error fetching all complaints:', error.message, error.stack);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch complaints'
+        error: 'Failed to fetch complaints',
+        detail: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
@@ -520,7 +521,7 @@ class ComplaintController {
   async getFalseComplaints(req, res) {
     try {
       const { limit } = req.query;
-      
+
       const result = await this.complaintService.getFalseComplaints({
         limit: limit ? parseInt(limit) : undefined
       });
@@ -587,8 +588,8 @@ class ComplaintController {
 
     } catch (error) {
       console.error('[COMPLAINT] Mark assignment complete error:', error);
-      const status = error.message.includes('not found') ? 404 : 
-                    error.message.includes('not authorized') ? 403 : 500;
+      const status = error.message.includes('not found') ? 404 :
+        error.message.includes('not authorized') ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -669,7 +670,7 @@ class ComplaintController {
     } catch (error) {
       console.error('[COMPLAINT] Confirm resolution error:', error);
       const status = error.message.includes('not found') ? 404 :
-                    error.message.includes('not authorized') ? 403 : 500;
+        error.message.includes('not authorized') ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -719,25 +720,59 @@ class ComplaintController {
     }
   }
 
-  /**
-   * Get current user's complaint statistics (Citizen endpoint)
-   */
-  async getMyStatistics(req, res) {
+  async getConfirmationMessage(req, res) {
     try {
+      const { id } = req.params;
       const { user } = req;
 
-      const stats = await this.complaintService.getUserStatistics(user.id);
+      const message = await this.complaintService.getConfirmationMessage(id, user.role);
 
       res.json({
         success: true,
-        data: stats
+        data: message
       });
-
     } catch (error) {
-      console.error('[COMPLAINT-CONTROLLER] Error getting user statistics:', error);
+      console.error('Error getting confirmation message:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch statistics'
+        error: 'Failed to get confirmation message'
+      });
+    }
+  }
+
+  /**
+   * Create assignment for officers
+   */
+  async createAssignment(req, res) {
+    try {
+      const complaintId = req.params.complaintId; // Get from URL parameter
+      const { officerIds } = req.body;
+      const user = req.user;
+      
+      if (!complaintId || !officerIds || !Array.isArray(officerIds) || officerIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields: complaintId and officerIds array'
+        });
+      }
+      
+      const result = await this.complaintService.createAssignment(
+        complaintId,
+        officerIds,
+        user.id
+      );
+      
+      res.json({
+        success: true,
+        data: result,
+        message: 'Assignment created successfully'
+      });
+    } catch (error) {
+      console.error('Error creating assignment:', error.message, error.stack);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create assignment',
+        detail: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }

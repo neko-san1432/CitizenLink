@@ -95,9 +95,9 @@ class FalseComplaintMarker {
     // Character count
     const textarea = document.getElementById('falseComplaintDetails');
     const charCount = this.modal.querySelector('.char-count');
-    
+
     textarea?.addEventListener('input', (e) => {
-      const length = e.target.value.length;
+      const {length} = e.target.value;
       charCount.textContent = `${length} / 20 minimum characters`;
       charCount.classList.toggle('valid', length >= 20);
     });
@@ -113,7 +113,7 @@ class FalseComplaintMarker {
   open(complaintId, onSuccess) {
     this.complaintId = complaintId;
     this.onSuccess = onSuccess;
-    
+
     // Reset form
     document.getElementById('falseComplaintForm')?.reset();
     const charCount = this.modal.querySelector('.char-count');
@@ -171,7 +171,7 @@ class FalseComplaintMarker {
 
       // Success
       this.showSuccess('Complaint marked as false successfully');
-      
+
       if (this.onSuccess) {
         this.onSuccess(result.data);
       }

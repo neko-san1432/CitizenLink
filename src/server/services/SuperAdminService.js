@@ -209,7 +209,7 @@ class SuperAdminService {
               .order('created_at', { ascending: false })
               .limit(limit)
               .range(offset, offset + limit - 1);
-            
+
             if (fallbackError) throw fallbackError;
             logs.role_changes = fallbackData || [];
           } else {
@@ -247,7 +247,7 @@ class SuperAdminService {
               .order('created_at', { ascending: false })
               .limit(limit)
               .range(offset, offset + limit - 1);
-            
+
             if (fallbackError) throw fallbackError;
             logs.department_transfers = fallbackData || [];
           } else {

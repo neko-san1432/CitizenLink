@@ -492,7 +492,7 @@ class HRService {
         ...link,
         url: `${baseUrl}/signup-with-code?code=${link.code}`,
         is_expired: link.expires_at ? new Date(link.expires_at) < new Date() : false,
-        is_used: !!link.used_at
+        is_used: Boolean(link.used_at)
       }));
 
       return {

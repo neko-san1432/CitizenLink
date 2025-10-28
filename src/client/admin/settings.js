@@ -149,7 +149,7 @@ class SettingsManager {
   // Enhanced HTML sanitization function
   sanitizeHtml(html) {
     if (!html || typeof html !== 'string') return '';
-    
+
     // Use DOMPurify for comprehensive sanitization
     if (typeof DOMPurify !== 'undefined') {
       return DOMPurify.sanitize(html, {
@@ -161,7 +161,7 @@ class SettingsManager {
         KEEP_CONTENT: true
       });
     }
-    
+
     // Fallback sanitization if DOMPurify is not available
     return html
       // Remove script tags and their content

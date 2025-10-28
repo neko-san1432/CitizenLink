@@ -29,25 +29,25 @@ router.use(authenticateUser);
 
 // Generate signup link
 router.post('/signup-links',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-hr', 'super-admin', 'complaint-coordinator']),
   (req, res) => hrController.generateSignupLink(req, res)
 );
 
 // Get signup links
 router.get('/signup-links',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-hr', 'super-admin', 'complaint-coordinator']),
   (req, res) => hrController.getSignupLinks(req, res)
 );
 
 // Deactivate signup link
 router.delete('/signup-links/:linkId',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-hr', 'super-admin', 'complaint-coordinator']),
   (req, res) => hrController.deactivateSignupLink(req, res)
 );
 
 // Get HR dashboard
 router.get('/dashboard',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-hr', 'super-admin', 'complaint-coordinator']),
   (req, res) => hrController.getDashboard(req, res)
 );
 
@@ -58,43 +58,43 @@ router.get('/validate-signup-code/:code',
 
 // Role management actions
 router.post('/promote-to-officer',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.promoteToOfficer(req, res)
 );
 
 router.post('/promote-to-admin',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.promoteToAdmin(req, res)
 );
 
 router.post('/demote-to-officer',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.demoteToOfficer(req, res)
 );
 
 router.post('/strip-titles',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.stripTitles(req, res)
 );
 
 router.post('/assign-department',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.assignDepartment(req, res)
 );
 
 // User listing and details (search + barangay filter)
 router.get('/users',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.getUsers(req, res)
 );
 
 router.get('/users/:id',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.getUserDetails(req, res)
 );
 
 router.get('/users/:id/complaints',
-  requireRole(['lgu-hr', /^lgu-hr/, 'super-admin']),
+  requireRole(['lgu-hr', 'super-admin']),
   (req, res) => hrController.getUserComplaints(req, res)
 );
 

@@ -17,7 +17,7 @@ router.get('/status', (req, res) => {
   try {
     const now = Date.now();
     const windowDuration = 60 * 1000; // 1 minute window
-    
+
     // Reset window if needed
     if (now - rateLimitData.windowStart > windowDuration) {
       rateLimitData = {
@@ -27,11 +27,11 @@ router.get('/status', (req, res) => {
         resetTime: now + windowDuration
       };
     }
-    
+
     // Increment request count
     rateLimitData.requests++;
     rateLimitData.remaining = Math.max(0, 1000 - rateLimitData.requests);
-    
+
     res.json({
       success: true,
       status: {
@@ -61,7 +61,7 @@ router.post('/reset', (req, res) => {
       remaining: 1000,
       resetTime: Date.now() + (60 * 1000)
     };
-    
+
     res.json({
       success: true,
       message: 'Rate limit reset successfully'

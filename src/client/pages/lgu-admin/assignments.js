@@ -185,7 +185,7 @@ function filterAssignments() {
  * Create HTML for assignment item
  */
 function createAssignmentHTML(assignment) {
-  const isAssigned = !!assignment.assigned_to;
+  const isAssigned = Boolean(assignment.assigned_to);
   const priorityClass = `priority-${assignment.priority || 'medium'}`;
   const statusClass = isAssigned ? 'status-assigned' : 'status-unassigned';
   const statusText = isAssigned ? 'Assigned' : 'Unassigned';
@@ -353,10 +353,10 @@ function populateOfficerSelect() {
     return;
   }
 
-  select.innerHTML = '<option value="">-- Select an officer --</option>' +
+  select.innerHTML = `<option value="">-- Select an officer --</option>${
     officers.map(officer => `
       <option value="${officer.id}">${escapeHtml(officer.name)} ${officer.employee_id ? `(${officer.employee_id})` : ''}</option>
-    `).join('');
+    `).join('')}`;
 
   // console.log removed for security
 }

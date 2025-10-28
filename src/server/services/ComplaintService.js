@@ -20,10 +20,10 @@ class ComplaintService {
       departments: complaintData.departments,
       keys: Object.keys(complaintData)
     });
-    
+
     // Parse preferred_departments - handle both array and individual values
     let preferredDepartments = complaintData.preferred_departments || [];
-    
+
     // If preferred_departments is a string, check if it's JSON or just a single value
     if (typeof preferredDepartments === 'string') {
       // Try to parse as JSON first
@@ -35,7 +35,7 @@ class ComplaintService {
         preferredDepartments = [preferredDepartments].filter(Boolean);
       }
     }
-    
+
     // If preferred_departments is not an array, convert it to array
     if (!Array.isArray(preferredDepartments)) {
       preferredDepartments = [preferredDepartments].filter(Boolean);
@@ -59,10 +59,10 @@ class ComplaintService {
 
     // Prepare data for insertion using utility functions
     const preparedData = prepareComplaintForInsert(mappedData);
-    
+
     // Debug: Log what fields are being sent to database
     console.log('[COMPLAINT_SERVICE] Fields being sent to database:', Object.keys(preparedData));
-    
+
     // Validate data consistency
     const consistencyCheck = validateComplaintConsistency(preparedData);
     if (!consistencyCheck.isValid) {
@@ -98,17 +98,19 @@ class ComplaintService {
 
       // Send notification to complaint coordinator
       try {
-        // Find active complaint coordinator
-        const coordinator = await this.complaintRepo.findActiveCoordinator('GENERAL');
-        if (coordinator) {
-          await this.notificationService.notifyNewComplaintReview(
-            coordinator.user_id,
-            createdComplaint.id,
-            createdComplaint.title
-          );
-          console.log('[COMPLAINT] Coordinator notification sent for complaint:', createdComplaint.id);
+        // Use the new method that finds all coordinators and notifies them
+        const coordResult = await this.notificationService.notifyAllCoordinators(
+          createdComplaint.id,
+          createdComplaint.title
+        );
+
+        if (coordResult.success) {
+          console.log('[COMPLAINT] Coordinator notifications sent:', {
+            complaintId: createdComplaint.id,
+            coordinatorsNotified: coordResult.count || 0
+          });
         } else {
-          console.warn('[COMPLAINT] No active coordinator found for notification');
+          console.warn('[COMPLAINT] Failed to send coordinator notifications:', coordResult.error);
         }
       } catch (coordNotifError) {
         console.warn('[COMPLAINT] Failed to send coordinator notification:', coordNotifError.message);
@@ -206,7 +208,7 @@ class ComplaintService {
     //     }
     //   });
     // } catch (error) {
-    //   console.warn('[WORKFLOW] Audit logging failed:', error.message);
+    //   console.warn('[AUDIT] Audit logging failed:', error.message);
     // }
   }
 
@@ -249,7 +251,7 @@ class ComplaintService {
           filePath: uploadData.path,
           fileType: file.mimetype,
           fileSize: file.size,
-          publicUrl: publicUrl
+          publicUrl
         });
 
         // Store evidence metadata in database with evidence_type='initial'
@@ -334,7 +336,7 @@ class ComplaintService {
           filePath: uploadData.path,
           fileType: file.mimetype,
           fileSize: file.size,
-          publicUrl: publicUrl
+          publicUrl
         });
 
         // Store evidence metadata in database with evidence_type='completion'
@@ -415,8 +417,8 @@ class ComplaintService {
 
   async getUserStatistics(userId) {
     try {
-      const supabase = this.complaintRepo.supabase;
-      
+      const {supabase} = this.complaintRepo;
+
       // Get total complaints count
       const { count: totalComplaints, error: totalError } = await supabase
         .from('complaints')
@@ -716,7 +718,7 @@ class ComplaintService {
     try {
       // Get complaint and verify ownership
       const complaint = await this.complaintRepo.getComplaintById(complaintId);
-      
+
       if (!complaint) {
         throw new Error('Complaint not found');
       }
@@ -823,7 +825,7 @@ class ComplaintService {
     try {
       // Get complaint and verify ownership
       const complaint = await this.complaintRepo.getComplaintById(complaintId);
-      
+
       if (!complaint) {
         throw new Error('Complaint not found');
       }
@@ -832,8 +834,8 @@ class ComplaintService {
         throw new Error('Not authorized to send reminder for this complaint');
       }
 
-      // Check if reminder can be sent (not cancelled, closed, or resolved)
-      const reminderBlockedStatuses = ['cancelled', 'completed'];
+      // Check if reminder can be sent (not cancelled, closed, resolved, or pending)
+      const reminderBlockedStatuses = ['cancelled', 'completed', 'pending'];
       if (reminderBlockedStatuses.includes(complaint.workflow_status)) {
         throw new Error('Cannot send reminder for complaint in current status');
       }
@@ -930,7 +932,7 @@ class ComplaintService {
     try {
       // Get complaint and verify ownership
       const complaint = await this.complaintRepo.getComplaintById(complaintId);
-      
+
       if (!complaint) {
         throw new Error('Complaint not found');
       }
@@ -949,6 +951,7 @@ class ComplaintService {
           updated_at: new Date().toISOString()
         })
         .eq('id', complaintId)
+        .eq('submitted_by', userId)
         .select()
         .single();
 
@@ -1041,13 +1044,23 @@ class ComplaintService {
   async markAssignmentComplete(complaintId, officerId, notes = null, files = []) {
     try {
       // Debug logging
-      console.log('[COMPLAINT_SERVICE] markAssignmentComplete called:', { complaintId, officerId, hasNotes: !!notes, hasFiles: files?.length || 0 });
+      console.log('[COMPLAINT_SERVICE] markAssignmentComplete called:', { complaintId, officerId, hasNotes: Boolean(notes), hasFiles: files?.length || 0 });
 
-      // Get user info for role checking
-      const { data: userInfo } = await this.complaintRepo.supabase.auth.admin.getUserById(officerId);
-      const userRole = userInfo?.user?.raw_user_meta_data?.role || userInfo?.user?.user_metadata?.role;
-      console.log('[COMPLAINT_SERVICE] User role:', { officerId, userRole, userEmail: userInfo?.user?.email });
-      
+      // Get user info for role checking from auth.users table
+      const { data: userData, error: userError } = await this.complaintRepo.supabase
+        .from('auth.users')
+        .select('id, email, raw_user_meta_data, user_metadata')
+        .eq('id', officerId)
+        .single();
+
+      if (userError) {
+        console.error('[COMPLAINT_SERVICE] Error fetching user info:', userError);
+        throw new Error('Unable to verify user permissions');
+      }
+
+      const userRole = userData?.raw_user_meta_data?.role || userData?.user_metadata?.role;
+      console.log('[COMPLAINT_SERVICE] User role:', { officerId, userRole, userEmail: userData?.email });
+
       const { data: assignments, error: assignmentError } = await this.complaintRepo.supabase
         .from('complaint_assignments')
         .select('*')
@@ -1055,11 +1068,11 @@ class ComplaintService {
         .eq('assigned_to', officerId)
         .order('created_at', { ascending: false }); // Get most recent first
 
-      console.log('[COMPLAINT_SERVICE] Assignment query result:', { 
-        found: !!assignments && assignments.length > 0, 
+      console.log('[COMPLAINT_SERVICE] Assignment query result:', {
+        found: Boolean(assignments) && assignments.length > 0,
         error: assignmentError,
         count: assignments?.length || 0,
-        assignments 
+        assignments
       });
 
       // Log assignment details for debugging
@@ -1076,14 +1089,14 @@ class ComplaintService {
       } else {
         console.log('[COMPLAINT_SERVICE] No assignments found for officer:', { complaintId, officerId });
       }
-      
+
       // Select the first (most recent) assignment or check if admin
       let assignment = assignments && assignments.length > 0 ? assignments[0] : null;
       let authorized = true;
-      
+
       if (!assignment) {
         console.log('[COMPLAINT_SERVICE] No assignment found, checking if admin...');
-        
+
         // Check if user is admin who assigned the task
         const { data: adminAssignments, error: adminError } = await this.complaintRepo.supabase
           .from('complaint_assignments')
@@ -1091,13 +1104,13 @@ class ComplaintService {
           .eq('complaint_id', complaintId)
           .eq('assigned_by', officerId)
           .order('created_at', { ascending: false });
-        
-        console.log('[COMPLAINT_SERVICE] Admin assignments query result:', { 
-          found: !!adminAssignments && adminAssignments.length > 0,
+
+        console.log('[COMPLAINT_SERVICE] Admin assignments query result:', {
+          found: Boolean(adminAssignments) && adminAssignments.length > 0,
           error: adminError,
           count: adminAssignments?.length || 0
         });
-        
+
         if (!adminAssignments || adminAssignments.length === 0) {
           // Get all assignments to debug why none match
           const { data: allAssignments } = await this.complaintRepo.supabase
@@ -1115,7 +1128,7 @@ class ComplaintService {
 
           throw new Error(`Assignment not found or not authorized. User role: ${userRole}, Complaint ID: ${complaintId}`);
         }
-        
+
         assignment = adminAssignments[0]; // Get first admin assignment
         authorized = false; // Flag that this is admin completing their own assignment
       }
@@ -1154,7 +1167,7 @@ class ComplaintService {
           .eq('assigned_by', officerId)
           .limit(1)
           .single();
-        
+
         if (adminAssignment) {
           const { data, error: updateError } = await this.complaintRepo.supabase
             .from('complaint_assignments')
@@ -1189,19 +1202,44 @@ class ComplaintService {
 
       // Notify relevant parties
       try {
-        // Notify citizen
+        // Notify citizen about assignment completion
         if (complaint?.submitted_by) {
-          await this.notificationService.createNotification(
+          await this.notificationService.notifyWorkflowStepCompleted(
             complaint.submitted_by,
-            'assignment_completed',
-            'Assignment Completed',
-            `An officer has completed their assignment for complaint: "${complaint.title}"`,
-            {
-              priority: 'info',
-              link: `/complaint-details/${complaintId}`,
-              metadata: { complaint_id: complaintId }
-            }
+            complaintId,
+            complaint.title,
+            'Assignment completed by LGU officer'
           );
+        }
+
+        // Check if all assignments are completed
+        const { data: allAssignments } = await this.complaintRepo.supabase
+          .from('complaint_assignments')
+          .select('status, assigned_to')
+          .eq('complaint_id', complaintId);
+
+        const allCompleted = allAssignments?.every(ass => ass.status === 'completed') || false;
+
+        // If all assignments are completed, notify citizen that LGU work is done
+        if (allCompleted && complaint?.submitted_by) {
+          await this.notificationService.notifyLguWorkCompleted(
+            complaint.submitted_by,
+            complaintId,
+            complaint.title
+          );
+        }
+
+        // Notify other officers that assignment is completed
+        if (allAssignments) {
+          for (const assignment of allAssignments) {
+            if (assignment.assigned_to && assignment.assigned_to !== officerId) {
+              await this.notificationService.notifyAssignmentCompleted(
+                assignment.assigned_to,
+                complaintId,
+                complaint.title
+              );
+            }
+          }
         }
 
         // Notify department admin
@@ -1263,7 +1301,7 @@ class ComplaintService {
       if (!complaint) {
         return null;
       }
-      
+
       return normalizeComplaintData(complaint);
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] Error getting normalized complaint:', error);
@@ -1328,7 +1366,7 @@ class ComplaintService {
         'complaint',
         complaintId,
         {
-          reason: reason,
+          reason,
           previous_status: complaint.workflow_status
         }
       );
@@ -1439,11 +1477,11 @@ class ComplaintService {
         .eq('id', complaintId)
         .single();
 
-      console.log(`[COMPLAINT_SERVICE] Complaint query result:`, { 
-        complaint, 
+      console.log(`[COMPLAINT_SERVICE] Complaint query result:`, {
+        complaint,
         error: complaintError,
-        hasComplaint: !!complaint,
-        hasError: !!complaintError 
+        hasComplaint: Boolean(complaint),
+        hasError: Boolean(complaintError)
       });
 
       if (complaintError || !complaint) {
@@ -1472,7 +1510,7 @@ class ComplaintService {
 
       // List files in the complaint-evidence bucket for this complaint
       const bucketName = 'complaint-evidence';
-      
+
       // Get initial evidence files
       const initialFolderPath = `${complaintId}/evidence/`;
       const { data: initialFiles } = await supabase.storage
@@ -1486,16 +1524,16 @@ class ComplaintService {
         .list(completionFolderPath);
 
       const allFiles = [];
-      
+
       // Process initial evidence
       if (initialFiles && initialFiles.length > 0) {
         for (const file of initialFiles) {
           const filePath = `${initialFolderPath}${file.name}`;
-          
+
           const { data: signedUrl } = await supabase.storage
             .from(bucketName)
             .createSignedUrl(filePath, 3600);
-          
+
           if (signedUrl) {
             allFiles.push({
               name: file.name,
@@ -1513,11 +1551,11 @@ class ComplaintService {
       if (completionFiles && completionFiles.length > 0) {
         for (const file of completionFiles) {
           const filePath = `${completionFolderPath}${file.name}`;
-          
+
           const { data: signedUrl } = await supabase.storage
             .from(bucketName)
             .createSignedUrl(filePath, 3600);
-          
+
           if (signedUrl) {
             allFiles.push({
               name: file.name,
@@ -1610,7 +1648,24 @@ class ComplaintService {
       throw error;
     }
   }
+
+  async createAssignment(complaintId, officerIds, assignedBy) {
+    try {
+      // Validate complaint exists
+      const complaint = await this.getComplaintById(complaintId);
+      
+      // Create assignment records
+      const assignments = await this.complaintRepo.createAssignments(complaintId, officerIds, assignedBy);
+      
+      // Update complaint status
+      await this.updateComplaintStatus(complaintId, 'assigned');
+      
+      return assignments;
+    } catch (error) {
+      console.error('[COMPLAINT-SERVICE] Error creating assignment:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = ComplaintService;
-

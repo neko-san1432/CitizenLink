@@ -98,7 +98,7 @@ class DepartmentService {
 
       // Get departments from the new structure
       const departments = await getDepartmentsByCategory(categoryName);
-      
+
       // Convert to the expected format
       return departments.map(dept => ({
         id: dept.id,

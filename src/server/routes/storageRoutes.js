@@ -9,7 +9,7 @@ const supabase = db.getClient();
 // GET /api/storage/signed-url?path=bucketPath
 router.get('/signed-url', authenticateUser, async (req, res) => {
   try {
-    const path = req.query.path;
+    const {path} = req.query;
     if (!path) return res.status(400).json({ error: 'path is required' });
 
     // 5 minutes expiry

@@ -16,10 +16,10 @@ const authenticateUser = async (req, res, next) => {
       req.headers.authorization?.replace('Bearer ', '');
 
     console.log('[AUTH] Token extraction result:', {
-      hasToken: !!token,
+      hasToken: Boolean(token),
       tokenLength: token?.length,
-      hasCookie: !!(req.cookies?.sb_access_token || req.cookies?.sb_access_token_debug),
-      hasAuthHeader: !!req.headers.authorization
+      hasCookie: Boolean(req.cookies?.sb_access_token || req.cookies?.sb_access_token_debug),
+      hasAuthHeader: Boolean(req.headers.authorization)
     });
 
     if (!token) {
@@ -32,7 +32,7 @@ const authenticateUser = async (req, res, next) => {
           error: 'No authentication token'
         });
       }
-      return res.redirect('/login?message=' + encodeURIComponent('Please login first') + '&type=error');
+      return res.redirect(`/login?message=${  encodeURIComponent('Please login first')  }&type=error`);
     }
 
     // Validate token with Supabase
@@ -42,10 +42,10 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     console.log('[AUTH] Token validation result:', {
-      hasUser: !!tokenUser,
+      hasUser: Boolean(tokenUser),
       userId: tokenUser?.id,
       userEmail: tokenUser?.email,
-      hasError: !!error,
+      hasError: Boolean(error),
       errorMessage: error?.message
     });
 
@@ -59,7 +59,7 @@ const authenticateUser = async (req, res, next) => {
           error: 'Invalid token'
         });
       }
-      return res.redirect('/login?message=' + encodeURIComponent('Invalid session. Please login again') + '&type=error');
+      return res.redirect(`/login?message=${  encodeURIComponent('Invalid session. Please login again')  }&type=error`);
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -84,29 +84,29 @@ const authenticateUser = async (req, res, next) => {
     // Validate user role and department code
     const userRole = combinedMetadata.role || 'citizen';
     const roleValidation = await validateUserRole(userRole);
-    
+
     if (!roleValidation.isValid) {
       console.error('[AUTH] ❌ Invalid role:', {
         role: userRole,
         error: roleValidation.error,
         userId: tokenUser.id
       });
-      
+
       if (req.path.startsWith('/api/')) {
         return res.status(403).json({
           success: false,
           error: `Invalid role: ${roleValidation.error}`
         });
       }
-      return res.redirect('/login?message=' + encodeURIComponent(`Invalid role: ${roleValidation.error}`) + '&type=error');
+      return res.redirect(`/login?message=${  encodeURIComponent(`Invalid role: ${roleValidation.error}`)  }&type=error`);
     }
 
     // Extract department code for LGU roles
     const departmentCode = extractDepartmentCode(userRole);
-    
+
     // For simplified roles, extract department from metadata
-    const userDepartment = departmentCode || 
-                          combinedMetadata.department || 
+    const userDepartment = departmentCode ||
+                          combinedMetadata.department ||
                           combinedMetadata.dpt ||
                           combinedMetadata.raw_user_meta_data?.department ||
                           combinedMetadata.raw_user_meta_data?.dpt;
@@ -149,10 +149,10 @@ const authenticateUser = async (req, res, next) => {
 
       // Role validation info
       roleType: roleValidation.roleType,
-      departmentCode: departmentCode,
+      departmentCode,
 
       // Verification
-      emailVerified: !!tokenUser.email_confirmed_at,
+      emailVerified: Boolean(tokenUser.email_confirmed_at),
       phoneVerified: combinedMetadata.phone_verified || false,
 
       // Security
@@ -169,7 +169,7 @@ const authenticateUser = async (req, res, next) => {
         error: 'Authentication failed'
       });
     }
-    return res.redirect('/login?message=' + encodeURIComponent('Authentication failed. Please try again') + '&type=error');
+    return res.redirect(`/login?message=${  encodeURIComponent('Authentication failed. Please try again')  }&type=error`);
   }
 };
 
@@ -184,12 +184,12 @@ const requireRole = (allowedRoles) => {
       console.log('[AUTH] User object:', {
         id: req.user?.id,
         email: req.user?.email,
-        hasRole: !!req.user?.role,
-        hasMetadata: !!req.user?.raw_user_meta_data,
+        hasRole: Boolean(req.user?.role),
+        hasMetadata: Boolean(req.user?.raw_user_meta_data),
         metadataKeys: Object.keys(req.user?.raw_user_meta_data || {}),
         userMetadataKeys: Object.keys(req.user?.user_metadata || {})
       });
-      return res.redirect('/login?message=' + encodeURIComponent('Authentication incomplete: missing role. Please contact support.') + '&type=error');
+      return res.redirect(`/login?message=${  encodeURIComponent('Authentication incomplete: missing role. Please contact support.')  }&type=error`);
     }
 
     const normalizedRole = String(userRole).trim().toLowerCase();
@@ -207,6 +207,10 @@ const requireRole = (allowedRoles) => {
         return normalizedRole === allowedRole.toLowerCase() || (normalizedBaseRole && normalizedBaseRole === allowedRole.toLowerCase());
       } else if (allowedRole instanceof RegExp) {
         return allowedRole.test(normalizedRole) || (normalizedBaseRole && allowedRole.test(normalizedBaseRole));
+      } else if (typeof allowedRole === 'object' && allowedRole !== null) {
+        // Handle case where regex might be converted to object
+        console.error('[AUTH] Invalid role in allowedRoles array:', allowedRole);
+        return false;
       }
       return false;
     });
@@ -220,12 +224,12 @@ const requireRole = (allowedRoles) => {
         originalUrl: req.originalUrl,
         method: req.method
       });
-      
+
       // Check if this is an API request - look at both path and originalUrl
-      const isApiRequest = req.path.startsWith('/api/') || 
+      const isApiRequest = req.path.startsWith('/api/') ||
                            req.originalUrl.startsWith('/api/') ||
                            req.url.startsWith('/api/');
-      
+
       if (isApiRequest) {
         console.log('[AUTH] Returning JSON error for API request');
         return res.status(403).json({
@@ -238,8 +242,8 @@ const requireRole = (allowedRoles) => {
           }
         });
       }
-      
-      return res.redirect('/login?message=' + encodeURIComponent('Access denied. You do not have permission to access this resource.') + '&type=error');
+
+      return res.redirect(`/login?message=${  encodeURIComponent('Access denied. You do not have permission to access this resource.')  }&type=error`);
     }
 
     next();

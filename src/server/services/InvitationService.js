@@ -21,7 +21,7 @@ class InvitationService {
       created_by: createdBy,
       role,
       department_id: departmentId,
-      employee_id_required: !!employeeIdRequired,
+      employee_id_required: Boolean(employeeIdRequired),
       max_uses: Math.max(1, Number(maxUses) || 1),
       uses: 0,
       expires_at: expiresAt,

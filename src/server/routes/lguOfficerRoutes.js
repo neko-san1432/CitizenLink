@@ -12,7 +12,7 @@ router.use((req, res, next) => {
   console.log('[LGU_ROUTES] User role:', req.user?.role, 'Base role:', req.user?.raw_user_meta_data?.base_role);
   next();
 });
-router.use(requireRole(['lgu', /^lgu-(?!admin|hr)/])); // Matches lgu, lgu-wst, lgu-engineering, etc.
+router.use(requireRole(['lgu'])); // Simplified role requirement
 
 // Get assigned tasks for officer
 router.get('/assigned-tasks', lguOfficerController.getAssignedTasks.bind(lguOfficerController));

@@ -13,7 +13,7 @@ const checkAuthentication = async () => {
       // console.log removed for security
 
       // Get user metadata
-      const user = session.user;
+      const {user} = session;
       const role = user?.user_metadata?.role || '';
       const name = user?.user_metadata?.name || '';
 
@@ -21,11 +21,11 @@ const checkAuthentication = async () => {
       if (role && name) {
         // console.log removed for security
         window.location.href = '/dashboard';
-        return;
+
       } else {
         // console.log removed for security
         window.location.href = '/oauth-continuation';
-        return;
+
       }
     } else {
       // console.log removed for security

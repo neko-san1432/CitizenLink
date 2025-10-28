@@ -1,10 +1,10 @@
+const { createClient } = require('@supabase/supabase-js');
 const Database = require('../config/database');
 const Complaint = require('../models/Complaint');
 
 class ComplaintRepository {
   constructor() {
-    this.db = Database.getInstance();
-    this.supabase = this.db.getClient();
+    this.supabase = require('@supabase/supabase-js').createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
   }
 
   async create(complaintData) {
@@ -107,7 +107,9 @@ class ComplaintRepository {
   }
 
   async findAll(options = {}) {
-    const { page = 1, limit = 20, status, department, search } = options;
+    // Extract filter parameters
+    const { page = 1, limit = 20, status, type, department, search } = options;
+
     const offset = (page - 1) * limit;
 
     let query = this.supabase
@@ -237,19 +239,60 @@ class ComplaintRepository {
   }
 
   async findActiveCoordinator(department) {
-    const { data, error } = await this.supabase
-      .from('complaint_coordinators')
-      .select('user_id')
-      .eq('department', department)
-      .eq('is_active', true)
-      .limit(1)
-      .single();
+    // Use admin auth API to find coordinators instead of complaint_coordinators table
+    try {
+      const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
+      if (authError) {
+        console.error('[COMPLAINT_REPO] Error fetching auth users:', authError);
+        return null;
+      }
+
+      if (!authUsers?.users) {
+        console.warn('[COMPLAINT_REPO] No users found in auth system');
+        return null;
+      }
+
+      // Find users with base_role = complaint-coordinator
+      const coordinators = authUsers.users.filter(user => {
+        const metadata = user.user_metadata || {};
+        const rawMetadata = user.raw_user_meta_data || {};
+
+        const baseRole = metadata.base_role || rawMetadata.base_role;
+        const isCoordinator = baseRole === 'complaint-coordinator';
+
+        // Optional: filter by department if specified
+        if (department && department !== 'GENERAL') {
+          const userDept = metadata.department || rawMetadata.department ||
+                          metadata.dpt || rawMetadata.dpt;
+          return isCoordinator && userDept === department;
+        }
+
+        return isCoordinator;
+      });
+
+      if (coordinators.length === 0) {
+        console.warn('[COMPLAINT_REPO] No complaint coordinators found');
+        return null;
+      }
+
+      // Return the first available coordinator
+      const coordinator = coordinators[0];
+      console.log('[COMPLAINT_REPO] Found coordinator:', {
+        id: coordinator.id,
+        email: coordinator.email,
+        base_role: coordinator.user_metadata?.base_role || coordinator.raw_user_meta_data?.base_role
+      });
+
+      return {
+        user_id: coordinator.id,
+        email: coordinator.email,
+        name: coordinator.user_metadata?.name || coordinator.raw_user_meta_data?.name || coordinator.email
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Error finding coordinator:', error);
+      return null;
     }
-    return data;
   }
 
   async logAction(complaintId, actionType, details = {}) {
@@ -264,6 +307,36 @@ class ComplaintRepository {
 
     if (error) throw error;
     return true;
+  }
+
+  async createAssignments(complaintId, officerIds, assignedBy) {
+    try {
+      const assignments = [];
+      
+      for (const officerId of officerIds) {
+        const assignment = {
+          complaint_id: complaintId,
+          officer_id: officerId,
+          assigned_by: assignedBy,
+          assigned_at: new Date().toISOString(),
+          status: 'pending'
+        };
+        
+        const { data, error } = await this.supabase
+          .from('complaint_assignments')
+          .insert(assignment)
+          .select();
+        
+        if (error) throw error;
+        
+        assignments.push(data[0]);
+      }
+      
+      return assignments;
+    } catch (error) {
+      console.error('[COMPLAINT-REPO] Error creating assignments:', error.message);
+      throw error;
+    }
   }
 }
 

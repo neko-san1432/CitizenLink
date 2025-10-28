@@ -21,7 +21,7 @@ const ACTUAL_ROLE_KEY = 'cl_actual_role';
 const SWITCHABLE_ROLES = [
   'complaint-coordinator',
   'lgu',           // LGU Officers
-  'lgu-admin',      // LGU Admins  
+  'lgu-admin',      // LGU Admins
   'lgu-hr',         // LGU HR
   'super-admin'
 ];
@@ -256,7 +256,7 @@ export function getActualRole() {
  */
 export async function initializeRoleToggle() {
   console.log('[ROLE_TOGGLE] Initializing role toggle...');
-  
+
   // Prevent multiple initializations
   if (isInitialized) {
     console.log('[ROLE_TOGGLE] Already initialized, skipping...');
@@ -276,14 +276,14 @@ export async function initializeRoleToggle() {
       }
     });
     const result = await response.json();
-    
+
     const baseRole = result?.data?.base_role;
     const currentRole = result?.data?.role || 'citizen';
-    
+
     // Show button if user has a base role (staff member) OR if they're currently in citizen mode with a base role
     const hasBaseRole = baseRole && baseRole !== 'citizen';
     const isInCitizenMode = currentRole === 'citizen' && baseRole;
-    
+
     if (!hasBaseRole && !isInCitizenMode) {
       // Remove the button if user is a real citizen (no base role)
       const btn = document.getElementById('role-toggle-btn');
@@ -460,7 +460,7 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
   toggleBtn.disabled = false;
   toggleBtn.title = isInCitizen ? `Switch back to ${formatRoleName(actualRole)}` : 'Switch to Citizen Mode';
   toggleBtn.innerHTML = isInCitizen ? '👔' : '👤';
-  
+
   console.log('[ROLE_TOGGLE] Button updated successfully:', { actualRole, isInCitizen });
 
   // console.log removed for security

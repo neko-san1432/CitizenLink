@@ -1,10 +1,21 @@
-console.log('Testing Node.js execution...');
+console.log('Node.js is working!');
 console.log('Current directory:', process.cwd());
-console.log('Node version:', process.version);
-try {
-  const config = require('./config/app');
-  console.log('Config loaded successfully');
-} catch (error) {
-  console.error('Config load error:', error.message);
-}
-console.log('Test completed');
+console.log('Testing basic functionality...');
+
+// Check if files exist
+const fs = require('fs');
+const path = require('path');
+
+console.log('\nChecking files:');
+const testFiles = [
+  'package.json',
+  'src/client/components/comprehensive-violations.js',
+  '.eslintrc.js'
+];
+
+testFiles.forEach(file => {
+  const exists = fs.existsSync(file);
+  console.log(`  ${file}: ${exists ? '✅ EXISTS' : '❌ MISSING'}`);
+});
+
+console.log('\nTest completed!');

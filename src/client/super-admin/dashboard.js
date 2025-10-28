@@ -24,22 +24,22 @@ async function loadDepartmentRoles() {
   try {
     const { apiClient } = await import('../config/apiClient.js');
     const { data: departments, error } = await apiClient.get('/api/department-structure/departments');
-    
+
     if (error) throw error;
-    
+
     // Load role swap dropdown
     const roleSwapSelect = document.getElementById('role-swap-role');
     if (roleSwapSelect) {
       const loadingEl = document.getElementById('department-roles-loading');
       if (loadingEl) loadingEl.remove();
-      
+
       departments.forEach(dept => {
         // Add officer role
         const officerOption = document.createElement('option');
         officerOption.value = `lgu-${dept.code.toLowerCase()}`;
         officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
         roleSwapSelect.appendChild(officerOption);
-        
+
         // Add admin role
         const adminOption = document.createElement('option');
         adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;
@@ -47,20 +47,20 @@ async function loadDepartmentRoles() {
         roleSwapSelect.appendChild(adminOption);
       });
     }
-    
+
     // Load assign citizen dropdown
     const assignCitizenSelect = document.getElementById('assign-citizen-role');
     if (assignCitizenSelect) {
       const loadingEl = document.getElementById('assign-citizen-roles-loading');
       if (loadingEl) loadingEl.remove();
-      
+
       departments.forEach(dept => {
         // Add officer role
         const officerOption = document.createElement('option');
         officerOption.value = `lgu-${dept.code.toLowerCase()}`;
         officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
         assignCitizenSelect.appendChild(officerOption);
-        
+
         // Add admin role
         const adminOption = document.createElement('option');
         adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;

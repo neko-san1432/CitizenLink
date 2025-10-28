@@ -268,7 +268,7 @@ export const setupRealtimeValidation = (form) => {
     const input = form.querySelector(selector);
     if (!input) return;
     const formGroup = input.closest('.form-group');
-    
+
     ['input', 'change', 'blur'].forEach((evt) => {
       input.addEventListener(evt, () => {
         // Add touched class when user interacts with the field

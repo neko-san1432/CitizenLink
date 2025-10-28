@@ -227,9 +227,9 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       // Persist access token to HttpOnly cookie for server-protected pages
       try {
         const accessToken = result.data?.session?.accessToken || null;
-        console.log('[CLIENT AUTH] Access token received:', !!accessToken);
+        console.log('[CLIENT AUTH] Access token received:', Boolean(accessToken));
         console.log('[CLIENT AUTH] Remember me:', remember);
-        
+
         if (accessToken) {
           console.log('[CLIENT AUTH] 🔑 Setting server session cookie...');
           console.log('[CLIENT AUTH] Access token length:', accessToken?.length);
@@ -251,7 +251,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
 
           // Verify cookie by hitting a protected endpoint before redirecting
           console.log('[CLIENT AUTH] ✅ Verifying session cookie...');
-          let resp = await fetch('/api/user/role', {
+          const resp = await fetch('/api/user/role', {
             method: 'GET',
             credentials: 'include', // Ensure cookies are sent
             headers: {
@@ -295,7 +295,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
             } else {
               const retryErrorData = await retryResp.json().catch(() => ({}));
               console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
-              
+
               // Enhanced error message based on specific error
               let errorMessage = 'Session verification failed. ';
               if (retryResp.status === 401) {
@@ -307,7 +307,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               } else {
                 errorMessage += 'Please try logging in again.';
               }
-              
+
               showMessage('error', errorMessage);
               return;
             }
@@ -370,7 +370,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const ctx = getOAuthContext();
       if (ctx && ctx.provider) {
         window.location.href = '/signup';
-        return;
+
       }
     }
   } catch (error) {
@@ -428,7 +428,7 @@ async function setServerSessionCookie(accessToken, remember) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ access_token: accessToken, remember: !!remember })
+      body: JSON.stringify({ access_token: accessToken, remember: Boolean(remember) })
     });
 
     console.log('[CLIENT AUTH] Server session response:', {

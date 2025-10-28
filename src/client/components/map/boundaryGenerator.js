@@ -113,7 +113,7 @@ async function addCityBoundary(map, brgyData) {
           fillOpacity: 0.3,         // Semi-transparent fill
           fillColor: '#000000'      // Black mask
         },
-        onEachFeature: function(feature, layer) {
+        onEachFeature(feature, layer) {
           layer.bindPopup(`
             <div>
               <h4>🏙️ Digos City Area</h4>

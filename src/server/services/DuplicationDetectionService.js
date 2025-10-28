@@ -90,8 +90,8 @@ class DuplicationDetectionService {
       );
 
       const keywordScore = this.calculateKeywordOverlap(
-        complaint.title + ' ' + complaint.descriptive_su,
-        candidate.title + ' ' + candidate.descriptive_su
+        `${complaint.title  } ${  complaint.descriptive_su}`,
+        `${candidate.title  } ${  candidate.descriptive_su}`
       );
 
       const textScore = (titleScore * 0.4 + descScore * 0.4 + keywordScore * 0.2);

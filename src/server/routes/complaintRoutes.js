@@ -50,19 +50,19 @@ router.get('/my-statistics',
 
 router.get('/stats',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-admin', 'complaint-coordinator', 'super-admin']),
   (req, res) => complaintController.getComplaintStats(req, res)
 );
 
 router.get('/locations',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin', 'complaint-coordinator']),
+  requireRole(['lgu-admin', 'complaint-coordinator', 'super-admin']),
   (req, res) => complaintController.getComplaintLocations(req, res)
 );
 
 router.get('/',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
+  requireRole(['lgu-admin', 'super-admin']),
   (req, res) => complaintController.getAllComplaints(req, res)
 );
 
@@ -79,14 +79,14 @@ router.get('/:id',
 
 router.patch('/:id/status',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
+  requireRole(['lgu-admin', 'super-admin']),
   (req, res) => complaintController.updateComplaintStatus(req, res)
 );
 
 // Human confirmation workflow transitions (officer -> admin -> citizen)
 router.patch('/:id/transition',
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin', 'citizen']),
+  requireRole(['lgu-admin', 'super-admin', 'citizen']),
   upload, // allow evidence on transition
   (req, res) => complaintController.transitionStatus(req, res)
 );
@@ -145,7 +145,7 @@ const completionUpload = multer({
 // Admins can also complete assignments they've created
 router.post('/:id/mark-complete',
   authenticateUser,
-  requireRole(['lgu', 'lgu-admin', /^lgu-(?!hr)/]), // Allow officers and admins but exclude HR
+  requireRole(['lgu', 'lgu-admin']),
   completionUpload,
   (req, res) => complaintController.markAssignmentComplete(req, res)
 );
@@ -153,7 +153,7 @@ router.post('/:id/mark-complete',
 // Separate route for admin completion
 router.post('/:id/mark-complete-admin',
   authenticateUser,
-  requireRole(['lgu-admin', /^lgu-admin/]), // Allow admins
+  requireRole(['lgu-admin']),
   completionUpload,
   (req, res) => complaintController.markAssignmentComplete(req, res)
 );
@@ -181,6 +181,13 @@ router.get('/false-reports/statistics',
   authenticateUser,
   requireRole(['complaint-coordinator', 'super-admin']),
   (req, res) => complaintController.getFalseComplaintStatistics(req, res)
+);
+
+// Assignment creation
+router.post('/:complaintId/assign',
+  authenticateUser,
+  requireRole(['lgu-admin']),
+  (req, res) => complaintController.createAssignment(req, res)
 );
 
 module.exports = router;

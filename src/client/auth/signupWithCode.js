@@ -21,7 +21,7 @@ async function signupWithOAuth(provider) {
 
     // Get OAuth URL with signup code in state parameter
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
+      provider,
       options: {
         redirectTo: `${window.location.origin}/complete-position-signup?code=${signupCode}`,
         queryParams: {

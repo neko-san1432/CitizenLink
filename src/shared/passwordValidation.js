@@ -69,7 +69,7 @@ function validatePasswordStrength(password) {
 
   return {
     isValid: errors.length === 0,
-    errors: errors,
+    errors,
     strength: calculatePasswordStrength(password)
   };
 }

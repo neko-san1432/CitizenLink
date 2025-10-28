@@ -84,7 +84,7 @@ export async function initializeComplaintForm() {
     console.warn('[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:', error);
     activeRole = getActiveRole();
   }
-  
+
   const inCitizenMode = isInCitizenMode();
 
   // console.log removed for security
@@ -97,12 +97,12 @@ export async function initializeComplaintForm() {
       // Show message to switch to citizen mode
       showRoleSwitchRequired(form);
       return;
-    } else {
-      // Shouldn't happen, but handle it
-      showMessage('error', 'Only citizens can file complaints');
-      form.style.display = 'none';
-      return;
     }
+    // Shouldn't happen, but handle it
+    showMessage('error', 'Only citizens can file complaints');
+    form.style.display = 'none';
+    return;
+
   }
 
   // Get form elements

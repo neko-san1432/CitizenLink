@@ -157,7 +157,7 @@ export class FileHandler {
         height: 100%;
         color: #6c757d;
       `;
-      
+
       const icon = document.createElement('div');
       icon.style.cssText = 'font-size: 32px; margin-bottom: 4px;';
       if (file.type.startsWith('video/')) {
@@ -167,11 +167,11 @@ export class FileHandler {
       } else {
         icon.textContent = '📄';
       }
-      
+
       const fileName = document.createElement('div');
-      fileName.textContent = file.name.length > 12 ? file.name.substring(0, 12) + '...' : file.name;
+      fileName.textContent = file.name.length > 12 ? `${file.name.substring(0, 12)  }...` : file.name;
       fileName.style.cssText = 'font-size: 10px; text-align: center; word-break: break-all;';
-      
+
       fileIcon.appendChild(icon);
       fileIcon.appendChild(fileName);
       previewItem.appendChild(fileIcon);
@@ -282,7 +282,7 @@ export function setupDragAndDrop(dropZone, fileHandler, fileInput) {
     e.preventDefault();
     dropZone.classList.remove('dragover');
 
-    const files = e.dataTransfer.files;
+    const {files} = e.dataTransfer;
     if (files.length > 0) {
       fileHandler.addFiles(files);
     }

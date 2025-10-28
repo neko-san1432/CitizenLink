@@ -8,11 +8,11 @@ function validateAndSanitizeURL(urlString) {
   }
 
   const trimmedUrl = urlString.trim();
-  
+
   // Basic URL format validation
   try {
     const url = new URL(trimmedUrl);
-    
+
     // Whitelist of allowed protocols
     const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
     if (!allowedProtocols.includes(url.protocol)) {
@@ -43,7 +43,7 @@ function validateAndSanitizeURL(urlString) {
     }
 
     // Check for protocol confusion attacks
-    if (url.protocol !== trimmedUrl.split(':')[0] + ':') {
+    if (url.protocol !== `${trimmedUrl.split(':')[0]  }:`) {
       console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
       return '';
     }
@@ -83,7 +83,7 @@ function validateAndSanitizeURL(urlString) {
 // Enhanced HTML sanitization function
 function sanitizeHtml(html) {
   if (!html || typeof html !== 'string') return '';
-  
+
   // Use DOMPurify for comprehensive sanitization
   if (typeof DOMPurify !== 'undefined') {
     return DOMPurify.sanitize(html, {
@@ -95,7 +95,7 @@ function sanitizeHtml(html) {
       KEEP_CONTENT: true
     });
   }
-  
+
   // Fallback sanitization if DOMPurify is not available
   // Fallback sanitization: repeatedly remove dangerous tags to prevent incomplete replacement
   let sanitized = html;
@@ -276,7 +276,7 @@ function renderTasks() {
   // Add click listeners to task cards
   document.querySelectorAll('.task-card').forEach(card => {
     card.addEventListener('click', () => {
-      const taskId = card.dataset.taskId;
+      const {taskId} = card.dataset;
       const task = allTasks.find(t => t.id === taskId);
       if (task) openTaskModal(task);
     });

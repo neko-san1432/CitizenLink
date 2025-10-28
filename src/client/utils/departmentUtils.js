@@ -15,7 +15,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
  */
 export async function getDepartments() {
   const now = Date.now();
-  
+
   // Return cached data if still valid
   if (departmentCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
     return departmentCache;
@@ -27,7 +27,7 @@ export async function getDepartments() {
 
     // Flatten the hierarchical structure into a simple array
     const departments = [];
-    
+
     if (data) {
       data.forEach(category => {
         if (category.subcategories) {
@@ -52,7 +52,7 @@ export async function getDepartments() {
     // Cache the result
     departmentCache = departments;
     cacheTimestamp = now;
-    
+
     return departments;
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -75,8 +75,8 @@ export async function getDepartmentNameByCode(code) {
  */
 export async function getDepartmentCodeByName(name) {
   const departments = await getDepartments();
-  const dept = departments.find(d => 
-    d.name.toLowerCase() === name.toLowerCase() || 
+  const dept = departments.find(d =>
+    d.name.toLowerCase() === name.toLowerCase() ||
     d.code.toLowerCase() === name.toLowerCase()
   );
   return dept ? dept.code : name;
@@ -104,12 +104,12 @@ export async function getDepartmentsBySubcategory(subcategoryName) {
 export async function getLegacyDepartmentMapping() {
   const departments = await getDepartments();
   const mapping = {};
-  
+
   departments.forEach(dept => {
     // Map common legacy codes to new names
     const legacyCode = dept.code.toLowerCase();
     mapping[legacyCode] = dept.name;
-    
+
     // Also map by partial name matching for common patterns - Updated for new department codes
     if (legacyCode.includes('ceo') || dept.name.toLowerCase().includes('engineering')) {
       mapping['ceo'] = dept.name;
@@ -163,7 +163,7 @@ export async function getLegacyDepartmentMapping() {
       mapping['cao'] = dept.name;
     }
   });
-  
+
   return mapping;
 }
 

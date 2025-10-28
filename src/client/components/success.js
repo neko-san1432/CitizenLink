@@ -7,8 +7,8 @@ const run = async () => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     console.log('[SUCCESS] Session check:', {
-      hasSession: !!session,
-      hasError: !!sessionError,
+      hasSession: Boolean(session),
+      hasError: Boolean(sessionError),
       sessionError: sessionError?.message
     });
 
@@ -19,12 +19,12 @@ const run = async () => {
     const email = user?.email || null;
 
     console.log('[SUCCESS] User data:', {
-      hasUser: !!user,
-      email: email,
-      role: role,
-      name: name,
+      hasUser: Boolean(user),
+      email,
+      role,
+      name,
       userMetadata: user?.user_metadata,
-      hasMobile: !!user?.user_metadata?.mobile,
+      hasMobile: Boolean(user?.user_metadata?.mobile),
       mobile: user?.user_metadata?.mobile
     });
 
@@ -94,8 +94,8 @@ const run = async () => {
 
     // redirect based on registration status
     console.log('[SUCCESS] Redirect decision:', {
-      provider: provider,
-      hasMobile: !!user?.user_metadata?.mobile
+      provider,
+      hasMobile: Boolean(user?.user_metadata?.mobile)
     });
 
     // Check if user needs to complete OAuth registration
@@ -110,7 +110,7 @@ const run = async () => {
       phone: user?.user_metadata?.phone,
       phone_number: user?.user_metadata?.phone_number,
       user_phone: user?.phone,
-      final_hasMobile: !!hasMobile
+      final_hasMobile: Boolean(hasMobile)
     });
 
     if (provider && !hasMobile) {

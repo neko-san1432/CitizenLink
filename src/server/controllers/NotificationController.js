@@ -233,7 +233,7 @@ class NotificationController {
           filter: `user_id=eq.${userId}`
         }, (payload) => {
           console.log('[NOTIFICATION] Real-time notification received:', payload);
-          
+
           const notification = payload.new;
           const notificationData = {
             id: notification.id,

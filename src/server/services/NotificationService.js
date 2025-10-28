@@ -23,21 +23,33 @@ class NotificationService {
     try {
       console.log(`[NOTIFICATION] Looking up LGU admins for department: ${departmentCode}`);
 
-      // Get all users with lgu-admin role and matching department (using the working method from CoordinatorService)
-      const { data: users, error } = await this.supabase.auth.admin.listUsers();
+      // Use admin auth API instead of direct table query
+      let users = [];
+      try {
+        const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
 
-      if (error) {
-        console.warn('[NOTIFICATION] Failed to get users for notification:', error.message);
-        return { success: false };
+        if (authError) {
+          console.warn('[NOTIFICATION] Failed to get auth users:', authError.message);
+          return { success: false, error: authError.message };
+        }
+
+        users = authUsers.users || [];
+      } catch (authErr) {
+        console.warn('[NOTIFICATION] Auth API error:', authErr.message);
+        return { success: false, error: authErr.message };
       }
 
-      // Find LGU admins for this specific department
-      const admins = users.users.filter(user => {
-        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
-        const userDept = user.user_metadata?.dpt || user.raw_user_meta_data?.dpt ||
-                        user.user_metadata?.department || user.raw_user_meta_data?.department;
+      // Filter for admins in the specific department
+      const admins = users.filter(user => {
+        const metadata = user.user_metadata || {};
+        const rawMetadata = user.raw_user_meta_data || {};
+        const role = metadata.role || rawMetadata.role || '';
 
-        return userRole === 'lgu-admin' && userDept === departmentCode;
+        return role === 'lgu-admin' &&
+               (metadata.dpt === departmentCode ||
+                rawMetadata.dpt === departmentCode ||
+                metadata.department === departmentCode ||
+                rawMetadata.department === departmentCode);
       });
 
       console.log(`[NOTIFICATION] Found ${admins.length} LGU admins for department ${departmentCode}`);
@@ -117,12 +129,12 @@ class NotificationService {
       // Check for duplicates if deduplication is enabled
       if (deduplicate) {
         const duplicateCheck = await this.checkDuplicateNotification(
-          userId, 
-          notifType, 
-          notifTitle, 
+          userId,
+          notifType,
+          notifTitle,
           metadata
         );
-        
+
         if (duplicateCheck.exists) {
           console.log(`[NOTIFICATION] Duplicate notification prevented for user ${userId}: ${notifTitle}`);
           return {
@@ -650,6 +662,221 @@ class NotificationService {
       }
     );
   }
+
+  /**
+   * Notify officer that their assignment has been completed
+   */
+  async notifyAssignmentCompleted(officerId, complaintId, complaintTitle) {
+    return this.createNotification(
+      officerId,
+      NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
+      'Assignment Completed',
+      `Your assignment for "${complaintTitle}" has been completed by another officer.`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/lgu/tasks/${complaintId}`,
+        metadata: { complaint_id: complaintId }
+      }
+    );
+  }
+
+  /**
+   * Notify officer of admin reminder to complete task
+   */
+  async notifyAdminReminder(officerId, complaintId, complaintTitle, reminderMessage) {
+    return this.createNotification(
+      officerId,
+      NOTIFICATION_TYPES.ADMIN_REMINDER,
+      'Reminder from Admin',
+      `Admin reminder: ${reminderMessage} - "${complaintTitle}"`,
+      {
+        priority: NOTIFICATION_PRIORITY.WARNING,
+        link: `/lgu/tasks/${complaintId}`,
+        metadata: { complaint_id: complaintId, reminder_type: 'admin_reminder' }
+      }
+    );
+  }
+
+  /**
+   * Notify citizen about workflow step completion
+   */
+  async notifyWorkflowStepCompleted(citizenId, complaintId, complaintTitle, stepDescription) {
+    return this.createNotification(
+      citizenId,
+      NOTIFICATION_TYPES.WORKFLOW_STEP_COMPLETED,
+      'Progress Update',
+      `Progress on "${complaintTitle}": ${stepDescription}`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/citizen/complaints/${complaintId}`,
+        metadata: { complaint_id: complaintId, step: stepDescription }
+      }
+    );
+  }
+
+  /**
+   * Notify citizen that LGU work has been completed
+   */
+  async notifyLguWorkCompleted(citizenId, complaintId, complaintTitle) {
+    return this.createNotification(
+      citizenId,
+      NOTIFICATION_TYPES.LGU_WORK_COMPLETED,
+      'Work Completed - Please Review',
+      `The assigned LGU departments have completed their work on "${complaintTitle}". Please review and confirm resolution.`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/citizen/complaints/${complaintId}`,
+        metadata: { complaint_id: complaintId, action_required: 'review_resolution' }
+      }
+    );
+  }
+
+  /**
+   * Notify citizen that resolution review is needed
+   */
+  async notifyResolutionReviewNeeded(citizenId, complaintId, complaintTitle) {
+    return this.createNotification(
+      citizenId,
+      NOTIFICATION_TYPES.RESOLUTION_REVIEW_NEEDED,
+      'Review Required',
+      `Please review the completed work for "${complaintTitle}" and mark as resolved if satisfied.`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/citizen/complaints/${complaintId}`,
+        metadata: { complaint_id: complaintId, action_required: 'mark_resolved' }
+      }
+    );
+  }
+
+  /**
+   * Notify LGU admin about officer reminder needs
+   */
+  async notifyOfficerReminder(adminId, officerName, complaintId, complaintTitle, reminderType) {
+    const reminderMessages = {
+      pending_task: `${officerName} has a pending task that needs attention`,
+      complete_assignment: `${officerName} needs to mark their assignment as complete`,
+      overdue_task: `${officerName} has an overdue task that requires immediate action`
+    };
+
+    return this.createNotification(
+      adminId,
+      NOTIFICATION_TYPES.OFFICER_REMINDER,
+      'Officer Reminder Needed',
+      reminderMessages[reminderType] || `Action needed from ${officerName}`,
+      {
+        priority: NOTIFICATION_PRIORITY.WARNING,
+        link: `/lgu-admin/assignments`,
+        metadata: {
+          complaint_id: complaintId,
+          officer_name: officerName,
+          reminder_type: reminderType
+        }
+      }
+    );
+  }
+
+  /**
+   * Notify officer about pending task reminder from admin
+   */
+  async notifyPendingTaskReminder(officerId, complaintId, complaintTitle, adminMessage) {
+    return this.createNotification(
+      officerId,
+      NOTIFICATION_TYPES.PENDING_TASK_REMINDER,
+      'Task Reminder',
+      `Admin reminder: ${adminMessage} - "${complaintTitle}"`,
+      {
+        priority: NOTIFICATION_PRIORITY.WARNING,
+        link: `/lgu/tasks/${complaintId}`,
+        metadata: { complaint_id: complaintId, admin_message: adminMessage }
+      }
+    );
+  }
+
+  /**
+   * Notify citizen that complaint was assigned to officer
+   */
+  async notifyComplaintAssignedToOfficer(citizenId, complaintId, complaintTitle, officerInfo) {
+    return this.createNotification(
+      citizenId,
+      NOTIFICATION_TYPES.COMPLAINT_ASSIGNED,
+      'Complaint Assigned to Officer',
+      `Your complaint "${complaintTitle}" has been assigned to an officer and work will begin soon.`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/citizen/complaints/${complaintId}`,
+        metadata: {
+          complaint_id: complaintId,
+          officer_info: officerInfo
+        }
+      }
+    );
+  }
+
+  /**
+   * Find all complaint coordinators and notify them about new complaint
+   * Scans auth.users for users with base_role = complaint-coordinator
+   */
+  async notifyAllCoordinators(complaintId, complaintTitle) {
+    try {
+      console.log(`[NOTIFICATION] Finding all coordinators for complaint: ${complaintId}`);
+
+      // Use admin auth API to find coordinators
+      let users = [];
+      try {
+        const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
+
+        if (authError) {
+          console.error('[NOTIFICATION] Error fetching auth users for coordinators:', authError);
+          return { success: false, error: authError.message };
+        }
+
+        users = authUsers.users || [];
+      } catch (authErr) {
+        console.error('[NOTIFICATION] Auth API error for coordinators:', authErr);
+        return { success: false, error: authErr.message };
+      }
+
+      // Find all users with base_role = complaint-coordinator
+      const coordinators = users.filter(user => {
+        const metadata = user.user_metadata || {};
+        const rawMetadata = user.raw_user_meta_data || {};
+
+        const baseRole = metadata.base_role || rawMetadata.base_role;
+        return baseRole === 'complaint-coordinator';
+      });
+
+      console.log(`[NOTIFICATION] Found ${coordinators.length} complaint coordinators`);
+
+      if (coordinators.length === 0) {
+        console.warn(`[NOTIFICATION] No complaint coordinators found for complaint ${complaintId}`);
+        return { success: true, count: 0 };
+      }
+
+      // Send notifications to all coordinators
+      const notifications = coordinators.map((coordinator) => ({
+        userId: coordinator.id,
+        type: NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW,
+        title: 'New Complaint for Review',
+        message: `"${complaintTitle}" needs your review and assignment.`,
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/coordinator/review/${complaintId}`,
+        metadata: {
+          complaint_id: complaintId,
+          assigned_at: new Date().toISOString()
+        }
+      }));
+
+      const result = await this.createBulkNotifications(notifications);
+
+      console.log(`[NOTIFICATION] Sent notifications to ${result.count} coordinators for complaint ${complaintId}`);
+      return result;
+
+    } catch (error) {
+      console.error('[NOTIFICATION] notifyAllCoordinators error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
 }
 
 module.exports = NotificationService;

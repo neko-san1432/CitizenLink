@@ -13,7 +13,7 @@ const lguAdminController = new LguAdminController();
 
 // All routes require authentication and LGU Admin role
 router.use(authenticateUser);
-router.use(requireRole(['lgu-admin', /^lgu-admin/])); // Match lgu-admin and lgu-admin-* roles
+router.use(requireRole(['lgu-admin'])); // Simplified role requirement
 
 // Get department queue
 router.get('/department-queue', lguAdminController.getDepartmentQueue.bind(lguAdminController));
@@ -24,10 +24,19 @@ router.get('/department-assignments', lguAdminController.getDepartmentAssignment
 // Get department officers
 router.get('/department-officers', lguAdminController.getDepartmentOfficers.bind(lguAdminController));
 
-// Assign complaint to officer
+// Assign complaint to officer (supports URL parameter for complaintId)
+router.post('/complaints/:complaintId/assign', lguAdminController.assignToOfficer.bind(lguAdminController));
+
+// Legacy route - Assign complaint to officer
 router.post('/assign-complaint', lguAdminController.assignComplaint.bind(lguAdminController));
 
-// Assign complaint to officer (new endpoint)
-router.post('/complaints/:complaintId/assign', lguAdminController.assignToOfficer.bind(lguAdminController));
+// Send reminder to officer
+router.post('/remind-officer', lguAdminController.sendOfficerReminder.bind(lguAdminController));
+
+// Get pending assignments summary
+router.get('/pending-summary', lguAdminController.getPendingAssignmentsSummary.bind(lguAdminController));
+
+// Get officers needing attention
+router.get('/officers-needing-attention', lguAdminController.getOfficersNeedingAttention.bind(lguAdminController));
 
 module.exports = router;

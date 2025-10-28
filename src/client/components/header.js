@@ -106,13 +106,13 @@ export function createHeader() {
 // Initialize global click handler to close dropdowns
 function initializeGlobalClickHandler() {
   console.log('[HEADER] Initializing global click handler...');
-  
-  document.addEventListener('click', function(e) {
+
+  document.addEventListener('click', (e) => {
     const notificationPanel = document.getElementById('notification-panel');
     const profilePanel = document.getElementById('profile-panel');
     const notificationBtn = document.getElementById('notification-btn');
     const profileBtn = document.getElementById('profile-btn');
-    
+
     // Close notification panel if clicking outside
     if (notificationPanel && notificationPanel.classList.contains('show')) {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
@@ -124,7 +124,7 @@ function initializeGlobalClickHandler() {
         }, 300);
       }
     }
-    
+
     // Close profile panel if clicking outside
     if (profilePanel && profilePanel.classList.contains('show')) {
       if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
@@ -150,7 +150,7 @@ function initializeProfileButton() {
     return;
   }
 
-  profileBtn.addEventListener('click', function(e) {
+  profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
     if (notificationPanel && notificationPanel.classList.contains('show')) {
@@ -159,7 +159,7 @@ function initializeProfileButton() {
       notificationPanel.style.transform = 'translateY(-10px)';
       setTimeout(() => { notificationPanel.style.display = 'none'; }, 300);
     }
-    
+
     const profilePanel = document.getElementById('profile-panel');
     if (profilePanel.classList.contains('show')) {
       profilePanel.classList.remove('show');
@@ -184,12 +184,12 @@ function initializeMenuToggle() {
   const sidebar = document.getElementById('sidebar');
 
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', function() {
+    menuToggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
       menuToggle.classList.toggle('active');
     });
   } else {
-    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
+    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: Boolean(menuToggle), sidebar: Boolean(sidebar) });
   }
 }
 
@@ -206,14 +206,14 @@ function initializeThemeToggle() {
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
 
-  themeToggleBtn.addEventListener('click', function() {
+  themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
-    
+
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    
+
     // Update button appearance
     themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
@@ -237,12 +237,12 @@ function initializeHeaderScroll() {
   window.addEventListener('scroll', () => {
     const currentScrollY = window.scrollY;
     const header = document.querySelector('.header-content');
-    
+
     if (header) {
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         // Scrolling down
         header.style.transform = 'translateY(-100%)';
-    } else {
+      } else {
         // Scrolling up
         header.style.transform = 'translateY(0)';
       }
@@ -258,13 +258,13 @@ function initializeDropdowns() {
   // Move dropdowns to body to avoid container issues
   const notificationPanel = document.getElementById('notification-panel');
   const profilePanel = document.getElementById('profile-panel');
-  
+
   if (notificationPanel) {
     notificationPanel.remove();
     document.body.appendChild(notificationPanel);
     // CSS classes will handle the styling now
   }
-  
+
   if (profilePanel) {
     profilePanel.remove();
     document.body.appendChild(profilePanel);
@@ -273,38 +273,38 @@ function initializeDropdowns() {
 }
 
 // Initialize header when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // Add a small delay to ensure all elements are ready
   setTimeout(() => {
     console.log('[HEADER] Initializing header...');
-    let headerContainer = document.querySelector('.header-container');
-    let headerElement = document.querySelector('#header');
-    
+    const headerContainer = document.querySelector('.header-container');
+    const headerElement = document.querySelector('#header');
+
     console.log('[HEADER] Header container element:', headerContainer);
     console.log('[HEADER] Header element:', headerElement);
-    
+
     // Try .header-container first, then fall back to #header
     if (headerContainer) {
       console.log('[HEADER] Header container found, creating header...');
       const headerHTML = createHeader();
-      console.log('[HEADER] Created header HTML:', headerHTML.substring(0, 100) + '...');
+      console.log('[HEADER] Created header HTML:', `${headerHTML.substring(0, 100)  }...`);
       headerContainer.innerHTML = headerHTML;
     } else if (headerElement) {
       console.log('[HEADER] Header element found, creating header...');
       const headerHTML = createHeader();
-      console.log('[HEADER] Created header HTML:', headerHTML.substring(0, 100) + '...');
+      console.log('[HEADER] Created header HTML:', `${headerHTML.substring(0, 100)  }...`);
       headerElement.innerHTML = headerHTML;
     } else {
       console.warn('[HEADER] No header container or header element found!');
       // Try to create a header container as a fallback
-      const body = document.body;
+      const {body} = document;
       if (body) {
         console.log('[HEADER] Creating fallback header container...');
         const fallbackHeader = document.createElement('div');
         fallbackHeader.className = 'header-container';
         fallbackHeader.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000;';
         body.insertBefore(fallbackHeader, body.firstChild);
-        
+
         const headerHTML = createHeader();
         fallbackHeader.innerHTML = headerHTML;
         console.log('[HEADER] Fallback header created');
@@ -313,26 +313,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
     }
-    
+
     // Test if buttons were created
     const testNotificationBtn = document.getElementById('notification-btn');
     const testProfileBtn = document.getElementById('profile-btn');
     console.log('[HEADER] Buttons after HTML insertion:', {
-      notificationBtn: !!testNotificationBtn,
-      profileBtn: !!testProfileBtn
+      notificationBtn: Boolean(testNotificationBtn),
+      profileBtn: Boolean(testProfileBtn)
     });
-    
+
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector('.notification-container');
     const profileContainer = document.querySelector('.profile-container');
-    
+
     if (notificationContainer) {
       notificationContainer.style.position = 'relative';
     }
     if (profileContainer) {
       profileContainer.style.position = 'relative';
     }
-    
+
     // Move dashboard clock into header-right to align with buttons (put it first)
     try {
       const headerRight = document.querySelector('.header-right');
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) {
       console.warn('[HEADER] Clock positioning failed:', e);
     }
-    
+
     // Add a small delay to ensure DOM is fully updated
     setTimeout(() => {
       initializeNotificationButton();

@@ -69,7 +69,7 @@ function calculateDepartmentStats(users) {
   users.forEach(user => {
     const role = String(user.role || '').toLowerCase();
     const department = user.department || 'Unknown';
-    
+
     if (!deptMap.has(department)) {
       deptMap.set(department, { admins: 0, officers: 0 });
     }

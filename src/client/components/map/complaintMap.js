@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let searchInput, searchBtn, resultsList;
     const SearchControl = L.Control.extend({
       options: { position: 'topright' },
-      onAdd: function() {
+      onAdd() {
         const container = L.DomUtil.create('div', 'leaflet-bar');
         container.style.background = '#fff';
         container.style.padding = '6px';

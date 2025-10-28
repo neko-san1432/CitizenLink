@@ -42,7 +42,7 @@ router.get('/categories', async (req, res) => {
 router.get('/categories/:categoryId/subcategories', async (req, res) => {
   try {
     const { categoryId } = req.params;
-    
+
     const { data: subcategories, error } = await Database.getClient()
       .from('subcategories')
       .select(`
@@ -78,7 +78,7 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
   try {
     const { subcategoryId } = req.params;
     console.log('[DEPT-API] Fetching ALL departments for subcategory:', subcategoryId);
-    
+
     const supabase = Database.getClient();
 
     // 1) Get ALL active departments (not just mapped ones)
@@ -130,7 +130,7 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
 router.get('/departments/all', async (req, res) => {
   try {
     console.log('[DEPT-API] Fetching ALL departments');
-    
+
     const supabase = Database.getClient();
 
     // Get ALL active departments
@@ -268,15 +268,15 @@ router.post('/admin/subcategories', authenticateUser, async (req, res) => {
 // Admin: Create new department
 router.post('/admin/departments', authenticateUser, async (req, res) => {
   try {
-    const { 
-      name, 
-      code, 
-      description, 
-      subcategory_id, 
-      level, 
-      response_time_hours, 
+    const {
+      name,
+      code,
+      description,
+      subcategory_id,
+      level,
+      response_time_hours,
       escalation_time_hours,
-      contact_info 
+      contact_info
     } = req.body;
 
     const { data, error } = await Database.getClient()

@@ -235,11 +235,11 @@ class HeatmapVisualization {
     const radius = radiusSizes[complaint.priority] || 75;
 
     const circle = L.circle([complaint.lat, complaint.lng], {
-      radius: radius,
+      radius,
       color: borderColor,
       weight: 3,
       opacity: 0.8,
-      fillColor: fillColor,
+      fillColor,
       fillOpacity: 0.4,
       className: 'complaint-circle'
     });
@@ -516,7 +516,7 @@ class HeatmapVisualization {
       const complaintDepartment = complaint.department?.toUpperCase();
       const complaintDepartments = complaint.departments || [];
       const secondaryDepartments = complaint.secondaryDepartments || [];
-      
+
       // Check primary department
       if (complaintDepartment === userDepartment) {
         // console.log removed for security

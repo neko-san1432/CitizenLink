@@ -503,7 +503,7 @@ class InputSanitizer {
     }
 
     const trimmedUrl = urlString.trim();
-    
+
     // First, use validator.js for basic validation (with known vulnerability)
     if (!validator.isURL(trimmedUrl)) {
       return '';
@@ -512,7 +512,7 @@ class InputSanitizer {
     // Additional validation using native URL constructor to catch bypasses
     try {
       const url = new URL(trimmedUrl);
-      
+
       // Whitelist of allowed protocols
       const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
       if (!allowedProtocols.includes(url.protocol)) {
@@ -543,7 +543,7 @@ class InputSanitizer {
       }
 
       // Check for protocol confusion attacks (e.g., "http:javascript:alert(1)")
-      if (url.protocol !== trimmedUrl.split(':')[0] + ':') {
+      if (url.protocol !== `${trimmedUrl.split(':')[0]  }:`) {
         console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
         return '';
       }

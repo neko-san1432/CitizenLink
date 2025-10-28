@@ -22,10 +22,11 @@ class LguAdminDashboard {
 
   async loadDashboardData() {
     try {
-      await Promise.all([
-        this.loadAssignments(),
-        this.loadActivities()
-      ]);
+      console.log('[LGU_ADMIN_DASHBOARD] Loading assignments...');
+      await this.loadAssignments();
+      
+      console.log('[LGU_ADMIN_DASHBOARD] Loading activities...');
+      await this.loadActivities();
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load dashboard data error:', error);
       showMessage('error', 'Failed to load dashboard data');
@@ -38,18 +39,15 @@ class LguAdminDashboard {
     try {
       console.log('[LGU_ADMIN_DASHBOARD] Loading recent assignments...');
       
-      // For now, show empty state until API is fixed
-      this.assignments = [];
-      this.renderAssignments();
+      const response = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
+      console.log('[LGU_ADMIN_DASHBOARD] Assignment response:', response);
       
-      // TODO: Re-enable when API is working
-      // const { data } = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
-      // if (data && data.success) {
-      //   this.assignments = data.data || [];
-      //   this.renderAssignments();
-      // } else {
-      //   throw new Error(data?.error || 'Failed to load assignments');
-      // }
+      if (response && response.success) {
+        this.assignments = response.data || [];
+        this.renderAssignments();
+      } else {
+        throw new Error(response?.error || 'Failed to load assignments');
+      }
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load assignments error:', error);
       this.assignments = [];
@@ -61,13 +59,9 @@ class LguAdminDashboard {
     try {
       console.log('[LGU_ADMIN_DASHBOARD] Loading recent activities...');
       
-      // For now, show empty state until API is fixed
-      this.activities = [];
+      // Show recent assignments as activities
+      this.activities = this.assignments.slice(0, 5);
       this.renderActivities();
-      
-      // TODO: Re-enable when API is working
-      // this.activities = this.assignments.slice(0, 5);
-      // this.renderActivities();
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load activities error:', error);
       this.activities = [];

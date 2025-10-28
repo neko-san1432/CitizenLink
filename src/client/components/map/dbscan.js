@@ -155,7 +155,7 @@ class DBSCAN {
         size: clusterPoints.length,
         center: { lat: centerLat, lng: centerLng },
         radius: maxRadius,
-        density: density,
+        density,
         points: clusterPoints
       });
     });

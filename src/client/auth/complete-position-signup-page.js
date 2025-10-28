@@ -8,10 +8,10 @@ const fetchCaptchaKey = async () => {
 
     if (data.success && data.key) {
       return data.key;
-    } else {
-      console.error('Failed to fetch CAPTCHA key:', data.error);
-      return null;
     }
+    console.error('Failed to fetch CAPTCHA key:', data.error);
+    return null;
+
   } catch (error) {
     console.error('Error fetching CAPTCHA key:', error);
     return null;

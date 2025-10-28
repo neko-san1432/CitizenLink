@@ -17,7 +17,7 @@ class CoordinatorController {
     try {
       console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} Getting review queue for user:`, req.user?.id);
       console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} User role:`, req.user?.role);
-      
+
       const { user } = req;
       const filters = {
         priority: req.query.priority,
@@ -174,7 +174,7 @@ class CoordinatorController {
         stack: error.stack,
         code: error.code
       });
-      
+
       // Return a basic dashboard structure if there's an error
       res.json({
         success: true,

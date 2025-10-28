@@ -173,7 +173,7 @@ class DepartmentController {
     try {
       const { subcategoryId } = req.params;
       const departments = await this.departmentService.getDepartmentsBySubcategory(subcategoryId);
-      
+
       res.json({
         success: true,
         data: departments

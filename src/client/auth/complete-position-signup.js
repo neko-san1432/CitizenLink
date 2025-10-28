@@ -87,10 +87,10 @@ const validateSignupCode = async (code) => {
         role: result.data?.role,
         department: result.data?.department_code
       };
-    } else {
-      showMessage('error', result.error || 'Invalid signup code');
-      return { valid: false };
     }
+    showMessage('error', result.error || 'Invalid signup code');
+    return { valid: false };
+
   } catch (error) {
     console.error('Code validation error:', error);
     showMessage('error', 'Failed to validate signup code');

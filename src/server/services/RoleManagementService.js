@@ -34,7 +34,7 @@ class RoleManagementService {
         throw new Error('User not found');
       }
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
       const currentRole = currentMetadata.role || 'citizen';
 
@@ -194,7 +194,7 @@ class RoleManagementService {
 
       if (getUserError) throw getUserError;
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
 
       const updatedMetadata = {
@@ -234,7 +234,7 @@ class RoleManagementService {
 
       if (getUserError) throw getUserError;
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
 
       const updatedMetadata = {

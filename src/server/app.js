@@ -47,11 +47,11 @@ class CitizenLinkApp {
     this.app.use('/assets', express.static(path.join(config.rootDir, 'src', 'client', 'assets')));
     this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
-    
+
     // Additional static file serving for coordinator review system
     this.app.use('/components', express.static(path.join(config.rootDir, 'public', 'components')));
     this.app.use('/styles', express.static(path.join(config.rootDir, 'public', 'styles')));
-    
+
     // Serve favicon
     this.app.get('/favicon.ico', (req, res) => {
       res.sendFile(path.join(config.rootDir, 'public', 'favicon.ico'));
@@ -72,7 +72,7 @@ class CitizenLinkApp {
         console.log('[SERVER SESSION] Request details:', {
           path: req.path,
           method: req.method,
-          hasBody: !!req.body,
+          hasBody: Boolean(req.body),
           contentType: req.get('Content-Type')
         });
 
@@ -80,9 +80,9 @@ class CitizenLinkApp {
         const remember = Boolean(req.body?.remember);
 
         console.log('[SERVER SESSION] Token details:', {
-          hasToken: !!token,
+          hasToken: Boolean(token),
           tokenLength: token?.length,
-          remember: remember
+          remember
         });
 
         if (!token) {
@@ -91,16 +91,16 @@ class CitizenLinkApp {
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
 
-            const cookieOptions = {
-              httpOnly: true, // Set back to true for security
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              path: '/',
-              maxAge: 315360000000 // 10 years for development (permanent)
-            };
+        const cookieOptions = {
+          httpOnly: true, // Set back to true for security
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 315360000000 // 10 years for development (permanent)
+        };
 
         console.log('[SERVER SESSION] 🍪 Setting cookie with options:', cookieOptions);
-        console.log('[SERVER SESSION] Token prefix:', token.substring(0, 20) + '...');
+        console.log('[SERVER SESSION] Token prefix:', `${token.substring(0, 20)  }...`);
 
         res.cookie('sb_access_token', token, cookieOptions);
 
@@ -131,8 +131,8 @@ class CitizenLinkApp {
           const diagnostics = {
             timestamp: new Date().toISOString(),
             environment: process.env.NODE_ENV,
-            hasSupabaseUrl: !!process.env.SUPABASE_URL,
-            hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+            hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+            hasSupabaseServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
           };
           res.json({ success: true, diagnostics });
         } catch (error) {
@@ -289,7 +289,7 @@ class CitizenLinkApp {
     // LGU-specific pages (simplified URLs)
     this.app.get('/task-assigned',
       authenticateUser,
-      requireRole([/^lgu-(?!admin|hr)/]),
+      requireRole(['lgu']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
       }
@@ -298,7 +298,7 @@ class CitizenLinkApp {
     // LGU Admin specific pages (simplified URLs)
     this.app.get('/assignments',
       authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
+      requireRole(['lgu-admin', 'complaint-coordinator']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'assignments.html'));
       }
@@ -306,7 +306,7 @@ class CitizenLinkApp {
 
     this.app.get('/heatmap',
       authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/, 'complaint-coordinator']),
+      requireRole(['lgu-admin', 'complaint-coordinator']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
       }
@@ -314,7 +314,7 @@ class CitizenLinkApp {
 
     this.app.get('/publish',
       authenticateUser,
-      requireRole(['lgu-admin', /^lgu-admin/]),
+      requireRole(['lgu-admin']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'publish.html'));
       }
@@ -334,7 +334,7 @@ class CitizenLinkApp {
       res.redirect('/dashboard');
     });
 
-    this.app.get('/lgu', authenticateUser, requireRole(['lgu', /^lgu-/]), (req, res) => {
+    this.app.get('/lgu', authenticateUser, requireRole(['lgu']), (req, res) => {
       res.redirect('/dashboard');
     });
 
@@ -345,7 +345,7 @@ class CitizenLinkApp {
     // HR specific pages (simplified URLs)
     this.app.get('/link-generator',
       authenticateUser,
-      requireRole(['lgu-hr', /^lgu-hr/]),
+      requireRole(['lgu-hr']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'link-generator.html'));
       }
@@ -381,7 +381,7 @@ class CitizenLinkApp {
     // LGU Officer routes (simplified URLs)
     this.app.get('/lgu-officer/dashboard',
       authenticateUser,
-      requireRole(['lgu', /^lgu-(?!admin|hr)/]),
+      requireRole(['lgu']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'dashboard.html'));
       }
@@ -390,7 +390,7 @@ class CitizenLinkApp {
     // LGU Officer tasks page (alias for task-assigned)
     this.app.get('/lgu-officer/tasks',
       authenticateUser,
-      requireRole(['lgu', /^lgu-(?!admin|hr)/]),
+      requireRole(['lgu']),
       (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
       }
@@ -458,12 +458,16 @@ class CitizenLinkApp {
           newMetadata.base_role = previousRole;
         }
 
-        const { data, error } = await Database.getClient().auth.admin.updateUserById(user.id, {
-          user_metadata: newMetadata
-        });
+        // Update user metadata directly using the auth.users table
+        const { error: updateError } = await Database.getClient()
+          .from('auth.users')
+          .update({
+            raw_user_meta_data: newMetadata
+          })
+          .eq('id', user.id);
 
-        if (error) {
-          console.error('Error updating user role:', error);
+        if (updateError) {
+          console.error('Error updating user role:', updateError);
           return res.status(500).json({
             success: false,
             error: 'Failed to update role'
@@ -493,14 +497,14 @@ class CitizenLinkApp {
       const metaBase = user.raw_user_meta_data?.base_role || null;
       // If no meta base_role is stored, assume staff's base role equals their current role (not citizen)
       const baseRole = metaBase || (role !== 'citizen' ? role : null);
-      
+
       // Debug logging
       console.log('[API] User role:', role, 'metaBase:', metaBase, 'baseRole:', baseRole);
       console.log('[API] User metadata:', JSON.stringify(user.raw_user_meta_data, null, 2));
       res.json({
         success: true,
         data: {
-          role: role,
+          role,
           name: user.name || 'Unknown',
           email: user.email,
           metadata: user.raw_user_meta_data,
@@ -517,7 +521,7 @@ class CitizenLinkApp {
       const metaBase = user.raw_user_meta_data?.base_role || null;
       const baseRole = metaBase || (role !== 'citizen' ? role : null);
       const isInCitizen = role === 'citizen' && baseRole && baseRole !== 'citizen';
-      
+
       const html = `
 <!DOCTYPE html>
 <html>
@@ -536,16 +540,16 @@ class CitizenLinkApp {
     <div class="info">
         <h3>API Response:</h3>
         <pre>${JSON.stringify({
-          success: true,
-          data: {
-            role: role,
-            name: user.name || 'Unknown',
-            email: user.email,
-            metadata: user.raw_user_meta_data,
-            base_role: baseRole,
-            actual_role: baseRole
-          }
-        }, null, 2)}</pre>
+    success: true,
+    data: {
+      role,
+      name: user.name || 'Unknown',
+      email: user.email,
+      metadata: user.raw_user_meta_data,
+      base_role: baseRole,
+      actual_role: baseRole
+    }
+  }, null, 2)}</pre>
     </div>
     
     <div class="info">
@@ -558,10 +562,10 @@ class CitizenLinkApp {
     
     <div class="info">
         <h3>Role Switcher Button:</h3>
-        ${isInCitizen ? 
-          `<button class="button" onclick="switchRole()">Switch to ${baseRole.toUpperCase()}</button>` : 
-          '<p>No button should appear - user is not in citizen mode with base role</p>'
-        }
+        ${isInCitizen ?
+    `<button class="button" onclick="switchRole()">Switch to ${baseRole.toUpperCase()}</button>` :
+    '<p>No button should appear - user is not in citizen mode with base role</p>'
+}
     </div>
 
     <script>
@@ -590,7 +594,7 @@ class CitizenLinkApp {
     </script>
 </body>
 </html>`;
-      
+
       res.send(html);
     });
 
@@ -598,10 +602,10 @@ class CitizenLinkApp {
     this.app.get('/auth/session/health', async (req, res) => {
       try {
         console.log('[SESSION HEALTH] Checking session health...');
-        
+
         // Check if user has valid session cookie
         const token = req.cookies?.sb_access_token;
-        
+
         if (!token) {
           console.log('[SESSION HEALTH] No session token found');
           return res.status(401).json({
@@ -615,10 +619,10 @@ class CitizenLinkApp {
         }
 
         console.log('[SESSION HEALTH] Token found, validating with Supabase...');
-        
+
         // Try to validate token with Supabase using the correct method
         const { data: { user }, error } = await Database.getClient().auth.getUser(token);
-        
+
         if (error || !user) {
           console.log('[SESSION HEALTH] Token validation failed:', error?.message);
           return res.status(401).json({
@@ -648,8 +652,8 @@ class CitizenLinkApp {
             authenticated: true,
             userId: user.id,
             email: user.email,
-            role: role,
-            name: name,
+            role,
+            name,
             timestamp: new Date().toISOString()
           }
         });
@@ -671,7 +675,7 @@ class CitizenLinkApp {
       try {
         // Check if user has existing session cookie
         const existingToken = req.cookies?.sb_access_token;
-        
+
         if (!existingToken) {
           return res.status(401).json({
             success: false,
@@ -685,14 +689,14 @@ class CitizenLinkApp {
 
         // Try to get fresh session from Supabase
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error || !session) {
           return res.status(401).json({
             success: false,
             error: 'No valid Supabase session found',
             debug: {
               error: error?.message,
-              hasSession: !!session
+              hasSession: Boolean(session)
             }
           });
         }
@@ -709,7 +713,7 @@ class CitizenLinkApp {
         res.cookie('sb_access_token', session.access_token, cookieOptions);
 
         // Extract user info from session
-        const user = session.user;
+        const {user} = session;
         const userMetadata = user.user_metadata || {};
         const rawUserMetaData = user.raw_user_meta_data || {};
         const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
@@ -721,8 +725,8 @@ class CitizenLinkApp {
           data: {
             userId: user.id,
             email: user.email,
-            role: role,
-            name: name,
+            role,
+            name,
             refreshed: true,
             timestamp: new Date().toISOString()
           }
@@ -743,7 +747,7 @@ class CitizenLinkApp {
     this.app.get('/auth/test', (req, res) => {
       try {
         const token = req.cookies?.sb_access_token;
-        
+
         if (!token) {
           return res.json({
             success: false,

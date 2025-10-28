@@ -32,7 +32,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -57,7 +57,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -105,7 +105,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -131,7 +131,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -179,7 +179,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -205,7 +205,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -252,7 +252,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
@@ -277,7 +277,7 @@ class ApiClient {
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = window.location.origin + '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }

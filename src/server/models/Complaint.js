@@ -86,7 +86,7 @@ class Complaint {
       category: this.category,
       subcategory: this.subcategory,
       workflow_status: this.workflow_status || 'new',
-      priority: this.priority || 'low', 
+      priority: this.priority || 'low',
       assigned_coordinator_id: this.assigned_coordinator_id || null,
       response_deadline: this.response_deadline || null,
       submitted_at: this.submitted_at || new Date().toISOString()
