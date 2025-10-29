@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const Database = require('../config/database');
 const Complaint = require('../models/Complaint');
+const crypto = require('crypto');
 
 class ComplaintRepository {
   constructor() {
@@ -313,13 +314,17 @@ class ComplaintRepository {
     try {
       const assignments = [];
       
-      for (const officerId of officerIds) {
+      for (let i = 0; i < officerIds.length; i++) {
+        const officerId = officerIds[i];
         const assignment = {
           complaint_id: complaintId,
-          officer_id: officerId,
+          assigned_to: officerId, // Fixed: was officer_id, should be assigned_to
           assigned_by: assignedBy,
-          assigned_at: new Date().toISOString(),
-          status: 'pending'
+          status: 'assigned',
+          priority: 'medium',
+          assignment_type: officerIds.length > 1 ? 'multi' : 'single',
+          assignment_group_id: crypto.randomUUID(),
+          officer_order: i + 1
         };
         
         const { data, error } = await this.supabase

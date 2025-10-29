@@ -58,7 +58,7 @@ class LguAdminAssignments {
     try {
       console.log('[LGU_ADMIN_ASSIGNMENTS] Loading complaints...');
       
-      const response = await apiClient.get('/api/complaints');
+      const response = await apiClient.get('/api/lgu-admin/department-queue');
       console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response received:', response);
       console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response data:', response?.data);
       console.log('[LGU_ADMIN_ASSIGNMENTS] Complaints response success:', response?.success);
@@ -510,10 +510,15 @@ class LguAdminAssignments {
     if (officerCheckboxes) {
       officerCheckboxes.innerHTML = '';
       
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Populating officers in modal:', this.officers.length);
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Officers data:', this.officers);
+      
       if (this.officers.length === 0) {
         officerCheckboxes.innerHTML = '<div class="no-officers">No officers available</div>';
+        console.log('[LGU_ADMIN_ASSIGNMENTS] No officers available message shown');
       } else {
-        this.officers.forEach(officer => {
+        this.officers.forEach((officer, index) => {
+          console.log(`[LGU_ADMIN_ASSIGNMENTS] Creating checkbox for officer ${index}:`, officer);
           const checkboxItem = document.createElement('div');
           checkboxItem.className = 'officer-checkbox-item';
           checkboxItem.innerHTML = `
@@ -527,6 +532,7 @@ class LguAdminAssignments {
           `;
           officerCheckboxes.appendChild(checkboxItem);
         });
+        console.log('[LGU_ADMIN_ASSIGNMENTS] All officer checkboxes created');
       }
     }
 
@@ -548,7 +554,11 @@ class LguAdminAssignments {
 
   getSelectedOfficers() {
     const checkboxes = document.querySelectorAll('#officer-checkboxes input[type="checkbox"]:checked');
-    return Array.from(checkboxes).map(checkbox => checkbox.value);
+    const selectedIds = Array.from(checkboxes).map(checkbox => checkbox.value);
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Found checkboxes:', checkboxes.length);
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Selected officer IDs:', selectedIds);
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Available officers:', this.officers.length);
+    return selectedIds;
   }
 
   openComplaintDetailsPanel(complaintId) {
@@ -979,6 +989,8 @@ class LguAdminAssignments {
     console.log('[LGU_ADMIN_ASSIGNMENTS] Handling assignment...');
     const officerIds = this.getSelectedOfficers();
     console.log('[LGU_ADMIN_ASSIGNMENTS] Selected officer IDs:', officerIds);
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Available officers:', this.officers);
+    console.log('[LGU_ADMIN_ASSIGNMENTS] Current complaint ID:', this.currentComplaintId);
     
     if (officerIds.length === 0) {
       showMessage('error', 'Please select at least one officer');
@@ -988,9 +1000,12 @@ class LguAdminAssignments {
     try {
       console.log('[LGU_ADMIN_ASSIGNMENTS] Sending assignment request for complaint:', this.currentComplaintId);
       
-      const response = await apiClient.post(`/api/complaints/${this.currentComplaintId}/assign`, {
+      const requestData = {
         officerIds
-      });
+      };
+      console.log('[LGU_ADMIN_ASSIGNMENTS] Request data:', requestData);
+      
+      const response = await apiClient.post(`/api/lgu-admin/complaints/${this.currentComplaintId}/assign`, requestData);
       
       console.log('[LGU_ADMIN_ASSIGNMENTS] Assignment response:', response);
       
@@ -1001,6 +1016,7 @@ class LguAdminAssignments {
       } else {
         const errorMsg = response?.error || 'Failed to create assignment';
         console.error('[LGU_ADMIN_ASSIGNMENTS] Assignment error:', errorMsg);
+        console.error('[LGU_ADMIN_ASSIGNMENTS] Full response:', response);
         showMessage('error', errorMsg);
       }
     } catch (error) {

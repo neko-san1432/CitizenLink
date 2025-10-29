@@ -1654,11 +1654,11 @@ class ComplaintService {
       // Validate complaint exists
       const complaint = await this.getComplaintById(complaintId);
       
-      // Create assignment records
+      // Create assignment records using the repository method
       const assignments = await this.complaintRepo.createAssignments(complaintId, officerIds, assignedBy);
       
       // Update complaint status
-      await this.updateComplaintStatus(complaintId, 'assigned');
+      await this.updateComplaintStatus(complaintId, 'assigned to officer');
       
       return assignments;
     } catch (error) {
