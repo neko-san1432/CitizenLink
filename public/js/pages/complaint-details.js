@@ -227,14 +227,64 @@ class ComplaintDetails {
         // Populate location
         this.renderLocation();
 
+        // Populate complainant info (only for admin, officers, coordinators)
+        this.renderComplainantInfo();
+
         // Populate attachments
         this.renderAttachments();
 
         // Populate timeline
         this.renderTimeline();
 
-        // Show the details
-        detailsContainer.style.display = 'block';
+        // Show the details (ensure grid layout)
+        detailsContainer.style.display = 'grid';
+    }
+
+    renderComplainantInfo() {
+        const complainantSection = document.getElementById('complainant-section');
+        const complainantInfo = document.getElementById('complainant-info');
+        
+        if (!complainantSection || !complainantInfo) return;
+
+        // Show complainant info only for admin, officers, and complaint coordinator
+        const rolesThatCanSeeComplainant = ['complaint-coordinator', 'lgu-admin', 'lgu', 'lgu-officer', 'super-admin', 'hr'];
+        const canSeeComplainant = rolesThatCanSeeComplainant.includes(this.userRole);
+
+        if (canSeeComplainant && this.complaint.submitted_by_profile) {
+            const profile = this.complaint.submitted_by_profile;
+            const name = profile.name || profile.email || 'Unknown';
+            const email = profile.email || '—';
+            const mobile = profile.mobileNumber || profile.mobile || '—';
+
+            complainantInfo.innerHTML = `
+                <div class="complainant-details">
+                    <div class="complainant-field">
+                        <span class="field-label">Name:</span>
+                        <span class="field-value">${this.escapeHtml(name)}</span>
+                    </div>
+                    <div class="complainant-field">
+                        <span class="field-label">Email:</span>
+                        <span class="field-value">${this.escapeHtml(email)}</span>
+                    </div>
+                    ${mobile !== '—' ? `
+                    <div class="complainant-field">
+                        <span class="field-label">Mobile:</span>
+                        <span class="field-value">${this.escapeHtml(mobile)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            complainantSection.style.display = 'block';
+        } else {
+            complainantSection.style.display = 'none';
+        }
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     getStatusClass(status) {
@@ -825,97 +875,115 @@ class ComplaintDetails {
         const timelineContainer = document.getElementById('timeline-items');
         if (!timelineContainer) return;
 
-        const timeline = this.complaint.timeline || this.generateTimeline();
+        // Map workflow status to step number (0-4, with 5 as cancelled)
+        const workflowStatus = (this.complaint.workflow_status || 'new').toLowerCase();
+        const isCancelled = workflowStatus === 'cancelled';
         
-        timelineContainer.innerHTML = timeline.map(item => `
-            <div class="timeline-item">
-                <div class="timeline-icon">${item.icon}</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${item.title}</div>
-                    <div class="timeline-description">${item.description}</div>
-                    <div class="timeline-date">${item.date}</div>
+        const statusStepMap = {
+            'new': 0,
+            'assigned': 1,
+            'in_progress': 2,
+            'pending_approval': 3,
+            'completed': 4
+        };
+
+        // For cancelled complaints, don't show any active steps - gray everything out
+        // Otherwise, show progress up to the current step
+        const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+        
+        // Step labels
+        const stepLabels = [
+            'New',
+            'Assigned',
+            'In Progress',
+            'Pending Approval',
+            'Completed',
+            'Cancelled'
+        ];
+
+        // Node color (blue only for all active steps)
+        const nodeColors = [
+            '#3b82f6',
+            '#3b82f6',
+            '#3b82f6',
+            '#3b82f6',
+            '#3b82f6'
+        ];
+
+        // Build the stepper HTML
+        let stepperHTML = '<div class="stepper-container">';
+        
+        for (let i = 0; i < 5; i++) {
+            // If cancelled, all steps are inactive (grayed out)
+            // Otherwise, active steps are those up to currentStep (0-4)
+            // Step 5 is always inactive (grey) - represents unreached final state
+            const isActive = isCancelled ? false : (i <= currentStep && i < 5);
+            
+            // Get node color - if cancelled, everything is grey
+            let nodeColor = isCancelled ? '#9ca3af' : (isActive ? nodeColors[i] : '#9ca3af');
+
+            // Determine connector line style
+            let connectorStyle = '';
+            if (i < 4) {
+                // If cancelled, all connectors are grey
+                // Otherwise, color connector through the current step as well (continuous bar effect)
+                const isConnectorActive = isCancelled ? false : (i <= currentStep);
+                
+                if (isConnectorActive) {
+                    // Active connector solid blue
+                    connectorStyle = '#3b82f6';
+                } else {
+                    connectorStyle = '#e5e7eb'; // Inactive grey
+                }
+            }
+
+            // No glow/box-shadow for nodes
+            let boxShadow = 'none';
+
+            stepperHTML += `
+                <div class="stepper-step ${isActive ? 'active' : ''}">
+                    <div class="stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
+                    ${i < 4 ? `
+                    <div class="stepper-connector" style="background: ${connectorStyle};"></div>
+                    ` : ''}
                 </div>
-            </div>
-        `).join('');
+            `;
+        }
+        stepperHTML += '</div>';
+
+        // Labels row under the stepper, aligned with nodes
+        stepperHTML += '<div class="stepper-labels">';
+        for (let i = 0; i < 5; i++) {
+            const isActive = !isCancelled && i <= currentStep;
+            stepperHTML += `
+                <div class="stepper-label-item ${isActive ? 'active' : ''}">${stepLabels[i]}</div>
+            `;
+        }
+        stepperHTML += '</div>';
+
+        const displayLabel = isCancelled ? 'Cancelled' : stepLabels[currentStep] || 'Unknown';
+        stepperHTML += `<div class="stepper-current">Current Status: <strong>${displayLabel}</strong></div>`;
+        
+        timelineContainer.innerHTML = stepperHTML;
     }
 
-    generateTimeline() {
-        const timeline = [];
-        const now = new Date();
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : [0, 0, 0];
+    }
 
-        // Submitted
-        timeline.push({
-            icon: '📝',
-            title: 'Complaint Submitted',
-            description: 'Complaint was submitted by citizen',
-            date: this.formatDate(this.complaint.created_at || this.complaint.submitted_at)
-        });
-
-        // Status changes
-        if (this.complaint.status === 'approved') {
-            timeline.push({
-                icon: '✅',
-                title: 'Complaint Approved',
-                description: 'Complaint was approved by coordinator',
-                date: this.formatDate(this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'assigned' && this.userRole !== 'lgu') {
-            timeline.push({
-                icon: '🏢',
-                title: 'Assigned to Department',
-                description: 'Complaint was assigned to department(s)',
-                date: this.formatDate(this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'in progress') {
-            timeline.push({
-                icon: '👷',
-                title: 'Work in Progress',
-                description: this.userRole === 'lgu' ? 'You are working on this complaint' : 'Department is working on the complaint',
-                date: this.formatDate(this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'resolved') {
-            timeline.push({
-                icon: '✅',
-                title: 'Resolved',
-                description: this.userRole === 'lgu' ? 'You have resolved this complaint' : 'Complaint has been resolved by department',
-                date: this.formatDate(this.complaint.resolved_at || this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'closed') {
-            timeline.push({
-                icon: '🔒',
-                title: 'Closed',
-                description: 'Complaint has been closed',
-                date: this.formatDate(this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'rejected') {
-            timeline.push({
-                icon: '❌',
-                title: 'Rejected',
-                description: 'Complaint was rejected by coordinator',
-                date: this.formatDate(this.complaint.updated_at)
-            });
-        }
-
-        if (this.complaint.status === 'cancelled') {
-            timeline.push({
-                icon: '🚫',
-                title: 'Cancelled',
-                description: 'Complaint was cancelled by citizen',
-                date: this.formatDate(this.complaint.cancelled_at || this.complaint.updated_at)
-            });
-        }
-
-        return timeline;
+    getNextColor(currentColor) {
+        const colorMap = {
+            '#f97316': '#ef4444', // Orange -> Red
+            '#ef4444': '#ec4899', // Red -> Pink
+            '#ec4899': '#9333ea', // Pink -> Purple
+            '#9333ea': '#9ca3af'  // Purple -> Grey
+        };
+        return colorMap[currentColor] || currentColor;
     }
 
     setupRoleSpecificUI() {

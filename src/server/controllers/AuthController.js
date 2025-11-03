@@ -4,6 +4,7 @@ const Database = require('../config/database');
 const supabase = Database.getClient();
 const { validatePasswordStrength } = require('../../shared/passwordValidation');
 const { validateUserRole } = require('../utils/roleValidation');
+const crypto = require('crypto');
 
 class AuthController {
   /**
@@ -332,7 +333,105 @@ class AuthController {
   }
 
   /**
-   * Change user password
+   * Request password change with email confirmation
+   */
+  async requestPasswordChange(req, res) {
+    try {
+      const { currentPassword, newPassword, confirmNewPassword } = req.body;
+      const userId = req.user.id;
+      const userEmail = req.user.email;
+
+      if (!currentPassword || !newPassword || !confirmNewPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'All password fields are required'
+        });
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'New passwords do not match'
+        });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
+        });
+      }
+
+      // Verify current password by attempting to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: currentPassword
+      });
+
+      if (signInError || !signInData) {
+        return res.status(400).json({
+          success: false,
+          error: 'Current password is incorrect'
+        });
+      }
+
+      // Use Supabase's resetPasswordForEmail to send a confirmation email
+      // This will send a password reset email, which the user can use to confirm the password change
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const { error: emailError } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${frontendUrl}/reset-password`
+      });
+
+      if (emailError) {
+        return res.status(400).json({
+          success: false,
+          error: 'Failed to send confirmation email. Please try again later.'
+        });
+      }
+
+      // Store the new password temporarily (in a real implementation, you'd use a secure storage)
+      // For now, we'll rely on Supabase's password reset flow
+      // The user will set the new password through the email link
+
+      res.json({
+        success: true,
+        message: 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to complete the password change. You will be asked to set your new password through the link.'
+      });
+
+    } catch (error) {
+      console.error('Request password change error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to request password change'
+      });
+    }
+  }
+
+  /**
+   * Confirm password change via email link (handled by Supabase's reset password flow)
+   * This endpoint is kept for compatibility but the actual confirmation is handled
+   * by Supabase's password reset email link flow
+   */
+  async confirmPasswordChange(req, res) {
+    try {
+      // This endpoint redirects to the password reset page
+      // The actual password change is handled through Supabase's password reset flow
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      res.redirect(`${frontendUrl}/reset-password`);
+    } catch (error) {
+      console.error('Confirm password change error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to confirm password change'
+      });
+    }
+  }
+
+  /**
+   * Change user password (legacy - kept for backward compatibility)
    */
   async changePassword(req, res) {
     try {

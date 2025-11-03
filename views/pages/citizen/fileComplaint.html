@@ -10,19 +10,40 @@
     <link rel="stylesheet" href="../../css/style.css" />
     <link rel="stylesheet" href="../../css/toast.css" />
     <link rel="stylesheet" href="../../css/components/sidebar.css" />
-    <link rel="stylesheet" href="../../css/complaint-form.css" />
     <link rel="stylesheet" href="../../css/app.css" />
     <link rel="stylesheet" href="../../css/header-redesign.css" />
+    <link rel="stylesheet" href="../../css/complaint-form.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      /* Force side-by-side layout for form rows */
+      .form-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      .form-row .form-group {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        margin-bottom: 0 !important;
+      }
+      .form-row .form-col-map {
+        flex: 1.5 !important;
+      }
+      .complaint-form-container {
+        max-width: 1200px !important;
+      }
+    </style>
 </head>
 <body>
     <div class="app-container">
       <div class="header-container"></div>
       <div id="sidebar" class="collapsible"></div>
       <div id="app" class="collapsible">
-        <div class="complaint-form-container">
+        <div class="complaint-form-container" style="max-width: 1200px !important;">
           <h1>File Complaint</h1>
-          <form id="complaintForm" class="complaint-form">
+          <form id="complaintForm" class="complaint-form" style="display: flex; flex-direction: column;">
             <div class="form-group">
               <label for="complaintTitle">Complaint Title *</label>
               <input
@@ -33,18 +54,20 @@
               />
             </div>
             
-            <div class="form-group">
-              <label for="complaintCategory">Category *</label>
-              <select id="complaintCategory" name="complaintCategory">
-                <option value="">Select a category...</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="complaintSubcategory">Subcategory *</label>
-              <select id="complaintSubcategory" name="complaintSubcategory">
-                <option value="">Select a subcategory...</option>
-              </select>
+            <div class="form-row">
+              <div class="form-group form-col">
+                <label for="complaintCategory">Category *</label>
+                <select id="complaintCategory" name="complaintCategory">
+                  <option value="">Select a category...</option>
+                </select>
+              </div>
+              
+              <div class="form-group form-col">
+                <label for="complaintSubcategory">Subcategory *</label>
+                <select id="complaintSubcategory" name="complaintSubcategory">
+                  <option value="">Select a subcategory...</option>
+                </select>
+              </div>
             </div>
             
             <!-- Type field removed - all submissions are complaints -->
@@ -68,20 +91,22 @@
                 rows="5"
               ></textarea>
             </div>
-            <div class="form-group">
-              <label for="location">Location *</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                placeholder="Enter the specific location of the complaint"
-              />
-            </div>
-            <div class="form-group">
-              <label>Pin Location on Map</label>
-              <div id="complaint-map" style="width: 100%; height: 320px; border: 1px solid #ddd; border-radius: 6px; position: relative;"></div>
-              <input type="hidden" id="latitude" name="latitude" />
-              <input type="hidden" id="longitude" name="longitude" />
+            <div class="form-row form-row-map">
+              <div class="form-group form-col">
+                <label for="location">Location *</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  placeholder="Enter the specific location of the complaint"
+                />
+              </div>
+              <div class="form-group form-col form-col-map">
+                <label>Pin Location on Map</label>
+                <div id="complaint-map" style="width: 100%; height: 320px; border: 1px solid #ddd; border-radius: 6px; position: relative;"></div>
+                <input type="hidden" id="latitude" name="latitude" />
+                <input type="hidden" id="longitude" name="longitude" />
+              </div>
             </div>
             <div class="form-group">
               <label for="evidence">Evidence (Optional)</label>

@@ -618,9 +618,7 @@ function renderMyComplaints(complaints, totalCount = null) {
         <span class="complaint-date">${formatDate(complaint.submitted_at)}</span>
       </div>
       <div class="complaint-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${getProgressWidth(status)}%"></div>
-        </div>
+        ${renderCompactStepper(status)}
         <span class="progress-text">${getProgressText(status)}</span>
       </div>
     </div>
@@ -640,7 +638,104 @@ function formatStatus(status) {
   ).join(' ');
 }
 
+function renderCompactStepper(status) {
+  // Map workflow status to step number (0-4, with 5 as cancelled)
+  const workflowStatus = (status || 'new').toLowerCase();
+  const isCancelled = workflowStatus === 'cancelled';
+  
+  const statusStepMap = {
+    'new': 0,
+    'assigned': 1,
+    'in_progress': 2,
+    'pending_approval': 3,
+    'completed': 4,
+    'submitted': 0,
+    'under_review': 1,
+    'resolved': 4,
+    'waiting_for_responders': 3,
+    'waiting_for_complainant': 3,
+    'confirmed': 4,
+    'closed': 4
+  };
+
+  // For cancelled complaints, don't show any active steps - gray everything out
+  // Otherwise, show progress up to the current step
+  const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+  
+  // Node colors for each step (orange → red → pink → purple)
+  const nodeColors = [
+    '#3b82f6',
+    '#3b82f6',
+    '#3b82f6',
+    '#3b82f6',
+    '#3b82f6'
+  ];
+
+  // Build compact stepper HTML
+  let stepperHTML = '<div class="compact-stepper-container">';
+  
+  for (let i = 0; i < 5; i++) {
+    // If cancelled, all steps are inactive (grayed out)
+    // Otherwise, active steps are those up to currentStep (0-4)
+    const isActive = isCancelled ? false : (i <= currentStep && i < 5);
+    
+    // Get node color - if cancelled, everything is grey
+    const nodeColor = isCancelled ? '#9ca3af' : (isActive ? nodeColors[i] : '#9ca3af');
+    
+    // Determine connector line style
+    let connectorStyle = '';
+    if (i < 4) {
+      // If cancelled, all connectors are grey
+      // Otherwise, color connector through the current step as well (continuous bar effect)
+      const isConnectorActive = isCancelled ? false : (i <= currentStep);
+      
+      if (isConnectorActive) {
+        // Active connector solid blue
+        connectorStyle = '#3b82f6';
+      } else {
+        connectorStyle = '#e5e7eb';
+      }
+    }
+
+    // No glow/box-shadow for nodes
+    let boxShadow = 'none';
+
+    stepperHTML += `
+      <div class="compact-stepper-step ${isActive ? 'active' : ''}">
+        <div class="compact-stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
+        ${i < 4 ? `
+        <div class="compact-stepper-connector" style="background: ${connectorStyle};"></div>
+        ` : ''}
+      </div>
+    `;
+  }
+  stepperHTML += '</div>';
+
+  // Labels row under the stepper, aligned with nodes
+  const stepLabels = ['New','Assigned','In Progress','Pending Approval','Completed'];
+  stepperHTML += '<div class="compact-stepper-labels">';
+  for (let i = 0; i < 5; i++) {
+    const isActive = !isCancelled && i <= currentStep;
+    stepperHTML += `
+      <div class="compact-stepper-label-item ${isActive ? 'active' : ''}">${stepLabels[i]}</div>
+    `;
+  }
+  stepperHTML += '</div>';
+
+  return stepperHTML;
+}
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+  ] : [0, 0, 0];
+}
+
 function getProgressWidth(status) {
+  // Deprecated - keeping for backward compatibility if needed elsewhere
   const progressMap = {
     'new': 20,
     'assigned': 40,

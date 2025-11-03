@@ -48,8 +48,6 @@ class ComplaintRepository {
 
   async findByUserId(userId, options = {}) {
     try {
-      console.log('[COMPLAINT_REPO] findByUserId called:', { userId, options });
-
       const { page = 1, limit = 10, status, type } = options;
       const offset = (page - 1) * limit;
 
@@ -66,15 +64,6 @@ class ComplaintRepository {
       if (type) {
         query = query.eq('type', type);
       }
-
-      console.log('[COMPLAINT_REPO] Executing query with:', {
-        userId,
-        page,
-        limit,
-        offset,
-        status,
-        type
-      });
 
       // First get the count without range, applying same filters
       let countQuery = this.supabase
@@ -96,8 +85,6 @@ class ComplaintRepository {
         console.error('[COMPLAINT_REPO] Count query error:', countError);
       }
 
-      console.log('[COMPLAINT_REPO] Total count for user:', totalCount);
-
       // DIAGNOSTIC: Get ALL complaints for this user without pagination (non-blocking)
       // This runs in parallel and doesn't block the main query
       this.supabase
@@ -105,26 +92,11 @@ class ComplaintRepository {
         .select('id, title, workflow_status, submitted_at, is_duplicate, cancelled_at')
         .eq('submitted_by', userId)
         .order('submitted_at', { ascending: false })
-        .then(({ data: allData, error: allError }) => {
-          if (!allError && allData) {
-            console.log('[COMPLAINT_REPO] [DIAGNOSTIC] ALL complaints in DB for user:', {
-              userId,
-              totalInDb: allData.length,
-              complaints: allData.map(c => ({
-                id: c.id.substring(0, 8) + '...',
-                title: c.title?.substring(0, 30) + '...',
-                status: c.workflow_status,
-                submitted_at: c.submitted_at,
-                is_duplicate: c.is_duplicate,
-                cancelled: !!c.cancelled_at
-              }))
-            });
-          } else if (allError) {
-            console.error('[COMPLAINT_REPO] [DIAGNOSTIC] Error fetching all complaints:', allError);
-          }
+        .then(() => {
+          // Diagnostic query removed for cleaner logs
         })
-        .catch(err => {
-          console.error('[COMPLAINT_REPO] [DIAGNOSTIC] Exception in diagnostic query:', err);
+        .catch(() => {
+          // Silent catch for diagnostic query
         });
 
       // Then get the paginated data
@@ -136,18 +108,6 @@ class ComplaintRepository {
         console.error('[COMPLAINT_REPO] Database query error:', error);
         throw error;
       }
-
-      console.log('[COMPLAINT_REPO] Query result:', {
-        dataCount: data?.length || 0,
-        totalCount: totalCount || 0,
-        page,
-        limit,
-        offset,
-        userId,
-        firstComplaintId: data?.[0]?.id,
-        firstComplaintTitle: data?.[0]?.title,
-        allComplaintIds: data?.map(c => c.id) || []
-      });
 
       return {
         complaints: data || [],

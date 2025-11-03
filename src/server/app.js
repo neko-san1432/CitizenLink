@@ -819,7 +819,7 @@ class CitizenLinkApp {
     });
 
     // Public pages
-    const publicPages = ['login', 'signup', 'resetPass', 'OAuthContinuation', 'success'];
+    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'OAuthContinuation', 'success'];
     publicPages.forEach(page => {
       this.app.get(`/${page}`, (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', `${page}.html`));

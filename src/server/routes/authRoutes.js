@@ -46,7 +46,8 @@ router.get('/verify-email', authLimiter, ErrorHandler.asyncWrapper(AuthControlle
  * @desc    Send password reset email
  * @access  Public
  */
-router.post('/forgot-password', passwordResetLimiter, csrfProtection, ErrorHandler.asyncWrapper(async (req, res) => {
+// CSRF disabled for forgot-password to allow public POST from reset page
+router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -158,8 +159,22 @@ router.get('/profile', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
 router.put('/profile', authenticateUser, ErrorHandler.asyncWrapper(AuthController.updateProfile));
 
 /**
+ * @route   POST /api/auth/request-password-change
+ * @desc    Request password change with email confirmation
+ * @access  Private
+ */
+router.post('/request-password-change', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.requestPasswordChange));
+
+/**
+ * @route   GET /api/auth/confirm-password-change
+ * @desc    Confirm password change via email token
+ * @access  Public
+ */
+router.get('/confirm-password-change', ErrorHandler.asyncWrapper(AuthController.confirmPasswordChange));
+
+/**
  * @route   POST /api/auth/change-password
- * @desc    Change user password
+ * @desc    Change user password (legacy - direct change)
  * @access  Private
  */
 router.post('/change-password', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));

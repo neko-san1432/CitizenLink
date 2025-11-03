@@ -3,6 +3,8 @@
 /* Global viewport constraints */
 html, body {
   height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -14,10 +16,14 @@ html, body {
 /* App container viewport optimization */
 .app-container {
   height: 100vh;
+  max-height: 100vh;
   overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   padding-bottom: 0 !important;
+  box-sizing: border-box;
 }
 
 /* Main app area - fits remaining viewport after header */

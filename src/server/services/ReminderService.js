@@ -47,8 +47,6 @@ class ReminderService {
       const now = new Date();
       const reminders = await this.getPendingReminders(now);
 
-      console.log(`[REMINDER_SERVICE] Found ${reminders.length} complaints needing reminders`);
-
       for (const complaint of reminders) {
         await this.sendReminder(complaint);
       }

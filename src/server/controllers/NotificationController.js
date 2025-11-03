@@ -222,7 +222,6 @@ class NotificationController {
   async getNotificationCount(req, res) {
     try {
       const userId = req.user.id;
-      console.log('[NOTIFICATION] Getting notification count for user:', userId);
 
       // Get all unread notifications to apply deduplication
       const { data: notifications, error } = await supabase
@@ -261,13 +260,6 @@ class NotificationController {
       }
 
       const deduplicatedCount = seenKeys.size;
-
-      console.log('[NOTIFICATION][DEBUG] Count deduplication result:', {
-        userId,
-        originalCount: notifications?.length || 0,
-        deduplicatedCount,
-        removedDuplicates: (notifications?.length || 0) - deduplicatedCount
-      });
 
       res.json({
         success: true,

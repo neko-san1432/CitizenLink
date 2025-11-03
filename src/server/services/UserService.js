@@ -441,7 +441,8 @@ class UserService {
       lastName: combined.last_name,
       name: displayName,
       fullName: displayName, // Keep for backwards compatibility
-      mobileNumber: combined.mobile_number,
+      // Mobile number from raw_user_meta_data (priority) or user_metadata
+      mobileNumber: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
       dateOfBirth: combined.date_of_birth,
       gender: combined.gender,
 
@@ -482,6 +483,9 @@ class UserService {
         bio: combined.bio
       },
 
+      // Created at from auth.users.created_at
+      created_at: authUser.created_at,
+      
       timestamps: {
         lastLogin: combined.last_login_at,
         created: authUser.created_at,

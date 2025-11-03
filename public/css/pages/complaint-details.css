@@ -23,7 +23,7 @@
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 8px;
+    padding: 0 16px;
     height: 100%;
     box-sizing: border-box;
     display: flex;
@@ -32,12 +32,17 @@
 }
 
 .complaint-details {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 6px;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr; /* Title | Progress */
+    grid-template-rows: auto 1fr;   /* Row 1 (header+progress), Row 2 (content fills) */
+    grid-template-areas:
+        "header progress"
+        "content content";
+    gap: 12px; /* match dashboard card spacing */
     height: 100%;
     min-height: 0;
 }
@@ -64,18 +69,19 @@
 }
 
 /* Complaint Header */
-.complaint-header {
+.complaint-details > .complaint-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 6px;
-    padding: 10px;
+    align-items: center; /* vertically center header content */
+    margin-bottom: 0;
+    padding: 8px; /* slightly shorter height */
     background: white;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     flex-shrink: 0;
     min-height: fit-content;
+    grid-area: header;
 }
 
 .complaint-title-section {
@@ -291,64 +297,145 @@
     flex-wrap: wrap;
 }
 
-/* Status Timeline */
-.status-timeline {
-    margin-bottom: 6px;
-    padding: 10px;
+/* Status Timeline - Horizontal Stepper */
+.complaint-details > .status-timeline {
+    margin-bottom: 0;
+    padding: 0.75rem; /* slightly shorter height */
     background: white;
-    border-radius: 6px;
+    border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     flex-shrink: 0;
-    max-height: 200px;
-    overflow-y: auto;
+    display: flex; /* center timeline vertically */
+    flex-direction: column;
+    justify-content: center;
+    grid-area: progress;
 }
 
 .status-timeline h3 {
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0; /* tighter spacing above stepper */
     color: #1f2937;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 600;
 }
 
-.timeline-items {
+.progress-stepper {
+    width: 100%;
     position: relative;
+    padding: 0.5rem 0; /* reduce internal vertical padding */
 }
 
-.timeline-item {
+.stepper-container {
     display: flex;
-    align-items: flex-start;
-    margin-bottom: 8px;
+    align-items: center; /* vertically center circles */
+    justify-content: space-between;
+    width: 100%;
     position: relative;
+    padding: 0 0.5rem;
 }
 
-.timeline-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 12px;
-    top: 24px;
-    bottom: -12px;
-    width: 2px;
-    background: #e5e7eb;
+.stepper-step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
-.timeline-icon {
-    width: 24px;
-    height: 24px;
+.stepper-node {
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #3b82f6;
-    color: white;
+    background-color: #9ca3af;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    margin-right: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    box-shadow: none;
     flex-shrink: 0;
+    z-index: 2;
 }
 
-.timeline-content {
+.stepper-step.active .stepper-node {
+    transform: scale(1.1);
+}
+
+.stepper-step.active:not(.cancelled) .stepper-node { }
+.stepper-step.cancelled .stepper-node { }
+
+.stepper-number {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.stepper-node:not(.active) .stepper-number {
+    color: #374151;
+}
+
+.stepper-connector {
     flex: 1;
+    height: 8px;
+    margin: 0 0.25rem;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stepper-connector::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 2px;
+    background: inherit;
+}
+
+.stepper-label {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.stepper-label strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Labels aligned under each node */
+.stepper-labels {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.stepper-label-item {
+    flex: 1;
+    text-align: center;
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+
+.stepper-label-item.active {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.stepper-current {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: #6b7280;
 }
 
 .timeline-title {
@@ -370,12 +457,13 @@
 
 /* Content Sections */
 .complaint-content {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
     min-height: 0;
     flex: 1;
     overflow-y: auto;
+    grid-area: content; /* full width row */
 }
 
 .content-section {
@@ -387,6 +475,7 @@
     overflow: hidden;
     box-sizing: border-box;
     flex-shrink: 0;
+    grid-column: span 1;
 }
 
 .content-section h3 {
@@ -417,6 +506,46 @@
 .location-address {
     font-weight: 500;
     color: #1f2937;
+}
+
+/* Complainant Information Section */
+.complainant-info {
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 0.875rem;
+    border: 1px solid #e5e7eb;
+    margin-top: 0.5rem;
+}
+
+.complainant-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.complainant-field {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.complainant-field:last-child {
+    border-bottom: none;
+}
+
+.complainant-field .field-label {
+    font-weight: 600;
+    color: #6b7280;
+    min-width: 80px;
+    font-size: 0.875rem;
+}
+
+.complainant-field .field-value {
+    color: #1f2937;
+    font-size: 0.875rem;
+    flex: 1;
 }
 
 .location-coordinates {
@@ -748,10 +877,10 @@ body {
         padding: 0 8px;
     }
 
-    .complaint-header {
-        flex-direction: column;
-        gap: 16px;
-    }
+    .complaint-details { grid-template-columns: 1fr; }
+    .complaint-header { grid-column: 1 / -1; flex-direction: column; gap: 16px; }
+    .status-timeline { grid-column: 1 / -1; }
+    .complaint-content { grid-template-columns: 1fr; }
 
     .complaint-actions {
         width: 100%;
@@ -794,6 +923,15 @@ body {
         padding: 6px 8px;
         font-size: 0.75rem;
     }
+}
+
+/* Responsive grid adjustments for complaint content */
+@media (max-width: 1200px) {
+    .complaint-content { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .complaint-content { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {

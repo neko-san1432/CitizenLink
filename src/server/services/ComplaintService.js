@@ -390,6 +390,35 @@ class ComplaintService {
     // Add assignments to complaint data
     complaint.assignments = assignments || [];
 
+    // Fetch complainant info from auth.users for admin, officers, and coordinators
+    // Only fetch if userId is null (meaning user is not a citizen viewing their own complaint)
+    if (!userId && complaint.submitted_by) {
+      try {
+        const { data: submitterData, error: submitterError } = await this.complaintRepo.supabase.auth.admin.getUserById(complaint.submitted_by);
+        
+        if (!submitterError && submitterData?.user) {
+          const user = submitterData.user;
+          const meta = user.user_metadata || {};
+          const rawMeta = user.raw_user_meta_data || {};
+          const combined = { ...rawMeta, ...meta };
+          
+          complaint.submitted_by_profile = {
+            id: user.id,
+            email: user.email,
+            name: combined.name || `${combined.first_name || ''} ${combined.last_name || ''}`.trim() || user.email,
+            firstName: combined.first_name,
+            lastName: combined.last_name,
+            mobileNumber: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
+            mobile: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
+            raw_user_meta_data: rawMeta
+          };
+        }
+      } catch (error) {
+        console.error('[COMPLAINT_SERVICE] Error fetching complainant info:', error);
+        // Continue without complainant info if fetch fails
+      }
+    }
+
     // Reconcile workflow (eventual consistency)
     await this.reconcileWorkflowStatus(id);
 
@@ -399,17 +428,7 @@ class ComplaintService {
 
   async getUserComplaints(userId, options = {}) {
     try {
-      console.log('[COMPLAINT_SERVICE] getUserComplaints called:', { userId, options });
-
       const result = await this.complaintRepo.findByUserId(userId, options);
-
-      console.log('[COMPLAINT_SERVICE] getUserComplaints result:', {
-        complaintsCount: result.complaints?.length || 0,
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: result.totalPages
-      });
 
       return result;
     } catch (error) {

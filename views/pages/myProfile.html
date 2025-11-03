@@ -12,64 +12,235 @@
     <link rel="stylesheet" href="../css/app.css">
     <link rel="stylesheet" href="../css/components/clock.css">
     <link rel="stylesheet" href="../css/header-redesign.css">
+    <link rel="stylesheet" href="../css/viewport-fix.css">
     <style>
-      .profile-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 12px;
-        color: white;
-        margin-bottom: 2rem;
+      /* Profile page layout - flex column to consume remaining space */
+      .profile-page {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        gap: 1rem;
+        padding: 1rem;
+        box-sizing: border-box;
       }
-      .profile-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
+
+      /* Main content area - side by side layout */
+      .profile-content-wrapper {
+        display: flex;
+        flex-direction: row;
+        gap: 1.5rem;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* Left sidebar - compact profile */
+      .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        width: 280px;
+        flex-shrink: 0;
+        overflow: hidden;
+        height: 100%;
+        align-content: flex-start;
+      }
+
+      /* Profile card */
+      .profile-card {
         background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .profile-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 1.75rem;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .profile-status-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #10b981;
+        color: white;
+        font-size: 0.5625rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .profile-name-section {
+        text-align: center;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        flex-shrink: 0;
+      }
+
+      .profile-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.125rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        line-height: 1.2;
+      }
+
+      .profile-username {
+        font-size: 0.75rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        line-height: 1.2;
+      }
+
+      .profile-info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.75rem;
+        width: 100%;
+        flex-shrink: 0;
+        line-height: 1.1;
+      }
+
+      .profile-info-item:first-of-type {
+        border-top: none;
+      }
+
+      .profile-info-label {
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .profile-info-value {
+        color: #1f2937;
+        font-weight: 500;
+      }
+
+      /* Change Password Card */
+      .password-card {
+        background: white;
+        border-radius: 10px;
+        padding: 0.875rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        flex-shrink: 0;
+      }
+
+      .password-card-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+      }
+
+      .password-card-description {
+        font-size: 0.6875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+
+      /* Right side - complaints container */
+      .complaints-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .complaints-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 1rem;
       }
-      .stat-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
+
+      .complaints-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #10b981;
       }
-      .stat-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        text-align: center;
-        transition: transform 0.2s;
+
+      .complaints-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 0.5rem;
       }
-      .stat-card:hover {
-        transform: translateY(-2px);
-      }
-      .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #667eea;
-      }
-      .stat-label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin-top: 0.5rem;
-      }
+
       .complaint-card {
         background: white;
-        padding: 1rem;
+        padding: 1.25rem;
         border-radius: 8px;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: all 0.2s;
+        border: 1px solid #e5e7eb;
       }
+
       .complaint-card:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateX(4px);
+        transform: translateY(-2px);
+        border-color: #10b981;
       }
+
+      .complaint-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+      }
+
+      .complaint-title {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+        flex: 1;
+        margin-right: 1rem;
+      }
+
+      .complaint-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+
       .status-badge {
         display: inline-block;
         padding: 0.25rem 0.75rem;
@@ -77,6 +248,7 @@
         font-size: 0.75rem;
         font-weight: 600;
       }
+
       .status-new { background: #dbeafe; color: #1e40af; }
       .status-assigned { background: #fef3c7; color: #92400e; }
       .status-in_progress { background: #ddd6fe; color: #5b21b6; }
@@ -85,14 +257,122 @@
       .status-resolved { background: #d1fae5; color: #065f46; }
       .status-cancelled { background: #fee2e2; color: #991b1b; }
       .status-unknown { background: #e5e7eb; color: #374151; }
-      /* Viewport-fit: constrain to screen, internal scroll only */
-      .profile-page { height: calc(100vh - 64px); display: flex; flex-direction: column; overflow: hidden }
-      .profile-header { position: sticky; top: 0; z-index: 10 }
-      .profile-scroll { flex: 1 1 auto; overflow-y: auto; padding: 1rem 0 }
-      /* Ensure anchor scrolling accounts for fixed header */
-      #complaints { scroll-margin-top: 120px; }
-      @media (max-width: 1024px) { #complaints { scroll-margin-top: 100px; } }
-      @media (max-width: 600px) { #complaints { scroll-margin-top: 80px; } }
+
+      .complaint-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      /* Empty state */
+      .complaints-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        text-align: center;
+        color: #6b7280;
+      }
+
+      .complaints-empty.hidden {
+        display: none;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        .profile-content-wrapper {
+          flex-direction: column;
+          height: 100%;
+        }
+
+        .profile-sidebar {
+          width: 100%;
+          max-height: none;
+          height: auto;
+          min-height: 0;
+          overflow: visible;
+          gap: 0.5rem;
+          flex-shrink: 0;
+        }
+
+        .profile-card {
+          padding: 0.875rem;
+        }
+
+        .password-card {
+          padding: 0.75rem;
+        }
+
+        .complaints-container {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        .complaints-scroll {
+          min-height: 0;
+        }
+      }
+
+      /* Scrollbar styling - only for complaints */
+      .complaints-scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .complaints-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+
+      .complaints-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .complaints-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Edit icon */
+      .edit-icon {
+        cursor: pointer;
+        color: #6b7280;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+
+      .edit-icon:hover {
+        opacity: 1;
+      }
+
+      /* Password form */
+      #change-password-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
+
+      #change-password-form .input {
+        padding: 0.4375rem;
+        font-size: 0.75rem;
+      }
+
+      #change-password-form button {
+        padding: 0.4375rem;
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+      }
+
+      /* Email confirmation message */
+      .email-confirmation-message {
+        padding: 0.75rem;
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        color: #1e40af;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+      }
     </style>
   </head>
   <body>
@@ -102,77 +382,82 @@
         <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
         <div id="app" class="collapsible">
           <div class="profile-page">
-          <!-- Profile Header -->
-          <div class="profile-header">
-            <div class="profile-avatar">
-              <div id="profile-initial">—</div>
-            </div>
-            <h1 id="profile-name" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">Loading...</h1>
-            <p id="profile-email" style="opacity: 0.9;">Loading...</p>
-          </div>
+            <div class="profile-content-wrapper">
+              <!-- Left Sidebar - Compact Profile -->
+              <div class="profile-sidebar">
+                <!-- Profile Card -->
+                <div class="profile-card">
+                  <div class="profile-avatar">
+                    <div id="profile-initial">—</div>
+                    <div class="profile-status-badge">Online</div>
+                  </div>
+                  <div class="profile-name-section">
+                    <div class="profile-name">
+                      <span id="profile-name">Loading...</span>
+                      <span class="edit-icon" title="Edit profile">✏️</span>
+                    </div>
+                    <div class="profile-username">
+                      <span id="profile-email">Loading...</span>
+                      <span class="edit-icon" title="Edit username">✏️</span>
+                    </div>
+                  </div>
+                  <!-- Profile Edit Form -->
+                  <form id="profile-edit-form" style="width: 100%; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.375rem;">
+                    <input id="edit-name" class="input" type="text" placeholder="Full name" style="padding: 0.5rem; font-size: 0.8125rem;">
+                    <input id="edit-mobile" class="input" type="tel" placeholder="Mobile number" style="padding: 0.5rem; font-size: 0.8125rem;">
+                    <button class="btn-secondary" type="submit" style="padding: 0.5rem; font-size: 0.8125rem;">Save</button>
+                  </form>
+                  <div style="width: 100%;">
+                    <div class="profile-info-item">
+                      <span class="profile-info-label">📍 From</span>
+                      <span class="profile-info-value">Philippines</span>
+                    </div>
+                    <div class="profile-info-item">
+                      <span class="profile-info-label">👤 Member since</span>
+                      <span class="profile-info-value" id="member-since">—</span>
+                    </div>
+                    <div class="profile-info-item">
+                      <span class="profile-info-label">📱 Mobile</span>
+                      <span class="profile-info-value" id="profile-mobile">—</span>
+                    </div>
+                    <div class="profile-info-item">
+                      <span class="profile-info-label">📅 Available</span>
+                      <span class="profile-info-value">Yes</span>
+                    </div>
+                  </div>
+                </div>
 
-          <div class="profile-scroll">
-          <!-- Profile Information Card -->
-          <div class="card" style="margin-bottom: 2rem;">
-            <div class="card-header">
-              <h2 class="card-title">Personal Information</h2>
-            </div>
-            <div class="card-body space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="form-label">Mobile Number</label>
-                  <div id="profile-mobile" class="input read-only">—</div>
+                <!-- Change Password Card -->
+                <div class="password-card">
+                  <div class="password-card-title">Change Password</div>
+                  <div class="password-card-description">Update your account password. You'll receive a confirmation email.</div>
+                  <form id="change-password-form">
+                    <input id="current-password" class="input" type="password" placeholder="Current password" autocomplete="current-password" style="margin-bottom: 0.75rem;">
+                    <input id="new-password" class="input" type="password" placeholder="New password" autocomplete="new-password" style="margin-bottom: 0.75rem;">
+                    <input id="confirm-new-password" class="input" type="password" placeholder="Confirm new password" autocomplete="new-password" style="margin-bottom: 0.75rem;">
+                    <button class="btn-primary" type="submit" style="width: 100%;">Request Password Change</button>
+                    <div id="email-confirmation-message" class="email-confirmation-message hidden"></div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Right Side - Complaints Container -->
+              <div class="complaints-container">
+                <div class="complaints-header">
+                  <h2 class="complaints-title">Active Complaints</h2>
+                  <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
+                </div>
+                <div class="complaints-scroll" id="complaints-scroll">
+                  <div id="my-complaints"></div>
+                  <div id="complaints-empty" class="complaints-empty hidden">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;">No complaints yet</h3>
+                    <p style="margin-bottom: 1rem;">You haven't filed any complaints yet. Click "File a complaint" to get started!</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Statistics Cards -->
-          <div class="stat-cards">
-            <div class="stat-card">
-              <div class="stat-value" id="total-complaints">0</div>
-              <div class="stat-label">Total Complaints</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="active-complaints">0</div>
-              <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="resolved-complaints">0</div>
-              <div class="stat-label">Resolved</div>
-            </div>
-          </div>
-
-          <!-- Change Password Card -->
-          <div class="card" style="margin-bottom: 2rem;">
-            <div class="card-header">
-              <h2 class="card-title">Change Password</h2>
-            </div>
-            <div class="card-body">
-              <form id="change-password-form" class="space-y-3">
-                <input id="current-password" class="input" type="password" placeholder="Current password" autocomplete="current-password">
-                <input id="new-password" class="input" type="password" placeholder="New password" autocomplete="new-password">
-                <input id="confirm-new-password" class="input" type="password" placeholder="Confirm new password" autocomplete="new-password">
-                <button id="change-password-btn" class="btn-primary w-full md:w-auto" type="submit">Update Password</button>
-              </form>
-            </div>
-          </div>
-
-          <!-- Complaints Card -->
-          <div class="card" id="complaints">
-            <div class="card-header">
-              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <h2 class="card-title" style="margin: 0;">My Complaints</h2>
-                <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
-              </div>
-            </div>
-            <div class="card-body">
-              <div id="my-complaints" class="mt-3 space-y-2"></div>
-              <div id="complaints-empty" class="text-sm text-gray-500 hidden">No complaints yet.</div>
-            </div>
-          </div>
-          </div> <!-- /.profile-scroll -->
-          </div> <!-- /.profile-page -->
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>

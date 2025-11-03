@@ -1,7 +1,8 @@
 /* Complaint Form Styling */
+/* IMPORTANT: This file should load AFTER style.css to override conflicting rules */
 
 .complaint-form-container {
-  max-width: 800px;
+  max-width: 1200px !important;
   margin: 0 auto;
   padding: 2rem;
   background: #ffffff;
@@ -9,8 +10,49 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Form Row - Side by Side Layout */
+.complaint-form .form-row,
+form.complaint-form .form-row,
+#complaintForm .form-row {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 1rem !important;
+  margin-bottom: 1.5rem !important;
+  width: 100% !important;
+}
+
 .form-group {
   margin-bottom: 1.5rem;
+}
+
+/* Form Groups inside rows should be side by side */
+.complaint-form .form-row .form-group,
+form.complaint-form .form-row .form-group,
+#complaintForm .form-row .form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 0 !important;
+  flex: 1 !important;
+  min-width: 0 !important; /* Prevents flex items from overflowing */
+  width: auto !important;
+}
+
+.form-row .form-col {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.form-row .form-col-map {
+  flex: 1.5 !important;
+  min-width: 0 !important;
+}
+
+/* Ensure inputs/selects inside form-row don't break layout */
+.form-row .form-group input,
+.form-row .form-group select,
+.form-row .form-group textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .form-group label {
@@ -31,6 +73,7 @@
   font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   background-color: #ffffff;
+  box-sizing: border-box;
 }
 
 /* Description textarea specific typography */
@@ -321,11 +364,86 @@ html.dark .loading-placeholder {
   margin-right: 0.5rem;
 }
 
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.submit-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancel-btn {
+  flex: 0 0 auto;
+  background: #ffffff;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .complaint-form-container {
     padding: 1rem;
     margin: 0.5rem;
+    max-width: 100%;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-row .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-row-map {
+    flex-direction: column;
+  }
+
+  .form-col-map {
+    flex: 1;
   }
   
   .form-group input,
@@ -340,6 +458,14 @@ html.dark .loading-placeholder {
   
   .department-section {
     padding: 0.75rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn {
+    flex: 1;
   }
 }
 
