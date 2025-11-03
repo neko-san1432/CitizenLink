@@ -51,6 +51,7 @@
   color: var(--gray-700);
   cursor: pointer;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .menu-toggle:hover {
@@ -114,6 +115,10 @@
   gap: var(--space-3);
   flex-shrink: 0;
   overflow: visible;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
 }
 
 .header-action {
@@ -128,6 +133,7 @@
   color: var(--gray-700);
   cursor: pointer;
   position: relative;
+  box-sizing: border-box;
 }
 
 .header-action:hover {
@@ -154,9 +160,9 @@
 .notification-btn {
   position: relative;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 2px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 8px;
+  padding: 0;
   width: 40px;
   height: 40px;
   display: flex;
@@ -167,6 +173,7 @@
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .notification-btn:hover {
@@ -205,6 +212,7 @@
   background: var(--primary-50);
   border-color: var(--primary-200);
   color: var(--primary-700);
+  box-sizing: border-box;
 }
 
 .profile-btn:hover {
@@ -247,9 +255,14 @@
   border-radius: var(--radius-lg);
   font-weight: 500;
   font-family: var(--font-mono);
-  min-width: 120px;
+  min-width: 100px;
+  max-width: 180px;
   font-size: 0.875rem;
-  margin-right: var(--space-3);
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 /* Clock positioning in header-right */
@@ -532,6 +545,9 @@
   .header-left {
     gap: var(--space-4);
     padding-left: var(--space-4);
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 50%;
   }
   
   .header-right {
@@ -539,6 +555,17 @@
     padding-right: var(--space-2);
     flex-shrink: 0;
     overflow: visible;
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 50%;
+  }
+  
+  .dashboard-clock {
+    min-width: 80px;
+    max-width: 140px;
+    font-size: 0.75rem;
+    padding: var(--space-1) var(--space-2);
+    flex-shrink: 1;
   }
   
   .brand-text {
@@ -549,6 +576,11 @@
     width: 36px;
     height: 36px;
     padding: 6px;
+  }
+  
+  .header-action {
+    width: 36px;
+    height: 36px;
   }
   
   .notification-panel {
@@ -570,19 +602,37 @@
   }
   
   .header-left {
-    gap: var(--space-3);
-    padding-left: var(--space-3);
+    gap: var(--space-2);
+    padding-left: var(--space-2);
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 45%;
   }
   
   .header-right {
     gap: var(--space-1);
-    padding-right: var(--space-3);
+    padding-right: var(--space-2);
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 55%;
+  }
+  
+  .dashboard-clock {
+    min-width: 70px;
+    max-width: 110px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  
+  .dashboard-clock .date {
+    display: none; /* Hide date on very small screens */
   }
   
   .menu-toggle,
   .header-action {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
   
   .menu-toggle svg,

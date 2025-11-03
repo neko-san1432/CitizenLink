@@ -1,0 +1,37 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digos City Map</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+      html, body { height: 100% }
+      #app { margin-top: 64px }
+      #digos-map { height: calc(100vh - 64px); width: 100%; border-radius: 12px; border: 1px solid #e5e7eb }
+      .map-legend { position: absolute; bottom: 16px; right: 16px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 10px; box-shadow: 0 2px 10px rgba(0,0,0,.08); font-size: .85rem; }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div id="app" class="collapsible citizen-dashboard" style="padding-left:3%; padding-right:3%;">
+        <div class="dashboard-header" style="background:transparent">
+          <div class="dashboard-title-group">
+            <h1>🗺️ Digos City Barangay Map</h1>
+            <p class="dashboard-subtitle">Citizen view of barangay boundaries</p>
+          </div>
+        </div>
+        <div id="digos-map"></div>
+        <div class="map-legend" id="map-legend">Tap a boundary to see its name</div>
+      </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script src="/js/pages/digos-map.js"></script>
+  </body>
+ </html>

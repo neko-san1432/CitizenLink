@@ -47,19 +47,30 @@ function getStatusFromWorkflow(workflowStatus) {
 
 /**
  * Get workflow status from legacy status
- * @param {string} status - Legacy status
+ * @param {string} status - Legacy status or workflow status
  * @returns {string} Workflow status
  */
 function getWorkflowFromStatus(status) {
+  if (!status) return undefined;
+  
+  // Map legacy status values to workflow_status
   const workflowMap = {
     'pending review': 'new',
     'in progress': 'in_progress',
     'resolved': 'completed',
+    'completed': 'completed', // Also handle "completed" as a legacy status
     'rejected': 'cancelled',
     'closed': 'cancelled'
   };
 
-  return workflowMap[status] || 'new';
+  // If it's already a workflow status, return it as-is
+  const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
+  if (validWorkflowStatuses.includes(status.toLowerCase())) {
+    return status.toLowerCase();
+  }
+
+  // Otherwise, try to map from legacy status
+  return workflowMap[status.toLowerCase()] || status;
 }
 
 /**

@@ -11,7 +11,6 @@ if (_sidebarEl) {
 
 function initializeSidebar() {
   initializeSidebarClose();
-  initializeSidebarSearch();
   // Theme toggle is handled by header.js
   setTimeout(setSidebarRole, 500); // Wait 500ms for auth to complete
   setActiveMenuItem();
@@ -116,13 +115,6 @@ async function setSidebarRole() {
   <button id="sidebar-close" class="sidebar-close">×</button>
 </div>
         
-<div class="sidebar-search">
-  <div class="search-container">
-    <div class="search-icon">🔍</div>
-    <input type="text" class="search-input" placeholder="Search..." id="sidebar-search-input">
-  </div>
-</div>
-        
 <div class="sidebar-menu">
           ${menuItems.map(item => `
             <a href="${root}${item.url}" data-icon="${item.icon}">
@@ -151,7 +143,6 @@ async function setSidebarRole() {
 
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
-      initializeSidebarSearch();
       // Theme toggle is handled by header.js
       initializeLogout();
 
@@ -182,6 +173,7 @@ function getMenuItemsForRole(role) {
     'citizen': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/fileComplaint', icon: 'fileComplaint', label: 'File Complaint' },
+      { url: '/digos-map', icon: 'map', label: 'Digos City Map' },
       { url: '/departments', icon: 'departments', label: 'Departments' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
@@ -234,24 +226,7 @@ function getMenuItemsForRole(role) {
   return items;
 }
 
-function initializeSidebarSearch() {
-  const searchInput = document.getElementById('sidebar-search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const menuItems = document.querySelectorAll('.sidebar-menu a');
-
-      menuItems.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        if (text.includes(query)) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = query ? 'none' : 'flex';
-        }
-      });
-    });
-  }
-}
+// Sidebar search removed per requirements
 
 // Theme toggle is handled by header.js - removed duplicate implementation
 // But we need applyTheme function for compatibility

@@ -231,6 +231,11 @@ class CitizenLinkApp {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'myProfile.html'));
     });
 
+    // Publication page (all authenticated roles)
+    this.app.get('/publication', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'publication.html'));
+    });
+
     // File Complaint page (citizen only or staff in citizen mode)
     this.app.get('/fileComplaint', authenticateUser, (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'fileComplaint.html'));
@@ -245,6 +250,15 @@ class CitizenLinkApp {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'departments.html'));
       }
     });
+
+    // Digos City Map (citizen only)
+    this.app.get('/digos-map',
+      authenticateUser,
+      requireRole(['citizen']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'digosMap.html'));
+      }
+    );
 
     // Complaint Details page (authenticated users only)
     this.app.get('/complaint-details', authenticateUser, (req, res) => {

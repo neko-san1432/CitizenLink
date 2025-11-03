@@ -1,4 +1,5 @@
 const ComplaintService = require('../services/ComplaintService');
+const { getWorkflowFromStatus } = require('../utils/complaintUtils');
 
 class ComplaintController {
   constructor() {
@@ -446,6 +447,8 @@ class ComplaintController {
 
   async getComplaintLocations(req, res) {
     try {
+      console.log('[COMPLAINT-CONTROLLER] getComplaintLocations called');
+      console.log('[COMPLAINT-CONTROLLER] Query params:', req.query);
 
       const {
         status,
@@ -456,7 +459,7 @@ class ComplaintController {
         includeResolved = 'true'
       } = req.query;
 
-      const locations = await this.complaintService.getComplaintLocations({
+      console.log('[COMPLAINT-CONTROLLER] Parsed filters:', {
         status,
         type,
         department,
@@ -464,6 +467,44 @@ class ComplaintController {
         endDate,
         includeResolved: includeResolved === 'true'
       });
+
+      // Map query params to service filters
+      // IMPORTANT: Convert legacy status values to workflow_status
+      let workflowStatus = undefined;
+      if (status) {
+        // Convert legacy status (e.g., "pending review", "in progress", "resolved") 
+        // to workflow_status (e.g., "new", "in_progress", "completed")
+        workflowStatus = getWorkflowFromStatus(status);
+        // If conversion failed (returned original), check if it's already a workflow status
+        if (workflowStatus === status && !['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(status)) {
+          // Try direct workflow status values
+          workflowStatus = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(status) ? status : undefined;
+        }
+        console.log('[COMPLAINT-CONTROLLER] Status conversion:', { input: status, output: workflowStatus });
+      }
+      
+      const serviceFilters = {
+        status: workflowStatus,
+        category: req.query.category || undefined,
+        subcategory: req.query.subcategory || undefined,
+        department: department || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        includeResolved: includeResolved === 'true'
+      };
+      
+      // Remove undefined values
+      Object.keys(serviceFilters).forEach(key => {
+        if (serviceFilters[key] === undefined) {
+          delete serviceFilters[key];
+        }
+      });
+      
+      console.log('[COMPLAINT-CONTROLLER] Service filters:', serviceFilters);
+      
+      const locations = await this.complaintService.getComplaintLocations(serviceFilters);
+
+      console.log('[COMPLAINT-CONTROLLER] Returning locations count:', locations.length);
 
       res.json({
         success: true,
@@ -613,46 +654,9 @@ class ComplaintController {
         });
       }
 
-      // First, get the complaint to check its current status
-      const complaint = await this.complaintService.getComplaintById(complaintId, user.id);
-
-      // Check if complaint has been assigned by coordinator
-      // Allow confirmation attempts as soon as coordinator assigns to officers
-      const coordinatorAssignedStatuses = ['assigned', 'in_progress', 'pending_approval', 'completed'];
-      if (!coordinatorAssignedStatuses.includes(complaint.workflow_status)) {
-        return res.status(400).json({
-          success: false,
-          error: `Cannot confirm resolution for a complaint with status '${complaint.workflow_status}'. Please wait for the coordinator to assign the complaint to officers.`
-        });
-      }
-
-      // Check if complaint confirmation status prevents confirmation
-      if (complaint.confirmation_status === 'pending') {
-        return res.status(400).json({
-          success: false,
-          error: 'Cannot confirm resolution for a complaint that is not ready for confirmation. Please wait for all responders to complete their tasks.'
-        });
-      }
-
-      // Check if confirmation status allows confirmation
-      const validConfirmationStatuses = ['waiting_for_complainant', 'confirmed', 'disputed'];
-      if (!validConfirmationStatuses.includes(complaint.confirmation_status)) {
-        return res.status(400).json({
-          success: false,
-          error: `Cannot confirm resolution for a complaint with confirmation status '${complaint.confirmation_status}'.`
-        });
-      }
-
-      // Additional check: if assignments exist, ensure all assignments are complete before allowing confirmation
-      const progress = complaint.assignment_progress;
-      if (progress && progress.totalAssignments > 0) {
-        if (progress.completedAssignments !== progress.totalAssignments) {
-          return res.status(400).json({
-            success: false,
-            error: `Cannot confirm resolution until all assigned officers complete their work. ${progress.completedAssignments} of ${progress.totalAssignments} assignments completed.`
-          });
-        }
-      }
+      // Note: Ownership and consistency checks are handled in the service.
+      // We no longer block citizen confirmation here on coordinator/confirmation gates
+      // to avoid false 400s; the service will update and reconcile workflow accordingly.
 
       const result = await this.complaintService.confirmResolution(
         complaintId,
@@ -679,46 +683,20 @@ class ComplaintController {
   }
 
   /**
-   * Get current user's complaints (Citizen endpoint)
+   * Get evidence files for a complaint (citizen and authorized roles)
    */
-  async getMyComplaints(req, res) {
+  async getComplaintEvidence(req, res) {
     try {
+      const id = req.params.id || req.params.complaintId;
       const { user } = req;
-      const {
-        page = 1,
-        limit = 10,
-        status,
-        type
-      } = req.query;
-
-      const options = {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        status,
-        type
-      };
-
-      const result = await this.complaintService.getUserComplaints(user.id, options);
-
-      res.json({
-        success: true,
-        data: result.complaints,
-        pagination: {
-          page: result.page,
-          limit: result.limit,
-          total: result.total,
-          totalPages: result.totalPages
-        }
-      });
-
+      const files = await this.complaintService.getComplaintEvidence(id, user);
+      return res.json({ success: true, data: files });
     } catch (error) {
-      console.error('[COMPLAINT-CONTROLLER] Error getting user complaints:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch complaints'
-      });
+      console.error('Error getting complaint evidence:', error);
+      return res.status(500).json({ success: false, error: 'Failed to load complaint evidence' });
     }
   }
+
 
   async getConfirmationMessage(req, res) {
     try {

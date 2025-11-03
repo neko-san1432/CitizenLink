@@ -638,44 +638,155 @@ class LguAdminController {
       // Ensure departmentComplaints is an array
       const complaints = departmentComplaints || [];
 
-      // Step 2: Get existing assignments for these complaints
+      // Step 2: Get assignments for this department (two approaches):
+      // a) Assignments linked through complaints with this department in department_r
+      // b) Assignments directly linked by department_id (newly assigned ones)
       const complaintIds = complaints.map(c => c.id);
-      const { data: existingAssignments, error: assignError } = await supabase
+      
+      console.log('[LGU_ADMIN] Fetching assignments:', {
+        departmentCode,
+        departmentId: department.id,
+        complaintIdsCount: complaintIds.length,
+        complaintsCount: complaints.length
+      });
+      
+      // First, get assignments by department_id (PRIMARY QUERY)
+      // For recent assignments, include all statuses except 'cancelled'
+      let deptAssignmentsQuery = supabase
         .from('complaint_assignments')
-        .select('*')
-        .in('complaint_id', complaintIds)
-        .in('status', ['assigned', 'in_progress']);
+        .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
+        .eq('department_id', department.id)
+        .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
+        .order('created_at', { ascending: false });
+      
+      const { limit } = req.query;
+      if (limit) {
+        deptAssignmentsQuery = deptAssignmentsQuery.limit(parseInt(limit));
+      }
+      
+      const { data: deptAssignments, error: deptAssignError } = await deptAssignmentsQuery;
 
-      if (assignError) {
-        console.error('[LGU_ADMIN] Error fetching assignments:', assignError);
+      console.log('[LGU_ADMIN] Assignments by department_id:', {
+        count: deptAssignments?.length || 0,
+        error: deptAssignError?.message,
+        assignments: deptAssignments?.map(a => ({
+          id: a.id,
+          complaint_id: a.complaint_id,
+          status: a.status,
+          department_id: a.department_id
+        }))
+      });
+
+      if (deptAssignError) {
+        console.error('[LGU_ADMIN] Error fetching assignments by department_id:', deptAssignError);
       }
 
-      // Ensure existingAssignments is an array
-      const assignments = existingAssignments || [];
+      // Then, get assignments by complaint_id (if any complaints found) - SECONDARY QUERY
+      let assignmentsByComplaint = [];
+      if (complaintIds.length > 0) {
+        let complaintAssignmentsQuery = supabase
+          .from('complaint_assignments')
+          .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
+          .in('complaint_id', complaintIds)
+          .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
+          .order('created_at', { ascending: false });
+        
+        if (limit) {
+          complaintAssignmentsQuery = complaintAssignmentsQuery.limit(parseInt(limit));
+        }
+        
+        const { data: complaintAssignments, error: complaintAssignError } = await complaintAssignmentsQuery;
+        
+        console.log('[LGU_ADMIN] Assignments by complaint_id:', {
+          count: complaintAssignments?.length || 0,
+          error: complaintAssignError?.message
+        });
+        
+        assignmentsByComplaint = complaintAssignments || [];
+      }
 
-      // Create a map of complaint_id -> assignment
+      // Merge and deduplicate assignments (keep most recent if duplicate complaint_id)
+      const allAssignments = [...assignmentsByComplaint, ...(deptAssignments || [])];
+      console.log('[LGU_ADMIN] All assignments before dedup:', allAssignments.length);
+      
       const assignmentsMap = {};
-      assignments.forEach(assignment => {
-        assignmentsMap[assignment.complaint_id] = assignment;
+      allAssignments.forEach(assignment => {
+        const existing = assignmentsMap[assignment.complaint_id];
+        if (!existing || new Date(assignment.created_at) > new Date(existing.created_at)) {
+          assignmentsMap[assignment.complaint_id] = assignment;
+        }
       });
 
-      // Combine complaints with their assignments (or null if unassigned)
-      const departmentAssignments = complaints.map(complaint => {
-        const assignment = assignmentsMap[complaint.id];
-        return {
-          id: assignment?.id || null,
-          complaint_id: complaint.id,
-          assigned_to: assignment?.assigned_to || null,
-          assigned_by: assignment?.assigned_by || null,
-          status: assignment?.status || 'unassigned',
-          priority: assignment?.priority || 'medium',
-          deadline: assignment?.deadline || null,
-          notes: assignment?.notes || null,
-          created_at: assignment?.created_at || complaint.submitted_at,
-          updated_at: assignment?.updated_at || complaint.submitted_at,
-          complaints: complaint
-        };
-      });
+      const existingAssignments = Object.values(assignmentsMap);
+      console.log('[LGU_ADMIN] Final assignments after dedup:', existingAssignments.length);
+
+      // Get all unique complaint IDs from assignments
+      const assignmentComplaintIds = [...new Set(existingAssignments.map(a => a.complaint_id).filter(Boolean))];
+      
+      // Fetch complaint details for assignments that weren't in the initial complaints list
+      const existingComplaintIds = new Set(complaints.map(c => c.id));
+      const missingComplaintIds = assignmentComplaintIds.filter(id => !existingComplaintIds.has(id));
+      
+      let allComplaints = [...complaints];
+      if (missingComplaintIds.length > 0) {
+        const { data: missingComplaints, error: missingError } = await supabase
+          .from('complaints')
+          .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority')
+          .in('id', missingComplaintIds);
+        
+        if (!missingError && missingComplaints) {
+          allComplaints = [...complaints, ...missingComplaints];
+        }
+      }
+
+      // Combine complaints with their assignments
+      // IMPORTANT: Include ALL assignments found, even if complaint not in department_r
+      const departmentAssignments = allComplaints
+        .map(complaint => {
+          const assignment = assignmentsMap[complaint.id];
+          // Include if there's an assignment for this complaint
+          if (assignment) {
+            return {
+              id: assignment.id,
+              complaint_id: complaint.id,
+              assigned_to: assignment.assigned_to || null,
+              assigned_by: assignment.assigned_by || null,
+              status: assignment.status,
+              priority: assignment.priority || complaint.priority || 'medium',
+              deadline: assignment.deadline || null,
+              notes: assignment.notes || null,
+              created_at: assignment.created_at || complaint.submitted_at,
+              updated_at: assignment.updated_at || complaint.submitted_at,
+              complaints: complaint
+            };
+          }
+          // Also include complaints from department_r even if no assignment yet
+          if (complaints.find(c => c.id === complaint.id)) {
+            return {
+              id: null,
+              complaint_id: complaint.id,
+              assigned_to: null,
+              assigned_by: null,
+              status: 'unassigned',
+              priority: complaint.priority || 'medium',
+              deadline: null,
+              notes: null,
+              created_at: complaint.submitted_at,
+              updated_at: complaint.submitted_at,
+              complaints: complaint
+            };
+          }
+          return null;
+        })
+        .filter(Boolean); // Remove null entries
+      
+      console.log('[LGU_ADMIN] Final departmentAssignments count:', departmentAssignments.length);
+      console.log('[LGU_ADMIN] Final departmentAssignments:', departmentAssignments.map(a => ({
+        id: a.id,
+        complaint_id: a.complaint_id,
+        status: a.status,
+        title: a.complaints?.title
+      })));
 
       // Get officer information for assigned complaints
       const assignedOfficerIds = departmentAssignments
@@ -998,10 +1109,11 @@ class LguAdminController {
           .update({
             assigned_to: officerId,
             assigned_by: userId,
+            department_id: department.id, // Ensure department_id is set on update too
             priority: priority || 'medium',
             deadline: deadline || null,
             notes: notes || null,
-            status: 'active',
+            status: 'assigned', // Changed from 'active' to 'assigned' to match table schema
             updated_at: new Date().toISOString()
           })
           .eq('id', existingAssignment.id)
@@ -1025,11 +1137,11 @@ class LguAdminController {
             complaint_id: complaintId,
             assigned_to: officerId,
             assigned_by: userId,
-            department_id: null, // Department is tracked via complaint.department_r
+            department_id: department.id, // Set department ID (bigint) for proper data tracking - matches departments.id type
             priority: priority || 'medium',
             deadline: deadline || null,
             notes: notes || null,
-            status: 'active'
+            status: 'assigned' // Changed from 'active' to 'assigned' to match table schema
           })
           .select()
           .single();

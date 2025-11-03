@@ -7,20 +7,11 @@ const supabase = Database.getClient();
 
 const authenticateUser = async (req, res, next) => {
   try {
-    console.log('[AUTH] authenticateUser called for path:', req.path);
-
     // Extract token from cookies or headers
     const token =
       req.cookies?.sb_access_token ||
       req.cookies?.sb_access_token_debug ||
       req.headers.authorization?.replace('Bearer ', '');
-
-    console.log('[AUTH] Token extraction result:', {
-      hasToken: Boolean(token),
-      tokenLength: token?.length,
-      hasCookie: Boolean(req.cookies?.sb_access_token || req.cookies?.sb_access_token_debug),
-      hasAuthHeader: Boolean(req.headers.authorization)
-    });
 
     if (!token) {
       if (process.env.NODE_ENV === 'development') {
@@ -41,14 +32,6 @@ const authenticateUser = async (req, res, next) => {
       error,
     } = await supabase.auth.getUser(token);
 
-    console.log('[AUTH] Token validation result:', {
-      hasUser: Boolean(tokenUser),
-      userId: tokenUser?.id,
-      userEmail: tokenUser?.email,
-      hasError: Boolean(error),
-      errorMessage: error?.message
-    });
-
     if (error || !tokenUser) {
       if (process.env.NODE_ENV === 'development') {
         console.log(`[AUTH] ${new Date().toISOString()} ❌ Token validation failed:`, error?.message);
@@ -62,9 +45,6 @@ const authenticateUser = async (req, res, next) => {
       return res.redirect(`/login?message=${  encodeURIComponent('Invalid session. Please login again')  }&type=error`);
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[AUTH] ${new Date().toISOString()} ✅ Token validated successfully for user:`, tokenUser.id);
-    }
 
     // Get user metadata from the token itself instead of using admin API
     // The token already contains user metadata that we can use
@@ -111,19 +91,6 @@ const authenticateUser = async (req, res, next) => {
                           combinedMetadata.raw_user_meta_data?.department ||
                           combinedMetadata.raw_user_meta_data?.dpt;
 
-    // Debug logging for department extraction
-    if (process.env.NODE_ENV === 'development' && userRole === 'lgu-admin') {
-      console.log('[AUTH] Department extraction debug:', {
-        userRole,
-        departmentCode,
-        combinedMetadata: {
-          department: combinedMetadata.department,
-          dpt: combinedMetadata.dpt,
-          raw_user_meta_data: combinedMetadata.raw_user_meta_data
-        },
-        extractedDepartment: userDepartment
-      });
-    }
 
     // Attach the enhanced user object to the request
     req.user = {

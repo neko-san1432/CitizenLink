@@ -66,37 +66,34 @@
         
         <div id="app" class="collapsible hr-dashboard">
             <div class="dashboard-header">
-                <h1>👥 HR Dashboard</h1>
-                <p class="dashboard-subtitle">Comprehensive human resources management and staff oversight</p>
-            </div>
-
-            <!-- Quick Actions Panel -->
-            <div class="quick-actions-panel">
-                <h2 class="section-title">⚡ Quick Actions</h2>
-                <div class="quick-actions-grid">
-                    <button class="quick-action-btn" onclick="promoteUser()">
+                <div class="dashboard-title-group">
+                    <h1>👥 HR Dashboard</h1>
+                    <p class="dashboard-subtitle">Comprehensive human resources management and staff oversight</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/link-generator">
+                        <div class="quick-action-icon">🔗</div>
+                        <div class="quick-action-text">Links</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/role-changer">
+                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-text">Roles</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="promoteUser()">
                         <div class="quick-action-icon">⬆️</div>
-                        <div class="quick-action-text">Promote User</div>
+                        <div class="quick-action-text">Promote</div>
                     </button>
-                    <button class="quick-action-btn" onclick="demoteUser()">
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="demoteUser()">
                         <div class="quick-action-icon">⬇️</div>
-                        <div class="quick-action-text">Demote User</div>
+                        <div class="quick-action-text">Demote</div>
                     </button>
-                    <button class="quick-action-btn" onclick="assignDepartment()">
-                        <div class="quick-action-icon">🏢</div>
-                        <div class="quick-action-text">Assign Office</div>
-                    </button>
-                    <button class="quick-action-btn" onclick="viewRoleHistory()">
-                        <div class="quick-action-icon">📜</div>
-                        <div class="quick-action-text">Role History</div>
-                    </button>
-                    <button class="quick-action-btn" onclick="generateReport()">
-                        <div class="quick-action-icon">📊</div>
-                        <div class="quick-action-text">Generate Report</div>
-                    </button>
-                    <button class="quick-action-btn" onclick="manageUsers()">
-                        <div class="quick-action-icon">👥</div>
-                        <div class="quick-action-text">Manage Users</div>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                        <div class="quick-action-icon">❓</div>
+                        <div class="quick-action-text">Help</div>
                     </button>
                 </div>
             </div>

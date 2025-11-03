@@ -3,7 +3,7 @@
  * Provides dynamic department name mapping and lookup functions
  */
 
-import { apiClient } from '../config/apiClient.js';
+import apiClient from '../config/apiClient.js';
 
 // Cache for department data
 let departmentCache = null;

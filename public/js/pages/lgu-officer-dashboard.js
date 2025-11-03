@@ -41,9 +41,25 @@ async function loadDashboardData() {
  * Load my tasks
  */
 async function loadMyTasks() {
+  console.log('[LGU_OFFICER_DASHBOARD] loadMyTasks called');
   try {
-    const response = await fetch('/api/lgu/my-tasks?limit=5');
+    console.log('[LGU_OFFICER_DASHBOARD] Making API call to /api/lgu/tasks');
+    const response = await fetch('/api/lgu/tasks?limit=5');
     const result = await response.json();
+
+    console.log('[LGU_OFFICER_DASHBOARD] Tasks API response:', {
+      success: result.success,
+      dataLength: result.data?.length || 0,
+      data: result.data?.map(task => ({
+        id: task.id,
+        complaint_id: task.complaint_id,
+        status: task.status,
+        title: task.complaint?.title,
+        category: task.complaint?.category,
+        fullComplaint: task.complaint,
+        fullTask: task
+      }))
+    });
 
     if (result.success) {
       renderMyTasks(result.data || []);
@@ -114,7 +130,23 @@ function renderMyTasks(tasks) {
   const container = document.getElementById('tasks-container');
   if (!container) return;
 
-  if (tasks.length === 0) {
+  // Client-side deduplication by complaint_id (keep the most recent one)
+  const uniqueTasks = tasks.reduce((acc, task) => {
+    const existing = acc.find(t => t.complaint_id === task.complaint_id);
+    if (!existing || new Date(task.updated_at || task.created_at) > new Date(existing.updated_at || existing.created_at)) {
+      const filtered = acc.filter(t => t.complaint_id !== task.complaint_id);
+      return [...filtered, task];
+    }
+    return acc;
+  }, []);
+
+  console.log('[LGU_OFFICER_DASHBOARD] Task deduplication:', {
+    originalCount: tasks.length,
+    uniqueCount: uniqueTasks.length,
+    removedDuplicates: tasks.length - uniqueTasks.length
+  });
+
+  if (uniqueTasks.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">📋</div>
@@ -126,14 +158,14 @@ function renderMyTasks(tasks) {
     return;
   }
 
-  const html = tasks.map(task => `
-    <div class="task-item" onclick="viewTaskDetail('${task.id}')">
+  const html = uniqueTasks.map(task => `
+    <div class="task-item" onclick="viewTaskDetail('${task.complaint_id}')">
       <div class="task-header">
-        <h4 class="task-title">${escapeHtml(task.title)}</h4>
-        <span class="task-priority priority-${task.priority}">${task.priority}</span>
+        <h4 class="task-title">${escapeHtml(getTaskTitle(task))}</h4>
+        <span class="task-priority priority-${task.priority || 'medium'}">${task.priority || 'MEDIUM'}</span>
       </div>
       <div class="task-meta">
-        <span class="task-type">${escapeHtml(task.type || task.category)}</span>
+        <span class="task-type">${escapeHtml(task.complaint?.category || 'General')}</span>
         <span class="task-deadline">Due: ${formatDate(task.deadline)}</span>
       </div>
       <div class="task-progress">
@@ -143,8 +175,8 @@ function renderMyTasks(tasks) {
         <span class="progress-text">${getTaskStatusText(task.status)}</span>
       </div>
       <div class="task-actions">
-        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${task.id}')">Update</button>
-        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${task.id}')">Add Note</button>
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${task.complaint_id}')">Update</button>
+        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${task.complaint_id}')">Add Note</button>
       </div>
     </div>
   `).join('');
@@ -156,10 +188,10 @@ function renderMyTasks(tasks) {
  * Render statistics
  */
 function renderStatistics(stats) {
-  document.getElementById('stat-total-assigned').textContent = stats.total_assigned || 0;
-  document.getElementById('stat-in-progress').textContent = stats.in_progress || 0;
-  document.getElementById('stat-completed').textContent = stats.completed || 0;
-  document.getElementById('stat-overdue').textContent = stats.overdue || 0;
+  document.getElementById('stat-total-assigned').textContent = stats.total_tasks || 0;
+  document.getElementById('stat-in-progress').textContent = stats.in_progress_tasks || 0;
+  document.getElementById('stat-completed').textContent = stats.completed_tasks || 0;
+  document.getElementById('stat-overdue').textContent = stats.overdue_tasks || 0;
 }
 
 /**
@@ -169,7 +201,23 @@ function renderActivity(activities) {
   const container = document.getElementById('activity-container');
   if (!container) return;
 
-  if (activities.length === 0) {
+  // Client-side deduplication by complaint_id (keep the most recent one)
+  const uniqueActivities = activities.reduce((acc, activity) => {
+    const existing = acc.find(a => a.complaint_id === activity.complaint_id);
+    if (!existing || new Date(activity.created_at) > new Date(existing.created_at)) {
+      const filtered = acc.filter(a => a.complaint_id !== activity.complaint_id);
+      return [...filtered, activity];
+    }
+    return acc;
+  }, []);
+
+  console.log('[LGU_OFFICER_DASHBOARD] Activity deduplication:', {
+    originalCount: activities.length,
+    uniqueCount: uniqueActivities.length,
+    removedDuplicates: activities.length - uniqueActivities.length
+  });
+
+  if (uniqueActivities.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🕒</div>
@@ -179,7 +227,7 @@ function renderActivity(activities) {
     return;
   }
 
-  const html = activities.map(activity => `
+  const html = uniqueActivities.map(activity => `
     <div class="activity-item" data-type="${activity.type}">
       <div class="activity-icon">${getActivityIcon(activity.type)}</div>
       <div class="activity-content">
@@ -244,14 +292,21 @@ function getTaskProgress(status) {
 }
 
 function getTaskStatusText(status) {
+  console.log('[LGU_OFFICER_DASHBOARD] Getting status text for:', status);
+  
   const statusMap = {
     'assigned': 'Assigned',
     'in_progress': 'In Progress',
     'review': 'Under Review',
     'completed': 'Completed',
-    'cancelled': 'Cancelled'
+    'cancelled': 'Cancelled',
+    'pending': 'Pending',
+    'active': 'Active'
   };
-  return statusMap[status] || 'Unknown';
+  
+  const result = statusMap[status] || 'Unknown';
+  console.log('[LGU_OFFICER_DASHBOARD] Status text result:', result);
+  return result;
 }
 
 function getActivityIcon(type) {
@@ -299,6 +354,20 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Title fallback helper to avoid blank titles
+function getTaskTitle(task) {
+  console.log('[LGU_OFFICER_DASHBOARD] getTaskTitle called with:', task);
+  const complaint = task?.complaint || {};
+  const byPriority = (task?.priority || '').toString().toUpperCase();
+  const result = (
+    complaint.title ||
+    complaint.category ||
+    `Complaint ${task?.complaint_id ? '#' + String(task.complaint_id).substring(0, 8) : ''} ${byPriority ? '(' + byPriority + ')' : ''}`.trim()
+  );
+  console.log('[LGU_OFFICER_DASHBOARD] getTaskTitle result:', result);
+  return result;
 }
 
 /**

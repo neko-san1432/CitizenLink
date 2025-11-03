@@ -17,6 +17,7 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding-bottom: 0 !important;
 }
 
 /* Main app area - fits remaining viewport after header */
@@ -25,6 +26,12 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
+}
+
+/* Ensure dashboard content sits below fixed header on all viewports */
+#app.citizen-dashboard {
+  margin-top: 0;
+  max-height: calc(100vh - 64px);
 }
 
 /* Dashboard containers - fit within available space */
@@ -38,8 +45,110 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
-  padding: 0;
+  padding: 0 1%;
   margin: 0;
+}
+
+/* Exclude heatmap pages from responsive padding (they need full-width for map) */
+.lgu-admin-dashboard.heatmap-page,
+[class*="heatmap"],
+#map {
+  padding: 0 !important;
+}
+
+/* Apply citizen dashboard padding to all dashboards except heatmap/map pages */
+.coordinator-dashboard:not(.heatmap-page),
+.hr-dashboard:not(.heatmap-page),
+.lgu-admin-dashboard:not(.heatmap-page),
+.superadmin-dashboard:not(.heatmap-page),
+.lgu-officer-dashboard:not(.heatmap-page) {
+  padding: 0 1%;
+}
+
+/* Responsive page margins - apply citizen dashboard padding to all dashboards except heatmap/map pages */
+@media (min-width: 320px) and (max-width: 479px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 16px; 
+    padding-right: 16px; 
+  }
+}
+
+@media (min-width: 480px) and (max-width: 700px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 24px; 
+    padding-right: 24px; 
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1024px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 32px; 
+    padding-right: 32px; 
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 80px; 
+    padding-right: 80px; 
+  }
+}
+
+@media (min-width: 1440px) and (max-width: 1920px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 120px; 
+    padding-right: 120px; 
+  }
+}
+
+/* For very small and very large screens, fall back to closest rule */
+@media (max-width: 319px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 16px; 
+    padding-right: 16px; 
+  }
+}
+
+@media (min-width: 1921px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) { 
+    padding-left: 120px; 
+    padding-right: 120px; 
+  }
 }
 
 /* Dashboard grids - prevent overflow */
@@ -106,11 +215,7 @@ html, body {
     gap: var(--space-2);
   }
   
-  /* Ensure proper header spacing on mobile */
-  #app {
-    margin-top: 64px;
-    max-height: calc(100vh - 64px);
-  }
+  /* Ensure proper header spacing on mobile (already handled globally) */
 }
 
 @media (max-width: 480px) {

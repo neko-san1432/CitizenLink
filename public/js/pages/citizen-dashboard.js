@@ -6,19 +6,464 @@
 import showMessage from '../components/toast.js';
 import { initializeRoleToggle } from '../auth/roleToggle.js';
 
-// Citizen dashboard script loaded
+// Priority scoring system
+const PRIORITY_SCORES = {
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  normal: 1,
+  low: 0
+};
 
-// Dashboard state
-let dashboardData = null;
+// Content type icons
+const CONTENT_TYPE_ICONS = {
+  notice: '📢',
+  news: '📰',
+  event: '📅'
+};
+
+class ContentBannerManager {
+  constructor() {
+    // Separate queues for each content type
+    this.queues = {
+      notice: [],
+      news: [],
+      event: []
+    };
+    // Current index for each content type
+    this.currentIndices = {
+      notice: 0,
+      news: 0,
+      event: 0
+    };
+    this.scrollInterval = null;
+    this.fetchInterval = null;
+    this.displayDuration = 20000; // 20 seconds
+    this.fetchIntervalMs = 30000; // Fetch new content every 30 seconds
+    
+    // Track currently displayed items to avoid unnecessary updates
+    this.currentlyDisplayed = {
+      notice: null,
+      news: null,
+      event: null
+    };
+    
+    this.init();
+  }
+
+  async init() {
+    // Load initial content
+    await this.fetchLatestContent();
+    
+    // Set up periodic fetching (no automatic rotation)
+    this.fetchInterval = setInterval(() => {
+      this.fetchLatestContent();
+    }, this.fetchIntervalMs);
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this.fetchLatestContent();
+      }
+    });
+  }
+
+  // Priority scoring function
+  getPriorityScore(item) {
+    const priority = item.priority || 'normal';
+    return PRIORITY_SCORES[priority.toLowerCase()] || PRIORITY_SCORES.normal;
+  }
+
+  // Compare function for sorting - prioritize latest items first, then by priority
+  compareItems(a, b) {
+    // First sort by date (newest first)
+    const dateA = new Date(a.created_at || a.published_at || a.event_date || 0);
+    const dateB = new Date(b.created_at || b.published_at || b.event_date || 0);
+    const dateDiff = dateB - dateA; // Newer dates first (positive if B is newer)
+    
+    // Always prioritize newest first - if dates differ significantly, use date
+    // Only use priority as tie-breaker for items created on the same day
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (Math.abs(dateDiff) > oneDay) {
+      // More than 1 day difference - newest always wins
+      return dateDiff;
+    }
+    
+    // Same day or very close - check priority for urgent items
+    // But still prefer newer if there's any date difference
+    const scoreA = this.getPriorityScore(a);
+    const scoreB = this.getPriorityScore(b);
+    
+    // If one is urgent and other is not, and dates are same day, prioritize urgent
+    if (Math.abs(dateDiff) <= oneDay && scoreA !== scoreB) {
+      // If urgent (score 4), it can override same-day items
+      if (scoreA === PRIORITY_SCORES.urgent && scoreB < PRIORITY_SCORES.urgent) {
+        return -1; // A (urgent) comes first
+      }
+      if (scoreB === PRIORITY_SCORES.urgent && scoreA < PRIORITY_SCORES.urgent) {
+        return 1; // B (urgent) comes first
+      }
+      // For non-urgent priorities, still prefer newer
+      return dateDiff;
+    }
+    
+    // Same priority or not urgent, newest first
+    return dateDiff;
+  }
+
+  // Add item to queue with priority-based insertion
+  addToQueue(newItem) {
+    const contentType = newItem.content_type;
+    if (!this.queues[contentType]) return;
+    
+    const queue = this.queues[contentType];
+    const currentIndex = this.currentIndices[contentType];
+    const newScore = this.getPriorityScore(newItem);
+    
+    // Check if item already exists (avoid duplicates)
+    const exists = queue.some(item => item.id === newItem.id);
+    if (exists) return;
+    
+    // If queue is empty, just add it
+    if (queue.length === 0) {
+      queue.push(newItem);
+      this.currentIndices[contentType] = 0;
+      return;
+    }
+    
+    const currentDisplaying = queue[currentIndex];
+    const currentScore = currentDisplaying ? this.getPriorityScore(currentDisplaying) : 0;
+    
+    // If urgent and higher than current, replace current immediately
+    if (newScore === PRIORITY_SCORES.urgent && newScore > currentScore) {
+      // Save current item to re-insert later
+      const currentItem = currentDisplaying;
+      
+      // Remove current item temporarily
+      if (currentItem) {
+        queue.splice(currentIndex, 1);
+      }
+      
+      // Insert urgent item at current position
+      queue.splice(currentIndex, 0, newItem);
+      
+      // Re-insert current item after urgent (maintain position)
+      if (currentItem && queue.length > currentIndex + 1) {
+        queue.splice(currentIndex + 1, 0, currentItem);
+      } else if (currentItem) {
+        // If queue was empty, just add it
+        queue.push(currentItem);
+      }
+      
+      // Keep current index pointing to urgent item
+      this.currentIndices[contentType] = currentIndex;
+      this.updateDisplay();
+      return;
+    }
+    
+    // If high priority, insert right after current item
+    if (newScore === PRIORITY_SCORES.high && currentDisplaying) {
+      const insertIndex = (currentIndex + 1) % (queue.length + 1);
+      queue.splice(insertIndex, 0, newItem);
+      return;
+    }
+    
+    // Normal insertion with priority sorting
+    const insertIndex = this.findInsertPosition(queue, newItem, newScore);
+    queue.splice(insertIndex, 0, newItem);
+    
+    // Adjust current index if item was inserted before it
+    if (insertIndex <= currentIndex) {
+      this.currentIndices[contentType] = currentIndex + 1;
+    }
+  }
+
+  // Find position to insert item based on priority
+  findInsertPosition(queue, item, score) {
+    if (queue.length === 0) return 0;
+    
+    for (let i = 0; i < queue.length; i++) {
+      const itemScore = this.getPriorityScore(queue[i]);
+      if (score > itemScore) {
+        return i;
+      } else if (score === itemScore) {
+        // Same priority, check date (newer first)
+        const itemDate = new Date(queue[i].created_at || queue[i].published_at || queue[i].event_date || 0);
+        const newDate = new Date(item.created_at || item.published_at || item.event_date || 0);
+        if (newDate < itemDate) {
+          return i;
+        }
+      }
+    }
+    
+    return queue.length;
+  }
+
+  // Fetch latest content from all types
+  async fetchLatestContent() {
+    try {
+      const [noticesRes, newsRes, eventsRes] = await Promise.all([
+        fetch('/api/content/notices?limit=10&status=active'),
+        fetch('/api/content/news?limit=10&status=published'),
+        fetch('/api/content/events?limit=10&status=upcoming')
+      ]);
+
+      const [noticesData, newsData, eventsData] = await Promise.all([
+        noticesRes.json(),
+        newsRes.json(),
+        eventsRes.json()
+      ]);
+
+      const allContent = [];
+
+      // Process notices
+      if (noticesData.success && noticesData.data) {
+        noticesData.data.forEach(notice => {
+          allContent.push({
+            ...notice,
+            content_type: 'notice',
+            display_title: notice.title,
+            display_date: notice.created_at || notice.valid_from
+          });
+        });
+      }
+
+      // Process news
+      if (newsData.success && newsData.data) {
+        newsData.data.forEach(news => {
+          allContent.push({
+            ...news,
+            content_type: 'news',
+            display_title: news.title,
+            display_date: news.published_at || news.created_at,
+            priority: 'normal' // News default priority
+          });
+        });
+      }
+
+      // Process events
+      if (eventsData.success && eventsData.data) {
+        eventsData.data.forEach(event => {
+          allContent.push({
+            ...event,
+            content_type: 'event',
+            display_title: event.title,
+            display_date: event.event_date || event.created_at,
+            priority: 'normal' // Events default priority
+          });
+        });
+      }
+
+      // Add all items to their respective queues with priority handling
+      allContent.forEach(item => {
+        this.addToQueue(item);
+      });
+
+      // Sort each queue by latest first (newest date, then priority)
+      Object.keys(this.queues).forEach(contentType => {
+        this.queues[contentType].sort((a, b) => this.compareItems(a, b));
+        // Ensure latest item is at index 0
+        this.currentIndices[contentType] = 0;
+      });
+
+      // Check if content has changed and update only if different
+      const hasContent = Object.values(this.queues).some(queue => queue.length > 0);
+      
+      if (hasContent) {
+        // Check if displayed items have changed before updating
+        if (this.hasContentChanged()) {
+          // Only update if content has changed (prevents unnecessary transitions/blinking)
+          this.updateDisplay();
+        }
+      } else {
+        // If no content, clear tracked items
+        this.currentlyDisplayed = {
+          notice: null,
+          news: null,
+          event: null
+        };
+      }
+
+      // Show banner if we have content
+      const banner = document.getElementById('content-banner');
+      if (banner) {
+        if (hasContent) {
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+
+    } catch (error) {
+      console.error('Error fetching content:', error);
+    }
+  }
+
+  // Check if the currently displayed content has changed
+  hasContentChanged() {
+    let changed = false;
+    
+    ['notice', 'news', 'event'].forEach(contentType => {
+      const queue = this.queues[contentType];
+      const currentIndex = this.currentIndices[contentType];
+      
+      if (queue.length > 0) {
+        const index = currentIndex % queue.length;
+        const currentItem = queue[index];
+        const currentlyDisplayedItem = this.currentlyDisplayed[contentType];
+        
+        // Check if item has changed (different ID or new item)
+        if (!currentlyDisplayedItem || currentlyDisplayedItem.id !== currentItem.id) {
+          changed = true;
+        }
+      } else {
+        // If queue is empty but we had content before, it changed
+        if (this.currentlyDisplayed[contentType] !== null) {
+          changed = true;
+        }
+      }
+    });
+    
+    return changed;
+  }
+
+  // Update the display with current items from each type's queue
+  // Only called when content has actually changed
+  updateDisplay() {
+    const track = document.querySelector('.content-banner-track');
+    if (!track) return;
+
+    // Get current item for each content type from their respective queues
+    const itemsToShow = [];
+    ['notice', 'news', 'event'].forEach(contentType => {
+      const queue = this.queues[contentType];
+      const currentIndex = this.currentIndices[contentType];
+      
+      if (queue.length > 0) {
+        // Get item at current index (with wrap-around)
+        const index = currentIndex % queue.length;
+        const item = queue[index];
+        itemsToShow.push(item);
+        
+        // Track this item as currently displayed
+        this.currentlyDisplayed[contentType] = item;
+      } else {
+        this.currentlyDisplayed[contentType] = null;
+      }
+    });
+    
+    // If no items to show, hide banner
+    if (itemsToShow.length === 0) {
+      const banner = document.getElementById('content-banner');
+      if (banner) {
+        banner.style.display = 'none';
+      }
+      return;
+    }
+
+    // Create content items HTML
+    let itemHTML = '';
+    itemsToShow.forEach((item, idx) => {
+      // Determine badge based on content type
+      let badge = '';
+      if (item.content_type === 'event') {
+        badge = '<span class="content-badge">[Event]</span>';
+      } else if (item.content_type === 'news') {
+        badge = '<span class="content-badge">[News]</span>';
+      } else if (item.content_type === 'notice') {
+        badge = '<span class="content-badge">[Announcement]</span>';
+      }
+      
+      const itemClass = item.content_type === 'news' ? 
+        'content-banner-item active news-item' : 
+        'content-banner-item active';
+      
+      itemHTML += `
+        <div class="${itemClass}">
+          <span class="content-icon">${CONTENT_TYPE_ICONS[item.content_type] || '📢'}</span>
+          ${badge}
+          <span class="content-text">${this.escapeHtml(item.display_title || item.title)}</span>
+        </div>
+      `;
+    });
+
+    track.innerHTML = itemHTML;
+
+    // Add click handlers to navigate to content
+    track.querySelectorAll('.content-banner-item').forEach((itemElement, idx) => {
+      const item = itemsToShow[idx];
+      itemElement.style.cursor = 'pointer';
+      itemElement.addEventListener('click', () => {
+        this.navigateToContent(item);
+      });
+    });
+  }
+
+  // Navigate to content detail page
+  navigateToContent(item) {
+    let url = '';
+    switch (item.content_type) {
+      case 'notice':
+        url = `/publication#notices-${item.id}`;
+        break;
+      case 'news':
+        url = `/publication#news-${item.id}`;
+        break;
+      case 'event':
+        url = `/publication#events-${item.id}`;
+        break;
+      default:
+        url = '/publication';
+    }
+    window.location.href = url;
+  }
+
+  // Sort queues and update display only if content changed
+  sortAndUpdate() {
+    // Sort all queues by latest first (newest date, then priority)
+    Object.keys(this.queues).forEach(contentType => {
+      this.queues[contentType].sort((a, b) => this.compareItems(a, b));
+      // Reset index to 0 to show the latest item first
+      this.currentIndices[contentType] = 0;
+    });
+
+    // Check if content has changed before updating
+    if (this.hasContentChanged()) {
+      this.updateDisplay();
+    }
+  }
+
+
+  // Cleanup
+  destroy() {
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+    }
+    if (this.fetchInterval) {
+      clearInterval(this.fetchInterval);
+    }
+  }
+
+  // Escape HTML to prevent XSS
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+}
+
+// Initialize on page load
+let bannerManager;
 
 /**
  * Initialize dashboard
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadDashboardData();
+  // Initialize content banner manager
+  bannerManager = new ContentBannerManager();
+  
+  // Load complaints
   await loadMyComplaints();
-  await loadStatistics();
-  setupEventListeners();
   
   // Initialize role switcher for staff members
   try {
@@ -28,115 +473,90 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-/**
- * Load dashboard data
- */
-async function loadDashboardData() {
-  try {
-    // Load news, notices, and events
-    await Promise.all([
-      loadNews(),
-      loadNotices(),
-      loadEvents()
-    ]);
-  } catch (error) {
-    console.error('[CITIZEN] Load dashboard error:', error);
-    showMessage('error', 'Failed to load dashboard data');
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (bannerManager) {
+    bannerManager.destroy();
   }
-}
+});
 
 /**
  * Load my complaints
  */
 async function loadMyComplaints() {
+  const container = document.getElementById('my-complaints-container');
+  if (!container) {
+    console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
+    return;
+  }
+
+  // Show loading state
+  container.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading your complaints...</p>
+    </div>
+  `;
+
   try {
-    const response = await fetch('/api/complaints/my?limit=5');
+    const response = await fetch('/api/complaints/my?limit=20');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load complaints: ${response.status}`);
+    }
+
     const result = await response.json();
 
+    console.log('[CITIZEN_DASHBOARD] Load complaints response:', {
+      success: result.success,
+      complaintsCount: result.data?.length || 0,
+      total: result.pagination?.total || 0,
+      page: result.pagination?.page,
+      totalPages: result.pagination?.totalPages,
+      data: result.data?.map(c => ({ 
+        id: c.id, 
+        title: c.title, 
+        status: c.workflow_status,
+        is_duplicate: c.is_duplicate,
+        cancelled_at: c.cancelled_at
+      }))
+    });
+
     if (result.success) {
-      renderMyComplaints(result.data || []);
+      const totalComplaints = result.pagination?.total || result.data?.length || 0;
+      console.log(`[CITIZEN_DASHBOARD] Showing ${result.data?.length || 0} of ${totalComplaints} total complaints`);
+      renderMyComplaints(result.data || [], totalComplaints);
     } else {
-      renderMyComplaints([]);
+      console.error('[CITIZEN_DASHBOARD] Failed to load complaints:', result.error);
+      renderMyComplaints([], 0);
     }
   } catch (error) {
-    console.error('[CITIZEN] Load complaints error:', error);
-    renderMyComplaints([]);
-  }
-}
-
-/**
- * Load statistics
- */
-async function loadStatistics() {
-  try {
-    const response = await fetch('/api/complaints/my-statistics');
-    const result = await response.json();
-
-    if (result.success) {
-      renderStatistics(result.data);
-    } else {
-      renderStatistics({});
-    }
-  } catch (error) {
-    console.error('[CITIZEN] Load statistics error:', error);
-    renderStatistics({});
-  }
-}
-
-/**
- * Load news
- */
-async function loadNews() {
-  try {
-    const response = await fetch('/api/content/news?limit=3');
-    const result = await response.json();
-
-    if (result.success) {
-      renderNews(result.data || []);
-    }
-  } catch (error) {
-    console.error('[CITIZEN] Load news error:', error);
-  }
-}
-
-/**
- * Load notices
- */
-async function loadNotices() {
-  try {
-    const response = await fetch('/api/content/notices?limit=3');
-    const result = await response.json();
-
-    if (result.success) {
-      renderNotices(result.data || []);
-    }
-  } catch (error) {
-    console.error('[CITIZEN] Load notices error:', error);
-  }
-}
-
-/**
- * Load events
- */
-async function loadEvents() {
-  try {
-    const response = await fetch('/api/content/events?limit=3');
-    const result = await response.json();
-
-    if (result.success) {
-      renderEvents(result.data || []);
-    }
-  } catch (error) {
-    console.error('[CITIZEN] Load events error:', error);
+    console.error('[CITIZEN_DASHBOARD] Load complaints error:', error);
+    showMessage('error', 'Failed to load complaints. Please try again.');
+    renderMyComplaints([], 0);
   }
 }
 
 /**
  * Render my complaints
  */
-function renderMyComplaints(complaints) {
+function renderMyComplaints(complaints, totalCount = null) {
   const container = document.getElementById('my-complaints-container');
-  if (!container) return;
+  if (!container) {
+    console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
+    return;
+  }
+
+  console.log('[CITIZEN_DASHBOARD] Rendering complaints:', {
+    count: complaints.length,
+    totalCount: totalCount,
+    complaints: complaints.map(c => ({ 
+      id: c.id, 
+      title: c.title, 
+      status: c.workflow_status || c.status, 
+      submitted_at: c.submitted_at 
+    }))
+  });
 
   if (complaints.length === 0) {
     container.innerHTML = `
@@ -150,19 +570,51 @@ function renderMyComplaints(complaints) {
     return;
   }
 
-  const html = complaints.map(complaint => {
+  // Show total count if available and different from displayed count
+  let countInfo = '';
+  if (totalCount !== null && totalCount > complaints.length) {
+    countInfo = `<div class="complaints-count-info" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+      Showing ${complaints.length} of ${totalCount} complaints
+    </div>`;
+  }
+
+  // Filter out duplicate and cancelled complaints for display (but show them in count)
+  const filteredComplaints = complaints.filter(complaint => {
+    // Don't filter - show all complaints including duplicates and cancelled
+    // The user might want to see them
+    return true;
+  });
+
+  console.log('[CITIZEN_DASHBOARD] Complaints after filtering:', {
+    total: complaints.length,
+    filtered: filteredComplaints.length,
+    duplicates: complaints.filter(c => c.is_duplicate).length,
+    cancelled: complaints.filter(c => c.cancelled_at).length
+  });
+
+  const html = filteredComplaints.map(complaint => {
     const status = complaint.workflow_status || complaint.status || 'new';
     const statusClass = status.toLowerCase().replace(/[_\s]/g, '-');
     const statusLabel = formatStatus(status);
     
+    // Add visual indicator for duplicates and cancelled
+    let statusBadge = '';
+    if (complaint.is_duplicate) {
+      statusBadge = '<span style="font-size: 0.7rem; color: #f59e0b; margin-left: 0.5rem;">(Duplicate)</span>';
+    }
+    if (complaint.cancelled_at) {
+      statusBadge = '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.5rem;">(Cancelled)</span>';
+    }
+    
     return `
     <div class="complaint-item" onclick="viewComplaintDetail('${complaint.id}')">
       <div class="complaint-header">
-        <h4 class="complaint-title">${escapeHtml(complaint.title)}</h4>
+        <h4 class="complaint-title">${escapeHtml(complaint.title)}${statusBadge}</h4>
         <span class="complaint-status status-${statusClass}">${statusLabel}</span>
       </div>
       <div class="complaint-meta">
-        <span class="complaint-type">${escapeHtml(complaint.type || complaint.category)}</span>
+        <span class="complaint-id" style="font-size: 0.75rem; color: #9ca3af;">${complaint.id.substring(0, 8)}...</span>
+        <span class="complaint-type">${escapeHtml(complaint.type || complaint.category || 'N/A')}</span>
         <span class="complaint-date">${formatDate(complaint.submitted_at)}</span>
       </div>
       <div class="complaint-progress">
@@ -175,123 +627,7 @@ function renderMyComplaints(complaints) {
   `;
   }).join('');
 
-  container.innerHTML = html;
-}
-
-/**
- * Render statistics
- */
-function renderStatistics(stats) {
-  document.getElementById('stat-total-filed').textContent = stats.total_filed || 0;
-  document.getElementById('stat-pending').textContent = stats.pending || 0;
-  document.getElementById('stat-resolved').textContent = stats.resolved || 0;
-  document.getElementById('stat-success-rate').textContent = stats.success_rate || '0%';
-}
-
-/**
- * Render news
- */
-function renderNews(news) {
-  const container = document.getElementById('news-container');
-  if (!container) return;
-
-  if (news.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📰</div>
-        <p>No news available at the moment.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const html = news.map(item => `
-    <div class="news-item">
-      <div class="news-image">${getNewsIcon(item.category)}</div>
-      <div class="news-content">
-        <h4>${escapeHtml(item.title)}</h4>
-        <p>${escapeHtml(item.excerpt || item.content?.substring(0, 100) + '...')}</p>
-        <div class="news-meta">${formatDate(item.created_at)}</div>
-      </div>
-    </div>
-  `).join('');
-
-  container.querySelector('.news-list').innerHTML = html;
-}
-
-/**
- * Render notices
- */
-function renderNotices(notices) {
-  const container = document.getElementById('notices-container');
-  if (!container) return;
-
-  if (notices.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📢</div>
-        <p>No notices available at the moment.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const html = notices.map(notice => `
-    <div class="notice-item ${notice.priority === 'urgent' ? 'urgent' : ''}">
-      <div class="notice-icon">${getNoticeIcon(notice.priority)}</div>
-      <div class="notice-content">
-        <h4>${escapeHtml(notice.title)}</h4>
-        <p>${escapeHtml(notice.content?.substring(0, 100) + '...')}</p>
-        <div class="notice-meta">${formatDate(notice.created_at)}</div>
-      </div>
-    </div>
-  `).join('');
-
-  container.querySelector('.notices-list').innerHTML = html;
-}
-
-/**
- * Render events
- */
-function renderEvents(events) {
-  const container = document.getElementById('events-container');
-  if (!container) return;
-
-  if (events.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📅</div>
-        <p>No upcoming events at the moment.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const html = events.map(event => {
-    const eventDate = new Date(event.event_date);
-    return `
-      <div class="event-item">
-        <div class="event-date">
-          <div class="event-day">${eventDate.getDate()}</div>
-          <div class="event-month">${eventDate.toLocaleDateString('en-US', { month: 'short' })}</div>
-        </div>
-        <div class="event-content">
-          <h4>${escapeHtml(event.title)}</h4>
-          <p>${escapeHtml(event.description?.substring(0, 80) + '...')}</p>
-          <div class="event-meta">${formatEventTime(event.event_date)}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  container.querySelector('.events-list').innerHTML = html;
-}
-
-/**
- * Setup event listeners
- */
-function setupEventListeners() {
-  // Add any additional event listeners here
+  container.innerHTML = countInfo + html;
 }
 
 /**
@@ -342,27 +678,6 @@ function getProgressText(status) {
   return textMap[status] || 'Unknown';
 }
 
-function getNewsIcon(category) {
-  const iconMap = {
-    'general': '📰',
-    'health': '🏥',
-    'infrastructure': '🏗️',
-    'education': '🎓',
-    'safety': '🛡️'
-  };
-  return iconMap[category] || '📰';
-}
-
-function getNoticeIcon(priority) {
-  const iconMap = {
-    'urgent': '⚠️',
-    'important': '📢',
-    'general': '📅',
-    'info': 'ℹ️'
-  };
-  return iconMap[priority] || '📢';
-}
-
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   
@@ -381,17 +696,6 @@ function formatDate(dateString) {
   return date.toLocaleDateString();
 }
 
-function formatEventTime(dateString) {
-  if (!dateString) return 'TBD';
-  
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
-  });
-}
-
 function escapeHtml(text) {
   if (!text) return '';
   const div = document.createElement('div');
@@ -404,12 +708,7 @@ function escapeHtml(text) {
  */
 window.viewMyComplaints = function() {
   showMessage('info', 'Redirecting to complaints page...');
-  // TODO: Implement complaints page navigation
-};
-
-window.viewStatus = function() {
-  showMessage('info', 'Status check feature coming soon');
-  // TODO: Implement status check modal
+  window.location.href = '/myProfile#complaints';
 };
 
 window.viewMap = function() {
@@ -418,32 +717,13 @@ window.viewMap = function() {
 
 window.getHelp = function() {
   showMessage('info', 'Help section coming soon');
-  // TODO: Implement help modal or page
 };
 
 window.viewAllComplaints = function() {
-  showMessage('info', 'Redirecting to all complaints...');
-  // TODO: Implement all complaints page
+  window.location.href = '/myProfile#complaints';
 };
 
 window.viewComplaintDetail = function(complaintId) {
   window.location.href = `/complaint-details/${complaintId}`;
 };
 
-window.refreshNews = async function() {
-  showMessage('info', 'Refreshing news...');
-  await loadNews();
-  showMessage('success', 'News refreshed');
-};
-
-window.refreshNotices = async function() {
-  showMessage('info', 'Refreshing notices...');
-  await loadNotices();
-  showMessage('success', 'Notices refreshed');
-};
-
-window.refreshEvents = async function() {
-  showMessage('info', 'Refreshing events...');
-  await loadEvents();
-  showMessage('success', 'Events refreshed');
-};

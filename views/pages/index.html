@@ -8,22 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/app.css">
     <link rel="stylesheet" href="./css/pages/index.css">
 </head>
 <body>
-    <!-- Authentication buttons container -->
-    <div id="auth-buttons" class="container mx-auto px-4 py-4 flex items-center justify-end gap-2">
-        <!-- Default buttons for unauthenticated users -->
-        <div id="unauthenticated-buttons" class="flex items-center gap-2">
-            <a href="/login" id="login-btn" class="btn-secondary">Login</a>
-            <a href="/signup" id="signup-btn" class="btn-primary">Sign up</a>
-        </div>
-        
-        <!-- Dashboard button for authenticated users (hidden by default) -->
-        <div id="authenticated-buttons" class="hidden">
-            <a href="/dashboard" id="dashboard-btn" class="btn btn-primary">Go to Dashboard</a>
-            <button id="logout-btn" type="button" class="btn btn-secondary">Logout</button>
+    <!-- Header Container -->
+    <div class="header-container">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">C</div>
+                    <span class="brand-text">CitizenLink</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                    <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
+                    <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
+                </div>
+                <div id="authenticated-buttons" class="hidden flex items-center gap-2">
+                    <a href="/dashboard" id="dashboard-btn" class="btn btn-primary">Go to Dashboard</a>
+                    <button id="logout-btn" type="button" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
         </div>
     </div>
 

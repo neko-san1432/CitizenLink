@@ -21,7 +21,7 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
     }
 
     // Ensure map container exists and has dimensions
-    const mapContainer = document.getElementById(containerId);
+    let mapContainer = document.getElementById(containerId);
     if (!mapContainer) {
       console.error(`Map container with ID '${containerId}' not found`);
       return null;
@@ -60,8 +60,19 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
     // Merge with provided options
     const mapOptions = { ...defaultOptions, ...options };
 
+    // If container is already bound to a Leaflet map, reuse or force a clean host
+    if (mapContainer.classList.contains('leaflet-container') || mapContainer._leaflet_id) {
+      if (window.simpleMap) {
+        window.simpleMap.invalidateSize();
+        return window.simpleMap;
+      }
+      const fresh = mapContainer.cloneNode(false);
+      mapContainer.parentNode.replaceChild(fresh, mapContainer);
+      mapContainer = fresh;
+    }
+
     // Create map
-    const map = L.map(containerId, {
+    const map = L.map(mapContainer, {
       zoomControl: mapOptions.zoomControl,
       preferCanvas: mapOptions.preferCanvas,
       scrollWheelZoom: mapOptions.scrollWheelZoom,

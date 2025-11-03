@@ -120,6 +120,19 @@ function updateStatistics(complaints) {
   document.getElementById('resolved-complaints').textContent = resolved
 }
 
+function scrollToAnchorIfNeeded() {
+  if (location.hash !== '#complaints') return
+  const target = document.getElementById('complaints')
+  if (!target) return
+  const container = document.getElementById('app') || document.scrollingElement || document.documentElement
+  const headerOffset = 120 // accounts for fixed header and desired gap
+  const containerRect = container.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  const absoluteTop = targetRect.top - containerRect.top + container.scrollTop
+  const finalTop = Math.max(absoluteTop - headerOffset, 0)
+  container.scrollTo({ top: finalTop, behavior: 'smooth' })
+}
+
 function wireChangePassword() {
   const form = document.getElementById('change-password-form')
   if (!form) return
@@ -160,10 +173,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     ])
     renderProfile(profile)
     renderComplaints(complaints)
+    // Scroll after initial render and also after next frame to ensure layout settled
+    requestAnimationFrame(scrollToAnchorIfNeeded)
+    setTimeout(scrollToAnchorIfNeeded, 150)
   } catch (err) {
     showMessage('error', err.message || 'Failed to load profile', 4000)
   }
   wireChangePassword()
+  window.addEventListener('hashchange', scrollToAnchorIfNeeded)
 })
-
-

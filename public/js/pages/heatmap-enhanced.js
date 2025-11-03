@@ -9,7 +9,8 @@ class EnhancedHeatmapController {
     this.heatmapViz = null;
     this.controls = null;
     this.isInitialized = false;
-    this.zoomThreshold = 14;
+    this.zoomThreshold = 11; // Lower threshold to show markers at default zoom
+    this.markersAlwaysVisible = true; // Show markers by default
     this.isFullscreen = false;
     this.isControlsVisible = true;
     this.autoRefreshInterval = null;
@@ -45,8 +46,19 @@ class EnhancedHeatmapController {
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
       
-      // Initialize enhanced controls
-      this.controls = new EnhancedHeatmapControls(this);
+      // Initialize enhanced controls (optional)
+      try {
+        if (typeof window.EnhancedHeatmapControls === 'function') {
+          this.controls = new window.EnhancedHeatmapControls(this);
+          if (this.controls && typeof this.controls.attach === 'function') {
+            this.controls.attach();
+          }
+        } else {
+          console.warn('[ENHANCED-HEATMAP] Controls not found; continuing without controls');
+        }
+      } catch (e) {
+        console.warn('[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls', e);
+      }
       
       // Load initial data
       await this.loadData();
@@ -129,9 +141,22 @@ class EnhancedHeatmapController {
    * Add map event listeners
    */
   addMapEventListeners(map) {
-    // Update statistics on zoom change
+    // Update statistics and markers on zoom change
     map.on('zoomend', () => {
       this.updateStatistics();
+      // Refresh markers visibility based on new zoom level
+      if (this.heatmapViz && this.heatmapViz.markerLayer) {
+        const zoom = map.getZoom();
+        if (this.markersAlwaysVisible || zoom >= this.zoomThreshold) {
+          if (!map.hasLayer(this.heatmapViz.markerLayer)) {
+            this.heatmapViz.showMarkers();
+          }
+        } else {
+          if (map.hasLayer(this.heatmapViz.markerLayer)) {
+            this.heatmapViz.hideMarkers();
+          }
+        }
+      }
       this.refreshVisualization();
     });
 
@@ -163,6 +188,11 @@ class EnhancedHeatmapController {
     // Export heatmap
     document.getElementById('export-heatmap')?.addEventListener('click', () => {
       this.showExportModal();
+    });
+
+    // Recreate/rebuild map and layers (if a button exists in the UI)
+    document.getElementById('recreate-map')?.addEventListener('click', async () => {
+      await this.rebuildMap();
     });
 
     // Reset view button in controls
@@ -197,6 +227,48 @@ class EnhancedHeatmapController {
   }
 
   /**
+   * Fully rebuild the map and all visualization layers
+   * - Clears layers
+   * - Destroys Leaflet map instance
+   * - Reinitializes map
+   * - Reloads data and recreates layers
+   */
+  async rebuildMap() {
+    try {
+      this.showLoading(true);
+
+      // Clear layers if visualization exists
+      try {
+        this.heatmapViz?.clearAllLayers();
+      } catch (_) {}
+
+      // Destroy existing map instance safely
+      if (this.map) {
+        try { this.map.off(); } catch (_) {}
+        try { this.map.remove(); } catch (_) {}
+        this.map = null;
+      }
+
+      // Recreate map
+      this.map = await this.initializeMap();
+
+      // Recreate visualization
+      this.heatmapViz = new HeatmapVisualization(this.map);
+
+      // Reload data and refresh layers
+      await this.loadData();
+      this.refreshVisualization();
+
+      this.showMessage('success', 'Map and layers recreated');
+    } catch (error) {
+      console.error('[ENHANCED-HEATMAP] Rebuild failed:', error);
+      this.showError('Failed to recreate map');
+    } finally {
+      this.showLoading(false);
+    }
+  }
+
+  /**
    * Setup auto-refresh functionality
    */
   setupAutoRefresh() {
@@ -218,6 +290,9 @@ class EnhancedHeatmapController {
       this.refreshVisualization();
       this.updateStatistics();
       this.updateHeaderStats();
+      if (this.heatmapViz.complaintData && this.heatmapViz.complaintData.length > 0) {
+        this.fitToComplaints();
+      }
     } catch (error) {
       console.error('[ENHANCED-HEATMAP] Failed to load data:', error);
       this.showError('Failed to load complaint data');
@@ -233,15 +308,29 @@ class EnhancedHeatmapController {
     // Clear all layers first
     this.heatmapViz.clearAllLayers();
 
+    // Only create layers if we have data
+    if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
+      console.warn('[ENHANCED-HEATMAP] No complaint data available for visualization');
+      this.updateLayerButtonStates();
+      return;
+    }
+
     // Show heatmap always
     this.heatmapViz.createHeatmapLayer();
     this.heatmapViz.showHeatmap();
 
-    // Show markers only when zoomed in
+    // Create markers layer (always create when data exists, show conditionally)
+    this.heatmapViz.createMarkerLayer();
+    
+    // Show markers based on visibility preference and zoom level
     const zoom = this.map ? this.map.getZoom() : 0;
-    if (zoom >= this.zoomThreshold) {
-      this.heatmapViz.createMarkerLayer();
+    const shouldShowMarkers = this.markersAlwaysVisible || zoom >= this.zoomThreshold;
+    
+    if (shouldShowMarkers && this.heatmapViz.markerLayer) {
       this.heatmapViz.showMarkers();
+      console.log(`[ENHANCED-HEATMAP] Markers shown: ${this.heatmapViz.complaintData.length} markers, zoom: ${zoom}`);
+    } else {
+      console.log(`[ENHANCED-HEATMAP] Markers hidden: zoom ${zoom} < threshold ${this.zoomThreshold}, alwaysVisible: ${this.markersAlwaysVisible}`);
     }
 
     // Show clusters if enabled
@@ -317,11 +406,17 @@ class EnhancedHeatmapController {
    * Toggle markers layer
    */
   toggleMarkers() {
-    if (this.heatmapViz.markerLayer) {
+    if (this.heatmapViz.markerLayer && this.map.hasLayer(this.heatmapViz.markerLayer)) {
+      // Hide markers
       this.heatmapViz.hideMarkers();
+      this.markersAlwaysVisible = false;
     } else {
-      this.heatmapViz.createMarkerLayer();
+      // Show markers - ensure layer exists first
+      if (!this.heatmapViz.markerLayer) {
+        this.heatmapViz.createMarkerLayer();
+      }
       this.heatmapViz.showMarkers();
+      this.markersAlwaysVisible = true;
     }
     this.updateLayerButtonStates();
   }
@@ -811,6 +906,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Make controller globally available
     window.enhancedHeatmapController = enhancedController;
+    // Expose a simple global command to rebuild
+    window.recreateHeatmap = async () => {
+      if (window.enhancedHeatmapController) {
+        await window.enhancedHeatmapController.rebuildMap();
+      }
+    };
     
     console.log('[ENHANCED-HEATMAP] Enhanced heatmap controller ready');
   } catch (error) {

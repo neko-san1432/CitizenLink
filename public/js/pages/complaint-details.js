@@ -192,8 +192,24 @@ class ComplaintDetails {
         document.getElementById('complaint-title').textContent = this.complaint.title || 'Untitled Complaint';
         document.getElementById('complaint-id').textContent = `#${this.complaint.id}`;
 
-        // Use confirmation_status if available, otherwise fall back to legacy status
-        const displayStatus = this.complaint.confirmation_status || this.complaint.status || 'Unknown';
+        // Prefer workflow_status, then confirmation_status; map to user-friendly text
+        const wf = (this.complaint.workflow_status || '').toLowerCase();
+        let displayStatus;
+        if (this.complaint.confirmation_status && this.complaint.confirmation_status !== 'pending') {
+            displayStatus = this.complaint.confirmation_status;
+        } else if (wf === 'completed') {
+            displayStatus = 'resolved';
+        } else if (wf === 'in_progress' || wf === 'pending_approval' || wf === 'assigned') {
+            displayStatus = 'in progress';
+        } else if (wf === 'cancelled') {
+            displayStatus = 'cancelled';
+        } else if (wf === 'rejected_false') {
+            displayStatus = 'rejected';
+        } else if (wf === 'new') {
+            displayStatus = 'new';
+        } else {
+            displayStatus = this.complaint.status || 'Unknown';
+        }
         const statusClass = this.getStatusClass(displayStatus);
         document.getElementById('complaint-status').textContent = this.getStatusDisplayText(displayStatus);
         document.getElementById('complaint-status').className = `complaint-status ${statusClass}`;
@@ -314,7 +330,7 @@ class ComplaintDetails {
     }
 
     shouldShowConfirmationButton() {
-        // Match backend validation logic exactly
+        // Match backend validation logic closely, but do not block on delayed confirmation_status updates
         // Show confirmation button ONLY after coordinator has assigned to officers
 
         // 1. Check if citizen already confirmed
@@ -323,29 +339,25 @@ class ComplaintDetails {
         }
 
         // 2. Check workflow status - show button after coordinator assigns to officers
-        // The confirm resolution should appear as soon as coordinator assigns the complaint
         const coordinatorAssignedStatuses = ['assigned', 'in_progress', 'pending_approval', 'completed'];
         if (!coordinatorAssignedStatuses.includes(this.complaint.workflow_status)) {
             return false;
         }
 
-        // 3. Check confirmation status - prevent confirmation when pending
-        if (this.complaint.confirmation_status === 'pending') {
-            return false;
-        }
-
-        // 4. Check if confirmation status allows confirmation
-        const validConfirmationStatuses = ['waiting_for_complainant', 'confirmed', 'disputed'];
-        if (!validConfirmationStatuses.includes(this.complaint.confirmation_status)) {
-            return false;
-        }
-
-        // 5. Additional check: if assignments exist and all assignments are complete
+        // 3. If assignments exist and all assignments are complete, show the button regardless of confirmation_status
         const progress = this.complaint.assignment_progress;
         if (progress && progress.totalAssignments > 0) {
-            if (progress.completedAssignments !== progress.totalAssignments) {
-                return false;
+            if (progress.completedAssignments === progress.totalAssignments) {
+                return true;
             }
+            // If not all completed, fall through to stricter checks
+            return false;
+        }
+
+        // 4. Fallback to confirmation_status gate when no assignment info is available
+        const validConfirmationStatuses = ['waiting_for_complainant', 'confirmed', 'disputed', 'pending'];
+        if (!validConfirmationStatuses.includes(this.complaint.confirmation_status)) {
+            return false;
         }
 
         return true;
@@ -933,8 +945,8 @@ class ComplaintDetails {
                 break;
             case 'citizen':
             default:
-                returnLink.href = '/citizen/dashboard';
-                returnText.textContent = 'Return to Your Complaints';
+                returnLink.href = '/myProfile';
+                returnText.textContent = 'Return to Your Profile';
                 break;
         }
     }
@@ -986,13 +998,27 @@ class ComplaintDetails {
                 }
                 if (this.complaint.status !== 'cancelled' && this.complaint.status !== 'closed') {
                     actions.push(
-                        { text: 'Send Reminder', class: 'btn btn-info', action: 'remind' }
+                        { text: 'Set Reminder', class: 'btn btn-info', action: 'remind' }
                     );
                 }
                 break;
         }
 
-        actionsContainer.innerHTML = actions.map(action => `
+        // Hide Confirm Resolution if already resolved/completed
+        const wf = (this.complaint.workflow_status || '').toLowerCase();
+        const confirmedByCitizen = Boolean(this.complaint.confirmed_by_citizen);
+        const filteredActions = actions.filter(a => {
+            if (a.action === 'confirm-resolution') {
+                if (wf === 'completed' || confirmedByCitizen) return false;
+            }
+            if (a.action === 'remind') {
+                // Hide reminder when already resolved/completed or cancelled
+                if (wf === 'completed' || wf === 'cancelled') return false;
+            }
+            return true;
+        });
+
+        actionsContainer.innerHTML = filteredActions.map(action => `
             <button class="${action.class}" data-action="${action.action}">
                 ${action.text}
             </button>

@@ -17,7 +17,7 @@ class LguOfficerController {
       // Get assignments for this officer (using separate queries to avoid relationship issues)
       let assignmentQuery = supabase
         .from('complaint_assignments')
-        .select('*')
+        .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
 
@@ -38,7 +38,8 @@ class LguOfficerController {
         userId,
         assignmentsCount: assignments?.length || 0,
         hasError: Boolean(assignmentError),
-        errorDetails: assignmentError
+        errorDetails: assignmentError,
+        assignments: assignments?.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
       });
 
       if (assignmentError) {
@@ -59,10 +60,20 @@ class LguOfficerController {
 
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
+      console.log('[LGU_OFFICER] Fetching complaints for IDs:', complaintIds);
+      
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
+
+      console.log('[LGU_OFFICER] Complaints query result:', {
+        complaintIds,
+        complaintsFound: complaints?.length || 0,
+        hasError: Boolean(complaintError),
+        errorDetails: complaintError,
+        complaints: complaints?.map(c => ({ id: c.id, title: c.title, category: c.category }))
+      });
 
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
@@ -72,8 +83,25 @@ class LguOfficerController {
         });
       }
 
+      // Deduplicate assignments by complaint_id (keep the most recent one)
+      const uniqueAssignments = assignments.reduce((acc, assignment) => {
+        const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
+        if (!existing || new Date(assignment.created_at) > new Date(existing.created_at)) {
+          // Remove existing if it exists and add new one
+          const filtered = acc.filter(a => a.complaint_id !== assignment.complaint_id);
+          return [...filtered, assignment];
+        }
+        return acc;
+      }, []);
+
+      console.log('[LGU_OFFICER] Deduplication result:', {
+        originalCount: assignments.length,
+        uniqueCount: uniqueAssignments.length,
+        uniqueAssignments: uniqueAssignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
+      });
+
       // Combine assignments with complaint data
-      const combinedData = assignments.map(assignment => {
+      const combinedData = uniqueAssignments.map(assignment => {
         const complaint = complaints?.find(c => c.id === assignment.complaint_id);
         return {
           id: assignment.id,
@@ -242,18 +270,35 @@ class LguOfficerController {
       }
 
       if (!assignments || assignments.length === 0) {
+        console.log('[LGU_OFFICER] getMyTasks - No assignments found for user:', userId);
         return res.json({
           success: true,
           data: []
         });
       }
 
+      console.log('[LGU_OFFICER] getMyTasks - Found assignments:', {
+        userId,
+        assignmentsCount: assignments.length,
+        assignments: assignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
+      });
+
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
+      console.log('[LGU_OFFICER] getMyTasks - Fetching complaints for IDs:', complaintIds);
+      
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
+
+      console.log('[LGU_OFFICER] getMyTasks - Complaints query result:', {
+        complaintIds,
+        complaintsFound: complaints?.length || 0,
+        hasError: Boolean(complaintError),
+        errorDetails: complaintError,
+        complaints: complaints?.map(c => ({ id: c.id, title: c.title, category: c.category }))
+      });
 
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
@@ -263,9 +308,26 @@ class LguOfficerController {
         });
       }
 
+      // Deduplicate assignments by complaint_id (keep the most recent one)
+      const uniqueAssignments = assignments.reduce((acc, assignment) => {
+        const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
+        if (!existing || new Date(assignment.created_at) > new Date(existing.created_at)) {
+          // Remove existing if it exists and add new one
+          const filtered = acc.filter(a => a.complaint_id !== assignment.complaint_id);
+          return [...filtered, assignment];
+        }
+        return acc;
+      }, []);
+
+      console.log('[LGU_OFFICER] getMyTasks deduplication result:', {
+        originalCount: assignments.length,
+        uniqueCount: uniqueAssignments.length,
+        uniqueAssignments: uniqueAssignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
+      });
+
       // Get assigned_by user info for each assignment
       const assignmentsWithUsers = await Promise.all(
-        assignments.map(async (assignment) => {
+        uniqueAssignments.map(async (assignment) => {
           let assignedByName = 'Unknown';
 
           if (assignment.assigned_by) {
@@ -281,21 +343,37 @@ class LguOfficerController {
           return {
             id: assignment.id,
             complaint_id: assignment.complaint_id,
-            complaint_title: complaint?.title || 'Untitled',
-            complaint_description: complaint?.descriptive_su || '',
-            complaint_type: 'complaint', // Default type since type field doesn't exist
-            complaint_status: complaint?.status || '',
-            complaint_location: complaint?.location_text || '',
-            complaint_submitted_at: complaint?.submitted_at,
-            assignment_status: assignment.status,
             assigned_by: assignment.assigned_by,
             assigned_by_name: assignedByName,
+            status: assignment.status, // Use 'status' instead of 'assignment_status'
             notes: assignment.notes,
             priority: assignment.priority || 'medium',
             deadline: assignment.deadline,
             assigned_at: assignment.created_at,
+            created_at: assignment.created_at,
             updated_at: assignment.updated_at,
-            completed_at: assignment.completed_at
+            completed_at: assignment.completed_at,
+            complaint: complaint ? {
+              id: complaint.id,
+              title: complaint.title,
+              description: complaint.descriptive_su,
+              category: complaint.category,
+              subcategory: complaint.subcategory,
+              status: complaint.status,
+              submitted_at: complaint.submitted_at,
+              location_text: complaint.location_text,
+              last_activity_at: complaint.last_activity_at
+            } : {
+              id: assignment.complaint_id,
+              title: 'Complaint Details Not Available',
+              description: 'Details could not be loaded',
+              category: 'General',
+              subcategory: 'unknown',
+              status: 'unknown',
+              submitted_at: assignment.created_at,
+              location_text: 'Location not available',
+              last_activity_at: assignment.updated_at
+            }
           };
         })
       );
@@ -503,31 +581,35 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
 
-      // Get total tasks
-      const { count: totalTasks, error: totalError } = await supabase
+      // Get all assignments for this officer
+      const { data: assignments, error: assignmentError } = await supabase
         .from('complaint_assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('assigned_to', userId);
-
-      if (totalError) throw totalError;
-
-      // Get pending tasks
-      const { count: pendingTasks, error: pendingError } = await supabase
-        .from('complaint_assignments')
-        .select('*', { count: 'exact', head: true })
+        .select('*')
         .eq('assigned_to', userId)
-        .in('status', ['assigned', 'in_progress']);
+        .order('created_at', { ascending: false });
 
-      if (pendingError) throw pendingError;
+      if (assignmentError) throw assignmentError;
 
-      // Get completed tasks
-      const { count: completedTasks, error: completedError } = await supabase
-        .from('complaint_assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('assigned_to', userId)
-        .eq('status', 'completed');
+      // Deduplicate assignments by complaint_id (keep the most recent one)
+      const uniqueAssignments = assignments.reduce((acc, assignment) => {
+        const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
+        if (!existing || new Date(assignment.created_at) > new Date(existing.created_at)) {
+          const filtered = acc.filter(a => a.complaint_id !== assignment.complaint_id);
+          return [...filtered, assignment];
+        }
+        return acc;
+      }, []);
 
-      if (completedError) throw completedError;
+      console.log('[LGU_OFFICER] Statistics deduplication:', {
+        originalCount: assignments.length,
+        uniqueCount: uniqueAssignments.length
+      });
+
+      // Calculate statistics from deduplicated assignments
+      const totalTasks = uniqueAssignments.length;
+      const pendingTasks = uniqueAssignments.filter(a => ['assigned', 'in_progress'].includes(a.status)).length;
+      const completedTasks = uniqueAssignments.filter(a => a.status === 'completed').length;
+      const inProgressTasks = uniqueAssignments.filter(a => a.status === 'in_progress').length;
 
       // Calculate efficiency rate
       const efficiencyRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -535,9 +617,10 @@ class LguOfficerController {
       return res.json({
         success: true,
         data: {
-          total_tasks: totalTasks || 0,
-          pending_tasks: pendingTasks || 0,
-          completed_tasks: completedTasks || 0,
+          total_tasks: totalTasks,
+          pending_tasks: pendingTasks,
+          in_progress_tasks: inProgressTasks,
+          completed_tasks: completedTasks,
           efficiency_rate: `${efficiencyRate}%`
         }
       });
@@ -559,7 +642,7 @@ class LguOfficerController {
       const userId = req.user.id;
       const { limit = 10 } = req.query;
 
-      // Get recent activities from assignments
+      // Get recent activities from assignments with complaint details
       const { data: activities, error } = await supabase
         .from('complaint_assignments')
         .select(`
@@ -568,7 +651,13 @@ class LguOfficerController {
           notes,
           created_at,
           updated_at,
-          complaint_id
+          completed_at,
+          complaint_id,
+          complaints!inner(
+            id,
+            title,
+            category
+          )
         `)
         .eq('assigned_to', userId)
         .order('updated_at', { ascending: false })
@@ -579,19 +668,35 @@ class LguOfficerController {
         // Fallback: get activities without joins
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('complaint_assignments')
-          .select('id, status, notes, created_at, updated_at, complaint_id')
+          .select('id, status, notes, created_at, updated_at, completed_at, complaint_id')
           .eq('assigned_to', userId)
           .order('updated_at', { ascending: false })
           .limit(parseInt(limit));
 
         if (fallbackError) throw fallbackError;
 
+        // Deduplicate fallback data by complaint_id (keep the most recent one)
+        const uniqueFallbackData = fallbackData.reduce((acc, activity) => {
+          const existing = acc.find(a => a.complaint_id === activity.complaint_id);
+          if (!existing || new Date(activity.updated_at || activity.created_at) > new Date(existing.updated_at || existing.created_at)) {
+            const filtered = acc.filter(a => a.complaint_id !== activity.complaint_id);
+            return [...filtered, activity];
+          }
+          return acc;
+        }, []);
+
+        console.log('[LGU_OFFICER] Activities fallback deduplication:', {
+          originalCount: fallbackData.length,
+          uniqueCount: uniqueFallbackData.length,
+          removedDuplicates: fallbackData.length - uniqueFallbackData.length
+        });
+
         // Transform fallback data
-        const transformedActivities = fallbackData.map(activity => ({
+        const transformedActivities = uniqueFallbackData.map(activity => ({
           id: activity.id,
-          type: 'task_update',
-          description: `Task status updated to ${activity.status}`,
-          created_at: activity.updated_at
+          type: this.getActivityType(activity),
+          description: this.getActivityDescription(activity),
+          created_at: activity.updated_at || activity.created_at
         }));
 
         return res.json({
@@ -600,12 +705,28 @@ class LguOfficerController {
         });
       }
 
-      // Transform to activity format
-      const transformedActivities = activities.map(activity => ({
+      // Deduplicate activities by complaint_id (keep the most recent one)
+      const uniqueActivities = activities.reduce((acc, activity) => {
+        const existing = acc.find(a => a.complaint_id === activity.complaint_id);
+        if (!existing || new Date(activity.updated_at || activity.created_at) > new Date(existing.updated_at || existing.created_at)) {
+          const filtered = acc.filter(a => a.complaint_id !== activity.complaint_id);
+          return [...filtered, activity];
+        }
+        return acc;
+      }, []);
+
+      console.log('[LGU_OFFICER] Activities deduplication:', {
+        originalCount: activities.length,
+        uniqueCount: uniqueActivities.length,
+        removedDuplicates: activities.length - uniqueActivities.length
+      });
+
+      // Transform to activity format with complaint details
+      const transformedActivities = uniqueActivities.map(activity => ({
         id: activity.id,
-        type: 'task_update',
-        description: `Task status updated to ${activity.status}`,
-        created_at: activity.updated_at
+        type: this.getActivityType(activity),
+        description: this.getActivityDescription(activity, activity.complaints),
+        created_at: activity.updated_at || activity.created_at
       }));
 
       return res.json({
@@ -619,6 +740,34 @@ class LguOfficerController {
         success: false,
         error: error.message || 'Failed to get activities'
       });
+    }
+  }
+
+  // Helper function to determine activity type
+  getActivityType(activity) {
+    if (activity.completed_at) return 'task_completed';
+    if (activity.status === 'in_progress') return 'task_started';
+    if (activity.status === 'assigned') return 'task_assigned';
+    if (activity.notes) return 'note_added';
+    return 'task_update';
+  }
+
+  // Helper function to generate activity description
+  getActivityDescription(activity, complaint = null) {
+    const complaintTitle = complaint?.title || `Complaint #${activity.complaint_id?.substring(0, 8)}`;
+    const complaintCategory = complaint?.category || 'General';
+    
+    switch (this.getActivityType(activity)) {
+      case 'task_completed':
+        return `Completed task: "${complaintTitle}" (${complaintCategory})`;
+      case 'task_started':
+        return `Started working on: "${complaintTitle}" (${complaintCategory})`;
+      case 'task_assigned':
+        return `New task assigned: "${complaintTitle}" (${complaintCategory})`;
+      case 'note_added':
+        return `Added note to: "${complaintTitle}" (${complaintCategory})`;
+      default:
+        return `Updated task: "${complaintTitle}" - Status: ${activity.status}`;
     }
   }
 

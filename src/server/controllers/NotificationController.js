@@ -7,6 +7,26 @@ const Database = require('../config/database');
 const supabase = Database.getClient();
 
 class NotificationController {
+  // Build a client link for a notification when applicable
+  buildNotificationLink(notification) {
+    try {
+      const type = (notification.type || '').toLowerCase();
+      const title = (notification.title || '').toLowerCase();
+      const complaintId = notification.metadata?.complaint_id || notification.metadata?.complaintId || notification.complaint_id;
+
+      if (complaintId) {
+        // Progress/completion updates should open complaint details
+        if (type.includes('workflow') || type.includes('progress') || title.includes('progress update') || type === 'complaint_assigned_to_officer') {
+          return `/complaint-details/${complaintId}`;
+        }
+      }
+
+      // Default: no link
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
   /**
    * Get unread notifications for user
    */
@@ -31,10 +51,66 @@ class NotificationController {
         });
       }
 
+      // Debug: summarize results and potential duplicates by (type,title,complaint_id)
+      const summaries = (notifications || []).map(n => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        complaint_id: n.metadata?.complaint_id,
+        created_at: n.created_at
+      }));
+      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ''}`;
+      const dedupMap = new Map();
+      for (const r of summaries) {
+        const k = dedupKey(r);
+        dedupMap.set(k, (dedupMap.get(k) || 0) + 1);
+      }
+      console.log('[NOTIFICATION][DEBUG] Unread fetch summary:', {
+        userId,
+        returned: notifications?.length || 0,
+        uniqueByTypeTitleComplaint: dedupMap.size,
+        buckets: Array.from(dedupMap.entries()).slice(0, 10) // cap log noise
+      });
+
+      // Deduplicate notifications by keeping only the most recent one per group
+      const deduplicatedNotifications = [];
+      const seenKeys = new Set();
+      
+      // Sort by created_at descending to keep most recent
+      const sortedNotifications = (notifications || []).sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+      
+      for (const notification of sortedNotifications) {
+        const key = dedupKey({
+          type: notification.type,
+          title: notification.title,
+          complaint_id: notification.metadata?.complaint_id
+        });
+        
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          deduplicatedNotifications.push(notification);
+        }
+      }
+
+      console.log('[NOTIFICATION][DEBUG] Deduplication result:', {
+        userId,
+        originalCount: notifications?.length || 0,
+        deduplicatedCount: deduplicatedNotifications.length,
+        removedDuplicates: (notifications?.length || 0) - deduplicatedNotifications.length
+      });
+
+      // Enrich with link for client-side navigation
+      const enriched = deduplicatedNotifications.map(n => ({
+        ...n,
+        link: this.buildNotificationLink(n)
+      }));
+
       res.json({
         success: true,
-        notifications: notifications || [],
-        count: notifications?.length || 0
+        notifications: enriched,
+        count: enriched.length
       });
 
     } catch (error) {
@@ -69,10 +145,66 @@ class NotificationController {
         });
       }
 
+      // Debug: summarize results and potential duplicates by (type,title,complaint_id)
+      const summaries = (notifications || []).map(n => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        complaint_id: n.metadata?.complaint_id,
+        created_at: n.created_at
+      }));
+      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ''}`;
+      const dedupMap = new Map();
+      for (const r of summaries) {
+        const k = dedupKey(r);
+        dedupMap.set(k, (dedupMap.get(k) || 0) + 1);
+      }
+      console.log('[NOTIFICATION][DEBUG] All fetch summary:', {
+        userId,
+        returned: notifications?.length || 0,
+        uniqueByTypeTitleComplaint: dedupMap.size,
+        buckets: Array.from(dedupMap.entries()).slice(0, 10)
+      });
+
+      // Deduplicate notifications by keeping only the most recent one per group
+      const deduplicatedNotifications = [];
+      const seenKeys = new Set();
+      
+      // Sort by created_at descending to keep most recent
+      const sortedNotifications = (notifications || []).sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+      
+      for (const notification of sortedNotifications) {
+        const key = dedupKey({
+          type: notification.type,
+          title: notification.title,
+          complaint_id: notification.metadata?.complaint_id
+        });
+        
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          deduplicatedNotifications.push(notification);
+        }
+      }
+
+      console.log('[NOTIFICATION][DEBUG] All deduplication result:', {
+        userId,
+        originalCount: notifications?.length || 0,
+        deduplicatedCount: deduplicatedNotifications.length,
+        removedDuplicates: (notifications?.length || 0) - deduplicatedNotifications.length
+      });
+
+      // Enrich with link for client-side navigation
+      const enriched = deduplicatedNotifications.map(n => ({
+        ...n,
+        link: this.buildNotificationLink(n)
+      }));
+
       res.json({
         success: true,
-        notifications: notifications || [],
-        count: notifications?.length || 0
+        notifications: enriched,
+        count: enriched.length
       });
 
     } catch (error) {
@@ -92,9 +224,10 @@ class NotificationController {
       const userId = req.user.id;
       console.log('[NOTIFICATION] Getting notification count for user:', userId);
 
-      const { count, error } = await supabase
+      // Get all unread notifications to apply deduplication
+      const { data: notifications, error } = await supabase
         .from('notification')
-        .select('*', { count: 'exact', head: true })
+        .select('*')
         .eq('user_id', userId)
         .eq('read', false);
 
@@ -106,9 +239,39 @@ class NotificationController {
         });
       }
 
+      // Apply same deduplication logic as getUnreadNotifications
+      const dedupKey = r => `${r.type}|${r.title}|${r.metadata?.complaint_id || ''}`;
+      const seenKeys = new Set();
+      
+      // Sort by created_at descending to keep most recent
+      const sortedNotifications = (notifications || []).sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+      
+      for (const notification of sortedNotifications) {
+        const key = dedupKey({
+          type: notification.type,
+          title: notification.title,
+          complaint_id: notification.metadata?.complaint_id
+        });
+        
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+        }
+      }
+
+      const deduplicatedCount = seenKeys.size;
+
+      console.log('[NOTIFICATION][DEBUG] Count deduplication result:', {
+        userId,
+        originalCount: notifications?.length || 0,
+        deduplicatedCount,
+        removedDuplicates: (notifications?.length || 0) - deduplicatedCount
+      });
+
       res.json({
         success: true,
-        count: count || 0
+        count: deduplicatedCount
       });
 
     } catch (error) {

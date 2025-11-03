@@ -22,38 +22,35 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible lgu-admin-dashboard">
             <div class="dashboard-header">
-                <h1>🏛️ LGU Admin Dashboard</h1>
-                <p class="dashboard-subtitle">Local government administration and community management</p>
-            </div>
-
-            <!-- Quick Actions Panel -->
-            <div class="quick-actions-panel">
-                <h2 class="section-title">⚡ Quick Actions</h2>
-                <div class="quick-actions-grid">
-                    <a class="quick-action-btn" href="/lgu-admin/publish?type=notices">
+                <div class="dashboard-title-group">
+                    <h1>🏛️ LGU Admin Dashboard</h1>
+                    <p class="dashboard-subtitle">Local government administration and community management</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=notices">
                         <div class="quick-action-icon">📢</div>
-                        <div class="quick-action-text">Publish Notice</div>
+                        <div class="quick-action-text">Notice</div>
                     </a>
-                    <a class="quick-action-btn" href="/lgu-admin/publish?type=events">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=events">
                         <div class="quick-action-icon">📅</div>
-                        <div class="quick-action-text">Publish Event</div>
+                        <div class="quick-action-text">Event</div>
                     </a>
-                    <a class="quick-action-btn" href="/lgu-admin/publish?type=news">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=news">
                         <div class="quick-action-icon">📰</div>
-                        <div class="quick-action-text">Publish News</div>
+                        <div class="quick-action-text">News</div>
                     </a>
-                    <button class="quick-action-btn" onclick="viewAssignments()">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/assignments">
                         <div class="quick-action-icon">📋</div>
-                        <div class="quick-action-text">View Assignments</div>
-                    </button>
-                    <button class="quick-action-btn" onclick="viewHeatmap()">
+                        <div class="quick-action-text">Assignments</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
                         <div class="quick-action-icon">🗺️</div>
-                        <div class="quick-action-text">View Heatmap</div>
-                    </button>
-                    <button class="quick-action-btn" onclick="generateReport()">
-                        <div class="quick-action-icon">📊</div>
-                        <div class="quick-action-text">Generate Report</div>
-                    </button>
+                        <div class="quick-action-text">Heatmap</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
                 </div>
             </div>
 

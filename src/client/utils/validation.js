@@ -322,6 +322,62 @@ export const extractComplaintFormData = (formElement) => {
 };
 
 /**
+ * Check if coordinates are within Digos City boundaries
+ * @param {number} latitude - Latitude coordinate
+ * @param {number} longitude - Longitude coordinate
+ * @returns {boolean} True if coordinates are within city boundaries
+ */
+export const isWithinCityBoundary = (latitude, longitude) => {
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return false;
+  }
+
+  // Use Leaflet's polygon contains check if available (more accurate)
+  if (typeof window !== 'undefined' && window.L && window.cityBoundaries) {
+    try {
+      const point = window.L.latLng(latitude, longitude);
+      // Check if point is within any barangay boundary
+      for (const boundary of window.cityBoundaries) {
+        if (window.L.GeometryUtil && window.L.GeometryUtil.locateOnLine) {
+          // If GeometryUtil is available, use more accurate check
+          const layer = window.L.geoJSON(boundary.geojson);
+          const bounds = layer.getBounds();
+          if (bounds.contains(point)) {
+            return true;
+          }
+        } else {
+          // Simple bounds check
+          const layer = window.L.geoJSON(boundary.geojson);
+          const bounds = layer.getBounds();
+          if (bounds.contains(point)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      console.warn('Boundary check failed, using bounding box:', e);
+    }
+  }
+
+  // Fallback: Simple bounding box check for Digos City
+  // Based on viewbox: ['125.0,7.0','125.7,6.0'] (lon,lat pairs)
+  // Digos City approximate bounds:
+  // North: ~7.0, South: ~6.6, East: ~125.7, West: ~125.0
+  const minLat = 6.6;
+  const maxLat = 7.0;
+  const minLng = 125.0;
+  const maxLng = 125.7;
+
+  return (
+    latitude >= minLat &&
+    latitude <= maxLat &&
+    longitude >= minLng &&
+    longitude <= maxLng
+  );
+};
+
+/**
  * Validate complaint form data
  * @param {Object} data
  * @returns {{ valid: boolean, errors: string[] }}
@@ -364,6 +420,11 @@ export const validateComplaintForm = (data) => {
   if (hasLat && hasLng) {
     if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
       errors.push('Coordinates must be numeric');
+    } else {
+      // Check if coordinates are within city boundary
+      if (!isWithinCityBoundary(data.latitude, data.longitude)) {
+        errors.push('Outside the jurisdiction of the city');
+      }
     }
   }
 

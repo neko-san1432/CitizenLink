@@ -26,8 +26,36 @@
         
         <div id="app" class="collapsible coordinator-dashboard">
             <div class="dashboard-header">
-                <h1>📋 Complaint Coordinator Dashboard</h1>
-                <p class="dashboard-subtitle">Intelligent complaint review and management system</p>
+                <div class="dashboard-title-group">
+                    <h1>📋 Complaint Coordinator Dashboard</h1>
+                    <p class="dashboard-subtitle">Intelligent complaint review and management system</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/review-queue">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-text">Review</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/assignments">
+                        <div class="quick-action-icon">📝</div>
+                        <div class="quick-action-text">Assignments</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
+                        <div class="quick-action-icon">🗺️</div>
+                        <div class="quick-action-text">Heatmap</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+                        <div class="quick-action-icon">🏢</div>
+                        <div class="quick-action-text">Depts</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                        <div class="quick-action-icon">❓</div>
+                        <div class="quick-action-text">Help</div>
+                    </button>
+                </div>
             </div>
 
             <!-- Enhanced Statistics Grid -->

@@ -33,8 +33,15 @@ class HeatmapController {
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
 
-      // Initialize controls
-      this.controls = new HeatmapControls(this);
+      // Initialize controls (skip if enhanced controls exist on the page)
+      const existingControls = document.getElementById('heatmap-controls');
+      const hasEnhancedControls = existingControls && existingControls.classList.contains('enhanced-controls');
+      if (!hasEnhancedControls && !window.enhancedHeatmapController) {
+        this.controls = new HeatmapControls(this);
+      } else {
+        // Use existing enhanced controls panel; do not create legacy controls
+        this.controls = null;
+      }
 
       // Load initial data
       await this.loadData();

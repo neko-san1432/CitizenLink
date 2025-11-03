@@ -185,6 +185,13 @@ class NotificationService {
    */
   async checkDuplicateNotification(userId, type, title, metadata = {}) {
     try {
+      console.log('[NOTIFICATION] Checking for duplicate notification:', {
+        userId,
+        type,
+        title,
+        metadata
+      });
+
       const { data, error } = await this.supabase
         .from('notification')
         .select('*')
@@ -201,8 +208,17 @@ class NotificationService {
         return { exists: false };
       }
 
+      const exists = data && data.length > 0;
+      console.log('[NOTIFICATION] Duplicate check result:', {
+        userId,
+        type,
+        title,
+        exists,
+        foundNotifications: data?.length || 0
+      });
+
       return {
-        exists: data && data.length > 0,
+        exists,
         notification: data && data.length > 0 ? data[0] : null
       };
     } catch (error) {
@@ -578,6 +594,14 @@ class NotificationService {
   * Notify officer about new task assignment
   */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
+    console.log('[NOTIFICATION] Creating task assignment notification:', {
+      officerId,
+      complaintId,
+      complaintTitle,
+      priority,
+      deadline
+    });
+
     const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
       priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
         NOTIFICATION_PRIORITY.INFO;

@@ -1,6 +1,7 @@
 /* Index page specific styles */
 .hero {
   min-height: 100vh;
+  padding-top: 64px; /* Account for fixed header */
   display: flex;
   align-items: center;
   background: linear-gradient(135deg, var(--primary-50) 0%, var(--gray-50) 100%);
@@ -109,10 +110,6 @@
   .hero p {
     font-size: 1rem}
   
-  #auth-buttons {
-    position: static;
-    margin-bottom: var(--space-6);
-    justify-content: center}
   
   .hero .grid {
     grid-template-columns: 1fr;
@@ -132,9 +129,6 @@
     width: 100%;
     margin: var(--space-2) 0}
   
-  #auth-buttons {
-    flex-direction: column;
-    gap: var(--space-2)}
 }
 
 @media (prefers-reduced-motion: reduce) {

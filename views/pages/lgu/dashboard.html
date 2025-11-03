@@ -22,10 +22,34 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
             <div class="dashboard-header">
-                <h1>LGU Dashboard</h1>
-                <div class="dashboard-actions">
-                    <button class="btn btn-primary" onclick="refreshDashboard()">
-                        <span class="icon">🔄</span> Refresh
+                <div class="dashboard-title-group">
+                    <h1>🏛️ LGU Dashboard</h1>
+                    <p class="dashboard-subtitle">Task management and community service</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/task-assigned">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-text">Tasks</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/assignments">
+                        <div class="quick-action-icon">📝</div>
+                        <div class="quick-action-text">Assignments</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
+                        <div class="quick-action-icon">🗺️</div>
+                        <div class="quick-action-text">Heatmap</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+                        <div class="quick-action-icon">🏢</div>
+                        <div class="quick-action-text">Depts</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                        <div class="quick-action-icon">❓</div>
+                        <div class="quick-action-text">Help</div>
                     </button>
                 </div>
             </div>

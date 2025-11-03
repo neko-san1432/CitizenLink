@@ -22,49 +22,49 @@
       <div id="sidebar" class="collapsible"></div>
       <div id="app" class="collapsible citizen-dashboard">
         <div class="dashboard-header">
-          <h1>🏠 Citizen Dashboard</h1>
-          <p class="dashboard-subtitle">Your gateway to community engagement and complaint management</p>
-        </div>
-
-        <!-- Quick Actions Panel -->
-        <section id="quick-actions" class="quick-actions-panel">
-          <h2 class="section-title">⚡ Quick Actions</h2>
-          <div class="quick-actions-grid">
-            <a class="quick-action-btn" href="/fileComplaint">
+          <div class="dashboard-title-group">
+            <h1>🏠 Citizen Dashboard</h1>
+            <p class="dashboard-subtitle">Your gateway to community engagement and complaint management</p>
+          </div>
+          <div class="header-quick-actions">
+            <a class="quick-action-btn quick-action-btn--sm" href="/fileComplaint">
               <div class="quick-action-icon">📝</div>
-              <div class="quick-action-text">File Complaint</div>
+              <div class="quick-action-text">File</div>
             </a>
-            <a class="quick-action-btn" href="/myProfile">
-              <div class="quick-action-icon">👤</div>
-              <div class="quick-action-text">My Profile</div>
-            </a>
-            <button class="quick-action-btn" onclick="viewMyComplaints()">
+            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile#complaints">
               <div class="quick-action-icon">📋</div>
-              <div class="quick-action-text">My Complaints</div>
-            </button>
-            <button class="quick-action-btn" onclick="viewStatus()">
-              <div class="quick-action-icon">📊</div>
-              <div class="quick-action-text">Status Check</div>
-            </button>
-            <button class="quick-action-btn" onclick="viewMap()">
-              <div class="quick-action-icon">🗺️</div>
-              <div class="quick-action-text">View Map</div>
-            </button>
-            <a class="quick-action-btn" href="/departments">
-              <div class="quick-action-icon">🏢</div>
-              <div class="quick-action-text">Departments</div>
+              <div class="quick-action-text">Complaints</div>
             </a>
-            <button class="quick-action-btn" onclick="getHelp()">
+            <button class="quick-action-btn quick-action-btn--sm" onclick="viewMap()">
+              <div class="quick-action-icon">🗺️</div>
+              <div class="quick-action-text">Map</div>
+            </button>
+            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+              <div class="quick-action-icon">👤</div>
+              <div class="quick-action-text">Profile</div>
+            </a>
+            <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+              <div class="quick-action-icon">🏢</div>
+              <div class="quick-action-text">Depts</div>
+            </a>
+            <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
               <div class="quick-action-icon">❓</div>
-              <div class="quick-action-text">Get Help</div>
+              <div class="quick-action-text">Help</div>
             </button>
           </div>
-        </section>
-
+        </div>
+        <!-- Dynamic Content Banner -->
+        <div id="content-banner" class="content-banner">
+          <div class="content-banner-inner">
+            <div class="content-banner-track">
+              <!-- Content items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
         <!-- Main Content Grid -->
         <div class="dashboard-grid">
           <!-- My Complaints Status -->
-          <div class="dashboard-section">
+           <div class="dashboard-section my-complaints-section">
             <div class="section-header">
               <h2 class="section-title">📋 My Complaints</h2>
               <button class="btn btn-primary" onclick="viewAllComplaints()">View All</button>
@@ -77,132 +77,8 @@
             </div>
           </div>
 
-          <!-- Statistics Overview -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">📊 My Statistics</h2>
-            </div>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon">📝</div>
-                <div class="stat-content">
-                  <div class="stat-label">Total Filed</div>
-                  <div class="stat-value" id="stat-total-filed">-</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-content">
-                  <div class="stat-label">Pending</div>
-                  <div class="stat-value" id="stat-pending">-</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-content">
-                  <div class="stat-label">Resolved</div>
-                  <div class="stat-value" id="stat-resolved">-</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">📈</div>
-                <div class="stat-content">
-                  <div class="stat-label">Success Rate</div>
-                  <div class="stat-value" id="stat-success-rate">-</div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- News Section -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">📰 Latest News</h2>
-              <button class="btn btn-secondary" onclick="refreshNews()">Refresh</button>
-            </div>
-            <div id="news-container" class="content-container">
-              <div class="news-list">
-                <div class="news-item">
-                  <div class="news-image">📰</div>
-                  <div class="news-content">
-                    <h4>City Council Approves New Infrastructure Projects</h4>
-                    <p>Several new infrastructure projects have been approved for the upcoming year...</p>
-                    <div class="news-meta">2 hours ago</div>
-                  </div>
-                </div>
-                <div class="news-item">
-                  <div class="news-image">🏥</div>
-                  <div class="news-content">
-                    <h4>New Health Center Opens in Barangay 3</h4>
-                    <p>The new health center will provide better healthcare services to residents...</p>
-                    <div class="news-meta">1 day ago</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Notices Section -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">📢 Important Notices</h2>
-              <button class="btn btn-secondary" onclick="refreshNotices()">Refresh</button>
-            </div>
-            <div id="notices-container" class="content-container">
-              <div class="notices-list">
-                <div class="notice-item urgent">
-                  <div class="notice-icon">⚠️</div>
-                  <div class="notice-content">
-                    <h4>Water Service Interruption</h4>
-                    <p>Water service will be temporarily interrupted in Barangay 1-3 for maintenance...</p>
-                    <div class="notice-meta">Today, 9:00 AM - 5:00 PM</div>
-                  </div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon">📅</div>
-                  <div class="notice-content">
-                    <h4>Community Meeting</h4>
-                    <p>Monthly community meeting scheduled for this Saturday at the barangay hall...</p>
-                    <div class="notice-meta">This Saturday, 2:00 PM</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Upcoming Events -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">📅 Upcoming Events</h2>
-              <button class="btn btn-secondary" onclick="refreshEvents()">Refresh</button>
-            </div>
-            <div id="events-container" class="content-container">
-              <div class="events-list">
-                <div class="event-item">
-                  <div class="event-date">
-                    <div class="event-day">15</div>
-                    <div class="event-month">Dec</div>
-                  </div>
-                  <div class="event-content">
-                    <h4>Christmas Bazaar</h4>
-                    <p>Annual Christmas bazaar at the town plaza</p>
-                    <div class="event-meta">2:00 PM - 8:00 PM</div>
-                  </div>
-                </div>
-                <div class="event-item">
-                  <div class="event-date">
-                    <div class="event-day">20</div>
-                    <div class="event-month">Dec</div>
-                  </div>
-                  <div class="event-content">
-                    <h4>Health Fair</h4>
-                    <p>Free health checkups and medical services</p>
-                    <div class="event-meta">9:00 AM - 4:00 PM</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           <!-- Quick Tips -->
           <div class="dashboard-section">
@@ -235,6 +111,7 @@
           </div>
         </div>
       </div>
+
     </div>
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../../js/components/toast.js"></script>
@@ -246,3 +123,4 @@
     <script type="module" src="../../js/pages/citizen-dashboard.js"></script>
   </body>
 </html>
+

@@ -544,7 +544,8 @@ class HeatmapControls {
    */
   async loadCategories() {
     try {
-      const { apiClient } = await import('../../config/apiClient.js');
+      const apiClientModule = await import('../../config/apiClient.js');
+      const apiClient = apiClientModule.default;
       const { data, error } = await apiClient.get('/api/department-structure/categories');
       if (error) throw error;
 
@@ -595,7 +596,8 @@ class HeatmapControls {
       subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
       subcategorySelect.disabled = true;
 
-      const { apiClient } = await import('../../config/apiClient.js');
+      const apiClientModule = await import('../../config/apiClient.js');
+      const apiClient = apiClientModule.default;
       const { data, error } = await apiClient.get(`/api/department-structure/categories/${categoryId}/subcategories`);
       if (error) throw error;
 

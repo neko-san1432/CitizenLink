@@ -198,6 +198,49 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   const pass = document.getElementById('password').value;
   const remember = document.getElementById('remember-me')?.checked || false;
 
+  // Get login button elements
+  const loginBtn = document.getElementById('login-submit-btn');
+  const loginBtnIcon = document.getElementById('login-btn-icon');
+  const loginBtnText = document.getElementById('login-btn-text');
+
+  // Function to show loading state
+  const showLoading = () => {
+    if (!loginBtn || !loginBtnIcon) return;
+    
+    // Store original icon HTML
+    const originalIcon = loginBtnIcon.outerHTML;
+    loginBtn.dataset.originalIcon = originalIcon;
+    
+    // Replace icon with loading spinner (CSS animation will handle rotation)
+    loginBtnIcon.innerHTML = `
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
+      <path d="M12 2 A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="15 10"/>
+    `;
+    loginBtnIcon.classList.add('spinning');
+    
+    // Disable button
+    loginBtn.disabled = true;
+    loginBtnText.textContent = 'Signing in...';
+  };
+
+  // Function to hide loading state
+  const hideLoading = () => {
+    if (!loginBtn || !loginBtnIcon) return;
+    
+    // Restore original icon if stored
+    if (loginBtn.dataset.originalIcon) {
+      const originalIconHtml = loginBtn.dataset.originalIcon;
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = originalIconHtml;
+      const restoredIcon = tempDiv.firstElementChild;
+      loginBtnIcon.parentNode.replaceChild(restoredIcon, loginBtnIcon);
+    }
+    
+    // Re-enable button
+    loginBtn.disabled = false;
+    loginBtnText.textContent = 'Sign in';
+  };
+
   // Basic validation
   if (!email || !pass) {
     showMessage('error', 'Email and password are required');
@@ -209,9 +252,15 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     return;
   }
 
+  // Show loading state
+  showLoading();
+
   // verify captcha
   const captchaResult = await verifyCaptchaOrFail(loginCaptchaWidgetId);
-  if (!captchaResult.ok) return;
+  if (!captchaResult.ok) {
+    hideLoading();
+    return;
+  }
 
   try {
     // Submit via API with JSON body
@@ -309,13 +358,18 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               }
 
               showMessage('error', errorMessage);
+              hideLoading();
               return;
             }
           }
 
           console.log('[CLIENT AUTH] ✅ Session verified successfully');
         }
-      } catch {}
+      } catch (error) {
+        console.error('[CLIENT AUTH] Error in session setup:', error);
+        hideLoading();
+        throw error; // Re-throw to be caught by outer catch
+      }
 
       showMessage('success', 'Logged in successfully');
       // Get role from multiple sources

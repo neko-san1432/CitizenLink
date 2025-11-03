@@ -9,9 +9,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/pages/signup.css">
 </head>
 <body class="auth-page">
+    <!-- Header Container -->
+    <div class="header-container">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">C</div>
+                    <span class="brand-text">CitizenLink</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                    <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
+                    <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Background Pattern -->
     <div class="auth-background">
         <div class="auth-pattern"></div>
@@ -213,6 +231,8 @@
     <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/signup-page.js"></script>
+    <script type="module" src="./js/auth/authChecker.js"></script>
+    
 
     <!-- Simple Modal HTML -->
     <div id="termsModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">

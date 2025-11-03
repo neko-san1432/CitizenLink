@@ -367,4 +367,67 @@ try {
   initializeAuthListener();
   // Start token expiry monitoring
   startTokenExpiryMonitoring();
+  // Initialize header auth UI on all pages
+  const initializeHeaderAuthUI = () => {
+    try {
+      const path = (window.location && window.location.pathname || '').toLowerCase();
+      const unauthEl = document.getElementById('unauthenticated-buttons');
+      const authEl = document.getElementById('authenticated-buttons');
+      const dashboardBtn = document.getElementById('dashboard-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const onAuthPage = (path === '/login' || path === '/signup');
+
+      // Hide unauthenticated buttons on auth pages themselves
+      if (onAuthPage) {
+        if (unauthEl) unauthEl.classList.add('hidden');
+      }
+
+      // Resolve role and set dashboard target + toggle buttons
+      (async () => {
+        try {
+          const res = await fetch('/api/user/role', { credentials: 'include' });
+          const authed = res.ok ? (await res.clone().json())?.success : false;
+          if (authed) {
+            if (unauthEl) unauthEl.classList.add('hidden');
+            if (authEl) authEl.classList.remove('hidden');
+            try {
+              const data = await res.json();
+              const role = data?.data?.role?.toLowerCase?.();
+              const map = {
+                'citizen': '/dashboard',
+                'lgu-admin': '/dashboard',
+                'complaint-coordinator': '/review-queue',
+                'lgu': '/task-assigned',
+                'super-admin': '/appoint-admins',
+                'lgu-hr': '/link-generator'
+              };
+              const href = map[role] || '/dashboard';
+              if (dashboardBtn) dashboardBtn.setAttribute('href', href);
+            } catch {}
+          } else {
+            // On auth pages, keep unauth buttons hidden
+            if (!onAuthPage) {
+              if (unauthEl) unauthEl.classList.remove('hidden');
+            }
+            if (authEl) authEl.classList.add('hidden');
+          }
+        } catch {}
+
+        // Bind logout
+        if (logoutBtn) {
+          try {
+            logoutBtn.addEventListener('click', async () => {
+              await logout();
+            }, { once: true });
+          } catch {}
+        }
+      })();
+    } catch {}
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeHeaderAuthUI);
+  } else {
+    initializeHeaderAuthUI();
+  }
 } catch {}

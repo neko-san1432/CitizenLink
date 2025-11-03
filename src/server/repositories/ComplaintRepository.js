@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 class ComplaintRepository {
   constructor() {
-    this.supabase = require('@supabase/supabase-js').createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    this.supabase = Database.getClient();
   }
 
   async create(complaintData) {
@@ -33,10 +33,10 @@ class ComplaintRepository {
 
     const complaint = new Complaint(data);
 
-    // Get assignment data for progress tracking
+    // Get assignment data for progress tracking (without accessing auth.users)
     const { data: assignments } = await this.supabase
       .from('complaint_assignments')
-      .select('*')
+      .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
       .eq('complaint_id', id)
       .order('officer_order', { ascending: true });
 
@@ -55,7 +55,7 @@ class ComplaintRepository {
 
       let query = this.supabase
         .from('complaints')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('submitted_by', userId)
         .order('submitted_at', { ascending: false });
 
@@ -73,11 +73,63 @@ class ComplaintRepository {
         limit,
         offset,
         status,
-        type,
-        sql: query.toString()
+        type
       });
 
-      const { data, error, count } = await query
+      // First get the count without range, applying same filters
+      let countQuery = this.supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId);
+
+      if (status) {
+        countQuery = countQuery.eq('workflow_status', status);
+      }
+
+      if (type) {
+        countQuery = countQuery.eq('type', type);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error('[COMPLAINT_REPO] Count query error:', countError);
+      }
+
+      console.log('[COMPLAINT_REPO] Total count for user:', totalCount);
+
+      // DIAGNOSTIC: Get ALL complaints for this user without pagination (non-blocking)
+      // This runs in parallel and doesn't block the main query
+      this.supabase
+        .from('complaints')
+        .select('id, title, workflow_status, submitted_at, is_duplicate, cancelled_at')
+        .eq('submitted_by', userId)
+        .order('submitted_at', { ascending: false })
+        .then(({ data: allData, error: allError }) => {
+          if (!allError && allData) {
+            console.log('[COMPLAINT_REPO] [DIAGNOSTIC] ALL complaints in DB for user:', {
+              userId,
+              totalInDb: allData.length,
+              complaints: allData.map(c => ({
+                id: c.id.substring(0, 8) + '...',
+                title: c.title?.substring(0, 30) + '...',
+                status: c.workflow_status,
+                submitted_at: c.submitted_at,
+                is_duplicate: c.is_duplicate,
+                cancelled: !!c.cancelled_at
+              }))
+            });
+          } else if (allError) {
+            console.error('[COMPLAINT_REPO] [DIAGNOSTIC] Error fetching all complaints:', allError);
+          }
+        })
+        .catch(err => {
+          console.error('[COMPLAINT_REPO] [DIAGNOSTIC] Exception in diagnostic query:', err);
+        });
+
+      // Then get the paginated data
+      // Use range for pagination (Supabase uses 0-based indexing for range)
+      const { data, error } = await query
         .range(offset, offset + limit - 1);
 
       if (error) {
@@ -87,18 +139,22 @@ class ComplaintRepository {
 
       console.log('[COMPLAINT_REPO] Query result:', {
         dataCount: data?.length || 0,
-        count,
+        totalCount: totalCount || 0,
         page,
         limit,
-        offset
+        offset,
+        userId,
+        firstComplaintId: data?.[0]?.id,
+        firstComplaintTitle: data?.[0]?.title,
+        allComplaintIds: data?.map(c => c.id) || []
       });
 
       return {
         complaints: data || [],
-        total: count || 0,
+        total: totalCount || 0,
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil((count || 0) / limit)
+        totalPages: Math.ceil((totalCount || 0) / limit)
       };
     } catch (error) {
       console.error('[COMPLAINT_REPO] Error in findByUserId:', error);

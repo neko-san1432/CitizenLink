@@ -250,11 +250,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2) Helper to update hidden fields
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
+    const mapContainer = document.getElementById('complaint-map');
     let pin = null;
+    let boundaryErrorMsg = null;
+
+    // Boundary check function (simple bounding box for Digos City)
+    function isWithinCityBoundary(lat, lng) {
+      if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+      // Digos City approximate bounds
+      const minLat = 6.6, maxLat = 7.0, minLng = 125.0, maxLng = 125.7;
+      return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+    }
+
+    // Show/hide boundary error message
+    function showBoundaryError(show = true) {
+      const mapGroup = mapContainer?.closest('.form-group');
+      if (!mapGroup) return;
+
+      if (show && !boundaryErrorMsg) {
+        boundaryErrorMsg = document.createElement('div');
+        boundaryErrorMsg.className = 'boundary-error-message';
+        boundaryErrorMsg.style.cssText = `
+          color: #dc3545;
+          font-size: 0.875rem;
+          margin-top: 8px;
+          padding: 8px 12px;
+          background-color: #f8d7da;
+          border: 1px solid #f5c6cb;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `;
+        boundaryErrorMsg.innerHTML = `
+          <span style="font-size: 1.2em;">⚠️</span>
+          <span>Outside the jurisdiction of the city</span>
+        `;
+        mapGroup.appendChild(boundaryErrorMsg);
+      } else if (!show && boundaryErrorMsg) {
+        boundaryErrorMsg.remove();
+        boundaryErrorMsg = null;
+      }
+    }
 
     function updateCoordinates(lat, lng) {
       latInput.value = lat.toFixed(6);
       lngInput.value = lng.toFixed(6);
+      
+      // Check boundary and show/hide error
+      const withinBoundary = isWithinCityBoundary(lat, lng);
+      showBoundaryError(!withinBoundary);
     }
 
     function setPin(lat, lng, moveMap = false) {

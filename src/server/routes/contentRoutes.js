@@ -1,5 +1,6 @@
 const express = require('express');
 const Database = require('../config/database');
+const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,18 +11,20 @@ const router = express.Router();
 // GET /api/content/news - Get all published news
 router.get('/news', async (req, res) => {
   try {
-    const { limit = 10, offset = 0, category } = req.query;
+    const { limit = 10, offset = 0, category, from, to, office, status } = req.query;
 
     let query = Database.getClient()
       .from('news')
       .select('*')
-      .eq('status', 'published')
+      .eq('status', status || 'published')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (category) {
-      query = query.eq('category', category);
-    }
+    if (category) query = query.eq('category', category);
+    // map office -> category for filtering
+    if (office) query = query.eq('category', office);
+    if (from) query = query.gte('published_at', from);
+    if (to) query = query.lte('published_at', to);
 
     const { data, error } = await query;
 
@@ -76,7 +79,7 @@ router.get('/news/:id', async (req, res) => {
 });
 
 // POST /api/content/news - Create news (admin only)
-router.post('/news', async (req, res) => {
+router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
     const { title, content, excerpt, image_url, category, tags, status } = req.body;
 
@@ -87,35 +90,70 @@ router.post('/news', async (req, res) => {
       });
     }
 
+    // Convert empty strings to null for optional fields
     const newsData = {
-      title,
-      content,
-      excerpt,
-      image_url,
-      category,
-      tags,
-      status: status || 'draft',
+      title: title.trim(),
+      content: content.trim(),
+      excerpt: excerpt?.trim() || null,
+      image_url: image_url?.trim() || null,
+      category: category?.trim() || null,
+      tags: Array.isArray(tags) && tags.length > 0 ? tags : (tags ? [tags] : '{}'),
+      status: status || 'published',
       published_at: status === 'published' ? new Date().toISOString() : null,
       author_id: req.user?.id
     };
 
-    const { data, error } = await Database.getClient()
+    console.log('[CONTENT] Inserting news:', { 
+      ...newsData, 
+      content: newsData.content.substring(0, 50) + '...',
+      author_id: newsData.author_id,
+      user_id: req.user?.id,
+      user_role: req.user?.role
+    });
+
+    const dbClient = Database.getClient();
+    const { data, error } = await dbClient
       .from('news')
       .insert([newsData])
-      .select()
-      .single();
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[CONTENT] Database error inserting news:', error);
+      console.error('[CONTENT] Error code:', error.code);
+      console.error('[CONTENT] Error message:', error.message);
+      console.error('[CONTENT] Error details:', error.details);
+      console.error('[CONTENT] Error hint:', error.hint);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create news',
+        details: error.message || error.code || 'Database error',
+        code: error.code,
+        hint: error.hint
+      });
+    }
+
+    if (!data || data.length === 0) {
+      console.error('[CONTENT] Insert succeeded but no data returned');
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create news',
+        details: 'Insert operation returned no data'
+      });
+    }
+
+    const insertedNews = data[0];
+    console.log('[CONTENT] News created successfully:', { id: insertedNews.id, title: insertedNews.title });
 
     return res.json({
       success: true,
-      data
+      data: insertedNews
     });
   } catch (error) {
-    console.error('Error creating news:', error);
+    console.error('[CONTENT] Error creating news:', error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to create news'
+      error: 'Failed to create news',
+      details: error.message || error.code || 'Unknown error'
     });
   }
 });
@@ -127,15 +165,22 @@ router.post('/news', async (req, res) => {
 // GET /api/content/events - Get upcoming events
 router.get('/events', async (req, res) => {
   try {
-    const { limit = 10, offset = 0, status = 'upcoming' } = req.query;
+    const { limit = 10, offset = 0, status = 'upcoming', from, to, office } = req.query;
 
     const { data, error } = await Database.getClient()
       .from('events')
       .select('*')
       .in('status', status.split(','))
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', from || new Date(0).toISOString())
+      .lte('event_date', to || '9999-12-31T23:59:59.999Z')
       .order('event_date', { ascending: true })
       .range(offset, offset + limit - 1);
+
+    if (office) {
+      // Filter by organizer as office proxy
+      const filtered = (data || []).filter(e => (e.organizer || '').toLowerCase() === String(office).toLowerCase());
+      return res.json({ success: true, data: filtered, count: filtered.length });
+    }
 
     if (error) throw error;
 
@@ -187,7 +232,7 @@ router.get('/events/:id', async (req, res) => {
 });
 
 // POST /api/content/events - Create event (admin only)
-router.post('/events', async (req, res) => {
+router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
     const {
       title,
@@ -210,39 +255,60 @@ router.post('/events', async (req, res) => {
       });
     }
 
+    // Convert empty strings to null for optional fields
     const eventData = {
-      title,
-      description,
-      location,
+      title: title.trim(),
+      description: description.trim(),
+      location: location?.trim() || null,
       event_date,
-      end_date,
-      image_url,
-      organizer,
-      category,
-      tags,
-      max_participants,
-      registration_required,
+      end_date: end_date || null,
+      image_url: image_url?.trim() || null,
+      organizer: organizer?.trim() || null,
+      category: category?.trim() || null,
+      tags: tags || null,
+      max_participants: max_participants || null,
+      registration_required: registration_required || false,
       status: 'upcoming',
       created_by: req.user?.id
     };
 
-    const { data, error } = await Database.getClient()
+    console.log('[CONTENT] Inserting event:', { ...eventData, description: eventData.description.substring(0, 50) + '...' });
+
+    const dbClient = Database.getClient();
+    const { data, error } = await dbClient
       .from('events')
       .insert([eventData])
-      .select()
-      .single();
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[CONTENT] Database error inserting event:', error);
+      console.error('[CONTENT] Error code:', error.code);
+      console.error('[CONTENT] Error message:', error.message);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.error('[CONTENT] Insert succeeded but no data returned');
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create event',
+        details: 'Insert operation returned no data'
+      });
+    }
+
+    const insertedEvent = data[0];
+    console.log('[CONTENT] Event created successfully:', { id: insertedEvent.id, title: insertedEvent.title });
 
     return res.json({
       success: true,
-      data
+      data: insertedEvent
     });
   } catch (error) {
-    console.error('Error creating event:', error);
+    console.error('[CONTENT] Error creating event:', error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to create event'
+      error: 'Failed to create event',
+      details: error.message || error.code || 'Unknown error'
     });
   }
 });
@@ -254,20 +320,21 @@ router.post('/events', async (req, res) => {
 // GET /api/content/notices - Get active notices
 router.get('/notices', async (req, res) => {
   try {
-    const { limit = 10, offset = 0, priority } = req.query;
+    const { limit = 10, offset = 0, priority, from, to, office, status = 'active' } = req.query;
 
     let query = Database.getClient()
       .from('notices')
       .select('*')
-      .eq('status', 'active')
+      .eq('status', status)
       .or(`valid_until.is.null,valid_until.gte.${new Date().toISOString()}`)
       .order('priority', { ascending: false })
       .order('valid_from', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (priority) {
-      query = query.eq('priority', priority);
-    }
+    if (priority) query = query.eq('priority', priority);
+    if (office) query = query.eq('type', office);
+    if (from) query = query.gte('created_at', from);
+    if (to) query = query.lte('created_at', to);
 
     const { data, error } = await query;
 
@@ -321,7 +388,7 @@ router.get('/notices/:id', async (req, res) => {
 });
 
 // POST /api/content/notices - Create notice (admin only)
-router.post('/notices', async (req, res) => {
+router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
     const {
       title,
@@ -341,36 +408,68 @@ router.post('/notices', async (req, res) => {
       });
     }
 
+    // Convert empty strings to null for optional fields
     const noticeData = {
-      title,
-      content,
+      title: title.trim(),
+      content: content.trim(),
       priority: priority || 'normal',
-      type,
-      target_audience,
-      image_url,
+      type: type?.trim() || null,
+      target_audience: target_audience || null,
+      image_url: image_url?.trim() || null,
       valid_from: valid_from || new Date().toISOString(),
-      valid_until,
+      valid_until: valid_until || null,
       status: 'active',
       created_by: req.user?.id
     };
 
-    const { data, error } = await Database.getClient()
+    console.log('[CONTENT] Inserting notice:', { ...noticeData, content: noticeData.content.substring(0, 50) + '...' });
+
+    const dbClient = Database.getClient();
+    const { data, error } = await dbClient
       .from('notices')
       .insert([noticeData])
-      .select()
-      .single();
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[CONTENT] Database error inserting notice:', error);
+      console.error('[CONTENT] Error code:', error.code);
+      console.error('[CONTENT] Error message:', error.message);
+      console.error('[CONTENT] Error details:', error.details);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.error('[CONTENT] Insert succeeded but no data returned');
+      // Try to query the notices table to verify insert
+      const { data: verifyData, error: verifyError } = await dbClient
+        .from('notices')
+        .select('*')
+        .eq('title', noticeData.title)
+        .eq('created_by', noticeData.created_by)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      console.log('[CONTENT] Verification query result:', { verifyData, verifyError });
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create notice',
+        details: 'Insert operation returned no data. Verification query: ' + (verifyError ? verifyError.message : 'No matching record found')
+      });
+    }
+
+    const insertedNotice = data[0];
+    console.log('[CONTENT] Notice created successfully:', { id: insertedNotice.id, title: insertedNotice.title });
 
     return res.json({
       success: true,
-      data
+      data: insertedNotice
     });
   } catch (error) {
-    console.error('Error creating notice:', error);
+    console.error('[CONTENT] Error creating notice:', error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to create notice'
+      error: 'Failed to create notice',
+      details: error.message || error.code || 'Unknown error'
     });
   }
 });
