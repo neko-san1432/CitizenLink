@@ -9,3 +9,5 @@ BEGIN
     SELECT 1 
     FROM information_schema.table_constraints 
     WHERE constraint_name LIKE '%department_id%'   
+
+
