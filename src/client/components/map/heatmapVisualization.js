@@ -72,7 +72,7 @@ class HeatmapVisualization {
         }
       });
       
-      console.log('[HEATMAP] Request filters:', Object.fromEntries(queryParams));
+      // console.log removed for security
 
       // Use apiClient for authenticated requests
       const apiClientModule = await import('../../config/apiClient.js');
@@ -84,12 +84,12 @@ class HeatmapVisualization {
       // Backend service already returns data with lat/lng fields correctly formatted
       const raw = Array.isArray(result.data) ? result.data : [];
 
-      console.log('[HEATMAP] Raw complaints from API:', raw.length);
+      // console.log removed for security
       
       // Log first item structure for debugging
       if (raw.length > 0) {
-        console.log('[HEATMAP] Sample complaint structure:', raw[0]);
-        console.log('[HEATMAP] First 3 complaint IDs:', raw.slice(0, 3).map(c => ({ id: c.id, lat: c.lat, lng: c.lng })));
+        // console.log removed for security
+        // console.log removed for security
       }
       
       // Debug: Check if we're only getting one complaint
@@ -134,7 +134,7 @@ class HeatmapVisualization {
           };
         });
 
-      console.log('[HEATMAP] Valid complaints count after validation:', this.complaintData.length);
+      // console.log removed for security
 
       // console.log removed for security
       // console.log removed for security
@@ -161,12 +161,12 @@ class HeatmapVisualization {
       this.getIntensityValue(complaint)
     ]);
 
-    console.log(`[HEATMAP] Creating heatmap with ${heatmapData.length} data points`);
+    // console.log removed for security
 
     // Create heatmap layer using Leaflet.heat
     try {
       this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
-      console.log('[HEATMAP] Heatmap layer created successfully');
+      // console.log removed for security
       return this.heatmapLayer;
     } catch (error) {
       console.error('[HEATMAP] Error creating heatmap layer:', error);
@@ -218,27 +218,22 @@ class HeatmapVisualization {
       return null;
     }
 
-    console.log(`[HEATMAP] Creating markers for ${this.complaintData.length} complaints`);
+    // console.log removed for security
     this.markerLayer = L.layerGroup();
 
     this.complaintData.forEach((complaint, index) => {
-      console.log(`[HEATMAP] Creating marker ${index + 1}/${this.complaintData.length}:`, {
-        id: complaint.id,
-        lat: complaint.lat,
-        lng: complaint.lng,
-        title: complaint.title
-      });
+      // console.log removed for security
       
       try {
         const marker = this.createComplaintMarker(complaint, index);
         this.markerLayer.addLayer(marker);
-        console.log(`[HEATMAP] Marker ${index + 1} added successfully at ${complaint.lat}, ${complaint.lng}`);
+        // console.log removed for security
       } catch (error) {
         console.error(`[HEATMAP] Failed to create marker ${index + 1}:`, error, complaint);
       }
     });
 
-    console.log(`[HEATMAP] Marker layer created with ${this.markerLayer.getLayers().length} markers`);
+    // console.log removed for security
     return this.markerLayer;
   }
 
@@ -828,12 +823,12 @@ class HeatmapVisualization {
       // Ensure Leaflet recalculates sizes before drawing the heat canvas
       this.map.invalidateSize();
       this.heatmapLayer.addTo(this.map);
-      console.log('[HEATMAP] Heatmap added to map successfully');
+      // console.log removed for security
       
       // Verify it's actually on the map
       setTimeout(() => {
         const hasLayer = this.map.hasLayer(this.heatmapLayer);
-        console.log(`[HEATMAP] Heatmap visibility check - Has layer: ${hasLayer}`);
+        // console.log removed for security
       }, 100);
     } catch (e) {
       console.error('[HEATMAP] Error showing heatmap:', e);
@@ -842,7 +837,7 @@ class HeatmapVisualization {
         try {
           this.map.invalidateSize();
           this.heatmapLayer.addTo(this.map);
-          console.log('[HEATMAP] Heatmap added to map on retry');
+          // console.log removed for security
         } catch (error) {
           console.error('[HEATMAP] Failed to show heatmap on retry:', error);
         }
@@ -873,14 +868,14 @@ class HeatmapVisualization {
       return;
     }
     
-    console.log(`[HEATMAP] Showing ${this.markerLayer.getLayers().length} markers on map`);
+    // console.log removed for security
     this.markerLayer.addTo(this.map);
     
     // Verify markers are actually on the map
     setTimeout(() => {
       const hasLayer = this.map.hasLayer(this.markerLayer);
       const layerCount = this.markerLayer.getLayers().length;
-      console.log(`[HEATMAP] Marker visibility check - Has layer: ${hasLayer}, Marker count: ${layerCount}`);
+      // console.log removed for security
       
       if (hasLayer && layerCount > 0) {
         // Get bounds of all markers to verify they're valid
@@ -890,7 +885,7 @@ class HeatmapVisualization {
             const firstMarker = layers[0];
             if (firstMarker && firstMarker.getLatLng) {
               const latLng = firstMarker.getLatLng();
-              console.log(`[HEATMAP] First marker position: ${latLng.lat}, ${latLng.lng}`);
+              // console.log removed for security
             }
           }
         } catch (error) {

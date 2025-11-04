@@ -430,8 +430,8 @@ class ComplaintController {
 
   async getComplaintLocations(req, res) {
     try {
-      console.log('[COMPLAINT-CONTROLLER] getComplaintLocations called');
-      console.log('[COMPLAINT-CONTROLLER] Query params:', req.query);
+      // console.log removed for security
+      // console.log removed for security
 
       const {
         status,
@@ -442,14 +442,7 @@ class ComplaintController {
         includeResolved = 'true'
       } = req.query;
 
-      console.log('[COMPLAINT-CONTROLLER] Parsed filters:', {
-        status,
-        type,
-        department,
-        startDate,
-        endDate,
-        includeResolved: includeResolved === 'true'
-      });
+      // console.log removed for security
 
       // Map query params to service filters
       // IMPORTANT: Convert legacy status values to workflow_status
@@ -463,7 +456,7 @@ class ComplaintController {
           // Try direct workflow status values
           workflowStatus = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(status) ? status : undefined;
         }
-        console.log('[COMPLAINT-CONTROLLER] Status conversion:', { input: status, output: workflowStatus });
+        // console.log removed for security
       }
       
       const serviceFilters = {
@@ -483,11 +476,11 @@ class ComplaintController {
         }
       });
       
-      console.log('[COMPLAINT-CONTROLLER] Service filters:', serviceFilters);
+      // console.log removed for security
       
       const locations = await this.complaintService.getComplaintLocations(serviceFilters);
 
-      console.log('[COMPLAINT-CONTROLLER] Returning locations count:', locations.length);
+      // console.log removed for security
 
       res.json({
         success: true,

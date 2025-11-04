@@ -21,7 +21,7 @@ class NotificationService {
   */
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
-      console.log(`[NOTIFICATION] Looking up LGU admins for department: ${departmentCode}`);
+      // console.log removed for security
 
       // Use admin auth API instead of direct table query
       let users = [];
@@ -52,7 +52,7 @@ class NotificationService {
                 rawMetadata.department === departmentCode);
       });
 
-      console.log(`[NOTIFICATION] Found ${admins.length} LGU admins for department ${departmentCode}`);
+      // console.log removed for security
 
       if (admins.length === 0) {
         console.warn(`[NOTIFICATION] No LGU admins found for department ${departmentCode}`);
@@ -136,7 +136,7 @@ class NotificationService {
         );
 
         if (duplicateCheck.exists) {
-          console.log(`[NOTIFICATION] Duplicate notification prevented for user ${userId}: ${notifTitle}`);
+          // console.log removed for security
           return {
             success: true,
             notification: duplicateCheck.notification,
@@ -162,7 +162,7 @@ class NotificationService {
 
       if (error) throw error;
 
-      console.log(`[NOTIFICATION] Created notification for user ${userId}: ${notifTitle}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -185,12 +185,7 @@ class NotificationService {
    */
   async checkDuplicateNotification(userId, type, title, metadata = {}) {
     try {
-      console.log('[NOTIFICATION] Checking for duplicate notification:', {
-        userId,
-        type,
-        title,
-        metadata
-      });
+      // console.log removed for security
 
       const { data, error } = await this.supabase
         .from('notification')
@@ -209,13 +204,7 @@ class NotificationService {
       }
 
       const exists = data && data.length > 0;
-      console.log('[NOTIFICATION] Duplicate check result:', {
-        userId,
-        type,
-        title,
-        exists,
-        foundNotifications: data?.length || 0
-      });
+      // console.log removed for security
 
       return {
         exists,
@@ -254,7 +243,7 @@ class NotificationService {
 
         if (error) throw error;
 
-        console.log(`[NOTIFICATION] Created ${data.length} bulk notifications`);
+        // console.log removed for security
 
         return {
           success: true,
@@ -297,7 +286,7 @@ class NotificationService {
         }
       }
 
-      console.log(`[NOTIFICATION] Bulk notification results: ${results.notifications.length} created, ${results.duplicates} duplicates, ${results.errors} errors`);
+      // console.log removed for security
 
       return results;
     } catch (error) {
@@ -317,7 +306,7 @@ class NotificationService {
    */
   async notifyMultipleUsers(userIds, type, title, message, options = {}) {
     try {
-      console.log(`[NOTIFICATION] Notifying ${userIds.length} users: ${title}`);
+      // console.log removed for security
 
       const notifications = userIds.map(userId => ({
         userId,
@@ -594,13 +583,7 @@ class NotificationService {
   * Notify officer about new task assignment
   */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
-    console.log('[NOTIFICATION] Creating task assignment notification:', {
-      officerId,
-      complaintId,
-      complaintTitle,
-      priority,
-      deadline
-    });
+    // console.log removed for security
 
     const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
       priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
@@ -842,7 +825,7 @@ class NotificationService {
    */
   async notifyAllCoordinators(complaintId, complaintTitle) {
     try {
-      console.log(`[NOTIFICATION] Finding all coordinators for complaint: ${complaintId}`);
+      // console.log removed for security
 
       // Use admin auth API to find coordinators
       let users = [];
@@ -869,7 +852,7 @@ class NotificationService {
         return baseRole === 'complaint-coordinator';
       });
 
-      console.log(`[NOTIFICATION] Found ${coordinators.length} complaint coordinators`);
+      // console.log removed for security
 
       if (coordinators.length === 0) {
         console.warn(`[NOTIFICATION] No complaint coordinators found for complaint ${complaintId}`);
@@ -892,7 +875,7 @@ class NotificationService {
 
       const result = await this.createBulkNotifications(notifications);
 
-      console.log(`[NOTIFICATION] Sent notifications to ${result.count} coordinators for complaint ${complaintId}`);
+      // console.log removed for security
       return result;
 
     } catch (error) {

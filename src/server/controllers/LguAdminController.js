@@ -147,11 +147,7 @@ class LguAdminController {
    */
   async assignToOfficer(req, res) {
     try {
-      console.log('[LGU_ADMIN] assignToOfficer called with:', {
-        params: req.params,
-        body: req.body,
-        user: req.user ? { id: req.user.id, role: req.user.role } : 'No user'
-      });
+      // console.log removed for security
 
       const { complaintId } = req.params;
       const { officerIds, officerId, priority, deadline, notes } = req.body;
@@ -193,14 +189,7 @@ class LguAdminController {
                            req.user.raw_user_meta_data?.department ||
                            req.user.raw_user_meta_data?.dpt;
 
-      console.log('[LGU_ADMIN] Department extraction for assignment:', {
-        'req.user.department': req.user.department,
-        'req.user.metadata?.department': req.user.metadata?.department,
-        'req.user.raw_user_meta_data?.department': req.user.raw_user_meta_data?.department,
-        'req.user.raw_user_meta_data?.dpt': req.user.raw_user_meta_data?.dpt,
-        'final departmentCode': departmentCode,
-        'officersToAssign': officersToAssign
-      });
+      // console.log removed for security
 
       if (!departmentCode) {
         return res.status(400).json({
@@ -267,7 +256,7 @@ class LguAdminController {
         }
         
         allUsers = authUsers.users || [];
-        console.log('[LGU_ADMIN] Fetched users for verification:', allUsers.length);
+        // console.log removed for security
       } catch (authErr) {
         console.error('[LGU_ADMIN] Auth API error for officer verification:', authErr);
         return res.status(500).json({
@@ -313,20 +302,7 @@ class LguAdminController {
         const belongsToDepartment = (isLguOfficer && hasCorrectDepartment) ||
                                    (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
 
-        console.log('[LGU_ADMIN] Officer department validation:', {
-          officerId,
-          officerEmail: officer.email,
-          role,
-          departmentCode,
-          metadata,
-          rawMetadata,
-          isLguOfficer,
-          hasCorrectDepartment,
-          isLegacyOfficer,
-          roleContainsDepartment,
-          hasLegacyDepartment,
-          belongsToDepartment
-        });
+        // console.log removed for security
 
         // TEMPORARY: Allow any LGU user for testing (excluding HR)
         // TODO: Fix department matching logic
@@ -351,14 +327,7 @@ class LguAdminController {
           continue; // Skip this officer but continue with others
         }
 
-        console.log('[LGU_ADMIN] Allowing LGU officer:', {
-          officerId,
-          officerEmail: officer.email,
-          role,
-          departmentCode,
-          belongsToDepartment,
-          isAnyLguUser
-        });
+        // console.log removed for security
 
         assignments.push({
           complaint_id: complaintId,
@@ -391,7 +360,7 @@ class LguAdminController {
       // Log if some officers were rejected
       if (rejectedOfficers.length > 0) {
         console.warn('[LGU_ADMIN] Some officers were rejected:', rejectedOfficers);
-        console.log('[LGU_ADMIN] Successful assignments:', assignments.length);
+        // console.log removed for security
       }
 
       // Update complaint status
@@ -531,23 +500,11 @@ class LguAdminController {
                            req.user.raw_user_meta_data?.department ||
                            req.user.raw_user_meta_data?.dpt;
 
-      console.log('[LGU_ADMIN] Department extraction debug:', {
-        'req.user.department': req.user.department,
-        'req.user.metadata?.department': req.user.metadata?.department,
-        'req.user.raw_user_meta_data?.department': req.user.raw_user_meta_data?.department,
-        'req.user.raw_user_meta_data?.dpt': req.user.raw_user_meta_data?.dpt,
-        'final departmentCode': departmentCode,
-        'departmentCode type': typeof departmentCode,
-        'departmentCode length': departmentCode?.length,
-        'departmentCode truthy': Boolean(departmentCode),
-        'departmentCode === "PNP"': departmentCode === 'PNP',
-        'departmentCode !== null': departmentCode !== null,
-        'departmentCode !== undefined': departmentCode !== undefined
-      });
+      // console.log removed for security
 
-      console.log('[LGU_ADMIN] About to check departmentCode condition...');
-      console.log('[LGU_ADMIN] departmentCode value:', JSON.stringify(departmentCode));
-      console.log('[LGU_ADMIN] !departmentCode result:', !departmentCode);
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
 
       if (!departmentCode) {
         console.error('[LGU_ADMIN] No department found in user metadata:', {
@@ -558,7 +515,7 @@ class LguAdminController {
         });
 
         // For debugging, let's try to find any department and use it temporarily
-        console.log('[LGU_ADMIN] Attempting to find a default department...');
+        // console.log removed for security
         const { data: defaultDept } = await supabase
           .from('departments')
           .select('id, name, code')
@@ -568,7 +525,7 @@ class LguAdminController {
           .single();
 
         if (defaultDept) {
-          console.log('[LGU_ADMIN] Using default department:', defaultDept);
+          // console.log removed for security
           // Continue with the default department for testing
         } else {
           return res.status(400).json({
@@ -643,12 +600,7 @@ class LguAdminController {
       // b) Assignments directly linked by department_id (newly assigned ones)
       const complaintIds = complaints.map(c => c.id);
       
-      console.log('[LGU_ADMIN] Fetching assignments:', {
-        departmentCode,
-        departmentId: department.id,
-        complaintIdsCount: complaintIds.length,
-        complaintsCount: complaints.length
-      });
+      // console.log removed for security
       
       // First, get assignments by department_id (PRIMARY QUERY)
       // For recent assignments, include all statuses except 'cancelled'
@@ -666,16 +618,7 @@ class LguAdminController {
       
       const { data: deptAssignments, error: deptAssignError } = await deptAssignmentsQuery;
 
-      console.log('[LGU_ADMIN] Assignments by department_id:', {
-        count: deptAssignments?.length || 0,
-        error: deptAssignError?.message,
-        assignments: deptAssignments?.map(a => ({
-          id: a.id,
-          complaint_id: a.complaint_id,
-          status: a.status,
-          department_id: a.department_id
-        }))
-      });
+      // console.log removed for security
 
       if (deptAssignError) {
         console.error('[LGU_ADMIN] Error fetching assignments by department_id:', deptAssignError);
@@ -697,17 +640,14 @@ class LguAdminController {
         
         const { data: complaintAssignments, error: complaintAssignError } = await complaintAssignmentsQuery;
         
-        console.log('[LGU_ADMIN] Assignments by complaint_id:', {
-          count: complaintAssignments?.length || 0,
-          error: complaintAssignError?.message
-        });
+        // console.log removed for security
         
         assignmentsByComplaint = complaintAssignments || [];
       }
 
       // Merge and deduplicate assignments (keep most recent if duplicate complaint_id)
       const allAssignments = [...assignmentsByComplaint, ...(deptAssignments || [])];
-      console.log('[LGU_ADMIN] All assignments before dedup:', allAssignments.length);
+      // console.log removed for security
       
       const assignmentsMap = {};
       allAssignments.forEach(assignment => {
@@ -718,7 +658,7 @@ class LguAdminController {
       });
 
       const existingAssignments = Object.values(assignmentsMap);
-      console.log('[LGU_ADMIN] Final assignments after dedup:', existingAssignments.length);
+      // console.log removed for security
 
       // Get all unique complaint IDs from assignments
       const assignmentComplaintIds = [...new Set(existingAssignments.map(a => a.complaint_id).filter(Boolean))];
@@ -780,13 +720,8 @@ class LguAdminController {
         })
         .filter(Boolean); // Remove null entries
       
-      console.log('[LGU_ADMIN] Final departmentAssignments count:', departmentAssignments.length);
-      console.log('[LGU_ADMIN] Final departmentAssignments:', departmentAssignments.map(a => ({
-        id: a.id,
-        complaint_id: a.complaint_id,
-        status: a.status,
-        title: a.complaints?.title
-      })));
+      // console.log removed for security
+      // console.log removed for security
 
       // Get officer information for assigned complaints
       const assignedOfficerIds = departmentAssignments
@@ -860,13 +795,7 @@ class LguAdminController {
         notes: assignment.notes
       }));
 
-      console.log('[LGU_ADMIN] Final response data:', {
-        departmentCode,
-        departmentId: department?.id,
-        totalComplaints: complaints?.length || 0,
-        totalAssignments: formattedAssignments?.length || 0,
-        sampleAssignment: formattedAssignments?.[0] || null
-      });
+      // console.log removed for security
 
       return res.json({
         success: true,
@@ -946,7 +875,7 @@ class LguAdminController {
         }
 
         users = authUsers.users || [];
-        console.log('[LGU_ADMIN] Total auth users found:', users.length);
+        // console.log removed for security
       } catch (authErr) {
         console.error('[LGU_ADMIN] Auth API error:', authErr);
         return res.status(500).json({
@@ -956,8 +885,8 @@ class LguAdminController {
         });
       }
 
-      console.log('[LGU_ADMIN] Scanning for officers in department:', departmentCode);
-      console.log('[LGU_ADMIN] Total users found:', users.length);
+      // console.log removed for security
+      // console.log removed for security
 
       const officers = users
         .filter(user => {
@@ -966,15 +895,7 @@ class LguAdminController {
           const role = metadata.role || rawMetadata.role || '';
 
           // Debug logging for each user
-          console.log('[LGU_ADMIN] Checking user:', {
-            id: user.id,
-            email: user.email,
-            role,
-            metadata,
-            rawMetadata,
-            hasDpt: Boolean(metadata.dpt || rawMetadata.dpt),
-            dptValue: metadata.dpt || rawMetadata.dpt
-          });
+          // console.log removed for security
 
           // Check for simplified role system: lgu with department in metadata, or lgu-admin
           const isLguOfficer = role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin';
@@ -996,15 +917,7 @@ class LguAdminController {
           const finalMatch = isMatch || isAnyLguUser;
 
           if (finalMatch) {
-            console.log('[LGU_ADMIN] Found matching officer:', {
-              id: user.id,
-              email: user.email,
-              role,
-              department: metadata.dpt || rawMetadata.dpt,
-              isMatch,
-              isAnyLguUser,
-              finalMatch
-            });
+            // console.log removed for security
           }
 
           return finalMatch;
@@ -1017,12 +930,7 @@ class LguAdminController {
           mobile: user.user_metadata?.mobile || user.raw_user_meta_data?.mobile
         }));
 
-      console.log('[LGU_ADMIN] Officers response:', {
-        departmentCode,
-        departmentId: department?.id,
-        totalOfficers: officers?.length || 0,
-        sampleOfficer: officers?.[0] || null
-      });
+      // console.log removed for security
 
       return res.json({
         success: true,

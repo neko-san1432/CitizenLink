@@ -34,13 +34,7 @@ class LguOfficerController {
 
       const { data: assignments, error: assignmentError } = await assignmentQuery;
 
-      console.log('[LGU_OFFICER] Assignments query result:', {
-        userId,
-        assignmentsCount: assignments?.length || 0,
-        hasError: Boolean(assignmentError),
-        errorDetails: assignmentError,
-        assignments: assignments?.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
-      });
+      // console.log removed for security
 
       if (assignmentError) {
         console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
@@ -51,7 +45,7 @@ class LguOfficerController {
       }
 
       if (!assignments || assignments.length === 0) {
-        console.log('[LGU_OFFICER] No assignments found for user:', userId);
+        // console.log removed for security
         return res.json({
           success: true,
           data: []
@@ -60,20 +54,14 @@ class LguOfficerController {
 
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
-      console.log('[LGU_OFFICER] Fetching complaints for IDs:', complaintIds);
+      // console.log removed for security
       
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
 
-      console.log('[LGU_OFFICER] Complaints query result:', {
-        complaintIds,
-        complaintsFound: complaints?.length || 0,
-        hasError: Boolean(complaintError),
-        errorDetails: complaintError,
-        complaints: complaints?.map(c => ({ id: c.id, title: c.title, category: c.category }))
-      });
+      // console.log removed for security
 
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
@@ -94,11 +82,7 @@ class LguOfficerController {
         return acc;
       }, []);
 
-      console.log('[LGU_OFFICER] Deduplication result:', {
-        originalCount: assignments.length,
-        uniqueCount: uniqueAssignments.length,
-        uniqueAssignments: uniqueAssignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
-      });
+      // console.log removed for security
 
       // Combine assignments with complaint data
       const combinedData = uniqueAssignments.map(assignment => {
@@ -270,35 +254,25 @@ class LguOfficerController {
       }
 
       if (!assignments || assignments.length === 0) {
-        console.log('[LGU_OFFICER] getMyTasks - No assignments found for user:', userId);
+        // console.log removed for security
         return res.json({
           success: true,
           data: []
         });
       }
 
-      console.log('[LGU_OFFICER] getMyTasks - Found assignments:', {
-        userId,
-        assignmentsCount: assignments.length,
-        assignments: assignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
-      });
+      // console.log removed for security
 
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
-      console.log('[LGU_OFFICER] getMyTasks - Fetching complaints for IDs:', complaintIds);
+      // console.log removed for security
       
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
 
-      console.log('[LGU_OFFICER] getMyTasks - Complaints query result:', {
-        complaintIds,
-        complaintsFound: complaints?.length || 0,
-        hasError: Boolean(complaintError),
-        errorDetails: complaintError,
-        complaints: complaints?.map(c => ({ id: c.id, title: c.title, category: c.category }))
-      });
+      // console.log removed for security
 
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
@@ -319,11 +293,7 @@ class LguOfficerController {
         return acc;
       }, []);
 
-      console.log('[LGU_OFFICER] getMyTasks deduplication result:', {
-        originalCount: assignments.length,
-        uniqueCount: uniqueAssignments.length,
-        uniqueAssignments: uniqueAssignments.map(a => ({ id: a.id, complaint_id: a.complaint_id, status: a.status }))
-      });
+      // console.log removed for security
 
       // Get assigned_by user info for each assignment
       const assignmentsWithUsers = await Promise.all(
@@ -600,10 +570,7 @@ class LguOfficerController {
         return acc;
       }, []);
 
-      console.log('[LGU_OFFICER] Statistics deduplication:', {
-        originalCount: assignments.length,
-        uniqueCount: uniqueAssignments.length
-      });
+      // console.log removed for security
 
       // Calculate statistics from deduplicated assignments
       const totalTasks = uniqueAssignments.length;
@@ -685,11 +652,7 @@ class LguOfficerController {
           return acc;
         }, []);
 
-        console.log('[LGU_OFFICER] Activities fallback deduplication:', {
-          originalCount: fallbackData.length,
-          uniqueCount: uniqueFallbackData.length,
-          removedDuplicates: fallbackData.length - uniqueFallbackData.length
-        });
+        // console.log removed for security
 
         // Transform fallback data
         const transformedActivities = uniqueFallbackData.map(activity => ({
@@ -715,11 +678,7 @@ class LguOfficerController {
         return acc;
       }, []);
 
-      console.log('[LGU_OFFICER] Activities deduplication:', {
-        originalCount: activities.length,
-        uniqueCount: uniqueActivities.length,
-        removedDuplicates: activities.length - uniqueActivities.length
-      });
+      // console.log removed for security
 
       // Transform to activity format with complaint details
       const transformedActivities = uniqueActivities.map(activity => ({

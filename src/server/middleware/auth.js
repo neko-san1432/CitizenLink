@@ -15,7 +15,7 @@ const authenticateUser = async (req, res, next) => {
 
     if (!token) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[AUTH] ${new Date().toISOString()} ❌ No token found for:`, req.path);
+        // console.log removed for security
       }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -34,7 +34,7 @@ const authenticateUser = async (req, res, next) => {
 
     if (error || !tokenUser) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[AUTH] ${new Date().toISOString()} ❌ Token validation failed:`, error?.message);
+        // console.log removed for security
       }
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -147,15 +147,8 @@ const requireRole = (allowedRoles) => {
     const baseRole = req.user?.raw_user_meta_data?.base_role;
 
     if (!userRole) {
-      console.log('[AUTH] ❌ No user role found');
-      console.log('[AUTH] User object:', {
-        id: req.user?.id,
-        email: req.user?.email,
-        hasRole: Boolean(req.user?.role),
-        hasMetadata: Boolean(req.user?.raw_user_meta_data),
-        metadataKeys: Object.keys(req.user?.raw_user_meta_data || {}),
-        userMetadataKeys: Object.keys(req.user?.user_metadata || {})
-      });
+      // console.log removed for security
+      // console.log removed for security
       return res.redirect(`/login?message=${  encodeURIComponent('Authentication incomplete: missing role. Please contact support.')  }&type=error`);
     }
 
@@ -183,14 +176,7 @@ const requireRole = (allowedRoles) => {
     });
 
     if (!hasPermission) {
-      console.log('[AUTH] ❌ Access denied:', {
-        userRole,
-        baseRole,
-        allowedRoles,
-        path: req.path,
-        originalUrl: req.originalUrl,
-        method: req.method
-      });
+      // console.log removed for security
 
       // Check if this is an API request - look at both path and originalUrl
       const isApiRequest = req.path.startsWith('/api/') ||
@@ -198,7 +184,7 @@ const requireRole = (allowedRoles) => {
                            req.url.startsWith('/api/');
 
       if (isApiRequest) {
-        console.log('[AUTH] Returning JSON error for API request');
+        // console.log removed for security
         return res.status(403).json({
           success: false,
           error: 'Access denied. You do not have permission to access this resource.',

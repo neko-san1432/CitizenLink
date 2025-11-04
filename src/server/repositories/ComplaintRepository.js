@@ -295,11 +295,7 @@ class ComplaintRepository {
 
       // Return the first available coordinator
       const coordinator = coordinators[0];
-      console.log('[COMPLAINT_REPO] Found coordinator:', {
-        id: coordinator.id,
-        email: coordinator.email,
-        base_role: coordinator.user_metadata?.base_role || coordinator.raw_user_meta_data?.base_role
-      });
+      // console.log removed for security
 
       return {
         user_id: coordinator.id,

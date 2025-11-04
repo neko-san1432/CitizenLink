@@ -103,13 +103,7 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
       author_id: req.user?.id
     };
 
-    console.log('[CONTENT] Inserting news:', { 
-      ...newsData, 
-      content: newsData.content.substring(0, 50) + '...',
-      author_id: newsData.author_id,
-      user_id: req.user?.id,
-      user_role: req.user?.role
-    });
+    // console.log removed for security
 
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
@@ -142,7 +136,7 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
     }
 
     const insertedNews = data[0];
-    console.log('[CONTENT] News created successfully:', { id: insertedNews.id, title: insertedNews.title });
+    // console.log removed for security
 
     return res.json({
       success: true,
@@ -272,7 +266,7 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
       created_by: req.user?.id
     };
 
-    console.log('[CONTENT] Inserting event:', { ...eventData, description: eventData.description.substring(0, 50) + '...' });
+    // console.log removed for security
 
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
@@ -297,7 +291,7 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
     }
 
     const insertedEvent = data[0];
-    console.log('[CONTENT] Event created successfully:', { id: insertedEvent.id, title: insertedEvent.title });
+    // console.log removed for security
 
     return res.json({
       success: true,
@@ -422,7 +416,7 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
       created_by: req.user?.id
     };
 
-    console.log('[CONTENT] Inserting notice:', { ...noticeData, content: noticeData.content.substring(0, 50) + '...' });
+    // console.log removed for security
 
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
@@ -449,7 +443,7 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
         .order('created_at', { ascending: false })
         .limit(1);
       
-      console.log('[CONTENT] Verification query result:', { verifyData, verifyError });
+      // console.log removed for security
       return res.status(500).json({
         success: false,
         error: 'Failed to create notice',
@@ -458,7 +452,7 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
     }
 
     const insertedNotice = data[0];
-    console.log('[CONTENT] Notice created successfully:', { id: insertedNotice.id, title: insertedNotice.title });
+    // console.log removed for security
 
     return res.json({
       success: true,

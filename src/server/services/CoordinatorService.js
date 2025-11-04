@@ -26,12 +26,12 @@ class CoordinatorService {
   */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
-      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Getting review queue for coordinator:`, coordinatorId);
-      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Filters:`, filters);
+      // console.log removed for security
+      // console.log removed for security
 
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
 
-      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Retrieved ${complaints.length} complaints from repository`);
+      // console.log removed for security
 
       // Enhance with algorithm confidence levels
       const enhanced = complaints.map(complaint => {
@@ -211,7 +211,7 @@ class CoordinatorService {
   */
   async approveComplaint(complaintId, departments, coordinatorId, options = {}) {
     try {
-      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Approving complaint ${complaintId} with departments:`, departments);
+      // console.log removed for security
 
       // Update complaint status to approved
       const { data: updated, error: updateError } = await this.coordinatorRepo.supabase
@@ -350,7 +350,7 @@ class CoordinatorService {
    */
   async markAsFalse(complaintId, coordinatorId, reason) {
     try {
-      console.log(`[COORDINATOR_SERVICE] ${new Date().toISOString()} Marking complaint ${complaintId} as false with reason:`, reason);
+      // console.log removed for security
 
       // Update complaint status to false
       const { data, error } = await this.coordinatorRepo.supabase
@@ -731,27 +731,27 @@ class CoordinatorService {
    */
   async getDashboardData(coordinatorId) {
     try {
-      console.log(`[COORDINATOR_SERVICE] Getting dashboard data for coordinator: ${coordinatorId}`);
+      // console.log removed for security
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      console.log(`[COORDINATOR_SERVICE] Date range: ${weekAgo.toISOString()} to ${today.toISOString()}`);
+      // console.log removed for security
 
       const pendingCount = await this.coordinatorRepo.getPendingReviewsCount(coordinatorId);
-      console.log(`[COORDINATOR_SERVICE] Pending count: ${pendingCount}`);
+      // console.log removed for security
 
       const stats = await this.coordinatorRepo.getCoordinatorStats(
         coordinatorId,
         weekAgo.toISOString(),
         today.toISOString()
       );
-      console.log(`[COORDINATOR_SERVICE] Stats:`, stats);
+      // console.log removed for security
 
       const recentQueue = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 10 });
-      console.log(`[COORDINATOR_SERVICE] Recent queue: ${recentQueue.length} complaints`);
+      // console.log removed for security
 
       const clusters = await this.coordinatorRepo.getActiveClusters({ limit: 5 });
-      console.log(`[COORDINATOR_SERVICE] Active clusters: ${clusters.length}`);
+      // console.log removed for security
 
       const result = {
         pending_reviews: pendingCount,
@@ -763,12 +763,7 @@ class CoordinatorService {
         active_clusters: clusters
       };
 
-      console.log(`[COORDINATOR_SERVICE] Final dashboard result:`, {
-        pending_reviews: result.pending_reviews,
-        stats: result.stats,
-        recent_queue_count: result.recent_queue.length,
-        active_clusters_count: result.active_clusters.length
-      });
+      // console.log removed for security
 
       return result;
     } catch (error) {
@@ -864,7 +859,7 @@ class CoordinatorService {
    */
   async notifyDepartmentAdmins(departmentCode, complaintId, complaintTitle) {
     try {
-      console.log(`[COORDINATOR_SERVICE] Notifying department admins for ${departmentCode} about complaint ${complaintId}`);
+      // console.log removed for security
 
       // Use the NotificationService method that properly handles auth.users queries
       await this.notificationService.notifyDepartmentAdminsByCode(
