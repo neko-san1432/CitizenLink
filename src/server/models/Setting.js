@@ -71,3 +71,4 @@ class Setting {
 }
 
 module.exports = Setting;
+

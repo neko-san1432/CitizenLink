@@ -24,7 +24,7 @@ export class FileHandler {
    */
   addFiles(files) {
     const validation = validateFiles(files, this.selectedFiles);
-    
+
     if (validation.errors.length > 0) {
       // Show errors but still add valid files
       validation.errors.forEach(error => {
@@ -35,11 +35,11 @@ export class FileHandler {
 
     if (validation.validFiles.length > 0) {
       this.selectedFiles.push(...validation.validFiles);
-      
+
       if (validation.errors.length === 0) {
         showMessage('success', `${validation.validFiles.length} file(s) added successfully`);
       }
-      
+
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();
     }
@@ -52,8 +52,8 @@ export class FileHandler {
   removeFile(index) {
     if (index >= 0 && index < this.selectedFiles.length) {
       const removedFile = this.selectedFiles.splice(index, 1)[0];
-      console.log(`[FILE] Removed file: ${removedFile.name}`);
-      
+      // console.log removed for security
+
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();
     }
@@ -66,6 +66,7 @@ export class FileHandler {
     this.selectedFiles = [];
     this.onFilesChange(this.selectedFiles);
     this.renderPreviews();
+    this.updateDragZoneVisibility();
   }
 
   /**
@@ -84,10 +85,34 @@ export class FileHandler {
 
     this.previewContainer.innerHTML = '';
 
+    // Hide/show drag zone based on files
+    this.updateDragZoneVisibility();
+
+    // Render file previews
     this.selectedFiles.forEach((file, index) => {
       const previewItem = this.createPreviewItem(file, index);
       this.previewContainer.appendChild(previewItem);
     });
+
+    // Add plus button if not at max files
+    if (this.selectedFiles.length < this.maxFiles) {
+      const addButton = this.createAddButton();
+      this.previewContainer.appendChild(addButton);
+    }
+  }
+
+  /**
+   * Update drag zone visibility
+   */
+  updateDragZoneVisibility() {
+    const dropZone = document.getElementById('fileDropZone');
+    if (!dropZone) return;
+
+    if (this.selectedFiles.length > 0) {
+      dropZone.style.display = 'none';
+    } else {
+      dropZone.style.display = 'block';
+    }
   }
 
   /**
@@ -100,35 +125,67 @@ export class FileHandler {
     const previewItem = document.createElement('div');
     previewItem.className = 'file-preview-item';
     previewItem.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      margin: 4px 0;
+      display: inline-block;
+      position: relative;
+      margin: 8px;
+      width: 120px;
+      height: 120px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
       background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
     `;
 
-    const fileInfo = document.createElement('div');
-    fileInfo.className = 'file-info';
-    fileInfo.style.flex = '1';
+    // Create preview based on file type
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      `;
+      previewItem.appendChild(img);
+    } else {
+      // For non-image files, show file icon
+      const fileIcon = document.createElement('div');
+      fileIcon.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6c757d;
+      `;
 
-    const fileName = document.createElement('span');
-    fileName.className = 'file-name';
-    fileName.textContent = file.name;
-    fileName.style.cssText = 'display: block; font-weight: 500; color: #495057;';
+      const icon = document.createElement('div');
+      icon.style.cssText = 'font-size: 32px; margin-bottom: 4px;';
+      if (file.type.startsWith('video/')) {
+        icon.textContent = '🎥';
+      } else if (file.type.startsWith('audio/')) {
+        icon.textContent = '🎵';
+      } else {
+        icon.textContent = '📄';
+      }
 
-    const fileSize = document.createElement('span');
-    fileSize.className = 'file-size';
-    fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
-    fileSize.style.cssText = 'display: block; font-size: 12px; color: #6c757d;';
+      const fileName = document.createElement('div');
+      fileName.textContent = file.name.length > 12 ? `${file.name.substring(0, 12)  }...` : file.name;
+      fileName.style.cssText = 'font-size: 10px; text-align: center; word-break: break-all;';
 
+      fileIcon.appendChild(icon);
+      fileIcon.appendChild(fileName);
+      previewItem.appendChild(fileIcon);
+    }
+
+    // Add remove button
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'remove-file-btn';
     removeBtn.textContent = '×';
     removeBtn.style.cssText = `
+      position: absolute;
+      top: 4px;
+      right: 4px;
       background: #dc3545;
       color: white;
       border: none;
@@ -138,17 +195,66 @@ export class FileHandler {
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
-      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     `;
 
     removeBtn.addEventListener('click', () => this.removeFile(index));
-
-    fileInfo.appendChild(fileName);
-    fileInfo.appendChild(fileSize);
-    previewItem.appendChild(fileInfo);
     previewItem.appendChild(removeBtn);
 
     return previewItem;
+  }
+
+  /**
+   * Create add more files button
+   * @returns {HTMLElement} Add button element
+   */
+  createAddButton() {
+    const addButton = document.createElement('div');
+    addButton.className = 'add-file-button';
+    addButton.style.cssText = `
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 8px;
+      width: 120px;
+      height: 120px;
+      border: 2px dashed #6c757d;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #f8f9fa;
+      color: #6c757d;
+      transition: all 0.2s ease;
+    `;
+
+    addButton.innerHTML = `
+      <div style="font-size: 32px; margin-bottom: 8px;">+</div>
+      <div style="font-size: 12px; text-align: center;">Add More<br/>(${this.selectedFiles.length}/${this.maxFiles})</div>
+    `;
+
+    addButton.addEventListener('click', () => {
+      const fileInput = document.getElementById('evidenceFiles');
+      if (fileInput) {
+        fileInput.click();
+      }
+    });
+
+    addButton.addEventListener('mouseenter', () => {
+      addButton.style.borderColor = '#007bff';
+      addButton.style.color = '#007bff';
+      addButton.style.backgroundColor = '#e3f2fd';
+    });
+
+    addButton.addEventListener('mouseleave', () => {
+      addButton.style.borderColor = '#6c757d';
+      addButton.style.color = '#6c757d';
+      addButton.style.backgroundColor = '#f8f9fa';
+    });
+
+    return addButton;
   }
 }
 
@@ -175,8 +281,8 @@ export function setupDragAndDrop(dropZone, fileHandler, fileInput) {
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    
-    const files = e.dataTransfer.files;
+
+    const {files} = e.dataTransfer;
     if (files.length > 0) {
       fileHandler.addFiles(files);
     }

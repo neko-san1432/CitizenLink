@@ -48,10 +48,3 @@ class ComplaintAssignmentRepository {
 }
 
 module.exports = ComplaintAssignmentRepository;
-
-
-
-
-
-
-

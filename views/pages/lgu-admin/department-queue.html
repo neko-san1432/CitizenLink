@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>Office Queue - CitizenLink</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/pages/lgu-admin-queue.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header"></header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Office Queue</h1>
+                    <p id="department-name">Loading department...</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label for="status-filter">Status:</label>
+                        <select id="status-filter" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="approved">Approved</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="assigned to officer">Assigned to Officer</option>
+                            <option value="in progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priority-filter">Priority:</label>
+                        <select id="priority-filter" class="filter-select">
+                            <option value="">All Priority</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="search-input">Search:</label>
+                        <input type="text" id="search-input" class="filter-input" placeholder="Search complaints...">
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-complaints">0</div>
+                        <div class="stat-label">Total Complaints</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pending-assignment">0</div>
+                        <div class="stat-label">Pending Assignment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="in-progress">0</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="resolved">0</div>
+                        <div class="stat-label">Resolved</div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading complaints...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <h2>No complaints found</h2>
+                    <p>No complaints match your current filters.</p>
+                </div>
+
+                <!-- Complaints List -->
+                <div id="complaints-list" class="complaints-list" style="display: none;">
+                    <!-- Complaints will be populated here -->
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination" style="display: none;">
+                    <!-- Pagination will be populated here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer id="footer"></footer>
+    </div>
+
+    <!-- Officer Assignment Modal -->
+    <div id="officer-assignment-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Assign to Officer</h3>
+                <button class="modal-close" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="officer-assignment-form">
+                    <input type="hidden" id="assignment-complaint-id">
+                    
+                    <div class="form-group">
+                        <label for="officer-select">Select Officer:</label>
+                        <select id="officer-select" class="form-select" required>
+                            <option value="">Choose an officer...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignment-priority">Priority:</label>
+                        <select id="assignment-priority" class="form-select">
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignment-deadline">Deadline:</label>
+                        <input type="datetime-local" id="assignment-deadline" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignment-notes">Notes:</label>
+                        <textarea id="assignment-notes" class="form-textarea" rows="3" placeholder="Additional notes for the officer..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-assignment">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-assignment">Assign</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/lgu-admin/department-queue.js"></script>
+</body>
+</html>

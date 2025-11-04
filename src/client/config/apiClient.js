@@ -15,53 +15,53 @@ class ApiClient {
   async get(url) {
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(url, { 
+      const response = await fetch(url, {
         method: 'GET',
-        headers 
+        headers
       });
-      
+
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
-          
+
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             // Import and show session expired toast
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           // Update server cookie with new token
           await fetch('/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: session.access_token })
           });
-          
+
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'GET',
             headers: newHeaders
           });
-          
+
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           return await retryResponse.json();
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -73,11 +73,11 @@ class ApiClient {
           return;
         }
       }
-      
+
       if (response.status === 403) {
         throw new Error('Insufficient permissions');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('API GET error:', error);
@@ -93,49 +93,49 @@ class ApiClient {
         headers,
         body: JSON.stringify(data)
       });
-      
+
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
-          
+
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           // Update server cookie with new token
           await fetch('/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: session.access_token })
           });
-          
+
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'POST',
             headers: newHeaders,
             body: JSON.stringify(data)
           });
-          
+
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           return await retryResponse.json();
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -147,11 +147,11 @@ class ApiClient {
           return;
         }
       }
-      
+
       if (response.status === 403) {
         throw new Error('Insufficient permissions');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('API POST error:', error);
@@ -167,49 +167,49 @@ class ApiClient {
         headers,
         body: JSON.stringify(data)
       });
-      
+
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
-          
+
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           // Update server cookie with new token
           await fetch('/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: session.access_token })
           });
-          
+
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'PUT',
             headers: newHeaders,
             body: JSON.stringify(data)
           });
-          
+
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           return await retryResponse.json();
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -221,11 +221,11 @@ class ApiClient {
           return;
         }
       }
-      
+
       if (response.status === 403) {
         throw new Error('Insufficient permissions');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('API PUT error:', error);
@@ -240,48 +240,48 @@ class ApiClient {
         method: 'DELETE',
         headers
       });
-      
+
       if (response.status === 401) {
         // Try to refresh token before redirecting
         try {
-          console.log('Token expired, attempting refresh...');
+          // console.log removed for security
           const { data: { session }, error } = await supabase.auth.refreshSession();
-          
+
           if (error || !session) {
-            console.log('Token refresh failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           // Update server cookie with new token
           await fetch('/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: session.access_token })
           });
-          
+
           // Retry the original request with new token
-          console.log('Token refreshed, retrying request...');
+          // console.log removed for security
           const newHeaders = await this.getAuthHeaders();
           const retryResponse = await fetch(url, {
             method: 'DELETE',
             headers: newHeaders
           });
-          
+
           if (retryResponse.status === 401) {
-            console.log('Retry failed, showing session expired toast');
+            // console.log removed for security
             const { showMessage } = await import('../components/toast.js');
             showMessage('error', 'Session expired. Please log in again.', 5000);
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${window.location.origin  }/login`;
             }, 3000);
             return;
           }
-          
+
           return await retryResponse.json();
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -293,11 +293,11 @@ class ApiClient {
           return;
         }
       }
-      
+
       if (response.status === 403) {
         throw new Error('Insufficient permissions');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('API DELETE error:', error);

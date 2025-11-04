@@ -14,10 +14,22 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_logs_pkey PRIMARY KEY (id),
   CONSTRAINT audit_logs_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES auth.users(id)
 );
+CREATE TABLE public.categories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  code text NOT NULL UNIQUE,
+  description text,
+  icon text,
+  sort_order integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.complaint_assignments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   complaint_id uuid NOT NULL,
-  department_id uuid NOT NULL,
+  department_id uuid,
   assigned_by uuid NOT NULL,
   assigned_to uuid,
   status character varying NOT NULL DEFAULT 'pending'::character varying,
@@ -25,10 +37,16 @@ CREATE TABLE public.complaint_assignments (
   notes text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  priority text DEFAULT 'medium'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
+  deadline timestamp with time zone,
+  completed_at timestamp with time zone,
+  assignment_type text DEFAULT 'single'::text CHECK (assignment_type = ANY (ARRAY['single'::text, 'multi'::text])),
+  assignment_group_id uuid DEFAULT gen_random_uuid(),
+  officer_order integer DEFAULT 1,
   CONSTRAINT complaint_assignments_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_assignments_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaint_assignments_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_assignments_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id)
+  CONSTRAINT complaint_assignments_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id),
+  CONSTRAINT complaint_assignments_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
 );
 CREATE TABLE public.complaint_clusters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -64,8 +82,6 @@ CREATE TABLE public.complaint_duplicates (
   merged_at timestamp with time zone DEFAULT now(),
   merge_reason text,
   CONSTRAINT complaint_duplicates_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_duplicates_duplicate_complaint_id_fkey FOREIGN KEY (duplicate_complaint_id) REFERENCES public.complaints(id),
-  CONSTRAINT complaint_duplicates_master_complaint_id_fkey FOREIGN KEY (master_complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaint_duplicates_merged_by_fkey FOREIGN KEY (merged_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_evidence (
@@ -79,8 +95,8 @@ CREATE TABLE public.complaint_evidence (
   uploaded_by uuid NOT NULL,
   uploaded_at timestamp with time zone DEFAULT now(),
   is_public boolean DEFAULT false,
+  evidence_type text DEFAULT 'initial'::text CHECK (evidence_type = ANY (ARRAY['initial'::text, 'completion'::text])),
   CONSTRAINT complaint_evidence_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_evidence_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_history (
@@ -91,8 +107,17 @@ CREATE TABLE public.complaint_history (
   details jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT complaint_history_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_history_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaint_history_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.complaint_reminders (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  complaint_id uuid NOT NULL,
+  reminded_at timestamp with time zone DEFAULT now(),
+  reminder_count integer DEFAULT 1,
+  reminded_by uuid,
+  reminder_type text DEFAULT 'manual'::text,
+  CONSTRAINT complaint_reminders_pkey PRIMARY KEY (id),
+  CONSTRAINT complaint_reminders_reminded_by_fkey FOREIGN KEY (reminded_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_similarities (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -105,9 +130,7 @@ CREATE TABLE public.complaint_similarities (
   reviewed_at timestamp with time zone,
   coordinator_decision text CHECK (coordinator_decision = ANY (ARRAY['duplicate'::text, 'related'::text, 'unique'::text, 'false_positive'::text])),
   CONSTRAINT complaint_similarities_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_similarities_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
-  CONSTRAINT complaint_similarities_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_similarities_similar_complaint_id_fkey FOREIGN KEY (similar_complaint_id) REFERENCES public.complaints(id)
+  CONSTRAINT complaint_similarities_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_workflow_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -117,29 +140,29 @@ CREATE TABLE public.complaint_workflow_logs (
   details jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT complaint_workflow_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_workflow_logs_action_by_fkey FOREIGN KEY (action_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_workflow_logs_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
+  CONSTRAINT complaint_workflow_logs_action_by_fkey FOREIGN KEY (action_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaints (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   submitted_by uuid NOT NULL,
   title text NOT NULL,
-  type text NOT NULL,
-  subtype text,
   descriptive_su text NOT NULL,
   location_text text,
   latitude double precision,
   longitude double precision,
+  category text,
+  subcategory text,
   department_r ARRAY DEFAULT '{}'::text[],
-  status text DEFAULT 'pending review'::text CHECK (status = ANY (ARRAY['pending review'::text, 'in progress'::text, 'resolved'::text, 'rejected'::text, 'closed'::text])),
+  preferred_departments jsonb DEFAULT '[]'::jsonb,
   workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text])),
   priority text DEFAULT 'low'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
-  evidence jsonb DEFAULT '[]'::jsonb,
-  primary_department text,
-  secondary_departments ARRAY DEFAULT '{}'::text[],
   assigned_coordinator_id uuid,
   response_deadline timestamp with time zone,
-  citizen_satisfaction_rating integer CHECK (citizen_satisfaction_rating >= 1 AND citizen_satisfaction_rating <= 5),
+  resolution_notes text,
+  resolved_by uuid,
+  resolved_at timestamp with time zone,
+  confirmed_by_citizen boolean DEFAULT false,
+  citizen_confirmation_date timestamp with time zone,
   is_duplicate boolean DEFAULT false,
   master_complaint_id uuid,
   task_force_id uuid,
@@ -147,10 +170,20 @@ CREATE TABLE public.complaints (
   estimated_resolution_date timestamp with time zone,
   submitted_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  last_activity_at timestamp with time zone DEFAULT now(),
+  cancelled_at timestamp with time zone,
+  cancellation_reason text,
+  cancelled_by uuid,
+  status character varying DEFAULT 'pending'::character varying,
+  all_responders_confirmed boolean DEFAULT false,
+  responders_confirmation_date timestamp with time zone,
+  confirmation_status text DEFAULT 'pending'::text CHECK (confirmation_status = ANY (ARRAY['pending'::text, 'waiting_for_responders'::text, 'waiting_for_complainant'::text, 'confirmed'::text, 'disputed'::text])),
   CONSTRAINT complaints_pkey PRIMARY KEY (id),
   CONSTRAINT complaints_assigned_coordinator_id_fkey FOREIGN KEY (assigned_coordinator_id) REFERENCES auth.users(id),
   CONSTRAINT complaints_master_complaint_id_fkey FOREIGN KEY (master_complaint_id) REFERENCES public.complaints(id),
-  CONSTRAINT complaints_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES auth.users(id)
+  CONSTRAINT complaints_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES auth.users(id),
+  CONSTRAINT complaints_cancelled_by_fkey FOREIGN KEY (cancelled_by) REFERENCES auth.users(id),
+  CONSTRAINT complaints_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.department_escalation_matrix (
   id bigint NOT NULL DEFAULT nextval('department_escalation_matrix_id_seq'::regclass),
@@ -167,6 +200,17 @@ CREATE TABLE public.department_escalation_matrix (
   created_by uuid,
   CONSTRAINT department_escalation_matrix_pkey PRIMARY KEY (id),
   CONSTRAINT department_escalation_matrix_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.department_subcategory_mapping (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  department_id bigint NOT NULL,
+  subcategory_id uuid NOT NULL,
+  is_primary boolean DEFAULT false,
+  response_priority integer DEFAULT 1,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT department_subcategory_mapping_pkey PRIMARY KEY (id),
+  CONSTRAINT department_subcategory_mapping_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id),
+  CONSTRAINT department_subcategory_mapping_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
 );
 CREATE TABLE public.department_transfers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -188,7 +232,32 @@ CREATE TABLE public.departments (
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT departments_pkey PRIMARY KEY (id)
+  subcategory_id uuid,
+  level text DEFAULT 'LGU'::text CHECK (level = ANY (ARRAY['LGU'::text, 'NGA'::text])),
+  contact_info jsonb DEFAULT '{}'::jsonb,
+  response_time_hours integer DEFAULT 24,
+  escalation_time_hours integer DEFAULT 72,
+  CONSTRAINT departments_pkey PRIMARY KEY (id),
+  CONSTRAINT departments_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
+);
+CREATE TABLE public.events (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  description text NOT NULL,
+  location character varying,
+  event_date timestamp with time zone NOT NULL,
+  end_date timestamp with time zone,
+  image_url text,
+  organizer character varying,
+  category character varying,
+  tags ARRAY DEFAULT '{}'::text[],
+  status character varying DEFAULT 'upcoming'::character varying,
+  max_participants integer,
+  registration_required boolean DEFAULT false,
+  created_by uuid,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT events_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.invitation_tokens (
   token character varying NOT NULL,
@@ -205,11 +274,18 @@ CREATE TABLE public.invitation_tokens (
   CONSTRAINT invitation_tokens_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.news (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  content text NOT NULL,
+  excerpt text,
+  image_url text,
+  author_id uuid,
+  category character varying,
+  tags ARRAY DEFAULT '{}'::text[],
+  status character varying DEFAULT 'draft'::character varying,
+  published_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  owner uuid DEFAULT auth.uid(),
-  title text NOT NULL,
-  description text,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT news_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.notice (
@@ -217,6 +293,22 @@ CREATE TABLE public.notice (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   owner uuid DEFAULT auth.uid(),
   CONSTRAINT notice_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notices (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  content text NOT NULL,
+  priority character varying DEFAULT 'normal'::character varying,
+  type character varying,
+  target_audience ARRAY DEFAULT '{}'::text[],
+  image_url text,
+  valid_from timestamp with time zone DEFAULT now(),
+  valid_until timestamp with time zone,
+  status character varying DEFAULT 'active'::character varying,
+  created_by uuid,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT notices_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.notification (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -227,7 +319,18 @@ CREATE TABLE public.notification (
   news_id bigint,
   complaint_id bigint,
   notice_id bigint,
-  CONSTRAINT notification_pkey PRIMARY KEY (id)
+  user_id uuid,
+  priority text DEFAULT 'info'::text CHECK (priority = ANY (ARRAY['info'::text, 'warning'::text, 'urgent'::text])),
+  title text,
+  message text,
+  icon text DEFAULT '📢'::text,
+  link text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  read boolean DEFAULT false,
+  read_at timestamp with time zone,
+  expires_at timestamp with time zone,
+  CONSTRAINT notification_pkey PRIMARY KEY (id),
+  CONSTRAINT notification_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.role_changes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -252,6 +355,34 @@ CREATE TABLE public.settings (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT settings_pkey PRIMARY KEY (key)
+);
+CREATE TABLE public.signup_links (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code character varying NOT NULL UNIQUE,
+  role character varying NOT NULL,
+  department_code character varying,
+  created_by uuid NOT NULL,
+  expires_at timestamp with time zone,
+  is_active boolean DEFAULT true,
+  used_at timestamp with time zone,
+  used_by uuid,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT signup_links_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.subcategories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  category_id uuid NOT NULL,
+  name text NOT NULL,
+  code text NOT NULL,
+  description text,
+  sort_order integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT subcategories_pkey PRIMARY KEY (id),
+  CONSTRAINT subcategories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
 );
 CREATE TABLE public.task_forces (
   id bigint NOT NULL DEFAULT nextval('task_forces_id_seq'::regclass),
@@ -292,7 +423,7 @@ CREATE TABLE public.user_sessions (
   user_id uuid NOT NULL,
   session_token text,
   ip_address inet,
-  user_agent text,  
+  user_agent text,
   device_type text,
   browser text,
   location_city text,

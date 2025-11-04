@@ -1,18 +1,19 @@
 const RoleManagementService = require('./RoleManagementService');
 const { USER_ROLES } = require('../../shared/constants');
+const { validateUserRole, isValidDepartmentCode } = require('../utils/roleValidation');
 
 /**
- * HRService
- * Handles HR-specific operations: manage LGU officers and admins
- */
+* HRService
+* Handles HR-specific operations: manage LGU officers and admins
+*/
 class HRService {
   constructor() {
     this.roleService = new RoleManagementService();
   }
 
   /**
-   * Promote citizen to LGU officer
-   */
+  * Promote citizen to LGU officer
+  */
   async promoteToOfficer(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -57,8 +58,8 @@ class HRService {
   }
 
   /**
-   * Promote LGU officer to LGU admin
-   */
+  * Promote LGU officer to LGU admin
+  */
   async promoteToAdmin(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -70,7 +71,7 @@ class HRService {
       // Get current role - must be an LGU officer (lgu-wst, lgu-engineering, etc.)
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
-      
+
       if (!isLguOfficer) {
         throw new Error('Can only promote LGU officers to admin');
       }
@@ -105,8 +106,8 @@ class HRService {
   }
 
   /**
-   * Demote LGU admin to LGU officer
-   */
+  * Demote LGU admin to LGU officer
+  */
   async demoteAdminToOfficer(userId, hrId, options = {}) {
     try {
       // Validate permission
@@ -118,7 +119,7 @@ class HRService {
       // Get current role - must be an LGU admin
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
-      
+
       if (!isLguAdmin) {
         throw new Error('Can only demote LGU admins');
       }
@@ -151,8 +152,8 @@ class HRService {
   }
 
   /**
-   * Strip all titles - revert to citizen
-   */
+  * Strip all titles - revert to citizen
+  */
   async stripTitles(userId, hrId, reason) {
     try {
       // Validate permission
@@ -163,7 +164,7 @@ class HRService {
 
       // Get current role
       const currentRole = await this.roleService.getUserRole(userId);
-      
+
       // Can't strip citizen or HR/Super Admin roles
       if (currentRole === 'citizen') {
         throw new Error('User is already a citizen');
@@ -205,8 +206,8 @@ class HRService {
   }
 
   /**
-   * Assign LGU officer to department
-   */
+  * Assign LGU officer to department
+  */
   async assignOfficerToDepartment(userId, departmentId, hrId) {
     try {
       // Validate permission
@@ -219,7 +220,7 @@ class HRService {
       const currentRole = await this.roleService.getUserRole(userId);
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
-      
+
       if (!isLguOfficer && !isLguAdmin) {
         throw new Error('Can only assign LGU officers/admins to departments');
       }
@@ -245,8 +246,8 @@ class HRService {
   }
 
   /**
-   * Get HR dashboard data
-   */
+  * Get HR dashboard data
+  */
   async getHRDashboard(hrId) {
     try {
       // Validate HR role
@@ -281,12 +282,12 @@ class HRService {
   }
 
   /**
-   * Get role change history for a user
-   */
+  * Get role change history for a user
+  */
   async getUserRoleHistory(userId, hrId) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { data, error } = await supabase
@@ -308,16 +309,16 @@ class HRService {
   }
 
   /**
-   * Generate signup link for specific role and department
-   */
+  * Generate signup link for specific role and department
+  */
   async generateSignupLink(hrId, role, departmentCode, expiresInHours = 1) {
     try {
-      
+
       // Validate HR role and get user metadata
       const hrRole = await this.roleService.getUserRole(hrId);
       const isHR = hrRole === 'lgu-hr' || hrRole === 'super-admin' || /^lgu-hr/.test(hrRole);
       const isCoordinator = hrRole === 'complaint-coordinator';
-      
+
       if (!isHR && !isCoordinator) {
         throw new Error('Only HR or coordinators can generate signup links');
       }
@@ -328,36 +329,34 @@ class HRService {
         throw new Error('Failed to get HR user information');
       }
 
-      // Extract department from HR role (e.g., lgu-hr-wst -> WST)
+      // With simplified roles, department is stored separately in metadata
       let hrDepartment = null;
-      if (hrRole.startsWith('lgu-hr-')) {
-        hrDepartment = hrRole.split('-')[2]?.toUpperCase();
-      } else if (hrRole === 'lgu-hr') {
+      if (hrRole === 'lgu-hr') {
         // Fallback to metadata if role is just 'lgu-hr'
         const hrMetadata = hrUser.user.raw_user_meta_data || {};
         hrDepartment = hrMetadata.department;
       }
 
-    // Role-based restrictions
-    if (isHR && !isCoordinator) {
+      // Role-based restrictions
+      if (isHR && !isCoordinator) {
       // LGU-HR can only create links for their own department
-      if (hrDepartment && hrDepartment !== departmentCode) {
-        throw new Error(`You can only create signup links for your own department (${hrDepartment})`);
+        if (hrDepartment && hrDepartment !== departmentCode) {
+          throw new Error(`You can only create signup links for your own department (${hrDepartment})`);
+        }
+
+        // For LGU-HR, automatically use their department if not specified
+        if (isHR && !departmentCode && hrDepartment) {
+          departmentCode = hrDepartment;
+          // console.log removed for security
+        }
+
+        // console.log removed for security
+
+        // LGU-HR can only create officer or admin roles
+        if (!['lgu-officer', 'lgu-admin'].includes(role)) {
+          throw new Error('You can only create signup links for officer or admin roles');
+        }
       }
-      
-      // For LGU-HR, automatically use their department if not specified
-      if (isHR && !departmentCode && hrDepartment) {
-        departmentCode = hrDepartment;
-        console.log(`[HR] Auto-setting department to HR's department: ${departmentCode}`);
-      }
-      
-      console.log(`[HR] Final departmentCode before database insert: ${departmentCode}`);
-      
-      // LGU-HR can only create officer or admin roles
-      if (!['lgu-officer', 'lgu-admin'].includes(role)) {
-        throw new Error('You can only create signup links for officer or admin roles');
-      }
-    }
 
       // Validate role
       const validRoles = ['lgu-officer', 'lgu-admin', 'lgu-hr'];
@@ -365,8 +364,16 @@ class HRService {
         throw new Error('Invalid role specified');
       }
 
+      // Validate department code if provided
+      if (departmentCode) {
+        const isValidDept = await isValidDepartmentCode(departmentCode);
+        if (!isValidDept) {
+          throw new Error(`Invalid department code: ${departmentCode}. Must be one of the active departments.`);
+        }
+      }
+
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       // Get HR user info for metadata
@@ -377,7 +384,7 @@ class HRService {
 
       // Generate unique code
       const code = this.generateUniqueCode();
-      
+
       // Calculate expiration
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + expiresInHours);
@@ -394,15 +401,8 @@ class HRService {
       }
 
       // Create signup link record
-      console.log('[HR] Inserting into database:', {
-        code,
-        role,
-        department_code: departmentCode,
-        created_by: hrId,
-        expires_at: expiresAt.toISOString(),
-        department_name: departmentName
-      });
-      
+      // console.log removed for security
+
       const { data: linkData, error: linkError } = await supabase
         .from('signup_links')
         .insert({
@@ -447,8 +447,8 @@ class HRService {
   }
 
   /**
-   * Get all signup links created by HR
-   */
+  * Get all signup links created by HR
+  */
   async getSignupLinks(hrId, filters = {}) {
     try {
       // Validate HR role
@@ -459,7 +459,7 @@ class HRService {
       }
 
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       let query = supabase
@@ -484,13 +484,7 @@ class HRService {
         throw new Error('Failed to fetch signup links');
       }
 
-      console.log('[HR] Retrieved links from database:', links.map(link => ({
-        id: link.id,
-        code: link.code,
-        role: link.role,
-        department_code: link.department_code,
-        created_at: link.created_at
-      })));
+      // console.log removed for security
 
       // Add full URLs and status to each link
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -498,7 +492,7 @@ class HRService {
         ...link,
         url: `${baseUrl}/signup-with-code?code=${link.code}`,
         is_expired: link.expires_at ? new Date(link.expires_at) < new Date() : false,
-        is_used: !!link.used_at
+        is_used: Boolean(link.used_at)
       }));
 
       return {
@@ -512,25 +506,25 @@ class HRService {
   }
 
   /**
-   * Deactivate a signup link
-   */
+  * Deactivate a signup link
+  */
   async deactivateSignupLink(hrId, linkId) {
     try {
-      console.log('[HR-SERVICE] Deactivating signup link:', { hrId, linkId });
-      
+      // console.log removed for security
+
       // Validate HR role
       const hrRole = await this.roleService.getUserRole(hrId);
-      
+
       const isHR = hrRole === 'lgu-hr' || hrRole === 'super-admin' || /^lgu-hr/.test(hrRole);
       if (!isHR) {
         throw new Error('Only HR can deactivate signup links');
       }
 
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
-      console.log('[HR-SERVICE] Updating signup_links table...');
+      // console.log removed for security
       const { data, error } = await supabase
         .from('signup_links')
         .update({ is_active: false })
@@ -538,7 +532,7 @@ class HRService {
         .eq('created_by', hrId)
         .select();
 
-      console.log('[HR-SERVICE] Update result:', { data, error });
+      // console.log removed for security
 
       if (error) {
         throw new Error('Failed to deactivate signup link');
@@ -556,12 +550,12 @@ class HRService {
   }
 
   /**
-   * Validate signup code (public method)
-   */
+  * Validate signup code (public method)
+  */
   async validateSignupCode(code) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { data: link, error } = await supabase
@@ -600,12 +594,12 @@ class HRService {
   }
 
   /**
-   * Mark signup code as used
-   */
+  * Mark signup code as used
+  */
   async markSignupCodeUsed(code, userId) {
     try {
       const Database = require('../config/database');
-      const db = new Database();
+      const db = Database.getInstance();
       const supabase = db.getClient();
 
       const { error } = await supabase
@@ -629,16 +623,17 @@ class HRService {
   }
 
   /**
-   * Generate unique code for signup link
-   */
+  * Generate unique code for signup link
+  */
   generateUniqueCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      result += chars.charAt(require('crypto').randomInt(0, chars.length));
     }
     return result;
   }
 }
 
 module.exports = HRService;
+

@@ -4,11 +4,12 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const config = require('../../config/app');
 const Database = require('./config/database');
-const database = new Database();
 const routes = require('./routes');
 const { authenticateUser, requireRole } = require('./middleware/auth');
 const { ErrorHandler } = require('./middleware/errorHandler');
-const { securityHeaders, cspConfig } = require('./middleware/security');
+const { securityHeaders, cspConfig, customSecurityHeaders } = require('./middleware/security');
+const { apiLimiter, authLimiter } = require('./middleware/rateLimiting');
+const InputSanitizer = require('./middleware/inputSanitizer');
 
 class CitizenLinkApp {
   constructor() {
@@ -19,14 +20,24 @@ class CitizenLinkApp {
   }
 
   initializeMiddleware() {
-    // Security middleware (applied first)
+    // Enhanced security headers (applied first)
     this.app.use(securityHeaders);
+    this.app.use(customSecurityHeaders);
+
+    // Rate limiting (applied early to protect against abuse)
+    this.app.use('/api/', apiLimiter);
+
+    // Enhanced input sanitization and validation
+    this.app.use(InputSanitizer.validateRequestSize);
+    this.app.use(InputSanitizer.preventSQLInjection);
+    this.app.use(InputSanitizer.preventXSS);
+    this.app.use(InputSanitizer.sanitize);
 
     this.app.use(cors());
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
     this.app.use(cookieParser());
-    
+
     // Serve static files with proper paths
     // Prefer public assets, then fall back to src client assets
     this.app.use('/js', express.static(path.join(config.rootDir, 'public', 'js')));
@@ -36,7 +47,16 @@ class CitizenLinkApp {
     this.app.use('/assets', express.static(path.join(config.rootDir, 'src', 'client', 'assets')));
     this.app.use('/public', express.static(path.join(config.rootDir, 'public')));
     this.app.use('/uploads', express.static(path.join(config.rootDir, 'uploads')));
-    
+
+    // Additional static file serving for coordinator review system
+    this.app.use('/components', express.static(path.join(config.rootDir, 'public', 'components')));
+    this.app.use('/styles', express.static(path.join(config.rootDir, 'public', 'styles')));
+
+    // Serve favicon
+    this.app.get('/favicon.ico', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'public', 'favicon.ico'));
+    });
+
     // Serve node_modules for browser imports
     this.app.use('/node_modules', express.static(path.join(config.rootDir, 'node_modules')));
   }
@@ -46,25 +66,56 @@ class CitizenLinkApp {
     this.app.use('/api', routes);
 
     // Session cookie helpers for client
-    this.app.post('/auth/session', (req, res) => {
+    this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
+        console.log('[SERVER SESSION] 🍪 Session cookie request received');
+        console.log('[SERVER SESSION] Request details:', {
+          path: req.path,
+          method: req.method,
+          hasBody: Boolean(req.body),
+          contentType: req.get('Content-Type')
+        });
+
         const token = req.body?.access_token;
+        const remember = Boolean(req.body?.remember);
+
+        console.log('[SERVER SESSION] Token details:', {
+          hasToken: Boolean(token),
+          tokenLength: token?.length,
+          remember
+        });
+
         if (!token) {
+          console.log('[SERVER SESSION] ❌ No token provided in request body');
+          console.log('[SERVER SESSION] Request body keys:', Object.keys(req.body || {}));
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
-        res.cookie('sb_access_token', token, {
-          httpOnly: true,
+
+        const cookieOptions = {
+          httpOnly: true, // Set back to true for security
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: config.security.cookieMaxAge
-        });
+          path: '/',
+          maxAge: 315360000000 // 10 years for development (permanent)
+        };
+
+        console.log('[SERVER SESSION] 🍪 Setting cookie with options:', cookieOptions);
+        console.log('[SERVER SESSION] Token prefix:', `${token.substring(0, 20)  }...`);
+
+        res.cookie('sb_access_token', token, cookieOptions);
+
+        console.log('[SERVER SESSION] ✅ Cookie set successfully');
+        console.log('[SERVER SESSION] Response status: 200');
+
         return res.json({ success: true });
       } catch (e) {
+        console.error('[SERVER SESSION] 💥 Error setting session cookie:', e);
+        console.error('[SERVER SESSION] Error stack:', e.stack);
         return res.status(500).json({ success: false, error: 'Failed to set session' });
       }
     });
 
-    this.app.delete('/auth/session', (req, res) => {
+    this.app.delete('/auth/session', authLimiter, (req, res) => {
       try {
         res.clearCookie('sb_access_token');
         return res.json({ success: true });
@@ -72,6 +123,23 @@ class CitizenLinkApp {
         return res.status(500).json({ success: false, error: 'Failed to clear session' });
       }
     });
+
+    // Debug endpoint (development only)
+    if (process.env.NODE_ENV === 'development') {
+      this.app.get('/debug/auth', async (req, res) => {
+        try {
+          const diagnostics = {
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV,
+            hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+            hasSupabaseServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
+          };
+          res.json({ success: true, diagnostics });
+        } catch (error) {
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+    }
 
     // Protected Pages (must come before public routes and 404 handler)
     this.setupProtectedRoutes();
@@ -86,173 +154,273 @@ class CitizenLinkApp {
   }
 
   setupProtectedRoutes() {
+    // Redirects from role-prefixed URLs to simplified URLs (backward compatibility)
+    this.app.get('/citizen/fileComplaint', authenticateUser, (req, res) => {
+      res.redirect('/fileComplaint');
+    });
+
+    this.app.get('/citizen/departments', authenticateUser, (req, res) => {
+      res.redirect('/departments');
+    });
+
+    this.app.get('/admin/appoint-admins', authenticateUser, (req, res) => {
+      res.redirect('/appoint-admins');
+    });
+
+    this.app.get('/admin/departments', authenticateUser, (req, res) => {
+      res.redirect('/departments');
+    });
+
+    this.app.get('/admin/role-changer', authenticateUser, (req, res) => {
+      res.redirect('/role-changer');
+    });
+
+    this.app.get('/admin/settings', authenticateUser, (req, res) => {
+      res.redirect('/settings');
+    });
+
+    this.app.get('/hr/link-generator', authenticateUser, (req, res) => {
+      res.redirect('/link-generator');
+    });
+
+    this.app.get('/hr/role-changer', authenticateUser, (req, res) => {
+      res.redirect('/role-changer');
+    });
+
+    this.app.get('/coordinator/review-queue', authenticateUser, (req, res) => {
+      res.redirect('/review-queue');
+    });
+
+    this.app.get('/coordinator/assignments', authenticateUser, (req, res) => {
+      res.redirect('/assignments');
+    });
+
+    this.app.get('/coordinator/heatmap', authenticateUser, (req, res) => {
+      res.redirect('/heatmap');
+    });
+
+    this.app.get('/lgu-admin/dashboard', authenticateUser, (req, res) => {
+      res.redirect('/dashboard');
+    });
+
+    this.app.get('/lgu-admin/assignments', authenticateUser, (req, res) => {
+      res.redirect('/assignments');
+    });
+
+    this.app.get('/lgu-admin/heatmap', authenticateUser, (req, res) => {
+      res.redirect('/heatmap');
+    });
+
+    this.app.get('/lgu-admin/publish', authenticateUser, (req, res) => {
+      res.redirect('/publish');
+    });
+
+    this.app.get('/lgu-officer/task-assigned', authenticateUser, (req, res) => {
+      res.redirect('/task-assigned');
+    });
+
     // Dashboard route - protected and routed by role
-    this.app.get("/dashboard", authenticateUser, (req, res) => {
-      const userRole = req.user?.role || "citizen";
+    this.app.get('/dashboard', authenticateUser, (req, res) => {
+      const userRole = req.user?.role || 'citizen';
       const dashboardPath = this.getDashboardPath(userRole);
       res.sendFile(dashboardPath);
     });
 
-    // General protected pages
-    this.app.get("/myProfile", authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "myProfile.html"));
+    // General protected pages (simplified URLs)
+    this.app.get('/myProfile', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'myProfile.html'));
+    });
+
+    // Publication page (all authenticated roles)
+    this.app.get('/publication', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'publication.html'));
     });
 
     // File Complaint page (citizen only or staff in citizen mode)
-    this.app.get("/citizen/fileComplaint", authenticateUser, (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "citizen", "fileComplaint.html"));
+    this.app.get('/fileComplaint', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'fileComplaint.html'));
     });
 
-    // Admin pages
-    this.app.get("/admin/departments", 
-      authenticateUser, 
-      requireRole(["super-admin"]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "admin", "departments", "index.html"));
+    // Departments page (role-aware)
+    this.app.get('/departments', authenticateUser, (req, res) => {
+      const userRole = req.user?.role || 'citizen';
+      if (userRole === 'super-admin') {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'departments', 'index.html'));
+      } else {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'departments.html'));
       }
-    );
+    });
 
-    this.app.get("/admin/settings", 
-      authenticateUser, 
-      requireRole(["lgu-admin", "super-admin"]), 
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "admin", "settings", "index.html"));
-      }
-    );
-
-    // LGU-specific pages
-    this.app.get("/taskAssigned", 
-      authenticateUser, 
-      requireRole([/^lgu-(?!admin|hr)/]),
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu", "taskAssigned.html"));
-      }
-    );
-
-    // LGU Admin specific pages
-    this.app.get("/lgu-admin/heatmap",
+    // Digos City Map (citizen only)
+    this.app.get('/digos-map',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['citizen']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "heatmap.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'citizen', 'digosMap.html'));
       }
     );
 
-    // Redirect /heatmap to /lgu-admin/heatmap for convenience
-    this.app.get("/heatmap",
+    // Complaint Details page (authenticated users only)
+    this.app.get('/complaint-details', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'complaint-details.html'));
+    });
+
+    // Complaint Details page with ID parameter
+    this.app.get('/complaint-details/:id', authenticateUser, (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'complaint-details.html'));
+    });
+
+    // Admin pages (simplified URLs)
+    this.app.get('/appoint-admins',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['super-admin']),
       (req, res) => {
-        res.redirect("/lgu-admin/heatmap");
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'appointAdmins.html'));
       }
     );
 
-    this.app.get("/publish",
+    this.app.get('/settings',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu-admin', 'super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'admin', 'settings', 'index.html'));
       }
     );
 
-    this.app.get("/appointMembers",
+    this.app.get('/role-changer',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['super-admin', 'lgu-hr']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "appointMembers.html"));
+        const userRole = req.user?.role || 'citizen';
+        if (userRole === 'super-admin') {
+          res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'role-changer.html'));
+        } else {
+          res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'role-changer.html'));
+        }
       }
     );
 
-    this.app.get("/lgu-admin/assignments",
+    // LGU-specific pages (simplified URLs)
+    this.app.get('/task-assigned',
       authenticateUser,
-      requireRole(["lgu-admin", /^lgu-admin/]),
+      requireRole(['lgu']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "lgu-admin", "assignments.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
+      }
+    );
+
+    // LGU Admin specific pages (simplified URLs)
+    this.app.get('/assignments',
+      authenticateUser,
+      requireRole(['lgu-admin', 'complaint-coordinator']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'assignments.html'));
+      }
+    );
+
+    this.app.get('/heatmap',
+      authenticateUser,
+      requireRole(['lgu-admin', 'complaint-coordinator']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'heatmap.html'));
+      }
+    );
+
+    this.app.get('/publish',
+      authenticateUser,
+      requireRole(['lgu-admin']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'publish.html'));
       }
     );
 
     // Super Admin specific pages
-    this.app.get("/appointAdmins", 
-      authenticateUser, 
-      requireRole(["super-admin"]), 
+    this.app.get('/appointAdmins',
+      authenticateUser,
+      requireRole(['super-admin']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "super-admin", "appointAdmins.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'appointAdmins.html'));
       }
     );
 
     // Role-based dashboard shortcuts
-    this.app.get("/citizen", authenticateUser, requireRole(["citizen"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/citizen', authenticateUser, requireRole(['citizen']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/lgu", authenticateUser, requireRole(["lgu", /^lgu-/]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/lgu', authenticateUser, requireRole(['lgu']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/coordinator", authenticateUser, requireRole(["complaint-coordinator"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/coordinator', authenticateUser, requireRole(['complaint-coordinator']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    // Coordinator review queue list page
-    this.app.get("/coordinator/review-queue", 
-      authenticateUser, 
-      requireRole(["complaint-coordinator"]), 
+    // HR specific pages (simplified URLs)
+    this.app.get('/link-generator',
+      authenticateUser,
+      requireRole(['lgu-hr']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review-queue.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'hr', 'link-generator.html'));
+      }
+    );
+
+    // Coordinator review queue list page (simplified URLs)
+    this.app.get('/review-queue',
+      authenticateUser,
+      requireRole(['complaint-coordinator']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'coordinator', 'review-queue.html'));
       }
     );
 
     // Coordinator complaint review page (individual)
-    this.app.get("/coordinator/review/:id", 
-      authenticateUser, 
-      requireRole(["complaint-coordinator"]), 
-      (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "coordinator", "review.html"));
-      }
-    );
-
-    this.app.get("/hr", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
-      res.redirect("/dashboard");
-    });
-
-    this.app.get("/hr/link-generator", authenticateUser, requireRole(["lgu-hr", /^lgu-hr/]), (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "link-generator.html"));
-    });
-
-    // HR Role Changer dedicated page
-    this.app.get("/hr/role-changer",
+    this.app.get('/coordinator/review/:id',
       authenticateUser,
-      requireRole(["lgu-hr", /^lgu-hr/]),
+      requireRole(['complaint-coordinator']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "hr", "role-changer.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'coordinator', 'review.html'));
       }
     );
 
     // Complete Position Signup page (public - no auth required)
-    this.app.get("/complete-position-signup", (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "auth", "complete-position-signup.html"));
+    this.app.get('/complete-position-signup', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'auth', 'complete-position-signup.html'));
     });
 
-    this.app.get("/lgu-admin", authenticateUser, requireRole(["lgu-admin"]), (req, res) => {
-      res.redirect("/dashboard");
+    this.app.get('/lgu-admin', authenticateUser, requireRole(['lgu-admin']), (req, res) => {
+      res.redirect('/dashboard');
     });
 
-    this.app.get("/super-admin", authenticateUser, requireRole(["super-admin"]), (req, res) => {
-      res.redirect("/dashboard");
-    });
-
-    // Super Admin Role Changer dedicated page
-    this.app.get("/super-admin/role-changer",
+    // LGU Officer routes (simplified URLs)
+    this.app.get('/lgu-officer/dashboard',
       authenticateUser,
-      requireRole(["super-admin"]),
+      requireRole(['lgu']),
       (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", "super-admin", "role-changer.html"));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'dashboard.html'));
       }
     );
 
+    // LGU Officer tasks page (alias for task-assigned)
+    this.app.get('/lgu-officer/tasks',
+      authenticateUser,
+      requireRole(['lgu']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'lgu-officer', 'assigned-tasks.html'));
+      }
+    );
+
+    // Super Admin Role Changer dedicated page
+    this.app.get('/super-admin/role-changer',
+      authenticateUser,
+      requireRole(['super-admin']),
+      (req, res) => {
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', 'super-admin', 'role-changer.html'));
+      }
+    );
 
     // Legacy API endpoints for user info
-    this.app.get("/api/user/profile", authenticateUser, (req, res) => {
+    this.app.get('/api/user/profile', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
@@ -269,19 +437,19 @@ class CitizenLinkApp {
       });
     });
 
-    this.app.get("/api/user/role", authenticateUser, (req, res) => {
+    this.app.get('/api/user/role', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
       res.json({
         success: true,
         data: {
-          role: user.role || "citizen",
-          name: user.name || "Unknown",
+          role: user.role || 'citizen',
+          name: user.name || 'Unknown',
         },
       });
     });
 
     // User role switching endpoint
-    this.app.post("/api/user/switch-role", authenticateUser, async (req, res) => {
+    this.app.post('/api/user/switch-role', authenticateUser, authLimiter, async (req, res) => {
       try {
         const { targetRole, previousRole } = req.body;
         const { user } = req;
@@ -299,17 +467,21 @@ class CitizenLinkApp {
           role: targetRole
         };
 
-        // If switching to citizen, store previous role as actual_role for UI logic
+        // If switching to citizen, store previous role as base_role for UI logic
         if (targetRole === 'citizen' && previousRole) {
-          newMetadata.actual_role = previousRole;
+          newMetadata.base_role = previousRole;
         }
 
-        const { data, error } = await database.supabase.auth.admin.updateUserById(user.id, {
-          user_metadata: newMetadata
-        });
+        // Update user metadata directly using the auth.users table
+        const { error: updateError } = await Database.getClient()
+          .from('auth.users')
+          .update({
+            raw_user_meta_data: newMetadata
+          })
+          .eq('id', user.id);
 
-        if (error) {
-          console.error('Error updating user role:', error);
+        if (updateError) {
+          console.error('Error updating user role:', updateError);
           return res.status(500).json({
             success: false,
             error: 'Failed to update role'
@@ -333,49 +505,337 @@ class CitizenLinkApp {
     });
 
     // User role info endpoint (for role toggle functionality)
-    this.app.get("/api/user/role-info", authenticateUser, (req, res) => {
+    this.app.get('/api/user/role-info', authenticateUser, authLimiter, (req, res) => {
       const { user } = req;
-      const role = user.role || "citizen";
-      const metaActual = user.raw_user_meta_data?.actual_role || null;
-      // If no meta actual_role is stored, assume staff's actual role equals their current role (not citizen)
-      const actualRole = metaActual || (role !== 'citizen' ? role : null);
+      const role = user.role || 'citizen';
+      const metaBase = user.raw_user_meta_data?.base_role || null;
+      // If no meta base_role is stored, assume staff's base role equals their current role (not citizen)
+      const baseRole = metaBase || (role !== 'citizen' ? role : null);
+
+      // Debug logging
+      console.log('[API] User role:', role, 'metaBase:', metaBase, 'baseRole:', baseRole);
+      console.log('[API] User metadata:', JSON.stringify(user.raw_user_meta_data, null, 2));
       res.json({
         success: true,
         data: {
-          role: role,
-          name: user.name || "Unknown",
+          role,
+          name: user.name || 'Unknown',
           email: user.email,
           metadata: user.raw_user_meta_data,
-          actual_role: actualRole
+          base_role: baseRole,
+          actual_role: baseRole  // Add this for compatibility with frontend
         }
       });
+    });
+
+    // Debug endpoint for role switcher
+    this.app.get('/debug-role-switcher', authenticateUser, (req, res) => {
+      const { user } = req;
+      const role = user.role || 'citizen';
+      const metaBase = user.raw_user_meta_data?.base_role || null;
+      const baseRole = metaBase || (role !== 'citizen' ? role : null);
+      const isInCitizen = role === 'citizen' && baseRole && baseRole !== 'citizen';
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Role Switcher</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Role Switcher Debug</h1>
+    
+    <div class="info">
+        <h3>API Response:</h3>
+        <pre>${JSON.stringify({
+    success: true,
+    data: {
+      role,
+      name: user.name || 'Unknown',
+      email: user.email,
+      metadata: user.raw_user_meta_data,
+      base_role: baseRole,
+      actual_role: baseRole
+    }
+  }, null, 2)}</pre>
+    </div>
+    
+    <div class="info">
+        <h3>Role Analysis:</h3>
+        <p><strong>Current Role:</strong> ${role}</p>
+        <p><strong>Base Role:</strong> ${baseRole}</p>
+        <p><strong>Is in Citizen Mode:</strong> ${isInCitizen}</p>
+        <p><strong>Should Show Button:</strong> ${isInCitizen}</p>
+    </div>
+    
+    <div class="info">
+        <h3>Role Switcher Button:</h3>
+        ${isInCitizen ?
+    `<button class="button" onclick="switchRole()">Switch to ${baseRole.toUpperCase()}</button>` :
+    '<p>No button should appear - user is not in citizen mode with base role</p>'
+}
+    </div>
+
+    <script>
+        async function switchRole() {
+            try {
+                const response = await fetch('/api/user/switch-role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        targetRole: '${baseRole}',
+                        previousRole: 'citizen'
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Role switched successfully! Page will reload...');
+                    window.location.reload();
+                } else {
+                    alert('Failed to switch role');
+                }
+            } catch (error) {
+                alert('Error switching role: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>`;
+
+      res.send(html);
+    });
+
+    // Session health endpoint for monitoring (public - no auth required)
+    this.app.get('/auth/session/health', async (req, res) => {
+      try {
+        console.log('[SESSION HEALTH] Checking session health...');
+
+        // Check if user has valid session cookie
+        const token = req.cookies?.sb_access_token;
+
+        if (!token) {
+          console.log('[SESSION HEALTH] No session token found');
+          return res.status(401).json({
+            success: false,
+            error: 'No session token found',
+            data: {
+              authenticated: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        console.log('[SESSION HEALTH] Token found, validating with Supabase...');
+
+        // Try to validate token with Supabase using the correct method
+        const { data: { user }, error } = await Database.getClient().auth.getUser(token);
+
+        if (error || !user) {
+          console.log('[SESSION HEALTH] Token validation failed:', error?.message);
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid session token',
+            data: {
+              authenticated: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        console.log('[SESSION HEALTH] Token valid, extracting user data...');
+
+        // Extract role from user metadata
+        const userMetadata = user.user_metadata || {};
+        const rawUserMetaData = user.raw_user_meta_data || {};
+        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const role = combinedMetadata.role || 'citizen';
+        const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+
+        console.log('[SESSION HEALTH] User data extracted:', { role, name });
+
+        res.json({
+          success: true,
+          data: {
+            authenticated: true,
+            userId: user.id,
+            email: user.email,
+            role,
+            name,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('[SESSION HEALTH] Error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Session health check failed',
+          data: {
+            authenticated: false,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    });
+
+    // Session refresh endpoint (public - no auth required)
+    this.app.post('/auth/session/refresh', async (req, res) => {
+      try {
+        // Check if user has existing session cookie
+        const existingToken = req.cookies?.sb_access_token;
+
+        if (!existingToken) {
+          return res.status(401).json({
+            success: false,
+            error: 'No existing session to refresh',
+            data: {
+              refreshed: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        // Try to get fresh session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          return res.status(401).json({
+            success: false,
+            error: 'No valid Supabase session found',
+            debug: {
+              error: error?.message,
+              hasSession: Boolean(session)
+            }
+          });
+        }
+
+        // Update server cookie with fresh session
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 4 * 60 * 60 * 1000 // 4 hours
+        };
+
+        res.cookie('sb_access_token', session.access_token, cookieOptions);
+
+        // Extract user info from session
+        const {user} = session;
+        const userMetadata = user.user_metadata || {};
+        const rawUserMetaData = user.raw_user_meta_data || {};
+        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const role = combinedMetadata.role || 'citizen';
+        const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+
+        res.json({
+          success: true,
+          data: {
+            userId: user.id,
+            email: user.email,
+            role,
+            name,
+            refreshed: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('[SESSION REFRESH] Error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Session refresh failed',
+          debug: {
+            error: error.message
+          }
+        });
+      }
+    });
+
+    // Simple authentication test endpoint (public)
+    this.app.get('/auth/test', (req, res) => {
+      try {
+        const token = req.cookies?.sb_access_token;
+
+        if (!token) {
+          return res.json({
+            success: false,
+            authenticated: false,
+            message: 'No session token found',
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        // Try to validate token
+        supabase.auth.getUser(token).then(({ data: { user }, error }) => {
+          if (error || !user) {
+            return res.json({
+              success: false,
+              authenticated: false,
+              message: 'Invalid session token',
+              error: error?.message,
+              timestamp: new Date().toISOString()
+            });
+          }
+
+          res.json({
+            success: true,
+            authenticated: true,
+            message: 'Session is valid',
+            userId: user.id,
+            email: user.email,
+            timestamp: new Date().toISOString()
+          });
+        }).catch(error => {
+          res.json({
+            success: false,
+            authenticated: false,
+            message: 'Token validation failed',
+            error: error.message,
+            timestamp: new Date().toISOString()
+          });
+        });
+      } catch (error) {
+        res.json({
+          success: false,
+          authenticated: false,
+          message: 'Authentication test failed',
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
     });
   }
 
   setupPublicRoutes() {
     // Root route
-    this.app.get("/", (req, res) => {
-      res.sendFile(path.join(config.rootDir, "views", "pages", "index.html"));
+    this.app.get('/', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'index.html'));
     });
 
     // Public pages
-    const publicPages = ['login', 'signup', 'resetPass', 'OAuthContinuation', 'success'];
+    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'OAuthContinuation', 'success'];
     publicPages.forEach(page => {
       this.app.get(`/${page}`, (req, res) => {
-        res.sendFile(path.join(config.rootDir, "views", "pages", `${page}.html`));
+        res.sendFile(path.join(config.rootDir, 'views', 'pages', `${page}.html`));
       });
     });
 
     // Special signup with code page
     this.app.get('/signup-with-code', (req, res) => {
-      const filePath = path.join(config.rootDir, "views", "pages", "auth", "signup-with-code.html");
+      const filePath = path.join(config.rootDir, 'views', 'pages', 'auth', 'signup-with-code.html');
       res.sendFile(filePath);
     });
 
     // Public API endpoints
-    this.app.get("/api/boundaries", async (req, res) => {
+    this.app.get('/api/boundaries', apiLimiter, async (req, res) => {
       try {
-        const filePath = path.join(config.rootDir, "src", "client", "assets", "brgy_boundaries_location.json");
+        const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'brgy_boundaries_location.json');
         const fs = require('fs').promises;
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
@@ -384,26 +844,26 @@ class CitizenLinkApp {
       }
     });
 
-    this.app.get("/api/reverse-geocode", async (req, res) => {
+    this.app.get('/api/reverse-geocode', apiLimiter, async (req, res) => {
       try {
         const { lat, lng } = req.query;
-        
+
         if (!lat || !lng) {
           return res.status(400).json({ error: 'Latitude and longitude are required' });
         }
 
         const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
-        
+
         const response = await fetch(nominatimUrl, {
           headers: {
             'User-Agent': 'CitizenLink/1.0 (https://citizenlink.local)'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`Nominatim API error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         res.json(data);
       } catch (error) {
@@ -415,20 +875,20 @@ class CitizenLinkApp {
 
   getDashboardPath(userRole) {
     const roleDashboards = {
-      citizen: path.join(config.rootDir, "views", "pages", "citizen", "dashboard.html"),
-      lgu: path.join(config.rootDir, "views", "pages", "lgu", "dashboard.html"),
-      "complaint-coordinator": path.join(config.rootDir, "views", "pages", "coordinator", "dashboard.html"),
-      "lgu-admin": path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html"),
-      "lgu-hr": path.join(config.rootDir, "views", "pages", "hr", "dashboard.html"),
-      "super-admin": path.join(config.rootDir, "views", "pages", "super-admin", "dashboard.html"),
+      citizen: path.join(config.rootDir, 'views', 'pages', 'citizen', 'dashboard.html'),
+      lgu: path.join(config.rootDir, 'views', 'pages', 'lgu', 'dashboard.html'),
+      'complaint-coordinator': path.join(config.rootDir, 'views', 'pages', 'coordinator', 'dashboard.html'),
+      'lgu-admin': path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'dashboard.html'),
+      'lgu-hr': path.join(config.rootDir, 'views', 'pages', 'hr', 'dashboard.html'),
+      'super-admin': path.join(config.rootDir, 'views', 'pages', 'super-admin', 'dashboard.html'),
     };
 
-    // Check for department-specific roles (e.g., lgu-hr-{dept}, lgu-admin-{dept})
-    if (userRole.startsWith('lgu-hr-')) {
-      return path.join(config.rootDir, "views", "pages", "hr", "dashboard.html");
+    // Check for simplified LGU roles
+    if (userRole === 'lgu-hr') {
+      return path.join(config.rootDir, 'views', 'pages', 'hr', 'dashboard.html');
     }
-    if (userRole.startsWith('lgu-admin-')) {
-      return path.join(config.rootDir, "views", "pages", "lgu-admin", "dashboard.html");
+    if (userRole === 'lgu-admin') {
+      return path.join(config.rootDir, 'views', 'pages', 'lgu-admin', 'dashboard.html');
     }
 
     return roleDashboards[userRole] || roleDashboards.citizen;
@@ -437,7 +897,7 @@ class CitizenLinkApp {
   initializeErrorHandling() {
     // 404 handler for unmatched routes
     this.app.use(ErrorHandler.notFound);
-    
+
     // Global error handler
     this.app.use(ErrorHandler.handle);
   }
@@ -445,13 +905,20 @@ class CitizenLinkApp {
   async start(port = 3001) {
     try {
       // Test database connection
-      const isConnected = await database.testConnection();
+      const isConnected = await Database.getInstance().testConnection();
       if (!isConnected) {
         throw new Error('Database connection failed');
       }
 
+      // Initialize reminder service
+      const ReminderService = require('./services/ReminderService');
+      const reminderService = new ReminderService();
+      reminderService.startScheduler();
+      console.log('📅 Reminder service started');
+
       this.app.listen(port, () => {
-        // Server started
+        console.log(`✅ Server started on port ${port}`);
+        console.log(`🌐 Server URL: http://localhost:${port}`);
       });
     } catch (error) {
       console.error('Failed to start server:', error);

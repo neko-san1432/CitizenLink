@@ -5,8 +5,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-}
+  padding: 20px}
 
 .auth-card {
   background: white;
@@ -16,8 +15,7 @@
   width: 100%;
   max-width: 450px;
   position: relative;
-  overflow: hidden;
-}
+  overflow: hidden}
 
 .auth-card::before {
   content: '';
@@ -26,13 +24,11 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-}
+  background: linear-gradient(90deg, #667eea, #764ba2)}
 
 .auth-header {
   text-align: center;
-  margin-bottom: 30px;
-}
+  margin-bottom: 30px}
 
 .auth-logo,
 .auth-logo-placeholder {
@@ -47,15 +43,13 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 32px;
-  font-weight: bold;
-}
+  font-weight: bold}
 
 /* OAuth Buttons */
 .auth-divider {
   text-align: center;
   margin: 20px 0;
-  position: relative;
-}
+  position: relative}
 
 .auth-divider::before {
   content: '';
@@ -64,22 +58,19 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: #e0e0e0;
-}
+  background: #e0e0e0}
 
 .auth-divider span {
   background: white;
   padding: 0 15px;
   color: #666;
-  font-size: 14px;
-}
+  font-size: 14px}
 
 .oauth-buttons {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 20px;
-}
+  margin-top: 20px}
 
 .btn-oauth {
   display: flex;
@@ -94,72 +85,60 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  
   text-decoration: none;
-  width: 100%;
-}
+  width: 100%}
 
 .btn-oauth:hover {
   background: #f8f9fa;
   border-color: #d0d0d0;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1)}
 
 .btn-oauth.google {
-  border-color: #dadce0;
-}
+  border-color: #dadce0}
 
 .btn-oauth.google:hover {
   background: #f8f9fa;
-  border-color: #c1c1c1;
-}
+  border-color: #c1c1c1}
 
 .btn-oauth.facebook {
   border-color: #1877f2;
-  color: #1877f2;
-}
+  color: #1877f2}
 
 .btn-oauth.facebook:hover {
   background: #1877f2;
-  color: white;
-}
+  color: white}
 
 .btn-oauth svg {
-  flex-shrink: 0;
-}
+  flex-shrink: 0}
 
 .auth-header h1 {
   color: #333;
   font-size: 28px;
   font-weight: 600;
-  margin: 0 0 10px 0;
-}
+  margin: 0 0 10px 0}
 
 .auth-header p {
   color: #666;
   font-size: 16px;
   margin: 0;
-  line-height: 1.5;
-}
+  line-height: 1.5}
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
+  gap: 20px}
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
+  gap: 8px}
 
 .form-group label {
   color: #333;
   font-weight: 500;
-  font-size: 14px;
-}
+  font-size: 14px}
 
 .form-group input,
 .form-group select {
@@ -167,68 +146,57 @@
   border: 2px solid #e1e5e9;
   border-radius: 8px;
   font-size: 16px;
-  transition: all 0.3s ease;
-  background: #fafbfc;
-}
+  
+  background: #fafbfc}
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #667eea;
   background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1)}
 
 .form-group input.error {
   border-color: #e74c3c;
-  background: #fdf2f2;
-}
+  background: #fdf2f2}
 
 .form-group input.error:focus {
-  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
-}
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1)}
 
 .error-message {
   color: #e74c3c;
   font-size: 12px;
-  margin-top: 4px;
-}
+  margin-top: 4px}
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
+  gap: 16px}
 
 .checkbox-group {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin: 10px 0;
-}
+  margin: 10px 0}
 
 .checkbox-group input[type="checkbox"] {
   margin: 0;
   width: 18px;
   height: 18px;
-  accent-color: #667eea;
-}
+  accent-color: #667eea}
 
 .checkbox-group label {
   font-size: 14px;
   color: #666;
   line-height: 1.4;
-  cursor: pointer;
-}
+  cursor: pointer}
 
 .checkbox-group label a {
   color: #667eea;
-  text-decoration: none;
-}
+  text-decoration: none}
 
 .checkbox-group label a:hover {
-  text-decoration: underline;
-}
+  text-decoration: underline}
 
 .btn {
   padding: 14px 24px;
@@ -237,62 +205,52 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  
   text-align: center;
   text-decoration: none;
-  display: inline-block;
-}
+  display: inline-block}
 
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
+  color: white}
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-}
+  
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3)}
 
 .btn-primary:disabled {
   background: #ccc;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
+  
+  box-shadow: none}
 
 .btn-secondary {
   background: #f8f9fa;
   color: #333;
-  border: 2px solid #e1e5e9;
-}
+  border: 2px solid #e1e5e9}
 
 .btn-secondary:hover {
   background: #e9ecef;
-  border-color: #dee2e6;
-}
+  border-color: #dee2e6}
 
 .auth-footer {
   text-align: center;
   margin-top: 30px;
   padding-top: 20px;
-  border-top: 1px solid #e1e5e9;
-}
+  border-top: 1px solid #e1e5e9}
 
 .auth-footer p {
   color: #666;
   font-size: 14px;
-  margin: 0;
-}
+  margin: 0}
 
 .auth-footer a {
   color: #667eea;
   text-decoration: none;
-  font-weight: 500;
-}
+  font-weight: 500}
 
 .auth-footer a:hover {
-  text-decoration: underline;
-}
+  text-decoration: underline}
 
 .loading {
   display: inline-block;
@@ -300,32 +258,22 @@
   height: 20px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+  border-top-color: white}
 
 /* Responsive Design */
 @media (max-width: 480px) {
   .auth-container {
-    padding: 10px;
-  }
+    padding: 10px}
   
   .auth-card {
-    padding: 30px 20px;
-  }
+    padding: 30px 20px}
   
   .form-row {
     grid-template-columns: 1fr;
-    gap: 20px;
-  }
+    gap: 20px}
   
   .auth-header h1 {
-    font-size: 24px;
-  }
+    font-size: 24px}
 }
 
 /* Code validation styles */
@@ -334,23 +282,19 @@
   border-radius: 8px;
   margin-bottom: 20px;
   font-size: 14px;
-  font-weight: 500;
-}
+  font-weight: 500}
 
 .code-validation.valid {
   background: #d4edda;
   color: #155724;
-  border: 1px solid #c3e6cb;
-}
+  border: 1px solid #c3e6cb}
 
 .code-validation.invalid {
   background: #f8d7da;
   color: #721c24;
-  border: 1px solid #f5c6cb;
-}
+  border: 1px solid #f5c6cb}
 
 .code-validation.loading {
   background: #d1ecf1;
   color: #0c5460;
-  border: 1px solid #bee5eb;
-}
+  border: 1px solid #bee5eb}

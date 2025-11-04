@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/components/clock.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
+    <link rel="stylesheet" href="/css/pages/lgu-dashboard.css">
 </head>
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
@@ -19,7 +21,139 @@
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
-            <h1>LGU Dashboard</h1>
+            <div class="dashboard-header">
+                <div class="dashboard-title-group">
+                    <h1>🏛️ LGU Dashboard</h1>
+                    <p class="dashboard-subtitle">Task management and community service</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/task-assigned">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-text">Tasks</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/assignments">
+                        <div class="quick-action-icon">📝</div>
+                        <div class="quick-action-text">Assignments</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
+                        <div class="quick-action-icon">🗺️</div>
+                        <div class="quick-action-text">Heatmap</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+                        <div class="quick-action-icon">🏢</div>
+                        <div class="quick-action-text">Depts</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                        <div class="quick-action-icon">❓</div>
+                        <div class="quick-action-text">Help</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <h3 id="stat-total-tasks">0</h3>
+                        <p>Total Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-content">
+                        <h3 id="stat-pending-tasks">0</h3>
+                        <p>Pending Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h3 id="stat-completed-tasks">0</h3>
+                        <p>Completed Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3 id="stat-efficiency">0%</h3>
+                        <p>Efficiency Rate</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="dashboard-grid">
+                <!-- My Tasks -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Tasks</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-primary" onclick="viewAllTasks()">View All</button>
+                        </div>
+                    </div>
+                    <div id="tasks-container" class="section-content">
+                        <div class="loading-placeholder">Loading tasks...</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Recent Activities</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="refreshActivities()">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="activities-container" class="section-content">
+                        <div class="loading-placeholder">Loading activities...</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="section-content">
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" onclick="updateTaskStatus()">
+                                <span class="icon">📝</span>
+                                <span>Update Task</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="addTaskNote()">
+                                <span class="icon">📄</span>
+                                <span>Add Note</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="viewReports()">
+                                <span class="icon">📊</span>
+                                <span>View Reports</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="contactSupervisor()">
+                                <span class="icon">📞</span>
+                                <span>Contact Supervisor</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Updates -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Department Updates</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="refreshUpdates()">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="updates-container" class="section-content">
+                        <div class="loading-placeholder">Loading updates...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
@@ -29,5 +163,6 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/lgu-dashboard.js"></script>
 </body>
 </html>

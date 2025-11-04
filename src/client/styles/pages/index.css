@@ -3,8 +3,7 @@
     justify-content: center;
     align-items: center;
     min-height: 50vh;
-    gap: 20px;
-}
+    gap: 20px}
 
 #auth-buttons a,
 #auth-buttons button {
@@ -16,37 +15,28 @@
     border-radius: 6px;
     border: none;
     font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+    cursor: pointer}
 
 #auth-buttons a:hover,
 #auth-buttons button:hover {
     background-color: #0056b3;
-    text-decoration: none;
-}
+    text-decoration: none}
 
 #logout-btn {
     background-color: #dc3545;
-    margin-left: 10px;
-}
+    margin-left: 10px}
 
 #logout-btn:hover {
-    background-color: #c82333;
-}
+    background-color: #c82333}
 
 #authenticated-buttons {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
+    gap: 10px}
 
 #unauthenticated-buttons {
     display: flex;
-    gap: 15px;
-}
+    gap: 15px}
 
-.hidden { display: none; }
-
-
+.hidden { display: none}
 

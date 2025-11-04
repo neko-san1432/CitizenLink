@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Heatmap - Barangay Boundaries</title>
+    <title>Heatmap - Complaint Visualization</title>
 
     <!-- Leaflet CSS -->
     <link
@@ -11,28 +11,345 @@
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
 
-    <!-- Custom styles -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../css/style.css" />
-    <link rel="stylesheet" href="../../css/toast.css" />
-    <link rel="stylesheet" href="../../css/components/sidebar.css" />
-    <link rel="stylesheet" href="../../css/heatmap.css" />
-    <link rel="stylesheet" href="../../css/app.css" />
-    <link rel="stylesheet" href="../../css/heatmap-redesign.css" />
+    <!-- Leaflet Heat CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
 
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* Ensure sidebar styles are not overridden */
+      #sidebar {
+        display: flex !important;
+        flex-direction: column !important;
+        background: var(--sidebar-bg, #ffffff) !important;
+        color: var(--sidebar-text, #1f2937) !important;
+      }
+
+      #sidebar * {
+        box-sizing: border-box;
+      }
+
+      #map {
+        width: 100%;
+        height: 100vh;
+      }
+
+      /* Control Panel Styles */
+      .map-controls-panel {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 320px;
+        max-height: calc(100vh - 40px);
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+        z-index: 1000;
+        overflow-y: auto;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+
+      .controls-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      .controls-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+      }
+
+      .btn-close:hover {
+        background: #f3f4f6;
+        color: #1f2937;
+      }
+
+      .control-group {
+        margin-bottom: 16px;
+      }
+
+      .control-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+      }
+
+      .control-group select,
+      .control-group input[type="range"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+
+      .control-group input[type="range"] {
+        padding: 0;
+        height: 6px;
+      }
+
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .slider-container input[type="range"] {
+        flex: 1;
+      }
+
+      .slider-value {
+        font-size: 12px;
+        font-weight: 600;
+        color: #667eea;
+        min-width: 40px;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+
+      .stats-display {
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+        font-size: 12px;
+      }
+
+      .stats-display p {
+        margin: 4px 0;
+        color: #374151;
+      }
+
+      .stats-display span {
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      .toggle-controls-btn {
+        position: fixed;
+        top: 20px; /* Default position when panel is hidden */
+        right: 20px;
+        width: 48px;
+        height: 48px;
+        background: white;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 999; /* Below the control panel (panel is 1000) */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: top 0.3s ease;
+      }
+
+      .toggle-controls-btn:hover {
+        background: #f9fafb;
+      }
+
+      .map-controls-panel.hidden {
+        display: none;
+      }
+
+      /* Move Leaflet controls down to avoid overlapping sidebar button */
+      .leaflet-top.leaflet-left {
+        top: 70px !important;
+        left: 10px !important;
+      }
+
+      /* Ensure sidebar button is above everything */
+      .menu-toggle-btn {
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        width: 48px !important;
+        height: 48px !important;
+        background: white !important;
+        border: 2px solid #ddd !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        font-size: 24px !important;
+        cursor: pointer !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      .menu-toggle-btn:hover {
+        background: #f9fafb !important;
+        border-color: #667eea !important;
+      }
+    </style>
+    
+    <!-- Sidebar CSS - Load after inline styles to ensure proper cascade -->
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
   </head>
   <body>
+    <!-- Sidebar -->
     <div id="sidebar" class="collapsible"></div>
-    <button id="menu-toggle" class="heatmap-menu-btn">☰</button>
+    
+    <!-- Menu Toggle Button (for sidebar) -->
+    <button id="menu-toggle" class="menu-toggle-btn" title="Toggle Sidebar">☰</button>
+    
+    <!-- Toggle Controls Button -->
+    <button id="toggle-controls-btn" class="toggle-controls-btn" title="Toggle Controls">⚙️</button>
+
+    <!-- Control Panel -->
+    <div id="map-controls-panel" class="map-controls-panel">
+      <div class="controls-header">
+        <h3>🎛️ Heatmap Controls</h3>
+        <button class="btn-close" id="close-controls-btn">×</button>
+      </div>
+
+      <div class="controls-content">
+        <!-- Filters -->
+        <div class="control-group">
+          <label>Status Filter:</label>
+          <select id="status-filter">
+            <option value="">All Statuses</option>
+            <option value="pending review">Pending Review</option>
+            <option value="in progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="completed">Completed</option>
+            <option value="closed">Closed</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Category Filter:</label>
+          <select id="category-filter">
+            <option value="">All Categories</option>
+            <option value="" id="category-loading">Loading...</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Office Filter:</label>
+          <select id="department-filter">
+            <option value="">All Offices</option>
+            <option value="" id="department-loading">Loading...</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Include Resolved:</label>
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="checkbox" id="include-resolved" checked style="width: auto;">
+            <span>Show completed/completed complaints</span>
+          </label>
+        </div>
+
+        <!-- Visualization Controls -->
+        <div class="control-group">
+          <label>Heatmap Intensity:</label>
+          <div class="slider-container">
+            <input type="range" id="heatmap-intensity" min="0.1" max="2.0" step="0.1" value="1.0">
+            <span class="slider-value" id="heatmap-intensity-value">1.0</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Zoom Threshold:</label>
+          <div class="slider-container">
+            <input type="range" id="zoom-threshold" min="10" max="18" step="1" value="11">
+            <span class="slider-value" id="zoom-threshold-value">11</span>
+          </div>
+          <small style="font-size: 11px; color: #6b7280;">Show markers at this zoom level</small>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="control-group">
+          <div class="action-buttons">
+            <button id="apply-filters-btn" class="btn-primary">Apply Filters</button>
+            <button id="reset-filters-btn" class="btn-secondary">Reset Filters</button>
+            <button id="fit-bounds-btn" class="btn-secondary">Fit to All Markers</button>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="control-group">
+          <label>Statistics:</label>
+          <div class="stats-display">
+            <p>Total Complaints: <span id="total-complaints-stat">0</span></p>
+            <p>Visible Markers: <span id="visible-markers-stat">0</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Map Container -->
-    <div id="heatmap">
-      <div id="map" style="width: 100%; height: 100%"></div>
-    </div>
-    <div id="toast-container" class="toast-container"></div>
-    <script type="module" src="../../js/components/toast.js"></script>
+    <div id="map"></div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -49,13 +366,363 @@
     <script src="../../js/components/map/dbscan.js"></script>
     <script src="../../js/components/map/heatmapVisualization.js"></script>
     <script src="../../js/components/map/heatmapController.js"></script>
-    <script src="../../js/components/map/heatmapControls.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
-    <script
-      type="module"
-      src="../../js/components/map/boundaryGenerator.js"
-    ></script>
-    <script type="module" src="../../js/pages/lgu-admin-heatmap.js"></script>
-    </body>
-  </html>
+    <script type="module" src="../../js/components/map/boundaryGenerator.js"></script>
+    
+    <script>
+      // Global references
+      let map = null;
+      let heatmapViz = null;
+      let currentFilters = {
+        status: '',
+        category: '',
+        department: '',
+        includeResolved: true
+      };
+
+      // Simple initialization - map with heatmap and controls
+      (async function() {
+        try {
+          console.log('[HEATMAP] Initializing map...');
+          
+          // Wait for Leaflet to be available
+          while (typeof L === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
+          // Store original center point (origin) - calculated from brgy_boundaries_location.json
+          // Center calculated from all barangay boundaries: [6.854282, 125.318462]
+          const originCenter = [6.854282, 125.318462]; // Digos City center from JSON file
+          const originZoom = 12;
+
+          // Initialize map with increased zoom out level
+          map = await initializeSimpleMap('map', {
+            center: originCenter,
+            zoom: originZoom,
+            minZoom: 8 // Allow zooming out further (lower = more zoom out)
+          });
+
+          if (!map) {
+            throw new Error('Failed to initialize map');
+          }
+
+          // Add zoom event listener to return to origin when zoomed out to minimum
+          map.on('zoomend', () => {
+            const currentZoom = map.getZoom();
+            const minZoom = map.getMinZoom();
+            
+            // When zoomed out to minimum level, reset to origin
+            if (currentZoom <= minZoom) {
+              map.setView(originCenter, originZoom, { animate: true });
+              console.log('[HEATMAP] Reset to origin point at max zoom out');
+            }
+          });
+
+          // Initialize heatmap visualization
+          heatmapViz = new HeatmapVisualization(map);
+
+          // Setup control panel handlers
+          setupControlPanel();
+
+          // Setup sidebar toggle
+          setupSidebarToggle();
+
+          // Load complaint data (but keep default Digos City view - don't auto-fit)
+          await loadComplaintData();
+
+          // Keep default Digos City view on initial load instead of auto-fitting
+          // Users can click "Fit to All Markers" button if they want to see all complaints
+          console.log('[HEATMAP] Map initialized successfully - showing default Digos City view');
+        } catch (error) {
+          console.error('[HEATMAP] Initialization failed:', error);
+        }
+      })();
+
+      // Load complaint data with filters
+      async function loadComplaintData() {
+        try {
+          console.log('[HEATMAP] Loading complaint data with filters:', currentFilters);
+          await heatmapViz.loadComplaintData(currentFilters);
+
+          // Get the count of complaints after filtering
+          const complaintCount = heatmapViz.complaintData ? heatmapViz.complaintData.length : 0;
+          console.log('[HEATMAP] Loaded', complaintCount, 'complaints after filtering');
+
+          // Always create and show heatmap first (it should be on bottom layer)
+          if (heatmapViz.heatmapLayer) {
+            heatmapViz.hideHeatmap();
+          }
+          heatmapViz.createHeatmapLayer();
+          heatmapViz.showHeatmap();
+          console.log('[HEATMAP] Heatmap layer created and shown with', complaintCount, 'data points');
+
+          // Create and show markers (on top of heatmap)
+          if (heatmapViz.markerLayer) {
+            heatmapViz.hideMarkers();
+          }
+          heatmapViz.createMarkerLayer();
+          heatmapViz.showMarkers();
+          console.log('[HEATMAP] Marker layer created and shown with', complaintCount, 'markers');
+
+          // Update statistics
+          updateStatistics();
+        } catch (error) {
+          console.error('[HEATMAP] Failed to load data:', error);
+        }
+      }
+
+      // Function to position gear button below control panel
+      function positionGearButton() {
+        const panel = document.getElementById('map-controls-panel');
+        const gearButton = document.getElementById('toggle-controls-btn');
+        
+        if (!panel || !gearButton) return;
+        
+        if (panel.classList.contains('hidden')) {
+          // Panel is hidden, show gear button at default position
+          gearButton.style.top = '20px';
+        } else {
+          // Panel is visible, position gear button below it
+          const panelRect = panel.getBoundingClientRect();
+          const panelBottom = panelRect.bottom;
+          const spacing = 10; // 10px spacing below panel
+          gearButton.style.top = `${panelBottom + spacing}px`;
+        }
+      }
+
+      // Setup control panel event handlers
+      function setupControlPanel() {
+        // Toggle controls visibility
+        document.getElementById('toggle-controls-btn').addEventListener('click', () => {
+          const panel = document.getElementById('map-controls-panel');
+          panel.classList.toggle('hidden');
+          // Reposition gear button after toggling
+          setTimeout(positionGearButton, 50); // Small delay to ensure panel height is calculated
+        });
+
+        document.getElementById('close-controls-btn').addEventListener('click', () => {
+          document.getElementById('map-controls-panel').classList.add('hidden');
+          positionGearButton();
+        });
+        
+        // Reposition gear button when panel content changes (e.g., filters loaded)
+        const observer = new MutationObserver(() => {
+          positionGearButton();
+        });
+        
+        const panel = document.getElementById('map-controls-panel');
+        if (panel) {
+          observer.observe(panel, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class']
+          });
+        }
+        
+        // Initial positioning
+        positionGearButton();
+        
+        // Also reposition on window resize
+        window.addEventListener('resize', positionGearButton);
+
+        // Apply filters
+        document.getElementById('apply-filters-btn').addEventListener('click', async () => {
+          currentFilters = {
+            status: document.getElementById('status-filter').value,
+            category: document.getElementById('category-filter').value,
+            department: document.getElementById('department-filter').value,
+            includeResolved: document.getElementById('include-resolved').checked
+          };
+
+          console.log('[HEATMAP] Applying filters:', currentFilters);
+          await loadComplaintData();
+          fitToAllMarkers();
+          console.log('[HEATMAP] Filters applied, data reloaded');
+        });
+
+        // Reset filters
+        document.getElementById('reset-filters-btn').addEventListener('click', async () => {
+          document.getElementById('status-filter').value = '';
+          document.getElementById('category-filter').value = '';
+          document.getElementById('department-filter').value = '';
+          document.getElementById('include-resolved').checked = true;
+
+          currentFilters = {
+            status: '',
+            category: '',
+            department: '',
+            includeResolved: true
+          };
+
+          await loadComplaintData();
+          fitToAllMarkers();
+        });
+
+        // Fit to bounds
+        document.getElementById('fit-bounds-btn').addEventListener('click', () => {
+          fitToAllMarkers();
+        });
+
+        // Heatmap intensity slider
+        const intensitySlider = document.getElementById('heatmap-intensity');
+        const intensityValue = document.getElementById('heatmap-intensity-value');
+        intensitySlider.addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          intensityValue.textContent = value.toFixed(1);
+          if (heatmapViz) {
+            heatmapViz.heatmapConfig.intensity = value;
+            heatmapViz.hideHeatmap();
+            heatmapViz.createHeatmapLayer();
+            heatmapViz.showHeatmap();
+          }
+        });
+
+        // Zoom threshold slider
+        const zoomSlider = document.getElementById('zoom-threshold');
+        const zoomValue = document.getElementById('zoom-threshold-value');
+        zoomSlider.addEventListener('input', (e) => {
+          const value = parseInt(e.target.value);
+          zoomValue.textContent = value;
+          // This can be used to control when markers appear
+        });
+
+        // Load categories and departments
+        loadCategories();
+        loadDepartments();
+      }
+
+      // Load categories
+      async function loadCategories() {
+        try {
+          const apiClientModule = await import('../../js/config/apiClient.js');
+          const apiClient = apiClientModule.default;
+          const { data } = await apiClient.get('/api/department-structure/categories');
+          
+          const select = document.getElementById('category-filter');
+          const loading = document.getElementById('category-loading');
+          if (loading) loading.remove();
+
+          if (data && data.length > 0) {
+            data.forEach(category => {
+              const option = document.createElement('option');
+              option.value = category.id;
+              option.textContent = `${category.icon || ''} ${category.name}`;
+              select.appendChild(option);
+            });
+          }
+        } catch (error) {
+          console.error('[HEATMAP] Failed to load categories:', error);
+        } finally {
+          // Reposition gear button after categories load (panel height might change)
+          positionGearButton();
+        }
+      }
+
+      // Load departments
+      async function loadDepartments() {
+        try {
+          const { getDepartments } = await import('../../js/utils/departmentUtils.js');
+          const departments = await getDepartments();
+          
+          const select = document.getElementById('department-filter');
+          const loading = document.getElementById('department-loading');
+          if (loading) loading.remove();
+
+          if (departments && departments.length > 0) {
+            departments.forEach(dept => {
+              const option = document.createElement('option');
+              option.value = dept.code;
+              option.textContent = `${dept.name} (${dept.code})`;
+              select.appendChild(option);
+            });
+          }
+        } catch (error) {
+          console.error('[HEATMAP] Failed to load departments:', error);
+        } finally {
+          // Reposition gear button after departments load (panel height might change)
+          positionGearButton();
+        }
+      }
+
+      // Update statistics display
+      function updateStatistics() {
+        if (!heatmapViz) return;
+
+        const total = heatmapViz.complaintData ? heatmapViz.complaintData.length : 0;
+        const visible = heatmapViz.markerLayer ? heatmapViz.markerLayer.getLayers().length : 0;
+
+        document.getElementById('total-complaints-stat').textContent = total;
+        document.getElementById('visible-markers-stat').textContent = visible;
+        
+        // Reposition gear button after stats update (panel height might change)
+        positionGearButton();
+      }
+
+      // Fit map to show all markers
+      function fitToAllMarkers() {
+        if (!map || !heatmapViz || !heatmapViz.complaintData || heatmapViz.complaintData.length === 0) {
+          return;
+        }
+
+        // If only one complaint, don't zoom in too close - just center on it with a reasonable zoom
+        if (heatmapViz.complaintData.length === 1) {
+          const complaint = heatmapViz.complaintData[0];
+          map.setView([complaint.lat, complaint.lng], 14, { animate: false });
+          return;
+        }
+
+        const bounds = L.latLngBounds();
+        heatmapViz.complaintData.forEach(complaint => {
+          bounds.extend([complaint.lat, complaint.lng]);
+        });
+
+        if (bounds.isValid()) {
+          // Calculate the size of the bounds
+          const northEast = bounds.getNorthEast();
+          const southWest = bounds.getSouthWest();
+          const latDiff = Math.abs(northEast.lat - southWest.lat);
+          const lngDiff = Math.abs(northEast.lng - southWest.lng);
+          
+          // If bounds are too small (all complaints very close together), use minimum zoom
+          if (latDiff < 0.01 && lngDiff < 0.01) {
+            // All complaints are very close - center on them but don't zoom in too much
+            const center = bounds.getCenter();
+            map.setView([center.lat, center.lng], Math.min(map.getZoom(), 14), { animate: false });
+          } else {
+            // Multiple complaints spread out - fit to bounds with padding
+            map.fitBounds(bounds, { 
+              padding: [50, 50],
+              maxZoom: 16 // Prevent zooming in too close even if complaints are clustered
+            });
+          }
+        }
+      }
+
+      // Setup sidebar toggle
+      function setupSidebarToggle() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        console.log('[SIDEBAR] Menu toggle button:', menuToggle);
+        console.log('[SIDEBAR] Sidebar element:', sidebar);
+        
+        if (menuToggle && sidebar) {
+          console.log('[SIDEBAR] Setting up toggle functionality');
+          menuToggle.addEventListener('click', () => {
+            console.log('[SIDEBAR] Toggle button clicked');
+            sidebar.classList.toggle('open');
+          });
+          
+          // Ensure button is visible
+          menuToggle.style.display = 'flex';
+          menuToggle.style.visibility = 'visible';
+          menuToggle.style.opacity = '1';
+        } else {
+          console.error('[SIDEBAR] Menu toggle or sidebar not found!', { menuToggle, sidebar });
+        }
+      }
+    </script>
+  </body>
+</html>

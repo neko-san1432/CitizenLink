@@ -4,31 +4,31 @@ import { supabase } from '../config/config.js';
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
   try {
-    console.log('🔍 Checking if user is already logged in...');
+    // console.log removed for security
 
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (session && !error) {
-      console.log('✅ User is already logged in, redirecting to dashboard...');
+      // console.log removed for security
 
       // Get user metadata
-      const user = session.user;
+      const {user} = session;
       const role = user?.user_metadata?.role || '';
       const name = user?.user_metadata?.name || '';
 
       // Check if user has completed registration
       if (role && name) {
-        console.log('🎯 Profile complete, redirecting to dashboard for role:', role);
+        // console.log removed for security
         window.location.href = '/dashboard';
-        return;
+
       } else {
-        console.log('❌ User profile incomplete, redirecting to OAuth continuation');
+        // console.log removed for security
         window.location.href = '/oauth-continuation';
-        return;
+
       }
     } else {
-      console.log('❌ No active session found, user can proceed with login');
+      // console.log removed for security
     }
   } catch (error) {
     console.error('💥 Authentication check failed:', error);
@@ -67,7 +67,7 @@ const initializeLoginPage = () => {
 
   // Listen for auth state changes to update UI dynamically
   supabase.auth.onAuthStateChange((event, session) => {
-    console.log('🔄 Auth state changed on login page:', event);
+    // console.log removed for security
     if (event === 'SIGNED_IN' && session) {
       checkAuthentication();
     }

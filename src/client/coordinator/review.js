@@ -3,7 +3,7 @@
  * Handles loading and reviewing individual complaints
  */
 
-import { Toast } from '../components/toast.js';
+import { Toast } from '../../public/js/components/toast.js';
 
 let currentComplaint = null;
 let complaintId = null;
@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadComplaint() {
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to load complaint');
     }
 
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to load complaint');
     }
@@ -53,9 +53,12 @@ async function loadComplaint() {
  * Render complaint details
  */
 async function renderComplaint() {
-  const complaint = currentComplaint.complaint;
-  const similarities = currentComplaint.similarities || [];
-  
+  // The service returns complaint in nested structure
+  const {complaint} = currentComplaint;
+  const similarities = currentComplaint.analysis?.duplicate_candidates ||
+                     currentComplaint.analysis?.similar_complaints ||
+                     currentComplaint.similarities || [];
+
   // Hide loading, show content
   document.getElementById('loading').style.display = 'none';
   document.getElementById('complaint-content').style.display = 'block';
@@ -64,7 +67,7 @@ async function renderComplaint() {
   document.getElementById('complaint-title').textContent = complaint.title;
   document.getElementById('complaint-id').textContent = complaint.id;
   document.getElementById('submitted-date').textContent = formatDate(complaint.submitted_at);
-  document.getElementById('submitter-name').textContent = 
+  document.getElementById('submitter-name').textContent =
     complaint.submitted_by_profile?.name || complaint.submitted_by_profile?.email || 'Unknown';
 
   // Status badge
@@ -75,11 +78,16 @@ async function renderComplaint() {
   const priorityEl = document.getElementById('complaint-priority');
   priorityEl.innerHTML = `<span class="badge priority-${complaint.priority}">${complaint.priority}</span>`;
 
-  // Details
-  document.getElementById('complaint-type').textContent = complaint.type;
+  // Details - Handle both old and new hierarchical form structure
+  const typeText = complaint.type || complaint.category || 'Not specified';
+  const subcategoryText = complaint.subcategory || '';
+
+  document.getElementById('complaint-type').textContent = typeText;
   const subtypeEl = document.getElementById('complaint-subtype');
-  if (complaint.subtype) {
-    subtypeEl.textContent = ` - ${complaint.subtype}`;
+  if (subcategoryText) {
+    subtypeEl.textContent = ` - ${subcategoryText}`;
+  } else {
+    subtypeEl.textContent = '';
   }
 
   document.getElementById('complaint-description').textContent = complaint.descriptive_su;
@@ -88,19 +96,20 @@ async function renderComplaint() {
   // Show complainant's department preference
   const preferenceEl = document.getElementById('complainant-preference');
   if (preferenceEl) {
-    const departments = complaint.department_r || [];
+    const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
-      const deptNames = {
-        'wst': 'Water, Sanitation & Treatment',
-        'engineering': 'Engineering',
-        'health': 'Health',
-        'social-welfare': 'Social Welfare',
-        'public-safety': 'Public Safety',
-        'environmental': 'Environmental Services',
-        'transportation': 'Transportation',
-        'public-works': 'Public Works'
-      };
-      const displayNames = departments.map(dept => deptNames[dept] || dept);
+      // Use dynamic department names
+      const displayNames = await Promise.all(
+        departments.map(async dept => {
+          try {
+            const { getDepartmentNameByCode } = await import('../utils/departmentUtils.js');
+            return await getDepartmentNameByCode(dept);
+          } catch (error) {
+            console.error('Error fetching department name:', error);
+            return dept; // Fallback to original code
+          }
+        })
+      );
       preferenceEl.textContent = displayNames.join(', ');
     } else {
       preferenceEl.textContent = 'No preference specified';
@@ -144,7 +153,17 @@ async function renderComplaint() {
   // Evidence (always show section with fallback)
   const evidenceSection = document.getElementById('evidence-section');
   const evidenceEmpty = document.getElementById('evidence-empty');
-  const evidenceList = complaint.evidence && Array.isArray(complaint.evidence) ? complaint.evidence : [];
+
+  // Handle different evidence field structures
+  let evidenceList = [];
+  if (complaint.evidence && Array.isArray(complaint.evidence)) {
+    evidenceList = complaint.evidence;
+  } else if (complaint.evidence_files && Array.isArray(complaint.evidence_files)) {
+    evidenceList = complaint.evidence_files;
+  } else if (complaint.files && Array.isArray(complaint.files)) {
+    evidenceList = complaint.files;
+  }
+
   if (evidenceList.length > 0) {
     if (evidenceSection) evidenceSection.style.display = 'block';
     if (evidenceEmpty) evidenceEmpty.style.display = 'none';
@@ -157,12 +176,18 @@ async function renderComplaint() {
   }
 
   // Similar complaints
-  if (similarities.length > 0) {
+  if (similarities && similarities.length > 0) {
     document.getElementById('similar-section').style.display = 'block';
     document.getElementById('duplicate-btn').style.display = 'block';
     document.getElementById('related-btn').style.display = 'block';
     document.getElementById('unique-btn').style.display = 'block';
     renderSimilarComplaints(similarities);
+  } else {
+    // Hide similar complaints section if no similarities
+    document.getElementById('similar-section').style.display = 'none';
+    document.getElementById('duplicate-btn').style.display = 'none';
+    document.getElementById('related-btn').style.display = 'none';
+    document.getElementById('unique-btn').style.display = 'none';
   }
 }
 
@@ -246,7 +271,7 @@ function renderEvidence(evidence) {
 function renderSimilarComplaints(similarities) {
   const list = document.getElementById('similar-list');
   const masterSelect = document.getElementById('master-complaint');
-  
+
   list.innerHTML = similarities.map(sim => `
     <div class="similar-item">
       <h4>${sim.similar_complaint?.title || 'Unknown'}</h4>
@@ -260,12 +285,12 @@ function renderSimilarComplaints(similarities) {
   `).join('');
 
   // Populate master complaint dropdown
-  masterSelect.innerHTML = '<option value="">Select master complaint...</option>' +
+  masterSelect.innerHTML = `<option value="">Select master complaint...</option>${
     similarities.map(sim => `
       <option value="${sim.similar_complaint_id}">
         ${sim.similar_complaint?.title} (${Math.round(sim.similarity_score * 100)}% match)
       </option>
-    `).join('');
+    `).join('')}`;
 }
 
 /**
@@ -274,19 +299,27 @@ function renderSimilarComplaints(similarities) {
 window.openAssignModal = function() {
   document.getElementById('assign-modal').classList.add('active');
   // Pre-fill priority from complaint
-  document.getElementById('assign-priority').value = currentComplaint.complaint.priority || 'medium';
+  const {complaint} = currentComplaint;
+  document.getElementById('assign-priority').value = complaint.priority || 'medium';
+
+  // Load departments dynamically
+  loadDepartmentsForAssignment();
 };
 
-window.openDuplicateModal = function() {
+window.showDuplicateModal = function() {
   document.getElementById('duplicate-modal').classList.add('active');
 };
 
-window.openRelatedModal = function() {
+window.linkRelatedComplaints = function() {
   Toast.info('Link related complaints feature coming soon');
 };
 
-window.openRejectModal = function() {
+window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
+};
+
+window.openFalseComplaintModal = function() {
+  document.getElementById('false-complaint-modal').classList.add('active');
 };
 
 window.closeModal = function(modalId) {
@@ -412,6 +445,52 @@ window.handleReject = async function(event) {
 };
 
 /**
+ * Handle mark as false complaint
+ */
+window.handleFalseComplaint = async function(event) {
+  event.preventDefault();
+
+  const reason = document.getElementById('false-complaint-reason').value;
+  const notes = document.getElementById('false-complaint-notes').value;
+
+  // Validate that a reason is selected
+  if (!reason) {
+    Toast.error('Please select a reason for marking this complaint as false.');
+    return;
+  }
+
+  // Combine reason and notes
+  const fullReason = notes ? `${reason}: ${notes}` : reason;
+
+  try {
+    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'mark_false',
+        data: {
+          reason: fullReason
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to mark as false complaint');
+    }
+
+    Toast.success('Complaint marked as false');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1500);
+  } catch (error) {
+    console.error('[REVIEW] False complaint error:', error);
+    Toast.error(error.message);
+  }
+};
+
+/**
  * Mark complaint as unique (no duplicates)
  */
 window.markAsUnique = async function() {
@@ -432,7 +511,7 @@ window.markAsUnique = async function() {
     }
 
     Toast.success('Complaint marked as unique');
-    
+
     // Hide similar complaints section
     document.getElementById('similar-section').style.display = 'none';
     document.getElementById('duplicate-btn').style.display = 'none';
@@ -443,6 +522,41 @@ window.markAsUnique = async function() {
     Toast.error(error.message);
   }
 };
+
+/**
+ * Load departments for assignment modal
+ */
+async function loadDepartmentsForAssignment() {
+  try {
+    const response = await fetch('/api/departments/active');
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      const departmentsList = document.getElementById('departments-list');
+      departmentsList.innerHTML = result.data.map(dept => `
+        <label>
+          <input type="checkbox" class="dept-check" value="${dept.id}">
+          ${dept.name} (${dept.code})
+        </label>
+      `).join('');
+    } else {
+      throw new Error(result.error || 'Failed to load departments');
+    }
+  } catch (error) {
+    console.error('Error loading departments:', error);
+    // Fallback to hardcoded list if API fails - Updated with new department codes
+    const departmentsList = document.getElementById('departments-list');
+    departmentsList.innerHTML = `
+      <label><input type="checkbox" class="dept-check" value="CEO"> City Engineering Office</label>
+      <label><input type="checkbox" class="dept-check" value="GSO"> City General Services Office</label>
+      <label><input type="checkbox" class="dept-check" value="CPDC"> City Planning and Development Coordinator</label>
+      <label><input type="checkbox" class="dept-check" value="CHO"> Digos City Health Office</label>
+      <label><input type="checkbox" class="dept-check" value="CSWDO"> City Social Welfare and Development Office</label>
+      <label><input type="checkbox" class="dept-check" value="CDRRMO"> City Disaster Risk Reduction and Management Office</label>
+      <label><input type="checkbox" class="dept-check" value="ENRO"> City Environment and Natural Resources Office</label>
+    `;
+  }
+}
 
 /**
  * Show error message
@@ -458,23 +572,22 @@ function showError(message) {
  */
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
-  
+
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
+
   if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
   if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-  
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
 }
-

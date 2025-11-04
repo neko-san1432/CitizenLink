@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/components/sidebar.css">
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/publish.css">
 </head>
 <body>
     <div class="app-container">
@@ -18,6 +19,15 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
             <h1>Publish</h1>
+            <section id="publish-controls">
+                <label for="content-type" class="form-label">Content Type</label>
+                <select id="content-type" class="select">
+                    <option value="news">News</option>
+                    <option value="events">Upcoming Event</option>
+                    <option value="notices">Notice</option>
+                </select>
+            </section>
+            <section id="publish-form"></section>
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
@@ -25,5 +35,6 @@
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/pages/lgu-admin/publish.js"></script>
 </body>
 </html>

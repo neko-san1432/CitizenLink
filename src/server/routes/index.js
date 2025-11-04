@@ -6,10 +6,11 @@ const settingRoutes = require('./settingRoutes');
 const supabaseRoutes = require('./supabaseRoutes');
 const captchaRoutes = require('./captchaRoutes');
 const coordinatorRoutes = require('./coordinatorRoutes');
+const { apiLimiter } = require('../middleware/rateLimiting');
 let hrRoutes;
 try {
   hrRoutes = require('./hrRoutes');
-  console.log('[ROUTES] HR routes loaded successfully');
+  // console.log removed for security
 } catch (error) {
   console.error('[ROUTES] Error loading HR routes:', error);
   throw error;
@@ -20,6 +21,9 @@ const lguRoutes = require('./lguOfficerRoutes'); // LGU officer routes (using lg
 const notificationRoutes = require('./notificationRoutes');
 const storageRoutes = require('./storageRoutes');
 const contentRoutes = require('./contentRoutes');
+const rateLimitRoutes = require('./rateLimitRoutes');
+const healthRoutes = require('./healthRoutes');
+const departmentStructureRoutes = require('./departmentStructureRoutes');
 
 const router = express.Router();
 
@@ -44,13 +48,9 @@ router.use('/lgu', lguRoutes); // LGU officer routes (lgu-wst, lgu-engineering, 
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/content', contentRoutes);
+router.use('/rate-limit', rateLimitRoutes);
+router.use('/health', healthRoutes);
+router.use('/department-structure', departmentStructureRoutes);
 
-router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is healthy',
-    timestamp: new Date().toISOString()
-  });
-});
 
 module.exports = router;

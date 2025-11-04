@@ -54,22 +54,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   
   // If heatmap controls toggle exists, close sidebar when controls open
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.target.id === 'heatmap-controls' && 
-          mutation.attributeName === 'class') {
-        const isControlsVisible = !heatmapControls.classList.contains('collapsed');
-        
-        // If controls are being shown and sidebar is open, close sidebar
-        if (isControlsVisible && sidebar && sidebar.classList.contains('open')) {
-          sidebar.classList.remove('open');
-          console.log('[HEATMAP] Sidebar closed due to controls opening');
-        }
-      }
-    });
-  });
-  
   if (heatmapControls) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'heatmap-controls' && 
+            mutation.attributeName === 'class') {
+          const isControlsVisible = !heatmapControls.classList.contains('collapsed');
+          
+          // If controls are being shown and sidebar is open, close sidebar
+          if (isControlsVisible && sidebar && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            console.log('[HEATMAP] Sidebar closed due to controls opening');
+          }
+        }
+      });
+    });
+    
     observer.observe(heatmapControls, { attributes: true });
   }
 });
@@ -77,8 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Global functions for popup buttons
 window.viewComplaintDetails = function(complaintId) {
   console.log('[HEATMAP] View details for complaint:', complaintId);
-  // You can implement navigation to complaint details page here
-  alert(`Viewing details for complaint: ${complaintId}`);
+  window.location.href = `/complaint-details?id=${complaintId}`;
 };
 
 window.centerOnComplaint = function(lat, lng) {

@@ -60,12 +60,12 @@ class SettingService {
 
   async updateSetting(key, settingData) {
     const existingSetting = await this.getSettingByKey(key);
-    
+
     const validation = Setting.validate({
       ...existingSetting,
       ...settingData
     });
-    
+
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
@@ -140,7 +140,7 @@ class SettingService {
       },
       {
         key: 'complaint_disclaimer',
-        value: `Filing a complaint does not guarantee immediate resolution. Response times may vary based on complexity and department workload. Emergency situations should be reported directly to appropriate authorities.`,
+        value: 'Filing a complaint does not guarantee immediate resolution. Response times may vary based on complexity and department workload. Emergency situations should be reported directly to appropriate authorities.',
         type: 'text',
         category: 'complaints',
         description: 'Disclaimer shown during complaint submission',
@@ -162,3 +162,4 @@ class SettingService {
 }
 
 module.exports = SettingService;
+

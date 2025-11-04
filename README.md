@@ -12,13 +12,17 @@ Built with modern web technologies and following clean architecture principles, 
 
 ### Key Capabilities
 
-- **Intelligent Complaint Routing**: Automated department assignment with coordinator oversight
+- **Intelligent Complaint Routing**: Automated department assignment with hierarchical category/subcategory routing
 - **Geospatial Analytics**: DBSCAN-based heatmap clustering for identifying complaint hotspots
 - **Multi-Role System**: Support for Citizens, LGU Officers, Admins, HR, and Super Admins
 - **Content Management**: Integrated news, events, and notices publishing system
 - **Duplicate Detection**: Advanced similarity detection to prevent duplicate complaints
 - **Comprehensive Audit Trail**: Verbose logging of all system actions and state changes
-- **Secure by Design**: Enterprise-grade security with Helmet.js, CSP, and RLS policies
+- **Secure by Design**: Enterprise-grade security with Helmet.js, CSP, RLS policies, and advanced rate limiting
+- **Health Monitoring**: Real-time system health checks and performance monitoring
+- **Hierarchical Department Structure**: Three-tier organization (Categories → Subcategories → Departments)
+- **Advanced Security Scanning**: Automated security vulnerability detection and resolution
+- **Rate Limiting System**: Multi-tier rate limiting with IP-based tracking and management
 
 ## 📦 Installation & Dependencies
 
@@ -63,13 +67,20 @@ npm run dev
 | **dotenv** | ^17.2.1 | Environment variable loader from `.env` files. Manages sensitive configuration data (API keys, database credentials) outside of source code. |
 | **express** | ^4.21.2 | Fast, minimalist web framework for Node.js. Serves as the core HTTP server handling routing, middleware, and request/response management. |
 | **helmet** | ^8.1.0 | Security middleware that sets various HTTP headers to protect against common web vulnerabilities (XSS, clickjacking, MIME sniffing). Implements Content Security Policy (CSP). |
+| **isomorphic-dompurify** | ^1.8.0 | Client and server-side HTML sanitization library. Prevents XSS attacks by cleaning malicious HTML content in user inputs and outputs. |
 | **multer** | ^2.0.2 | Multipart/form-data middleware for handling file uploads. Manages complaint evidence attachments with file type validation and size limits. |
+| **validator** | ^13.15.15 | String validation and sanitization library. Provides comprehensive input validation for emails, URLs, phone numbers, and other data types. |
+| **xss** | ^1.0.14 | Cross-Site Scripting (XSS) prevention library. Sanitizes user input to prevent malicious script injection attacks. |
 
 #### Development Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|----------|
+| **@microsoft/eslint-formatter-sarif** | ^3.1.0 | SARIF (Static Analysis Results Interchange Format) formatter for ESLint. Enables integration with security scanning tools and GitHub CodeQL. |
 | **autoprefixer** | ^10.4.21 | PostCSS plugin that automatically adds vendor prefixes to CSS rules for cross-browser compatibility. |
+| **eslint** | ^8.57.0 | JavaScript linter for code quality and consistency. Enforces coding standards and identifies potential issues. |
+| **eslint-plugin-no-unsanitized** | ^4.1.4 | ESLint plugin that prevents use of unsanitized content in DOM operations. Critical for XSS prevention. |
+| **eslint-plugin-security** | ^3.0.1 | ESLint plugin with security-focused rules. Detects common security vulnerabilities in JavaScript code. |
 | **gzip-cli** | ^1.0.0 | Command-line tool for compressing static assets during build process to reduce file sizes. |
 | **nodemon** | ^3.1.10 | Development utility that automatically restarts the Node.js server when file changes are detected. |
 | **postcss** | ^8.5.6 | CSS transformation tool used with TailwindCSS for processing and optimizing stylesheets. |
@@ -120,15 +131,184 @@ CitizenLink/
 └── 📁 uploads/                # User uploaded files (auto-created)
 ```
 
-### Design Patterns Used
+### Architectural Design Patterns
 
-- **Repository Pattern**: Clean data access abstraction
-- **Service Layer**: Business logic separation
-- **MVC Architecture**: Model-View-Controller pattern
-- **Dependency Injection**: Loose coupling between components
-- **Factory Pattern**: Object creation abstraction
-- **Middleware Pattern**: Request/response processing
-- **Observer Pattern**: Event-driven architecture
+CitizenLink follows a **layered architecture** with clear separation of concerns, implementing multiple design patterns for maintainability and scalability.
+
+#### 🏛️ MVC + Service Layer Architecture (Fat Service, Thin Controller)
+
+The application implements an **enhanced MVC pattern** with an additional Service Layer, following the **"Fat Service, Thin Controller"** principle:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         CLIENT LAYER                         │
+│  (Views, Frontend Components, API Consumers)                 │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                    CONTROLLER LAYER (Thin)                   │
+│  • Request/Response handling                                 │
+│  • Input parsing and validation                              │
+│  • HTTP status code management                               │
+│  • Minimal logic - delegates to services                     │
+│                                                               │
+│  Example: ComplaintController.js                             │
+│  - Extracts request data                                     │
+│  - Calls ComplaintService methods                            │
+│  - Formats and returns responses                             │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                     SERVICE LAYER (Fat)                      │
+│  • Business logic and rules                                  │
+│  • Workflow orchestration                                    │
+│  • Cross-cutting concerns                                    │
+│  • Transaction management                                    │
+│  • Coordinates multiple repositories                         │
+│  • Implements domain logic                                   │
+│                                                               │
+│  Example: ComplaintService.js                                │
+│  - Validates business rules                                  │
+│  - Orchestrates complaint workflow                           │
+│  - Manages department assignments                            │
+│  - Triggers notifications                                    │
+│  - Handles file processing                                   │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                   REPOSITORY LAYER                           │
+│  • Data access abstraction                                   │
+│  • Database queries (CRUD operations)                        │
+│  • No business logic                                         │
+│  • Returns domain models                                     │
+│                                                               │
+│  Example: ComplaintRepository.js                             │
+│  - create(), findById(), findAll()                           │
+│  - Supabase query execution                                  │
+│  - Maps database rows to Models                              │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                      MODEL LAYER                             │
+│  • Data structure definitions                                │
+│  • Validation rules                                          │
+│  • Data transformation methods                               │
+│  • No business logic                                         │
+│                                                               │
+│  Example: Complaint.js                                       │
+│  - Property definitions                                      │
+│  - validate() method                                         │
+│  - sanitizeForInsert() method                                │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                    DATABASE LAYER                            │
+│  (PostgreSQL/Supabase)                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Benefits of This Architecture:**
+
+1. **Separation of Concerns**: Each layer has a single, well-defined responsibility
+2. **Testability**: Business logic in services can be tested independently
+3. **Reusability**: Services can be called from multiple controllers or other services
+4. **Maintainability**: Changes to business logic don't affect controllers or repositories
+5. **Scalability**: Easy to add new features without modifying existing layers
+
+**Code Example:**
+
+```javascript
+// THIN CONTROLLER - Only handles HTTP concerns
+class ComplaintController {
+  async createComplaint(req, res) {
+    try {
+      const { user } = req;
+      const complaintData = req.body;
+      const files = req.files?.evidenceFiles || [];
+
+      // Delegate to service layer
+      const complaint = await this.complaintService.createComplaint(
+        user.id, 
+        complaintData, 
+        files
+      );
+
+      // Format response
+      res.status(201).json({
+        success: true,
+        data: complaint,
+        message: "Complaint submitted successfully"
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+}
+
+// FAT SERVICE - Contains all business logic
+class ComplaintService {
+  async createComplaint(userId, complaintData, files) {
+    // Business validation
+    const complaint = new Complaint(complaintData);
+    const validation = Complaint.validate(complaint);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+    }
+
+    // Orchestrate multiple operations
+    const createdComplaint = await this.complaintRepo.create(complaint);
+    await this._processWorkflow(createdComplaint, departments);
+    await this._processFileUploads(createdComplaint.id, files);
+    await this.notificationService.notifyComplaintSubmitted(userId, createdComplaint.id);
+    
+    // Business logic for duplicate detection
+    await this.duplicationService.checkForDuplicates(createdComplaint);
+    
+    return createdComplaint;
+  }
+}
+
+// REPOSITORY - Only data access
+class ComplaintRepository {
+  async create(complaintData) {
+    const { data, error } = await this.supabase
+      .from('complaints')
+      .insert(complaintData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return new Complaint(data);
+  }
+}
+```
+
+#### 🎯 Additional Design Patterns
+
+| Pattern | Implementation | Purpose |
+|---------|----------------|---------|
+| **Repository Pattern** | `ComplaintRepository`, `DepartmentRepository`, `CoordinatorRepository` | Abstracts data access logic, provides clean interface for database operations, enables easy testing with mock repositories |
+| **Dependency Injection** | Constructor injection in Controllers and Services | Loose coupling between components, easier testing, flexible component replacement |
+| **Model-View-Controller (MVC)** | Models (`Complaint.js`), Views (HTML templates), Controllers (`ComplaintController.js`) | Separates data, presentation, and control logic |
+| **Middleware Pattern** | `auth.js`, `security.js`, `roleCheck.js` | Modular request/response processing pipeline, cross-cutting concerns (auth, logging, security) |
+| **Factory Pattern** | Model constructors, Database client initialization | Centralized object creation, encapsulates instantiation logic |
+| **Strategy Pattern** | Role-based access control, different notification strategies | Enables runtime selection of algorithms based on context |
+| **Observer Pattern** | Notification system, event-driven workflows | Decoupled event handling, automatic notifications on state changes |
+| **Singleton Pattern** | Database connection (`Database` class) | Single shared instance for database connections, resource optimization |
+| **Facade Pattern** | Service layer methods that orchestrate multiple operations | Simplified interface to complex subsystems |
+| **Chain of Responsibility** | Express middleware chain | Sequential processing of requests through multiple handlers |
+
+#### 📋 Layer Responsibilities Summary
+
+| Layer | Responsibilities | What It Should NOT Do |
+|-------|------------------|----------------------|
+| **Controllers** | Parse requests, call services, format responses, handle HTTP status codes | Business logic, database queries, complex validations |
+| **Services** | Business logic, workflow orchestration, transaction management, coordinate repositories | Direct database access, HTTP concerns, response formatting |
+| **Repositories** | CRUD operations, query building, data mapping | Business logic, validation, workflow management |
+| **Models** | Data structure, basic validation, data transformation | Business logic, database access, HTTP handling |
+| **Middleware** | Authentication, authorization, logging, security headers | Business logic, data access |
+
+This architecture ensures that **business logic lives in the Service Layer**, making the codebase maintainable, testable, and scalable.
 
 ## ✨ Feature Highlights
 
@@ -150,15 +330,17 @@ CitizenLink implements **Density-Based Spatial Clustering of Applications with N
 
 ### 🔒 Robust Security
 
-Comprehensive security implementation across multiple layers:
+Comprehensive security implementation across multiple layers with advanced threat protection:
 
 #### Application Security
 - **Helmet.js Integration**: Sets 11+ security-related HTTP headers
 - **Content Security Policy (CSP)**: Prevents XSS attacks by controlling resource loading
-- **XSS Protection**: Output sanitization and input validation
+- **XSS Protection**: Multi-layer XSS prevention with isomorphic-dompurify and xss libraries
 - **CSRF Protection**: Request verification tokens
 - **Clickjacking Prevention**: X-Frame-Options headers
 - **MIME Sniffing Protection**: X-Content-Type-Options headers
+- **Input Sanitization**: Comprehensive input validation and sanitization with validator.js
+- **Rate Limiting**: Advanced rate limiting system with configurable limits per endpoint type
 
 #### Database Security
 - **Row Level Security (RLS)**: PostgreSQL policies enforce data access at database level
@@ -171,10 +353,61 @@ Comprehensive security implementation across multiple layers:
 - **Size Limits**: Configurable maximum file sizes
 - **Virus Scanning Ready**: Architecture supports AV integration
 
+#### Security Monitoring & Scanning
+- **CodeQL Integration**: Automated security scanning with GitHub CodeQL
+- **ESLint Security Rules**: Real-time security vulnerability detection
+- **npm Audit**: Regular dependency vulnerability scanning
+- **Automated Security Fixes**: Self-healing security issues resolution
+- **Security Audit Trail**: Comprehensive logging of security events
+
+#### Rate Limiting System
+- **Multi-Tier Rate Limiting**: Different limits for different endpoint types
+  - General API: 1000 requests per 15 minutes
+  - Authentication: 100 requests per 15 minutes
+  - Login attempts: 20 requests per 15 minutes
+  - Password reset: 5 requests per hour
+  - File uploads: 20 uploads per 15 minutes
+  - Complaint submissions: 10 complaints per hour
+- **IP-based Tracking**: Per-IP rate limit enforcement
+- **Development Mode Bypass**: Automatic bypass for localhost development
+- **Rate Limit Management**: Admin tools for clearing and monitoring rate limits
+
 **Security Files**:
 - `src/server/middleware/security.js` - Security headers and CSP configuration
-- `sql/20251008_security_rpc.sql` - Database security functions
-- `RLS_POLICIES.sql` - Row Level Security policies
+- `src/server/middleware/rateLimiting.js` - Advanced rate limiting system
+- `src/server/middleware/inputSanitizer.js` - Input validation and sanitization
+- `scripts/security-scan-detailed.js` - Comprehensive security scanning
+- `scripts/security-autoresolve.js` - Automated security issue resolution
+- `SECURITY.md` - Security policy and procedures
+
+### 🏥 Health Monitoring & System Management
+
+Comprehensive system monitoring and health check capabilities:
+
+#### Health Check System
+- **API Health Endpoint**: `/api/health` provides real-time system status
+- **System Metrics**: Memory usage, uptime, and performance monitoring
+- **Database Connectivity**: Automatic database connection testing
+- **File System Checks**: Directory structure and permission validation
+- **Configuration Validation**: Environment variable and config validation
+
+#### System Monitoring Features
+- **Real-time Status**: Live system health monitoring in Super Admin dashboard
+- **Performance Metrics**: Memory usage, response times, and system load tracking
+- **Error Tracking**: Comprehensive error logging and monitoring
+- **Traffic Monitoring**: Real-time request monitoring and analysis
+- **Log Management**: Centralized logging with search and filtering capabilities
+
+#### Health Check Scripts
+- **Automated Health Checks**: `npm run check` for comprehensive system validation
+- **Development Environment**: Automatic health checks during development
+- **Production Monitoring**: Continuous health monitoring in production environments
+- **Alert System**: Automated alerts for system issues and failures
+
+**Health Monitoring Files**:
+- `src/server/routes/healthRoutes.js` - Health check API endpoints
+- `scripts/healthcheck.js` - Comprehensive health check script
+- `src/client/super-admin/dashboard.js` - System monitoring dashboard
 
 ### 📰 Content Management System
 
@@ -202,6 +435,39 @@ Integrated CMS for public information dissemination:
 
 **Database Tables**: `news`, `events`, `notices` (see `sql/content_management_schema.sql`)
 
+### 🏢 Hierarchical Department Structure
+
+Advanced department management with hierarchical organization:
+
+#### Three-Tier Structure
+- **Categories**: Top-level grouping (Infrastructure, Health, Environment, etc.)
+- **Subcategories**: Specific areas within categories (Roads, Waste Management, etc.)
+- **Departments**: Actual government agencies with unique codes and contact information
+
+#### Department Management Features
+- **Hierarchical Routing**: Automatic complaint routing based on category → subcategory → department
+- **Department Codes**: Short, unique identifiers for efficient database operations
+- **Level Classification**: LGU (Local Government Unit) vs NGA (National Government Agency)
+- **Contact Information**: JSONB storage for flexible contact details
+- **Response Times**: Configurable response and escalation timeframes
+- **Multi-Subcategory Support**: Departments can handle multiple subcategories
+
+#### Example Structure
+```
+Infrastructure & Public Works
+├── Roads & Construction → CEO (City Engineering Office)
+├── Facilities & Maintenance → GSO (City General Services Office)
+└── Land Use & Planning → CPDC (City Planning and Development Coordinator)
+
+Health & Social Services
+├── Public Health → CHO (Digos City Health Office)
+├── Social Welfare → CSWDO (City Social Welfare and Development Office)
+├── Emergency Response → CDRRMO (City Disaster Risk Reduction and Management Office)
+└── Education Welfare → DEPED (Department of Education)
+```
+
+**Key Tables**: `categories`, `subcategories`, `departments`, `department_subcategory_mapping`
+
 ### 🎯 Complaint Distribution via Coordinator
 
 Intelligent complaint routing system:
@@ -212,6 +478,7 @@ Intelligent complaint routing system:
 - **Rejection Handling**: Departments can reject with reasons, triggering reassignment
 - **Load Balancing**: Track assignments per officer to distribute workload
 - **Escalation Support**: Automatic escalation for overdue complaints
+- **Hierarchical Routing**: Automatic routing based on category/subcategory selection
 
 **Key Tables**: `complaint_assignments`, `complaint_coordinators`
 
@@ -228,6 +495,20 @@ Advanced similarity detection to prevent duplicate complaints:
 
 **Implementation**: `src/server/services/SimilarityCalculatorService.js`
 **Database Table**: `complaint_similarities`
+
+### 📝 Hierarchical Complaint Form
+
+Enhanced complaint submission with intelligent routing:
+
+- **Three-Step Selection**: Category → Subcategory → Department selection
+- **Dynamic Loading**: Subcategories and departments load based on previous selections
+- **Visual Hierarchy**: Clear visual representation of the selection path
+- **Automatic Routing**: Complaints are automatically routed based on selections
+- **Multi-Department Support**: Complaints can be assigned to multiple departments
+- **Validation**: Real-time validation of selections and form data
+
+**Implementation**: `src/client/components/form/complaintFormHierarchical.js`
+**Features**: Dynamic form loading, hierarchical validation, automatic department assignment
 
 ### 📝 Verbose Logging & Audit Trail
 
@@ -284,7 +565,8 @@ HOST=localhost
 ```bash
 # Development
 npm run dev          # Start development server with auto-reload
-npm run check        # Run health checks
+npm run check        # Run comprehensive health checks
+npm run setup-dev    # Setup development environment
 
 # Production
 npm start            # Start production server
@@ -295,13 +577,31 @@ npm run migrate      # Run database migrations
 npm run seed         # Seed database with sample data
 
 # Build
-npm run build        # Build TailwindCSS
-npm run build:css    # Build and minify CSS
+npm run build:css    # Build and minify TailwindCSS
 
-# Code Quality
+# Code Quality & Security
 npm test             # Run tests
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix linting issues
+npm run lint         # Run ESLint with security rules
+npm run lint:fix     # Fix linting issues automatically
+
+# Security Scanning
+npm run security-scan           # Run automated security scan
+npm run security-scan-detailed  # Run detailed security analysis
+npm run security-audit          # Run comprehensive security audit
+npm run security-audit-npm      # Run npm audit for dependency vulnerabilities
+npm run security-fix            # Fix security issues automatically
+
+# CodeQL Analysis
+npm run codeql-scan             # Run CodeQL security analysis
+npm run codeql-scan-verbose     # Run CodeQL with verbose output
+npm run codeql-scan-sarif       # Run CodeQL and output SARIF format
+
+# System Management
+npm run rate-limit              # Manage rate limiting settings
+npm run cleanup                 # Clean up unused files
+npm run fix-indentation         # Fix service file indentation
+npm run fix-all-indentation     # Fix indentation across all files
+npm run setup-actions           # Setup GitHub Actions workflows
 ```
 
 ## 🗄️ Database Tables and Purposes
@@ -320,7 +620,10 @@ npm run lint:fix     # Fix linting issues
 
 | Table | Purpose |
 |-------|----------|
-| **departments** | Stores LGU departments (e.g., Waste Management, Public Works). Includes department name, unique code, and creation timestamp. |
+| **categories** | Top-level department groupings (Infrastructure, Health, Environment, etc.). Includes name, code, description, icon, and sort order for UI organization. |
+| **subcategories** | Specific areas within categories (Roads, Waste Management, etc.). Links to categories and provides hierarchical organization for complaint routing. |
+| **departments** | Enhanced department table with hierarchical relationships. Stores department name, unique code, subcategory association, level (LGU/NGA), contact info, and response times. |
+| **department_subcategory_mapping** | Many-to-many relationship between departments and subcategories. Allows departments to handle multiple subcategories. |
 | **invitation_tokens** | HR-generated signup links for staff registration. Controls role assignment, department association, expiration, and usage limits. |
 | **signup_links** | Alternative signup link system with metadata support. Tracks link usage, expiration, and creator information. |
 | **role_changes** | Audit trail for user role modifications. Records old role, new role, performer, reason, and timestamp for accountability. |
@@ -352,7 +655,15 @@ npm run lint:fix     # Fix linting issues
 |-------|----------|
 | **auth.users** | Supabase-managed user authentication table. Stores email, encrypted password, user metadata (role, department), and authentication tokens. |
 
-### Total Tables: 16 core tables + Supabase auth tables
+### Additional System Tables
+
+| Table | Purpose |
+|-------|----------|
+| **complaint_clusters** | Stores DBSCAN clustering results for geospatial analysis. Tracks cluster centers, radius, complaint IDs, and pattern types for hotspot detection. |
+| **task_forces** | Special task force assignments for complex complaints requiring multi-department coordination. |
+| **settings** | System configuration settings with type validation, categories, and public/private visibility controls. |
+
+### Total Tables: 20 core tables + Supabase auth tables
 
 ## 🔧 API Endpoints
 
@@ -362,11 +673,15 @@ npm run lint:fix     # Fix linting issues
 - `GET /api/complaints/:id` - Get complaint details
 - `PATCH /api/complaints/:id/status` - Update complaint status
 
-### Departments
+### Departments & Structure
 - `GET /api/departments/active` - Get active departments
 - `POST /api/departments` - Create department (admin)
 - `PUT /api/departments/:id` - Update department (admin)
 - `DELETE /api/departments/:id` - Delete department (admin)
+- `GET /api/departments/structure` - Get hierarchical department structure
+- `GET /api/categories` - Get all categories
+- `GET /api/subcategories` - Get subcategories by category
+- `GET /api/subcategories/:id/departments` - Get departments by subcategory
 
 ### Settings
 - `GET /api/settings/public` - Get public settings
@@ -377,6 +692,17 @@ npm run lint:fix     # Fix linting issues
 - `GET /api/coordinators` - List coordinators (admin)
 - `POST /api/coordinators` - Assign coordinator (admin)
 - `DELETE /api/coordinators/:id` - Remove coordinator (admin)
+
+### Health & Monitoring
+- `GET /api/health` - System health check
+- `GET /api/health/detailed` - Detailed system metrics
+- `GET /api/logs` - System logs (super admin)
+- `GET /api/statistics` - System statistics (super admin)
+
+### Rate Limiting Management
+- `GET /api/rate-limit/status` - Get rate limit status for IP
+- `POST /api/rate-limit/clear` - Clear rate limits for IP (admin)
+- `GET /api/rate-limit/stats` - Get rate limiting statistics (admin)
 
 ## 👥 User Roles
 

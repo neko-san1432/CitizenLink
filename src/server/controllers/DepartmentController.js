@@ -65,7 +65,7 @@ class DepartmentController {
       });
     } catch (error) {
       console.error('Error creating department:', error);
-      const status = error.message.includes('Validation failed') || 
+      const status = error.message.includes('Validation failed') ||
                      error.message.includes('already exists') ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -86,7 +86,7 @@ class DepartmentController {
     } catch (error) {
       console.error('Error updating department:', error);
       const status = error.message === 'Department not found' ? 404 :
-                     error.message.includes('Validation failed') || 
+        error.message.includes('Validation failed') ||
                      error.message.includes('already exists') ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -143,6 +143,46 @@ class DepartmentController {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch department officers'
+      });
+    }
+  }
+
+  /**
+   * Get all departments with their subcategory mappings
+   */
+  async getDepartmentsWithMappings(req, res) {
+    try {
+      const result = await this.departmentService.getDepartmentsWithMappings();
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Error fetching departments with mappings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch departments with mappings'
+      });
+    }
+  }
+
+  /**
+   * Get departments by subcategory
+   */
+  async getDepartmentsBySubcategory(req, res) {
+    try {
+      const { subcategoryId } = req.params;
+      const departments = await this.departmentService.getDepartmentsBySubcategory(subcategoryId);
+
+      res.json({
+        success: true,
+        data: departments
+      });
+    } catch (error) {
+      console.error('Error fetching departments by subcategory:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch departments by subcategory'
       });
     }
   }

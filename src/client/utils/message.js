@@ -33,6 +33,3 @@ export function showMessage(type, message) {
     }
   });
 }
-
-
-

@@ -16,7 +16,7 @@ import showMessage from '../toast.js';
 export async function handleComplaintSubmit(formElement, selectedFiles = []) {
   const submitBtn = formElement.querySelector('.submit-btn');
   const originalText = submitBtn?.textContent || 'Submit Complaint';
-  
+
   try {
     // Disable submit button
     if (submitBtn) {
@@ -26,27 +26,29 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
 
     // Extract and validate form data
     const formData = extractComplaintFormData(formElement);
+    console.log('[FORM] Extracted form data:', formData);
     const validation = validateComplaintForm(formData);
 
     if (!validation.valid) {
       throw new Error(validation.errors.join('. '));
     }
 
-    console.log('[COMPLAINT] Submitting complaint:', {
-      title: formData.title,
-      type: formData.type,
-      departments: formData.departments?.length || 0,
-      files: selectedFiles.length
-    });
-
     // Create FormData for API submission
     const apiFormData = new FormData();
-    
+
     // Add basic fields
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
         if (key === 'departments' && Array.isArray(value)) {
-          apiFormData.append(key, JSON.stringify(value));
+          // Map 'departments' from form to 'preferred_departments' for backend
+          value.forEach(deptId => {
+            apiFormData.append('preferred_departments', deptId);
+          });
+        } else if (key === 'preferred_departments' && Array.isArray(value)) {
+          // Handle preferred_departments array - send as preferred_departments for backend
+          value.forEach(deptId => {
+            apiFormData.append('preferred_departments', deptId);
+          });
         } else {
           apiFormData.append(key, String(value));
         }
@@ -58,6 +60,12 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
       apiFormData.append('evidenceFiles', file);
     });
 
+    // Debug: Log what's being sent to API
+    console.log('[FORM] FormData contents:');
+    for (const [key, value] of apiFormData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
     // Submit via API client (CSRF token handled internally)
     const result = await apiClient.submitComplaint(apiFormData);
 
@@ -66,7 +74,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     }
 
     showMessage('success', result.message || 'Complaint submitted successfully');
-    console.log('[COMPLAINT] Submission successful:', result.data);
+    // console.log removed for security
 
     return result.data;
 
@@ -100,16 +108,12 @@ export function resetComplaintForm(formElement, clearFiles) {
     input.setCustomValidity('');
   });
 
-  // Reset subtype dropdown
-  const subtypeSelect = formElement.querySelector('#complaintSubtype');
-  if (subtypeSelect) {
-    subtypeSelect.innerHTML = '<option value="">Select complaint subtype (optional)</option>';
-  }
+  // Subtype field removed - not needed in current schema
 
   // Clear files if function provided
   if (typeof clearFiles === 'function') {
     clearFiles();
   }
 
-  console.log('[COMPLAINT] Form reset completed');
+  // console.log removed for security
 }

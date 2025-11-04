@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/super-admin-dashboard.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
     <style>
         .superadmin-dashboard {
             padding: 20px;
@@ -186,8 +187,38 @@
         <div id="sidebar" class="collapsible"></div>
         
         <div id="app" class="collapsible superadmin-dashboard">
-            <h1>🔐 Super Admin Dashboard</h1>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">Complete system control - role swaps, department transfers, and audit logs</p>
+            <div class="dashboard-header">
+                <div class="dashboard-title-group">
+                    <h1>🔐 Super Admin Dashboard</h1>
+                    <p class="dashboard-subtitle">Complete system control - role swaps, office transfers, and audit logs</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/appoint-admins">
+                        <div class="quick-action-icon">👥</div>
+                        <div class="quick-action-text">Appoint</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+                        <div class="quick-action-icon">🏢</div>
+                        <div class="quick-action-text">Depts</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/role-changer">
+                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-text">Roles</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/settings">
+                        <div class="quick-action-icon">⚙️</div>
+                        <div class="quick-action-text">Settings</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                        <div class="quick-action-icon">❓</div>
+                        <div class="quick-action-text">Help</div>
+                    </button>
+                </div>
+            </div>
 
             <!-- Statistics -->
             <div class="stats-grid" id="stats-grid">
@@ -200,8 +231,24 @@
                     <div class="stat-value" id="stat-role-changes">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Department Transfers</div>
+                    <div class="stat-label">Office Transfers</div>
                     <div class="stat-value" id="stat-dept-transfers">-</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="stat-label">Users</div>
+                    <div class="stat-value" id="stat-users">-</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="stat-label">Admins</div>
+                    <div class="stat-value" id="stat-admins">-</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <div class="stat-label">HR</div>
+                    <div class="stat-value" id="stat-hr">-</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">
+                    <div class="stat-label">Officers</div>
+                    <div class="stat-value" id="stat-officers">-</div>
                 </div>
             </div>
 
@@ -222,17 +269,12 @@
                             <select id="role-swap-role" required>
                                 <option value="">Select new role</option>
                                 <option value="citizen">Citizen</option>
-                                <option value="lgu-wst">LGU Officer - Water & Sanitation (lgu-wst)</option>
-                                <option value="lgu-engineering">LGU Officer - Engineering (lgu-engineering)</option>
-                                <option value="lgu-health">LGU Officer - Health (lgu-health)</option>
                                 <option value="complaint-coordinator">Complaint Coordinator</option>
-                                <option value="lgu-admin-wst">LGU Admin - Water & Sanitation</option>
-                                <option value="lgu-admin-engineering">LGU Admin - Engineering</option>
-                                <option value="lgu-admin-health">LGU Admin - Health</option>
                                 <option value="lgu-hr">LGU HR</option>
                                 <option value="super-admin">Super Admin</option>
+                                <div id="department-roles-loading">Loading office roles...</div>
                             </select>
-                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Note: LGU Officers use department codes (e.g., lgu-wst)</div>
+                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Office roles will be loaded dynamically</div>
                         </div>
                         <div class="form-group">
                             <label>Reason</label>
@@ -242,35 +284,35 @@
                     </form>
                 </div>
 
-                <!-- Department Transfer -->
+                <!-- Office Transfer -->
                 <div class="action-card">
-                    <h3>🏢 Department Transfer</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 20px;">Transfer staff between departments</p>
+                    <h3>🏢 Office Transfer</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;">Transfer staff between offices</p>
                     <form id="dept-transfer-form">
                         <div class="form-group">
                             <label>User ID / Email</label>
                             <input type="text" id="dept-transfer-user" placeholder="Enter user ID or email" required>
                         </div>
                         <div class="form-group">
-                            <label>From Department</label>
+                            <label>From Office</label>
                             <input type="text" id="dept-transfer-from" placeholder="e.g., engineering" required>
                         </div>
                         <div class="form-group">
-                            <label>To Department</label>
+                            <label>To Office</label>
                             <input type="text" id="dept-transfer-to" placeholder="e.g., public-works" required>
                         </div>
                         <div class="form-group">
                             <label>Reason</label>
                             <textarea id="dept-transfer-reason" placeholder="Enter reason for transfer" required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Transfer Department</button>
+                        <button type="submit" class="btn btn-primary">Transfer Office</button>
                     </form>
                 </div>
 
                 <!-- Assign Citizen -->
                 <div class="action-card">
-                    <h3>➕ Assign Citizen to Department</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 20px;">Directly assign a citizen to any department role</p>
+                    <h3>➕ Assign Citizen to Office</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;">Directly assign a citizen to any office role</p>
                     <form id="assign-citizen-form">
                         <div class="form-group">
                             <label>User ID / Email</label>
@@ -281,19 +323,14 @@
                             <label>Role</label>
                             <select id="assign-citizen-role" required>
                                 <option value="">Select role</option>
-                                <option value="lgu-wst">LGU Officer - Water & Sanitation (lgu-wst)</option>
-                                <option value="lgu-engineering">LGU Officer - Engineering (lgu-engineering)</option>
-                                <option value="lgu-health">LGU Officer - Health (lgu-health)</option>
                                 <option value="complaint-coordinator">Complaint Coordinator</option>
-                                <option value="lgu-admin-wst">LGU Admin - Water & Sanitation</option>
-                                <option value="lgu-admin-engineering">LGU Admin - Engineering</option>
-                                <option value="lgu-admin-health">LGU Admin - Health</option>
                                 <option value="lgu-hr">LGU HR</option>
+                                <div id="assign-citizen-roles-loading">Loading office roles...</div>
                             </select>
-                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">LGU Officers use department codes (e.g., lgu-wst)</div>
+                            <div class="help-text" style="color: #7f8c8d; font-size: 12px; margin-top: 5px;">Office roles will be loaded dynamically</div>
                         </div>
                         <div class="form-group">
-                            <label>Department</label>
+                            <label>Office</label>
                             <input type="text" id="assign-citizen-dept" placeholder="e.g., engineering" required>
                         </div>
                         <div class="form-group">
@@ -332,6 +369,29 @@
             </div>
 
             <!-- System Logs -->
+            <h2 class="section-title">Operations</h2>
+            <div class="actions-grid" style="margin-bottom: 20px;">
+                <div class="action-card">
+                    <h3>API Health</h3>
+                    <div id="api-health-status" style="margin-bottom:8px; color:#7f8c8d;">Loading...</div>
+                    <button class="btn btn-info" id="btn-refresh-health">Refresh</button>
+                </div>
+                <div class="action-card">
+                    <h3>Traffic (last 60s)</h3>
+                    <div id="traffic-graph" style="height:120px; display:flex; align-items:flex-end; gap:2px; background:#f9fafb; border:1px solid #eee; padding:8px; border-radius:8px;"></div>
+                    <div id="traffic-meta" style="margin-top:8px; color:#7f8c8d; font-size:0.9rem;"></div>
+                </div>
+                <div class="action-card">
+                    <h3>Shortcuts</h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <a class="btn btn-primary" href="/hr/link-generator">Generate Signup Link</a>
+                        <a class="btn btn-primary" href="/super-admin/role-changer">Role Changer</a>
+                        <a class="btn btn-primary" href="#sa-user-search">Go to User List</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Logs -->
             <div class="logs-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="margin: 0;">📜 System Logs</h2>
@@ -339,7 +399,7 @@
                         <select id="log-type-filter" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-right: 10px;">
                             <option value="all">All Logs</option>
                             <option value="role_changes">Role Changes</option>
-                            <option value="department_transfers">Department Transfers</option>
+                            <option value="department_transfers">Office Transfers</option>
                             <option value="complaint_workflow">Complaint Workflow</option>
                         </select>
                         <button class="btn btn-info" onclick="loadLogs()">Refresh</button>

@@ -11,7 +11,7 @@ let assignments = [];
 let officers = [];
 let currentFilter = 'all';
 let selectedComplaint = null;
-let currentFilters = {
+const currentFilters = {
   status: 'all',
   sub_type: 'all',
   priority: 'all'
@@ -44,10 +44,7 @@ function initializeEventListeners() {
     loadAssignments();
   });
 
-  document.getElementById('subtype-filter')?.addEventListener('change', (e) => {
-    currentFilters.sub_type = e.target.value;
-    loadAssignments();
-  });
+  // subtype filter removed - not needed in current schema
 
   document.getElementById('priority-filter')?.addEventListener('change', (e) => {
     currentFilters.priority = e.target.value;
@@ -75,21 +72,21 @@ function initializeEventListeners() {
 async function loadAssignments() {
   try {
     showLoadingState();
-    
+
     // Build query parameters
     const params = new URLSearchParams();
     if (currentFilters.status !== 'all') params.append('status', currentFilters.status);
     if (currentFilters.sub_type !== 'all') params.append('sub_type', currentFilters.sub_type);
     if (currentFilters.priority !== 'all') params.append('priority', currentFilters.priority);
-    
+
     const queryString = params.toString();
     const url = queryString ? `/api/lgu-admin/department-assignments?${queryString}` : '/api/lgu-admin/department-assignments';
-    
+
     const response = await apiClient.get(url);
-    
+
     if (response.success) {
       assignments = response.data;
-      console.log('[ASSIGNMENTS] Loaded assignments:', assignments);
+      // console.log removed for security
       updateStats();
       renderAssignments();
     } else {
@@ -107,14 +104,14 @@ async function loadAssignments() {
  */
 async function loadOfficers() {
   try {
-    console.log('[ASSIGNMENTS] Loading officers...');
+    // console.log removed for security
     const response = await apiClient.get('/api/lgu-admin/department-officers');
-    
-    console.log('[ASSIGNMENTS] Officers API response:', response);
-    
+
+    // console.log removed for security
+
     if (response.success) {
       officers = response.data;
-      console.log('[ASSIGNMENTS] Loaded officers:', officers);
+      // console.log removed for security
       populateOfficerSelect();
     } else {
       throw new Error(response.error || 'Failed to load officers');
@@ -143,7 +140,7 @@ function updateStats() {
  */
 function renderAssignments() {
   const filteredAssignments = filterAssignments();
-  
+
   if (filteredAssignments.length === 0) {
     showEmptyState();
     return;
@@ -158,9 +155,9 @@ function renderAssignments() {
   filteredAssignments.forEach(assignment => {
     const btn = document.querySelector(`[data-complaint-id="${assignment.complaint_id}"]`);
     if (btn) {
-      console.log('[ASSIGNMENTS] Attaching click listener to button for complaint:', assignment.complaint_id);
+      // console.log removed for security
       btn.addEventListener('click', (e) => {
-        console.log('[ASSIGNMENTS] Assign button clicked for complaint:', assignment.complaint_id);
+        // console.log removed for security
         e.preventDefault();
         openAssignmentModal(assignment);
       });
@@ -188,11 +185,11 @@ function filterAssignments() {
  * Create HTML for assignment item
  */
 function createAssignmentHTML(assignment) {
-  const isAssigned = !!assignment.assigned_to;
+  const isAssigned = Boolean(assignment.assigned_to);
   const priorityClass = `priority-${assignment.priority || 'medium'}`;
   const statusClass = isAssigned ? 'status-assigned' : 'status-unassigned';
   const statusText = isAssigned ? 'Assigned' : 'Unassigned';
-  
+
   const assignedInfo = isAssigned ? `
     <div class="assigned-officer">
       <div class="officer-avatar">${getInitials(assignment.officer_name || 'Unknown')}</div>
@@ -224,7 +221,7 @@ function createAssignmentHTML(assignment) {
           <span class="status-badge ${statusClass}">${statusText}</span>
         </div>
       </div>
-      
+
       <div class="assignment-details">
         ${escapeHtml(assignment.description || 'No description provided').substring(0, 200)}${assignment.description?.length > 200 ? '...' : ''}
       </div>
@@ -240,16 +237,16 @@ function createAssignmentHTML(assignment) {
  * Open assignment modal
  */
 function openAssignmentModal(assignment) {
-  console.log('[ASSIGNMENTS] Opening assignment modal for:', assignment);
+  // console.log removed for security
   selectedComplaint = assignment;
-  
+
   // Populate complaint summary
   const summaryEl = document.getElementById('complaint-summary');
   if (!summaryEl) {
     console.error('[ASSIGNMENTS] Complaint summary element not found!');
     return;
   }
-  
+
   summaryEl.innerHTML = `
     <div class="complaint-summary-title">${escapeHtml(assignment.title)}</div>
     <div class="complaint-summary-detail"><strong>ID:</strong> ${assignment.complaint_id.slice(0, 8)}</div>
@@ -280,7 +277,7 @@ function openAssignmentModal(assignment) {
   const modal = document.getElementById('assignment-modal');
   if (modal) {
     modal.style.display = 'flex';
-    console.log('[ASSIGNMENTS] Modal should now be visible');
+    // console.log removed for security
   } else {
     console.error('[ASSIGNMENTS] Assignment modal not found!');
   }
@@ -342,26 +339,26 @@ async function handleAssignmentSubmit(e) {
  * Populate officer select dropdown
  */
 function populateOfficerSelect() {
-  console.log('[ASSIGNMENTS] Populating officer select with:', officers);
+  // console.log removed for security
   const select = document.getElementById('officer-select');
-  
+
   if (!select) {
     console.error('[ASSIGNMENTS] Officer select element not found!');
     return;
   }
-  
+
   if (!officers || officers.length === 0) {
     console.warn('[ASSIGNMENTS] No officers available');
     select.innerHTML = '<option value="">-- No officers available --</option>';
     return;
   }
-  
-  select.innerHTML = '<option value="">-- Select an officer --</option>' +
+
+  select.innerHTML = `<option value="">-- Select an officer --</option>${
     officers.map(officer => `
       <option value="${officer.id}">${escapeHtml(officer.name)} ${officer.employee_id ? `(${officer.employee_id})` : ''}</option>
-    `).join('');
-    
-  console.log('[ASSIGNMENTS] Officer select populated with', officers.length, 'officers');
+    `).join('')}`;
+
+  // console.log removed for security
 }
 
 /**
@@ -415,7 +412,7 @@ function formatRelativeTime(timestamp) {
   if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  
+
   return time.toLocaleDateString();
 }
 
@@ -427,4 +424,3 @@ function formatDateTimeLocal(date) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
-

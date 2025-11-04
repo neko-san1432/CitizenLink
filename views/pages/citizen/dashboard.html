@@ -12,31 +12,115 @@
     <link rel="stylesheet" href="/css/components/sidebar.css" />
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
   </head>
   <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
       <div class="header-container"></div>
       <div id="sidebar" class="collapsible"></div>
-      <div id="app" class="collapsible">
-        <h1>Dashboard</h1>
-        <div id="news-updates">
-          <h2>News Updates</h2>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-            quos.
-          </p>
+      <div id="app" class="collapsible citizen-dashboard">
+        <div class="dashboard-header">
+          <div class="dashboard-title-group">
+            <h1>🏠 Citizen Dashboard</h1>
+            <p class="dashboard-subtitle">Your gateway to community engagement and complaint management</p>
+          </div>
+          <div class="header-quick-actions">
+            <a class="quick-action-btn quick-action-btn--sm" href="/fileComplaint">
+              <div class="quick-action-icon">📝</div>
+              <div class="quick-action-text">File</div>
+            </a>
+            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile#complaints">
+              <div class="quick-action-icon">📋</div>
+              <div class="quick-action-text">Complaints</div>
+            </a>
+            <button class="quick-action-btn quick-action-btn--sm" onclick="viewMap()">
+              <div class="quick-action-icon">🗺️</div>
+              <div class="quick-action-text">Map</div>
+            </button>
+            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+              <div class="quick-action-icon">👤</div>
+              <div class="quick-action-text">Profile</div>
+            </a>
+            <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+              <div class="quick-action-icon">🏢</div>
+              <div class="quick-action-text">Depts</div>
+            </a>
+            <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+              <div class="quick-action-icon">❓</div>
+              <div class="quick-action-text">Help</div>
+            </button>
+          </div>
         </div>
-        <div id="events">
-          <h2>Events</h2>
+        <!-- Dynamic Content Banner -->
+        <div id="content-banner" class="content-banner">
+          <div class="content-banner-inner">
+            <div class="content-banner-track">
+              <!-- Content items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+        <!-- Main Content Grid -->
+        <div class="dashboard-grid">
+          <!-- My Complaints Status -->
+           <div class="dashboard-section my-complaints-section">
+            <div class="section-header">
+              <h2 class="section-title">📋 My Complaints</h2>
+              <button class="btn btn-primary" onclick="viewAllComplaints()">View All</button>
+            </div>
+            <div id="my-complaints-container" class="content-container">
+              <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading your complaints...</p>
+              </div>
+            </div>
+          </div>
+
+
+          
+
+          <!-- Quick Tips -->
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">💡 Quick Tips</h2>
+            </div>
+            <div class="tips-container">
+              <div class="tip-item">
+                <div class="tip-icon">📝</div>
+                <div class="tip-content">
+                  <h4>Filing Effective Complaints</h4>
+                  <p>Be specific about the location, include photos if possible, and provide detailed descriptions.</p>
+                </div>
+              </div>
+              <div class="tip-item">
+                <div class="tip-icon">⏰</div>
+                <div class="tip-content">
+                  <h4>Response Times</h4>
+                  <p>Most complaints are reviewed within 24-48 hours and assigned to appropriate offices.</p>
+                </div>
+              </div>
+              <div class="tip-item">
+                <div class="tip-icon">📞</div>
+                <div class="tip-content">
+                  <h4>Emergency Contacts</h4>
+                  <p>For urgent matters, call the emergency hotline at (02) 123-4567.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/citizen-dashboard.js"></script>
   </body>
 </html>
+

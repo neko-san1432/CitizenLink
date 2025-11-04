@@ -1,25 +1,160 @@
 import apiClient from '../../utils/apiClient.js';
 import { showToast } from '../../components/toast.js';
 
+// Enhanced URL validation function
+function validateAndSanitizeURL(urlString) {
+  if (!urlString || typeof urlString !== 'string') {
+    return '';
+  }
+
+  const trimmedUrl = urlString.trim();
+
+  // Basic URL format validation
+  try {
+    const url = new URL(trimmedUrl);
+
+    // Whitelist of allowed protocols
+    const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
+    if (!allowedProtocols.includes(url.protocol)) {
+      console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
+      return '';
+    }
+
+    // Check for suspicious patterns
+    const suspiciousPatterns = [
+      /javascript:/i,
+      /vbscript:/i,
+      /data:/i,
+      /file:/i,
+      /about:/i,
+      /chrome:/i,
+      /chrome-extension:/i,
+      /moz-extension:/i,
+      /ms-appx:/i,
+      /ms-appx-web:/i,
+      /blob:/i,
+      /ws:/i,
+      /wss:/i
+    ];
+
+    if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
+      console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
+      return '';
+    }
+
+    // Check for protocol confusion attacks
+    if (url.protocol !== `${trimmedUrl.split(':')[0]  }:`) {
+      console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
+      return '';
+    }
+
+    // Validate hostname
+    if (!url.hostname || url.hostname.length === 0) {
+      return '';
+    }
+
+    // Check for private IP ranges
+    const privateRanges = [
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^192\.168\./,
+      /^localhost$/i,
+      /^0\.0\.0\.0$/,
+      /^::1$/,
+      /^fe80:/i
+    ];
+
+    if (privateRanges.some(range => range.test(url.hostname))) {
+      console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
+      return '';
+    }
+
+    // Return the validated URL
+    return trimmedUrl;
+
+  } catch (error) {
+    // If URL constructor fails, the URL is invalid
+    console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
+    return '';
+  }
+}
+
+// Enhanced HTML sanitization function
+function sanitizeHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+
+  // Use DOMPurify for comprehensive sanitization
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'ul', 'ol', 'li', 'a', 'img'],
+      ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title', 'data-*'],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      SANITIZE_DOM: true,
+      KEEP_CONTENT: true
+    });
+  }
+
+  // Fallback sanitization if DOMPurify is not available
+  // Fallback sanitization: repeatedly remove dangerous tags to prevent incomplete replacement
+  let sanitized = html;
+  let previous;
+  do {
+    previous = sanitized;
+    sanitized = sanitized
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove object tags
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      // Remove form tags
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // Remove iframe tags
+      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '');
+  } while (sanitized !== previous);
+  // Now single-pass removes for other dangerous features
+  return sanitized
+    // Remove event handlers
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    // Remove javascript: URLs
+    .replace(/javascript\s*:/gi, '')
+    // Remove vbscript: URLs
+    .replace(/vbscript\s*:/gi, '')
+    // Remove data: URLs (except safe image types)
+    .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, '')
+    // Remove embed tags
+    .replace(/<embed\b[^<]*>/gi, '')
+    // Remove input tags
+    .replace(/<input\b[^<]*>/gi, '')
+    // Remove button tags with onclick
+    .replace(/<button\b[^<]*onclick[^<]*>/gi, '<button>')
+    // Remove style attributes with javascript
+    .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, '')
+    // Remove href with javascript
+    .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+    // Remove src with javascript
+    .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
+}
+
 // Task state
 let allTasks = [];
 let filteredTasks = [];
 let selectedTask = null;
 
 /**
- * Initialize the task assigned page
- */
+* Initialize the task assigned page
+*/
 async function initTaskAssignedPage() {
-  console.log('[TASK_ASSIGNED] Initializing...');
-  
+  // console.log removed for security
+
   setupEventListeners();
   await loadTasks();
   updateStats();
 }
 
 /**
- * Setup event listeners
- */
+* Setup event listeners
+*/
 function setupEventListeners() {
   // Filter buttons
   document.getElementById('filter-all')?.addEventListener('click', () => filterTasks('all'));
@@ -45,18 +180,18 @@ function setupEventListeners() {
 }
 
 /**
- * Load all tasks from API
- */
+* Load all tasks from API
+*/
 async function loadTasks() {
   try {
     const response = await apiClient.get('/lgu/my-tasks');
-    
+
     if (response.success) {
       allTasks = response.data || [];
       filteredTasks = [...allTasks];
       renderTasks();
       updateStats();
-      console.log('[TASK_ASSIGNED] Loaded tasks:', allTasks.length);
+      // console.log removed for security
     } else {
       showToast(response.error || 'Failed to load tasks', 'error');
     }
@@ -67,8 +202,8 @@ async function loadTasks() {
 }
 
 /**
- * Filter tasks by status
- */
+* Filter tasks by status
+*/
 function filterTasks(status) {
   // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -84,8 +219,8 @@ function filterTasks(status) {
 }
 
 /**
- * Sort tasks
- */
+* Sort tasks
+*/
 function sortTasks(sortBy) {
   switch (sortBy) {
     case 'deadline':
@@ -113,8 +248,8 @@ function sortTasks(sortBy) {
 }
 
 /**
- * Render tasks to the DOM
- */
+* Render tasks to the DOM
+*/
 function renderTasks() {
   const container = document.getElementById('tasks-container');
   if (!container) return;
@@ -129,12 +264,19 @@ function renderTasks() {
     return;
   }
 
-  container.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
+  // Use safer DOM manipulation instead of innerHTML
+  container.innerHTML = '';
+  const safeHtml = filteredTasks.map(task => createTaskCard(task)).join('');
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = sanitizeHtml(safeHtml);
+  while (tempDiv.firstChild) {
+    container.appendChild(tempDiv.firstChild);
+  }
 
   // Add click listeners to task cards
   document.querySelectorAll('.task-card').forEach(card => {
     card.addEventListener('click', () => {
-      const taskId = card.dataset.taskId;
+      const {taskId} = card.dataset;
       const task = allTasks.find(t => t.id === taskId);
       if (task) openTaskModal(task);
     });
@@ -142,8 +284,8 @@ function renderTasks() {
 }
 
 /**
- * Create HTML for a task card
- */
+* Create HTML for a task card
+*/
 function createTaskCard(task) {
   const priorityClass = `priority-${task.priority || 'medium'}`;
   const statusClass = `status-${task.assignment_status}`;
@@ -159,9 +301,9 @@ function createTaskCard(task) {
           ${getStatusIcon(task.assignment_status)} ${formatStatus(task.assignment_status)}
         </div>
       </div>
-      
+
       <h3 class="task-title">${escapeHtml(task.complaint_title)}</h3>
-      
+
       <div class="task-meta">
         <div class="task-type">
           <span class="icon">📂</span>
@@ -190,11 +332,11 @@ function createTaskCard(task) {
 }
 
 /**
- * Open task detail modal
- */
+* Open task detail modal
+*/
 function openTaskModal(task) {
   selectedTask = task;
-  
+
   const modal = document.getElementById('task-modal');
   if (!modal) return;
 
@@ -209,7 +351,7 @@ function openTaskModal(task) {
   document.getElementById('modal-task-status').className = `badge status-${task.assignment_status}`;
   document.getElementById('modal-assigned-by').textContent = task.assigned_by_name;
   document.getElementById('modal-assigned-date').textContent = formatDate(task.assigned_at);
-  
+
   if (task.deadline) {
     document.getElementById('modal-deadline').textContent = formatDate(task.deadline);
     document.getElementById('modal-deadline-row').style.display = 'flex';
@@ -231,8 +373,8 @@ function openTaskModal(task) {
 }
 
 /**
- * Close task modal
- */
+* Close task modal
+*/
 function closeTaskModal() {
   const modal = document.getElementById('task-modal');
   modal?.classList.remove('show');
@@ -241,8 +383,8 @@ function closeTaskModal() {
 }
 
 /**
- * Update modal action buttons based on task status
- */
+* Update modal action buttons based on task status
+*/
 function updateModalActions(status) {
   const acceptBtn = document.getElementById('btn-accept-task');
   const startBtn = document.getElementById('btn-start-task');
@@ -267,8 +409,8 @@ function updateModalActions(status) {
 }
 
 /**
- * Update task status
- */
+* Update task status
+*/
 async function updateTaskStatus(newStatus) {
   if (!selectedTask) return;
 
@@ -291,15 +433,15 @@ async function updateTaskStatus(newStatus) {
 }
 
 /**
- * Show add update form
- */
+* Show add update form
+*/
 function showAddUpdateForm() {
   document.getElementById('update-form').style.display = 'block';
 }
 
 /**
- * Hide add update form
- */
+* Hide add update form
+*/
 function hideAddUpdateForm() {
   document.getElementById('update-form').style.display = 'none';
   document.getElementById('update-message').value = '';
@@ -307,8 +449,8 @@ function hideAddUpdateForm() {
 }
 
 /**
- * Submit progress update
- */
+* Submit progress update
+*/
 async function submitProgressUpdate() {
   if (!selectedTask) return;
 
@@ -339,14 +481,14 @@ async function submitProgressUpdate() {
 }
 
 /**
- * Update stats dashboard
- */
+* Update stats dashboard
+*/
 function updateStats() {
   const total = allTasks.length;
   const pending = allTasks.filter(t => t.assignment_status === 'pending').length;
   const inProgress = allTasks.filter(t => t.assignment_status === 'in_progress').length;
   const completed = allTasks.filter(t => t.assignment_status === 'completed').length;
-  const overdue = allTasks.filter(t => 
+  const overdue = allTasks.filter(t =>
     t.deadline && new Date(t.deadline) < new Date() && t.assignment_status !== 'completed'
   ).length;
 
@@ -358,8 +500,8 @@ function updateStats() {
 }
 
 /**
- * Helper functions
- */
+* Helper functions
+*/
 function getPriorityIcon(priority) {
   const icons = {
     urgent: '🔴',
@@ -367,7 +509,8 @@ function getPriorityIcon(priority) {
     medium: '🟡',
     low: '🟢'
   };
-  return icons[priority] || icons.medium;
+  const safePriority = String(priority || '').toLowerCase();
+  return icons[safePriority] || icons.medium;
 }
 
 function getStatusIcon(status) {
@@ -378,7 +521,8 @@ function getStatusIcon(status) {
     completed: '✔️',
     cancelled: '❌'
   };
-  return icons[status] || '📋';
+  const safeStatus = String(status || '').toLowerCase();
+  return icons[safeStatus] || '📋';
 }
 
 function formatStatus(status) {
@@ -389,7 +533,8 @@ function formatStatus(status) {
     completed: 'Completed',
     cancelled: 'Cancelled'
   };
-  return labels[status] || status;
+  const safeStatus = String(status || '').toLowerCase();
+  return labels[safeStatus] || status;
 }
 
 function formatType(type) {
@@ -408,7 +553,7 @@ function formatRelativeDate(dateString) {
   const now = new Date();
   const diffTime = Math.abs(now - date);
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;

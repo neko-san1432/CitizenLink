@@ -8,6 +8,7 @@ import showMessage from '../components/toast.js';
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
   await loadDashboardData();
+  await loadDepartmentStats();
   setupFormHandlers();
   setupUserSearch();
 });
@@ -36,6 +37,96 @@ function updateStatistics(stats) {
   document.getElementById('stat-admins').textContent = stats.total_admins || 0;
   document.getElementById('stat-promotions').textContent = stats.promotions_this_month || 0;
   document.getElementById('stat-demotions').textContent = stats.demotions_this_month || 0;
+}
+
+/**
+ * Load department statistics
+ */
+async function loadDepartmentStats() {
+  try {
+    const response = await fetch('/api/hr/users?limit=1000');
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      const users = result.data;
+      const departmentStats = calculateDepartmentStats(users);
+      renderDepartmentStats(departmentStats);
+    } else {
+      renderDepartmentStats([]);
+    }
+  } catch (error) {
+    console.error('[HR] Load department stats error:', error);
+    renderDepartmentStats([]);
+  }
+}
+
+/**
+ * Calculate department statistics from user data
+ */
+function calculateDepartmentStats(users) {
+  const deptMap = new Map();
+
+  users.forEach(user => {
+    const role = String(user.role || '').toLowerCase();
+    const department = user.department || 'Unknown';
+
+    if (!deptMap.has(department)) {
+      deptMap.set(department, { admins: 0, officers: 0 });
+    }
+
+    const deptStats = deptMap.get(department);
+
+    // Count admins (lgu-admin-* roles)
+    if (role === 'lgu-admin' || /^lgu-admin-/.test(role)) {
+      deptStats.admins++;
+    }
+    // Count officers (lgu-* roles but not admin or hr)
+    else if (/^lgu-(?!admin|hr)/.test(role)) {
+      deptStats.officers++;
+    }
+  });
+
+  return Array.from(deptMap.entries()).map(([dept, stats]) => ({
+    department: dept,
+    admins: stats.admins,
+    officers: stats.officers,
+    total: stats.admins + stats.officers
+  })).sort((a, b) => b.total - a.total);
+}
+
+/**
+ * Render department statistics
+ */
+function renderDepartmentStats(stats) {
+  const container = document.getElementById('department-stats');
+  if (!container) return;
+
+  if (!stats.length) {
+    container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No department data available.</p>';
+    return;
+  }
+
+  const html = stats.map(dept => `
+    <div class="dept-stat-card">
+      <h3>${escapeHtml(dept.department)}</h3>
+      <div class="dept-counts">
+        <div class="dept-count">
+          <div class="dept-count-value">${dept.admins}</div>
+          <div class="dept-count-label">Admins</div>
+        </div>
+        <div class="dept-count">
+          <div class="dept-count-value">${dept.officers}</div>
+          <div class="dept-count-label">Officers</div>
+        </div>
+        <div class="dept-count">
+          <div class="dept-count-value">${dept.total}</div>
+          <div class="dept-count-label">Total</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
 }
 
 /**
@@ -77,7 +168,7 @@ function setupFormHandlers() {
     const userId = document.getElementById('strip-titles-user').value;
     const reason = document.getElementById('strip-titles-reason').value;
 
-    if (!confirm(`Are you sure you want to strip all titles from this user? This will revert them to citizen status.`)) {
+    if (!confirm('Are you sure you want to strip all titles from this user? This will revert them to citizen status.')) {
       return;
     }
 

@@ -134,30 +134,37 @@ const NOTIFICATION_TYPES = {
   COMPLAINT_RESOLVED: 'complaint_resolved',
   COMPLAINT_REJECTED: 'complaint_rejected',
   OFFICER_UPDATE: 'officer_added_update',
-  
+  WORKFLOW_STEP_COMPLETED: 'workflow_step_completed',
+  LGU_WORK_COMPLETED: 'lgu_work_completed',
+  RESOLUTION_REVIEW_NEEDED: 'resolution_review_needed',
+
   // Officer notifications
   TASK_ASSIGNED: 'task_assigned',
   TASK_DEADLINE_APPROACHING: 'task_deadline_approaching',
   TASK_OVERDUE: 'task_overdue',
   TASK_PRIORITY_CHANGED: 'task_priority_changed',
   COORDINATOR_NOTE: 'coordinator_added_note',
-  
+  ASSIGNMENT_COMPLETED: 'assignment_completed',
+  ADMIN_REMINDER: 'admin_reminder_to_complete',
+
   // Coordinator notifications
   NEW_COMPLAINT_REVIEW: 'new_complaint_needs_review',
   DUPLICATE_DETECTED: 'duplicate_detected',
   SIMILAR_COMPLAINTS: 'similar_complaints_found',
   RESOLUTION_PENDING_APPROVAL: 'resolution_pending_approval',
-  
+
   // Admin notifications
   APPROVAL_REQUIRED: 'approval_required',
   OFFICER_ASSIGNED_DEPARTMENT: 'officer_assigned_to_department',
   COMPLAINT_ESCALATED: 'complaint_escalated',
-  
+  OFFICER_REMINDER: 'officer_reminder',
+  PENDING_TASK_REMINDER: 'pending_task_reminder',
+
   // HR notifications
   STAFF_ADDED: 'staff_member_added',
   ROLE_CHANGE_COMPLETED: 'role_change_completed',
   DEPARTMENT_TRANSFER_COMPLETED: 'department_transfer_completed',
-  
+
   // System notifications
   SYSTEM_ALERT: 'system_alert',
   WELCOME: 'welcome'
@@ -179,11 +186,16 @@ const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.COMPLAINT_RESOLVED]: '✔️',
   [NOTIFICATION_TYPES.COMPLAINT_REJECTED]: '❌',
   [NOTIFICATION_TYPES.OFFICER_UPDATE]: '💬',
+  [NOTIFICATION_TYPES.WORKFLOW_STEP_COMPLETED]: '📈',
+  [NOTIFICATION_TYPES.LGU_WORK_COMPLETED]: '🎯',
+  [NOTIFICATION_TYPES.RESOLUTION_REVIEW_NEEDED]: '🔍',
   [NOTIFICATION_TYPES.TASK_ASSIGNED]: '📋',
   [NOTIFICATION_TYPES.TASK_DEADLINE_APPROACHING]: '⏰',
   [NOTIFICATION_TYPES.TASK_OVERDUE]: '🚨',
   [NOTIFICATION_TYPES.TASK_PRIORITY_CHANGED]: '⚠️',
   [NOTIFICATION_TYPES.COORDINATOR_NOTE]: '📝',
+  [NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED]: '✅',
+  [NOTIFICATION_TYPES.ADMIN_REMINDER]: '🔔',
   [NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW]: '🔍',
   [NOTIFICATION_TYPES.DUPLICATE_DETECTED]: '🔗',
   [NOTIFICATION_TYPES.SIMILAR_COMPLAINTS]: '📊',
@@ -191,6 +203,8 @@ const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.APPROVAL_REQUIRED]: '🔐',
   [NOTIFICATION_TYPES.OFFICER_ASSIGNED_DEPARTMENT]: '👔',
   [NOTIFICATION_TYPES.COMPLAINT_ESCALATED]: '⬆️',
+  [NOTIFICATION_TYPES.OFFICER_REMINDER]: '💬',
+  [NOTIFICATION_TYPES.PENDING_TASK_REMINDER]: '⏰',
   [NOTIFICATION_TYPES.STAFF_ADDED]: '👥',
   [NOTIFICATION_TYPES.ROLE_CHANGE_COMPLETED]: '🔄',
   [NOTIFICATION_TYPES.DEPARTMENT_TRANSFER_COMPLETED]: '🏢',

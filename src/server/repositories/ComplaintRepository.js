@@ -1,10 +1,11 @@
+const { createClient } = require('@supabase/supabase-js');
 const Database = require('../config/database');
 const Complaint = require('../models/Complaint');
+const crypto = require('crypto');
 
 class ComplaintRepository {
   constructor() {
-    this.db = new Database();
-    this.supabase = this.db.getClient();
+    this.supabase = Database.getClient();
   }
 
   async create(complaintData) {
@@ -29,58 +30,112 @@ class ComplaintRepository {
       if (error.code === 'PGRST116') return null;
       throw error;
     }
-    return new Complaint(data);
+
+    const complaint = new Complaint(data);
+
+    // Get assignment data for progress tracking (without accessing auth.users)
+    const { data: assignments } = await this.supabase
+      .from('complaint_assignments')
+      .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
+      .eq('complaint_id', id)
+      .order('officer_order', { ascending: true });
+
+    // Add assignments to complaint object
+    complaint.assignments = assignments || [];
+
+    return complaint;
   }
 
   async findByUserId(userId, options = {}) {
-    const { page = 1, limit = 10, status, type } = options;
+    try {
+      const { page = 1, limit = 10, status, type } = options;
+      const offset = (page - 1) * limit;
+
+      let query = this.supabase
+        .from('complaints')
+        .select('*', { count: 'exact' })
+        .eq('submitted_by', userId)
+        .order('submitted_at', { ascending: false });
+
+      if (status) {
+        query = query.eq('workflow_status', status);
+      }
+
+      if (type) {
+        query = query.eq('type', type);
+      }
+
+      // First get the count without range, applying same filters
+      let countQuery = this.supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId);
+
+      if (status) {
+        countQuery = countQuery.eq('workflow_status', status);
+      }
+
+      if (type) {
+        countQuery = countQuery.eq('type', type);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error('[COMPLAINT_REPO] Count query error:', countError);
+      }
+
+      // DIAGNOSTIC: Get ALL complaints for this user without pagination (non-blocking)
+      // This runs in parallel and doesn't block the main query
+      this.supabase
+        .from('complaints')
+        .select('id, title, workflow_status, submitted_at, is_duplicate, cancelled_at')
+        .eq('submitted_by', userId)
+        .order('submitted_at', { ascending: false })
+        .then(() => {
+          // Diagnostic query removed for cleaner logs
+        })
+        .catch(() => {
+          // Silent catch for diagnostic query
+        });
+
+      // Then get the paginated data
+      // Use range for pagination (Supabase uses 0-based indexing for range)
+      const { data, error } = await query
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('[COMPLAINT_REPO] Database query error:', error);
+        throw error;
+      }
+
+      return {
+        complaints: data || [],
+        total: totalCount || 0,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil((totalCount || 0) / limit)
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Error in findByUserId:', error);
+      console.error('[COMPLAINT_REPO] Error stack:', error.stack);
+      throw error;
+    }
+  }
+
+  async findAll(options = {}) {
+    // Extract filter parameters
+    const { page = 1, limit = 20, status, type, department, search } = options;
+
     const offset = (page - 1) * limit;
 
     let query = this.supabase
       .from('complaints')
       .select('*')
-      .eq('submitted_by', userId)
       .order('submitted_at', { ascending: false });
 
     if (status) {
-      query = query.eq('status', status);
-    }
-
-    if (type) {
-      query = query.eq('type', type);
-    }
-
-    const { data, error, count } = await query
-      .range(offset, offset + limit - 1);
-
-    if (error) throw error;
-
-    return {
-      complaints: data.map(complaint => new Complaint(complaint)),
-      total: count,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(count / limit)
-    };
-  }
-
-  async findAll(options = {}) {
-    const { page = 1, limit = 20, status, type, department, search } = options;
-    const offset = (page - 1) * limit;
-
-    let query = this.supabase
-      .from('complaints')
-      .select(`
-        *,
-        submitted_by_profile:submitted_by (
-          email,
-          raw_user_meta_data
-        )
-      `)
-      .order('submitted_at', { ascending: false });
-
-    if (status) {
-      query = query.eq('status', status);
+      query = query.eq('workflow_status', status);
     }
 
     if (type) {
@@ -141,22 +196,46 @@ class ComplaintRepository {
     return new Complaint(data);
   }
 
-  async updateEvidence(id, evidence) {
-    const { data, error } = await this.supabase
-      .from('complaints')
-      .update({ evidence })
-      .eq('id', id)
-      .select()
-      .single();
+  async updateEvidence(id, evidence, userId = null) {
+    // Store evidence files in the complaint_evidence table
+    if (!evidence || evidence.length === 0) {
+      return { success: true };
+    }
 
-    if (error) throw error;
-    return new Complaint(data);
+    try {
+      const evidenceRecords = evidence.map(file => ({
+        complaint_id: id,
+        file_name: file.fileName,
+        file_path: file.filePath,
+        file_size: file.fileSize,
+        file_type: file.fileType,
+        mime_type: file.fileType,
+        uploaded_by: userId,
+        is_public: false
+        // Removed description, tags, metadata as they don't exist in the table schema
+      }));
+
+      const { data, error } = await this.supabase
+        .from('complaint_evidence')
+        .insert(evidenceRecords)
+        .select();
+
+      if (error) {
+        console.error('[COMPLAINT_REPO] Evidence storage error:', error);
+        throw error;
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Evidence update failed:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   async assignCoordinator(id, coordinatorId) {
     const { data, error } = await this.supabase
       .from('complaints')
-      .update({ 
+      .update({
         assigned_coordinator_id: coordinatorId,
         updated_at: new Date().toISOString()
       })
@@ -177,19 +256,60 @@ class ComplaintRepository {
   }
 
   async findActiveCoordinator(department) {
-    const { data, error } = await this.supabase
-      .from('complaint_coordinators')
-      .select('user_id')
-      .eq('department', department)
-      .eq('is_active', true)
-      .limit(1)
-      .single();
+    // Use admin auth API to find coordinators instead of complaint_coordinators table
+    try {
+      const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
+      if (authError) {
+        console.error('[COMPLAINT_REPO] Error fetching auth users:', authError);
+        return null;
+      }
+
+      if (!authUsers?.users) {
+        console.warn('[COMPLAINT_REPO] No users found in auth system');
+        return null;
+      }
+
+      // Find users with base_role = complaint-coordinator
+      const coordinators = authUsers.users.filter(user => {
+        const metadata = user.user_metadata || {};
+        const rawMetadata = user.raw_user_meta_data || {};
+
+        const baseRole = metadata.base_role || rawMetadata.base_role;
+        const isCoordinator = baseRole === 'complaint-coordinator';
+
+        // Optional: filter by department if specified
+        if (department && department !== 'GENERAL') {
+          const userDept = metadata.department || rawMetadata.department ||
+                          metadata.dpt || rawMetadata.dpt;
+          return isCoordinator && userDept === department;
+        }
+
+        return isCoordinator;
+      });
+
+      if (coordinators.length === 0) {
+        console.warn('[COMPLAINT_REPO] No complaint coordinators found');
+        return null;
+      }
+
+      // Return the first available coordinator
+      const coordinator = coordinators[0];
+      console.log('[COMPLAINT_REPO] Found coordinator:', {
+        id: coordinator.id,
+        email: coordinator.email,
+        base_role: coordinator.user_metadata?.base_role || coordinator.raw_user_meta_data?.base_role
+      });
+
+      return {
+        user_id: coordinator.id,
+        email: coordinator.email,
+        name: coordinator.user_metadata?.name || coordinator.raw_user_meta_data?.name || coordinator.email
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_REPO] Error finding coordinator:', error);
+      return null;
     }
-    return data;
   }
 
   async logAction(complaintId, actionType, details = {}) {
@@ -204,6 +324,40 @@ class ComplaintRepository {
 
     if (error) throw error;
     return true;
+  }
+
+  async createAssignments(complaintId, officerIds, assignedBy) {
+    try {
+      const assignments = [];
+      
+      for (let i = 0; i < officerIds.length; i++) {
+        const officerId = officerIds[i];
+        const assignment = {
+          complaint_id: complaintId,
+          assigned_to: officerId, // Fixed: was officer_id, should be assigned_to
+          assigned_by: assignedBy,
+          status: 'assigned',
+          priority: 'medium',
+          assignment_type: officerIds.length > 1 ? 'multi' : 'single',
+          assignment_group_id: crypto.randomUUID(),
+          officer_order: i + 1
+        };
+        
+        const { data, error } = await this.supabase
+          .from('complaint_assignments')
+          .insert(assignment)
+          .select();
+        
+        if (error) throw error;
+        
+        assignments.push(data[0]);
+      }
+      
+      return assignments;
+    } catch (error) {
+      console.error('[COMPLAINT-REPO] Error creating assignments:', error.message);
+      throw error;
+    }
   }
 }
 

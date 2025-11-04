@@ -2,9 +2,9 @@ const Database = require('../config/database');
 const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require('../../shared/constants');
 
 /**
- * RoleManagementService
- * Handles role changes by modifying auth.users.raw_user_meta_data
- */
+* RoleManagementService
+* Handles role changes by modifying auth.users.raw_user_meta_data
+*/
 class RoleManagementService {
   constructor() {
     this.db = new Database();
@@ -12,12 +12,12 @@ class RoleManagementService {
   }
 
   /**
-   * Update user role in auth.users.raw_user_meta_data
-   * @param {string} userId - User ID to update
-   * @param {string} newRole - New role to assign
-   * @param {string} performedBy - ID of user making the change
-   * @param {object} metadata - Additional metadata (department, reason, etc.)
-   */
+  * Update user role in auth.users.raw_user_meta_data
+  * @param {string} userId - User ID to update
+  * @param {string} newRole - New role to assign
+  * @param {string} performedBy - ID of user making the change
+  * @param {object} metadata - Additional metadata (department, reason, etc.)
+  */
   async updateUserRole(userId, newRole, performedBy, metadata = {}) {
     try {
       // Validate role
@@ -28,13 +28,13 @@ class RoleManagementService {
 
       // Get current user data
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
         throw new Error('User not found');
       }
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
       const currentRole = currentMetadata.role || 'citizen';
 
@@ -62,7 +62,6 @@ class RoleManagementService {
       // Log the role change
       await this.logRoleChange(userId, currentRole, newRole, performedBy, metadata);
 
-
       return {
         success: true,
         user: updatedUser.user,
@@ -76,12 +75,12 @@ class RoleManagementService {
   }
 
   /**
-   * Get user's current role from auth metadata
-   */
+  * Get user's current role from auth metadata
+  */
   async getUserRole(userId) {
     try {
       const { data, error } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (error) throw error;
       if (!data || !data.user) throw new Error('User not found');
 
@@ -96,16 +95,16 @@ class RoleManagementService {
   }
 
   /**
-   * Check if user can switch to citizen mode
-   */
+  * Check if user can switch to citizen mode
+  */
   canSwitchToCitizen(userRole) {
     return SWITCHABLE_ROLES.includes(userRole);
   }
 
   /**
-   * Toggle user to citizen mode (temporary)
-   * Stores in session/local state, not in database
-   */
+  * Toggle user to citizen mode (temporary)
+  * Stores in session/local state, not in database
+  */
   async createCitizenSession(userId, actualRole) {
     // This returns data for client-side session storage
     return {
@@ -118,28 +117,28 @@ class RoleManagementService {
   }
 
   /**
-   * Check if role A can manage role B
-   */
+  * Check if role A can manage role B
+  */
   canManageRole(managerRole, targetRole) {
     const managerLevel = ROLE_HIERARCHY[managerRole] || 0;
     const targetLevel = ROLE_HIERARCHY[targetRole] || 0;
-    
+
     return managerLevel > targetLevel;
   }
 
   /**
-   * Get all users by role
-   */
+  * Get all users by role
+  */
   async getUsersByRole(role, options = {}) {
     try {
       // Note: Supabase doesn't allow querying auth.users directly via client
       // This would need to use a custom RPC function or edge function
       // For now, we'll use the business users table
-      
+
       // TODO: Implement proper user listing
       // This is a placeholder that would need enhancement
       console.warn('[ROLE] getUsersByRole needs custom RPC implementation');
-      
+
       return {
         users: [],
         message: 'User listing requires custom Supabase RPC function'
@@ -151,8 +150,8 @@ class RoleManagementService {
   }
 
   /**
-   * Log role change for audit trail
-   */
+  * Log role change for audit trail
+  */
   async logRoleChange(userId, oldRole, newRole, performedBy, metadata = {}) {
     try {
       // Create a role_changes table entry
@@ -187,15 +186,15 @@ class RoleManagementService {
   }
 
   /**
-   * Assign user to department
-   */
+  * Assign user to department
+  */
   async assignDepartment(userId, departmentId, assignedBy) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
 
       const updatedMetadata = {
@@ -214,7 +213,7 @@ class RoleManagementService {
 
       if (updateError) throw updateError;
 
-      console.log(`[ROLE] Assigned user ${userId} to department ${departmentId}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -227,15 +226,15 @@ class RoleManagementService {
   }
 
   /**
-   * Transfer user between departments
-   */
+  * Transfer user between departments
+  */
   async transferDepartment(userId, fromDepartment, toDepartment, transferredBy, reason) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
-      
+
       if (getUserError) throw getUserError;
 
-      const user = currentUser.user;
+      const {user} = currentUser;
       const currentMetadata = user.raw_user_meta_data || {};
 
       const updatedMetadata = {
@@ -259,7 +258,7 @@ class RoleManagementService {
       // Log the transfer
       await this.logDepartmentTransfer(userId, fromDepartment, toDepartment, transferredBy, reason);
 
-      console.log(`[ROLE] Transferred user ${userId} from ${fromDepartment} to ${toDepartment}`);
+      // console.log removed for security
 
       return {
         success: true,
@@ -274,8 +273,8 @@ class RoleManagementService {
   }
 
   /**
-   * Log department transfer
-   */
+  * Log department transfer
+  */
   async logDepartmentTransfer(userId, fromDept, toDept, performedBy, reason) {
     try {
       const logEntry = {
@@ -303,8 +302,8 @@ class RoleManagementService {
   }
 
   /**
-   * Validate permission for role change
-   */
+  * Validate permission for role change
+  */
   validateRoleChangePermission(performerRole, targetCurrentRole, targetNewRole) {
     const errors = [];
 
@@ -313,7 +312,7 @@ class RoleManagementService {
       // HR can assign LGU officer roles (lgu-wst, lgu-engineering, etc.) and lgu-admin
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(targetNewRole);
       const isLguAdmin = /^lgu-admin/.test(targetNewRole);
-      
+
       if (!isLguOfficer && !isLguAdmin) {
         errors.push('HR can only assign LGU officer (lgu-*) and lgu-admin roles');
       }
@@ -341,3 +340,4 @@ class RoleManagementService {
 }
 
 module.exports = RoleManagementService;
+

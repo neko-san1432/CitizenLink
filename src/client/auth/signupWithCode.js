@@ -1,6 +1,6 @@
-import { supabase } from "../config/config.js";
-import showMessage from "../components/toast.js";
-import { validateAndSanitizeForm } from "../utils/validation.js";
+import { supabase } from '../config/config.js';
+import showMessage from '../components/toast.js';
+import { validateAndSanitizeForm } from '../utils/validation.js';
 
 // Get signup code from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
@@ -18,10 +18,10 @@ if (signupCode) {
 async function signupWithOAuth(provider) {
   try {
     const { supabase } = await import('../config/config.js');
-    
+
     // Get OAuth URL with signup code in state parameter
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
+      provider,
       options: {
         redirectTo: `${window.location.origin}/complete-position-signup?code=${signupCode}`,
         queryParams: {
@@ -58,7 +58,7 @@ async function validateSignupCode(code) {
   try {
     const response = await fetch(`/api/hr/validate-signup-code/${code}?t=${Date.now()}`);
     const result = await response.json();
-    
+
     if (result.valid) {
       showMessage('success', `Valid signup code for ${result.data.role} role`);
     } else {
@@ -72,7 +72,7 @@ async function validateSignupCode(code) {
       } else {
         showMessage('error', result.error || 'Invalid signup code');
       }
-      
+
       // Disable form if code is invalid
       const form = document.getElementById('signup-form');
       if (form) {
@@ -91,7 +91,7 @@ const signupForm = document.getElementById('signup-form');
 if (signupForm) {
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
@@ -122,7 +122,7 @@ if (signupForm) {
     const submitButton = e.target.querySelector('button[type="submit"]');
     const buttonText = submitButton.querySelector('.button-text');
     const buttonLoading = submitButton.querySelector('.button-loading');
-    
+
     buttonText.style.display = 'none';
     buttonLoading.style.display = 'flex';
     submitButton.disabled = true;
@@ -147,9 +147,9 @@ if (signupForm) {
       const result = await response.json();
 
       if (result.success) {
-        showMessage('success', 'Account created successfully! Please check your email to verify your account.');
+        showMessage('success', 'Account created successfully! Redirecting to dashboard...');
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = '/dashboard';
         }, 3000);
       } else {
         // Check if it's an expired code

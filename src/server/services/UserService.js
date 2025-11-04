@@ -1,6 +1,5 @@
 const Database = require('../config/database');
-const db = new Database();
-const supabase = db.getClient();
+const supabase = Database.getClient();
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 
 class UserService {
@@ -8,15 +7,15 @@ class UserService {
   normalizeRole(rawRole) {
     if (!rawRole) return 'citizen';
     const role = String(rawRole).toLowerCase();
-    if (role.startsWith('lgu-admin')) return 'lgu-admin';
-    if (role.startsWith('lgu')) return 'lgu';
+    if (role === 'lgu-admin') return 'lgu-admin';
+    if (role === 'lgu') return 'lgu';
     if (role === 'super-admin' || role === 'superadmin') return 'super-admin';
     if (role === 'citizen') return 'citizen';
     return 'citizen';
   }
   /**
-   * Create a new user (stores everything in auth.users metadata)
-   */
+  * Create a new user (stores everything in auth.users metadata)
+  */
   async createUser(userData) {
     const {
       email,
@@ -52,7 +51,7 @@ class UserService {
           first_name: firstNameFinal,
           last_name: lastNameFinal,
           name: displayName,
-          role: role,
+          role,
           normalized_role: normalizedRole,
           mobile_number: mobileNumber || null,
           is_oauth: isOAuth,
@@ -65,7 +64,7 @@ class UserService {
           postal_code: address.postalCode || null,
           barangay: address.barangay || null,
           // LGU staff fields
-          department: department,
+          department,
           employee_id: employeeId,
           position: null,
           // Verification
@@ -85,7 +84,7 @@ class UserService {
           first_name: firstNameFinal,
           last_name: lastNameFinal,
           name: displayName,
-          role: role,
+          role,
           normalized_role: normalizedRole,
           mobile_number: mobileNumber || null,
           mobile: mobileNumber || null, // Also store as 'mobile' for compatibility
@@ -99,7 +98,7 @@ class UserService {
           postal_code: address.postalCode || null,
           barangay: address.barangay || null,
           // LGU staff fields
-          department: department,
+          department,
           employee_id: employeeId,
           position: null,
           // Verification
@@ -164,14 +163,14 @@ class UserService {
   }
 
   /**
-   * Get user by ID (from auth.users metadata only)
-   */
+  * Get user by ID (from auth.users metadata only)
+  */
   async getUserById(userId) {
     try {
       const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
 
       if (error) {
-        console.error('[AUTH] Failed to fetch user:', error);
+        console.error('[AUTH] Failed to fetch user via admin API:', error);
         return null;
       }
 
@@ -188,8 +187,8 @@ class UserService {
   }
 
   /**
-   * Update user profile (updates auth.users metadata)
-   */
+  * Update user profile (updates auth.users metadata)
+  */
   async updateUser(userId, updateData, updatedBy = null) {
     // Validate update data
     this.validateUpdateData(updateData);
@@ -228,9 +227,28 @@ class UserService {
   }
 
   /**
-   * Change user role (updates metadata and logs)
-   */
+  * Change user role (updates metadata and logs)
+  */
   async changeUserRole(userId, newRole, changedBy, reason = null) {
+    // Validate role parameter to prevent injection
+    const validRoles = [
+      'citizen', 'lgu', 'lgu-admin', 'lgu-hr', 'complaint-coordinator',
+      'super-admin', 'lgu-admin-health', 'lgu-admin-education',
+      'lgu-admin-social', 'lgu-admin-infrastructure', 'lgu-admin-environment',
+      'lgu-admin-agriculture', 'lgu-admin-tourism', 'lgu-admin-publicsafety',
+      'lgu-admin-economic', 'lgu-admin-legal', 'lgu-hr-health', 'lgu-hr-education'
+    ];
+
+    if (!newRole || typeof newRole !== 'string') {
+      throw new ValidationError('Role must be a valid string');
+    }
+
+    // Normalize and validate role
+    const normalizedRole = this.normalizeRole(newRole);
+    if (!validRoles.includes(normalizedRole)) {
+      throw new ValidationError(`Invalid role: ${newRole}. Must be one of: ${validRoles.join(', ')}`);
+    }
+
     // Get current user
     const currentUser = await this.getUserById(userId);
     if (!currentUser) {
@@ -238,23 +256,22 @@ class UserService {
     }
 
     const oldRole = currentUser.role;
-    const normalizedRole = this.normalizeRole(newRole);
 
     // Update role in metadata
     const updatedUser = await this.updateUser(userId, {
-      role: newRole,
+      role: normalizedRole,  // Use normalized role for consistency
       normalized_role: normalizedRole
     }, changedBy);
 
     // Log role change
-    await this.logRoleChange(userId, oldRole, newRole, changedBy, reason);
+    await this.logRoleChange(userId, oldRole, normalizedRole, changedBy, reason);
 
     return updatedUser;
   }
 
   /**
-   * Track user login
-   */
+  * Track user login
+  */
   async trackLogin(userId, ipAddress = null, userAgent = null) {
     try {
       const { error } = await supabase.rpc('update_user_login', {
@@ -272,8 +289,8 @@ class UserService {
   }
 
   /**
-   * Get users with filters and pagination (from auth.users)
-   */
+  * Get users with filters and pagination (from auth.users)
+  */
   async getUsers(filters = {}, pagination = {}) {
     const {
       role,
@@ -340,8 +357,8 @@ class UserService {
   }
 
   /**
-   * Sync auth user (no-op now since we only use auth.users)
-   */
+  * Sync auth user (no-op now since we only use auth.users)
+  */
   async syncAuthUser(authUserId) {
     // No longer needed - all data is in auth.users metadata
     return true;
@@ -380,11 +397,13 @@ class UserService {
       'first_name', 'last_name', 'mobile_number', 'date_of_birth', 'gender',
       'address_line_1', 'address_line_2', 'city', 'province', 'postal_code', 'barangay',
       'position', 'bio', 'avatar_url', 'preferred_language', 'timezone',
-      'email_notifications', 'sms_notifications', 'push_notifications'
+      'email_notifications', 'sms_notifications', 'push_notifications',
+      // Role-related fields for admin operations
+      'role', 'normalized_role'
     ];
 
     const invalidFields = Object.keys(updateData).filter(field => !allowedFields.includes(field));
-    
+
     if (invalidFields.length > 0) {
       throw new ValidationError(`Invalid fields: ${invalidFields.join(', ')}`);
     }
@@ -399,7 +418,7 @@ class UserService {
           old_role: oldRole,
           new_role: newRole,
           changed_by: changedBy,
-          reason: reason
+          reason
         });
     } catch (error) {
       console.warn('Role change logging failed:', error);
@@ -422,7 +441,8 @@ class UserService {
       lastName: combined.last_name,
       name: displayName,
       fullName: displayName, // Keep for backwards compatibility
-      mobileNumber: combined.mobile_number,
+      // Mobile number from raw_user_meta_data (priority) or user_metadata
+      mobileNumber: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
       dateOfBirth: combined.date_of_birth,
       gender: combined.gender,
 
@@ -443,7 +463,7 @@ class UserService {
       employeeId: combined.employee_id,
 
       verification: {
-        email: !!authUser.email_confirmed_at,
+        email: Boolean(authUser.email_confirmed_at),
         mobile: combined.mobile_verified || false,
         id: combined.id_verified || false
       },
@@ -463,6 +483,9 @@ class UserService {
         bio: combined.bio
       },
 
+      // Created at from auth.users.created_at
+      created_at: authUser.created_at,
+      
       timestamps: {
         lastLogin: combined.last_login_at,
         created: authUser.created_at,

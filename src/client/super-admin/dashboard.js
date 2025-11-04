@@ -7,11 +7,76 @@ import showMessage from '../components/toast.js';
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
+  await loadDepartmentRoles();
   await loadDashboardData();
+  await loadRoleCounts();
+  await loadApiHealth();
+  startTrafficMonitor();
   await loadLogs();
   setupFormHandlers();
   setupUserSearchSA();
 });
+
+/**
+ * Load department roles dynamically
+ */
+async function loadDepartmentRoles() {
+  try {
+    const { apiClient } = await import('../config/apiClient.js');
+    const { data: departments, error } = await apiClient.get('/api/department-structure/departments');
+
+    if (error) throw error;
+
+    // Load role swap dropdown
+    const roleSwapSelect = document.getElementById('role-swap-role');
+    if (roleSwapSelect) {
+      const loadingEl = document.getElementById('department-roles-loading');
+      if (loadingEl) loadingEl.remove();
+
+      departments.forEach(dept => {
+        // Add officer role
+        const officerOption = document.createElement('option');
+        officerOption.value = `lgu-${dept.code.toLowerCase()}`;
+        officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
+        roleSwapSelect.appendChild(officerOption);
+
+        // Add admin role
+        const adminOption = document.createElement('option');
+        adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;
+        adminOption.textContent = `LGU Admin - ${dept.name}`;
+        roleSwapSelect.appendChild(adminOption);
+      });
+    }
+
+    // Load assign citizen dropdown
+    const assignCitizenSelect = document.getElementById('assign-citizen-role');
+    if (assignCitizenSelect) {
+      const loadingEl = document.getElementById('assign-citizen-roles-loading');
+      if (loadingEl) loadingEl.remove();
+
+      departments.forEach(dept => {
+        // Add officer role
+        const officerOption = document.createElement('option');
+        officerOption.value = `lgu-${dept.code.toLowerCase()}`;
+        officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
+        assignCitizenSelect.appendChild(officerOption);
+
+        // Add admin role
+        const adminOption = document.createElement('option');
+        adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;
+        adminOption.textContent = `LGU Admin - ${dept.name}`;
+        assignCitizenSelect.appendChild(adminOption);
+      });
+    }
+  } catch (error) {
+    console.error('[SUPERADMIN] Error loading department roles:', error);
+    // Show error in loading placeholders
+    const loadingEls = document.querySelectorAll('[id$="-loading"]');
+    loadingEls.forEach(el => {
+      el.innerHTML = '<option value="">Error loading departments</option>';
+    });
+  }
+}
 
 /**
  * Load dashboard data
@@ -34,7 +99,7 @@ async function loadDashboardData() {
 
     if (dashboardResult.success) {
       // Additional dashboard data if needed
-      console.log('[SUPERADMIN] Dashboard loaded', dashboardResult.dashboard);
+      // console.log removed for security
     }
   } catch (error) {
     console.error('[SUPERADMIN] Load dashboard error:', error);
@@ -48,6 +113,91 @@ function updateStatistics(stats) {
   document.getElementById('stat-complaints').textContent = stats.total_complaints || 0;
   document.getElementById('stat-role-changes').textContent = stats.total_role_changes || 0;
   document.getElementById('stat-dept-transfers').textContent = stats.total_department_transfers || 0;
+}
+
+/**
+ * Load role counts (users, admins, hr, officers)
+ */
+async function loadRoleCounts() {
+  try {
+    const res = await fetch('/api/superadmin/users?limit=1');
+    const metaRes = await fetch('/api/superadmin/users?limit=1000');
+    const meta = await metaRes.json();
+    const users = (meta.success && Array.isArray(meta.data)) ? meta.data : [];
+    const totalUsers = users.length;
+    const admins = users.filter(u => String(u.role || '').toLowerCase() === 'super-admin' || /^lgu-admin/.test(String(u.role || ''))).length;
+    const hr = users.filter(u => String(u.role || '').toLowerCase() === 'lgu-hr' || /^lgu-hr/.test(String(u.role || ''))).length;
+    const officers = users.filter(u => /^lgu-(?!admin|hr)/.test(String(u.role || ''))).length;
+
+    setText('stat-users', totalUsers);
+    setText('stat-admins', admins);
+    setText('stat-hr', hr);
+    setText('stat-officers', officers);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function setText(id, v) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(v);
+}
+
+/**
+ * API Health
+ */
+async function loadApiHealth() {
+  const el = document.getElementById('api-health-status');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    if (data && data.success) {
+      el.textContent = `Healthy • ${new Date(data.timestamp).toLocaleString()}`;
+      el.style.color = '#059669';
+    } else {
+      el.textContent = 'Unhealthy';
+      el.style.color = '#b91c1c';
+    }
+  } catch {
+    el.textContent = 'Health check failed';
+    el.style.color = '#b91c1c';
+  }
+  const btn = document.getElementById('btn-refresh-health');
+  if (btn) btn.onclick = loadApiHealth;
+}
+
+/**
+ * Traffic monitor using rate-limit status (proxy for request volume)
+ */
+function startTrafficMonitor() {
+  const graph = document.getElementById('traffic-graph');
+  const meta = document.getElementById('traffic-meta');
+  if (!graph || !meta) return;
+  const bars = [];
+
+  async function tick() {
+    try {
+      const res = await fetch('/api/rate-limit/status');
+      const data = await res.json();
+      const requests = (data && data.status && data.status.requests) || 0;
+      bars.push(requests);
+      if (bars.length > 60) bars.shift();
+      renderBars(bars, graph);
+      meta.textContent = `Requests in window: ${requests}, Remaining: ${(data && data.status && data.status.remaining) || '-'}`;
+    } catch {}
+  }
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+function renderBars(values, container) {
+  const max = Math.max(1, ...values);
+  container.innerHTML = values.map(v => {
+    const h = Math.round((v / max) * 100);
+    return `<div style="width: 8px; height:${h}%; background:#3b82f6; border-radius:2px;"></div>`;
+  }).join('');
 }
 
 /**

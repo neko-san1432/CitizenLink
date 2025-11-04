@@ -21,17 +21,13 @@ const csrfProtection = (req, res, next) => {
   if (req.headers['x-csrf-token']) {
     token = req.headers['x-csrf-token'];
   }
-  // Check for token in body (for JSON requests)
-  else if (req.body && req.body._csrf) {
-    token = req.body._csrf;
-  }
-  // Check for token in multer fields (for FormData)
+  // Check for token in body (for JSON requests and FormData)
   else if (req.body && req.body._csrf) {
     token = req.body._csrf;
   }
 
   if (!token) {
-    console.log('[CSRF] Token missing in request');
+    // console.log removed for security
     return res.status(403).json({
       success: false,
       error: 'CSRF token missing'
@@ -40,7 +36,7 @@ const csrfProtection = (req, res, next) => {
 
   // Verify token exists and is valid
   if (!tokenStore.has(token)) {
-    console.log('[CSRF] Invalid token:', token, 'Available tokens:', Array.from(tokenStore.keys()));
+    // console.log removed for security
     return res.status(403).json({
       success: false,
       error: 'Invalid CSRF token'
@@ -53,7 +49,7 @@ const csrfProtection = (req, res, next) => {
     tokenStore.delete(token);
   }
 
-  console.log('[CSRF] Token validated successfully');
+  // console.log removed for security
   next();
 };
 
@@ -94,3 +90,4 @@ module.exports = {
   addCsrfToken,
   generateToken
 };
+

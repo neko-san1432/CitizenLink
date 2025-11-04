@@ -12,14 +12,96 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/components/clock.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
 </head>
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
-        <div id="app" class="collapsible">
-            <h1>LGU Admin Dashboard</h1>
+        <div id="app" class="collapsible lgu-admin-dashboard">
+            <div class="dashboard-header">
+                <div class="dashboard-title-group">
+                    <h1>🏛️ LGU Admin Dashboard</h1>
+                    <p class="dashboard-subtitle">Local government administration and community management</p>
+                </div>
+                <div class="header-quick-actions">
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=notices">
+                        <div class="quick-action-icon">📢</div>
+                        <div class="quick-action-text">Notice</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=events">
+                        <div class="quick-action-icon">📅</div>
+                        <div class="quick-action-text">Event</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/lgu-admin/publish?type=news">
+                        <div class="quick-action-icon">📰</div>
+                        <div class="quick-action-text">News</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/assignments">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-text">Assignments</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
+                        <div class="quick-action-icon">🗺️</div>
+                        <div class="quick-action-text">Heatmap</div>
+                    </a>
+                    <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
+                        <div class="quick-action-icon">👤</div>
+                        <div class="quick-action-text">Profile</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="dashboard-grid">
+                <!-- Statistics section removed -->
+
+                <!-- Recent Assignments -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📋 Recent Assignments</h2>
+                        <a href="/lgu-admin/assignments" class="btn btn-primary">View All</a>
+                    </div>
+                    <div id="assignments-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading assignments...</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Recent Activity -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🕒 Recent Activity</h2>
+                        <button class="btn btn-secondary" onclick="refreshActivity()">Refresh</button>
+                    </div>
+                    <div id="activity-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading recent activity...</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Alerts & Notifications -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🚨 Alerts & Notifications</h2>
+                        <button class="btn btn-secondary" onclick="markAllRead()">Mark All Read</button>
+                    </div>
+                    <div id="alerts-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading alerts and notifications...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
@@ -29,5 +111,6 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
+    <script type="module" src="../../js/pages/lgu-admin/dashboard.js"></script>
 </body>
 </html>

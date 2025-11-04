@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let searchInput, searchBtn, resultsList;
     const SearchControl = L.Control.extend({
       options: { position: 'topright' },
-      onAdd: function() {
+      onAdd() {
         const container = L.DomUtil.create('div', 'leaflet-bar');
         container.style.background = '#fff';
         container.style.padding = '6px';
@@ -136,17 +136,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function runSearch(query) {
       if (!query || !query.trim()) return;
-      console.log('🔍 Searching for:', query);
+      // console.log removed for security
       try {
         resultsList.style.display = 'none';
         resultsList.innerHTML = '';
         // Bias search to Digos bounding box and exclude "Digos City" from results
         const viewbox = ['125.0,7.0','125.7,6.0']; // lon,lat pairs top-left and bottom-right
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&bounded=1&viewbox=${viewbox.join(',')}&q=${encodeURIComponent(query)}`;
-        console.log('🌐 API URL:', url);
+        // console.log removed for security
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
         const data = await res.json();
-        console.log('📊 Raw results:', data.length, 'items');
+        // console.log removed for security
         if (!Array.isArray(data) || data.length === 0) {
           resultsList.innerHTML = '';
           resultsList.style.display = 'none';
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return !Number.isNaN(lat) && !Number.isNaN(lon) && kmDistance(digosLat, digosLng, lat, lon) <= 15;
           });
         }
-        console.log('🚫 After filtering:', filtered.length, 'items');
+        // console.log removed for security
         const scored = filtered.map((item) => {
           const lat = parseFloat(item.lat);
           const lon = parseFloat(item.lon);
@@ -182,10 +182,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           const score = 0.6 * proximityScore + 0.3 * classScore + 0.1 * brevity;
           return { item, score };
         })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3); // show best 3
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3); // show best 3
 
-        console.log('⭐ Top results:', scored.map(s => ({ name: s.item.display_name, score: s.score.toFixed(3) })));
+        // console.log removed for security
 
         scored.forEach(({ item }) => {
           const resultItem = document.createElement('div');
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           resultItem.addEventListener('click', () => {
             const lat = parseFloat(item.lat);
             const lng = parseFloat(item.lon);
-            console.log('📍 Selected location:', item.display_name, 'at', lat, lng);
+            // console.log removed for security
             if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
               map.setView([lat, lng], Math.max(map.getZoom(), 16));
               resultsList.style.display = 'none';
@@ -250,11 +250,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2) Helper to update hidden fields
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
+    const mapContainer = document.getElementById('complaint-map');
     let pin = null;
+    let boundaryErrorMsg = null;
+
+    // Boundary check function (simple bounding box for Digos City)
+    function isWithinCityBoundary(lat, lng) {
+      if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+      // Digos City approximate bounds
+      const minLat = 6.6, maxLat = 7.0, minLng = 125.0, maxLng = 125.7;
+      return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+    }
+
+    // Show/hide boundary error message
+    function showBoundaryError(show = true) {
+      const mapGroup = mapContainer?.closest('.form-group');
+      if (!mapGroup) return;
+
+      if (show && !boundaryErrorMsg) {
+        boundaryErrorMsg = document.createElement('div');
+        boundaryErrorMsg.className = 'boundary-error-message';
+        boundaryErrorMsg.style.cssText = `
+          color: #dc3545;
+          font-size: 0.875rem;
+          margin-top: 8px;
+          padding: 8px 12px;
+          background-color: #f8d7da;
+          border: 1px solid #f5c6cb;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `;
+        boundaryErrorMsg.innerHTML = `
+          <span style="font-size: 1.2em;">⚠️</span>
+          <span>Outside the jurisdiction of the city</span>
+        `;
+        mapGroup.appendChild(boundaryErrorMsg);
+      } else if (!show && boundaryErrorMsg) {
+        boundaryErrorMsg.remove();
+        boundaryErrorMsg = null;
+      }
+    }
 
     function updateCoordinates(lat, lng) {
       latInput.value = lat.toFixed(6);
       lngInput.value = lng.toFixed(6);
+      
+      // Check boundary and show/hide error
+      const withinBoundary = isWithinCityBoundary(lat, lng);
+      showBoundaryError(!withinBoundary);
     }
 
     function setPin(lat, lng, moveMap = false) {
@@ -306,5 +351,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Complaint map init error:', e);
   }
 });
-
-

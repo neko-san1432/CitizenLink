@@ -15,7 +15,7 @@ export const sanitizeString = (input) => {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        "'": '&#x27;',
+        '\'': '&#x27;',
         '&': '&amp;'
       };
       return entityMap[match];
@@ -244,6 +244,8 @@ export const setupRealtimeValidation = (form) => {
     '#complaintTitle': { required: true, minLength: 3 },
     '#description': { required: true, minLength: 10 },
     '#location': { required: true },
+    '#complaintCategory': { required: true },
+    '#complaintSubcategory': { required: true },
   };
 
   const validateTarget = (selector) => {
@@ -265,13 +267,19 @@ export const setupRealtimeValidation = (form) => {
   Object.keys(rules).forEach((selector) => {
     const input = form.querySelector(selector);
     if (!input) return;
+    const formGroup = input.closest('.form-group');
+
     ['input', 'change', 'blur'].forEach((evt) => {
-      input.addEventListener(evt, () => validateTarget(selector));
+      input.addEventListener(evt, () => {
+        // Add touched class when user interacts with the field
+        if (formGroup) formGroup.classList.add('touched');
+        validateTarget(selector);
+      });
     });
   });
 
-  // Initial pass
-  Object.keys(rules).forEach(validateTarget);
+  // Initial pass - removed to prevent immediate validation errors
+  // Object.keys(rules).forEach(validateTarget);
 };
 
 /**
@@ -301,14 +309,72 @@ export const extractComplaintFormData = (formElement) => {
 
   return {
     title: getVal('#complaintTitle'),
-    type: getVal('#complaintType'),
-    subtype: getVal('#complaintSubtype'),
+    // type field removed - not in current schema
+    // subtype field removed - not in current schema
+    category: getVal('#complaintCategory'),
+    subcategory: getVal('#complaintSubcategory'),
     description: getVal('#description'),
     location_text: getVal('#location'),
     latitude: parseNum('#latitude'),
     longitude: parseNum('#longitude'),
     departments
   };
+};
+
+/**
+ * Check if coordinates are within Digos City boundaries
+ * @param {number} latitude - Latitude coordinate
+ * @param {number} longitude - Longitude coordinate
+ * @returns {boolean} True if coordinates are within city boundaries
+ */
+export const isWithinCityBoundary = (latitude, longitude) => {
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return false;
+  }
+
+  // Use Leaflet's polygon contains check if available (more accurate)
+  if (typeof window !== 'undefined' && window.L && window.cityBoundaries) {
+    try {
+      const point = window.L.latLng(latitude, longitude);
+      // Check if point is within any barangay boundary
+      for (const boundary of window.cityBoundaries) {
+        if (window.L.GeometryUtil && window.L.GeometryUtil.locateOnLine) {
+          // If GeometryUtil is available, use more accurate check
+          const layer = window.L.geoJSON(boundary.geojson);
+          const bounds = layer.getBounds();
+          if (bounds.contains(point)) {
+            return true;
+          }
+        } else {
+          // Simple bounds check
+          const layer = window.L.geoJSON(boundary.geojson);
+          const bounds = layer.getBounds();
+          if (bounds.contains(point)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      console.warn('Boundary check failed, using bounding box:', e);
+    }
+  }
+
+  // Fallback: Simple bounding box check for Digos City
+  // Based on viewbox: ['125.0,7.0','125.7,6.0'] (lon,lat pairs)
+  // Digos City approximate bounds:
+  // North: ~7.0, South: ~6.6, East: ~125.7, West: ~125.0
+  const minLat = 6.6;
+  const maxLat = 7.0;
+  const minLng = 125.0;
+  const maxLng = 125.7;
+
+  return (
+    latitude >= minLat &&
+    latitude <= maxLat &&
+    longitude >= minLng &&
+    longitude <= maxLng
+  );
 };
 
 /**
@@ -325,6 +391,8 @@ export const validateComplaintForm = (data) => {
   const title = sanitizeString(data.title || '');
   const description = sanitizeString(data.description || '');
   const locationText = sanitizeString(data.location_text || '');
+  const category = sanitizeString(data.category || '');
+  const subcategory = sanitizeString(data.subcategory || '');
 
   if (!title) errors.push('Title is required');
   if (title && title.length < 3) errors.push('Title must be at least 3 characters');
@@ -333,6 +401,15 @@ export const validateComplaintForm = (data) => {
   if (description && description.length < 10) errors.push('Description must be at least 10 characters');
 
   if (!locationText) errors.push('Location is required');
+
+  // Validate hierarchical form fields
+  if (!category) errors.push('Category is required');
+  if (!subcategory) errors.push('Subcategory is required');
+
+  // Validate departments
+  if (!data.departments || data.departments.length === 0) {
+    errors.push('At least one department must be selected');
+  }
 
   // If one coordinate is provided, both should be valid numbers
   const hasLat = data.latitude !== null && data.latitude !== undefined;
@@ -343,6 +420,11 @@ export const validateComplaintForm = (data) => {
   if (hasLat && hasLng) {
     if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
       errors.push('Coordinates must be numeric');
+    } else {
+      // Check if coordinates are within city boundary
+      if (!isWithinCityBoundary(data.latitude, data.longitude)) {
+        errors.push('Outside the jurisdiction of the city');
+      }
     }
   }
 

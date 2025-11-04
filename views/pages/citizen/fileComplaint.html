@@ -5,54 +5,79 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <title>File Complaint</title>
     <link rel="stylesheet" href="../../css/style.css" />
     <link rel="stylesheet" href="../../css/toast.css" />
     <link rel="stylesheet" href="../../css/components/sidebar.css" />
-    <link rel="stylesheet" href="../../css/complaint-form.css" />
     <link rel="stylesheet" href="../../css/app.css" />
     <link rel="stylesheet" href="../../css/header-redesign.css" />
+    <link rel="stylesheet" href="../../css/complaint-form.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      /* Force side-by-side layout for form rows */
+      .form-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      .form-row .form-group {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        margin-bottom: 0 !important;
+      }
+      .form-row .form-col-map {
+        flex: 1.5 !important;
+      }
+      .complaint-form-container {
+        max-width: 1200px !important;
+      }
+    </style>
 </head>
 <body>
     <div class="app-container">
       <div class="header-container"></div>
       <div id="sidebar" class="collapsible"></div>
       <div id="app" class="collapsible">
-        <div class="complaint-form-container">
+        <div class="complaint-form-container" style="max-width: 1200px !important;">
           <h1>File Complaint</h1>
-          <form id="complaintForm" class="complaint-form">
+          <form id="complaintForm" class="complaint-form" style="display: flex; flex-direction: column;">
             <div class="form-group">
               <label for="complaintTitle">Complaint Title *</label>
               <input
                 type="text"
                 id="complaintTitle"
                 name="complaintTitle"
-                required
                 placeholder="Enter a descriptive title for your complaint"
               />
             </div>
-            <div class="form-group">
-              <label for="complaintType">Complaint Type</label>
-              <select id="complaintType" name="complaintType">
-                <option value="">Select complaint type (optional)</option>
-                <option value="infrastructure">Infrastructure</option>
-                <option value="public-safety">Public Safety</option>
-                <option value="environmental">Environmental</option>
-                <option value="health">Health & Sanitation</option>
-                <option value="traffic">Traffic & Transportation</option>
-                <option value="noise">Noise Pollution</option>
-                <option value="other">Other</option>
-              </select>
+            
+            <div class="form-row">
+              <div class="form-group form-col">
+                <label for="complaintCategory">Category *</label>
+                <select id="complaintCategory" name="complaintCategory">
+                  <option value="">Select a category...</option>
+                </select>
+              </div>
+              
+              <div class="form-group form-col">
+                <label for="complaintSubcategory">Subcategory *</label>
+                <select id="complaintSubcategory" name="complaintSubcategory">
+                  <option value="">Select a subcategory...</option>
+                </select>
+              </div>
             </div>
+            
+            <!-- Type field removed - all submissions are complaints -->
+            
+            <!-- Subtype field removed - not needed in current schema -->
             <div class="form-group">
-              <label for="complaintSubtype">Complaint Subtype</label>
-              <select id="complaintSubtype" name="complaintSubtype">
-                <option value="">Select complaint subtype (optional)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Department Involved (Optional)</label>
+              <label>Relevant Offices</label>
+              <div class="department-selection-info">
+                <p class="info-text">All available offices are shown below. When you select a subcategory, appropriate offices will be suggested. You can select or unselect any offices as needed.</p>
+              </div>
               <div id="departmentCheckboxes" class="checkbox-group">
                 <div class="loading-placeholder">Loading departments...</div>
               </div>
@@ -62,26 +87,26 @@
               <textarea
                 id="description"
                 name="description"
-                required
                 placeholder="Please provide a detailed description of your complaint..."
                 rows="5"
               ></textarea>
             </div>
-            <div class="form-group">
-              <label for="location">Location *</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                required
-                placeholder="Enter the specific location of the complaint"
-              />
-            </div>
-            <div class="form-group">
-              <label>Pin Location on Map</label>
-              <div id="complaint-map" style="width: 100%; height: 320px; border: 1px solid #ddd; border-radius: 6px; position: relative;"></div>
-              <input type="hidden" id="latitude" name="latitude" />
-              <input type="hidden" id="longitude" name="longitude" />
+            <div class="form-row form-row-map">
+              <div class="form-group form-col">
+                <label for="location">Location *</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  placeholder="Enter the specific location of the complaint"
+                />
+              </div>
+              <div class="form-group form-col form-col-map">
+                <label>Pin Location on Map</label>
+                <div id="complaint-map" style="width: 100%; height: 320px; border: 1px solid #ddd; border-radius: 6px; position: relative;"></div>
+                <input type="hidden" id="latitude" name="latitude" />
+                <input type="hidden" id="longitude" name="longitude" />
+              </div>
             </div>
             <div class="form-group">
               <label for="evidence">Evidence (Optional)</label>
@@ -122,19 +147,19 @@
     </div>
     <div id="toast-container" class="toast-container"></div>
     <!-- Core Scripts -->
-    <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
     
     <!-- Citizen-Only Access Check -->
-    <script type="module" src="../../js/pages/citizen-file-complaint-access.js"></script>
+    <script type="module" src="/js/pages/citizen-file-complaint-access.js"></script>
     
     <!-- Map Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../../js/components/map/complaintLocationPicker.js"></script>
+    <script src="/js/components/map/complaintLocationPicker.js"></script>
     
     <!-- Complaint Form Scripts (loaded last) -->
-    <script type="module" src="../../js/components/form/complaintForm.js"></script>
+    <script type="module" src="/js/components/form/complaintFormHierarchical.js"></script>
 </body>
 </html>

@@ -18,9 +18,9 @@ export const getCsrfToken = async () => {
     if (data.success) {
       csrfToken = data.csrfToken;
       return csrfToken;
-    } else {
-      throw new Error('Failed to get CSRF token');
     }
+    throw new Error('Failed to get CSRF token');
+
   } catch (error) {
     console.error('CSRF token fetch failed:', error);
     throw error;
