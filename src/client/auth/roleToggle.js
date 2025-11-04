@@ -3,10 +3,10 @@
  * Allows staff roles to switch to citizen mode temporarily
  */
 
-console.log('[ROLE_TOGGLE] Script loaded successfully');
+// console.log removed for security
 
 // Test: Add a simple alert to see if script is running
-console.log('[ROLE_TOGGLE] Testing basic functionality...');
+// console.log removed for security
 alert('Role toggle script is running!');
 
 import { supabase } from '../config/config.js';
@@ -255,11 +255,11 @@ export function getActualRole() {
  * Should be called on every page that needs the toggle
  */
 export async function initializeRoleToggle() {
-  console.log('[ROLE_TOGGLE] Initializing role toggle...');
+  // console.log removed for security
 
   // Prevent multiple initializations
   if (isInitialized) {
-    console.log('[ROLE_TOGGLE] Already initialized, skipping...');
+    // console.log removed for security
     return;
   }
   isInitialized = true;
@@ -288,14 +288,14 @@ export async function initializeRoleToggle() {
       // Remove the button if user is a real citizen (no base role)
       const btn = document.getElementById('role-toggle-btn');
       if (btn) {
-        console.log('[ROLE_TOGGLE] Removing button - user is real citizen');
+        // console.log removed for security
         btn.remove();
       }
       isInitialized = false; // Reset initialization flag
       return;
     }
 
-    console.log('[ROLE_TOGGLE] User has base role or is in citizen mode:', { hasBaseRole, isInCitizenMode, baseRole, currentRole });
+    // console.log removed for security
 
     // Cache the result for future use
     roleInfoCache = result;
@@ -336,7 +336,7 @@ function watchForHeaderChanges(baseRole, isInCitizenMode) {
         // Check if our button was removed
         const existingBtn = document.getElementById('role-toggle-btn');
         if (!existingBtn && (baseRole || isInCitizenMode)) {
-          console.log('[ROLE_TOGGLE] Button was removed, re-adding...');
+          // console.log removed for security
           createRoleToggleButton(baseRole, isInCitizenMode, false);
         }
       }
@@ -359,7 +359,7 @@ function createRoleToggleButton(actualRole = null, isInCitizen = false, isLoadin
   // Check if button already exists
   const existingBtn = document.getElementById('role-toggle-btn');
   if (existingBtn) {
-    console.log('[ROLE_TOGGLE] Button already exists, updating...');
+    // console.log removed for security
     updateRoleToggleButton(actualRole, isInCitizen);
     return;
   }
@@ -372,21 +372,21 @@ function createRoleToggleButton(actualRole = null, isInCitizen = false, isLoadin
     setTimeout(() => {
       const retryHeaderRight = document.querySelector('.header-right');
       if (retryHeaderRight) {
-        console.log('[ROLE_TOGGLE] Header-right found on first retry');
+        // console.log removed for security
         createRoleToggleButton(actualRole, isInCitizen, isLoading);
       } else {
         // Try again after header initialization
         setTimeout(() => {
           const secondRetry = document.querySelector('.header-right');
           if (secondRetry) {
-            console.log('[ROLE_TOGGLE] Header-right found on second retry');
+            // console.log removed for security
             createRoleToggleButton(actualRole, isInCitizen, isLoading);
           } else {
             // Final attempt after everything should be loaded
             setTimeout(() => {
               const finalRetry = document.querySelector('.header-right');
               if (finalRetry) {
-                console.log('[ROLE_TOGGLE] Header-right found on final retry');
+                // console.log removed for security
                 createRoleToggleButton(actualRole, isInCitizen, isLoading);
               } else {
                 console.warn('[ROLE_TOGGLE] Header-right not found after multiple retries - header may not be initialized');
@@ -449,7 +449,7 @@ function createRoleToggleButton(actualRole = null, isInCitizen = false, isLoadin
  * Update existing role toggle button
  */
 function updateRoleToggleButton(actualRole, isInCitizen) {
-  console.log('[ROLE_TOGGLE] Updating button:', { actualRole, isInCitizen });
+  // console.log removed for security
   const toggleBtn = document.getElementById('role-toggle-btn');
   if (!toggleBtn) {
     console.warn('[ROLE_TOGGLE] Button not found for update, creating new one');
@@ -461,7 +461,7 @@ function updateRoleToggleButton(actualRole, isInCitizen) {
   toggleBtn.title = isInCitizen ? `Switch back to ${formatRoleName(actualRole)}` : 'Switch to Citizen Mode';
   toggleBtn.innerHTML = isInCitizen ? '👔' : '👤';
 
-  console.log('[ROLE_TOGGLE] Button updated successfully:', { actualRole, isInCitizen });
+  // console.log removed for security
 
   // console.log removed for security
 

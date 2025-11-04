@@ -105,7 +105,7 @@ export function createHeader() {
 
 // Initialize global click handler to close dropdowns
 function initializeGlobalClickHandler() {
-  console.log('[HEADER] Initializing global click handler...');
+  // console.log removed for security
 
   document.addEventListener('click', (e) => {
     const notificationPanel = document.getElementById('notification-panel');
@@ -143,7 +143,7 @@ function initializeGlobalClickHandler() {
 
 // Initialize profile button
 function initializeProfileButton() {
-  console.log('[HEADER] Initializing profile button...');
+  // console.log removed for security
   const profileBtn = document.getElementById('profile-btn');
   if (!profileBtn) {
     console.warn('[HEADER] Profile button not found');
@@ -179,7 +179,7 @@ function initializeProfileButton() {
 
 // Initialize menu toggle
 function initializeMenuToggle() {
-  console.log('[HEADER] Initializing menu toggle...');
+  // console.log removed for security
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
 
@@ -195,7 +195,7 @@ function initializeMenuToggle() {
 
 // Initialize theme toggle
 function initializeThemeToggle() {
-  console.log('[HEADER] Initializing theme toggle...');
+  // console.log removed for security
   const themeToggleBtn = document.getElementById('theme-toggle');
   if (!themeToggleBtn) {
     console.warn('[HEADER] Theme toggle button not found');
@@ -231,7 +231,7 @@ function initializeThemeToggle() {
 
 // Initialize header scroll behavior
 function initializeHeaderScroll() {
-  console.log('[HEADER] Initializing header scroll behavior...');
+  // console.log removed for security
   let lastScrollY = window.scrollY;
 
   window.addEventListener('scroll', () => {
@@ -254,7 +254,7 @@ function initializeHeaderScroll() {
 
 // Initialize dropdowns
 function initializeDropdowns() {
-  console.log('[HEADER] Initializing dropdowns...');
+  // console.log removed for security
   // Move dropdowns to body to avoid container issues
   const notificationPanel = document.getElementById('notification-panel');
   const profilePanel = document.getElementById('profile-panel');
@@ -276,30 +276,30 @@ function initializeDropdowns() {
 document.addEventListener('DOMContentLoaded', () => {
   // Add a small delay to ensure all elements are ready
   setTimeout(() => {
-    console.log('[HEADER] Initializing header...');
+    // console.log removed for security
     const headerContainer = document.querySelector('.header-container');
     const headerElement = document.querySelector('#header');
 
-    console.log('[HEADER] Header container element:', headerContainer);
-    console.log('[HEADER] Header element:', headerElement);
+    // console.log removed for security
+    // console.log removed for security
 
     // Try .header-container first, then fall back to #header
     if (headerContainer) {
-      console.log('[HEADER] Header container found, creating header...');
+      // console.log removed for security
       const headerHTML = createHeader();
-      console.log('[HEADER] Created header HTML:', `${headerHTML.substring(0, 100)  }...`);
+      // console.log removed for security
       headerContainer.innerHTML = headerHTML;
     } else if (headerElement) {
-      console.log('[HEADER] Header element found, creating header...');
+      // console.log removed for security
       const headerHTML = createHeader();
-      console.log('[HEADER] Created header HTML:', `${headerHTML.substring(0, 100)  }...`);
+      // console.log removed for security
       headerElement.innerHTML = headerHTML;
     } else {
       console.warn('[HEADER] No header container or header element found!');
       // Try to create a header container as a fallback
       const {body} = document;
       if (body) {
-        console.log('[HEADER] Creating fallback header container...');
+        // console.log removed for security
         const fallbackHeader = document.createElement('div');
         fallbackHeader.className = 'header-container';
         fallbackHeader.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000;';
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const headerHTML = createHeader();
         fallbackHeader.innerHTML = headerHTML;
-        console.log('[HEADER] Fallback header created');
+        // console.log removed for security
       } else {
         console.error('[HEADER] Cannot create fallback header - body not found');
         return;
@@ -317,10 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Test if buttons were created
     const testNotificationBtn = document.getElementById('notification-btn');
     const testProfileBtn = document.getElementById('profile-btn');
-    console.log('[HEADER] Buttons after HTML insertion:', {
-      notificationBtn: Boolean(testNotificationBtn),
-      profileBtn: Boolean(testProfileBtn)
-    });
+    // console.log removed for security
 
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector('.notification-container');

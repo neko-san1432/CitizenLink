@@ -26,7 +26,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
 
     // Extract and validate form data
     const formData = extractComplaintFormData(formElement);
-    console.log('[FORM] Extracted form data:', formData);
+    // console.log removed for security
     const validation = validateComplaintForm(formData);
 
     if (!validation.valid) {
@@ -61,9 +61,9 @@ export async function handleComplaintSubmit(formElement, selectedFiles = []) {
     });
 
     // Debug: Log what's being sent to API
-    console.log('[FORM] FormData contents:');
+    // console.log removed for security
     for (const [key, value] of apiFormData.entries()) {
-      console.log(`  ${key}:`, value);
+      // console.log removed for security
     }
 
     // Submit via API client (CSRF token handled internally)

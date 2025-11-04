@@ -9,7 +9,7 @@ const lguOfficerController = new LguOfficerController();
 // All routes require authentication and LGU officer role
 router.use(authenticateUser);
 router.use((req, res, next) => {
-  console.log('[LGU_ROUTES] User role:', req.user?.role, 'Base role:', req.user?.raw_user_meta_data?.base_role);
+  // console.log removed for security
   next();
 });
 router.use(requireRole(['lgu'])); // Simplified role requirement

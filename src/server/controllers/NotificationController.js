@@ -65,12 +65,7 @@ class NotificationController {
         const k = dedupKey(r);
         dedupMap.set(k, (dedupMap.get(k) || 0) + 1);
       }
-      console.log('[NOTIFICATION][DEBUG] Unread fetch summary:', {
-        userId,
-        returned: notifications?.length || 0,
-        uniqueByTypeTitleComplaint: dedupMap.size,
-        buckets: Array.from(dedupMap.entries()).slice(0, 10) // cap log noise
-      });
+      // console.log removed for security
 
       // Deduplicate notifications by keeping only the most recent one per group
       const deduplicatedNotifications = [];
@@ -94,12 +89,7 @@ class NotificationController {
         }
       }
 
-      console.log('[NOTIFICATION][DEBUG] Deduplication result:', {
-        userId,
-        originalCount: notifications?.length || 0,
-        deduplicatedCount: deduplicatedNotifications.length,
-        removedDuplicates: (notifications?.length || 0) - deduplicatedNotifications.length
-      });
+      // console.log removed for security
 
       // Enrich with link for client-side navigation
       const enriched = deduplicatedNotifications.map(n => ({
@@ -159,12 +149,7 @@ class NotificationController {
         const k = dedupKey(r);
         dedupMap.set(k, (dedupMap.get(k) || 0) + 1);
       }
-      console.log('[NOTIFICATION][DEBUG] All fetch summary:', {
-        userId,
-        returned: notifications?.length || 0,
-        uniqueByTypeTitleComplaint: dedupMap.size,
-        buckets: Array.from(dedupMap.entries()).slice(0, 10)
-      });
+      // console.log removed for security
 
       // Deduplicate notifications by keeping only the most recent one per group
       const deduplicatedNotifications = [];
@@ -188,12 +173,7 @@ class NotificationController {
         }
       }
 
-      console.log('[NOTIFICATION][DEBUG] All deduplication result:', {
-        userId,
-        originalCount: notifications?.length || 0,
-        deduplicatedCount: deduplicatedNotifications.length,
-        removedDuplicates: (notifications?.length || 0) - deduplicatedNotifications.length
-      });
+      // console.log removed for security
 
       // Enrich with link for client-side navigation
       const enriched = deduplicatedNotifications.map(n => ({
@@ -387,7 +367,7 @@ class NotificationController {
           table: 'notification',
           filter: `user_id=eq.${userId}`
         }, (payload) => {
-          console.log('[NOTIFICATION] Real-time notification received:', payload);
+          // console.log removed for security
 
           const notification = payload.new;
           const notificationData = {
@@ -409,7 +389,7 @@ class NotificationController {
       req.on('close', () => {
         // Only log in development mode to reduce production noise
         if (process.env.NODE_ENV === 'development') {
-          console.log('[NOTIFICATION] Client disconnected from stream');
+          // console.log removed for security
         }
         subscription.unsubscribe();
         res.end();

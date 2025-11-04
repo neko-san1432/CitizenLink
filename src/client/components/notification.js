@@ -19,7 +19,7 @@ const POLLING_INTERVAL_MS = 30000;
 
 // Initialize notification button functionality
 export function initializeNotificationButton() {
-  console.log('[NOTIFICATION] Initializing notification button...');
+  // console.log removed for security
   const notificationBtn = document.getElementById('notification-btn');
   const notificationPanel = document.getElementById('notification-panel');
   const closeBtn = document.getElementById('close-notifications');
@@ -28,12 +28,12 @@ export function initializeNotificationButton() {
   const retryBtn = document.getElementById('retry-notifications');
 
   if (notificationBtn && notificationPanel) {
-    console.log('[NOTIFICATION] Notification elements found');
-    console.log('[NOTIFICATION] Notification button:', notificationBtn);
-    console.log('[NOTIFICATION] Notification panel:', notificationPanel);
+    // console.log removed for security
+    // console.log removed for security
+    // console.log removed for security
     // Toggle notification panel with smooth animations
     notificationBtn.addEventListener('click', (e) => {
-      console.log('[NOTIFICATION] Notification button clicked!');
+      // console.log removed for security
       e.stopPropagation();
 
       // Close profile panel if open
@@ -66,29 +66,13 @@ export function initializeNotificationButton() {
         }, 10);
       }
 
-      console.log('[NOTIFICATION] Notification panel classes after toggle:', notificationPanel.className);
-      console.log('[NOTIFICATION] Notification panel has show class:', notificationPanel.classList.contains('show'));
+      // console.log removed for security
+      // console.log removed for security
 
       // Debug positioning
       if (notificationPanel.classList.contains('show')) {
         const rect = notificationPanel.getBoundingClientRect();
-        console.log('[NOTIFICATION] Notification panel position:', {
-          top: notificationPanel.style.top,
-          left: notificationPanel.style.left,
-          right: notificationPanel.style.right,
-          zIndex: notificationPanel.style.zIndex,
-          display: getComputedStyle(notificationPanel).display,
-          visibility: getComputedStyle(notificationPanel).visibility,
-          opacity: getComputedStyle(notificationPanel).opacity,
-          boundingRect: {
-            top: rect.top,
-            left: rect.left,
-            right: rect.right,
-            bottom: rect.bottom,
-            width: rect.width,
-            height: rect.height
-          }
-        });
+        // console.log removed for security
       }
 
       // Load notifications when panel is opened (only show loading on first load)
@@ -200,7 +184,7 @@ async function checkForNewNotifications() {
 
       // If this is a new notification (different ID than our last one)
       if (latestNotification.id !== notificationState.lastNotificationId) {
-        console.log('[NOTIFICATION] New notification detected, adding to top of list');
+        // console.log removed for security
 
         // Add the new notification to the top of the list
         notificationState.notifications.unshift(latestNotification);

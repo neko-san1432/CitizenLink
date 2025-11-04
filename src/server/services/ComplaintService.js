@@ -16,11 +16,7 @@ class ComplaintService {
 
   async createComplaint(userId, complaintData, files = []) {
     // Debug: Log received complaint data
-    console.log('[COMPLAINT_SERVICE] Received complaint data:', {
-      preferred_departments: complaintData.preferred_departments,
-      departments: complaintData.departments,
-      keys: Object.keys(complaintData)
-    });
+    // console.log removed for security
 
     // Parse preferred_departments - handle both array and individual values
     let preferredDepartments = complaintData.preferred_departments || [];
@@ -32,7 +28,7 @@ class ComplaintService {
         preferredDepartments = JSON.parse(preferredDepartments);
       } catch (e) {
         // If JSON parsing fails, treat it as a single department code
-        console.log('[COMPLAINT] Treating preferred_departments as single value:', preferredDepartments);
+        // console.log removed for security
         preferredDepartments = [preferredDepartments].filter(Boolean);
       }
     }
@@ -42,7 +38,7 @@ class ComplaintService {
       preferredDepartments = [preferredDepartments].filter(Boolean);
     }
 
-    console.log('[COMPLAINT_SERVICE] Processed preferred_departments:', preferredDepartments);
+    // console.log removed for security
 
     // Map client field names to server field names
     const mappedData = {
@@ -62,7 +58,7 @@ class ComplaintService {
     const preparedData = prepareComplaintForInsert(mappedData);
 
     // Debug: Log what fields are being sent to database
-    console.log('[COMPLAINT_SERVICE] Fields being sent to database:', Object.keys(preparedData));
+    // console.log removed for security
 
     // Validate data consistency
     const consistencyCheck = validateComplaintConsistency(preparedData);
@@ -106,10 +102,7 @@ class ComplaintService {
         );
 
         if (coordResult.success) {
-          console.log('[COMPLAINT] Coordinator notifications sent:', {
-            complaintId: createdComplaint.id,
-            coordinatorsNotified: coordResult.count || 0
-          });
+          // console.log removed for security
         } else {
           console.warn('[COMPLAINT] Failed to send coordinator notifications:', coordResult.error);
         }
@@ -637,7 +630,7 @@ class ComplaintService {
   }
 
   async getComplaintLocations(filters = {}) {
-    console.log('[COMPLAINT-SERVICE] getComplaintLocations called with filters:', filters);
+    // console.log removed for security
 
     const {
       status,
@@ -650,7 +643,7 @@ class ComplaintService {
     } = filters;
 
     try {
-      console.log('[COMPLAINT-SERVICE] Starting database query...');
+      // console.log removed for security
       
       // First, get total count of complaints with coordinates for debugging
       // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
@@ -662,16 +655,16 @@ class ComplaintService {
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
       
-      console.log('[COMPLAINT-SERVICE] ============================================');
-      console.log('[COMPLAINT-SERVICE] TOTAL COUNT CHECK:');
-      console.log('[COMPLAINT-SERVICE] Total complaints with coordinates in DB:', totalWithCoords);
-      console.log('[COMPLAINT-SERVICE] ============================================');
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
       
       // Also check total complaints without coordinate filter using direct service role
       const { count: totalComplaints } = await supabase
         .from('complaints')
         .select('id', { count: 'exact', head: true });
-      console.log('[COMPLAINT-SERVICE] Total complaints in DB (no coord filter):', totalComplaints);
+      // console.log removed for security
       
       // CRITICAL FIX: Build base query using DIRECT service role client, not this.complaintRepo.supabase
       // This ensures we bypass any RLS policies that might be filtering results
@@ -683,33 +676,25 @@ class ComplaintService {
         .not('longitude', 'is', null)
         .order('submitted_at', { ascending: false }); // Add ordering for consistency
       
-      console.log('[COMPLAINT-SERVICE] Base query constructed using DIRECT Database.getClient() (service role - bypasses RLS)');
+      // console.log removed for security
 
       // Log filter parameters
-      console.log('[COMPLAINT-SERVICE] Filters applied:', {
-        status,
-        category,
-        subcategory,
-        department,
-        startDate,
-        endDate,
-        includeResolved
-      });
+      // console.log removed for security
 
       // Filter by workflow_status
       if (status) {
         // If a specific status is requested, filter by it
         query = query.eq('workflow_status', status);
-        console.log('[COMPLAINT-SERVICE] Filtering by status:', status);
+        // console.log removed for security
       } else {
         // No status filter - check if we should exclude resolved
         if (!includeResolved) {
           // Exclude completed and cancelled complaints
           query = query.neq('workflow_status', 'completed').neq('workflow_status', 'cancelled');
-          console.log('[COMPLAINT-SERVICE] Excluding resolved complaints (includeResolved=false)');
+          // console.log removed for security
         } else {
           // includeResolved is true - show ALL complaints regardless of status
-          console.log('[COMPLAINT-SERVICE] Including ALL complaints regardless of status (includeResolved=true)');
+          // console.log removed for security
         }
       }
 
@@ -743,40 +728,34 @@ class ComplaintService {
       // Note: We need to use limit() to override default pagination
       
       // DEBUG: Before executing, let's try a simple test query first using DIRECT service role
-      console.log('[COMPLAINT-SERVICE] ============================================');
-      console.log('[COMPLAINT-SERVICE] DEBUG: Testing simple query with DIRECT service role client...');
+      // console.log removed for security
+      // console.log removed for security
       const { data: testData, error: testError } = await supabase
         .from('complaints')
         .select('id, workflow_status, latitude, longitude')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
         .limit(100);
-      console.log('[COMPLAINT-SERVICE] Simple test query returned:', testData?.length || 0, 'complaints');
+      // console.log removed for security
       if (testData && testData.length > 0) {
-        console.log('[COMPLAINT-SERVICE] Test query status breakdown:');
+        // console.log removed for security
         const statusBreakdown = {};
         testData.forEach(c => {
           statusBreakdown[c.workflow_status] = (statusBreakdown[c.workflow_status] || 0) + 1;
         });
-        console.log('[COMPLAINT-SERVICE] Status breakdown:', statusBreakdown);
+        // console.log removed for security
       }
-      console.log('[COMPLAINT-SERVICE] ============================================');
+      // console.log removed for security
       
       // CRITICAL FIX: Make sure we explicitly set a high limit
       // Supabase PostgREST may have a very low default limit
-      console.log('[COMPLAINT-SERVICE] Executing filtered query with explicit limit(10000)...');
-      console.log('[COMPLAINT-SERVICE] Using DIRECT service role client (should see all 4 complaints)');
+      // console.log removed for security
+      // console.log removed for security
       
       // Ensure limit is applied to the query
       const queryWithLimit = query.limit(10000);
       
-      console.log('[COMPLAINT-SERVICE] Query structure before execution:', {
-        hasNotLatitude: true,
-        hasNotLongitude: true,
-        hasOrderBy: true,
-        hasLimit: true,
-        usingDirectServiceRole: true
-      });
+      // console.log removed for security
       
       const { data, error, count } = await queryWithLimit;
       
@@ -786,12 +765,12 @@ class ComplaintService {
         throw error;
       }
 
-      console.log('[COMPLAINT-SERVICE] ============================================');
-      console.log('[COMPLAINT-SERVICE] QUERY RESULTS:');
-      console.log('[COMPLAINT-SERVICE] Total complaints with coords in DB:', totalWithCoords);
-      console.log('[COMPLAINT-SERVICE] Query returned count:', count);
-      console.log('[COMPLAINT-SERVICE] Raw complaints returned from query (data.length):', data?.length || 0);
-      console.log('[COMPLAINT-SERVICE] Error (if any):', error?.message || 'none');
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
       
       if (data && data.length === 1 && totalWithCoords > 1) {
         console.error('[COMPLAINT-SERVICE] ⚠️ CRITICAL: Query returned only 1 complaint but DB has', totalWithCoords);
@@ -804,25 +783,19 @@ class ComplaintService {
         });
       }
       
-      console.log('[COMPLAINT-SERVICE] ============================================');
+      // console.log removed for security
       
       // Debug: Log first few complaints to see their structure
       if (data && data.length > 0) {
-        console.log('[COMPLAINT-SERVICE] Sample complaint from DB:', JSON.stringify(data[0], null, 2));
-        console.log('[COMPLAINT-SERVICE] First 5 complaints:', data.slice(0, 5).map(c => ({ 
-          id: c.id?.substring(0, 8) + '...', 
-          title: c.title, 
-          status: c.workflow_status,
-          lat: c.latitude, 
-          lng: c.longitude 
-        })));
+        // console.log removed for security
+        // console.log removed for security
         
         // Check status breakdown of returned data
         const returnedStatusBreakdown = {};
         data.forEach(c => {
           returnedStatusBreakdown[c.workflow_status] = (returnedStatusBreakdown[c.workflow_status] || 0) + 1;
         });
-        console.log('[COMPLAINT-SERVICE] Returned data status breakdown:', returnedStatusBreakdown);
+        // console.log removed for security
       } else {
         console.warn('[COMPLAINT-SERVICE] ⚠️ NO DATA RETURNED FROM QUERY!');
       }
@@ -834,7 +807,7 @@ class ComplaintService {
         console.error('[COMPLAINT-SERVICE] Attempting fallback: Direct query without filters...');
         
         // Try a direct query as fallback using service role client
-        console.log('[COMPLAINT-SERVICE] Using direct service role client for fallback query...');
+        // console.log removed for security
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('complaints')
           .select('id, title, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory')
@@ -899,12 +872,12 @@ class ComplaintService {
         })
         .filter(Boolean); // Remove null entries
 
-      console.log('[COMPLAINT-SERVICE] ============================================');
-      console.log('[COMPLAINT-SERVICE] TRANSFORMATION RESULTS:');
-      console.log('[COMPLAINT-SERVICE] Raw complaints from DB:', data?.length || 0);
-      console.log('[COMPLAINT-SERVICE] Transformed complaints count:', transformedData.length);
-      console.log('[COMPLAINT-SERVICE] Complaints filtered out (invalid coords):', (data?.length || 0) - transformedData.length);
-      console.log('[COMPLAINT-SERVICE] ============================================');
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
+      // console.log removed for security
       
       if (transformedData.length === 0 && totalWithCoords > 0) {
         console.error('[COMPLAINT-SERVICE] ⚠️ ERROR: No valid complaints after transformation, but', totalWithCoords, 'have coordinates in DB!');
@@ -1282,7 +1255,7 @@ class ComplaintService {
   async markAssignmentComplete(complaintId, officerId, notes = null, files = []) {
     try {
       // Debug logging
-      console.log('[COMPLAINT_SERVICE] markAssignmentComplete called:', { complaintId, officerId, hasNotes: Boolean(notes), hasFiles: files?.length || 0 });
+      // console.log removed for security
 
       // Authorization based solely on assignment ownership (avoid auth.admin / auth.users access)
       const { data: assignments, error: assignmentError } = await this.complaintRepo.supabase
@@ -1298,7 +1271,7 @@ class ComplaintService {
       }
 
       const assignment = Array.isArray(assignments) ? assignments[0] : null;
-      console.log('[COMPLAINT_SERVICE] Assignment query result:', { found: Boolean(assignment), count: assignments?.length || 0, assignment: assignment ? { id: assignment.id, status: assignment.status } : null });
+      // console.log removed for security
 
       if (!assignment) {
         throw new Error('No assignment found for this officer');
@@ -1361,7 +1334,7 @@ class ComplaintService {
         const completed = activeRows.filter(a => a.status === 'completed').length;
         const allDone = total > 0 && completed === total;
 
-        console.log('[COMPLAINT_SERVICE] Completion check:', { total, completed, allDone });
+        // console.log removed for security
 
         if (allDone) {
           // Check whether the citizen has already confirmed
@@ -1697,27 +1670,22 @@ class ComplaintService {
       const Database = require('../config/database');
       const supabase = Database.getClient();
 
-      console.log(`[COMPLAINT_SERVICE] Getting evidence for complaint ${complaintId}`);
+      // console.log removed for security
 
       // First, verify the user has access to this complaint
-      console.log(`[COMPLAINT_SERVICE] Querying complaint with ID: ${complaintId}`);
+      // console.log removed for security
       const { data: complaint, error: complaintError } = await supabase
         .from('complaints')
         .select('id, submitted_by, department_r, assigned_coordinator_id')
         .eq('id', complaintId)
         .single();
 
-      console.log(`[COMPLAINT_SERVICE] Complaint query result:`, {
-        complaint,
-        error: complaintError,
-        hasComplaint: Boolean(complaint),
-        hasError: Boolean(complaintError)
-      });
+      // console.log removed for security
 
       if (complaintError || !complaint) {
         console.error(`[COMPLAINT_SERVICE] Complaint not found:`, complaintError);
         // Return empty array instead of throwing error - complaint might have been deleted
-        console.log(`[COMPLAINT_SERVICE] Returning empty evidence array for non-existent complaint`);
+        // console.log removed for security
         return [];
       }
 

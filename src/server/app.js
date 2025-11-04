@@ -68,26 +68,17 @@ class CitizenLinkApp {
     // Session cookie helpers for client
     this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
-        console.log('[SERVER SESSION] 🍪 Session cookie request received');
-        console.log('[SERVER SESSION] Request details:', {
-          path: req.path,
-          method: req.method,
-          hasBody: Boolean(req.body),
-          contentType: req.get('Content-Type')
-        });
+        // console.log removed for security
+        // console.log removed for security
 
         const token = req.body?.access_token;
         const remember = Boolean(req.body?.remember);
 
-        console.log('[SERVER SESSION] Token details:', {
-          hasToken: Boolean(token),
-          tokenLength: token?.length,
-          remember
-        });
+        // console.log removed for security
 
         if (!token) {
-          console.log('[SERVER SESSION] ❌ No token provided in request body');
-          console.log('[SERVER SESSION] Request body keys:', Object.keys(req.body || {}));
+          // console.log removed for security
+          // console.log removed for security
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
 
@@ -99,13 +90,13 @@ class CitizenLinkApp {
           maxAge: 315360000000 // 10 years for development (permanent)
         };
 
-        console.log('[SERVER SESSION] 🍪 Setting cookie with options:', cookieOptions);
-        console.log('[SERVER SESSION] Token prefix:', `${token.substring(0, 20)  }...`);
+        // console.log removed for security
+        // console.log removed for security
 
         res.cookie('sb_access_token', token, cookieOptions);
 
-        console.log('[SERVER SESSION] ✅ Cookie set successfully');
-        console.log('[SERVER SESSION] Response status: 200');
+        // console.log removed for security
+        // console.log removed for security
 
         return res.json({ success: true });
       } catch (e) {
@@ -513,8 +504,8 @@ class CitizenLinkApp {
       const baseRole = metaBase || (role !== 'citizen' ? role : null);
 
       // Debug logging
-      console.log('[API] User role:', role, 'metaBase:', metaBase, 'baseRole:', baseRole);
-      console.log('[API] User metadata:', JSON.stringify(user.raw_user_meta_data, null, 2));
+      // console.log removed for security
+      // console.log removed for security
       res.json({
         success: true,
         data: {
@@ -615,13 +606,13 @@ class CitizenLinkApp {
     // Session health endpoint for monitoring (public - no auth required)
     this.app.get('/auth/session/health', async (req, res) => {
       try {
-        console.log('[SESSION HEALTH] Checking session health...');
+        // console.log removed for security
 
         // Check if user has valid session cookie
         const token = req.cookies?.sb_access_token;
 
         if (!token) {
-          console.log('[SESSION HEALTH] No session token found');
+          // console.log removed for security
           return res.status(401).json({
             success: false,
             error: 'No session token found',
@@ -632,13 +623,13 @@ class CitizenLinkApp {
           });
         }
 
-        console.log('[SESSION HEALTH] Token found, validating with Supabase...');
+        // console.log removed for security
 
         // Try to validate token with Supabase using the correct method
         const { data: { user }, error } = await Database.getClient().auth.getUser(token);
 
         if (error || !user) {
-          console.log('[SESSION HEALTH] Token validation failed:', error?.message);
+          // console.log removed for security
           return res.status(401).json({
             success: false,
             error: 'Invalid session token',
@@ -649,7 +640,7 @@ class CitizenLinkApp {
           });
         }
 
-        console.log('[SESSION HEALTH] Token valid, extracting user data...');
+        // console.log removed for security
 
         // Extract role from user metadata
         const userMetadata = user.user_metadata || {};
@@ -658,7 +649,7 @@ class CitizenLinkApp {
         const role = combinedMetadata.role || 'citizen';
         const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
 
-        console.log('[SESSION HEALTH] User data extracted:', { role, name });
+        // console.log removed for security
 
         res.json({
           success: true,
@@ -914,11 +905,11 @@ class CitizenLinkApp {
       const ReminderService = require('./services/ReminderService');
       const reminderService = new ReminderService();
       reminderService.startScheduler();
-      console.log('📅 Reminder service started');
+      // console.log removed for security
 
       this.app.listen(port, () => {
-        console.log(`✅ Server started on port ${port}`);
-        console.log(`🌐 Server URL: http://localhost:${port}`);
+        // console.log removed for security
+        // console.log removed for security
       });
     } catch (error) {
       console.error('Failed to start server:', error);

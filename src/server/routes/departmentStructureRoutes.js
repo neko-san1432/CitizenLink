@@ -77,7 +77,7 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
 router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
   try {
     const { subcategoryId } = req.params;
-    console.log('[DEPT-API] Fetching ALL departments for subcategory:', subcategoryId);
+    // console.log removed for security
 
     const supabase = Database.getClient();
 
@@ -111,7 +111,7 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
       department_subcategory_mapping: mapByDeptId.get(d.id) || null
     }));
 
-    console.log('[DEPT-API] Returning', enriched.length, 'departments for subcategory:', subcategoryId);
+    // console.log removed for security
 
     res.json({
       success: true,
@@ -129,7 +129,7 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
 // Get ALL departments (for showing all departments regardless of category)
 router.get('/departments/all', async (req, res) => {
   try {
-    console.log('[DEPT-API] Fetching ALL departments');
+    // console.log removed for security
 
     const supabase = Database.getClient();
 
@@ -145,7 +145,7 @@ router.get('/departments/all', async (req, res) => {
       throw deptError;
     }
 
-    console.log('[DEPT-API] Returning', allDepartments.length, 'departments');
+    // console.log removed for security
 
     res.json({
       success: true,

@@ -15,8 +15,8 @@ class CoordinatorController {
    */
   async getReviewQueue(req, res) {
     try {
-      console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} Getting review queue for user:`, req.user?.id);
-      console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} User role:`, req.user?.role);
+      // console.log removed for security
+      // console.log removed for security
 
       const { user } = req;
       const filters = {
@@ -25,11 +25,11 @@ class CoordinatorController {
         limit: req.query.limit ? parseInt(req.query.limit) : 50
       };
 
-      console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} Filters:`, filters);
+      // console.log removed for security
 
       const queue = await this.coordinatorService.getReviewQueue(user.id, filters);
 
-      console.log(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} Retrieved ${queue.length} complaints`);
+      // console.log removed for security
 
       res.json({
         success: true,
@@ -158,10 +158,10 @@ class CoordinatorController {
   async getDashboard(req, res) {
     try {
       const { user } = req;
-      console.log('[COORDINATOR_CONTROLLER] Getting dashboard for user:', user.id);
+      // console.log removed for security
 
       const data = await this.coordinatorService.getDashboardData(user.id);
-      console.log('[COORDINATOR_CONTROLLER] Dashboard data retrieved successfully');
+      // console.log removed for security
 
       res.json({
         success: true,
