@@ -123,7 +123,19 @@ class UserService {
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
+        const msg = String(authError.message || '').toLowerCase();
+        const code = String(authError.code || '').toLowerCase();
+        // Normalize duplicate email errors from Supabase/PostgREST
+        const isDuplicateEmail = (
+          code === 'user_already_exists' ||
+          code === 'email_exists' ||
+          code === '23505' || // unique_violation
+          /already\s*(registered|exists)/i.test(msg) ||
+          /duplicate/i.test(msg) ||
+          /unique/i.test(msg) ||
+          /email.*(in use|used|taken)/i.test(msg)
+        );
+        if (isDuplicateEmail) {
           throw new ConflictError('Email already registered');
         }
         throw new Error(`Auth creation failed: ${authError.message}`);

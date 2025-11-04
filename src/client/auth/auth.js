@@ -109,7 +109,8 @@ const regFormEl = document.getElementById('regForm');
 if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   e.preventDefault(); // prevent page refresh
 
-  const name = document.getElementById('name').value.trim();
+  const firstName = document.getElementById('firstName')?.value.trim() || '';
+  const lastName = document.getElementById('lastName')?.value.trim() || '';
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
   const regPass = document.getElementById('regPassword').value;
@@ -123,13 +124,14 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
 
   // Validate form data
   const validationRules = {
-    name: { required: true, minLength: 2, maxLength: 100 },
+    firstName: { required: true, minLength: 1, maxLength: 100 },
+    lastName: { required: true, minLength: 1, maxLength: 100 },
     email: { required: true, type: 'email' },
     mobile: { required: true, type: 'mobile' },
     regPassword: { required: true, type: 'password' }
   };
 
-  const formData = { name, email, mobile, regPassword };
+  const formData = { firstName, lastName, email, mobile, regPassword: regPass };
   const validation = validateAndSanitizeForm(formData, validationRules);
 
   if (!validation.isValid) {
@@ -153,9 +155,10 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       email: validation.sanitizedData.email,
       password: regPass,
       confirmPassword: reRegPass,
-      name: validation.sanitizedData.name, // Single name field
+      firstName: validation.sanitizedData.firstName,
+      lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
-      // role: 'citizen', // ❌ Removed - Backend defaults to citizen
+      // role: 'citizen', // backend defaults to citizen
       agreedToTerms: true,
       isOAuth: false // Regular signup
     };
@@ -183,7 +186,12 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       showMessage('success', 'Successfully registered. Please confirm via the email we sent.');
       setTimeout(()=>{window.location.href = '/login';},3000);
     } else {
-      showMessage('error', result.error || 'Registration failed');
+      const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
+      if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
+        showMessage('error', 'Email is used');
+      } else {
+        showMessage('error', result.error || 'Registration failed');
+      }
     }
   } catch (error) {
     console.error('Registration error:', error);

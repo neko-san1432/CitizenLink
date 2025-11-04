@@ -51,11 +51,34 @@ export const isValidPhilippineMobile = (mobile) => {
  * @returns {Object} Validation result with isValid and errors
  */
 export const validatePassword = (password) => {
-  // No validation - accept any password
-  return {
-    isValid: true,
-    errors: []
-  };
+  const errors = [];
+  const minLength = 8;
+  const maxLength = 128;
+
+  if (typeof password !== 'string') {
+    return { isValid: false, errors: ['Password is required'] };
+  }
+
+  if (password.length < minLength) {
+    errors.push(`Password must be at least ${minLength} characters long`);
+  }
+  if (password.length > maxLength) {
+    errors.push(`Password must not exceed ${maxLength} characters`);
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+
+  return { isValid: errors.length === 0, errors };
 };
 
 /**

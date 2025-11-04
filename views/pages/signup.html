@@ -50,18 +50,40 @@
                     <!-- Main Signup Form -->
                     <div class="auth-main">
                         <form id="regForm" class="signup-form">
-                            <!-- Name Field -->
-                            <div class="form-group form-full">
-                                <label for="name" class="form-label">Full Name</label>
+                            <!-- First Name Field -->
+                            <div class="form-group form-half">
+                                <label for="firstName" class="form-label">First Name</label>
                                 <div class="input-wrapper">
                                     <input 
                                         class="input" 
                                         type="text" 
-                                        id="name" 
-                                        name="name" 
-                                        placeholder="Enter your full name"
+                                        id="firstName" 
+                                        name="firstName" 
+                                        placeholder="Enter your first name"
                                         required
-                                        autocomplete="name"
+                                        autocomplete="given-name"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Last Name Field -->
+                            <div class="form-group form-half">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="text" 
+                                        id="lastName" 
+                                        name="lastName" 
+                                        placeholder="Enter your last name"
+                                        required
+                                        autocomplete="family-name"
                                     >
                                     <div class="input-icon">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

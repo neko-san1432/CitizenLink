@@ -159,7 +159,12 @@ if (signupForm) {
             window.location.href = '/';
           }, 3000);
         } else {
-          showMessage('error', result.error || 'Registration failed');
+          const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
+          if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
+            showMessage('error', 'Email is used');
+          } else {
+            showMessage('error', result.error || 'Registration failed');
+          }
         }
       }
     } catch (error) {
