@@ -77,14 +77,12 @@ npm run dev
 | Package | Version | Purpose |
 |---------|---------|----------|
 | **@microsoft/eslint-formatter-sarif** | ^3.1.0 | SARIF (Static Analysis Results Interchange Format) formatter for ESLint. Enables integration with security scanning tools and GitHub CodeQL. |
-| **autoprefixer** | ^10.4.21 | PostCSS plugin that automatically adds vendor prefixes to CSS rules for cross-browser compatibility. |
 | **eslint** | ^8.57.0 | JavaScript linter for code quality and consistency. Enforces coding standards and identifies potential issues. |
 | **eslint-plugin-no-unsanitized** | ^4.1.4 | ESLint plugin that prevents use of unsanitized content in DOM operations. Critical for XSS prevention. |
 | **eslint-plugin-security** | ^3.0.1 | ESLint plugin with security-focused rules. Detects common security vulnerabilities in JavaScript code. |
 | **gzip-cli** | ^1.0.0 | Command-line tool for compressing static assets during build process to reduce file sizes. |
 | **nodemon** | ^3.1.10 | Development utility that automatically restarts the Node.js server when file changes are detected. |
-| **postcss** | ^8.5.6 | CSS transformation tool used with TailwindCSS for processing and optimizing stylesheets. |
-| **tailwindcss** | ^3.4.18 | Utility-first CSS framework for rapid UI development with responsive design and modern styling. |
+| **postcss** | ^8.5.6 | CSS tooling used historically; not required for CSS-only setup. |
 
 ## 🏗️ Architecture
 
@@ -577,7 +575,7 @@ npm run migrate      # Run database migrations
 npm run seed         # Seed database with sample data
 
 # Build
-npm run build:css    # Build and minify TailwindCSS
+# (No CSS build step required; CSS is precompiled at public/css/app.css)
 
 # Code Quality & Security
 npm test             # Run tests
