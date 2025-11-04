@@ -2,22 +2,19 @@ const SettingRepository = require('../repositories/SettingRepository');
 const Setting = require('../models/Setting');
 
 class SettingService {
+
   constructor() {
     this.settingRepo = new SettingRepository();
   }
-
   async getAllSettings() {
     return this.settingRepo.findAll();
   }
-
   async getPublicSettings() {
     return this.settingRepo.findPublic();
   }
-
   async getSettingsByCategory(category) {
     return this.settingRepo.findByCategory(category);
   }
-
   async getSettingByKey(key) {
     const setting = await this.settingRepo.findByKey(key);
     if (!setting) {
@@ -25,7 +22,6 @@ class SettingService {
     }
     return setting;
   }
-
   async getSettingValue(key, defaultValue = null) {
     try {
       const setting = await this.settingRepo.findByKey(key);
@@ -34,18 +30,15 @@ class SettingService {
       return defaultValue;
     }
   }
-
   async createSetting(settingData) {
     const validation = Setting.validate(settingData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-
     const existingSetting = await this.settingRepo.findByKey(settingData.key);
     if (existingSetting) {
       throw new Error('Setting key already exists');
     }
-
     const sanitizedData = {
       key: settingData.key.trim().toLowerCase(),
       value: settingData.value,
@@ -54,22 +47,17 @@ class SettingService {
       description: settingData.description?.trim() || null,
       is_public: settingData.is_public !== undefined ? settingData.is_public : false
     };
-
     return this.settingRepo.create(sanitizedData);
   }
-
   async updateSetting(key, settingData) {
     const existingSetting = await this.getSettingByKey(key);
-
     const validation = Setting.validate({
       ...existingSetting,
       ...settingData
     });
-
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-
     const sanitizedData = {
       value: settingData.value,
       type: settingData.type || existingSetting.type,
@@ -77,16 +65,13 @@ class SettingService {
       description: settingData.description !== undefined ? settingData.description?.trim() : existingSetting.description,
       is_public: settingData.is_public !== undefined ? settingData.is_public : existingSetting.is_public
     };
-
     return this.settingRepo.update(key, sanitizedData);
   }
-
   async upsertSetting(settingData) {
     const validation = Setting.validate(settingData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-
     const sanitizedData = {
       key: settingData.key.trim().toLowerCase(),
       value: settingData.value,
@@ -95,15 +80,12 @@ class SettingService {
       description: settingData.description?.trim() || null,
       is_public: settingData.is_public !== undefined ? settingData.is_public : false
     };
-
     return this.settingRepo.upsert(sanitizedData);
   }
-
   async deleteSetting(key) {
     await this.getSettingByKey(key);
     return this.settingRepo.delete(key);
   }
-
   async initializeDefaultSettings() {
     const defaultSettings = [
       {
@@ -147,7 +129,6 @@ class SettingService {
         is_public: true
       }
     ];
-
     const results = [];
     for (const setting of defaultSettings) {
       try {
@@ -162,4 +143,3 @@ class SettingService {
 }
 
 module.exports = SettingService;
-

@@ -14,15 +14,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.warn('[FILE_COMPLAINT] Failed to get role from authChecker, trying roleToggle:', error);
       activeRole = getActiveRole();
     }
-    
     const inCitizenMode = isInCitizenMode();
-    
-    console.log('[FILE_COMPLAINT] Access check - Role:', activeRole, 'Citizen mode:', inCitizenMode);
-
     // Allow access only if citizen or in citizen mode
     if (activeRole !== 'citizen' && !inCitizenMode) {
       const canSwitch = await canSwitchToCitizen();
-      
       if (canSwitch) {
         // Show message and redirect to dashboard
         showMessage('warning', 'Please switch to Citizen mode to file a complaint', 5000);

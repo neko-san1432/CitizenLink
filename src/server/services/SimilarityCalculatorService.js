@@ -5,11 +5,11 @@ const Database = require('../config/database');
 * Advanced similarity calculations and pattern detection
 */
 class SimilarityCalculatorService {
+
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
   }
-
   /**
   * Find all similar complaints within a radius
   * @param {number} latitude
@@ -24,28 +24,21 @@ class SimilarityCalculatorService {
         .select('*')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
-
       // Apply filters
       if (filters.type) {
         query = query.eq('type', filters.type);
       }
-
       if (filters.status) {
         query = query.eq('workflow_status', filters.status);
       }
-
       if (filters.dateFrom) {
         query = query.gte('submitted_at', filters.dateFrom);
       }
-
       if (filters.dateTo) {
         query = query.lte('submitted_at', filters.dateTo);
       }
-
       const { data: complaints, error } = await query.limit(200);
-
       if (error) throw error;
-
       // Filter by distance
       const nearby = complaints.filter(complaint => {
         const distance = this.calculateDistance(
@@ -64,14 +57,12 @@ class SimilarityCalculatorService {
           complaint.longitude
         )
       }));
-
       return nearby.sort((a, b) => a.distance - b.distance);
     } catch (error) {
       console.error('[SIMILARITY] Radius search error:', error);
       throw error;
     }
   }
-
   /**
   * Detect geographic clusters of complaints
   * Uses DBSCAN-like algorithm
@@ -84,38 +75,30 @@ class SimilarityCalculatorService {
       dateFrom = null,
       dateTo = null
     } = options;
-
     try {
       let query = this.supabase
         .from('complaints')
         .select('*')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
-
       if (type) query = query.eq('type', type);
       if (dateFrom) query = query.gte('submitted_at', dateFrom);
       if (dateTo) query = query.lte('submitted_at', dateTo);
-
       const { data: complaints, error } = await query;
-
       if (error) throw error;
-
       const clusters = this.clusterComplaints(
         complaints,
         radiusKm,
         minComplaintsPerCluster
       );
-
       // Save clusters to database
       await this.saveClusters(clusters);
-
       return clusters;
     } catch (error) {
       console.error('[SIMILARITY] Cluster detection error:', error);
       throw error;
     }
   }
-
   /**
   * DBSCAN-like clustering algorithm
   */
@@ -123,22 +106,18 @@ class SimilarityCalculatorService {
     const clusters = [];
     const visited = new Set();
     const clustered = new Set();
-
     complaints.forEach((complaint, index) => {
       if (visited.has(complaint.id)) return;
       visited.add(complaint.id);
-
       // Find neighbors
       const neighbors = this.findNeighbors(
         complaint,
         complaints,
         radiusKm
       );
-
       if (neighbors.length < minPoints) {
         return; // Noise point
       }
-
       // Create new cluster
       const cluster = {
         complaints: [complaint],
@@ -148,14 +127,11 @@ class SimilarityCalculatorService {
         },
         radius: radiusKm
       };
-
       clustered.add(complaint.id);
-
       // Expand cluster
       let i = 0;
       while (i < neighbors.length) {
         const neighbor = neighbors[i];
-
         if (!visited.has(neighbor.id)) {
           visited.add(neighbor.id);
           const neighborNeighbors = this.findNeighbors(
@@ -163,30 +139,24 @@ class SimilarityCalculatorService {
             complaints,
             radiusKm
           );
-
           if (neighborNeighbors.length >= minPoints) {
             neighbors.push(...neighborNeighbors);
           }
         }
-
         if (!clustered.has(neighbor.id)) {
           cluster.complaints.push(neighbor);
           clustered.add(neighbor.id);
         }
-
         i++;
       }
-
       // Calculate cluster center
       cluster.center = this.calculateClusterCenter(cluster.complaints);
       cluster.actualRadius = this.calculateClusterRadius(
         cluster.center,
         cluster.complaints
       );
-
       clusters.push(cluster);
     });
-
     return clusters.map((cluster, index) => ({
       cluster_name: `Cluster ${index + 1} - ${cluster.complaints[0].type}`,
       center_lat: cluster.center.lat,
@@ -197,25 +167,21 @@ class SimilarityCalculatorService {
       status: 'active'
     }));
   }
-
   /**
   * Find neighboring complaints within radius
   */
   findNeighbors(complaint, allComplaints, radiusKm) {
     return allComplaints.filter(other => {
       if (other.id === complaint.id) return false;
-
       const distance = this.calculateDistance(
         complaint.latitude,
         complaint.longitude,
         other.latitude,
         other.longitude
       );
-
       return distance <= radiusKm;
     });
   }
-
   /**
   * Calculate geometric center of cluster
   */
@@ -227,13 +193,11 @@ class SimilarityCalculatorService {
       }),
       { lat: 0, lng: 0 }
     );
-
     return {
       lat: sum.lat / complaints.length,
       lng: sum.lng / complaints.length
     };
   }
-
   /**
   * Calculate maximum radius of cluster
   */
@@ -249,61 +213,50 @@ class SimilarityCalculatorService {
       )
     );
   }
-
   /**
   * Detect pattern type based on temporal distribution
   */
   detectPatternType(complaints) {
     if (complaints.length < 3) return 'normal';
-
     // Sort by date
     const sorted = [...complaints].sort(
       (a, b) => new Date(a.submitted_at) - new Date(b.submitted_at)
     );
-
     // Calculate time differences
     const timeDiffs = [];
     for (let i = 1; i < sorted.length; i++) {
+
       const diff = (new Date(sorted[i].submitted_at) - new Date(sorted[i - 1].submitted_at))
         / (1000 * 60 * 60 * 24); // Days
       timeDiffs.push(diff);
     }
-
     const avgDiff = timeDiffs.reduce((a, b) => a + b, 0) / timeDiffs.length;
-
     // Outbreak: Many complaints in short time
     if (avgDiff < 2 && complaints.length >= 5) {
       return 'outbreak';
     }
-
     // Recurring: Regular intervals
     const variance = timeDiffs.reduce(
       (acc, diff) => acc + Math.pow(diff - avgDiff, 2),
       0
     ) / timeDiffs.length;
-
     if (variance < 10 && avgDiff < 14) {
       return 'recurring';
     }
-
     return 'normal';
   }
-
   /**
   * Save clusters to database
   */
   async saveClusters(clusters) {
     if (clusters.length === 0) return;
-
     const { error } = await this.supabase
       .from('complaint_clusters')
       .insert(clusters);
-
     if (error) {
       console.error('[SIMILARITY] Save clusters error:', error);
     }
   }
-
   /**
   * Get nearest similar complaints
   */
@@ -311,7 +264,6 @@ class SimilarityCalculatorService {
     try {
       const complaint = await this.getComplaint(complaintId);
       if (!complaint) throw new Error('Complaint not found');
-
       // Get pre-calculated similarities
       const { data: similarities, error } = await this.supabase
         .from('complaint_similarities')
@@ -322,16 +274,13 @@ class SimilarityCalculatorService {
         .eq('complaint_id', complaintId)
         .order('similarity_score', { ascending: false })
         .limit(limit);
-
       if (error) throw error;
-
       return similarities || [];
     } catch (error) {
       console.error('[SIMILARITY] Get nearest error:', error);
       throw error;
     }
   }
-
   /**
   * Calculate distance between two points
   */
@@ -362,11 +311,9 @@ class SimilarityCalculatorService {
       .select('*')
       .eq('id', complaintId)
       .single();
-
     if (error) throw error;
     return data;
   }
 }
 
 module.exports = SimilarityCalculatorService;
-

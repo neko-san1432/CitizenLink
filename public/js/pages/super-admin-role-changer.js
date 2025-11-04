@@ -16,7 +16,6 @@ async function loadBarangays() {
     console.warn('Failed to load barangays', e); 
   }
 }
-
 function escapeHtml(s) {
   return (s == null ? '' : String(s))
     .replace(/&/g, '&amp;')
@@ -25,7 +24,6 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
 async function search() {
   const q = encodeURIComponent(document.getElementById('sa-rc-search').value || '');
   const b = encodeURIComponent(document.getElementById('sa-rc-brgy').value || '');
@@ -46,7 +44,6 @@ async function search() {
   `).join('');
   list.querySelectorAll('.item').forEach(el => el.addEventListener('click', () => selectUser(el.getAttribute('data-id'))));
 }
-
 async function selectUser(id) {
   const [ud, cd] = await Promise.all([
     fetch(`/api/superadmin/users/${id}`).then(r => r.json()),
@@ -86,7 +83,6 @@ async function selectUser(id) {
     `).join('') : '<p class="muted">No complaints.</p>';
   }
 }
-
 async function assignRole() {
   const id = document.getElementById('sa-rc-details').getAttribute('data-user-id');
   if (!id) return;
@@ -108,7 +104,6 @@ async function assignRole() {
     console.error(e); 
   }
 }
-
 // Initialize event listeners
 document.getElementById('sa-rc-search-btn').addEventListener('click', search);
 document.getElementById('sa-rc-search').addEventListener('keypress', (e) => { 

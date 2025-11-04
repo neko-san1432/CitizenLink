@@ -1,12 +1,12 @@
 const Database = require('../config/database');
 
 class ComplaintHistoryRepository {
+
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
     this.table = 'complaint_history';
   }
-
   async addEntry(complaintId, action, actorId = null, notes = null) {
     const { error } = await this.supabase
       .from(this.table)
@@ -20,7 +20,6 @@ class ComplaintHistoryRepository {
     if (error) throw error;
     return true;
   }
-
   async list(complaintId, options = {}) {
     const { limit = 50, offset = 0 } = options;
     const { data, error } = await this.supabase

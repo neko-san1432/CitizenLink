@@ -10,22 +10,18 @@ export function showMessage(type, message) {
     toastContainer.id = 'toast-container';
     document.body.appendChild(toastContainer);
   }
-
   // Create toast element
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.textContent = message;
-
   // Add to container
   toastContainer.appendChild(toast);
-
   // Auto remove after 5 seconds
   setTimeout(() => {
     if (toast.parentNode) {
       toast.parentNode.removeChild(toast);
     }
   }, 5000);
-
   // Add click to dismiss
   toast.addEventListener('click', () => {
     if (toast.parentNode) {

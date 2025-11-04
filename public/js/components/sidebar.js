@@ -3,19 +3,16 @@ import { brandConfig } from '../config/brand.js';
 
 const _sidebarEl = document.getElementById('sidebar');
 const root = window.location.origin;
-
 // Initialize sidebar
 if (_sidebarEl) {
   initializeSidebar();
 }
-
 function initializeSidebar() {
   initializeSidebarClose();
   // Theme toggle is handled by header.js
   setTimeout(setSidebarRole, 500); // Wait 500ms for auth to complete
   setActiveMenuItem();
 }
-
 function initializeSidebarClose() {
   const closeBtn = document.getElementById('sidebar-close');
   if (closeBtn) {
@@ -24,7 +21,6 @@ function initializeSidebarClose() {
     });
   }
 }
-
 // Icon mapping for menu items
 const menuIcons = {
   'dashboard': '📊',
@@ -47,11 +43,9 @@ const menuIcons = {
   'lgu-officer-dashboard': '👮',
   'super-admin-dashboard': '👑'
 };
-
 async function setSidebarRole() {
   try {
     console.log('Setting up sidebar...');
-    
     // Get user role with better error handling
     let role = null;
     try {
@@ -74,7 +68,6 @@ async function setSidebarRole() {
         console.error('Failed to get role from session:', sessionError);
       }
     }
-    
     // If still no role, try to get it from localStorage
     if (!role) {
       try {
@@ -86,22 +79,17 @@ async function setSidebarRole() {
         console.error('Failed to get role from localStorage:', error);
       }
     }
-    
     if (!role) {
       console.error('No role found, redirecting to login');
       window.location.href = '/login?message=' + encodeURIComponent('Unable to determine user role. Please log in again.') + '&type=error';
       return;
     }
-    
     const roleLower = role.toLowerCase();
     console.log('Processing role:', roleLower);
-    
     // Define menu items based on role
     const menuItems = getMenuItemsForRole(roleLower);
     console.log('Menu items for role:', menuItems);
-    
     // Build sidebar HTML
-
     if (_sidebarEl) {
       _sidebarEl.innerHTML = `
 <div class="sidebar-brand">
@@ -164,11 +152,8 @@ async function setSidebarRole() {
     }
   }
 }
-
-
 function getMenuItemsForRole(role) {
   console.log('Getting menu items for role:', role);
-  
   const menuItems = {
     'citizen': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -202,44 +187,39 @@ function getMenuItemsForRole(role) {
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ]
   };
-  
   // Handle simplified LGU roles
   if (role === 'lgu-hr') {
     return menuItems['lgu-hr'] || [];
   }
-  
   if (role === 'lgu-admin') {
     return menuItems['lgu-admin'] || [];
   }
-  
   if (role === 'lgu') {
     return [
       { url: '/task-assigned', icon: 'taskAssigned', label: 'Task Assigned' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ];
   }
-  
   // Return menu items for exact role match
   const items = menuItems[role] || [];
   console.log('Returning menu items:', items);
   return items;
 }
-
 // Sidebar search removed per requirements
-
 // Theme toggle is handled by header.js - removed duplicate implementation
 // But we need applyTheme function for compatibility
 function applyTheme(theme) {
+
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
   }
 }
-
 function updateToggleSwitch(isDark) {
   const toggleSwitch = document.getElementById('toggle-switch');
   if (toggleSwitch) {
+
     if (isDark) {
       toggleSwitch.classList.add('active');
     } else {
@@ -247,24 +227,19 @@ function updateToggleSwitch(isDark) {
     }
   }
 }
-
 function initializeLogout() {
   const logoutLink = document.querySelector('.logout-link');
   if (logoutLink) {
     logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
-      
       try {
         // Clear server session
         await fetch('/auth/session', { method: 'DELETE' });
-        
         // Clear Supabase session
         const { supabase } = await import('../config/config.js');
         await supabase.auth.signOut();
-        
         // Clear local storage
         localStorage.clear();
-        
         // Redirect to login
         window.location.href = '/login';
       } catch (error) {
@@ -275,12 +250,10 @@ function initializeLogout() {
     });
   }
 }
-
 // Set active menu item based on current page
 function setActiveMenuItem() {
   const currentPath = window.location.pathname;
   const menuItems = document.querySelectorAll('.sidebar-menu a');
-  
   menuItems.forEach(item => {
     const href = item.getAttribute('href');
     if (href && currentPath.includes(href.replace(root, ''))) {
@@ -290,7 +263,6 @@ function setActiveMenuItem() {
     }
   });
 }
-
 // Initialize theme on page load
 document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('theme') || 'light';

@@ -5,10 +5,10 @@ const CoordinatorService = require('../services/CoordinatorService');
  * Handles HTTP requests for coordinator operations
  */
 class CoordinatorController {
+
   constructor() {
     this.coordinatorService = new CoordinatorService();
   }
-
   /**
    * GET /api/coordinator/review-queue
    * Get complaints awaiting coordinator review
@@ -17,20 +17,15 @@ class CoordinatorController {
     try {
       // console.log removed for security
       // console.log removed for security
-
       const { user } = req;
       const filters = {
         priority: req.query.priority,
         type: req.query.type,
         limit: req.query.limit ? parseInt(req.query.limit) : 50
       };
-
       // console.log removed for security
-
       const queue = await this.coordinatorService.getReviewQueue(user.id, filters);
-
       // console.log removed for security
-
       res.json({
         success: true,
         data: queue,
@@ -46,7 +41,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * GET /api/coordinator/review-queue/:id
    * Get specific complaint for review with full analysis
@@ -55,9 +49,7 @@ class CoordinatorController {
     try {
       const { user } = req;
       const { id } = req.params;
-
       const result = await this.coordinatorService.getComplaintForReview(id, user.id);
-
       res.json({
         success: true,
         data: result
@@ -70,7 +62,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * POST /api/coordinator/review-queue/:id/decide
    * Process coordinator decision on a complaint
@@ -80,21 +71,18 @@ class CoordinatorController {
       const { user } = req;
       const { id } = req.params;
       const { decision, data } = req.body;
-
       if (!decision) {
         return res.status(400).json({
           success: false,
           error: 'Decision type is required'
         });
       }
-
       const result = await this.coordinatorService.processDecision(
         id,
         decision,
         user.id,
         data || {}
       );
-
       res.json({
         success: true,
         ...result
@@ -108,7 +96,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * POST /api/coordinator/bulk-assign
    * Bulk assign complaints to department
@@ -117,27 +104,23 @@ class CoordinatorController {
     try {
       const { user } = req;
       const { complaint_ids, department } = req.body;
-
       if (!complaint_ids || !Array.isArray(complaint_ids) || complaint_ids.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Complaint IDs array is required'
         });
       }
-
       if (!department) {
         return res.status(400).json({
           success: false,
           error: 'Department is required'
         });
       }
-
       const result = await this.coordinatorService.bulkAssign(
         complaint_ids,
         department,
         user.id
       );
-
       res.json({
         success: true,
         ...result
@@ -150,7 +133,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * GET /api/coordinator/dashboard
    * Get coordinator dashboard data
@@ -159,10 +141,8 @@ class CoordinatorController {
     try {
       const { user } = req;
       // console.log removed for security
-
       const data = await this.coordinatorService.getDashboardData(user.id);
       // console.log removed for security
-
       res.json({
         success: true,
         data
@@ -174,7 +154,6 @@ class CoordinatorController {
         stack: error.stack,
         code: error.code
       });
-
       // Return a basic dashboard structure if there's an error
       res.json({
         success: true,
@@ -192,7 +171,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * POST /api/coordinator/detect-clusters
    * Detect complaint clusters
@@ -206,9 +184,7 @@ class CoordinatorController {
         dateFrom: req.body.date_from,
         dateTo: req.body.date_to
       };
-
       const result = await this.coordinatorService.detectClusters(options);
-
       res.json({
         success: true,
         ...result
@@ -221,7 +197,6 @@ class CoordinatorController {
       });
     }
   }
-
   /**
    * GET /api/coordinator/status
    * Check if current user is a coordinator
@@ -229,9 +204,7 @@ class CoordinatorController {
   async checkStatus(req, res) {
     try {
       const { user } = req;
-
       const status = await this.coordinatorService.checkCoordinatorStatus(user.id);
-
       res.json({
         success: true,
         data: status

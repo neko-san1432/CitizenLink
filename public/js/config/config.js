@@ -1,17 +1,14 @@
 // SECURITY: Environment variables are now handled securely
 // Auth operations use a limited client, database operations go through server API
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Fetch Supabase configuration securely from server
 let supabaseConfig = null;
 let supabase = null;
 let initPromise = null;
-
 async function initializeSupabase() {
   if (supabase) return supabase;
   if (initPromise) return initPromise;
-
   initPromise = (async () => {
     try {
       const response = await fetch('/api/supabase/config');
@@ -29,20 +26,17 @@ async function initializeSupabase() {
       // Keep initPromise so late callers can await the same promise
     }
   })();
-
   return initPromise;
 }
-
 // Create a proxy object that initializes Supabase on first use
 const supabaseProxy = new Proxy({}, {
   get(target, prop) {
+
     if (supabase) {
       return supabase[prop];
     }
-
     // Kick off initialization (single flight)
     initializeSupabase().catch(() => {});
-
     // Return a promise-based method for async operations
     if (prop === 'auth') {
       return new Proxy({}, {
@@ -57,14 +51,12 @@ const supabaseProxy = new Proxy({}, {
         }
       });
     }
-
     return target[prop];
   }
 });
-
 // Export both the proxy and the initialization function
-export { supabaseProxy as supabase, initializeSupabase };
 
+export { supabaseProxy as supabase, initializeSupabase };
 // Database operations class for secure server-side operations
 class SecureDatabaseClient {
   async select(table, filters = {}) {
@@ -75,7 +67,6 @@ class SecureDatabaseClient {
     });
     return response.json();
   }
-
   async insert(table, data) {
     const response = await fetch('/api/supabase', {
       method: 'POST',
@@ -84,7 +75,6 @@ class SecureDatabaseClient {
     });
     return response.json();
   }
-
   async update(table, data, filters = {}) {
     const response = await fetch('/api/supabase', {
       method: 'POST',
@@ -93,7 +83,6 @@ class SecureDatabaseClient {
     });
     return response.json();
   }
-
   async delete(table, filters = {}) {
     const response = await fetch('/api/supabase', {
       method: 'POST',

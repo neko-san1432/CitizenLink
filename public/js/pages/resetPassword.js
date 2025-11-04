@@ -13,20 +13,16 @@ async function ensureSessionFromLink() {
     return false
   }
 }
-
 document.addEventListener('DOMContentLoaded', async () => {
   await ensureSessionFromLink()
   const supabase = await supabaseProxy
   const { data: sessionData } = await supabase.auth.getSession()
-
   const hasToken = Boolean(window.location.hash && window.location.hash.includes('access_token'))
   const isLoggedIn = Boolean(sessionData?.session)
-
   const modeRecovery = document.getElementById('mode-recovery')
   const modeLoggedIn = document.getElementById('mode-logged-in')
   const modeRequest = document.getElementById('mode-request')
   const msg = document.getElementById('message')
-
   // Choose mode
   if (hasToken) {
     modeRecovery.style.display = 'block'
@@ -35,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     modeRequest.style.display = 'block'
   }
-
   // Mode A: finalize recovery (token link)
   const resetForm = document.getElementById('reset-form')
   if (resetForm) {
@@ -63,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     })
   }
-
   // Mode B: logged-in change (require current password)
   const changeForm = document.getElementById('change-form')
   if (changeForm) {
@@ -86,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!email) throw new Error('Cannot retrieve user email')
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: current })
         if (signInError) throw new Error('Current password is incorrect')
-
         const { error } = await supabase.auth.updateUser({ password })
         if (error) throw error
         showMessage('success', 'Password updated successfully', 4000)
@@ -101,7 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     })
   }
-
   // Mode C: request reset link via email
   const requestForm = document.getElementById('request-form')
   if (requestForm) {
@@ -132,5 +124,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
   }
 })
-
-

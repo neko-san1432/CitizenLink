@@ -2,32 +2,27 @@
  * Department Utilities
  * Provides dynamic department name mapping and lookup functions
  */
-
 import apiClient from '../config/apiClient.js';
 
 // Cache for department data
 let departmentCache = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
 /**
  * Get all departments with their codes and names
  */
+
 export async function getDepartments() {
   const now = Date.now();
-
   // Return cached data if still valid
   if (departmentCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
     return departmentCache;
   }
-
   try {
     const { data, error } = await apiClient.get('/api/department-structure/categories');
     if (error) throw error;
-
     // Flatten the hierarchical structure into a simple array
     const departments = [];
-
     if (data) {
       data.forEach(category => {
         if (category.subcategories) {
@@ -48,11 +43,9 @@ export async function getDepartments() {
         }
       });
     }
-
     // Cache the result
     departmentCache = departments;
     cacheTimestamp = now;
-
     return departments;
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -60,19 +53,19 @@ export async function getDepartments() {
     return [];
   }
 }
-
 /**
  * Get department name by code
  */
+
 export async function getDepartmentNameByCode(code) {
   const departments = await getDepartments();
   const dept = departments.find(d => d.code === code);
   return dept ? dept.name : code;
 }
-
 /**
  * Get department code by name (case insensitive)
  */
+
 export async function getDepartmentCodeByName(name) {
   const departments = await getDepartments();
   const dept = departments.find(d =>
@@ -81,35 +74,33 @@ export async function getDepartmentCodeByName(name) {
   );
   return dept ? dept.code : name;
 }
-
 /**
  * Get departments by category
  */
+
 export async function getDepartmentsByCategory(categoryName) {
   const departments = await getDepartments();
   return departments.filter(d => d.category === categoryName);
 }
-
 /**
  * Get departments by subcategory
  */
+
 export async function getDepartmentsBySubcategory(subcategoryName) {
   const departments = await getDepartments();
   return departments.filter(d => d.subcategory === subcategoryName);
 }
-
 /**
  * Get legacy department name mapping (for backward compatibility)
  */
+
 export async function getLegacyDepartmentMapping() {
   const departments = await getDepartments();
   const mapping = {};
-
   departments.forEach(dept => {
     // Map common legacy codes to new names
     const legacyCode = dept.code.toLowerCase();
     mapping[legacyCode] = dept.name;
-
     // Also map by partial name matching for common patterns - Updated for new department codes
     if (legacyCode.includes('ceo') || dept.name.toLowerCase().includes('engineering')) {
       mapping['ceo'] = dept.name;
@@ -163,13 +154,12 @@ export async function getLegacyDepartmentMapping() {
       mapping['cao'] = dept.name;
     }
   });
-
   return mapping;
 }
-
 /**
  * Clear the department cache (useful for testing or when data changes)
  */
+
 export function clearDepartmentCache() {
   departmentCache = null;
   cacheTimestamp = null;

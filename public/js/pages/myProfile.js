@@ -19,27 +19,23 @@ async function enforceCitizenOnly() {
     return false
   }
 }
-
 async function fetchProfile() {
   const res = await fetch('/api/auth/profile')
   if (!res.ok) throw new Error('Failed to load profile')
   const json = await res.json()
   return json?.data || {}
 }
-
 async function fetchMyComplaints() {
   const res = await fetch('/api/complaints/my?limit=20')
   if (!res.ok) throw new Error('Failed to load complaints')
   const json = await res.json()
   return Array.isArray(json?.data) ? json.data : []
 }
-
 function renderProfile(profile) {
   const name = profile?.name || profile?.full_name || 'User'
   const email = profile?.email || '—'
   // Mobile number from raw_user_meta_data (already extracted in backend)
   const mobile = profile?.mobileNumber || profile?.mobile_number || profile?.mobile || '—'
-  
   // Update profile name
   const nameEl = document.getElementById('profile-name')
   if (nameEl) {
@@ -50,7 +46,6 @@ function renderProfile(profile) {
       nameEl.textContent = name
     }
   }
-  
   // Update email
   const emailEl = document.getElementById('profile-email')
   if (emailEl) {
@@ -61,22 +56,18 @@ function renderProfile(profile) {
       emailEl.textContent = email
     }
   }
-  
   // Update avatar initial
   const initialEl = document.getElementById('profile-initial')
   if (initialEl && name !== '—') {
     initialEl.textContent = name.charAt(0).toUpperCase()
   }
-  
   // Update mobile in card
   const mobileEl = document.getElementById('profile-mobile')
   if (mobileEl) mobileEl.textContent = mobile || '—'
-  
   // Update member since date from auth.users.created_at
   const memberSinceEl = document.getElementById('member-since')
   // Check both created_at (root level) and timestamps.created (nested)
   const createdDate = profile?.created_at || profile?.timestamps?.created
-  
   if (memberSinceEl && createdDate) {
     const date = new Date(createdDate)
     // Check if date is valid
@@ -90,7 +81,6 @@ function renderProfile(profile) {
     memberSinceEl.textContent = '—'
   }
 }
-
 function renderComplaints(list) {
   const container = document.getElementById('my-complaints')
   const empty = document.getElementById('complaints-empty')
@@ -101,7 +91,6 @@ function renderComplaints(list) {
     return
   }
   empty.classList.add('hidden')
-  
   for (const c of list) {
     const item = document.createElement('div')
     item.className = 'complaint-card'
@@ -112,7 +101,6 @@ function renderComplaints(list) {
     }) : ''
     const status = (c.workflow_status || 'unknown').toLowerCase().replace(/\s+/g, '_')
     const statusLabel = formatStatus(c.workflow_status)
-    
     item.innerHTML = `
       <div class="complaint-card-header">
         <div class="complaint-title">${c.title || 'Complaint'}</div>
@@ -126,7 +114,6 @@ function renderComplaints(list) {
     container.appendChild(item)
   }
 }
-
 function formatStatus(status) {
   if (!status) return 'Unknown'
   return status
@@ -134,39 +121,32 @@ function formatStatus(status) {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
-
 function updateStatistics(complaints) {
   // Statistics are no longer displayed in the compact layout
   // This function is kept for backward compatibility but does nothing
 }
-
 function scrollToAnchorIfNeeded() {
   // Anchor scrolling no longer needed with new layout
   // This function is kept for backward compatibility but does nothing
 }
-
 function wireChangePassword() {
   const form = document.getElementById('change-password-form')
   const messageEl = document.getElementById('email-confirmation-message')
   if (!form) return
-  
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const currentPassword = document.getElementById('current-password')?.value || ''
     const newPassword = document.getElementById('new-password')?.value || ''
     const confirmNewPassword = document.getElementById('confirm-new-password')?.value || ''
-    
     // Validate inputs
     if (!currentPassword || !newPassword || !confirmNewPassword) {
       showMessage('error', 'All password fields are required', 4000)
       return
     }
-    
     if (newPassword !== confirmNewPassword) {
       showMessage('error', 'New passwords do not match', 4000)
       return
     }
-    
     try {
       const res = await fetch('/api/auth/request-password-change', {
         method: 'POST',
@@ -175,16 +155,13 @@ function wireChangePassword() {
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request password change')
-      
       // Show success message with email confirmation info
       if (messageEl) {
         messageEl.textContent = json.message || 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to complete the password change.'
         messageEl.classList.remove('hidden')
       }
-      
       showMessage('success', 'Password change request sent! Please check your email for confirmation.', 5000)
       form.reset()
-      
       // Hide message after 10 seconds
       setTimeout(() => {
         if (messageEl) messageEl.classList.add('hidden')
@@ -195,7 +172,6 @@ function wireChangePassword() {
     }
   })
 }
-
 document.addEventListener('DOMContentLoaded', async () => {
   if (!(await enforceCitizenOnly())) return
   try {
@@ -205,7 +181,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     ])
     renderProfile(profile)
     renderComplaints(complaints)
-
     // Prefill edit form
     const nameInput = document.getElementById('edit-name')
     const mobileInput = document.getElementById('edit-mobile')
@@ -216,7 +191,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   wireChangePassword()
 })
-
 // Wire up profile edit (name and mobile)
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('profile-edit-form')
@@ -224,13 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const name = (document.getElementById('edit-name')?.value || '').trim()
+
     const mobile = (document.getElementById('edit-mobile')?.value || '').trim()
 
     if (!name && !mobile) {
       showMessage('error', 'Enter a name or mobile number to update', 3000)
       return
     }
-
     try {
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
@@ -239,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to update profile')
-
       // Re-render with updated data
       renderProfile(json.data)
       showMessage('success', 'Profile updated successfully', 3000)

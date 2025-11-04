@@ -2,8 +2,8 @@
  * Heatmap Visualization Component for Complaint Locations
  * Integrates with Leaflet maps and DBSCAN clustering
  */
-
 class HeatmapVisualization {
+
   constructor(map) {
     this.map = map;
     this.complaintData = [];
@@ -14,7 +14,6 @@ class HeatmapVisualization {
     this.dbscan = new DBSCAN();
     this.isClusteringEnabled = false;
     this.currentFilters = {};
-
     // Heatmap configuration
     this.heatmapConfig = {
       radius: 30,
@@ -32,7 +31,6 @@ class HeatmapVisualization {
         1.0: 'red'
       }
     };
-
     // Cluster configuration
     this.clusterConfig = {
       eps: 0.01, // ~1km
@@ -42,7 +40,6 @@ class HeatmapVisualization {
         '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
       ]
     };
-
     // Setup zoom listener for dynamic marker sizing
     if (this.map) {
       this.map.on('zoomend', () => {
@@ -50,7 +47,6 @@ class HeatmapVisualization {
       });
     }
   }
-
   /**
    * Load complaint data from API
    * @param {Object} filters - Filter options
@@ -59,11 +55,9 @@ class HeatmapVisualization {
     try {
       // console.log removed for security
       this.currentFilters = filters;
-
       const queryParams = new URLSearchParams();
       // Explicitly include resolved complaints by default for heatmap
       queryParams.append('includeResolved', filters.includeResolved !== false ? 'true' : 'false');
-      
       Object.entries(filters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === 'includeResolved') return;
@@ -71,55 +65,43 @@ class HeatmapVisualization {
           queryParams.append(key, value);
         }
       });
-      
       // console.log removed for security
-
       // Use apiClient for authenticated requests
       const apiClientModule = await import('../../config/apiClient.js');
       const apiClient = apiClientModule.default;
       // console.log removed for security
-
       const result = await apiClient.get(`/api/complaints/locations?${queryParams}`);
-
       // Backend service already returns data with lat/lng fields correctly formatted
       const raw = Array.isArray(result.data) ? result.data : [];
-
       // console.log removed for security
-      
       // Log first item structure for debugging
       if (raw.length > 0) {
         // console.log removed for security
         // console.log removed for security
       }
-      
       // Debug: Check if we're only getting one complaint
       if (raw.length === 1) {
         console.warn('[HEATMAP] ⚠️ WARNING: Only 1 complaint received from API!');
         console.warn('[HEATMAP] Filters applied:', filters);
         console.warn('[HEATMAP] Check backend logs to see how many complaints exist in database.');
       }
-
       // Backend already provides lat/lng, so we just need to validate
       this.complaintData = raw
         .filter((item) => {
           // Ensure lat/lng exist and are valid numbers
           const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
           const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
-          
           const isValid = Number.isFinite(lat) && Number.isFinite(lng) &&
                           lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-          
           if (!isValid) {
             console.warn('[HEATMAP] Skipping complaint with invalid coordinates:', item.id, { lat: item.lat, lng: item.lng });
           }
-          
           return isValid;
         })
         .map((item) => {
           // Ensure numeric types
           const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
           const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
-          
           return {
             ...item,
             lat,
@@ -133,9 +115,7 @@ class HeatmapVisualization {
             submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
           };
         });
-
       // console.log removed for security
-
       // console.log removed for security
       // console.log removed for security
       return this.complaintData;
@@ -144,25 +124,22 @@ class HeatmapVisualization {
       throw error;
     }
   }
-
   /**
    * Create heatmap layer from complaint data
    */
   createHeatmapLayer() {
+
     if (!this.complaintData || this.complaintData.length === 0) {
       console.warn('[HEATMAP] No complaint data available for heatmap');
       return null;
     }
-
     // Convert complaint data to heatmap format
     const heatmapData = this.complaintData.map(complaint => [
       complaint.lat,
       complaint.lng,
       this.getIntensityValue(complaint)
     ]);
-
     // console.log removed for security
-
     // Create heatmap layer using Leaflet.heat
     try {
       this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
@@ -173,7 +150,6 @@ class HeatmapVisualization {
       return null;
     }
   }
-
   /**
    * Calculate intensity value for heatmap based on complaint properties
    * @param {Object} complaint - Complaint data
@@ -181,7 +157,6 @@ class HeatmapVisualization {
    */
   getIntensityValue(complaint) {
     let intensity = 0.5; // Base intensity
-
     // Adjust based on priority
     const priorityWeights = {
       'low': 0.3,
@@ -190,7 +165,6 @@ class HeatmapVisualization {
       'urgent': 1.0
     };
     intensity = priorityWeights[complaint.priority] || 0.5;
-
     // Adjust based on status
     const statusWeights = {
       'pending review': 1.0,
@@ -200,30 +174,25 @@ class HeatmapVisualization {
       'rejected': 0.2
     };
     intensity *= statusWeights[complaint.status] || 0.5;
-
     // Adjust based on recency (more recent = higher intensity)
     const daysSinceSubmission = (Date.now() - new Date(complaint.submittedAt).getTime()) / (1000 * 60 * 60 * 24);
     const recencyFactor = Math.max(0.1, 1 - (daysSinceSubmission / 30)); // Decay over 30 days
     intensity *= recencyFactor;
-
     return Math.min(1.0, Math.max(0.1, intensity));
   }
-
   /**
    * Create individual complaint markers
    */
   createMarkerLayer() {
+
     if (!this.complaintData || this.complaintData.length === 0) {
       console.warn('[HEATMAP] No complaint data to create markers from');
       return null;
     }
-
     // console.log removed for security
     this.markerLayer = L.layerGroup();
-
     this.complaintData.forEach((complaint, index) => {
       // console.log removed for security
-      
       try {
         const marker = this.createComplaintMarker(complaint, index);
         this.markerLayer.addLayer(marker);
@@ -232,33 +201,27 @@ class HeatmapVisualization {
         console.error(`[HEATMAP] Failed to create marker ${index + 1}:`, error, complaint);
       }
     });
-
     // console.log removed for security
     return this.markerLayer;
   }
-
   /**
    * Create clickable circles for complaints
    */
   createCircleLayer() {
+
     if (!this.complaintData || this.complaintData.length === 0) {
       return null;
     }
-
     this.circleLayer = L.layerGroup();
-
     // console.log removed for security
-
     this.complaintData.forEach((complaint, index) => {
       // console.log removed for security
       const circle = this.createComplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
     });
-
     // console.log removed for security
     return this.circleLayer;
   }
-
   /**
    * Create individual complaint marker
    * @param {Object} complaint - Complaint data
@@ -272,17 +235,14 @@ class HeatmapVisualization {
       // Add z-index offset to prevent stacking
       zIndexOffset: 1000 + index * 10
     });
-
     // Create popup content
     const popupContent = this.createComplaintPopup(complaint);
     marker.bindPopup(popupContent, {
       maxWidth: 300,
       className: 'complaint-popup'
     });
-
     return marker;
   }
-
   /**
    * Create clickable circle for complaint
    * @param {Object} complaint - Complaint data
@@ -295,7 +255,6 @@ class HeatmapVisualization {
       'high': '#fd7e14',
       'urgent': '#dc3545'
     };
-
     const statusColors = {
       'pending review': '#6c757d',
       'in progress': '#17a2b8',
@@ -303,11 +262,9 @@ class HeatmapVisualization {
       'closed': '#6c757d',
       'rejected': '#dc3545'
     };
-
     // Use priority color for fill, status color for border
     const fillColor = priorityColors[complaint.priority] || '#6c757d';
     const borderColor = statusColors[complaint.status] || '#6c757d';
-
     // Circle size based on priority
     const radiusSizes = {
       'low': 50,
@@ -315,9 +272,7 @@ class HeatmapVisualization {
       'high': 100,
       'urgent': 125
     };
-
     const radius = radiusSizes[complaint.priority] || 75;
-
     const circle = L.circle([complaint.lat, complaint.lng], {
       radius,
       color: borderColor,
@@ -327,7 +282,6 @@ class HeatmapVisualization {
       fillOpacity: 0.4,
       className: 'complaint-circle'
     });
-
     // Add hover effects
     circle.on('mouseover', function(e) {
       this.setStyle({
@@ -335,14 +289,12 @@ class HeatmapVisualization {
         fillOpacity: 0.6
       });
     });
-
     circle.on('mouseout', function(e) {
       this.setStyle({
         weight: 3,
         fillOpacity: 0.4
       });
     });
-
     // Create detailed popup content (async)
     circle.bindPopup(async () => {
       return await this.createDetailedComplaintPopup(complaint);
@@ -353,16 +305,13 @@ class HeatmapVisualization {
       autoClose: false,
       keepInView: true
     });
-
     // Add click event for additional actions
     circle.on('click', (e) => {
       // console.log removed for security
       // You can add additional click actions here
     });
-
     return circle;
   }
-
   /**
    * Get appropriate icon for complaint
    * @param {Object} complaint - Complaint data
@@ -373,7 +322,6 @@ class HeatmapVisualization {
     // Use distinct colors for each marker to make them easily distinguishable
     const distinctColors = ['#dc3545', '#007bff', '#28a745', '#ffc107', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997'];
     const color = distinctColors[index % distinctColors.length] || '#6c757d';
-    
     // Dynamic sizing based on zoom level
     const currentZoom = this.map ? this.map.getZoom() : 12;
     const baseSize = 20; // Base size in pixels
@@ -381,9 +329,7 @@ class HeatmapVisualization {
     const size = Math.round(baseSize * zoomFactor);
     const fontSize = Math.round(11 * zoomFactor);
     const borderWidth = Math.max(2, Math.round(2 * zoomFactor));
-    
     const markerNumber = index + 1;
-
     return L.divIcon({
       html: `<div style="
         background-color: ${color};
@@ -408,7 +354,6 @@ class HeatmapVisualization {
       iconAnchor: [size / 2, size / 2]
     });
   }
-
   /**
    * Create popup content for complaint
    * @param {Object} complaint - Complaint data
@@ -417,7 +362,6 @@ class HeatmapVisualization {
   createComplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
     const priorityClass = complaint.priority.replace(' ', '-').toLowerCase();
-
     return `
       <div class="complaint-popup-content">
         <h4>${complaint.title}</h4>
@@ -460,35 +404,29 @@ class HeatmapVisualization {
               <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
             </div>
           </div>
-
           <div class="popup-content">
             <div class="complaint-info">
               <div class="info-row">
                 <span class="label">Type:</span>
                 <span class="value">${complaint.type}</span>
               </div>
-
               <div class="info-row">
                 <span class="label">Location:</span>
                 <span class="value">${complaint.location}</span>
               </div>
-
               <div class="info-row">
                 <span class="label">Department:</span>
                 <span class="value">${complaint.department || 'Not assigned'}</span>
               </div>
-
               <div class="info-row">
                 <span class="label">Submitted:</span>
                 <span class="value">${submittedDate} at ${submittedTime}</span>
               </div>
-
               <div class="info-row">
                 <span class="label">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
               </div>
             </div>
-
             <div class="popup-actions">
               <div class="access-denied">
                 <p>🔒 Access restricted to assigned department</p>
@@ -508,35 +446,29 @@ class HeatmapVisualization {
             <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
           </div>
         </div>
-
         <div class="popup-content">
           <div class="complaint-info">
             <div class="info-row">
               <span class="label">Type:</span>
               <span class="value">${complaint.type}</span>
             </div>
-
             <div class="info-row">
               <span class="label">Location:</span>
               <span class="value">${complaint.location}</span>
             </div>
-
             <div class="info-row">
               <span class="label">Department:</span>
               <span class="value">${complaint.department || 'Not assigned'}</span>
             </div>
-
             <div class="info-row">
               <span class="label">Submitted:</span>
               <span class="value">${submittedDate} at ${submittedTime}</span>
             </div>
-
             <div class="info-row">
               <span class="label">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
             </div>
           </div>
-
           <div class="popup-actions">
             <button class="btn-details" onclick="viewComplaintDetails('${complaint.id}')">
               📋 View Full Details

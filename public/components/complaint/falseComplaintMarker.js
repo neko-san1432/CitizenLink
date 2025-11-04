@@ -2,14 +2,13 @@
  * False Complaint Marker Component
  * Handles marking complaints as false with reasons and evidence
  */
-
 class FalseComplaintMarker {
+
   constructor() {
     this.modal = null;
     this.complaintId = null;
     this.callback = null;
   }
-
   /**
    * Show the false complaint marker modal
    * @param {string} complaintId - The ID of the complaint to mark as false
@@ -21,13 +20,11 @@ class FalseComplaintMarker {
     this.createModal();
     this.attachEventListeners();
     document.body.appendChild(this.modal);
-    
     // Trigger animation
     requestAnimationFrame(() => {
       this.modal.style.opacity = '1';
     });
   }
-
   /**
    * Create the modal HTML structure
    */
@@ -36,7 +33,6 @@ class FalseComplaintMarker {
     this.modal.className = 'false-complaint-modal';
     this.modal.style.opacity = '0';
     this.modal.style.transition = 'opacity 0.3s ease';
-    
     this.modal.innerHTML = `
       <div class="false-complaint-content">
         <div class="false-complaint-header">
@@ -118,7 +114,6 @@ class FalseComplaintMarker {
       </div>
     `;
   }
-
   /**
    * Attach event listeners to the modal
    */
@@ -126,18 +121,15 @@ class FalseComplaintMarker {
     const form = this.modal.querySelector('#false-complaint-form');
     const cancelBtn = this.modal.querySelector('#cancel-false-complaint');
     const reasonOptions = this.modal.querySelectorAll('.reason-option');
-
     // Handle form submission
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleSubmit();
     });
-
     // Handle cancel button
     cancelBtn.addEventListener('click', () => {
       this.hide();
     });
-
     // Handle reason option selection
     reasonOptions.forEach(option => {
       option.addEventListener('click', () => {
@@ -146,14 +138,12 @@ class FalseComplaintMarker {
         option.classList.toggle('selected', radio.checked);
       });
     });
-
     // Handle clicking outside modal to close
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
         this.hide();
       }
     });
-
     // Handle escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.modal && this.modal.parentNode) {
@@ -161,28 +151,23 @@ class FalseComplaintMarker {
       }
     });
   }
-
   /**
    * Handle form submission
    */
   async handleSubmit() {
     const form = this.modal.querySelector('#false-complaint-form');
     const formData = new FormData(form);
-    
     const reason = formData.get('false-reason');
     const notes = formData.get('false-notes');
     const evidence = Array.from(this.modal.querySelectorAll('.reason-radio:checked'))
       .map(radio => radio.value);
-
     if (!reason) {
       this.showError('Please select a reason for marking this complaint as false.');
       return;
     }
-
     try {
       // Show loading state
       this.showLoading();
-
       // Submit the false complaint marking
       const response = await fetch(`/api/complaints/${this.complaintId}/mark-false`, {
         method: 'POST',
@@ -197,17 +182,13 @@ class FalseComplaintMarker {
           marked_at: new Date().toISOString()
         })
       });
-
       const result = await response.json();
-
       if (result.success) {
         this.showSuccess('Complaint marked as false successfully.');
-        
         // Execute callback if provided
         if (this.callback && typeof this.callback === 'function') {
           this.callback(result);
         }
-        
         // Close modal after a short delay
         setTimeout(() => {
           this.hide();
@@ -220,32 +201,27 @@ class FalseComplaintMarker {
       this.showError('An error occurred while marking the complaint as false.');
     }
   }
-
   /**
    * Show loading state
    */
   showLoading() {
     const submitBtn = this.modal.querySelector('#confirm-false-complaint');
     const originalText = submitBtn.textContent;
-    
     submitBtn.innerHTML = '<div class="spinner"></div> Processing...';
     submitBtn.disabled = true;
   }
-
   /**
    * Show error message
    */
   showError(message) {
     this.showMessage(message, 'error');
   }
-
   /**
    * Show success message
    */
   showSuccess(message) {
     this.showMessage(message, 'success');
   }
-
   /**
    * Show message in modal
    */
@@ -255,14 +231,11 @@ class FalseComplaintMarker {
     if (existingMessage) {
       existingMessage.remove();
     }
-
     const messageDiv = document.createElement('div');
     messageDiv.className = `modal-message ${type === 'error' ? 'error-message' : 'success-message'}`;
     messageDiv.textContent = message;
-
     const form = this.modal.querySelector('#false-complaint-form');
     form.insertBefore(messageDiv, form.firstChild);
-
     // Auto-remove after 5 seconds
     setTimeout(() => {
       if (messageDiv.parentNode) {
@@ -270,14 +243,13 @@ class FalseComplaintMarker {
       }
     }, 5000);
   }
-
   /**
    * Hide the modal
    */
   hide() {
+
     if (this.modal && this.modal.parentNode) {
       this.modal.style.opacity = '0';
-      
       setTimeout(() => {
         if (this.modal && this.modal.parentNode) {
           this.modal.parentNode.removeChild(this.modal);
@@ -287,6 +259,6 @@ class FalseComplaintMarker {
     }
   }
 }
-
 // Export the class
+
 export default FalseComplaintMarker;

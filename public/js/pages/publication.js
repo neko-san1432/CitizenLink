@@ -18,7 +18,6 @@ import showMessage from '../components/toast.js'
 
 let currentType = 'news'
 let currentList = []
-
 document.addEventListener('DOMContentLoaded', () => {
   wireTabs()
   wireFilters()
@@ -35,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 })
-
 function wireTabs() {
   document.querySelectorAll('.pub-tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -49,22 +47,18 @@ function wireTabs() {
     })
   })
 }
-
 function wireFilters() {
   document.getElementById('filter-apply')?.addEventListener('click', () => loadContent(currentType))
 }
-
 function getFilters() {
   const from = document.getElementById('filter-from')?.value
   const to = document.getElementById('filter-to')?.value
   const office = document.getElementById('filter-office')?.value
   return { from, to, office }
 }
-
 async function loadContent(type) {
   currentType = type
   const { from, to, office } = getFilters()
-
   // build URL with published-only defaults
   const base = type === 'events' ? '/api/content/events' : `/api/content/${type}`
   const params = new URLSearchParams()
@@ -73,7 +67,6 @@ async function loadContent(type) {
   if (from) params.set(type === 'events' ? 'from' : 'from', from)
   if (to) params.set(type === 'events' ? 'to' : 'to', to)
   if (office) params.set('office', office)
-
   let data = []
   if (USE_MOCK_PUBLICATION) {
     data = Array.isArray(MOCK_PUBLICATION[type]) ? MOCK_PUBLICATION[type] : []
@@ -86,28 +79,24 @@ async function loadContent(type) {
       console.warn('[PUB] fetch failed', e)
     }
   }
-
-  console.log(`[PUB DEBUG] Loaded ${type}:`, data.length)
   currentList = data
   renderList()
   if (currentList.length) selectItem(0)
   else renderEmptyDetail()
 }
-
 function getTypeFromHash() {
+
   const h = (location.hash || '').toLowerCase()
   if (h === '#news') return 'news'
   if (h === '#notices' || h === '#notice') return 'notices'
   if (h === '#events' || h === '#event') return 'events'
   return null
 }
-
 function activateTab(type) {
   document.querySelectorAll('.pub-tab').forEach(b => b.classList.remove('active'))
   const btn = document.querySelector(`.pub-tab[data-type="${type}"]`)
   if (btn) btn.classList.add('active')
 }
-
 function renderList() {
   const list = document.getElementById('pub-list')
   if (!list) return
@@ -130,7 +119,6 @@ function renderList() {
     })
   })
 }
-
 function selectItem(index) {
   const item = currentList[index]
   if (!item) return

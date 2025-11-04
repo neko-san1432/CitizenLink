@@ -16,7 +16,6 @@ async function loadBarangays() {
     console.warn('Failed to load barangays', e); 
   }
 }
-
 function escapeHtml(s) {
   return (s == null ? '' : String(s))
     .replace(/&/g, '&amp;')
@@ -25,7 +24,6 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
 async function search() {
   const q = encodeURIComponent(document.getElementById('rc-search').value || '');
   const b = encodeURIComponent(document.getElementById('rc-brgy').value || '');
@@ -50,7 +48,6 @@ async function search() {
     console.error(e);
   }
 }
-
 async function selectUser(id) {
   try {
     const [ud, cd] = await Promise.all([
@@ -97,7 +94,6 @@ async function selectUser(id) {
     console.error(e); 
   }
 }
-
 async function promote(id, level) {
   try {
     if (level === 'officer') {
@@ -118,7 +114,6 @@ async function promote(id, level) {
     console.error(e); 
   }
 }
-
 // Initialize event listeners
 document.getElementById('rc-search-btn').addEventListener('click', search);
 document.getElementById('rc-search').addEventListener('keypress', (e) => { 

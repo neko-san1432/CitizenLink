@@ -1,8 +1,8 @@
 // LGU Admin Department Queue JavaScript
-
 import showToast from '../components/toast.js';
 
 class DepartmentQueue {
+
     constructor() {
         this.complaints = [];
         this.department = null;
@@ -13,64 +13,52 @@ class DepartmentQueue {
             priority: '',
             search: ''
         };
-        
         this.init();
     }
-
     init() {
         this.setupEventListeners();
         this.loadComplaints();
     }
-
     setupEventListeners() {
         // Filter controls
         const statusFilter = document.getElementById('status-filter');
         const priorityFilter = document.getElementById('priority-filter');
         const searchInput = document.getElementById('search-input');
-
         if (statusFilter) {
             statusFilter.addEventListener('change', (e) => {
                 this.filters.status = e.target.value;
                 this.loadComplaints();
             });
         }
-
         if (priorityFilter) {
             priorityFilter.addEventListener('change', (e) => {
                 this.filters.priority = e.target.value;
                 this.loadComplaints();
             });
         }
-
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.filters.search = e.target.value;
                 this.debounce(() => this.loadComplaints(), 300)();
             });
         }
-
         // Modal controls
         this.setupModalEventListeners();
     }
-
     setupModalEventListeners() {
         const modal = document.getElementById('officer-assignment-modal');
         const closeBtn = modal?.querySelector('.modal-close');
         const cancelBtn = document.getElementById('cancel-assignment');
         const confirmBtn = document.getElementById('confirm-assignment');
-
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.hideModal());
         }
-
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => this.hideModal());
         }
-
         if (confirmBtn) {
             confirmBtn.addEventListener('click', () => this.confirmAssignment());
         }
-
         // Close modal on overlay click
         if (modal) {
             modal.addEventListener('click', (e) => {
@@ -80,17 +68,14 @@ class DepartmentQueue {
             });
         }
     }
-
     async loadComplaints() {
         try {
             this.showLoading();
-
             const queryParams = new URLSearchParams();
             if (this.filters.status) queryParams.append('status', this.filters.status);
             if (this.filters.priority) queryParams.append('priority', this.filters.priority);
             if (this.filters.search) queryParams.append('search', this.filters.search);
             queryParams.append('limit', this.itemsPerPage);
-
             const response = await fetch(`/api/lgu-admin/department-queue?${queryParams}`, {
                 method: 'GET',
                 headers: {
@@ -98,24 +83,18 @@ class DepartmentQueue {
                 },
                 credentials: 'include'
             });
-
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
             const data = await response.json();
-            
             if (!data.success) {
                 throw new Error(data.error || 'Failed to load complaints');
             }
-
             this.complaints = data.data || [];
             this.department = data.department;
-            
             this.renderComplaints();
             this.updateStats();
             this.updateDepartmentName();
-            
         } catch (error) {
             console.error('Error loading complaints:', error);
             this.showError('Failed to load complaints: ' + error.message);
@@ -123,20 +102,15 @@ class DepartmentQueue {
             this.hideLoading();
         }
     }
-
     renderComplaints() {
         const complaintsList = document.getElementById('complaints-list');
         const loading = document.getElementById('loading');
         const emptyState = document.getElementById('empty-state');
-        
         if (!complaintsList) return;
-
         const filteredComplaints = this.getFilteredComplaints();
         const paginatedComplaints = this.getPaginatedComplaints(filteredComplaints);
-
         // Hide loading state
         if (loading) loading.style.display = 'none';
-
         if (paginatedComplaints.length === 0) {
             complaintsList.style.display = 'none';
             if (emptyState) {
@@ -148,11 +122,9 @@ class DepartmentQueue {
             }
             return;
         }
-
         // Show complaint list and hide empty state
         complaintsList.style.display = 'block';
         if (emptyState) emptyState.style.display = 'none';
-
         complaintsList.innerHTML = paginatedComplaints.map(complaint => `
             <div class="complaint-card">
                 <div class="complaint-header">
@@ -195,20 +167,16 @@ class DepartmentQueue {
                 ${this.renderAssignmentInfo(complaint)}
             </div>
         `).join('');
-
         this.attachActionEventListeners();
     }
-
     getActionButtons(complaint) {
         const buttons = [];
-
         // View details button
         buttons.push(`
             <button class="btn btn-outline" data-action="view" data-complaint-id="${complaint.id}">
                 View Details
             </button>
         `);
-
         // Assign to officer button (if not already assigned)
         if (complaint.status === 'approved' || complaint.status === 'assigned') {
             buttons.push(`
@@ -217,20 +185,15 @@ class DepartmentQueue {
                 </button>
             `);
         }
-
         return buttons.join('');
     }
-
     renderDepartmentsInfo(complaint) {
         const departments = complaint.assigned_departments || complaint.primary_department || [];
         const preferredDepartments = complaint.preferred_departments || [];
-
         if (!departments || departments.length === 0) {
             return '';
         }
-
         const departmentArray = Array.isArray(departments) ? departments : [departments];
-
         return `
             <div class="departments-info">
                 <strong>Assigned Departments:</strong>
@@ -288,15 +251,12 @@ class DepartmentQueue {
         // Redirect to complaint details page
         window.location.href = `/complaint-details?id=${complaintId}`;
     }
-
     async showAssignmentModal(complaintId) {
         try {
             // Load officers for this department
             await this.loadOfficers();
-
             // Set complaint ID
             document.getElementById('assignment-complaint-id').value = complaintId;
-
             // Show modal
             const modal = document.getElementById('officer-assignment-modal');
             if (modal) {
@@ -307,7 +267,6 @@ class DepartmentQueue {
             showToast('Failed to load officers: ' + error.message, 'error');
         }
     }
-
     async loadOfficers() {
         try {
             const response = await fetch('/api/lgu-admin/department-officers', {
@@ -317,17 +276,13 @@ class DepartmentQueue {
                 },
                 credentials: 'include'
             });
-
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
             const data = await response.json();
-            
             if (!data.success) {
                 throw new Error(data.error || 'Failed to load officers');
             }
-
             const officerSelect = document.getElementById('officer-select');
             if (officerSelect) {
                 officerSelect.innerHTML = '<option value="">Choose an officer...</option>' +
@@ -340,19 +295,16 @@ class DepartmentQueue {
             throw error;
         }
     }
-
     async confirmAssignment() {
         const complaintId = document.getElementById('assignment-complaint-id').value;
         const officerId = document.getElementById('officer-select').value;
         const priority = document.getElementById('assignment-priority').value;
         const deadline = document.getElementById('assignment-deadline').value;
         const notes = document.getElementById('assignment-notes').value;
-
         if (!officerId) {
             showToast('Please select an officer', 'error');
             return;
         }
-
         try {
             const response = await fetch(`/api/lgu-admin/complaints/${complaintId}/assign`, {
                 method: 'POST',
@@ -367,13 +319,10 @@ class DepartmentQueue {
                     notes: notes || null
                 })
             });
-
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
             const result = await response.json();
-            
             if (result.success) {
                 showToast('Complaint assigned to officer successfully', 'success');
                 this.hideModal();
@@ -386,23 +335,19 @@ class DepartmentQueue {
             showToast('Failed to assign complaint: ' + error.message, 'error');
         }
     }
-
     hideModal() {
         const modal = document.getElementById('officer-assignment-modal');
         if (modal) {
             modal.style.display = 'none';
         }
-
         // Reset form
         const form = document.getElementById('officer-assignment-form');
         if (form) {
             form.reset();
         }
     }
-
     getFilteredComplaints() {
         let filtered = [...this.complaints];
-
         if (this.filters.search) {
             const searchTerm = this.filters.search.toLowerCase();
             filtered = filtered.filter(complaint => 
@@ -411,16 +356,14 @@ class DepartmentQueue {
                 complaint.id?.toString().includes(searchTerm)
             );
         }
-
         return filtered;
     }
-
     getPaginatedComplaints(complaints) {
+
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         return complaints.slice(startIndex, endIndex);
     }
-
     updateStats() {
         const total = this.complaints.length;
         const pendingAssignment = this.complaints.filter(c => 
@@ -432,35 +375,29 @@ class DepartmentQueue {
         const resolved = this.complaints.filter(c => 
             c.status === 'resolved' || c.status === 'closed'
         ).length;
-
         document.getElementById('total-complaints').textContent = total;
         document.getElementById('pending-assignment').textContent = pendingAssignment;
         document.getElementById('in-progress').textContent = inProgress;
         document.getElementById('resolved').textContent = resolved;
     }
-
     updateDepartmentName() {
         const departmentNameElement = document.getElementById('department-name');
         if (departmentNameElement && this.department) {
             departmentNameElement.textContent = `${this.department.name} (${this.department.code})`;
         }
     }
-
     showLoading() {
         const loading = document.getElementById('loading');
         const complaintsList = document.getElementById('complaints-list');
         const emptyState = document.getElementById('empty-state');
-        
         if (loading) loading.style.display = 'block';
         if (complaintsList) complaintsList.style.display = 'none';
         if (emptyState) emptyState.style.display = 'none';
     }
-
     hideLoading() {
         const loading = document.getElementById('loading');
         if (loading) loading.style.display = 'none';
     }
-
     showError(message) {
         const emptyState = document.getElementById('empty-state');
         if (emptyState) {
@@ -472,10 +409,8 @@ class DepartmentQueue {
             `;
         }
     }
-
     formatDate(dateString) {
         if (!dateString) return 'Unknown date';
-        
         try {
             const date = new Date(dateString);
             return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
@@ -483,7 +418,6 @@ class DepartmentQueue {
             return 'Invalid date';
         }
     }
-
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -496,7 +430,6 @@ class DepartmentQueue {
         };
     }
 }
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new DepartmentQueue();

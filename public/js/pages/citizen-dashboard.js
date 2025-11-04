@@ -2,7 +2,6 @@
  * Enhanced Citizen Dashboard
  * Comprehensive citizen engagement and complaint management
  */
-
 import showMessage from '../components/toast.js';
 import { initializeRoleToggle } from '../auth/roleToggle.js';
 
@@ -14,15 +13,14 @@ const PRIORITY_SCORES = {
   normal: 1,
   low: 0
 };
-
 // Content type icons
 const CONTENT_TYPE_ICONS = {
   notice: '📢',
   news: '📰',
   event: '📅'
 };
-
 class ContentBannerManager {
+
   constructor() {
     // Separate queues for each content type
     this.queues = {
@@ -40,26 +38,21 @@ class ContentBannerManager {
     this.fetchInterval = null;
     this.displayDuration = 20000; // 20 seconds
     this.fetchIntervalMs = 30000; // Fetch new content every 30 seconds
-    
     // Track currently displayed items to avoid unnecessary updates
     this.currentlyDisplayed = {
       notice: null,
       news: null,
       event: null
     };
-    
     this.init();
   }
-
   async init() {
     // Load initial content
     await this.fetchLatestContent();
-    
     // Set up periodic fetching (no automatic rotation)
     this.fetchInterval = setInterval(() => {
       this.fetchLatestContent();
     }, this.fetchIntervalMs);
-
     // Listen for visibility changes
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
@@ -67,20 +60,17 @@ class ContentBannerManager {
       }
     });
   }
-
   // Priority scoring function
   getPriorityScore(item) {
     const priority = item.priority || 'normal';
     return PRIORITY_SCORES[priority.toLowerCase()] || PRIORITY_SCORES.normal;
   }
-
   // Compare function for sorting - prioritize latest items first, then by priority
   compareItems(a, b) {
     // First sort by date (newest first)
     const dateA = new Date(a.created_at || a.published_at || a.event_date || 0);
     const dateB = new Date(b.created_at || b.published_at || b.event_date || 0);
     const dateDiff = dateB - dateA; // Newer dates first (positive if B is newer)
-    
     // Always prioritize newest first - if dates differ significantly, use date
     // Only use priority as tie-breaker for items created on the same day
     const oneDay = 24 * 60 * 60 * 1000;
@@ -88,7 +78,6 @@ class ContentBannerManager {
       // More than 1 day difference - newest always wins
       return dateDiff;
     }
-    
     // Same day or very close - check priority for urgent items
     // But still prefer newer if there's any date difference
     const scoreA = this.getPriorityScore(a);
@@ -207,15 +196,12 @@ class ContentBannerManager {
         fetch('/api/content/news?limit=10&status=published'),
         fetch('/api/content/events?limit=10&status=upcoming')
       ]);
-
       const [noticesData, newsData, eventsData] = await Promise.all([
         noticesRes.json(),
         newsRes.json(),
         eventsRes.json()
       ]);
-
       const allContent = [];
-
       // Process notices
       if (noticesData.success && noticesData.data) {
         noticesData.data.forEach(notice => {
@@ -227,7 +213,6 @@ class ContentBannerManager {
           });
         });
       }
-
       // Process news
       if (newsData.success && newsData.data) {
         newsData.data.forEach(news => {
@@ -240,7 +225,6 @@ class ContentBannerManager {
           });
         });
       }
-
       // Process events
       if (eventsData.success && eventsData.data) {
         eventsData.data.forEach(event => {
@@ -253,22 +237,18 @@ class ContentBannerManager {
           });
         });
       }
-
       // Add all items to their respective queues with priority handling
       allContent.forEach(item => {
         this.addToQueue(item);
       });
-
       // Sort each queue by latest first (newest date, then priority)
       Object.keys(this.queues).forEach(contentType => {
         this.queues[contentType].sort((a, b) => this.compareItems(a, b));
         // Ensure latest item is at index 0
         this.currentIndices[contentType] = 0;
       });
-
       // Check if content has changed and update only if different
       const hasContent = Object.values(this.queues).some(queue => queue.length > 0);
-      
       if (hasContent) {
         // Check if displayed items have changed before updating
         if (this.hasContentChanged()) {
@@ -283,35 +263,30 @@ class ContentBannerManager {
           event: null
         };
       }
-
       // Show banner if we have content
       const banner = document.getElementById('content-banner');
       if (banner) {
+
         if (hasContent) {
           banner.style.display = 'block';
         } else {
           banner.style.display = 'none';
         }
       }
-
     } catch (error) {
       console.error('Error fetching content:', error);
     }
   }
-
   // Check if the currently displayed content has changed
   hasContentChanged() {
     let changed = false;
-    
     ['notice', 'news', 'event'].forEach(contentType => {
       const queue = this.queues[contentType];
       const currentIndex = this.currentIndices[contentType];
-      
       if (queue.length > 0) {
         const index = currentIndex % queue.length;
         const currentItem = queue[index];
         const currentlyDisplayedItem = this.currentlyDisplayed[contentType];
-        
         // Check if item has changed (different ID or new item)
         if (!currentlyDisplayedItem || currentlyDisplayedItem.id !== currentItem.id) {
           changed = true;
@@ -323,35 +298,29 @@ class ContentBannerManager {
         }
       }
     });
-    
     return changed;
   }
-
   // Update the display with current items from each type's queue
   // Only called when content has actually changed
   updateDisplay() {
     const track = document.querySelector('.content-banner-track');
     if (!track) return;
-
     // Get current item for each content type from their respective queues
     const itemsToShow = [];
     ['notice', 'news', 'event'].forEach(contentType => {
       const queue = this.queues[contentType];
       const currentIndex = this.currentIndices[contentType];
-      
       if (queue.length > 0) {
         // Get item at current index (with wrap-around)
         const index = currentIndex % queue.length;
         const item = queue[index];
         itemsToShow.push(item);
-        
         // Track this item as currently displayed
         this.currentlyDisplayed[contentType] = item;
       } else {
         this.currentlyDisplayed[contentType] = null;
       }
     });
-    
     // If no items to show, hide banner
     if (itemsToShow.length === 0) {
       const banner = document.getElementById('content-banner');
@@ -360,7 +329,6 @@ class ContentBannerManager {
       }
       return;
     }
-
     // Create content items HTML
     let itemHTML = '';
     itemsToShow.forEach((item, idx) => {
@@ -373,11 +341,9 @@ class ContentBannerManager {
       } else if (item.content_type === 'notice') {
         badge = '<span class="content-badge">[Announcement]</span>';
       }
-      
       const itemClass = item.content_type === 'news' ? 
         'content-banner-item active news-item' : 
         'content-banner-item active';
-      
       itemHTML += `
         <div class="${itemClass}">
           <span class="content-icon">${CONTENT_TYPE_ICONS[item.content_type] || '📢'}</span>
@@ -386,9 +352,7 @@ class ContentBannerManager {
         </div>
       `;
     });
-
     track.innerHTML = itemHTML;
-
     // Add click handlers to navigate to content
     track.querySelectorAll('.content-banner-item').forEach((itemElement, idx) => {
       const item = itemsToShow[idx];
@@ -398,7 +362,6 @@ class ContentBannerManager {
       });
     });
   }
-
   // Navigate to content detail page
   navigateToContent(item) {
     let url = '';
@@ -417,7 +380,6 @@ class ContentBannerManager {
     }
     window.location.href = url;
   }
-
   // Sort queues and update display only if content changed
   sortAndUpdate() {
     // Sort all queues by latest first (newest date, then priority)
@@ -426,16 +388,14 @@ class ContentBannerManager {
       // Reset index to 0 to show the latest item first
       this.currentIndices[contentType] = 0;
     });
-
     // Check if content has changed before updating
     if (this.hasContentChanged()) {
       this.updateDisplay();
     }
   }
-
-
   // Cleanup
   destroy() {
+
     if (this.scrollInterval) {
       clearInterval(this.scrollInterval);
     }
@@ -443,7 +403,6 @@ class ContentBannerManager {
       clearInterval(this.fetchInterval);
     }
   }
-
   // Escape HTML to prevent XSS
   escapeHtml(text) {
     const div = document.createElement('div');
@@ -451,20 +410,16 @@ class ContentBannerManager {
     return div.innerHTML;
   }
 }
-
 // Initialize on page load
 let bannerManager;
-
 /**
  * Initialize dashboard
  */
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize content banner manager
   bannerManager = new ContentBannerManager();
-  
   // Load complaints
   await loadMyComplaints();
-  
   // Initialize role switcher for staff members
   try {
     await initializeRoleToggle();
@@ -472,14 +427,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('[CITIZEN_DASHBOARD] Error initializing role toggle:', error);
   }
 });
-
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   if (bannerManager) {
     bannerManager.destroy();
   }
 });
-
 /**
  * Load my complaints
  */
@@ -489,7 +442,6 @@ async function loadMyComplaints() {
     console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
     return;
   }
-
   // Show loading state
   container.innerHTML = `
     <div class="loading">
@@ -497,17 +449,12 @@ async function loadMyComplaints() {
       <p>Loading your complaints...</p>
     </div>
   `;
-
   try {
     const response = await fetch('/api/complaints/my?limit=20');
-    
     if (!response.ok) {
       throw new Error(`Failed to load complaints: ${response.status}`);
     }
-
     const result = await response.json();
-
-    console.log('[CITIZEN_DASHBOARD] Load complaints response:', {
       success: result.success,
       complaintsCount: result.data?.length || 0,
       total: result.pagination?.total || 0,
@@ -521,10 +468,8 @@ async function loadMyComplaints() {
         cancelled_at: c.cancelled_at
       }))
     });
-
     if (result.success) {
       const totalComplaints = result.pagination?.total || result.data?.length || 0;
-      console.log(`[CITIZEN_DASHBOARD] Showing ${result.data?.length || 0} of ${totalComplaints} total complaints`);
       renderMyComplaints(result.data || [], totalComplaints);
     } else {
       console.error('[CITIZEN_DASHBOARD] Failed to load complaints:', result.error);
@@ -536,7 +481,6 @@ async function loadMyComplaints() {
     renderMyComplaints([], 0);
   }
 }
-
 /**
  * Render my complaints
  */
@@ -546,8 +490,6 @@ function renderMyComplaints(complaints, totalCount = null) {
     console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
     return;
   }
-
-  console.log('[CITIZEN_DASHBOARD] Rendering complaints:', {
     count: complaints.length,
     totalCount: totalCount,
     complaints: complaints.map(c => ({ 
@@ -557,7 +499,6 @@ function renderMyComplaints(complaints, totalCount = null) {
       submitted_at: c.submitted_at 
     }))
   });
-
   if (complaints.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -569,7 +510,6 @@ function renderMyComplaints(complaints, totalCount = null) {
     `;
     return;
   }
-
   // Show total count if available and different from displayed count
   let countInfo = '';
   if (totalCount !== null && totalCount > complaints.length) {
@@ -585,7 +525,7 @@ function renderMyComplaints(complaints, totalCount = null) {
     return true;
   });
 
-  console.log('[CITIZEN_DASHBOARD] Complaints after filtering:', {
+  
     total: complaints.length,
     filtered: filteredComplaints.length,
     duplicates: complaints.filter(c => c.is_duplicate).length,
@@ -605,7 +545,6 @@ function renderMyComplaints(complaints, totalCount = null) {
     if (complaint.cancelled_at) {
       statusBadge = '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.5rem;">(Cancelled)</span>';
     }
-    
     return `
     <div class="complaint-item" onclick="viewComplaintDetail('${complaint.id}')">
       <div class="complaint-header">
@@ -624,10 +563,8 @@ function renderMyComplaints(complaints, totalCount = null) {
     </div>
   `;
   }).join('');
-
   container.innerHTML = countInfo + html;
 }
-
 /**
  * Helper functions
  */
@@ -637,12 +574,10 @@ function formatStatus(status) {
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 }
-
 function renderCompactStepper(status) {
   // Map workflow status to step number (0-4, with 5 as cancelled)
   const workflowStatus = (status || 'new').toLowerCase();
   const isCancelled = workflowStatus === 'cancelled';
-  
   const statusStepMap = {
     'new': 0,
     'assigned': 1,
@@ -657,7 +592,6 @@ function renderCompactStepper(status) {
     'confirmed': 4,
     'closed': 4
   };
-
   // For cancelled complaints, don't show any active steps - gray everything out
   // Otherwise, show progress up to the current step
   const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
@@ -670,25 +604,20 @@ function renderCompactStepper(status) {
     '#3b82f6',
     '#3b82f6'
   ];
-
   // Build compact stepper HTML
   let stepperHTML = '<div class="compact-stepper-container">';
-  
   for (let i = 0; i < 5; i++) {
     // If cancelled, all steps are inactive (grayed out)
     // Otherwise, active steps are those up to currentStep (0-4)
     const isActive = isCancelled ? false : (i <= currentStep && i < 5);
-    
     // Get node color - if cancelled, everything is grey
     const nodeColor = isCancelled ? '#9ca3af' : (isActive ? nodeColors[i] : '#9ca3af');
-    
     // Determine connector line style
     let connectorStyle = '';
     if (i < 4) {
       // If cancelled, all connectors are grey
       // Otherwise, color connector through the current step as well (continuous bar effect)
       const isConnectorActive = isCancelled ? false : (i <= currentStep);
-      
       if (isConnectorActive) {
         // Active connector solid blue
         connectorStyle = '#3b82f6';
@@ -696,10 +625,8 @@ function renderCompactStepper(status) {
         connectorStyle = '#e5e7eb';
       }
     }
-
     // No glow/box-shadow for nodes
     let boxShadow = 'none';
-
     stepperHTML += `
       <div class="compact-stepper-step ${isActive ? 'active' : ''}">
         <div class="compact-stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
@@ -710,7 +637,6 @@ function renderCompactStepper(status) {
     `;
   }
   stepperHTML += '</div>';
-
   // Labels row under the stepper, aligned with nodes
   const stepLabels = ['New','Assigned','In Progress','Pending Approval','Completed'];
   stepperHTML += '<div class="compact-stepper-labels">';
@@ -721,10 +647,8 @@ function renderCompactStepper(status) {
     `;
   }
   stepperHTML += '</div>';
-
   return stepperHTML;
 }
-
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? [
@@ -733,7 +657,6 @@ function hexToRgb(hex) {
     parseInt(result[3], 16)
   ] : [0, 0, 0];
 }
-
 function getProgressWidth(status) {
   // Deprecated - keeping for backward compatibility if needed elsewhere
   const progressMap = {
@@ -753,7 +676,6 @@ function getProgressWidth(status) {
   };
   return progressMap[status] || 20;
 }
-
 function getProgressText(status) {
   const textMap = {
     'new': 'New Complaint',
@@ -772,32 +694,25 @@ function getProgressText(status) {
   };
   return textMap[status] || 'Unknown';
 }
-
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
-  
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
-  
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  
   return date.toLocaleDateString();
 }
-
 function escapeHtml(text) {
   if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-
 /**
  * Global functions for onclick handlers
  */
@@ -805,20 +720,15 @@ window.viewMyComplaints = function() {
   showMessage('info', 'Redirecting to complaints page...');
   window.location.href = '/myProfile#complaints';
 };
-
 window.viewMap = function() {
   window.location.href = '/heatmap';
 };
-
 window.getHelp = function() {
   showMessage('info', 'Help section coming soon');
 };
-
 window.viewAllComplaints = function() {
   window.location.href = '/myProfile#complaints';
 };
-
 window.viewComplaintDetail = function(complaintId) {
   window.location.href = `/complaint-details/${complaintId}`;
 };
-

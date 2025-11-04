@@ -384,7 +384,7 @@
       // Simple initialization - map with heatmap and controls
       (async function() {
         try {
-          console.log('[HEATMAP] Initializing map...');
+          
           
           // Wait for Leaflet to be available
           while (typeof L === 'undefined') {
@@ -415,7 +415,7 @@
             // When zoomed out to minimum level, reset to origin
             if (currentZoom <= minZoom) {
               map.setView(originCenter, originZoom, { animate: true });
-              console.log('[HEATMAP] Reset to origin point at max zoom out');
+              
             }
           });
 
@@ -433,7 +433,7 @@
 
           // Keep default Digos City view on initial load instead of auto-fitting
           // Users can click "Fit to All Markers" button if they want to see all complaints
-          console.log('[HEATMAP] Map initialized successfully - showing default Digos City view');
+          
         } catch (error) {
           console.error('[HEATMAP] Initialization failed:', error);
         }
@@ -442,12 +442,12 @@
       // Load complaint data with filters
       async function loadComplaintData() {
         try {
-          console.log('[HEATMAP] Loading complaint data with filters:', currentFilters);
+          
           await heatmapViz.loadComplaintData(currentFilters);
 
           // Get the count of complaints after filtering
           const complaintCount = heatmapViz.complaintData ? heatmapViz.complaintData.length : 0;
-          console.log('[HEATMAP] Loaded', complaintCount, 'complaints after filtering');
+          
 
           // Always create and show heatmap first (it should be on bottom layer)
           if (heatmapViz.heatmapLayer) {
@@ -455,7 +455,7 @@
           }
           heatmapViz.createHeatmapLayer();
           heatmapViz.showHeatmap();
-          console.log('[HEATMAP] Heatmap layer created and shown with', complaintCount, 'data points');
+          
 
           // Create and show markers (on top of heatmap)
           if (heatmapViz.markerLayer) {
@@ -463,7 +463,7 @@
           }
           heatmapViz.createMarkerLayer();
           heatmapViz.showMarkers();
-          console.log('[HEATMAP] Marker layer created and shown with', complaintCount, 'markers');
+          
 
           // Update statistics
           updateStatistics();
@@ -536,10 +536,10 @@
             includeResolved: document.getElementById('include-resolved').checked
           };
 
-          console.log('[HEATMAP] Applying filters:', currentFilters);
+          
           await loadComplaintData();
           fitToAllMarkers();
-          console.log('[HEATMAP] Filters applied, data reloaded');
+          
         });
 
         // Reset filters
@@ -705,13 +705,12 @@
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
         
-        console.log('[SIDEBAR] Menu toggle button:', menuToggle);
-        console.log('[SIDEBAR] Sidebar element:', sidebar);
+        
         
         if (menuToggle && sidebar) {
-          console.log('[SIDEBAR] Setting up toggle functionality');
+          
           menuToggle.addEventListener('click', () => {
-            console.log('[SIDEBAR] Toggle button clicked');
+            
             sidebar.classList.toggle('open');
           });
           

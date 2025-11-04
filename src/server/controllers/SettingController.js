@@ -1,10 +1,10 @@
 const SettingService = require('../services/SettingService');
 
 class SettingController {
+
   constructor() {
     this.settingService = new SettingService();
   }
-
   async getAllSettings(req, res) {
     try {
       const settings = await this.settingService.getAllSettings();
@@ -20,7 +20,6 @@ class SettingController {
       });
     }
   }
-
   async getPublicSettings(req, res) {
     try {
       const settings = await this.settingService.getPublicSettings();
@@ -36,7 +35,6 @@ class SettingController {
       });
     }
   }
-
   async getSettingsByCategory(req, res) {
     try {
       const { category } = req.params;
@@ -53,7 +51,6 @@ class SettingController {
       });
     }
   }
-
   async getSettingByKey(req, res) {
     try {
       const { key } = req.params;
@@ -71,7 +68,6 @@ class SettingController {
       });
     }
   }
-
   async createSetting(req, res) {
     try {
       const setting = await this.settingService.createSetting(req.body);
@@ -90,7 +86,6 @@ class SettingController {
       });
     }
   }
-
   async updateSetting(req, res) {
     try {
       const { key } = req.params;
@@ -110,7 +105,6 @@ class SettingController {
       });
     }
   }
-
   async deleteSetting(req, res) {
     try {
       const { key } = req.params;
@@ -128,7 +122,6 @@ class SettingController {
       });
     }
   }
-
   async initializeDefaults(req, res) {
     try {
       const settings = await this.settingService.initializeDefaultSettings();

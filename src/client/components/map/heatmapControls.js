@@ -2,8 +2,8 @@
  * Heatmap Controls - UI controls for heatmap functionality
  * Handles filters, clustering parameters, and view switching
  */
-
 class HeatmapControls {
+
   constructor(controller) {
     this.controller = controller;
     this.currentFilters = {
@@ -21,10 +21,8 @@ class HeatmapControls {
       minPts: 3
     };
     this.isVisible = true;
-
     this.createControls();
   }
-
   /**
    * Create the controls UI
    */
@@ -33,18 +31,15 @@ class HeatmapControls {
     controlsContainer.id = 'heatmap-controls';
     controlsContainer.className = 'map-controls';
     controlsContainer.innerHTML = this.getControlsHTML();
-
     // Insert after the map container
     const mapContainer = document.getElementById('map');
     if (mapContainer && mapContainer.parentNode) {
       mapContainer.parentNode.insertBefore(controlsContainer, mapContainer.nextSibling);
     }
-
     this.setupEventListeners();
     this.loadCategories();
     this.loadDepartments();
   }
-
   /**
    * Get HTML for controls
    * @returns {string} HTML content
@@ -177,7 +172,6 @@ class HeatmapControls {
       </div>
     `;
   }
-
   /**
    * Set up event listeners
    */
@@ -187,62 +181,49 @@ class HeatmapControls {
     document.getElementById('apply-filters')?.addEventListener('click', () => {
       this.applyFilters();
     });
-
     document.getElementById('reset-filters')?.addEventListener('click', () => {
       this.resetFilters();
     });
-
     document.getElementById('fit-to-complaints')?.addEventListener('click', () => {
       this.controller.fitToComplaints();
     });
-
     // Clustering controls
     document.getElementById('enable-clustering')?.addEventListener('change', (e) => {
       this.toggleClustering(e.target.checked);
     });
-
     // Auto-switch toggle
-
     document.getElementById('eps-slider')?.addEventListener('input', (e) => {
       this.updateEpsValue(e.target.value);
     });
-
     document.getElementById('minpts-slider')?.addEventListener('input', (e) => {
       this.updateMinPtsValue(e.target.value);
     });
-
     document.getElementById('suggest-params')?.addEventListener('click', () => {
       this.suggestParameters();
     });
-
     // Real-time updates for sliders
     document.getElementById('eps-slider')?.addEventListener('input', (e) => {
       this.updateClusteringParams();
     });
-
     document.getElementById('minpts-slider')?.addEventListener('input', (e) => {
       this.updateClusteringParams();
     });
-
     // Zoom threshold slider
     document.getElementById('zoom-threshold')?.addEventListener('input', (e) => {
       const threshold = parseInt(e.target.value);
       this.updateZoomThresholdValue(threshold);
       this.controller.setZoomThreshold(threshold);
     });
-
     // Heatmap intensity slider
     document.getElementById('heatmap-intensity')?.addEventListener('input', (e) => {
       const intensity = parseFloat(e.target.value);
       this.updateHeatmapIntensityValue(intensity);
       this.controller.setHeatmapIntensity(intensity);
     });
-
     // Filter change listeners
     document.getElementById('status-filter')?.addEventListener('change', () => {
       this.applyFilters();
     });
-
     document.getElementById('category-filter')?.addEventListener('change', async (e) => {
       const categoryId = e.target.value;
       await this.loadSubcategories(categoryId);
@@ -250,20 +231,16 @@ class HeatmapControls {
       this.currentFilters.subcategory = ''; // Reset subcategory when category changes
       this.applyFilters();
     });
-
     document.getElementById('subcategory-filter')?.addEventListener('change', (e) => {
       this.currentFilters.subcategory = e.target.value;
       this.applyFilters();
     });
-
     document.getElementById('department-filter')?.addEventListener('change', () => {
       this.applyFilters();
     });
-
     document.getElementById('time-range-filter')?.addEventListener('change', (e) => {
       const timeRange = e.target.value;
       this.currentFilters.timeRange = timeRange;
-
       // Show/hide custom date range
       const customDateRange = document.getElementById('custom-date-range');
       if (timeRange === 'custom') {
@@ -275,20 +252,16 @@ class HeatmapControls {
       }
       this.applyFilters();
     });
-
     document.getElementById('start-date')?.addEventListener('change', () => {
       this.applyFilters();
     });
-
     document.getElementById('end-date')?.addEventListener('change', () => {
       this.applyFilters();
     });
-
     document.getElementById('include-resolved')?.addEventListener('change', () => {
       this.applyFilters();
     });
   }
-
   /**
    * Apply current filters
    */
@@ -296,7 +269,6 @@ class HeatmapControls {
     const filters = this.getCurrentFilters();
     await this.controller.applyFilters(filters);
   }
-
   /**
    * Reset all filters
    */
@@ -308,11 +280,9 @@ class HeatmapControls {
     document.getElementById('start-date').value = '';
     document.getElementById('end-date').value = '';
     document.getElementById('include-resolved').checked = true;
-
     // Reset clustering
     document.getElementById('enable-clustering').checked = false;
     this.toggleClustering(false);
-
     // Apply reset filters
     this.currentFilters = {
       status: '',
@@ -322,10 +292,8 @@ class HeatmapControls {
       endDate: '',
       includeResolved: true
     };
-
     this.applyFilters();
   }
-
   /**
    * Set date range based on time range selection
    * @param {string} timeRange - Selected time range
@@ -334,11 +302,8 @@ class HeatmapControls {
     const now = new Date();
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
-
     if (!startDateInput || !endDateInput) return;
-
     let startDate, endDate;
-
     switch (timeRange) {
       case 'today':
         startDate = endDate = now;
@@ -361,11 +326,9 @@ class HeatmapControls {
       default:
         return;
     }
-
     startDateInput.value = startDate.toISOString().split('T')[0];
     endDateInput.value = endDate.toISOString().split('T')[0];
   }
-
   /**
    * Get current filter values
    * @returns {Object} Current filters
@@ -382,7 +345,6 @@ class HeatmapControls {
       includeResolved: document.getElementById('include-resolved')?.checked || true
     };
   }
-
   /**
    * Toggle clustering on/off
    * @param {boolean} enabled - Whether clustering is enabled
@@ -392,10 +354,8 @@ class HeatmapControls {
     if (paramsDiv) {
       paramsDiv.style.display = enabled ? 'block' : 'none';
     }
-
     this.controller.toggleClustering(enabled);
   }
-
   /**
    * Update epsilon value display
    * @param {string} value - Epsilon value
@@ -407,7 +367,6 @@ class HeatmapControls {
     }
     this.clusteringParams.eps = parseFloat(value);
   }
-
   /**
    * Update min points value display
    * @param {string} value - Min points value
@@ -419,50 +378,41 @@ class HeatmapControls {
     }
     this.clusteringParams.minPts = parseInt(value);
   }
-
   /**
    * Update clustering parameters
    */
   updateClusteringParams() {
     const eps = parseFloat(document.getElementById('eps-slider')?.value || 0.01);
     const minPts = parseInt(document.getElementById('minpts-slider')?.value || 3);
-
     this.clusteringParams.eps = eps;
     this.clusteringParams.minPts = minPts;
-
     this.controller.updateClusteringParameters(eps, minPts);
   }
-
   /**
    * Suggest optimal clustering parameters
    */
   suggestParameters() {
+
     if (!this.controller.heatmapViz || this.controller.heatmapViz.complaintData.length === 0) {
       this.showError('No complaint data available for parameter suggestion');
       return;
     }
-
     const points = this.controller.heatmapViz.complaintData.map(c => ({ lat: c.lat, lng: c.lng }));
     const suggested = this.controller.heatmapViz.dbscan.suggestParameters(points);
-
     // Update sliders
     const epsSlider = document.getElementById('eps-slider');
     const minPtsSlider = document.getElementById('minpts-slider');
-
     if (epsSlider) {
       epsSlider.value = suggested.eps;
       this.updateEpsValue(suggested.eps);
     }
-
     if (minPtsSlider) {
       minPtsSlider.value = suggested.minPts;
       this.updateMinPtsValue(suggested.minPts);
     }
-
     // Update clustering
     this.updateClusteringParams();
   }
-
   /**
    * Update zoom threshold value display
    * @param {number} value - Zoom threshold value
@@ -473,7 +423,6 @@ class HeatmapControls {
       thresholdValue.textContent = value;
     }
   }
-
   /**
    * Update heatmap intensity value display
    * @param {number} value - Heatmap intensity value
@@ -484,7 +433,6 @@ class HeatmapControls {
       intensityValue.textContent = value.toFixed(1);
     }
   }
-
   /**
    * Update statistics display
    * @param {Object} stats - Statistics object
@@ -493,12 +441,11 @@ class HeatmapControls {
     const totalComplaints = document.getElementById('total-complaints');
     const clusterCount = document.getElementById('cluster-count');
     const noiseCount = document.getElementById('noise-count');
-
     if (totalComplaints) {
       totalComplaints.textContent = stats.totalComplaints || 0;
     }
-
     if (stats.clusteringStats) {
+
       if (clusterCount) {
         clusterCount.textContent = stats.clusteringStats.numClusters || 0;
       }
@@ -510,7 +457,6 @@ class HeatmapControls {
       if (noiseCount) noiseCount.textContent = '0';
     }
   }
-
   /**
    * Show error message
    * @param {string} message - Error message
@@ -520,14 +466,12 @@ class HeatmapControls {
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
-
       // Hide after 5 seconds
       setTimeout(() => {
         errorDiv.style.display = 'none';
       }, 5000);
     }
   }
-
   /**
    * Toggle controls visibility
    */
@@ -538,7 +482,6 @@ class HeatmapControls {
       controls.style.display = this.isVisible ? 'block' : 'none';
     }
   }
-
   /**
    * Load categories dynamically
    */
@@ -548,7 +491,6 @@ class HeatmapControls {
       const apiClient = apiClientModule.default;
       const { data, error } = await apiClient.get('/api/department-structure/categories');
       if (error) throw error;
-
       const categorySelect = document.getElementById('category-filter');
       if (categorySelect) {
         // Remove loading placeholder
@@ -556,7 +498,6 @@ class HeatmapControls {
         if (loadingEl) {
           loadingEl.remove();
         }
-
         // Add category options
         if (data && data.length > 0) {
           data.forEach(category => {
@@ -578,31 +519,25 @@ class HeatmapControls {
       }
     }
   }
-
   /**
    * Load subcategories for selected category
    */
   async loadSubcategories(categoryId) {
     const subcategorySelect = document.getElementById('subcategory-filter');
     if (!subcategorySelect) return;
-
     try {
       if (!categoryId) {
         subcategorySelect.innerHTML = '<option value="">Select a category first</option>';
         subcategorySelect.disabled = true;
         return;
       }
-
       subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
       subcategorySelect.disabled = true;
-
       const apiClientModule = await import('../../config/apiClient.js');
       const apiClient = apiClientModule.default;
       const { data, error } = await apiClient.get(`/api/department-structure/categories/${categoryId}/subcategories`);
       if (error) throw error;
-
       subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
-
       if (data && data.length > 0) {
         data.forEach(subcategory => {
           const option = document.createElement('option');
@@ -619,7 +554,6 @@ class HeatmapControls {
       subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
     }
   }
-
   /**
    * Load departments dynamically
    */
@@ -627,7 +561,6 @@ class HeatmapControls {
     try {
       const { getDepartments } = await import('../../utils/departmentUtils.js');
       const departments = await getDepartments();
-
       const departmentSelect = document.getElementById('department-filter');
       if (departmentSelect) {
         // Remove loading placeholder
@@ -635,7 +568,6 @@ class HeatmapControls {
         if (loadingEl) {
           loadingEl.remove();
         }
-
         // Add department options
         departments.forEach(dept => {
           const option = document.createElement('option');
@@ -656,7 +588,6 @@ class HeatmapControls {
       }
     }
   }
-
   /**
    * Get current state
    * @returns {Object} Current state
@@ -669,9 +600,9 @@ class HeatmapControls {
     };
   }
 }
-
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+
   module.exports = HeatmapControls;
 } else {
   window.HeatmapControls = HeatmapControls;

@@ -2,7 +2,6 @@
  * Super Admin Dashboard
  * System-wide management interface
  */
-
 import showMessage from '../components/toast.js';
 
 // Initialize dashboard
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupFormHandlers();
   setupUserSearchSA();
 });
-
 /**
  * Load department roles dynamically
  */
@@ -24,22 +22,18 @@ async function loadDepartmentRoles() {
   try {
     const { apiClient } = await import('../config/apiClient.js');
     const { data: departments, error } = await apiClient.get('/api/department-structure/departments');
-
     if (error) throw error;
-
     // Load role swap dropdown
     const roleSwapSelect = document.getElementById('role-swap-role');
     if (roleSwapSelect) {
       const loadingEl = document.getElementById('department-roles-loading');
       if (loadingEl) loadingEl.remove();
-
       departments.forEach(dept => {
         // Add officer role
         const officerOption = document.createElement('option');
         officerOption.value = `lgu-${dept.code.toLowerCase()}`;
         officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
         roleSwapSelect.appendChild(officerOption);
-
         // Add admin role
         const adminOption = document.createElement('option');
         adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;
@@ -47,20 +41,17 @@ async function loadDepartmentRoles() {
         roleSwapSelect.appendChild(adminOption);
       });
     }
-
     // Load assign citizen dropdown
     const assignCitizenSelect = document.getElementById('assign-citizen-role');
     if (assignCitizenSelect) {
       const loadingEl = document.getElementById('assign-citizen-roles-loading');
       if (loadingEl) loadingEl.remove();
-
       departments.forEach(dept => {
         // Add officer role
         const officerOption = document.createElement('option');
         officerOption.value = `lgu-${dept.code.toLowerCase()}`;
         officerOption.textContent = `LGU Officer - ${dept.name} (${dept.code})`;
         assignCitizenSelect.appendChild(officerOption);
-
         // Add admin role
         const adminOption = document.createElement('option');
         adminOption.value = `lgu-admin-${dept.code.toLowerCase()}`;
@@ -77,7 +68,6 @@ async function loadDepartmentRoles() {
     });
   }
 }
-
 /**
  * Load dashboard data
  */
@@ -87,16 +77,13 @@ async function loadDashboardData() {
       fetch('/api/superadmin/statistics'),
       fetch('/api/superadmin/dashboard')
     ]);
-
     const [statsResult, dashboardResult] = await Promise.all([
       statsResponse.json(),
       dashboardResponse.json()
     ]);
-
     if (statsResult.success) {
       updateStatistics(statsResult.statistics);
     }
-
     if (dashboardResult.success) {
       // Additional dashboard data if needed
       // console.log removed for security
@@ -105,7 +92,6 @@ async function loadDashboardData() {
     console.error('[SUPERADMIN] Load dashboard error:', error);
   }
 }
-
 /**
  * Update statistics display
  */
@@ -114,7 +100,6 @@ function updateStatistics(stats) {
   document.getElementById('stat-role-changes').textContent = stats.total_role_changes || 0;
   document.getElementById('stat-dept-transfers').textContent = stats.total_department_transfers || 0;
 }
-
 /**
  * Load role counts (users, admins, hr, officers)
  */
@@ -128,7 +113,6 @@ async function loadRoleCounts() {
     const admins = users.filter(u => String(u.role || '').toLowerCase() === 'super-admin' || /^lgu-admin/.test(String(u.role || ''))).length;
     const hr = users.filter(u => String(u.role || '').toLowerCase() === 'lgu-hr' || /^lgu-hr/.test(String(u.role || ''))).length;
     const officers = users.filter(u => /^lgu-(?!admin|hr)/.test(String(u.role || ''))).length;
-
     setText('stat-users', totalUsers);
     setText('stat-admins', admins);
     setText('stat-hr', hr);
@@ -137,12 +121,10 @@ async function loadRoleCounts() {
     // ignore
   }
 }
-
 function setText(id, v) {
   const el = document.getElementById(id);
   if (el) el.textContent = String(v);
 }
-
 /**
  * API Health
  */
@@ -166,7 +148,6 @@ async function loadApiHealth() {
   const btn = document.getElementById('btn-refresh-health');
   if (btn) btn.onclick = loadApiHealth;
 }
-
 /**
  * Traffic monitor using rate-limit status (proxy for request volume)
  */
@@ -175,7 +156,6 @@ function startTrafficMonitor() {
   const meta = document.getElementById('traffic-meta');
   if (!graph || !meta) return;
   const bars = [];
-
   async function tick() {
     try {
       const res = await fetch('/api/rate-limit/status');
@@ -187,11 +167,9 @@ function startTrafficMonitor() {
       meta.textContent = `Requests in window: ${requests}, Remaining: ${(data && data.status && data.status.remaining) || '-'}`;
     } catch {}
   }
-
   tick();
   setInterval(tick, 1000);
 }
-
 function renderBars(values, container) {
   const max = Math.max(1, ...values);
   container.innerHTML = values.map(v => {
@@ -199,7 +177,6 @@ function renderBars(values, container) {
     return `<div style="width: 8px; height:${h}%; background:#3b82f6; border-radius:2px;"></div>`;
   }).join('');
 }
-
 /**
  * Load system logs
  */
@@ -208,7 +185,6 @@ window.loadLogs = async function() {
     const logType = document.getElementById('log-type-filter').value;
     const response = await fetch(`/api/superadmin/logs?log_type=${logType}&limit=50`);
     const result = await response.json();
-
     if (result.success) {
       displayLogs(result.logs);
     }
@@ -217,46 +193,37 @@ window.loadLogs = async function() {
     document.getElementById('logs-container').innerHTML = '<p style="color: #e74c3c;">Failed to load logs</p>';
   }
 };
-
 /**
  * Display logs
  */
 function displayLogs(logs) {
   const container = document.getElementById('logs-container');
-
   const allLogs = [];
-
   // Combine all log types
   if (logs.role_changes) {
     logs.role_changes.forEach(log => {
       allLogs.push({ ...log, log_type: 'role_change' });
     });
   }
-
   if (logs.department_transfers) {
     logs.department_transfers.forEach(log => {
       allLogs.push({ ...log, log_type: 'dept_transfer' });
     });
   }
-
   if (logs.complaint_workflow) {
     logs.complaint_workflow.forEach(log => {
       allLogs.push({ ...log, log_type: 'complaint' });
     });
   }
-
   // Sort by date
   allLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
   if (allLogs.length === 0) {
     container.innerHTML = '<p style="color: #7f8c8d;">No logs found</p>';
     return;
   }
-
   const html = allLogs.slice(0, 50).map(log => formatLogEntry(log)).join('');
   container.innerHTML = html;
 }
-
 /**
  * Format log entry
  */
@@ -265,7 +232,6 @@ function formatLogEntry(log) {
   let content = '';
   let typeLabel = '';
   let typeColor = '#667eea';
-
   if (log.log_type === 'role_change') {
     typeLabel = 'Role Change';
     typeColor = '#3498db';
@@ -320,10 +286,8 @@ function setupFormHandlers() {
     if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
       return;
     }
-
     await performRoleSwap(userId, newRole, reason);
   });
-
   // Department Transfer
   document.getElementById('dept-transfer-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -331,10 +295,8 @@ function setupFormHandlers() {
     const fromDept = document.getElementById('dept-transfer-from').value;
     const toDept = document.getElementById('dept-transfer-to').value;
     const reason = document.getElementById('dept-transfer-reason').value;
-
     await transferDepartment(userId, fromDept, toDept, reason);
   });
-
   // Assign Citizen
   document.getElementById('assign-citizen-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -342,21 +304,17 @@ function setupFormHandlers() {
     const role = document.getElementById('assign-citizen-role').value;
     const department = document.getElementById('assign-citizen-dept').value;
     const reason = document.getElementById('assign-citizen-reason').value;
-
     await assignCitizen(userId, role, department, reason);
   });
-
   // Log type filter change
   document.getElementById('log-type-filter').addEventListener('change', () => {
     loadLogs();
   });
 }
-
 function setupUserSearchSA() {
   const btn = document.getElementById('sa-user-search-btn');
   const input = document.getElementById('sa-user-search');
   const brgy = document.getElementById('sa-user-barangay');
-
   async function run() {
     const q = encodeURIComponent(input?.value || '');
     const b = encodeURIComponent(brgy?.value || '');
@@ -374,11 +332,9 @@ function setupUserSearchSA() {
       renderUserListSA([]);
     }
   }
-
   if (btn) btn.addEventListener('click', run);
   if (input) input.addEventListener('keypress', (e) => { if (e.key === 'Enter') run(); });
 }
-
 function renderUserListSA(users) {
   const list = document.getElementById('sa-user-list');
   if (!list) return;
@@ -390,7 +346,6 @@ function renderUserListSA(users) {
       <div style="color:#7f8c8d; font-size:0.9rem;">Role: ${escapeHtml(u.role || '')} | Brgy: ${escapeHtml(u.address?.barangay || '-')}</div>
     </div>
   `).join('');
-
   list.querySelectorAll('.user-item').forEach(el => {
     el.addEventListener('click', async () => {
       const id = el.getAttribute('data-user-id');
@@ -399,7 +354,6 @@ function renderUserListSA(users) {
     });
   });
 }
-
 async function loadUserDetailsSA(userId) {
   try {
     const res = await fetch(`/api/superadmin/users/${userId}`);
@@ -431,7 +385,6 @@ async function loadUserDetailsSA(userId) {
     console.error('[SUPERADMIN] load user details error:', e);
   }
 }
-
 async function loadUserComplaintsSA(userId) {
   try {
     const res = await fetch(`/api/superadmin/users/${userId}/complaints?limit=10`);
@@ -458,7 +411,6 @@ async function loadUserComplaintsSA(userId) {
     console.error('[SUPERADMIN] load user complaints error:', e);
   }
 }
-
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s)
@@ -468,7 +420,6 @@ function escapeHtml(s) {
     .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
 /**
  * Perform role swap
  */
@@ -485,9 +436,7 @@ async function performRoleSwap(userId, newRole, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('role-swap-form').reset();
@@ -501,7 +450,6 @@ async function performRoleSwap(userId, newRole, reason) {
     showMessage('error', 'Failed to perform role swap');
   }
 }
-
 /**
  * Transfer department
  */
@@ -519,9 +467,7 @@ async function transferDepartment(userId, fromDept, toDept, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('dept-transfer-form').reset();
@@ -535,7 +481,6 @@ async function transferDepartment(userId, fromDept, toDept, reason) {
     showMessage('error', 'Failed to transfer department');
   }
 }
-
 /**
  * Assign citizen
  */
@@ -553,9 +498,7 @@ async function assignCitizen(userId, role, department, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('assign-citizen-form').reset();

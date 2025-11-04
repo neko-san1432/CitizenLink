@@ -1,20 +1,20 @@
 const Database = require('../config/database');
+
 const {
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITY,
   NOTIFICATION_ICONS
 } = require('../../shared/constants');
-
 /**
 * NotificationService
 * Handles all notification-related operations
 */
 class NotificationService {
+
   constructor() {
     this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
-
   /**
   * Notify all admins of a department (lgu-admin variants) about a new complaint assignment
   * Department matching by code suffix in role (e.g., lgu-admin-{dept}) and/or profile metadata
@@ -22,43 +22,35 @@ class NotificationService {
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
       // console.log removed for security
-
       // Use admin auth API instead of direct table query
       let users = [];
       try {
         const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
-
         if (authError) {
           console.warn('[NOTIFICATION] Failed to get auth users:', authError.message);
           return { success: false, error: authError.message };
         }
-
         users = authUsers.users || [];
       } catch (authErr) {
         console.warn('[NOTIFICATION] Auth API error:', authErr.message);
         return { success: false, error: authErr.message };
       }
-
       // Filter for admins in the specific department
       const admins = users.filter(user => {
         const metadata = user.user_metadata || {};
         const rawMetadata = user.raw_user_meta_data || {};
         const role = metadata.role || rawMetadata.role || '';
-
         return role === 'lgu-admin' &&
                (metadata.dpt === departmentCode ||
                 rawMetadata.dpt === departmentCode ||
                 metadata.department === departmentCode ||
                 rawMetadata.department === departmentCode);
       });
-
       // console.log removed for security
-
       if (admins.length === 0) {
         console.warn(`[NOTIFICATION] No LGU admins found for department ${departmentCode}`);
         return { success: true, count: 0 };
       }
-
       const notifications = admins.map((admin) => ({
         userId: admin.id,
         type: NOTIFICATION_TYPES.APPROVAL_REQUIRED,
@@ -72,14 +64,12 @@ class NotificationService {
           assigned_at: new Date().toISOString()
         }
       }));
-
       return this.createBulkNotifications(notifications);
     } catch (error) {
       console.error('[NOTIFICATION] notifyDepartmentAdminsByCode error:', error);
       return { success: false, error: error.message };
     }
   }
-
   /**
   * Create a new notification with deduplication
   * Supports both object and individual parameter syntax
@@ -94,7 +84,6 @@ class NotificationService {
     try {
       // Support both calling patterns
       let userId, notifType, notifTitle, notifMessage, notifOptions;
-
       if (typeof userIdOrOptions === 'object' && !type) {
         // Object syntax: createNotification({ userId, type, title, message, ... })
         const opts = userIdOrOptions;
@@ -117,7 +106,6 @@ class NotificationService {
         notifMessage = message;
         notifOptions = options;
       }
-
       const {
         priority = NOTIFICATION_PRIORITY.INFO,
         link = null,
@@ -125,7 +113,6 @@ class NotificationService {
         icon = NOTIFICATION_ICONS[notifType] || '📢',
         deduplicate = true
       } = notifOptions;
-
       // Check for duplicates if deduplication is enabled
       if (deduplicate) {
         const duplicateCheck = await this.checkDuplicateNotification(
@@ -134,7 +121,6 @@ class NotificationService {
           notifTitle,
           metadata
         );
-
         if (duplicateCheck.exists) {
           // console.log removed for security
           return {
@@ -144,7 +130,6 @@ class NotificationService {
           };
         }
       }
-
       const { data, error } = await this.supabase
         .from('notification')
         .insert([{
@@ -159,11 +144,8 @@ class NotificationService {
         }])
         .select()
         .single();
-
       if (error) throw error;
-
       // console.log removed for security
-
       return {
         success: true,
         notification: data,
@@ -174,7 +156,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
    * Check for duplicate notifications
    * @param {string} userId - User ID
@@ -186,7 +167,6 @@ class NotificationService {
   async checkDuplicateNotification(userId, type, title, metadata = {}) {
     try {
       // console.log removed for security
-
       const { data, error } = await this.supabase
         .from('notification')
         .select('*')
@@ -197,15 +177,12 @@ class NotificationService {
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Within last 24 hours
         .order('created_at', { ascending: false })
         .limit(1);
-
       if (error) {
         console.warn('[NOTIFICATION] Duplicate check error:', error.message);
         return { exists: false };
       }
-
       const exists = data && data.length > 0;
       // console.log removed for security
-
       return {
         exists,
         notification: data && data.length > 0 ? data[0] : null
@@ -215,7 +192,6 @@ class NotificationService {
       return { exists: false };
     }
   }
-
   /**
   * Create multiple notifications (bulk) with deduplication
   * @param {Array} notifications - Array of notification objects
@@ -235,16 +211,12 @@ class NotificationService {
           link: notif.link || null,
           metadata: notif.metadata || {}
         }));
-
         const { data, error } = await this.supabase
           .from('notification')
           .insert(notificationsData)
           .select();
-
         if (error) throw error;
-
         // console.log removed for security
-
         return {
           success: true,
           notifications: data,
@@ -252,7 +224,6 @@ class NotificationService {
           duplicates: 0
         };
       }
-
       // With deduplication - process each notification individually
       const results = {
         success: true,
@@ -260,7 +231,6 @@ class NotificationService {
         duplicates: 0,
         errors: 0
       };
-
       for (const notif of notifications) {
         try {
           const result = await this.createNotification({
@@ -274,7 +244,6 @@ class NotificationService {
             icon: notif.icon,
             deduplicate: true
           });
-
           if (result.duplicate) {
             results.duplicates++;
           } else {
@@ -285,16 +254,13 @@ class NotificationService {
           results.errors++;
         }
       }
-
       // console.log removed for security
-
       return results;
     } catch (error) {
       console.error('[NOTIFICATION] Bulk create error:', error);
       throw error;
     }
   }
-
   /**
    * Notify multiple users about the same event with deduplication
    * @param {Array} userIds - Array of user IDs
@@ -307,7 +273,6 @@ class NotificationService {
   async notifyMultipleUsers(userIds, type, title, message, options = {}) {
     try {
       // console.log removed for security
-
       const notifications = userIds.map(userId => ({
         userId,
         type,
@@ -315,14 +280,12 @@ class NotificationService {
         message,
         ...options
       }));
-
       return await this.createBulkNotifications(notifications, true);
     } catch (error) {
       console.error('[NOTIFICATION] Notify multiple users error:', error);
       throw error;
     }
   }
-
   /**
   * Get user notifications (paginated)
   * @param {string} userId - User ID
@@ -333,7 +296,6 @@ class NotificationService {
   async getUserNotifications(userId, page = 0, limit = 10) {
     try {
       const offset = page * limit;
-
       // Get notifications
       const { data, error, count } = await this.supabase
         .from('notification')
@@ -341,9 +303,7 @@ class NotificationService {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
-
       if (error) throw error;
-
       const hasMore = (offset + limit) < count;
 
       return {
@@ -361,7 +321,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Get unread notification count for user
   * @param {string} userId - User ID
@@ -374,9 +333,7 @@ class NotificationService {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('read', false);
-
       if (error) throw error;
-
       return {
         success: true,
         count: count || 0
@@ -386,7 +343,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Mark notification as read
   * @param {string} notificationId - Notification ID
@@ -405,9 +361,7 @@ class NotificationService {
         .eq('user_id', userId)
         .select()
         .single();
-
       if (error) throw error;
-
       return {
         success: true,
         notification: data
@@ -417,7 +371,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Mark all user notifications as read
   * @param {string} userId - User ID
@@ -434,11 +387,8 @@ class NotificationService {
         .eq('user_id', userId)
         .eq('read', false)
         .select();
-
       if (error) throw error;
-
       // console.log removed for security
-
       return {
         success: true,
         count: data.length
@@ -448,7 +398,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Delete a notification
   * @param {string} notificationId - Notification ID
@@ -461,9 +410,7 @@ class NotificationService {
         .delete()
         .eq('id', notificationId)
         .eq('user_id', userId);
-
       if (error) throw error;
-
       return {
         success: true
       };
@@ -472,7 +419,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Delete expired notifications (cleanup job)
   * Removes notifications older than their expires_at date
@@ -484,11 +430,8 @@ class NotificationService {
         .delete()
         .lt('expires_at', new Date().toISOString())
         .select();
-
       if (error) throw error;
-
       // console.log removed for security
-
       return {
         success: true,
         deleted: data?.length || 0
@@ -498,7 +441,6 @@ class NotificationService {
       throw error;
     }
   }
-
   /**
   * Get notification summary for email
   * Groups notifications by priority
@@ -512,16 +454,13 @@ class NotificationService {
         .select('priority, type')
         .eq('user_id', userId)
         .eq('read', false);
-
       if (error) throw error;
-
       const summary = {
         total: data.length,
         urgent: data.filter(n => n.priority === NOTIFICATION_PRIORITY.URGENT).length,
         warning: data.filter(n => n.priority === NOTIFICATION_PRIORITY.WARNING).length,
         info: data.filter(n => n.priority === NOTIFICATION_PRIORITY.INFO).length
       };
-
       return {
         success: true,
         summary
@@ -531,9 +470,7 @@ class NotificationService {
       throw error;
     }
   }
-
   // ==================== ROLE-SPECIFIC NOTIFICATION HELPERS ====================
-
   /**
   * Notify citizen about complaint submission
   */
@@ -550,7 +487,6 @@ class NotificationService {
       }
     );
   }
-
   /**
   * Notify citizen about status change
   */
@@ -561,11 +497,9 @@ class NotificationService {
       'rejected': 'has been rejected',
       'closed': 'has been closed'
     };
-
     const priority = newStatus === 'resolved' ? NOTIFICATION_PRIORITY.INFO :
       newStatus === 'rejected' ? NOTIFICATION_PRIORITY.WARNING :
         NOTIFICATION_PRIORITY.INFO;
-
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_STATUS_CHANGED,
@@ -578,17 +512,14 @@ class NotificationService {
       }
     );
   }
-
   /**
   * Notify officer about new task assignment
   */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     // console.log removed for security
-
     const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
       priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
         NOTIFICATION_PRIORITY.INFO;
-
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.TASK_ASSIGNED,
@@ -618,7 +549,6 @@ class NotificationService {
       }
     );
   }
-
   /**
   * Notify officer about overdue task
   */
@@ -635,7 +565,6 @@ class NotificationService {
       }
     );
   }
-
   /**
   * Notify coordinator about new complaint needing review
   */
@@ -652,7 +581,6 @@ class NotificationService {
       }
     );
   }
-
   /**
   * Notify citizen that their complaint was marked as duplicate
   */
@@ -669,7 +597,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify officer that their assignment has been completed
    */
@@ -686,7 +613,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify officer of admin reminder to complete task
    */
@@ -703,7 +629,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify citizen about workflow step completion
    */
@@ -720,7 +645,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify citizen that LGU work has been completed
    */
@@ -737,7 +661,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify citizen that resolution review is needed
    */
@@ -754,7 +677,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify LGU admin about officer reminder needs
    */
@@ -764,7 +686,6 @@ class NotificationService {
       complete_assignment: `${officerName} needs to mark their assignment as complete`,
       overdue_task: `${officerName} has an overdue task that requires immediate action`
     };
-
     return this.createNotification(
       adminId,
       NOTIFICATION_TYPES.OFFICER_REMINDER,
@@ -781,7 +702,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify officer about pending task reminder from admin
    */
@@ -798,7 +718,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Notify citizen that complaint was assigned to officer
    */
@@ -818,7 +737,6 @@ class NotificationService {
       }
     );
   }
-
   /**
    * Find all complaint coordinators and notify them about new complaint
    * Scans auth.users for users with base_role = complaint-coordinator
@@ -826,39 +744,31 @@ class NotificationService {
   async notifyAllCoordinators(complaintId, complaintTitle) {
     try {
       // console.log removed for security
-
       // Use admin auth API to find coordinators
       let users = [];
       try {
         const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
-
         if (authError) {
           console.error('[NOTIFICATION] Error fetching auth users for coordinators:', authError);
           return { success: false, error: authError.message };
         }
-
         users = authUsers.users || [];
       } catch (authErr) {
         console.error('[NOTIFICATION] Auth API error for coordinators:', authErr);
         return { success: false, error: authErr.message };
       }
-
       // Find all users with base_role = complaint-coordinator
       const coordinators = users.filter(user => {
         const metadata = user.user_metadata || {};
         const rawMetadata = user.raw_user_meta_data || {};
-
         const baseRole = metadata.base_role || rawMetadata.base_role;
         return baseRole === 'complaint-coordinator';
       });
-
       // console.log removed for security
-
       if (coordinators.length === 0) {
         console.warn(`[NOTIFICATION] No complaint coordinators found for complaint ${complaintId}`);
         return { success: true, count: 0 };
       }
-
       // Send notifications to all coordinators
       const notifications = coordinators.map((coordinator) => ({
         userId: coordinator.id,
@@ -872,19 +782,14 @@ class NotificationService {
           assigned_at: new Date().toISOString()
         }
       }));
-
       const result = await this.createBulkNotifications(notifications);
-
       // console.log removed for security
       return result;
-
     } catch (error) {
       console.error('[NOTIFICATION] notifyAllCoordinators error:', error);
       return { success: false, error: error.message };
     }
   }
-
 }
 
 module.exports = NotificationService;
-

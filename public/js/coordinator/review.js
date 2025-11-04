@@ -2,12 +2,10 @@
  * Coordinator Complaint Review Page
  * Handles loading and reviewing individual complaints
  */
-
 import { Toast } from '../components/toast.js';
 
 let currentComplaint = null;
 let complaintId = null;
-
 /**
  * Initialize the review page
  */
@@ -15,45 +13,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get complaint ID from URL
   const pathParts = window.location.pathname.split('/');
   complaintId = pathParts[pathParts.length - 1];
-
   if (!complaintId || complaintId === 'review') {
     showError('No complaint ID provided');
     return;
   }
-
   await loadComplaint();
 });
-
 /**
  * Load complaint details
  */
 async function loadComplaint() {
   try {
-    console.log('[REVIEW] Loading complaint:', complaintId);
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}`);
-
-    console.log('[REVIEW] API response status:', response.status);
-
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-
     const result = await response.json();
-    console.log('[REVIEW] API response data:', result);
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to load complaint');
     }
-
     currentComplaint = result.data;
-    console.log('[REVIEW] Complaint loaded successfully:', currentComplaint);
     renderComplaint();
   } catch (error) {
     console.error('[REVIEW] Load error:', error);
     showError(error.message);
   }
 }
-
 /**
  * Render complaint details
  */
@@ -63,31 +48,25 @@ async function renderComplaint() {
   const similarities = currentComplaint.analysis?.duplicate_candidates || 
                      currentComplaint.analysis?.similar_complaints || 
                      currentComplaint.similarities || [];
-
   // Hide loading, show content
   document.getElementById('loading').style.display = 'none';
   document.getElementById('complaint-content').style.display = 'block';
-
   // Header
   document.getElementById('complaint-title').textContent = complaint.title;
   document.getElementById('complaint-id').textContent = complaint.id;
   document.getElementById('submitted-date').textContent = formatDate(complaint.submitted_at);
   document.getElementById('submitter-name').textContent =
     complaint.submitted_by_profile?.name || complaint.submitted_by_profile?.email || 'Unknown';
-
   // Status badge
   const statusEl = document.getElementById('complaint-status');
   const status = complaint.workflow_status || complaint.status || 'unknown';
   statusEl.innerHTML = `<span class="badge status-${status.replace(' ', '-')}">${status}</span>`;
-
   // Priority badge
   const priorityEl = document.getElementById('complaint-priority');
   priorityEl.innerHTML = `<span class="badge priority-${complaint.priority}">${complaint.priority}</span>`;
-
   // Details - Handle both old and new hierarchical form structure
   const typeText = complaint.type || complaint.category || 'Not specified';
   const subcategoryText = complaint.subcategory || '';
-  
   document.getElementById('complaint-type').textContent = typeText;
   const subtypeEl = document.getElementById('complaint-subtype');
   if (subcategoryText) {
@@ -95,10 +74,8 @@ async function renderComplaint() {
   } else {
     subtypeEl.textContent = '';
   }
-
   document.getElementById('complaint-description').textContent = complaint.descriptive_su;
   document.getElementById('complaint-location').textContent = complaint.location_text;
-
   // Show preferred departments in main details
   const preferredDeptsEl = document.getElementById('preferred-departments-list');
   if (preferredDeptsEl) {
@@ -147,7 +124,6 @@ async function renderComplaint() {
       preferredDeptsEl.textContent = 'No departments selected by citizen';
     }
   }
-
   // Show complainant's department preference
   const preferenceEl = document.getElementById('complainant-preference');
   if (preferenceEl) {
@@ -197,13 +173,11 @@ async function renderComplaint() {
       preferenceEl.textContent = 'No preference specified';
     }
   }
-
   // Map preview using ComplaintMap component
   try {
     const mapEl = document.getElementById('location-map');
     const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
     const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
-    
     console.log('[REVIEW] Map setup:', { 
       mapEl: !!mapEl, 
       hasLat, 
@@ -213,15 +187,11 @@ async function renderComplaint() {
       latType: typeof complaint.latitude,
       lngType: typeof complaint.longitude
     });
-    
     if (mapEl && (hasLat || hasLng)) {
       // Use ComplaintMap component
-      if (window.ComplaintMap) {
-        console.log('[REVIEW] Creating ComplaintMap...');
+        if (window.ComplaintMap) {
         const complaintMap = new window.ComplaintMap('location-map');
-        
         if (hasLat && hasLng) {
-          console.log('[REVIEW] Setting location:', complaint.latitude, complaint.longitude);
           // Add a small delay to ensure map is fully initialized
           setTimeout(() => {
             complaintMap.setLocation(
@@ -230,7 +200,6 @@ async function renderComplaint() {
               complaint.title || 'Complaint Location',
               complaint.location_text || ''
             );
-            console.log('[REVIEW] Location set on map');
           }, 500);
         }
       } else {
@@ -247,7 +216,6 @@ async function renderComplaint() {
             }).addTo(map);
             const marker = L.marker(center).addTo(map);
             marker.bindPopup(`<b>${complaint.title || 'Complaint Location'}</b><br>${complaint.location_text || ''}`);
-            console.log('[REVIEW] Fallback map created with marker');
           } else {
             console.warn('[REVIEW] Leaflet not available for fallback');
           }
@@ -256,7 +224,6 @@ async function renderComplaint() {
         }
       }
     } else {
-      console.log('[REVIEW] Map not created - missing coordinates or element');
       if (mapEl) {
         mapEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
       }
@@ -264,11 +231,9 @@ async function renderComplaint() {
   } catch (e) {
     console.warn('[REVIEW] Map init failed:', e);
   }
-
   // Evidence (always show section with fallback)
   const evidenceSection = document.getElementById('evidence-section');
   const evidenceEmpty = document.getElementById('evidence-empty');
-  
   // Handle different evidence field structures
   let evidenceList = [];
   if (complaint.evidence && Array.isArray(complaint.evidence)) {
@@ -278,7 +243,6 @@ async function renderComplaint() {
   } else if (complaint.files && Array.isArray(complaint.files)) {
     evidenceList = complaint.files;
   }
-  
   if (evidenceList.length > 0) {
     if (evidenceSection) evidenceSection.style.display = 'block';
     if (evidenceEmpty) evidenceEmpty.style.display = 'none';
@@ -289,7 +253,6 @@ async function renderComplaint() {
     const grid = document.getElementById('evidence-grid');
     if (grid) grid.innerHTML = '';
   }
-
   // Similar complaints
   if (similarities && similarities.length > 0) {
     document.getElementById('similar-section').style.display = 'block';
@@ -305,13 +268,11 @@ async function renderComplaint() {
     document.getElementById('unique-btn').style.display = 'none';
   }
 }
-
 /**
  * Render evidence images with preview functionality
  */
 function renderEvidence(evidence) {
   const grid = document.getElementById('evidence-grid');
-
   const normalize = (item) => {
     // Support both DB_FORMAT.sql (snake_case) and existing code (camelCase)
     // Also support signedUrl from coordinator repository
@@ -323,23 +284,19 @@ function renderEvidence(evidence) {
     const mimeType = item.mimeType || item.mime_type || item.fileType || '';
     return { url, fileName, filePath, fileType, fileSize, mimeType };
   };
-
   const isImage = (type, name) => {
     if (type && type.startsWith('image/')) return true;
     const n = (name || '').toLowerCase();
     return n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png') || n.endsWith('.webp');
   };
-
   const isVideo = (type, name) => {
     if (type && type.startsWith('video/')) return true;
     const n = (name || '').toLowerCase();
     return n.endsWith('.mp4') || n.endsWith('.mov') || n.endsWith('.webm');
   };
-
   const isPdf = (type, name) => {
     return (type === 'application/pdf') || (name || '').toLowerCase().endsWith('.pdf');
   };
-
   const formatSize = (bytes) => {
     if (!bytes || isNaN(bytes)) return '';
     const units = ['B','KB','MB','GB'];
@@ -347,7 +304,6 @@ function renderEvidence(evidence) {
     while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
     return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
   };
-
   const getFileIcon = (type, name) => {
     if (isImage(type, name)) return '🖼️';
     if (isVideo(type, name)) return '🎥';
@@ -355,12 +311,10 @@ function renderEvidence(evidence) {
     if (type && type.startsWith('audio/')) return '🎵';
     return '📎';
   };
-
   grid.innerHTML = evidence.map((raw, index) => {
     const item = normalize(raw);
     const sizeText = item.fileSize ? ` · ${formatSize(item.fileSize)}` : '';
     const icon = getFileIcon(item.fileType, item.fileName);
-
     return `
       <div class="evidence-item" onclick="openEvidencePreview(${index})" style="cursor: pointer;">
         <div class="evidence-preview">
@@ -379,11 +333,9 @@ function renderEvidence(evidence) {
 
   // Store evidence data globally for preview
   window.evidenceData = evidence.map(normalize);
-  console.log('[REVIEW] Evidence data stored:', window.evidenceData);
   
   // Test evidence preview functionality
-  console.log('[REVIEW] Evidence preview available:', !!window.evidencePreview);
-  console.log('[REVIEW] Evidence data length:', window.evidenceData.length);
+  
 }
 
 /**
@@ -432,7 +384,6 @@ function renderSimilarComplaints(similarities) {
       </option>
     `).join('');
 }
-
 /**
  * Modal functions
  */
@@ -441,42 +392,33 @@ window.openAssignModal = function() {
   // Pre-fill priority from complaint
   const complaint = currentComplaint.complaint;
   document.getElementById('assign-priority').value = complaint.priority || 'medium';
-  
   // Load departments dynamically
   loadDepartmentsForAssignment();
 };
-
 window.showDuplicateModal = function() {
   document.getElementById('duplicate-modal').classList.add('active');
 };
-
 window.linkRelatedComplaints = function() {
   Toast.info('Link related complaints feature coming soon');
 };
-
 window.showRejectModal = function() {
   document.getElementById('reject-modal').classList.add('active');
 };
-
 window.openFalseComplaintModal = function() {
   document.getElementById('false-complaint-modal').classList.add('active');
 };
-
 window.closeModal = function(modalId) {
   document.getElementById(modalId).classList.remove('active');
 };
-
 /**
  * Handle assign to department
  */
 window.handleAssign = async function(event) {
   event.preventDefault();
-
   const selectedDepartments = Array.from(document.querySelectorAll('.dept-check:checked')).map(el => el.value);
   const priority = document.getElementById('assign-priority').value;
   const deadline = document.getElementById('deadline').value;
   const notes = document.getElementById('notes').value;
-
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
       method: 'POST',
@@ -493,13 +435,10 @@ window.handleAssign = async function(event) {
         }
       })
     });
-
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to assign complaint');
     }
-
     Toast.success('Complaint assigned successfully!');
     setTimeout(() => {
       window.location.href = '/dashboard';
@@ -509,16 +448,13 @@ window.handleAssign = async function(event) {
     Toast.error(error.message);
   }
 };
-
 /**
  * Handle mark as duplicate
  */
 window.handleDuplicate = async function(event) {
   event.preventDefault();
-
   const masterComplaintId = document.getElementById('master-complaint').value;
   const reason = document.getElementById('duplicate-reason').value;
-
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
       method: 'POST',
@@ -531,13 +467,10 @@ window.handleDuplicate = async function(event) {
         }
       })
     });
-
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to mark as duplicate');
     }
-
     Toast.success('Complaint marked as duplicate');
     setTimeout(() => {
       window.location.href = '/dashboard';
@@ -547,15 +480,12 @@ window.handleDuplicate = async function(event) {
     Toast.error(error.message);
   }
 };
-
 /**
  * Handle reject complaint
  */
 window.handleReject = async function(event) {
   event.preventDefault();
-
   const reason = document.getElementById('reject-reason').value;
-
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
       method: 'POST',
@@ -567,13 +497,10 @@ window.handleReject = async function(event) {
         }
       })
     });
-
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to reject complaint');
     }
-
     Toast.success('Complaint rejected');
     setTimeout(() => {
       window.location.href = '/dashboard';
@@ -583,25 +510,20 @@ window.handleReject = async function(event) {
     Toast.error(error.message);
   }
 };
-
 /**
  * Handle mark as false complaint
  */
 window.handleFalseComplaint = async function(event) {
   event.preventDefault();
-
   const reason = document.getElementById('false-complaint-reason').value;
   const notes = document.getElementById('false-complaint-notes').value;
-
   // Validate that a reason is selected
   if (!reason) {
     Toast.error('Please select a reason for marking this complaint as false.');
     return;
   }
-
   // Combine reason and notes
   const fullReason = notes ? `${reason}: ${notes}` : reason;
-
   try {
     const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
       method: 'POST',
@@ -613,13 +535,10 @@ window.handleFalseComplaint = async function(event) {
         }
       })
     });
-
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to mark as false complaint');
     }
-
     Toast.success('Complaint marked as false');
     setTimeout(() => {
       window.location.href = '/dashboard';
@@ -629,7 +548,6 @@ window.handleFalseComplaint = async function(event) {
     Toast.error(error.message);
   }
 };
-
 /**
  * Mark complaint as unique (no duplicates)
  */
@@ -643,15 +561,11 @@ window.markAsUnique = async function() {
         data: {}
       })
     });
-
     const result = await response.json();
-
     if (!result.success) {
       throw new Error(result.error || 'Failed to mark as unique');
     }
-
     Toast.success('Complaint marked as unique');
-
     // Hide similar complaints section
     document.getElementById('similar-section').style.display = 'none';
     document.getElementById('duplicate-btn').style.display = 'none';
@@ -662,7 +576,6 @@ window.markAsUnique = async function() {
     Toast.error(error.message);
   }
 };
-
 /**
  * Load departments for assignment modal
  */
@@ -670,7 +583,6 @@ async function loadDepartmentsForAssignment() {
   try {
     const response = await fetch('/api/departments/active');
     const result = await response.json();
-    
     if (result.success && result.data) {
       const departmentsList = document.getElementById('departments-list');
       departmentsList.innerHTML = result.data.map(dept => `
@@ -697,7 +609,6 @@ async function loadDepartmentsForAssignment() {
     `;
   }
 }
-
 /**
  * Show error message
  */
@@ -706,25 +617,20 @@ function showError(message) {
   document.getElementById('error-message').style.display = 'block';
   document.getElementById('error-text').textContent = message;
 }
-
 /**
  * Format date
  */
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
-
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
-
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-
   if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
   if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',

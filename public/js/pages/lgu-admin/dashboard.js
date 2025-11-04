@@ -2,15 +2,13 @@ import apiClient from '../../config/apiClient.js';
 import showMessage from '../../components/toast.js';
 
 class LguAdminDashboard {
+
   constructor() {
     this.stats = null;
     this.assignments = [];
     this.activities = [];
   }
-
   async init() {
-    console.log('[LGU_ADMIN_DASHBOARD] Initializing...');
-    
     try {
       await this.loadDashboardData();
       this.setupEventListeners();
@@ -19,29 +17,19 @@ class LguAdminDashboard {
       showMessage('error', 'Failed to initialize dashboard');
     }
   }
-
   async loadDashboardData() {
     try {
-      console.log('[LGU_ADMIN_DASHBOARD] Loading assignments...');
       await this.loadAssignments();
-      
-      console.log('[LGU_ADMIN_DASHBOARD] Loading activities...');
       await this.loadActivities();
     } catch (error) {
       console.error('[LGU_ADMIN_DASHBOARD] Load dashboard data error:', error);
       showMessage('error', 'Failed to load dashboard data');
     }
   }
-
   // Statistics loading removed - no longer needed
-
   async loadAssignments() {
     try {
-      console.log('[LGU_ADMIN_DASHBOARD] Loading recent assignments...');
-      
       const response = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
-      console.log('[LGU_ADMIN_DASHBOARD] Assignment response:', response);
-      
       if (response && response.success) {
         this.assignments = response.data || [];
         this.renderAssignments();
@@ -54,11 +42,8 @@ class LguAdminDashboard {
       this.renderAssignments();
     }
   }
-
   async loadActivities() {
     try {
-      console.log('[LGU_ADMIN_DASHBOARD] Loading recent activities...');
-      
       // Show recent assignments as activities
       this.activities = this.assignments.slice(0, 5);
       this.renderActivities();
@@ -68,13 +53,10 @@ class LguAdminDashboard {
       this.renderActivities();
     }
   }
-
   // Statistics methods removed - no longer needed
-
   renderAssignments() {
     const container = document.getElementById('assignments-container');
     if (!container) return;
-
     if (this.assignments.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -85,19 +67,16 @@ class LguAdminDashboard {
       `;
     return;
   }
-
     container.innerHTML = `
       <div class="assignments-list">
         ${this.assignments.map(assignment => this.renderAssignmentCard(assignment)).join('')}
       </div>
     `;
   }
-
   renderAssignmentCard(assignment) {
     const statusClass = this.getStatusClass(assignment.status);
     const priorityClass = this.getPriorityClass(assignment.priority);
     const submittedDate = new Date(assignment.submitted_at).toLocaleDateString();
-
     return `
       <div class="assignment-card">
         <div class="assignment-header">
@@ -129,7 +108,6 @@ class LguAdminDashboard {
   renderActivities() {
     const container = document.getElementById('activity-container');
     if (!container) return;
-
     if (this.activities.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -140,18 +118,15 @@ class LguAdminDashboard {
       `;
       return;
     }
-
     container.innerHTML = `
       <div class="activities-list">
         ${this.activities.map(activity => this.renderActivityItem(activity)).join('')}
       </div>
     `;
   }
-
   renderActivityItem(activity) {
     const date = new Date(activity.submitted_at).toLocaleDateString();
     const time = new Date(activity.submitted_at).toLocaleTimeString();
-
     return `
       <div class="activity-item">
         <div class="activity-icon">📋</div>
@@ -165,47 +140,38 @@ class LguAdminDashboard {
       </div>
     `;
   }
-
   setupEventListeners() {
     // Refresh buttons
     const refreshActivityBtn = document.getElementById('refresh-activity');
-
     // Statistics refresh removed - no longer needed
-
     if (refreshActivityBtn) {
       refreshActivityBtn.addEventListener('click', () => {
         this.loadActivities();
       });
     }
-
     // Quick action buttons
     const viewAssignmentsBtn = document.querySelector('[onclick="viewAssignments()"]');
     const viewHeatmapBtn = document.querySelector('[onclick="viewHeatmap()"]');
     const generateReportBtn = document.querySelector('[onclick="generateReport()"]');
-
     if (viewAssignmentsBtn) {
       viewAssignmentsBtn.addEventListener('click', () => {
         window.location.href = '/lgu-admin/assignments';
       });
     }
-
     if (viewHeatmapBtn) {
       viewHeatmapBtn.addEventListener('click', () => {
         window.location.href = '/lgu-admin/heatmap';
       });
     }
-
     if (generateReportBtn) {
       generateReportBtn.addEventListener('click', () => {
         this.generateReport();
       });
     }
   }
-
   async generateReport() {
     try {
       showMessage('info', 'Generating report...');
-      
       // This would typically generate a PDF or CSV report
       // For now, we'll just show a success message
       setTimeout(() => {
@@ -216,7 +182,6 @@ class LguAdminDashboard {
       showMessage('error', 'Failed to generate report');
     }
   }
-
   getStatusClass(status) {
     const statusClasses = {
       'unassigned': 'status-unassigned',
@@ -231,7 +196,6 @@ class LguAdminDashboard {
     };
     return statusClasses[status] || 'status-unknown';
   }
-
   getStatusText(status) {
     const statusTexts = {
       'unassigned': 'Unassigned',
@@ -246,7 +210,6 @@ class LguAdminDashboard {
     };
     return statusTexts[status] || status;
   }
-
   getPriorityClass(priority) {
     const priorityClasses = {
       'low': 'priority-low',
@@ -256,7 +219,6 @@ class LguAdminDashboard {
     };
     return priorityClasses[priority] || 'priority-medium';
   }
-
   escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -264,12 +226,8 @@ class LguAdminDashboard {
     return div.innerHTML;
   }
 }
-
 // Initialize the dashboard
 const dashboard = new LguAdminDashboard();
-
 document.addEventListener('DOMContentLoaded', () => {
   dashboard.init();
 });
-
-

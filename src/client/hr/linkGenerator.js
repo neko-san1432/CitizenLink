@@ -2,40 +2,35 @@
  * HR Link Generator
  * Handles signup link generation and management
  */
-
 import apiClient from '../config/apiClient.js';
 import showMessage from '../components/toast.js';
 
 class LinkGenerator {
+
   constructor() {
     this.links = [];
     this.departments = [];
     this.init();
   }
-
   async init() {
     await this.loadDepartments();
     await this.loadLinks();
     this.setupEventListeners();
   }
-
   setupEventListeners() {
     const form = document.getElementById('linkForm');
     if (form) {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
   }
-
   async loadDepartments() {
     try {
       const response = await apiClient.getActiveDepartments();
       if (response.success) {
         this.departments = response.data;
-
         // Get user role to determine department restrictions
         const userRole = await this.getUserRole();
         await this.filterDepartmentsByRole(userRole);
-
         this.populateDepartmentSelect();
         this.setupRoleRestrictions(userRole);
       }
@@ -43,7 +38,6 @@ class LinkGenerator {
       console.error('Failed to load departments:', error);
     }
   }
-
   async getUserRole() {
     try {
       const response = await apiClient.get('/api/user/role-info');
@@ -53,7 +47,6 @@ class LinkGenerator {
       return 'citizen';
     }
   }
-
   async getHRDepartment(userRole) {
     if (userRole && userRole === 'lgu-hr') {
       // Get department from user metadata
@@ -69,7 +62,6 @@ class LinkGenerator {
     }
     return null;
   }
-
   async filterDepartmentsByRole(userRole) {
     // If user is LGU-HR, filter to only their department
     if (userRole === 'lgu-hr') {
@@ -80,14 +72,11 @@ class LinkGenerator {
     }
     // Coordinators and super-admin can see all departments
   }
-
   setupRoleRestrictions(userRole) {
     // console.log removed for security
-
     const roleSelect = document.getElementById('role');
     const roleInfo = document.getElementById('role-info');
     const roleDescription = document.getElementById('role-description');
-
     if (userRole === 'lgu-hr') {
       // LGU-HR can only create officer or admin roles
       const options = roleSelect.querySelectorAll('option');
@@ -96,17 +85,14 @@ class LinkGenerator {
           option.style.display = 'none';
         }
       });
-
       // Get HR user's department
       const hrDepartment = userRole.split('-')[2]?.toUpperCase() || 'WST';
       // console.log removed for security
-
       // Hide the department field completely for LGU-HR
       const departmentField = document.querySelector('.form-group:has(#department)');
       if (departmentField) {
         departmentField.style.display = 'none';
       }
-
       // Show role info
       if (roleInfo && roleDescription) {
         roleDescription.textContent = `As an LGU-HR, you can only create signup links for ${hrDepartment} department with officer or admin roles.`;
@@ -126,11 +112,9 @@ class LinkGenerator {
       }
     }
   }
-
   populateDepartmentSelect() {
     const select = document.getElementById('department');
     if (!select) return;
-
     select.innerHTML = '<option value="">Select Department (Optional)</option>';
     this.departments.forEach(dept => {
       const option = document.createElement('option');
@@ -139,7 +123,6 @@ class LinkGenerator {
       select.appendChild(option);
     });
   }
-
   async loadLinks() {
     try {
       const response = await apiClient.getSignupLinks();
@@ -154,19 +137,15 @@ class LinkGenerator {
       showMessage('error', 'Failed to load signup links');
     }
   }
-
   renderLinks() {
     const container = document.getElementById('linksList');
     if (!container) return;
-
     if (this.links.length === 0) {
       container.innerHTML = '<div class="no-links">No signup links generated yet</div>';
       return;
     }
-
     container.innerHTML = this.links.map(link => {
       // console.log removed for security
-
       return `
       <div class="link-item ${link.is_expired ? 'expired' : ''} ${link.is_used ? 'used' : ''}">
         <div class="link-item-header">
@@ -197,17 +176,14 @@ class LinkGenerator {
     `;
     }).join('');
   }
-
   updateStats() {
     const totalElement = document.getElementById('totalLinks');
     const activeElement = document.getElementById('activeLinks');
     const usedElement = document.getElementById('usedLinks');
-
     if (totalElement) totalElement.textContent = this.links.length;
     if (activeElement) activeElement.textContent = this.links.filter(l => !l.is_used && !l.is_expired).length;
     if (usedElement) usedElement.textContent = this.links.filter(l => l.is_used).length;
   }
-
   getRoleDisplayName(role) {
     const roleMap = {
       'lgu-officer': 'LGU Officer',
@@ -216,24 +192,20 @@ class LinkGenerator {
     };
     return roleMap[role] || role;
   }
-
   getStatusClass(link) {
     if (link.is_used) return 'status-used';
     if (link.is_expired) return 'status-expired';
     return 'status-active';
   }
-
   getStatusText(link) {
     if (link.is_used) return 'Used';
     if (link.is_expired) return 'Expired';
     return 'Active';
   }
-
   formatDate(dateString) {
     const date = new Date(dateString);
     return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
   }
-
   generateLink() {
     const form = document.getElementById('generatorForm');
     if (form) {
@@ -241,7 +213,6 @@ class LinkGenerator {
       form.scrollIntoView({ behavior: 'smooth' });
     }
   }
-
   cancelGenerate() {
     const form = document.getElementById('generatorForm');
     const generatedLink = document.getElementById('generatedLink');
@@ -249,13 +220,10 @@ class LinkGenerator {
     if (generatedLink) generatedLink.style.display = 'none';
     document.getElementById('linkForm').reset();
   }
-
   async handleSubmit(e) {
     e.preventDefault();
-
     const formData = new FormData(e.target);
     const userRole = await this.getUserRole();
-
     // Automatically get department based on user role
     let departmentCode = null;
     if (userRole === 'lgu-hr') {
@@ -265,15 +233,12 @@ class LinkGenerator {
       // For coordinators and super-admin, use form data
       departmentCode = formData.get('department_code') || null;
     }
-
     const data = {
       role: formData.get('role'),
       department_code: departmentCode,
       expires_in_hours: parseInt(formData.get('expires_in_hours')) || 1
     };
-
     // console.log removed for security
-
     try {
       const response = await apiClient.generateSignupLink(data);
       if (response.success) {
@@ -287,12 +252,10 @@ class LinkGenerator {
       showMessage('error', error.message || 'Failed to generate signup link');
     }
   }
-
   showGeneratedLink(linkData) {
     const generatedLink = document.getElementById('generatedLink');
     const linkInput = document.getElementById('linkInput');
     const expiryTime = document.getElementById('expiryTime');
-
     if (linkInput) linkInput.value = linkData.url;
     if (expiryTime) {
       const expiryDate = new Date(linkData.expires_at);
@@ -300,7 +263,6 @@ class LinkGenerator {
     }
     if (generatedLink) generatedLink.style.display = 'block';
   }
-
   copyLink() {
     const linkInput = document.getElementById('linkInput');
     if (linkInput) {
@@ -309,7 +271,6 @@ class LinkGenerator {
       showMessage('success', 'Link copied to clipboard');
     }
   }
-
   copyLinkUrl(url) {
     navigator.clipboard.writeText(url).then(() => {
       showMessage('success', 'URL copied to clipboard');
@@ -324,19 +285,15 @@ class LinkGenerator {
       showMessage('success', 'URL copied to clipboard');
     });
   }
-
   async deactivateLink(linkId) {
     // console.log removed for security
-
     if (!confirm('Are you sure you want to deactivate this link?')) {
       return;
     }
-
     try {
       // console.log removed for security
       const response = await apiClient.deactivateSignupLink(linkId);
       // console.log removed for security
-
       if (response.success) {
         showMessage('success', 'Link deactivated successfully');
         await this.loadLinks();
@@ -348,18 +305,15 @@ class LinkGenerator {
       showMessage('error', error.message || 'Failed to deactivate link');
     }
   }
-
   filterLinks() {
     const roleFilter = document.getElementById('roleFilter')?.value;
     const statusFilter = document.getElementById('statusFilter')?.value;
-
     let filteredLinks = this.links;
-
     if (roleFilter) {
       filteredLinks = filteredLinks.filter(link => link.role === roleFilter);
     }
-
     if (statusFilter) {
+
       if (statusFilter === 'active') {
         filteredLinks = filteredLinks.filter(link => !link.is_used && !link.is_expired);
       } else if (statusFilter === 'expired') {
@@ -368,7 +322,6 @@ class LinkGenerator {
         filteredLinks = filteredLinks.filter(link => link.is_used);
       }
     }
-
     // Temporarily replace links array for rendering
     const originalLinks = this.links;
     this.links = filteredLinks;
@@ -376,38 +329,32 @@ class LinkGenerator {
     this.links = originalLinks;
   }
 }
-
 // Global functions for onclick handlers
 window.generateLink = () => {
   if (window.linkGenerator) {
     window.linkGenerator.generateLink();
   }
 };
-
 window.copyLink = () => {
   if (window.linkGenerator) {
     window.linkGenerator.copyLink();
   }
 };
-
 window.copyLinkUrl = (url) => {
   if (window.linkGenerator) {
     window.linkGenerator.copyLinkUrl(url);
   }
 };
-
 window.deactivateLink = (linkId) => {
   if (window.linkGenerator) {
     window.linkGenerator.deactivateLink(linkId);
   }
 };
-
 window.filterLinks = () => {
   if (window.linkGenerator) {
     window.linkGenerator.filterLinks();
   }
 };
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   window.linkGenerator = new LinkGenerator();

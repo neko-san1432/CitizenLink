@@ -2,7 +2,6 @@
  * HR Dashboard
  * Role management interface for HR personnel
  */
-
 import showMessage from '../components/toast.js';
 
 // Initialize dashboard
@@ -12,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupFormHandlers();
   setupUserSearch();
 });
-
 /**
  * Load dashboard data
  */
@@ -20,7 +18,6 @@ async function loadDashboardData() {
   try {
     const response = await fetch('/api/hr/dashboard');
     const result = await response.json();
-
     if (result.success) {
       updateStatistics(result.data.statistics);
     }
@@ -28,7 +25,6 @@ async function loadDashboardData() {
     console.error('[HR] Load dashboard error:', error);
   }
 }
-
 /**
  * Update statistics display
  */
@@ -38,7 +34,6 @@ function updateStatistics(stats) {
   document.getElementById('stat-promotions').textContent = stats.promotions_this_month || 0;
   document.getElementById('stat-demotions').textContent = stats.demotions_this_month || 0;
 }
-
 /**
  * Load department statistics
  */
@@ -46,7 +41,6 @@ async function loadDepartmentStats() {
   try {
     const response = await fetch('/api/hr/users?limit=1000');
     const result = await response.json();
-
     if (result.success && result.data) {
       const users = result.data;
       const departmentStats = calculateDepartmentStats(users);
@@ -59,23 +53,18 @@ async function loadDepartmentStats() {
     renderDepartmentStats([]);
   }
 }
-
 /**
  * Calculate department statistics from user data
  */
 function calculateDepartmentStats(users) {
   const deptMap = new Map();
-
   users.forEach(user => {
     const role = String(user.role || '').toLowerCase();
     const department = user.department || 'Unknown';
-
     if (!deptMap.has(department)) {
       deptMap.set(department, { admins: 0, officers: 0 });
     }
-
     const deptStats = deptMap.get(department);
-
     // Count admins (lgu-admin-* roles)
     if (role === 'lgu-admin' || /^lgu-admin-/.test(role)) {
       deptStats.admins++;
@@ -85,7 +74,6 @@ function calculateDepartmentStats(users) {
       deptStats.officers++;
     }
   });
-
   return Array.from(deptMap.entries()).map(([dept, stats]) => ({
     department: dept,
     admins: stats.admins,
@@ -93,19 +81,16 @@ function calculateDepartmentStats(users) {
     total: stats.admins + stats.officers
   })).sort((a, b) => b.total - a.total);
 }
-
 /**
  * Render department statistics
  */
 function renderDepartmentStats(stats) {
   const container = document.getElementById('department-stats');
   if (!container) return;
-
   if (!stats.length) {
     container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No department data available.</p>';
     return;
   }
-
   const html = stats.map(dept => `
     <div class="dept-stat-card">
       <h3>${escapeHtml(dept.department)}</h3>
@@ -125,10 +110,8 @@ function renderDepartmentStats(stats) {
       </div>
     </div>
   `).join('');
-
   container.innerHTML = html;
 }
-
 /**
  * Setup form handlers
  */
@@ -139,60 +122,47 @@ function setupFormHandlers() {
     const userId = document.getElementById('promote-officer-user').value;
     const department = document.getElementById('promote-officer-dept').value;
     const reason = document.getElementById('promote-officer-reason').value;
-
     await promoteToOfficer(userId, department, reason);
   });
-
   // Promote to Admin
   document.getElementById('promote-admin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('promote-admin-user').value;
     const department = document.getElementById('promote-admin-dept').value;
     const reason = document.getElementById('promote-admin-reason').value;
-
     await promoteToAdmin(userId, department, reason);
   });
-
   // Demote to Officer
   document.getElementById('demote-officer-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('demote-officer-user').value;
     const reason = document.getElementById('demote-officer-reason').value;
-
     await demoteToOfficer(userId, reason);
   });
-
   // Strip Titles
   document.getElementById('strip-titles-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('strip-titles-user').value;
     const reason = document.getElementById('strip-titles-reason').value;
-
     if (!confirm('Are you sure you want to strip all titles from this user? This will revert them to citizen status.')) {
       return;
     }
-
     await stripTitles(userId, reason);
   });
-
   // Assign Department
   document.getElementById('assign-dept-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('assign-dept-user').value;
     const departmentId = document.getElementById('assign-dept-id').value;
-
     await assignDepartment(userId, departmentId);
   });
-
   // View Role History
   document.getElementById('role-history-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('role-history-user').value;
-
     await viewRoleHistory(userId);
   });
 }
-
 /**
  * User search & detail wiring
  */
@@ -200,7 +170,6 @@ function setupUserSearch() {
   const searchBtn = document.getElementById('user-search-btn');
   const searchInput = document.getElementById('user-search-input');
   const barangayInput = document.getElementById('user-filter-barangay');
-
   async function runSearch() {
     const q = encodeURIComponent(searchInput.value || '');
     const brgy = encodeURIComponent(barangayInput.value || '');
@@ -218,13 +187,11 @@ function setupUserSearch() {
       renderUserList([]);
     }
   }
-
   if (searchBtn) searchBtn.addEventListener('click', runSearch);
   if (searchInput) searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') runSearch();
   });
 }
-
 function renderUserList(users) {
   const list = document.getElementById('user-list');
   if (!list) return;
@@ -281,7 +248,6 @@ async function loadUserDetails(userId) {
     console.error('[HR] load user details error:', err);
   }
 }
-
 async function loadUserComplaints(userId) {
   try {
     const res = await fetch(`/api/hr/users/${userId}/complaints?limit=10`);
@@ -311,7 +277,6 @@ async function loadUserComplaints(userId) {
     console.error('[HR] load user complaints error:', err);
   }
 }
-
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s)
@@ -321,7 +286,6 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
 /**
  * Promote to Officer
  */
@@ -338,9 +302,7 @@ async function promoteToOfficer(userId, department, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('promote-officer-form').reset();
@@ -353,7 +315,6 @@ async function promoteToOfficer(userId, department, reason) {
     showMessage('error', 'Failed to promote user');
   }
 }
-
 /**
  * Promote to Admin
  */
@@ -370,9 +331,7 @@ async function promoteToAdmin(userId, department, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('promote-admin-form').reset();
@@ -385,7 +344,6 @@ async function promoteToAdmin(userId, department, reason) {
     showMessage('error', 'Failed to promote user');
   }
 }
-
 /**
  * Demote to Officer
  */
@@ -401,9 +359,7 @@ async function demoteToOfficer(userId, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('demote-officer-form').reset();
@@ -416,7 +372,6 @@ async function demoteToOfficer(userId, reason) {
     showMessage('error', 'Failed to demote user');
   }
 }
-
 /**
  * Strip Titles
  */
@@ -432,9 +387,7 @@ async function stripTitles(userId, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('strip-titles-form').reset();
@@ -447,7 +400,6 @@ async function stripTitles(userId, reason) {
     showMessage('error', 'Failed to strip titles');
   }
 }
-
 /**
  * Assign Department
  */
@@ -463,9 +415,7 @@ async function assignDepartment(userId, departmentId) {
         department_id: departmentId
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('assign-dept-form').reset();
@@ -477,7 +427,6 @@ async function assignDepartment(userId, departmentId) {
     showMessage('error', 'Failed to assign department');
   }
 }
-
 /**
  * View Role History
  */
@@ -485,15 +434,13 @@ async function viewRoleHistory(userId) {
   try {
     const response = await fetch(`/api/hr/role-history/${userId}`);
     const result = await response.json();
-
     const container = document.getElementById('role-history-results');
-
     if (result.success && result.history) {
+
       if (result.history.length === 0) {
         container.innerHTML = '<p style="color: #7f8c8d;">No role history found for this user.</p>';
         return;
       }
-
       const html = `
         <div style="margin-top: 20px;">
           <h4>Role Change History</h4>

@@ -16,9 +16,7 @@ export function initDashboardClock() {
   renderClock();
   setInterval(renderClock, 1000);
 }
-
 // auto-init if included directly
 document.addEventListener('DOMContentLoaded', () => {
   initDashboardClock();
 });
-

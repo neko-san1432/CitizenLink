@@ -25,18 +25,14 @@ export const requireRole = (allowedRoles) => {
 
 export const refreshMetaFromSession = async () => {
   const { data: { session } } = await supabase.auth.getSession();
-
   // Check both raw_user_meta_data and user_metadata
   const rawUserMetaData = session?.user?.raw_user_meta_data || {};
   const userMetadata = session?.user?.user_metadata || {};
-
   // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
   const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
-
   // Prioritize original role, but fall back to normalized role for backward compatibility
   const role = combinedMetadata.role || combinedMetadata.normalized_role || null;
   const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
-
   if (role || name) {
     saveUserMeta({ role, name });
   }
@@ -57,27 +53,24 @@ export const getOAuthContext = () => {
 export const clearOAuthContext = () => {
   try { localStorage.removeItem(oauthKey); } catch {}
 };
-
 // Cache for API calls to prevent excessive requests
 let roleApiCache = null;
 let roleApiCacheTime = 0;
 const CACHE_DURATION = 5000; // 5 seconds cache
-
 // Global role getter
+
 export const getUserRole = async (options = {}) => {
   const { refresh = false } = options;
   if (!refresh) {
     const cached = getUserMeta();
     if (cached && cached.role) return cached.role;
   }
-
   // Check API cache to prevent excessive calls
   const now = Date.now();
   if (!refresh && roleApiCache && (now - roleApiCacheTime) < CACHE_DURATION) {
     // console.log removed for security
     return roleApiCache;
   }
-
   try {
     // Try to get role from API first (server has complete metadata)
     const { data: { session } } = await supabase.auth.getSession();
@@ -86,7 +79,6 @@ export const getUserRole = async (options = {}) => {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-
     const response = await fetch('/api/user/role', {
       method: 'GET',
       headers
@@ -105,55 +97,42 @@ export const getUserRole = async (options = {}) => {
   } catch (error) {
     console.warn('Failed to get role from API:', error);
   }
-
   // Fallback to session metadata
   const { data: { session } } = await supabase.auth.getSession();
-
   // Check both raw_user_meta_data (priority) and user_metadata (fallback)
   const rawUserMetaData = session?.user?.raw_user_meta_data || {};
   const userMetadata = session?.user?.user_metadata || {};
-
   // Debug: Log what we find in metadata
   // console.log removed for security
-
   // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
   const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
-
   // Prioritize original role, but fall back to normalized role for backward compatibility
   const role = combinedMetadata.role || combinedMetadata.normalized_role || null;
   const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
-
   // console.log removed for security
-
   if (role || name) saveUserMeta({ role, name });
   return role;
 };
-
 // Check if token is valid and refresh if needed
+
 export const validateAndRefreshToken = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-
     if (error || !session) {
       // console.log removed for security
       return false;
     }
-
     // Check if session is expired
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = session.expires_at;
-
     if (expiresAt && now >= expiresAt) {
       // console.log removed for security
-
       // Try to refresh the session
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-
       if (refreshError || !refreshData.session) {
         // console.log removed for security
         return false;
       }
-
       // Update server cookie with new token
       try {
         await fetch('/auth/session', {
@@ -166,19 +145,17 @@ export const validateAndRefreshToken = async () => {
         console.error('Failed to update server cookie:', cookieError);
       }
     }
-
     return true;
   } catch (error) {
     console.error('Token validation failed:', error);
     return false;
   }
 };
-
 // Set up automatic token refresh listener
+
 export const initializeAuthListener = () => {
   supabase.auth.onAuthStateChange(async (event, session) => {
     // console.log removed for security
-
     // Ensure server cookie is set when we get a valid session
     if (event === 'SIGNED_IN' && session) {
       try {
@@ -192,7 +169,6 @@ export const initializeAuthListener = () => {
       stopTokenExpiryMonitoring();
       startTokenExpiryMonitoring();
     }
-
     if (event === 'TOKEN_REFRESHED' && session) {
       // console.log removed for security
       try {
@@ -207,7 +183,6 @@ export const initializeAuthListener = () => {
         console.error('Failed to update server cookie:', error);
       }
     }
-
     if (event === 'SIGNED_OUT') {
       // console.log removed for security
       localStorage.removeItem(storageKey);
@@ -215,12 +190,10 @@ export const initializeAuthListener = () => {
     }
   });
 };
-
 // Global token expiry monitoring
 let tokenExpiryTimer = null;
 let noSessionAttempts = 0;
 const MAX_NO_SESSION_ATTEMPTS = 3;
-
 const isAuthPage = () => {
   try {
     const p = (window.location.pathname || '').toLowerCase();
@@ -237,7 +210,6 @@ export const startTokenExpiryMonitoring = () => {
   }
   // Reset attempts counter
   noSessionAttempts = 0;
-
   const checkTokenExpiry = async () => {
     try {
       // Check if we're on an auth page - if so, stop monitoring
@@ -255,7 +227,6 @@ export const startTokenExpiryMonitoring = () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (!response.ok) {
         noSessionAttempts++;
         if (noSessionAttempts < MAX_NO_SESSION_ATTEMPTS) {
@@ -271,10 +242,8 @@ export const startTokenExpiryMonitoring = () => {
         }
         return;
       }
-
       // Reset attempts counter when session is found
       noSessionAttempts = 0;
-
       // If we reach here, the user is authenticated via API
       // Schedule next check in 5 minutes
       tokenExpiryTimer = setTimeout(checkTokenExpiry, 5 * 60 * 1000);
@@ -286,41 +255,34 @@ export const startTokenExpiryMonitoring = () => {
       }
     }
   };
-
   // Start monitoring
   checkTokenExpiry();
 };
 
 export const stopTokenExpiryMonitoring = () => {
+
   if (tokenExpiryTimer) {
     clearTimeout(tokenExpiryTimer);
     tokenExpiryTimer = null;
   }
 };
-
 // Handle session expired - show toast and logout
 const handleSessionExpired = () => {
   if (isAuthPage()) return;
-
   // Prevent multiple redirects
   if (window.location.pathname === '/login') return;
-
   // Stop monitoring
   stopTokenExpiryMonitoring();
-
   // Show session expired toast
   showSessionExpiredToast();
-
   // Clear local data
   localStorage.removeItem(storageKey);
   localStorage.removeItem(oauthKey);
-
   // Redirect to login after a short delay
   setTimeout(() => {
     window.location.href = '/login';
   }, 3000);
 };
-
 // Show session expired toast
 const showSessionExpiredToast = () => {
   // Import toast functionality
@@ -337,20 +299,17 @@ const showSessionExpiredToast = () => {
     }
   });
 };
-
 // Logout function
+
 export const logout = async () => {
   try {
     // Clear Supabase session
     await supabase.auth.signOut();
-
     // Clear server session
     await fetch('/auth/session', { method: 'DELETE' });
-
     // Clear local storage
     localStorage.removeItem(storageKey);
     clearOAuthContext();
-
     // Redirect to login
     window.location.href = '/login';
   } catch (error) {
@@ -359,7 +318,6 @@ export const logout = async () => {
     window.location.href = '/login';
   }
 };
-
 try {
   // expose globally for anywhere in the app
   window.getUserRole = (opts) => getUserRole(opts);

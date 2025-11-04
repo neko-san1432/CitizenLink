@@ -5,7 +5,6 @@ import { validateAndSanitizeForm } from '../utils/validation.js';
 // Get signup code from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
 const signupCode = urlParams.get('code');
-
 // Pre-fill the signup code if provided in URL
 if (signupCode) {
   const codeInput = document.getElementById('signupCode');
@@ -13,12 +12,10 @@ if (signupCode) {
     codeInput.value = signupCode;
   }
 }
-
 // OAuth signup function
 async function signupWithOAuth(provider) {
   try {
     const { supabase } = await import('../config/config.js');
-
     // Get OAuth URL with signup code in state parameter
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -30,13 +27,11 @@ async function signupWithOAuth(provider) {
         }
       }
     });
-
     if (error) {
       console.error('OAuth error:', error);
       showMessage('error', `Failed to sign in with ${provider}`);
       return;
     }
-
     // Redirect to OAuth provider
     window.location.href = data.url;
   } catch (error) {
@@ -44,21 +39,17 @@ async function signupWithOAuth(provider) {
     showMessage('error', `Failed to sign in with ${provider}`);
   }
 }
-
 // Attach OAuth button listeners (no inline handlers for CSP)
 document.getElementById('oauth-google')?.addEventListener('click', () => signupWithOAuth('google'));
 document.getElementById('oauth-facebook')?.addEventListener('click', () => signupWithOAuth('facebook'));
-
 // Check if signup code is provided in URL
 if (!signupCode) {
   showMessage('error', 'No signup code provided in URL');
 }
-
 async function validateSignupCode(code) {
   try {
     const response = await fetch(`/api/hr/validate-signup-code/${code}?t=${Date.now()}`);
     const result = await response.json();
-
     if (result.valid) {
       showMessage('success', `Valid signup code for ${result.data.role} role`);
     } else {
@@ -72,7 +63,6 @@ async function validateSignupCode(code) {
       } else {
         showMessage('error', result.error || 'Invalid signup code');
       }
-
       // Disable form if code is invalid
       const form = document.getElementById('signup-form');
       if (form) {
@@ -85,13 +75,11 @@ async function validateSignupCode(code) {
     showMessage('error', 'Failed to validate signup code');
   }
 }
-
 // Handle form submission
 const signupForm = document.getElementById('signup-form');
 if (signupForm) {
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
@@ -102,7 +90,6 @@ if (signupForm) {
       signupCode: formData.get('signupCode'),
       agreedToTerms: formData.get('agreedToTerms') === 'on'
     };
-
     // Validation rules
     const validationRules = {
       name: { required: true, minLength: 2, maxLength: 100 },
@@ -110,23 +97,18 @@ if (signupForm) {
       mobile: { required: true, type: 'mobile' },
       password: { required: true, type: 'password' }
     };
-
     const validation = validateAndSanitizeForm(data, validationRules);
-
     if (!validation.isValid) {
       showMessage('error', validation.errors.join(', '));
       return;
     }
-
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
     const buttonText = submitButton.querySelector('.button-text');
     const buttonLoading = submitButton.querySelector('.button-loading');
-
     buttonText.style.display = 'none';
     buttonLoading.style.display = 'flex';
     submitButton.disabled = true;
-
     try {
       // Submit via API
       const response = await fetch('/api/auth/signup-with-code', {
@@ -143,9 +125,7 @@ if (signupForm) {
           isOAuth: false
         })
       });
-
       const result = await response.json();
-
       if (result.success) {
         showMessage('success', 'Account created successfully! Redirecting to dashboard...');
         setTimeout(() => {
@@ -178,5 +158,4 @@ if (signupForm) {
     }
   });
 }
-
 // Code validation removed - no automatic validation on blur

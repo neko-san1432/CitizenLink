@@ -1,6 +1,5 @@
 document.addEventListener('click', function(e) {
     console.log('Click detected on:', e.target.tagName, e.target.className, e.target.getAttribute('data-open-terms'), e.target.getAttribute('data-open-privacy'));
-    
     // Check for terms link first
     if (e.target.matches('[data-open-terms]') || e.target.closest('[data-open-terms]')) {
         console.log('Opening terms modal');
@@ -19,11 +18,9 @@ document.addEventListener('click', function(e) {
             termsModal.style.height = '100%';
             termsModal.style.zIndex = '9999999';
             termsModal.style.backgroundColor = 'rgba(0,0,0,0.5)'; // Proper dark overlay
-
         } 
         return; // Important: return to prevent other handlers
     }
-    
     // Check for privacy link
     if (e.target.matches('[data-open-privacy]') || e.target.closest('[data-open-privacy]')) {
         e.preventDefault();
@@ -42,11 +39,9 @@ document.addEventListener('click', function(e) {
         }
         return; // Important: return to prevent other handlers
     }
-    
     if (e.target.matches('[data-modal]')) {
         document.getElementById(e.target.getAttribute('data-modal')).style.display = 'none';
     }
-    
     if (e.target.matches('[data-accept]')) {
         document.getElementById('terms-checkbox').checked = true;
         const modalId = e.target.getAttribute('data-accept') === 'terms' ? 'termsModal' : 'privacyModal';
@@ -54,29 +49,24 @@ document.addEventListener('click', function(e) {
         alert('Accepted!');
     }
 });
-
 // Close on outside click
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
     }
 };
-
 console.log('Signup modal event listeners attached');
-
 // Phone number validation - only allow numbers
 document.addEventListener('input', function(e) {
     if (e.target.id === 'mobile') {
         // Remove any non-numeric characters
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        
         // Limit to 10 digits
         if (e.target.value.length > 10) {
             e.target.value = e.target.value.slice(0, 10);
         }
     }
 });
-
 // Prevent non-numeric input on keypress
 document.addEventListener('keypress', function(e) {
     if (e.target.id === 'mobile') {
@@ -95,7 +85,6 @@ document.addEventListener('keypress', function(e) {
         }
     }
 });
-
 // Prevent paste of non-numeric content
 document.addEventListener('paste', function(e) {
     if (e.target.id === 'mobile') {

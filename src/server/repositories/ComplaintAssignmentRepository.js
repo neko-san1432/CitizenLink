@@ -1,12 +1,12 @@
 const Database = require('../config/database');
 
 class ComplaintAssignmentRepository {
+
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
     this.table = 'complaint_assignments';
   }
-
   async assign(complaintId, departmentId, assignedBy, options = {}) {
     const payload = {
       complaint_id: complaintId,
@@ -24,7 +24,6 @@ class ComplaintAssignmentRepository {
     if (error) throw error;
     return data;
   }
-
   async updateStatus(assignmentId, status, metadata = {}) {
     const { data, error } = await this.supabase
       .from(this.table)
@@ -35,7 +34,6 @@ class ComplaintAssignmentRepository {
     if (error) throw error;
     return data;
   }
-
   async listByComplaint(complaintId) {
     const { data, error } = await this.supabase
       .from(this.table)

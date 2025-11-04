@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router();
 
+const router = express.Router();
 /**
  * Health check endpoint
  * GET /api/health
@@ -26,4 +26,3 @@ router.get('/', (req, res) => {
 });
 
 module.exports = router;
-

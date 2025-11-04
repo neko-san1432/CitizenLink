@@ -7,13 +7,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       doubleClickZoom: true
     });
     if (!map) return;
-
     // Remove tile changer (layers control) on this page only
     if (window.simpleMapLayerControl) {
       try { map.removeControl(window.simpleMapLayerControl); } catch {}
       window.simpleMapLayerControl = null;
     }
-
     // Nominatim address search (OpenStreetMap) as a Leaflet control embedded in the map
     let searchInput, searchBtn, resultsList;
     const SearchControl = L.Control.extend({
@@ -25,12 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.style.borderRadius = '6px';
         container.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
         container.style.minWidth = '220px';
-
         const row = L.DomUtil.create('div', '', container);
         row.style.display = 'flex';
         row.style.gap = '6px';
         row.style.alignItems = 'center';
-
         searchInput = L.DomUtil.create('input', '', row);
         searchInput.type = 'text';
         searchInput.placeholder = 'Search address or place';
@@ -38,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchInput.style.padding = '6px';
         searchInput.style.border = '1px solid #ccc';
         searchInput.style.borderRadius = '6px';
-
         searchBtn = L.DomUtil.create('button', '', row);
         searchBtn.type = 'button';
         searchBtn.textContent = 'Clear';
@@ -47,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchBtn.style.border = '1px solid #ccc';
         searchBtn.style.borderRadius = '6px';
         searchBtn.style.background = '#f7f7f7';
-
         resultsList = L.DomUtil.create('div', '', container);
         resultsList.size = 4;
         resultsList.style.width = '100%';
@@ -62,21 +56,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         resultsList.style.position = 'absolute';
         resultsList.style.zIndex = '1000';
         resultsList.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-
         // Prevent map panning when interacting with the control
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
         L.DomEvent.disableClickPropagation(resultsList);
         L.DomEvent.disableScrollPropagation(resultsList);
-
         return container;
       }
     });
     map.addControl(new SearchControl());
-
     // Swap to magnifying icon on small screens
     const mq = window.matchMedia('(max-width: 600px)');
     function setSearchButtonUI(matches) {
+
       if (matches) {
         searchBtn.textContent = '✖';
         searchBtn.style.minWidth = '36px';
@@ -91,9 +83,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     setSearchButtonUI(mq.matches);
     try { mq.addEventListener('change', (e) => setSearchButtonUI(e.matches)); } catch { /* Safari fallback */ mq.addListener((e) => setSearchButtonUI(e.matches)); }
-
     // Simple scoring helpers
     function kmDistance(aLat, aLng, bLat, bLng) {
+
       const toRad = (d) => d * Math.PI / 180;
       const R = 6371;
       const dLat = toRad(bLat - aLat);
@@ -111,7 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
       return (weights[type] || weights[cls] || 1.0);
     }
-
     function isInDigosByAddress(item) {
       const a = item && item.address ? item.address : {};
       const cityish = (a.city || a.town || a.municipality || a.village || a.county || '').toLowerCase();
@@ -120,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (stateish.includes('digos')) return true;
       return false;
     }
-
     function cleanDisplayName(name) {
       if (!name) return '';
       return name
@@ -133,7 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         .replace(/\s*,\s*$/g, '')
         .trim();
     }
-
     async function runSearch(query) {
       if (!query || !query.trim()) return;
       // console.log removed for security
@@ -184,9 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
           .sort((a, b) => b.score - a.score)
           .slice(0, 3); // show best 3
-
         // console.log removed for security
-
         scored.forEach(({ item }) => {
           const resultItem = document.createElement('div');
           resultItem.style.padding = '8px';
@@ -218,14 +205,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('❌ Search failed:', e);
       }
     }
-
     // Debounced input search
     let searchTimer = null;
     function triggerDebouncedSearch() {
       if (searchTimer) clearTimeout(searchTimer);
       searchTimer = setTimeout(() => runSearch(searchInput.value), 500);
     }
-
     // Clear button: clears input and results
     searchBtn.addEventListener('click', () => {
       searchInput.value = '';
@@ -246,14 +231,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         resultsList.style.display = 'none';
       }
     });
-
     // 2) Helper to update hidden fields
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
     const mapContainer = document.getElementById('complaint-map');
     let pin = null;
     let boundaryErrorMsg = null;
-
     // Boundary check function (simple bounding box for Digos City)
     function isWithinCityBoundary(lat, lng) {
       if (typeof lat !== 'number' || typeof lng !== 'number') return false;
@@ -261,12 +244,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const minLat = 6.6, maxLat = 7.0, minLng = 125.0, maxLng = 125.7;
       return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
     }
-
     // Show/hide boundary error message
     function showBoundaryError(show = true) {
       const mapGroup = mapContainer?.closest('.form-group');
       if (!mapGroup) return;
-
       if (show && !boundaryErrorMsg) {
         boundaryErrorMsg = document.createElement('div');
         boundaryErrorMsg.className = 'boundary-error-message';
@@ -292,17 +273,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         boundaryErrorMsg = null;
       }
     }
-
     function updateCoordinates(lat, lng) {
       latInput.value = lat.toFixed(6);
       lngInput.value = lng.toFixed(6);
-      
       // Check boundary and show/hide error
       const withinBoundary = isWithinCityBoundary(lat, lng);
       showBoundaryError(!withinBoundary);
     }
-
     function setPin(lat, lng, moveMap = false) {
+
       if (!pin) {
         pin = L.marker([lat, lng], { draggable: false }).addTo(map);
       } else {
@@ -311,7 +290,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateCoordinates(lat, lng);
       if (moveMap) map.setView([lat, lng], Math.max(map.getZoom(), 15));
     }
-
     // 3) While dragging/panning, keep marker at map center and update coords
     map.on('move', () => {
       const center = map.getCenter();
@@ -320,14 +298,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       updateCoordinates(center.lat, center.lng);
     });
-
     // 4) Map click to reposition map center and marker
     map.on('click', (e) => {
       const { lat, lng } = e.latlng;
       map.setView([lat, lng], map.getZoom());
       setPin(lat, lng, false);
     });
-
     // 5) Try geolocation on load
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(

@@ -6,23 +6,19 @@ const cspConfig = {
     defaultSrc: ['\'self\''],
     styleSrc: [
       '\'self\'',
-      '\'unsafe-inline\'', // Required for existing inline styles - TODO: Remove when styles are externalized
+      '\'unsafe-inline\'', // TODO: remove after moving inline styles
       'https://fonts.googleapis.com',
       'https://unpkg.com'
     ],
     scriptSrc: [
       '\'self\'',
-      '\'unsafe-inline\'', // Required for inline scripts - TODO: Remove when all scripts are external
-      '\'unsafe-eval\'', // Required for dynamic imports - TODO: Remove when all scripts are static
-      '\'unsafe-hashes\'', // Required for inline event handlers
+      // no 'unsafe-inline' — enforced CSP-compliant scripts only
       'https://www.google.com',
       'https://www.gstatic.com',
       'https://unpkg.com',
       'https://esm.sh'
     ],
-    scriptSrcAttr: [
-      '\'unsafe-inline\'', // Required for inline event handlers like onclick
-    ],
+    // Disallow inline event handlers (onclick, etc.) — move logic to JS modules
     imgSrc: [
       '\'self\'',
       'data:',
@@ -65,7 +61,6 @@ const cspConfig = {
     frameAncestors: ['\'none\''],
   }
 };
-
 // Add upgrade-insecure-requests only in production
 if (process.env.NODE_ENV === 'production') {
   cspConfig.directives.upgradeInsecureRequests = true;
@@ -73,7 +68,6 @@ if (process.env.NODE_ENV === 'production') {
   // Explicitly remove upgrade-insecure-requests in development
   delete cspConfig.directives.upgradeInsecureRequests;
 }
-
 // Enhanced security headers using helmet
 const securityHeaders = helmet({
   contentSecurityPolicy: cspConfig,
@@ -90,19 +84,16 @@ const securityHeaders = helmet({
   dnsPrefetchControl: { allow: false },
   ieNoOpen: true,
 });
-
 // Additional custom security headers
 const customSecurityHeaders = (req, res, next) => {
   // Remove server information disclosure
   res.removeHeader('X-Powered-By');
-
   // Permissions Policy (formerly Feature Policy)
   // Allow geolocation in development, restrict in production
   const geolocationPolicy = process.env.NODE_ENV === 'production' ? 'geolocation=(self)' : 'geolocation=*';
   res.setHeader('Permissions-Policy',
     `camera=(), microphone=(), ${geolocationPolicy}, payment=()`
   );
-
   next();
 };
 
@@ -111,4 +102,3 @@ module.exports = {
   cspConfig,
   customSecurityHeaders
 };
-

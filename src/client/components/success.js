@@ -5,23 +5,17 @@ const run = async () => {
   try {
     // After OAuth or email confirmation, Supabase sets a session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
     // console.log removed for security
-
     const user = session?.user;
     const accessToken = session?.access_token || null;
     const role = user?.user_metadata?.role || null;
     const name = user?.user_metadata?.name || null;
     const email = user?.email || null;
-
     // console.log removed for security
-
     if (role || name) saveUserMeta({ role, name });
-
     // Track provider
     const provider = user?.identities?.[0]?.provider || null;
     // console.log removed for security
-
     if (provider) {
       setOAuthContext({ provider, email });
       // merge into oauth_providers array
@@ -35,7 +29,6 @@ const run = async () => {
         console.error('[SUCCESS] Error updating OAuth providers:', error);
       }
     }
-
     // Persist access token to HttpOnly cookie for server-protected pages
     try {
       if (accessToken) {
@@ -44,9 +37,7 @@ const run = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: accessToken })
         });
-
         // console.log removed for security
-
         // Verify cookie by hitting a protected endpoint before redirecting
         if (resp.ok) {
           let ok = false;
@@ -57,7 +48,6 @@ const run = async () => {
           } catch (error) {
             console.error('[SUCCESS] First role check error:', error);
           }
-
           if (!ok) {
             await new Promise(r => setTimeout(r, 300));
             try {
@@ -68,7 +58,6 @@ const run = async () => {
               console.error('[SUCCESS] Second role check error:', error);
             }
           }
-
           if (!ok) {
             // console.log removed for security
             // If cannot verify, stay on page and let user refresh
@@ -79,19 +68,15 @@ const run = async () => {
     } catch (error) {
       console.error('[SUCCESS] Session persistence error:', error);
     }
-
     // redirect based on registration status
     // console.log removed for security
-
     // Check if user needs to complete OAuth registration
     // Mobile could be in different places: user_metadata.mobile, user_metadata.phone, etc.
     const hasMobile = user?.user_metadata?.mobile ||
                      user?.user_metadata?.phone ||
                      user?.user_metadata?.phone_number ||
                      user?.phone;
-
     // console.log removed for security
-
     if (provider && !hasMobile) {
       // OAuth user needs to complete registration (no phone number)
       // console.log removed for security
@@ -107,5 +92,4 @@ const run = async () => {
     window.location.href = '/dashboard';
   }
 };
-
 run();

@@ -11,6 +11,7 @@ const RuleBasedSuggestionService = require('./RuleBasedSuggestionService');
 * Business logic for coordinator operations
 */
 class CoordinatorService {
+
   constructor() {
     this.coordinatorRepo = new CoordinatorRepository();
     this.assignmentRepo = new ComplaintAssignmentRepository();
@@ -20,7 +21,6 @@ class CoordinatorService {
     this.notificationService = new NotificationService();
     this.suggestionService = new RuleBasedSuggestionService();
   }
-
   /**
   * Get review queue with algorithm results
   */
@@ -28,17 +28,13 @@ class CoordinatorService {
     try {
       // console.log removed for security
       // console.log removed for security
-
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
-
       // console.log removed for security
-
       // Enhance with algorithm confidence levels
       const enhanced = complaints.map(complaint => {
         const hasSimilarities = complaint.similarities && complaint.similarities.length > 0;
         const highConfidence = hasSimilarities &&
           complaint.similarities.some(s => s.similarity_score >= 0.85);
-
         return {
           ...complaint,
           algorithm_flags: {
@@ -49,21 +45,18 @@ class CoordinatorService {
           }
         };
       });
-
       return enhanced;
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Get review queue error:', error);
       throw error;
     }
   }
-
   /**
   * Get complaint for review with full analysis
   */
   async getComplaintForReview(complaintId, coordinatorId) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-
       // Run duplication detection if not already done
       if (!complaint.similarities || complaint.similarities.length === 0) {
         try {
@@ -74,7 +67,6 @@ class CoordinatorService {
           complaint.similarities = [];
         }
       }
-
       // Get nearby complaints for geographic context
       let nearbyComplaints = [];
       if (complaint.latitude && complaint.longitude) {
@@ -89,10 +81,8 @@ class CoordinatorService {
           console.warn('[COORDINATOR_SERVICE] Nearby search failed:', nearbyError);
         }
       }
-
       // Categorize similarities
       const categorized = this.categorizeSimilarities(complaint.similarities);
-
       // Compute rule-based suggestions (non-ML)
       let suggestions = { departments: [], coordinator: null, disclaimer: '' };
       try {
@@ -100,7 +90,6 @@ class CoordinatorService {
       } catch (sugErr) {
         console.warn('[COORDINATOR_SERVICE] Suggestion compute failed:', sugErr.message);
       }
-
       return {
         complaint,
         analysis: {
@@ -117,7 +106,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Process coordinator decision
   */
@@ -135,7 +123,6 @@ class CoordinatorService {
             coordinatorId,
             data.options || {}
           );
-
         case 'reject':
           // New workflow: reject complaint
           if (!data.reason) {
@@ -146,7 +133,6 @@ class CoordinatorService {
             coordinatorId,
             data.reason
           );
-
         case 'mark_duplicate':
           if (!data.masterComplaintId) {
             throw new Error('Master complaint ID required');
@@ -157,16 +143,13 @@ class CoordinatorService {
             coordinatorId,
             data.reason
           );
-
         case 'mark_unique':
           return await this.markAsUnique(complaintId, coordinatorId);
-
         case 'mark_false':
           if (!data.reason) {
             throw new Error('Please select a reason for marking this complaint as false.');
           }
           return await this.markAsFalse(complaintId, coordinatorId, data.reason);
-
         case 'assign_department':
         // Support single or multiple departments
           if (!data.department && (!data.departments || data.departments.length === 0)) {
@@ -186,7 +169,6 @@ class CoordinatorService {
             coordinatorId,
             data.options
           );
-
         case 'link_related':
           if (!data.relatedComplaintIds) {
             throw new Error('Related complaint IDs required');
@@ -196,7 +178,6 @@ class CoordinatorService {
             data.relatedComplaintIds,
             coordinatorId
           );
-
         default:
           throw new Error('Invalid decision type');
       }
@@ -205,14 +186,12 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Approve complaint with department assignment
   */
   async approveComplaint(complaintId, departments, coordinatorId, options = {}) {
     try {
       // console.log removed for security
-
       // Update complaint status to approved
       const { data: updated, error: updateError } = await this.coordinatorRepo.supabase
         .from('complaints')
@@ -227,9 +206,7 @@ class CoordinatorService {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (updateError) throw updateError;
-
       // Assign to departments using existing method
       const assignResult = await this.assignToDepartments(
         complaintId,
@@ -237,7 +214,6 @@ class CoordinatorService {
         coordinatorId,
         options
       );
-
       // Log action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -249,7 +225,6 @@ class CoordinatorService {
           message: 'Complaint approved and assigned to departments'
         }
       );
-
       // Notify citizen about approval and assignment
       if (updated.submitted_by) {
         await this.notificationService.notifyComplaintAssignedToOfficer(
@@ -259,7 +234,6 @@ class CoordinatorService {
           { departments }
         );
       }
-
       return {
         success: true,
         message: `Complaint approved and assigned to ${departments.length} department(s)`,
@@ -271,21 +245,18 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Mark complaint as duplicate
   */
   async markAsDuplicate(complaintId, masterComplaintId, coordinatorId, reason) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-
       await this.coordinatorRepo.markAsDuplicate(
         complaintId,
         masterComplaintId,
         coordinatorId,
         reason || 'Duplicate complaint identified by coordinator'
       );
-
       // Notify citizen that their complaint was marked as duplicate
       try {
         await this.notificationService.notifyComplaintDuplicate(
@@ -297,7 +268,6 @@ class CoordinatorService {
       } catch (notifError) {
         console.warn('[COORDINATOR] Failed to send duplicate notification:', notifError.message);
       }
-
       return {
         success: true,
         message: 'Complaint marked as duplicate',
@@ -308,7 +278,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Mark complaint as unique (not a duplicate)
   */
@@ -316,8 +285,8 @@ class CoordinatorService {
     try {
       // Update all similarities to 'unique' decision
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-
       if (complaint.similarities && complaint.similarities.length > 0) {
+
         for (const similarity of complaint.similarities) {
           await this.coordinatorRepo.updateSimilarityDecision(
             similarity.id,
@@ -326,7 +295,6 @@ class CoordinatorService {
           );
         }
       }
-
       // Log action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -334,7 +302,6 @@ class CoordinatorService {
         coordinatorId,
         { message: 'Coordinator confirmed this is a unique complaint' }
       );
-
       return {
         success: true,
         message: 'Complaint marked as unique'
@@ -344,14 +311,12 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Mark complaint as false
    */
   async markAsFalse(complaintId, coordinatorId, reason) {
     try {
       // console.log removed for security
-
       // Update complaint status to false
       const { data, error } = await this.coordinatorRepo.supabase
         .from('complaints')
@@ -364,12 +329,10 @@ class CoordinatorService {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (error) {
         console.error('[COORDINATOR_SERVICE] Mark false error:', error);
         throw error;
       }
-
       // Log action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -380,7 +343,6 @@ class CoordinatorService {
           reason
         }
       );
-
       // Send notification to complainant
       try {
         await this.notificationService.notifyComplaintStatusChange(
@@ -393,7 +355,6 @@ class CoordinatorService {
       } catch (notifError) {
         console.warn('[COORDINATOR_SERVICE] Failed to send notification:', notifError.message);
       }
-
       return {
         success: true,
         message: 'Complaint marked as false'
@@ -403,7 +364,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Reject complaint
    */
@@ -421,9 +381,7 @@ class CoordinatorService {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (error) throw error;
-
       // Log action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -431,7 +389,6 @@ class CoordinatorService {
         coordinatorId,
         { reason }
       );
-
       // Notify submitter
       if (data.submitted_by) {
         await this.notificationService.createNotification(
@@ -446,7 +403,6 @@ class CoordinatorService {
           }
         );
       }
-
       return {
         success: true,
         message: 'Complaint rejected'
@@ -456,14 +412,12 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Assign complaint to department
   */
   async assignToDepartment(complaintId, departmentName, coordinatorId, options = {}) {
     try {
       // console.log removed for security
-
       // Update complaint with department assignment
       const assigned = await this.coordinatorRepo.assignToDepartment(
         complaintId,
@@ -471,7 +425,6 @@ class CoordinatorService {
         coordinatorId,
         options
       );
-
       // Update department_r field in complaints table (critical for LGU admin visibility)
       const { error: updateError } = await this.coordinatorRepo.supabase
         .from('complaints')
@@ -480,11 +433,9 @@ class CoordinatorService {
           updated_at: new Date().toISOString()
         })
         .eq('id', complaintId);
-
       if (updateError) {
         console.warn('[COORDINATOR_SERVICE] Failed to update department_r field:', updateError.message);
       }
-
       // Create complaint_assignments record
       try {
         const { data: dept, error: deptError } = await this.coordinatorRepo.supabase
@@ -492,7 +443,6 @@ class CoordinatorService {
           .select('id')
           .eq('code', departmentName)
           .single();
-
         if (deptError) {
           console.warn('[COORDINATOR_SERVICE] Department not found:', deptError.message);
         } else {
@@ -510,7 +460,6 @@ class CoordinatorService {
             })
             .select()
             .single();
-
           if (assignError) {
             console.warn('[COORDINATOR_SERVICE] Assignment creation failed:', assignError.message);
           } else {
@@ -520,14 +469,12 @@ class CoordinatorService {
       } catch (e) {
         console.warn('[COORDINATOR_SERVICE] Assignment creation failed:', e.message);
       }
-
       // Notify department admins
       try {
         await this.notifyDepartmentAdmins(departmentName, complaintId, assigned.title || 'New Complaint');
       } catch (e) {
         console.warn('[COORDINATOR_SERVICE] Admin notification failed:', e.message);
       }
-
       // If an officer is immediately assigned, notify them
       if (options && options.assigned_to) {
         try {
@@ -542,7 +489,6 @@ class CoordinatorService {
           console.warn('[COORDINATOR_SERVICE] Officer notification failed:', e.message);
         }
       }
-
       return {
         success: true,
         message: `Complaint assigned to ${departmentName}`,
@@ -553,7 +499,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Assign complaint to multiple departments
   */
@@ -563,10 +508,10 @@ class CoordinatorService {
       if (uniqueCodes.length === 0) {
         throw new Error('No departments provided');
       }
-
       // Validate department codes against dynamic directory
       try {
         const { validateDepartmentCodes } = require('../utils/departmentMapping');
+
         const { validCodes, invalidCodes } = await validateDepartmentCodes(uniqueCodes);
         if (invalidCodes.length > 0) {
           const list = invalidCodes.join(', ');
@@ -580,11 +525,9 @@ class CoordinatorService {
         // On validator failure (e.g., DB down), proceed with a safe fallback: reject to avoid bad data
         throw new Error('Unable to validate department codes at this time');
       }
-
       // Set primary to first, others as secondary array
       const primary = uniqueCodes[0];
       const secondary = uniqueCodes.slice(1);
-
       // Update complaint with arrays
       const { data: updated, error: updErr } = await this.coordinatorRepo.supabase
         .from('complaints')
@@ -602,9 +545,7 @@ class CoordinatorService {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (updErr) throw updErr;
-
       // Create assignment rows for each department
       for (const code of uniqueCodes) {
         try {
@@ -625,7 +566,6 @@ class CoordinatorService {
           console.warn('[COORDINATOR_SERVICE] Per-dept assignment failed:', code, e.message);
         }
       }
-
       // Log action once with all departments
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -633,7 +573,6 @@ class CoordinatorService {
         coordinatorId,
         { departments: uniqueCodes }
       );
-
       return {
         success: true,
         message: `Complaint assigned to ${uniqueCodes.length} department(s)` ,
@@ -644,7 +583,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Link related complaints
   */
@@ -652,12 +590,10 @@ class CoordinatorService {
     try {
       // Update similarities to 'related' decision
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
-
       for (const relatedId of relatedIds) {
         const similarity = complaint.similarities.find(
           s => s.similar_complaint_id === relatedId
         );
-
         if (similarity) {
           await this.coordinatorRepo.updateSimilarityDecision(
             similarity.id,
@@ -666,7 +602,6 @@ class CoordinatorService {
           );
         }
       }
-
       // Log action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -674,7 +609,6 @@ class CoordinatorService {
         coordinatorId,
         { related_complaint_ids: relatedIds }
       );
-
       return {
         success: true,
         message: 'Complaints linked as related'
@@ -684,7 +618,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Bulk assign complaints
   */
@@ -695,11 +628,11 @@ class CoordinatorService {
         departmentName,
         coordinatorId
       );
-
       // Create assignment records and notify admins for each complaint
       try {
         const dept = await this.departmentRepo.findByCode(departmentName);
         if (dept && dept.id) {
+
           for (const c of assigned) {
             await this.assignmentRepo.assign(
               c.id,
@@ -714,7 +647,6 @@ class CoordinatorService {
       } catch (e) {
         console.warn('[COORDINATOR_SERVICE] Bulk assignment/notification post-step failed:', e.message);
       }
-
       return {
         success: true,
         message: `${assigned.length} complaints assigned to ${departmentName}`,
@@ -725,7 +657,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Get coordinator dashboard data
    */
@@ -734,25 +665,19 @@ class CoordinatorService {
       // console.log removed for security
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-
       // console.log removed for security
-
       const pendingCount = await this.coordinatorRepo.getPendingReviewsCount(coordinatorId);
       // console.log removed for security
-
       const stats = await this.coordinatorRepo.getCoordinatorStats(
         coordinatorId,
         weekAgo.toISOString(),
         today.toISOString()
       );
       // console.log removed for security
-
       const recentQueue = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 10 });
       // console.log removed for security
-
       const clusters = await this.coordinatorRepo.getActiveClusters({ limit: 5 });
       // console.log removed for security
-
       const result = {
         pending_reviews: pendingCount,
         stats: {
@@ -762,9 +687,7 @@ class CoordinatorService {
         recent_queue: recentQueue,
         active_clusters: clusters
       };
-
       // console.log removed for security
-
       return result;
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Get dashboard error:', error);
@@ -772,14 +695,12 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Detect clusters in area
    */
   async detectClusters(options = {}) {
     try {
       const clusters = await this.similarityService.detectClusters(options);
-
       return {
         success: true,
         clusters,
@@ -790,7 +711,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
   * Helper: Categorize similarities by confidence
   */
@@ -802,11 +722,11 @@ class CoordinatorService {
       low: similarities.filter(s => s.similarity_score < 0.50)
     };
   }
-
   /**
   * Helper: Generate recommendation based on analysis
   */
   generateRecommendation(complaint, categorized) {
+
     if (categorized.veryHigh.length > 0) {
       return {
         action: 'review_duplicates',
@@ -815,7 +735,6 @@ class CoordinatorService {
         priority: 'urgent'
       };
     }
-
     if (categorized.high.length > 0) {
       return {
         action: 'review_similar',
@@ -824,7 +743,6 @@ class CoordinatorService {
         priority: 'high'
       };
     }
-
     if (categorized.medium.length > 0) {
       return {
         action: 'review_related',
@@ -833,7 +751,6 @@ class CoordinatorService {
         priority: 'medium'
       };
     }
-
     return {
       action: 'assign_department',
       confidence: 'high',
@@ -841,7 +758,6 @@ class CoordinatorService {
       priority: 'normal'
     };
   }
-
   /**
   * Check if user is coordinator
   */
@@ -853,26 +769,22 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Notify department admins about new assignment
    */
   async notifyDepartmentAdmins(departmentCode, complaintId, complaintTitle) {
     try {
       // console.log removed for security
-
       // Use the NotificationService method that properly handles auth.users queries
       await this.notificationService.notifyDepartmentAdminsByCode(
         departmentCode,
         complaintId,
         complaintTitle
       );
-
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Notify department admins error:', error);
     }
   }
-
   /**
   * Notify officer about task assignment
   */
@@ -880,7 +792,6 @@ class CoordinatorService {
     try {
       const notifPriority = priority === 'urgent' ? 'urgent' :
         priority === 'high' ? 'warning' : 'info';
-
       await this.notificationService.notifyTaskAssigned(
         officerId,
         complaintId,
@@ -892,7 +803,6 @@ class CoordinatorService {
       console.warn('[COORDINATOR_SERVICE] Task assignment notification failed:', error.message);
     }
   }
-
   /**
    * LGU Admin sends reminder to officer about pending task
    */
@@ -903,16 +813,13 @@ class CoordinatorService {
       if (!complaint) {
         throw new Error('Complaint not found');
       }
-
       // Get officer details
       const { data: officer } = await this.coordinatorRepo.supabase
         .from('auth.users')
         .select('raw_user_meta_data')
         .eq('id', officerId)
         .single();
-
       const officerName = officer?.raw_user_meta_data?.name || 'Officer';
-
       // Determine reminder message based on type
       let reminderMessage;
       switch (reminderType) {
@@ -928,7 +835,6 @@ class CoordinatorService {
         default:
           reminderMessage = customMessage || 'Please check your assigned task';
       }
-
       // Send notification to officer
       await this.notificationService.notifyPendingTaskReminder(
         officerId,
@@ -936,7 +842,6 @@ class CoordinatorService {
         complaint.title,
         `${reminderMessage} (from LGU Admin)`
       );
-
       // Notify admin that reminder was sent
       await this.notificationService.createNotification(
         adminId,
@@ -953,7 +858,6 @@ class CoordinatorService {
           }
         }
       );
-
       // Log the reminder action
       await this.coordinatorRepo.logAction(
         complaintId,
@@ -965,7 +869,6 @@ class CoordinatorService {
           message: reminderMessage
         }
       );
-
       return {
         success: true,
         message: `Reminder sent to officer successfully`
@@ -975,7 +878,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
   /**
    * Check pending assignments that need attention
    */
@@ -990,17 +892,13 @@ class CoordinatorService {
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       // Group by officer and check for overdue items
       const officerSummary = {};
       const overdueItems = [];
-
       for (const assignment of assignments) {
         const officerId = assignment.assigned_to;
         if (!officerId) continue;
-
         // Initialize officer summary
         if (!officerSummary[officerId]) {
           officerSummary[officerId] = {
@@ -1010,15 +908,12 @@ class CoordinatorService {
             recent_complaints: []
           };
         }
-
         officerSummary[officerId].assignments_count++;
-
         // Check if overdue (no activity for 7 days)
         const complaint = assignment.complaints;
         const daysSinceAssignment = Math.floor(
           (Date.now() - new Date(assignment.created_at).getTime()) / (1000 * 60 * 60 * 24)
         );
-
         if (daysSinceAssignment > 7) {
           officerSummary[officerId].overdue_count++;
           overdueItems.push({
@@ -1029,7 +924,6 @@ class CoordinatorService {
             days_overdue: daysSinceAssignment
           });
         }
-
         officerSummary[officerId].recent_complaints.push({
           id: complaint.id,
           title: complaint.title,
@@ -1037,7 +931,6 @@ class CoordinatorService {
           assigned_days_ago: daysSinceAssignment
         });
       }
-
       return {
         success: true,
         data: {
@@ -1053,7 +946,6 @@ class CoordinatorService {
       throw error;
     }
   }
-
 }
 
 module.exports = CoordinatorService;

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const Database = require('../config/database');
 const { authenticateUser } = require('../middleware/auth');
@@ -22,9 +23,7 @@ router.get('/categories', async (req, res) => {
       `)
       .eq('is_active', true)
       .order('sort_order');
-
     if (categoriesError) throw categoriesError;
-
     res.json({
       success: true,
       data: categories
@@ -37,12 +36,10 @@ router.get('/categories', async (req, res) => {
     });
   }
 });
-
 // Get subcategories for a specific category
 router.get('/categories/:categoryId/subcategories', async (req, res) => {
   try {
     const { categoryId } = req.params;
-
     const { data: subcategories, error } = await Database.getClient()
       .from('subcategories')
       .select(`
@@ -57,9 +54,7 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
       .eq('category_id', categoryId)
       .eq('is_active', true)
       .order('sort_order');
-
     if (error) throw error;
-
     res.json({
       success: true,
       data: subcategories
@@ -72,33 +67,27 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
     });
   }
 });
-
 // Get departments for a specific subcategory
 router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
   try {
     const { subcategoryId } = req.params;
     // console.log removed for security
-
     const supabase = Database.getClient();
-
     // 1) Get ALL active departments (not just mapped ones)
     const { data: allDepartments, error: deptError } = await supabase
       .from('departments')
       .select('*')
       .eq('is_active', true)
       .order('name');
-
     if (deptError) {
       console.error('[DEPT-API] Departments query error:', deptError);
       throw deptError;
     }
-
     // 2) Get department mappings for this subcategory (for reference)
     const { data: mappings, error: mapError } = await supabase
       .from('department_subcategory_mapping')
       .select('department_id,response_priority')
       .eq('subcategory_id', subcategoryId);
-
     if (mapError) {
       console.error('[DEPT-API] Mapping query error:', mapError);
       // Don't throw - mappings are optional
@@ -125,28 +114,22 @@ router.get('/subcategories/:subcategoryId/departments', async (req, res) => {
     });
   }
 });
-
 // Get ALL departments (for showing all departments regardless of category)
 router.get('/departments/all', async (req, res) => {
   try {
     // console.log removed for security
-
     const supabase = Database.getClient();
-
     // Get ALL active departments
     const { data: allDepartments, error: deptError } = await supabase
       .from('departments')
       .select('*')
       .eq('is_active', true)
       .order('name');
-
     if (deptError) {
       console.error('[DEPT-API] Departments query error:', deptError);
       throw deptError;
     }
-
     // console.log removed for security
-
     res.json({
       success: true,
       data: allDepartments
@@ -159,7 +142,6 @@ router.get('/departments/all', async (req, res) => {
     });
   }
 });
-
 // Get department structure for complaint form (simplified)
 router.get('/complaint-form', async (req, res) => {
   try {
@@ -185,9 +167,7 @@ router.get('/complaint-form', async (req, res) => {
       `)
       .eq('is_active', true)
       .order('sort_order');
-
     if (error) throw error;
-
     res.json({
       success: true,
       data: categories
@@ -200,12 +180,10 @@ router.get('/complaint-form', async (req, res) => {
     });
   }
 });
-
 // Admin: Create new category
 router.post('/admin/categories', authenticateUser, async (req, res) => {
   try {
     const { name, code, description, icon, sort_order } = req.body;
-
     const { data, error } = await Database.getClient()
       .from('categories')
       .insert({
@@ -217,9 +195,7 @@ router.post('/admin/categories', authenticateUser, async (req, res) => {
       })
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -232,12 +208,10 @@ router.post('/admin/categories', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Create new subcategory
 router.post('/admin/subcategories', authenticateUser, async (req, res) => {
   try {
     const { category_id, name, code, description, sort_order } = req.body;
-
     const { data, error } = await Database.getClient()
       .from('subcategories')
       .insert({
@@ -249,9 +223,7 @@ router.post('/admin/subcategories', authenticateUser, async (req, res) => {
       })
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -264,7 +236,6 @@ router.post('/admin/subcategories', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Create new department
 router.post('/admin/departments', authenticateUser, async (req, res) => {
   try {
@@ -278,7 +249,6 @@ router.post('/admin/departments', authenticateUser, async (req, res) => {
       escalation_time_hours,
       contact_info
     } = req.body;
-
     const { data, error } = await Database.getClient()
       .from('departments')
       .insert({
@@ -293,9 +263,7 @@ router.post('/admin/departments', authenticateUser, async (req, res) => {
       })
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -308,12 +276,10 @@ router.post('/admin/departments', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Map department to subcategory
 router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
   try {
     const { department_id, subcategory_id, response_priority } = req.body;
-
     const { data, error } = await Database.getClient()
       .from('department_subcategory_mapping')
       .insert({
@@ -323,9 +289,7 @@ router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
       })
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -338,13 +302,11 @@ router.post('/admin/department-mapping', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Update category
 router.put('/admin/categories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-
     const { data, error } = await Database.getClient()
       .from('categories')
       .update({
@@ -354,9 +316,7 @@ router.put('/admin/categories/:id', authenticateUser, async (req, res) => {
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -369,13 +329,11 @@ router.put('/admin/categories/:id', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Update subcategory
 router.put('/admin/subcategories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-
     const { data, error } = await Database.getClient()
       .from('subcategories')
       .update({
@@ -385,9 +343,7 @@ router.put('/admin/subcategories/:id', authenticateUser, async (req, res) => {
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -400,13 +356,11 @@ router.put('/admin/subcategories/:id', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Update department
 router.put('/admin/departments/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-
     const { data, error } = await Database.getClient()
       .from('departments')
       .update({
@@ -416,9 +370,7 @@ router.put('/admin/departments/:id', authenticateUser, async (req, res) => {
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw error;
-
     res.json({
       success: true,
       data
@@ -431,12 +383,10 @@ router.put('/admin/departments/:id', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Delete category (soft delete)
 router.delete('/admin/categories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
-
     const { error } = await Database.getClient()
       .from('categories')
       .update({
@@ -444,9 +394,7 @@ router.delete('/admin/categories/:id', authenticateUser, async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
-
     if (error) throw error;
-
     res.json({
       success: true,
       message: 'Category deactivated successfully'
@@ -459,12 +407,10 @@ router.delete('/admin/categories/:id', authenticateUser, async (req, res) => {
     });
   }
 });
-
 // Admin: Delete subcategory (soft delete)
 router.delete('/admin/subcategories/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
-
     const { error } = await Database.getClient()
       .from('subcategories')
       .update({
@@ -472,9 +418,7 @@ router.delete('/admin/subcategories/:id', authenticateUser, async (req, res) => 
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
-
     if (error) throw error;
-
     res.json({
       success: true,
       message: 'Subcategory deactivated successfully'
@@ -487,12 +431,10 @@ router.delete('/admin/subcategories/:id', authenticateUser, async (req, res) => 
     });
   }
 });
-
 // Admin: Delete department (soft delete)
 router.delete('/admin/departments/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
-
     const { error } = await Database.getClient()
       .from('departments')
       .update({
@@ -500,9 +442,7 @@ router.delete('/admin/departments/:id', authenticateUser, async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
-
     if (error) throw error;
-
     res.json({
       success: true,
       message: 'Department deactivated successfully'

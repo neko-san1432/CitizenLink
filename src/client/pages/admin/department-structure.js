@@ -2,20 +2,17 @@
  * Department Structure Management
  * Admin interface for managing categories, subcategories, and departments
  */
-
 import showMessage from '../../components/toast.js';
 import { apiClient } from '../../config/apiClient.js';
 
 let categories = [];
 const subcategories = [];
 const departments = [];
-
 // Initialize the page
 document.addEventListener('DOMContentLoaded', async () => {
   await loadAllData();
   setupEventListeners();
 });
-
 /**
  * Load all department structure data
  */
@@ -24,7 +21,6 @@ async function loadAllData() {
     // Load categories with their subcategories and departments
     const { data, error } = await apiClient.get('/api/department-structure/categories');
     if (error) throw error;
-
     categories = data || [];
     renderCategories();
     updateStats();
@@ -33,19 +29,16 @@ async function loadAllData() {
     showMessage('error', 'Failed to load department structure');
   }
 }
-
 /**
  * Render categories with their subcategories and departments
  */
 function renderCategories() {
   const container = document.getElementById('categories-container');
   if (!container) return;
-
   if (categories.length === 0) {
     container.innerHTML = '<div class="loading">No categories found</div>';
     return;
   }
-
   container.innerHTML = categories.map(category => `
         <div class="category-item">
             <div class="category-header" onclick="toggleCategory('${category.id}')">
@@ -87,7 +80,6 @@ function renderCategories() {
         </div>
     `).join('');
 }
-
 /**
  * Update statistics
  */
@@ -95,7 +87,6 @@ function updateStats() {
   let totalSubcategories = 0;
   let totalDepartments = 0;
   let activeDepartments = 0;
-
   categories.forEach(category => {
     if (category.subcategories) {
       totalSubcategories += category.subcategories.length;
@@ -107,27 +98,22 @@ function updateStats() {
       });
     }
   });
-
   document.getElementById('total-categories').textContent = categories.length;
   document.getElementById('total-subcategories').textContent = totalSubcategories;
   document.getElementById('total-departments').textContent = totalDepartments;
   document.getElementById('active-departments').textContent = activeDepartments;
 }
-
 /**
  * Setup event listeners
  */
 function setupEventListeners() {
   // Category form
   document.getElementById('category-form').addEventListener('submit', handleCategorySubmit);
-
   // Subcategory form
   document.getElementById('subcategory-form').addEventListener('submit', handleSubcategorySubmit);
-
   // Department form
   document.getElementById('department-form').addEventListener('submit', handleDepartmentSubmit);
 }
-
 /**
  * Toggle category expansion
  */
@@ -137,7 +123,6 @@ window.toggleCategory = function(categoryId) {
     container.classList.toggle('expanded');
   }
 };
-
 /**
  * Toggle subcategory expansion
  */
@@ -147,41 +132,34 @@ window.toggleSubcategory = function(subcategoryId) {
     container.classList.toggle('expanded');
   }
 };
-
 /**
  * Open modal for adding/editing
  */
 window.openModal = function(type, editId = null) {
   const modal = document.getElementById(`${type}-modal`);
   if (!modal) return;
-
   // Reset form
   const form = document.getElementById(`${type}-form`);
   if (form) {
     form.reset();
   }
-
   // Set modal title
   const title = document.getElementById(`${type}-modal-title`);
   if (title) {
     title.textContent = editId ? `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}` : `Add ${type.charAt(0).toUpperCase() + type.slice(1)}`;
   }
-
   // Populate dropdowns
   if (type === 'subcategory') {
     populateCategoryDropdown();
   } else if (type === 'department') {
     populateSubcategoryDropdown();
   }
-
   // If editing, populate form with existing data
   if (editId) {
     populateFormForEdit(type, editId);
   }
-
   modal.classList.add('show');
 };
-
 /**
  * Close modal
  */
@@ -191,14 +169,12 @@ window.closeModal = function(type) {
     modal.classList.remove('show');
   }
 };
-
 /**
  * Populate category dropdown
  */
 function populateCategoryDropdown() {
   const select = document.getElementById('subcategory-category');
   if (!select) return;
-
   select.innerHTML = '<option value="">Select a category</option>';
   categories.forEach(category => {
     const option = document.createElement('option');
@@ -207,14 +183,12 @@ function populateCategoryDropdown() {
     select.appendChild(option);
   });
 }
-
 /**
  * Populate subcategory dropdown
  */
 function populateSubcategoryDropdown() {
   const select = document.getElementById('department-subcategory');
   if (!select) return;
-
   select.innerHTML = '<option value="">Select a subcategory</option>';
   categories.forEach(category => {
     if (category.subcategories) {
@@ -227,13 +201,11 @@ function populateSubcategoryDropdown() {
     }
   });
 }
-
 /**
  * Handle category form submission
  */
 async function handleCategorySubmit(e) {
   e.preventDefault();
-
   const formData = {
     name: document.getElementById('category-name').value,
     code: document.getElementById('category-code').value,
@@ -241,11 +213,9 @@ async function handleCategorySubmit(e) {
     icon: document.getElementById('category-icon').value,
     sort_order: parseInt(document.getElementById('category-sort-order').value) || 0
   };
-
   try {
     const { data, error } = await apiClient.post('/api/department-structure/admin/categories', formData);
     if (error) throw error;
-
     showMessage('success', 'Category created successfully');
     closeModal('category');
     await loadAllData();
@@ -254,13 +224,11 @@ async function handleCategorySubmit(e) {
     showMessage('error', 'Failed to create category');
   }
 }
-
 /**
  * Handle subcategory form submission
  */
 async function handleSubcategorySubmit(e) {
   e.preventDefault();
-
   const formData = {
     category_id: document.getElementById('subcategory-category').value,
     name: document.getElementById('subcategory-name').value,
@@ -268,11 +236,9 @@ async function handleSubcategorySubmit(e) {
     description: document.getElementById('subcategory-description').value,
     sort_order: parseInt(document.getElementById('subcategory-sort-order').value) || 0
   };
-
   try {
     const { data, error } = await apiClient.post('/api/department-structure/admin/subcategories', formData);
     if (error) throw error;
-
     showMessage('success', 'Subcategory created successfully');
     closeModal('subcategory');
     await loadAllData();
@@ -281,13 +247,11 @@ async function handleSubcategorySubmit(e) {
     showMessage('error', 'Failed to create subcategory');
   }
 }
-
 /**
  * Handle department form submission
  */
 async function handleDepartmentSubmit(e) {
   e.preventDefault();
-
   const formData = {
     subcategory_id: document.getElementById('department-subcategory').value,
     name: document.getElementById('department-name').value,
@@ -297,11 +261,9 @@ async function handleDepartmentSubmit(e) {
     response_time_hours: parseInt(document.getElementById('department-response-time').value) || 24,
     escalation_time_hours: parseInt(document.getElementById('department-escalation-time').value) || 72
   };
-
   try {
     const { data, error } = await apiClient.post('/api/department-structure/admin/departments', formData);
     if (error) throw error;
-
     showMessage('success', 'Department created successfully');
     closeModal('department');
     await loadAllData();
@@ -310,22 +272,18 @@ async function handleDepartmentSubmit(e) {
     showMessage('error', 'Failed to create department');
   }
 }
-
 /**
  * Edit functions (placeholder - would need to implement edit functionality)
  */
 window.editCategory = function(id) {
   showMessage('info', 'Edit functionality coming soon');
 };
-
 window.editSubcategory = function(id) {
   showMessage('info', 'Edit functionality coming soon');
 };
-
 window.editDepartment = function(id) {
   showMessage('info', 'Edit functionality coming soon');
 };
-
 /**
  * Delete functions
  */
@@ -333,11 +291,9 @@ window.deleteCategory = async function(id) {
   if (!confirm('Are you sure you want to delete this category? This will also delete all subcategories and departments under it.')) {
     return;
   }
-
   try {
     const { error } = await apiClient.delete(`/api/department-structure/admin/categories/${id}`);
     if (error) throw error;
-
     showMessage('success', 'Category deleted successfully');
     await loadAllData();
   } catch (error) {
@@ -345,16 +301,13 @@ window.deleteCategory = async function(id) {
     showMessage('error', 'Failed to delete category');
   }
 };
-
 window.deleteSubcategory = async function(id) {
   if (!confirm('Are you sure you want to delete this subcategory? This will also delete all departments under it.')) {
     return;
   }
-
   try {
     const { error } = await apiClient.delete(`/api/department-structure/admin/subcategories/${id}`);
     if (error) throw error;
-
     showMessage('success', 'Subcategory deleted successfully');
     await loadAllData();
   } catch (error) {
@@ -362,16 +315,13 @@ window.deleteSubcategory = async function(id) {
     showMessage('error', 'Failed to delete subcategory');
   }
 };
-
 window.deleteDepartment = async function(id) {
   if (!confirm('Are you sure you want to delete this department?')) {
     return;
   }
-
   try {
     const { error } = await apiClient.delete(`/api/department-structure/admin/departments/${id}`);
     if (error) throw error;
-
     showMessage('success', 'Department deleted successfully');
     await loadAllData();
   } catch (error) {

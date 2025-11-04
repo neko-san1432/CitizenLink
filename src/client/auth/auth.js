@@ -4,6 +4,7 @@ import showMessage from '../components/toast.js';
 import { saveUserMeta, getOAuthContext } from './authChecker.js';
 import { addCsrfTokenToForm } from '../utils/csrf.js';
 import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword, isValidEmail } from '../utils/validation.js';
+
 // Show toast on login page if redirected due to missing auth
 try {
   const isLoginPage = /\/login(?:$|\?)/.test(window.location.pathname + window.location.search);
@@ -22,7 +23,6 @@ export const retrieveUserRole = async () => {};
 let loginCaptchaWidgetId = null;
 let registerCaptchaWidgetId = null;
 let siteKey = '';
-
 // Fetch CAPTCHA key securely from server
 async function getCaptchaKey() {
   try {
@@ -34,23 +34,18 @@ async function getCaptchaKey() {
     return '';
   }
 }
-
 async function renderCaptchaWidgetsIfAny() {
   // Skip reCAPTCHA in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     // console.log removed for security
     return;
   }
-
   if (!window.grecaptcha) return;
-
   // Fetch CAPTCHA key if not already loaded
   if (!siteKey) {
     siteKey = await getCaptchaKey();
   }
-
   if (!siteKey) return;
-
   window.grecaptcha.ready(() => {
     const loginEl = document.getElementById('login-captcha');
     if (loginEl && loginCaptchaWidgetId === null) {
@@ -62,18 +57,15 @@ async function renderCaptchaWidgetsIfAny() {
     }
   });
 }
-
 // Try render on load and after a short delay to cover async script load
 renderCaptchaWidgetsIfAny();
 setTimeout(renderCaptchaWidgetsIfAny, 500);
-
 async function verifyCaptchaOrFail(widgetId) {
   // Skip reCAPTCHA verification in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     // console.log removed for security
     return { ok: true };
   }
-
   if (!widgetId && widgetId !== 0) {
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };
@@ -104,24 +96,20 @@ async function verifyCaptchaOrFail(widgetId) {
     }
   }
 }
-
 const regFormEl = document.getElementById('regForm');
 if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   e.preventDefault(); // prevent page refresh
-
   const firstName = document.getElementById('firstName')?.value.trim() || '';
   const lastName = document.getElementById('lastName')?.value.trim() || '';
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
   const regPass = document.getElementById('regPassword').value;
   const reRegPass = document.getElementById('reRegPassword').value;
-
   // Early password length checks
   if (!regPass || regPass.length < 8) {
     showMessage('error', 'Password must be at least 8 characters long');
     return;
   }
-
   // Validate form data
   const validationRules = {
     firstName: { required: true, minLength: 1, maxLength: 100 },
@@ -130,15 +118,12 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     mobile: { required: true, type: 'mobile' },
     regPassword: { required: true, type: 'password' }
   };
-
   const formData = { firstName, lastName, email, mobile, regPassword: regPass };
   const validation = validateAndSanitizeForm(formData, validationRules);
-
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
     return;
   }
-
   // Additional password confirmation check
   if (reRegPass !== regPass) {
     showMessage('error', 'Passwords don\'t match');
@@ -162,17 +147,19 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       agreedToTerms: true,
       isOAuth: false // Regular signup
     };
-
     // Submit via API instead of direct Supabase call
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const result = await response.json();
-
-    if (result.success) {
+    // Be tolerant of API variations: treat 2xx with clear success message as success
+    const successMessage = (result && result.message) ? String(result.message) : '';
+    const isHttpSuccess = response.ok; // includes 201
+    const isApiSuccess = result && result.success === true;
+    const looksLikeSuccess = /account created|verify your email|verification email/i.test(successMessage);
+    if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
       // Ensure browser Supabase client has the session to prevent auto-logout
       try {
         const accessToken = result.data?.session?.accessToken || null;
@@ -190,7 +177,7 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
         showMessage('error', 'Email is used');
       } else {
-        showMessage('error', result.error || 'Registration failed');
+        showMessage('error', result.error || successMessage || 'Registration failed');
       }
     }
   } catch (error) {
@@ -198,43 +185,35 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     showMessage('error', 'Registration failed. Please try again.');
   }
 });
-
 const loginFormEl = document.getElementById('login');
 if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
   const remember = document.getElementById('remember-me')?.checked || false;
-
   // Get login button elements
   const loginBtn = document.getElementById('login-submit-btn');
   const loginBtnIcon = document.getElementById('login-btn-icon');
   const loginBtnText = document.getElementById('login-btn-text');
-
   // Function to show loading state
   const showLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    
     // Store original icon HTML
     const originalIcon = loginBtnIcon.outerHTML;
     loginBtn.dataset.originalIcon = originalIcon;
-    
     // Replace icon with loading spinner (CSS animation will handle rotation)
     loginBtnIcon.innerHTML = `
       <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
       <path d="M12 2 A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="15 10"/>
     `;
     loginBtnIcon.classList.add('spinning');
-    
     // Disable button
     loginBtn.disabled = true;
     loginBtnText.textContent = 'Signing in...';
   };
-
   // Function to hide loading state
   const hideLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    
     // Restore original icon if stored
     if (loginBtn.dataset.originalIcon) {
       const originalIconHtml = loginBtn.dataset.originalIcon;
@@ -243,33 +222,27 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const restoredIcon = tempDiv.firstElementChild;
       loginBtnIcon.parentNode.replaceChild(restoredIcon, loginBtnIcon);
     }
-    
     // Re-enable button
     loginBtn.disabled = false;
     loginBtnText.textContent = 'Sign in';
   };
-
   // Basic validation
   if (!email || !pass) {
     showMessage('error', 'Email and password are required');
     return;
   }
-
   if (!isValidEmail(email)) {
     showMessage('error', 'Please enter a valid email address');
     return;
   }
-
   // Show loading state
   showLoading();
-
   // verify captcha
   const captchaResult = await verifyCaptchaOrFail(loginCaptchaWidgetId);
   if (!captchaResult.ok) {
     hideLoading();
     return;
   }
-
   try {
     // Submit via API with JSON body
     const response = await fetch('/api/auth/login', {
@@ -277,20 +250,16 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass, remember })
     });
-
     const result = await response.json();
-
     if (result.success) {
       // Persist access token to HttpOnly cookie for server-protected pages
       try {
         const accessToken = result.data?.session?.accessToken || null;
         // console.log removed for security
         // console.log removed for security
-
         if (accessToken) {
           // console.log removed for security
           // console.log removed for security
-
           const ok = await setServerSessionCookie(accessToken, remember);
           // console.log removed for security
           if (!ok) {
@@ -298,14 +267,11 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
             showMessage('error', 'Failed to establish session. Please try again.');
             return;
           }
-
           // console.log removed for security
           // Wait a moment for cookie to be set
           await new Promise(r => setTimeout(r, 100));
-
           // console.log removed for security
           // console.log removed for security
-
           // Verify cookie by hitting a protected endpoint before redirecting
           // console.log removed for security
           const resp = await fetch('/api/user/role', {
@@ -316,18 +282,14 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               'Content-Type': 'application/json'
             }
           });
-
           // console.log removed for security
-
           if (!resp.ok) {
             // console.log removed for security
             const errorData = await resp.json().catch(() => ({}));
             // console.log removed for security
-
             // Try one more time with a longer wait
             // console.log removed for security
             await new Promise(r => setTimeout(r, 1000));
-
             const retryResp = await fetch('/api/user/role', {
               method: 'GET',
               credentials: 'include',
@@ -336,15 +298,12 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
                 'Content-Type': 'application/json'
               }
             });
-
             // console.log removed for security
-
             if (retryResp.ok) {
               // console.log removed for security
             } else {
               const retryErrorData = await retryResp.json().catch(() => ({}));
               console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
-
               // Enhanced error message based on specific error
               let errorMessage = 'Session verification failed. ';
               if (retryResp.status === 401) {
@@ -356,13 +315,11 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               } else {
                 errorMessage += 'Please try logging in again.';
               }
-
               showMessage('error', errorMessage);
               hideLoading();
               return;
             }
           }
-
           // console.log removed for security
         }
       } catch (error) {
@@ -370,37 +327,29 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         hideLoading();
         throw error; // Re-throw to be caught by outer catch
       }
-
       showMessage('success', 'Logged in successfully');
       // Get role from multiple sources
       const sessionUserMetadata = result.data?.session?.user?.user_metadata || {};
       const sessionRawUserMetadata = result.data?.session?.user?.raw_user_meta_data || {};
-
       // console.log removed for security
-
       const combinedSessionMetadata = { ...sessionRawUserMetadata, ...sessionUserMetadata };
-
       const role = result.data?.user?.role
         || combinedSessionMetadata.role
         || combinedSessionMetadata.normalized_role
         || sessionUserMetadata.role
         || sessionRawUserMetadata.role
         || null;
-
       const name = result.data?.user?.fullName
         || (result.data?.user?.firstName && result.data?.user?.lastName ? `${result.data.user.firstName} ${result.data.user.lastName}` : null)
         || combinedSessionMetadata.name
         || sessionUserMetadata.name
         || sessionRawUserMetadata.name
         || null;
-
       // console.log removed for security
-
       if (role || name) {
         saveUserMeta({ role, name });
         // console.log removed for security
       }
-
       // Check if user has completed registration
       if (!role || !name) {
         // console.log removed for security
@@ -411,7 +360,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         }, 2000);
         return;
       }
-
       // Redirect to dashboard based on role
       // console.log removed for security
       setTimeout(() => {
@@ -424,7 +372,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const ctx = getOAuthContext();
       if (ctx && ctx.provider) {
         window.location.href = '/signup';
-
       }
     }
   } catch (error) {
@@ -432,7 +379,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     showMessage('error', 'Login failed. Please try again.');
   }
 });
-
 // OAuth sign-in buttons
 const googleBtn = document.getElementById('login-google');
 if (googleBtn) {
@@ -451,7 +397,6 @@ if (googleBtn) {
     }
   });
 }
-
 const fbBtn = document.getElementById('login-facebook');
 if (fbBtn) {
   fbBtn.addEventListener('click', async () => {
@@ -469,39 +414,31 @@ if (fbBtn) {
     }
   });
 }
-
 // Email field remains empty and editable for both login and register
-
 // Utility to post session cookie with remember flag
 async function setServerSessionCookie(accessToken, remember) {
   try {
     // console.log removed for security
     // console.log removed for security
-
     const resp = await fetch('/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ access_token: accessToken, remember: Boolean(remember) })
     });
-
     // console.log removed for security
-
     const responseData = await resp.json();
     // console.log removed for security
-
     if (!resp.ok) {
       console.error('[CLIENT AUTH] ❌ Failed to set session cookie:', responseData);
       return false;
     }
-
     return responseData.success === true;
   } catch (error) {
     console.error('[CLIENT AUTH] 💥 Server session cookie error:', error);
     return false;
   }
 }
-
 // If not remembered, clear cookie on unload (best-effort for session cleanup)
 (function setupEphemeralSessionCleanup(){
   try {

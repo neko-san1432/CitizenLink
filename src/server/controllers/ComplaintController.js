@@ -2,33 +2,29 @@ const ComplaintService = require('../services/ComplaintService');
 const { getWorkflowFromStatus } = require('../utils/complaintUtils');
 
 class ComplaintController {
+
   constructor() {
     this.complaintService = new ComplaintService();
   }
-
   async createComplaint(req, res) {
     try {
       const { user } = req;
       const complaintData = req.body;
-
       // Handle multer .fields() response (files is an object, not array)
       let files = [];
       if (req.files && req.files.evidenceFiles) {
         files = req.files.evidenceFiles;
       }
-
       const complaint = await this.complaintService.createComplaint(
         user.id,
         complaintData,
         files
       );
-
       const response = {
         success: true,
         data: complaint,
         message: 'Complaint submitted successfully'
       };
-
       if (complaint.department_r && complaint.department_r.length > 0 || complaint.assigned_coordinator_id) {
         response.workflow = {
           auto_assigned: Boolean(complaint.department_r && complaint.department_r.length > 0),
@@ -36,7 +32,6 @@ class ComplaintController {
           workflow_status: complaint.workflow_status
         };
       }
-
       res.status(201).json(response);
       // console.log removed for security
     } catch (error) {
@@ -48,7 +43,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Cancel complaint
    */
@@ -57,22 +51,18 @@ class ComplaintController {
       const { complaintId } = req.params;
       const { reason } = req.body;
       const userId = req.user.id;
-
       if (!reason) {
         return res.status(400).json({
           success: false,
           error: 'Cancellation reason is required'
         });
       }
-
       const result = await this.complaintService.cancelComplaint(complaintId, userId, reason);
-
       res.json({
         success: true,
         message: 'Complaint cancelled successfully',
         data: result
       });
-
     } catch (error) {
       console.error('[COMPLAINT] Cancel complaint error:', error);
       const status = error.message.includes('not found') ? 404 :
@@ -83,7 +73,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Send reminder for complaint
    */
@@ -91,15 +80,12 @@ class ComplaintController {
     try {
       const { complaintId } = req.params;
       const userId = req.user.id;
-
       const result = await this.complaintService.sendReminder(complaintId, userId);
-
       res.json({
         success: true,
         message: 'Reminder sent successfully',
         data: result
       });
-
     } catch (error) {
       console.error('[COMPLAINT] Send reminder error:', error);
       const status = error.message.includes('not found') ? 404 :
@@ -110,7 +96,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Confirm resolution
    */
@@ -119,22 +104,18 @@ class ComplaintController {
       const { complaintId } = req.params;
       const { confirmed, feedback } = req.body;
       const userId = req.user.id;
-
       if (typeof confirmed !== 'boolean') {
         return res.status(400).json({
           success: false,
           error: 'Confirmation status is required'
         });
       }
-
       const result = await this.complaintService.confirmResolution(complaintId, userId, confirmed, feedback);
-
       res.json({
         success: true,
         message: confirmed ? 'Resolution confirmed successfully' : 'Resolution rejected',
         data: result
       });
-
     } catch (error) {
       console.error('[COMPLAINT] Confirm resolution error:', error);
       const status = error.message.includes('not found') ? 404 :
@@ -145,7 +126,6 @@ class ComplaintController {
       });
     }
   }
-
   async getMyComplaints(req, res) {
     try {
       const { user } = req;
@@ -155,9 +135,7 @@ class ComplaintController {
         status: req.query.status,
         type: req.query.type
       };
-
       const result = await this.complaintService.getUserComplaints(user.id, options);
-
       res.json({
         success: true,
         data: result.complaints,
@@ -177,7 +155,6 @@ class ComplaintController {
         queryParams: req.query,
         headers: req.headers
       });
-
       res.status(500).json({
         success: false,
         error: 'Failed to fetch complaints',
@@ -185,7 +162,6 @@ class ComplaintController {
       });
     }
   }
-
   async getMyStatistics(req, res) {
     try {
       const { user } = req;
@@ -202,20 +178,17 @@ class ComplaintController {
       });
     }
   }
-
   async getComplaintById(req, res) {
     try {
       const { user } = req;
       const { id } = req.params;
       const userRole = user.role || 'citizen';
-
       let complaint;
       if (userRole === 'citizen') {
         complaint = await this.complaintService.getComplaintById(id, user.id);
       } else {
         complaint = await this.complaintService.getComplaintById(id);
       }
-
       res.json({
         success: true,
         data: complaint
@@ -230,7 +203,6 @@ class ComplaintController {
       });
     }
   }
-
   async getAllComplaints(req, res) {
     try {
       const options = {
@@ -241,7 +213,6 @@ class ComplaintController {
         department: req.query.department,
         search: req.query.search
       };
-
       const result = await this.complaintService.getAllComplaints(options);
       res.json({
         success: true,
@@ -262,27 +233,23 @@ class ComplaintController {
       });
     }
   }
-
   async updateComplaintStatus(req, res) {
     try {
       const { id } = req.params;
       const { status, notes } = req.body;
       const { user } = req;
-
       if (!status) {
         return res.status(400).json({
           success: false,
           error: 'Status is required'
         });
       }
-
       const complaint = await this.complaintService.updateComplaintStatus(
         id,
         status,
         notes,
         user.id
       );
-
       res.json({
         success: true,
         data: complaint,
@@ -298,63 +265,53 @@ class ComplaintController {
       });
     }
   }
-
   async transitionStatus(req, res) {
     try {
       const complaintId = req.params.id;
       const { status, resolution_notes, admin_notes, feedback } = req.body || {};
       const userId = req.user?.id;
       const userRole = req.user?.role || 'citizen';
-
       // Optional evidence from officer during submit-for-approval
       const files = (req.files && req.files.evidenceFiles) ? req.files.evidenceFiles : [];
 
       if (!status) {
         return res.status(400).json({ success: false, error: 'Status is required' });
       }
-
       // Citizens can only confirm resolution (one-way)
       if (userRole === 'citizen' && status !== 'resolved') {
         return res.status(400).json({ success: false, error: 'Citizens can only confirm resolution' });
       }
-
       if (files && files.length > 0) {
         await this.complaintService.addEvidence(complaintId, files);
       }
-
       const updated = await this.complaintService.updateComplaintStatus(
         complaintId,
         status,
         userRole === 'citizen' ? null : (resolution_notes || admin_notes || feedback || null),
         userId
       );
-
       return res.json({ success: true, data: updated });
     } catch (error) {
       console.error('[COMPLAINT] Transition status error:', error);
       res.status(500).json({ success: false, error: 'Failed to update complaint status' });
     }
   }
-
   async assignCoordinator(req, res) {
     try {
       const { id } = req.params;
       const { coordinator_id } = req.body;
       const { user } = req;
-
       if (!coordinator_id) {
         return res.status(400).json({
           success: false,
           error: 'Coordinator ID is required'
         });
       }
-
       const complaint = await this.complaintService.assignCoordinator(
         id,
         coordinator_id,
         user.id
       );
-
       res.json({
         success: true,
         data: complaint,
@@ -369,20 +326,17 @@ class ComplaintController {
       });
     }
   }
-
   async transferComplaint(req, res) {
     try {
       const { id } = req.params;
       const { from_department, to_department, reason } = req.body;
       const { user } = req;
-
       if (!from_department || !to_department || !reason) {
         return res.status(400).json({
           success: false,
           error: 'From department, to department, and reason are required'
         });
       }
-
       const complaint = await this.complaintService.transferComplaint(
         id,
         from_department,
@@ -390,7 +344,6 @@ class ComplaintController {
         reason,
         user.id
       );
-
       res.json({
         success: true,
         data: complaint,
@@ -405,7 +358,6 @@ class ComplaintController {
       });
     }
   }
-
   async getComplaintStats(req, res) {
     try {
       const filters = {
@@ -413,7 +365,6 @@ class ComplaintController {
         dateFrom: req.query.date_from,
         dateTo: req.query.date_to
       };
-
       const stats = await this.complaintService.getComplaintStats(filters);
       res.json({
         success: true,
@@ -427,12 +378,10 @@ class ComplaintController {
       });
     }
   }
-
   async getComplaintLocations(req, res) {
     try {
       // console.log removed for security
       // console.log removed for security
-
       const {
         status,
         type,
@@ -441,9 +390,7 @@ class ComplaintController {
         endDate,
         includeResolved = 'true'
       } = req.query;
-
       // console.log removed for security
-
       // Map query params to service filters
       // IMPORTANT: Convert legacy status values to workflow_status
       let workflowStatus = undefined;
@@ -458,7 +405,6 @@ class ComplaintController {
         }
         // console.log removed for security
       }
-      
       const serviceFilters = {
         status: workflowStatus,
         category: req.query.category || undefined,
@@ -468,20 +414,15 @@ class ComplaintController {
         endDate: endDate || undefined,
         includeResolved: includeResolved === 'true'
       };
-      
       // Remove undefined values
       Object.keys(serviceFilters).forEach(key => {
         if (serviceFilters[key] === undefined) {
           delete serviceFilters[key];
         }
       });
-      
       // console.log removed for security
-      
       const locations = await this.complaintService.getComplaintLocations(serviceFilters);
-
       // console.log removed for security
-
       res.json({
         success: true,
         data: locations,
@@ -495,7 +436,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Mark a complaint as false
    */
@@ -504,24 +444,20 @@ class ComplaintController {
       const { id } = req.params;
       const { reason } = req.body;
       const { user } = req;
-
       if (!reason || !reason.trim()) {
         return res.status(400).json({
           success: false,
           error: 'Reason is required'
         });
       }
-
       const result = await this.complaintService.markAsFalseComplaint(
         id,
         user.id,
         reason
       );
-
       if (!result.success) {
         return res.status(400).json(result);
       }
-
       res.json(result);
     } catch (error) {
       console.error('[COMPLAINT-CONTROLLER] Error marking complaint as false:', error);
@@ -531,22 +467,18 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Get all false complaints
    */
   async getFalseComplaints(req, res) {
     try {
       const { limit } = req.query;
-
       const result = await this.complaintService.getFalseComplaints({
         limit: limit ? parseInt(limit) : undefined
       });
-
       if (!result.success) {
         return res.status(400).json(result);
       }
-
       res.json(result);
     } catch (error) {
       console.error('[COMPLAINT-CONTROLLER] Error getting false complaints:', error);
@@ -556,18 +488,15 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Get false complaint statistics
    */
   async getFalseComplaintStatistics(req, res) {
     try {
       const result = await this.complaintService.getFalseComplaintStatistics();
-
       if (!result.success) {
         return res.status(400).json(result);
       }
-
       res.json(result);
     } catch (error) {
       console.error('[COMPLAINT-CONTROLLER] Error getting false complaint statistics:', error);
@@ -577,7 +506,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Mark assignment as complete (LGU Officer)
    */
@@ -586,7 +514,6 @@ class ComplaintController {
       const { id: complaintId } = req.params;
       const { notes } = req.body;
       const { user } = req;
-
       // Extract completion evidence files if uploaded
       const files = (req.files && req.files.completionEvidence) ? req.files.completionEvidence : [];
 
@@ -596,13 +523,11 @@ class ComplaintController {
         notes,
         files
       );
-
       res.json({
         success: true,
         message: 'Assignment marked as complete successfully',
         data: result
       });
-
     } catch (error) {
       console.error('[COMPLAINT] Mark assignment complete error:', error);
       const status = error.message.includes('not found') ? 404 :
@@ -613,7 +538,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Confirm resolution (Citizen side)
    */
@@ -622,31 +546,26 @@ class ComplaintController {
       const { id: complaintId } = req.params;
       const { confirmed, feedback } = req.body;
       const { user } = req;
-
       if (typeof confirmed !== 'boolean') {
         return res.status(400).json({
           success: false,
           error: 'Confirmed status is required (true/false)'
         });
       }
-
       // Note: Ownership and consistency checks are handled in the service.
       // We no longer block citizen confirmation here on coordinator/confirmation gates
       // to avoid false 400s; the service will update and reconcile workflow accordingly.
-
       const result = await this.complaintService.confirmResolution(
         complaintId,
         user.id,
         confirmed,
         feedback
       );
-
       res.json({
         success: true,
         message: confirmed ? 'Resolution confirmed successfully' : 'Resolution rejected',
         data: result
       });
-
     } catch (error) {
       console.error('[COMPLAINT] Confirm resolution error:', error);
       const status = error.message.includes('not found') ? 404 :
@@ -657,7 +576,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Get evidence files for a complaint (citizen and authorized roles)
    */
@@ -672,15 +590,11 @@ class ComplaintController {
       return res.status(500).json({ success: false, error: 'Failed to load complaint evidence' });
     }
   }
-
-
   async getConfirmationMessage(req, res) {
     try {
       const { id } = req.params;
       const { user } = req;
-
       const message = await this.complaintService.getConfirmationMessage(id, user.role);
-
       res.json({
         success: true,
         data: message
@@ -693,7 +607,6 @@ class ComplaintController {
       });
     }
   }
-
   /**
    * Create assignment for officers
    */
@@ -702,20 +615,17 @@ class ComplaintController {
       const complaintId = req.params.complaintId; // Get from URL parameter
       const { officerIds } = req.body;
       const user = req.user;
-      
       if (!complaintId || !officerIds || !Array.isArray(officerIds) || officerIds.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Missing required fields: complaintId and officerIds array'
         });
       }
-      
       const result = await this.complaintService.createAssignment(
         complaintId,
         officerIds,
         user.id
       );
-      
       res.json({
         success: true,
         data: result,

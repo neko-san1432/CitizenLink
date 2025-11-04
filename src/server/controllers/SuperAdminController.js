@@ -5,10 +5,10 @@ const SuperAdminService = require('../services/SuperAdminService');
  * Handles Super Admin operations
  */
 class SuperAdminController {
+
   constructor() {
     this.superAdminService = new SuperAdminService();
   }
-
   /**
    * GET /api/superadmin/dashboard
    * Get Super Admin dashboard data
@@ -17,7 +17,6 @@ class SuperAdminController {
     try {
       const { user } = req;
       const data = await this.superAdminService.getDashboard(user.id);
-
       res.json({
         success: true,
         ...data
@@ -31,7 +30,6 @@ class SuperAdminController {
       });
     }
   }
-
   /**
    * POST /api/superadmin/role-swap
    * Swap user role (any to any)
@@ -40,28 +38,24 @@ class SuperAdminController {
     try {
       const { user } = req;
       const { user_id, new_role, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({
           success: false,
           error: 'User ID is required'
         });
       }
-
       if (!new_role) {
         return res.status(400).json({
           success: false,
           error: 'New role is required'
         });
       }
-
       const result = await this.superAdminService.roleSwap(
         user_id,
         new_role,
         user.id,
         reason
       );
-
       res.json({
         success: true,
         ...result
@@ -75,7 +69,6 @@ class SuperAdminController {
       });
     }
   }
-
   /**
    * POST /api/superadmin/transfer-department
    * Transfer user between departments
@@ -84,28 +77,24 @@ class SuperAdminController {
     try {
       const { user } = req;
       const { user_id, from_department, to_department, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({
           success: false,
           error: 'User ID is required'
         });
       }
-
       if (!from_department || !to_department) {
         return res.status(400).json({
           success: false,
           error: 'From and to departments are required'
         });
       }
-
       if (!reason) {
         return res.status(400).json({
           success: false,
           error: 'Reason is required for department transfer'
         });
       }
-
       const result = await this.superAdminService.transferUserBetweenDepartments(
         user_id,
         from_department,
@@ -113,7 +102,6 @@ class SuperAdminController {
         user.id,
         reason
       );
-
       res.json({
         success: true,
         ...result
@@ -127,7 +115,6 @@ class SuperAdminController {
       });
     }
   }
-
   /**
    * POST /api/superadmin/assign-citizen
    * Assign citizen to department with role
@@ -136,28 +123,24 @@ class SuperAdminController {
     try {
       const { user } = req;
       const { user_id, role, department_id, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({
           success: false,
           error: 'User ID is required'
         });
       }
-
       if (!role) {
         return res.status(400).json({
           success: false,
           error: 'Role is required'
         });
       }
-
       if (!department_id) {
         return res.status(400).json({
           success: false,
           error: 'Department ID is required'
         });
       }
-
       const result = await this.superAdminService.assignCitizenToDepartment(
         user_id,
         role,
@@ -165,7 +148,6 @@ class SuperAdminController {
         user.id,
         reason
       );
-
       res.json({
         success: true,
         ...result
@@ -179,7 +161,6 @@ class SuperAdminController {
       });
     }
   }
-
   /**
    * GET /api/superadmin/logs
    * Get system logs
@@ -194,9 +175,7 @@ class SuperAdminController {
         date_from: req.query.date_from,
         date_to: req.query.date_to
       };
-
       const result = await this.superAdminService.getSystemLogs(user.id, options);
-
       res.json({
         success: true,
         ...result
@@ -210,7 +189,6 @@ class SuperAdminController {
       });
     }
   }
-
   /**
    * GET /api/superadmin/statistics
    * Get system statistics
@@ -219,7 +197,6 @@ class SuperAdminController {
     try {
       const { user } = req;
       const result = await this.superAdminService.getSystemStatistics(user.id);
-
       res.json({
         success: true,
         ...result

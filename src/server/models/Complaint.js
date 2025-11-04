@@ -1,4 +1,5 @@
 class Complaint {
+
   constructor(data = {}) {
     this.id = data.id;
     this.submitted_by = data.submitted_by;
@@ -28,51 +29,40 @@ class Complaint {
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
   }
-
   static validate(data) {
     const errors = [];
-
     if (!data.title || data.title.trim().length < 5) {
       errors.push('Title must be at least 5 characters');
     }
-
     if (!data.descriptive_su || data.descriptive_su.trim().length < 10) {
       errors.push('Description must be at least 10 characters');
     }
-
     if (!data.location_text || data.location_text.trim().length < 5) {
       errors.push('Location must be at least 5 characters');
     }
-
     if (data.latitude && (data.latitude < -90 || data.latitude > 90)) {
       errors.push('Invalid latitude value');
     }
-
     if (data.longitude && (data.longitude < -180 || data.longitude > 180)) {
       errors.push('Invalid longitude value');
     }
-
     const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
     if (data.status && !validStatuses.includes(data.status)) {
       errors.push('Invalid status');
     }
-
     const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
     if (data.workflow_status && !validWorkflowStatuses.includes(data.workflow_status)) {
       errors.push('Invalid workflow status');
     }
-
     const validPriorities = ['low', 'medium', 'high', 'urgent'];
     if (data.priority && !validPriorities.includes(data.priority)) {
       errors.push('Invalid priority');
     }
-
     return {
       isValid: errors.length === 0,
       errors
     };
   }
-
   sanitizeForInsert() {
     return {
       submitted_by: this.submitted_by,
@@ -92,7 +82,6 @@ class Complaint {
       submitted_at: this.submitted_at || new Date().toISOString()
     };
   }
-
   toJSON() {
     return {
       id: this.id,
@@ -123,4 +112,3 @@ class Complaint {
 }
 
 module.exports = Complaint;
-

@@ -2,18 +2,17 @@
  * HR Controller
  * Handles HR-specific operations including signup link generation
  */
-
 const HRService = require('../services/HRService');
 const UserService = require('../services/UserService');
 const ComplaintService = require('../services/ComplaintService');
 
 class HRController {
+
   constructor() {
     this.hrService = new HRService();
     this.userService = UserService;
     this.complaintService = new ComplaintService();
   }
-
   /**
    * Generate signup link
    */
@@ -21,21 +20,18 @@ class HRController {
     try {
       const { role, department_code, expires_in_hours } = req.body;
       const hrId = req.user.id;
-
       if (!role) {
         return res.status(400).json({
           success: false,
           error: 'Role is required'
         });
       }
-
       const result = await this.hrService.generateSignupLink(
         hrId,
         role,
         department_code,
         expires_in_hours || 24
       );
-
       res.json(result);
     } catch (error) {
       console.error('Generate signup link error:', error);
@@ -45,7 +41,6 @@ class HRController {
       });
     }
   }
-
   /**
    * Get signup links
    */
@@ -57,7 +52,6 @@ class HRController {
         department_code: req.query.department_code,
         is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined
       };
-
       const result = await this.hrService.getSignupLinks(hrId, filters);
       res.json(result);
     } catch (error) {
@@ -68,7 +62,6 @@ class HRController {
       });
     }
   }
-
   /**
    * Deactivate signup link
    */
@@ -77,9 +70,7 @@ class HRController {
       // console.log removed for security
       const { linkId } = req.params;
       const hrId = req.user.id;
-
       // console.log removed for security
-
       const result = await this.hrService.deactivateSignupLink(hrId, linkId);
       // console.log removed for security
       res.json(result);
@@ -91,7 +82,6 @@ class HRController {
       });
     }
   }
-
   /**
    * Validate signup code (public endpoint)
    */
@@ -99,7 +89,6 @@ class HRController {
     try {
       // console.log removed for security
       const { code } = req.params;
-
       if (!code) {
         // console.log removed for security
         return res.status(400).json({
@@ -107,7 +96,6 @@ class HRController {
           error: 'Code is required'
         });
       }
-
       // console.log removed for security
       const result = await this.hrService.validateSignupCode(code);
       // console.log removed for security
@@ -120,7 +108,6 @@ class HRController {
       });
     }
   }
-
   /**
    * Get HR dashboard
    */
@@ -140,7 +127,6 @@ class HRController {
       });
     }
   }
-
   /**
    * POST /api/hr/promote-to-officer
    */
@@ -148,11 +134,9 @@ class HRController {
     try {
       const hrId = req.user.id;
       const { user_id, department, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({ success: false, error: 'user_id is required' });
       }
-
       const result = await this.hrService.promoteToOfficer(user_id, hrId, { department, reason });
       return res.json(result);
     } catch (error) {
@@ -160,7 +144,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to promote user' });
     }
   }
-
   /**
    * POST /api/hr/promote-to-admin
    */
@@ -168,11 +151,9 @@ class HRController {
     try {
       const hrId = req.user.id;
       const { user_id, department, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({ success: false, error: 'user_id is required' });
       }
-
       const result = await this.hrService.promoteToAdmin(user_id, hrId, { department, reason });
       return res.json(result);
     } catch (error) {
@@ -180,7 +161,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to promote user' });
     }
   }
-
   /**
    * POST /api/hr/demote-to-officer
    */
@@ -188,11 +168,9 @@ class HRController {
     try {
       const hrId = req.user.id;
       const { user_id, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({ success: false, error: 'user_id is required' });
       }
-
       const result = await this.hrService.demoteAdminToOfficer(user_id, hrId, { reason });
       return res.json(result);
     } catch (error) {
@@ -200,7 +178,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to demote user' });
     }
   }
-
   /**
    * POST /api/hr/strip-titles -> revert to citizen
    */
@@ -208,14 +185,12 @@ class HRController {
     try {
       const hrId = req.user.id;
       const { user_id, reason } = req.body;
-
       if (!user_id) {
         return res.status(400).json({ success: false, error: 'user_id is required' });
       }
       if (!reason) {
         return res.status(400).json({ success: false, error: 'reason is required' });
       }
-
       const result = await this.hrService.stripTitles(user_id, hrId, reason);
       return res.json(result);
     } catch (error) {
@@ -223,7 +198,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to strip titles' });
     }
   }
-
   /**
    * POST /api/hr/assign-department
    */
@@ -231,11 +205,9 @@ class HRController {
     try {
       const hrId = req.user.id;
       const { user_id, department_id } = req.body;
-
       if (!user_id || !department_id) {
         return res.status(400).json({ success: false, error: 'user_id and department_id are required' });
       }
-
       const result = await this.hrService.assignOfficerToDepartment(user_id, department_id, hrId);
       return res.json(result);
     } catch (error) {
@@ -243,7 +215,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to assign department' });
     }
   }
-
   /**
    * GET /api/hr/users
    * Supports search and barangay filter
@@ -253,14 +224,11 @@ class HRController {
       const { search, barangay, role, department, status, page, limit } = req.query;
       const filters = { role, department, status, search, includeInactive: true };
       const pagination = { page: page ? parseInt(page) : 1, limit: limit ? parseInt(limit) : 20 };
-
       const result = await this.userService.getUsers(filters, pagination);
-
       // Apply barangay filter client-side since admin.listUsers lacks server filters
       const filteredUsers = barangay
         ? (result.users || []).filter(u => (u.address?.barangay || '').toLowerCase() === String(barangay).toLowerCase())
         : result.users;
-
       return res.json({
         success: true,
         data: filteredUsers,
@@ -271,7 +239,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to fetch users' });
     }
   }
-
   /**
    * GET /api/hr/users/:id
    */
@@ -288,7 +255,6 @@ class HRController {
       return res.status(500).json({ success: false, error: error.message || 'Failed to fetch user' });
     }
   }
-
   /**
    * GET /api/hr/users/:id/complaints
    */
