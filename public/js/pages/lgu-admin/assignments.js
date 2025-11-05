@@ -4,7 +4,10 @@
  */
 import apiClient from '../../config/apiClient.js';
 import showMessage from '../../components/toast.js';
+import { escapeHtml } from '../../utils/string.js';
+import { getStatusText, getStatusClass, getPriorityClass } from '../../utils/complaint.js';
 import getCurrentUser from '../../utils/authUtils.js';
+import { supabase } from '../../config/config.js';
 
 class LguAdminAssignments {
 
@@ -248,44 +251,44 @@ class LguAdminAssignments {
     if (highEl) highEl.textContent = high;
   }
   renderAssignmentCard(assignment) {
-    const statusClass = this.getStatusClass(assignment.status);
-    const priorityClass = this.getPriorityClass(assignment.priority);
+    const statusClass = getStatusClass(assignment.status);
+    const priorityClass = getPriorityClass(assignment.priority);
     const assignedDate = new Date(assignment.assigned_at).toLocaleDateString();
     const submittedDate = new Date(assignment.submitted_at).toLocaleDateString();
     return `
       <div class="assignment-card" data-assignment-id="${assignment.id}" data-complaint-id="${assignment.complaint_id}">
         <div class="assignment-header">
           <div class="assignment-title">
-            <h4>${this.escapeHtml(assignment.title || 'Untitled Complaint')}</h4>
+            <h4>${escapeHtml(assignment.title || 'Untitled Complaint')}</h4>
             <div class="assignment-meta">
               <span class="assignment-id">#${assignment.complaint_id.slice(-8)}</span>
               <span class="assignment-date">Submitted: ${submittedDate}</span>
             </div>
           </div>
           <div class="assignment-status">
-            <span class="status-badge ${statusClass}">${this.getStatusText(assignment.status)}</span>
+            <span class="status-badge ${statusClass}">${getStatusText(assignment.status)}</span>
             <span class="priority-badge ${priorityClass}">${assignment.priority}</span>
           </div>
         </div>
 
         <div class="assignment-content">
           <div class="assignment-description">
-            <p>${this.escapeHtml(assignment.description || 'No description available')}</p>
+            <p>${escapeHtml(assignment.description || 'No description available')}</p>
           </div>
 
           <div class="assignment-details">
             <div class="detail-item">
               <span class="detail-label">Location:</span>
-              <span class="detail-value">${this.escapeHtml(assignment.location_text || 'Not specified')}</span>
+              <span class="detail-value">${escapeHtml(assignment.location_text || 'Not specified')}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Citizen:</span>
-              <span class="detail-value">${this.escapeHtml(assignment.citizen_name || 'Unknown')}</span>
+              <span class="detail-value">${escapeHtml(assignment.citizen_name || 'Unknown')}</span>
             </div>
             ${assignment.officer_name ? `
               <div class="detail-item">
                 <span class="detail-label">Assigned Officer:</span>
-                <span class="detail-value">${this.escapeHtml(assignment.officer_name)}</span>
+                <span class="detail-value">${escapeHtml(assignment.officer_name)}</span>
               </div>
             ` : ''}
             ${assignment.deadline ? `
@@ -488,7 +491,7 @@ class LguAdminAssignments {
   }
   generateComplaintDetailsHTML(complaint) {
     const submittedDate = new Date(complaint.submitted_at).toLocaleString();
-    const priorityClass = this.getPriorityClass(complaint.priority);
+    const priorityClass = getPriorityClass(complaint.priority);
     return `
       <div class="complaint-details">
         <!-- Header Section -->
@@ -501,7 +504,7 @@ class LguAdminAssignments {
             </div>
           </div>
           <div class="complaint-status">
-            <span class="status-badge ${this.getStatusClass(complaint.status)}">${this.getStatusText(complaint.status)}</span>
+            <span class="status-badge ${getStatusClass(complaint.status)}">${getStatusText(complaint.status)}</span>
             <span class="priority-badge ${priorityClass}">${complaint.priority}</span>
           </div>
         </div>
@@ -644,12 +647,16 @@ class LguAdminAssignments {
         </div>
       `;
       // Make API call to get evidence files from Supabase bucket
+      // SECURITY: Use Supabase session token, never localStorage
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`/api/complaints/${complaintId}/evidence`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        }
+        headers
       });
       if (!response.ok) {
         throw new Error(`Failed to load evidence: ${response.status} ${response.statusText}`);

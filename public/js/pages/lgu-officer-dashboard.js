@@ -3,6 +3,9 @@
  * Field operations and task management for local government officers
  */
 import showMessage from '../components/toast.js';
+import { escapeHtml } from '../utils/string.js';
+import { formatDate } from '../utils/date.js';
+import { getStatusText } from '../utils/complaint.js';
 
 // Dashboard state
 let dashboardData = null;
@@ -135,7 +138,7 @@ function renderMyTasks(tasks) {
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${getTaskProgress(task.status)}%"></div>
         </div>
-        <span class="progress-text">${getTaskStatusText(task.status)}</span>
+        <span class="progress-text">${getStatusText(task.status)}</span>
       </div>
       <div class="task-actions">
         <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${task.complaint_id}')">Update</button>
@@ -239,19 +242,7 @@ function getTaskProgress(status) {
   };
   return progressMap[status] || 0;
 }
-function getTaskStatusText(status) {
-  const statusMap = {
-    'assigned': 'Assigned',
-    'in_progress': 'In Progress',
-    'review': 'Under Review',
-    'completed': 'Completed',
-    'cancelled': 'Cancelled',
-    'pending': 'Pending',
-    'active': 'Active'
-  };
-  const result = statusMap[status] || 'Unknown';
-  return result;
-}
+// Removed duplicate getTaskStatusText in favor of shared getStatusText
 function getActivityIcon(type) {
   const iconMap = {
     'task_assigned': '📝',
@@ -272,25 +263,7 @@ function getUpdateIcon(type) {
   };
   return iconMap[type] || '📢';
 }
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-}
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Removed duplicate formatDate and escapeHtml in favor of shared utils
 // Title fallback helper to avoid blank titles
 function getTaskTitle(task) {
   const complaint = task?.complaint || {};

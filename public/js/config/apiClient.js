@@ -3,20 +3,10 @@ import { supabase } from './config.js';
 // API client with automatic JWT token handling
 class ApiClient {
   async getAuthHeaders() {
-    // Try to get token from Supabase session first
+    // SECURITY: Use Supabase session only, never localStorage or cookies
+    // HttpOnly cookies are handled server-side, client uses Supabase session
     const { data: { session } } = await supabase.auth.getSession();
-    let token = session?.access_token;
-    // If no session token, try to get from cookies (for server-side auth)
-    if (!token) {
-      // Check if we're in a browser environment
-      if (typeof document !== 'undefined') {
-        const cookies = document.cookie.split(';');
-        const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('sb_access_token='));
-        if (tokenCookie) {
-          token = tokenCookie.split('=')[1];
-        }
-      }
-    }
+    const token = session?.access_token;
     const headers = { 'Content-Type': 'application/json' };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -97,11 +87,19 @@ class ApiClient {
       });
       if (response.status === 401) {
         console.warn('Token expired, attempting refresh');
-        const refreshed = await supabase.auth.refreshSession();
-        if (refreshed) {
-          // Update local storage with new session
-          localStorage.setItem('access_token', refreshed.session.access_token);
-          localStorage.setItem('refresh_token', refreshed.session.refresh_token);
+        // SECURITY: Use Supabase session refresh, never localStorage
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed?.session) {
+          // Update server cookie with new token
+          try {
+            await fetch('/auth/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ access_token: refreshed.session.access_token })
+            });
+          } catch (cookieError) {
+            console.error('Failed to update server cookie:', cookieError);
+          }
           // Retry with new token
           headers = await this.getAuthHeaders();
           response = await fetch(url, {
@@ -256,10 +254,19 @@ class ApiClient {
   }
   async refreshToken() {
     try {
+      // SECURITY: Use Supabase session refresh, never localStorage
       const { data, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
-      // Update local storage with new session
-      localStorage.setItem('access_token', data.session.access_token);
+      if (error || !data?.session) throw error || new Error('No session');
+      // Update server cookie with new token
+      try {
+        await fetch('/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: data.session.access_token })
+        });
+      } catch (cookieError) {
+        console.error('Failed to update server cookie:', cookieError);
+      }
       return true;
     } catch (refreshError) {
       console.error('Token refresh failed:', refreshError);

@@ -144,7 +144,7 @@ class UserService {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${frontendUrl}/login`
+          emailRedirectTo: `${frontendUrl}/email-verification-success`
         }
       });
       if (emailError) {

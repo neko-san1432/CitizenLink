@@ -2,6 +2,8 @@
  * False Complaint Marker Component
  * Handles marking complaints as false with reasons and evidence
  */
+import { supabase } from '../../config/config.js';
+
 class FalseComplaintMarker {
 
   constructor() {
@@ -168,13 +170,17 @@ class FalseComplaintMarker {
     try {
       // Show loading state
       this.showLoading();
+      // SECURITY: Use Supabase session token, never localStorage
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       // Submit the false complaint marking
       const response = await fetch(`/api/complaints/${this.complaintId}/mark-false`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
+        headers,
         body: JSON.stringify({
           reason,
           notes,

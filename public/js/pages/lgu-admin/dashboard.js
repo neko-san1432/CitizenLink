@@ -1,5 +1,7 @@
 import apiClient from '../../config/apiClient.js';
 import showMessage from '../../components/toast.js';
+import { escapeHtml } from '../../utils/string.js';
+import { getStatusText, getStatusClass, getPriorityClass } from '../../utils/complaint.js';
 
 class LguAdminDashboard {
 
@@ -74,30 +76,30 @@ class LguAdminDashboard {
     `;
   }
   renderAssignmentCard(assignment) {
-    const statusClass = this.getStatusClass(assignment.status);
-    const priorityClass = this.getPriorityClass(assignment.priority);
+    const statusClass = getStatusClass(assignment.status);
+    const priorityClass = getPriorityClass(assignment.priority);
     const submittedDate = new Date(assignment.submitted_at).toLocaleDateString();
     return `
       <div class="assignment-card">
         <div class="assignment-header">
           <div class="assignment-title">
-            <h4>${this.escapeHtml(assignment.title || 'Untitled Complaint')}</h4>
+            <h4>${escapeHtml(assignment.title || 'Untitled Complaint')}</h4>
             <div class="assignment-meta">
               <span class="assignment-id">#${assignment.complaint_id.slice(-8)}</span>
               <span class="assignment-date">${submittedDate}</span>
             </div>
           </div>
           <div class="assignment-status">
-            <span class="status-badge ${statusClass}">${this.getStatusText(assignment.status)}</span>
+            <span class="status-badge ${statusClass}">${getStatusText(assignment.status)}</span>
             <span class="priority-badge ${priorityClass}">${assignment.priority}</span>
           </div>
         </div>
         <div class="assignment-content">
-          <p>${this.escapeHtml(assignment.description || 'No description available')}</p>
+          <p>${escapeHtml(assignment.description || 'No description available')}</p>
           ${assignment.officer_name ? `
             <div class="assignment-officer">
               <span class="detail-label">Officer:</span>
-              <span class="detail-value">${this.escapeHtml(assignment.officer_name)}</span>
+              <span class="detail-value">${escapeHtml(assignment.officer_name)}</span>
             </div>
           ` : ''}
         </div>
@@ -182,49 +184,7 @@ class LguAdminDashboard {
       showMessage('error', 'Failed to generate report');
     }
   }
-  getStatusClass(status) {
-    const statusClasses = {
-      'unassigned': 'status-unassigned',
-      'assigned': 'status-assigned',
-      'active': 'status-active',
-      'in_progress': 'status-in-progress',
-      'completed': 'status-completed',
-      'cancelled': 'status-cancelled',
-      'waiting_for_responders': 'status-waiting',
-      'waiting_for_complainant': 'status-waiting',
-      'confirmed': 'status-confirmed'
-    };
-    return statusClasses[status] || 'status-unknown';
-  }
-  getStatusText(status) {
-    const statusTexts = {
-      'unassigned': 'Unassigned',
-      'assigned': 'Assigned',
-      'active': 'Active',
-      'in_progress': 'In Progress',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled',
-      'waiting_for_responders': 'Waiting for responders\' confirmation',
-      'waiting_for_complainant': 'Waiting for complainant\'s confirmation',
-      'confirmed': 'Confirmed by both parties'
-    };
-    return statusTexts[status] || status;
-  }
-  getPriorityClass(priority) {
-    const priorityClasses = {
-      'low': 'priority-low',
-      'medium': 'priority-medium',
-      'high': 'priority-high',
-      'urgent': 'priority-urgent'
-    };
-    return priorityClasses[priority] || 'priority-medium';
-  }
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  // Removed duplicate helpers in favor of shared utils
 }
 // Initialize the dashboard
 const dashboard = new LguAdminDashboard();

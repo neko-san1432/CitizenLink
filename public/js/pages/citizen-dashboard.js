@@ -455,6 +455,7 @@ async function loadMyComplaints() {
       throw new Error(`Failed to load complaints: ${response.status}`);
     }
     const result = await response.json();
+    console.debug('[CITIZEN_DASHBOARD] Complaints fetch summary', {
       success: result.success,
       complaintsCount: result.data?.length || 0,
       total: result.pagination?.total || 0,
@@ -490,6 +491,7 @@ function renderMyComplaints(complaints, totalCount = null) {
     console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
     return;
   }
+  console.debug('[CITIZEN_DASHBOARD] Render complaints inputs', {
     count: complaints.length,
     totalCount: totalCount,
     complaints: complaints.map(c => ({ 
@@ -526,6 +528,7 @@ function renderMyComplaints(complaints, totalCount = null) {
   });
 
   
+  console.debug('[CITIZEN_DASHBOARD] Render complaints derived metrics', {
     total: complaints.length,
     filtered: filteredComplaints.length,
     duplicates: complaints.filter(c => c.is_duplicate).length,
@@ -557,7 +560,7 @@ function renderMyComplaints(complaints, totalCount = null) {
         <span class="complaint-date">${formatDate(complaint.submitted_at)}</span>
       </div>
       <div class="complaint-progress">
-        ${renderCompactStepper(status)}
+        ${renderCompactStepper(status, complaint.confirmed_by_citizen)}
         <span class="progress-text">${getProgressText(status)}</span>
       </div>
     </div>
@@ -574,7 +577,7 @@ function formatStatus(status) {
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 }
-function renderCompactStepper(status) {
+function renderCompactStepper(status, confirmedByCitizen = false) {
   // Map workflow status to step number (0-4, with 5 as cancelled)
   const workflowStatus = (status || 'new').toLowerCase();
   const isCancelled = workflowStatus === 'cancelled';
@@ -583,18 +586,23 @@ function renderCompactStepper(status) {
     'assigned': 1,
     'in_progress': 2,
     'pending_approval': 3,
-    'completed': 4,
+    'completed': 3, // Step 3: awaiting citizen confirmation, not fully completed yet
     'submitted': 0,
     'under_review': 1,
-    'resolved': 4,
+    'resolved': 3,
     'waiting_for_responders': 3,
     'waiting_for_complainant': 3,
-    'confirmed': 4,
+    'confirmed': 4, // Step 4: citizen confirmed, fully completed
     'closed': 4
   };
   // For cancelled complaints, don't show any active steps - gray everything out
   // Otherwise, show progress up to the current step
-  const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+  let currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+  
+  // If citizen has confirmed, show step 4 (all circles completed) even if status is still 'completed'
+  if (!isCancelled && confirmedByCitizen && (workflowStatus === 'completed' || workflowStatus === 'resolved')) {
+    currentStep = 4;
+  }
   
   // Node colors for each step (orange → red → pink → purple)
   const nodeColors = [

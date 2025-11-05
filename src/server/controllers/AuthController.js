@@ -50,7 +50,15 @@ class AuthController {
           details: passwordValidation.errors
         });
       }
-      // Validate role-specific requirements
+      // Regular signups (non-OAuth, without HR code) can only create citizen accounts
+      // Staff roles must use HR signup codes via /signup-with-code endpoint
+      if (!isOAuth && role !== 'citizen') {
+        return res.status(400).json({
+          success: false,
+          error: 'Only citizen accounts can be created through regular signup. Staff accounts require an HR signup code.'
+        });
+      }
+      // Validate role-specific requirements (for OAuth signups that might have staff roles)
       if (['lgu', 'lgu-admin'].includes(role)) {
         if (!department) {
           return res.status(400).json({
@@ -219,31 +227,16 @@ class AuthController {
       // console.log removed for security
       res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
       // console.log removed for security
-      // Also set a non-httpOnly cookie for debugging (remove in production)
-      if (process.env.NODE_ENV !== 'production') {
-        // console.log removed for security
-        res.cookie('sb_access_token_debug', authData.session.access_token, {
-          httpOnly: false,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 315360000000 // 10 years for development (permanent)
-          // Removed domain to use default
-        });
-        // console.log removed for security
-      }
+      // SECURITY: Removed non-httpOnly debug cookie to prevent token exposure
       // Verify cookies are set in response headers
       // console.log removed for security
       // console.log removed for security
+      // SECURITY: Tokens are set in HttpOnly cookies, not in response body
       res.json({
         success: true,
         data: {
-          user,
-          session: {
-            accessToken: authData.session.access_token,
-            refreshToken: authData.session.refresh_token,
-            expiresAt: authData.session.expires_at
-          }
+          user
+          // Tokens are set in HttpOnly cookies only, not exposed in response
         },
         message: 'Login successful'
       });

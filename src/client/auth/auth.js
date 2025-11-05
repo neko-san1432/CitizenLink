@@ -2,6 +2,7 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { saveUserMeta, getOAuthContext } from './authChecker.js';
+import { setButtonLoading, temporarilyMark } from '../utils/buttonState.js';
 import { addCsrfTokenToForm } from '../utils/csrf.js';
 import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword, isValidEmail } from '../utils/validation.js';
 
@@ -135,6 +136,8 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   if (!captchaResult.ok) return;
 
   try {
+    const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn');
+    const resetBtn = setButtonLoading(submitBtn, 'Creating account...');
     // Build JSON payload (role defaults to 'citizen' on backend)
     const payload = {
       email: validation.sanitizedData.email,
@@ -160,17 +163,12 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     const isApiSuccess = result && result.success === true;
     const looksLikeSuccess = /account created|verify your email|verification email/i.test(successMessage);
     if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
-      // Ensure browser Supabase client has the session to prevent auto-logout
-      try {
-        const accessToken = result.data?.session?.accessToken || null;
-        const refreshToken = result.data?.session?.refreshToken || null;
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        }
-      } catch (e) {
-        console.warn('Failed to set Supabase client session:', e);
-      }
+      // SECURITY: Tokens are no longer in response, Supabase session is managed server-side
+      // Server sets HttpOnly cookie, client relies on that for authentication
+      // No need to manually set session here as server handles it
       showMessage('success', 'Successfully registered. Please confirm via the email we sent.');
+      temporarilyMark(submitBtn, 'Success', 'btn-success');
+      resetBtn();
       setTimeout(()=>{window.location.href = '/login';},3000);
     } else {
       const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
@@ -179,10 +177,14 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       } else {
         showMessage('error', result.error || successMessage || 'Registration failed');
       }
+      temporarilyMark(submitBtn, 'Failed', 'btn-danger');
+      resetBtn();
     }
   } catch (error) {
     console.error('Registration error:', error);
     showMessage('error', 'Registration failed. Please try again.');
+    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); temporarilyMark(submitBtn, 'Failed', 'btn-danger'); } catch {}
+    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); } catch {}
   }
 });
 const loginFormEl = document.getElementById('login');
@@ -252,75 +254,84 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     });
     const result = await response.json();
     if (result.success) {
-      // Persist access token to HttpOnly cookie for server-protected pages
+      // SECURITY: Server sets HttpOnly cookie, client also signs in to get Supabase session
       try {
-        const accessToken = result.data?.session?.accessToken || null;
-        // console.log removed for security
-        // console.log removed for security
-        if (accessToken) {
-          // console.log removed for security
-          // console.log removed for security
-          const ok = await setServerSessionCookie(accessToken, remember);
-          // console.log removed for security
-          if (!ok) {
-            console.error('[CLIENT AUTH] ❌ Failed to establish session');
+        // Sign in client-side with Supabase to sync session (server already set cookie)
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password: pass
+        });
+        if (authError || !authData?.session?.access_token) {
+          console.error('[CLIENT AUTH] ❌ Failed to sync session:', authError);
+          // Server already set cookie, so continue anyway
+          // But try to get session if available
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
             showMessage('error', 'Failed to establish session. Please try again.');
+            hideLoading();
             return;
           }
-          // console.log removed for security
-          // Wait a moment for cookie to be set
-          await new Promise(r => setTimeout(r, 100));
-          // console.log removed for security
-          // console.log removed for security
-          // Verify cookie by hitting a protected endpoint before redirecting
-          // console.log removed for security
-          const resp = await fetch('/api/user/role', {
+        }
+        // Get token from Supabase session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.access_token) {
+          console.error('[CLIENT AUTH] ❌ Failed to get session:', sessionError);
+          showMessage('error', 'Failed to establish session. Please try again.');
+          hideLoading();
+          return;
+        }
+        const accessToken = session.access_token;
+        // Update server cookie with token from Supabase session
+        const ok = await setServerSessionCookie(accessToken, remember);
+        if (!ok) {
+          console.error('[CLIENT AUTH] ❌ Failed to establish session');
+          showMessage('error', 'Failed to establish session. Please try again.');
+          hideLoading();
+          return;
+        }
+        // Wait a moment for cookie to be set
+        await new Promise(r => setTimeout(r, 100));
+        // Verify cookie by hitting a protected endpoint before redirecting
+        const resp = await fetch('/api/user/role', {
+          method: 'GET',
+          credentials: 'include', // Ensure cookies are sent
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!resp.ok) {
+          const errorData = await resp.json().catch(() => ({}));
+          // Try one more time with a longer wait
+          await new Promise(r => setTimeout(r, 1000));
+          const retryResp = await fetch('/api/user/role', {
             method: 'GET',
-            credentials: 'include', // Ensure cookies are sent
+            credentials: 'include',
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json'
             }
           });
-          // console.log removed for security
-          if (!resp.ok) {
-            // console.log removed for security
-            const errorData = await resp.json().catch(() => ({}));
-            // console.log removed for security
-            // Try one more time with a longer wait
-            // console.log removed for security
-            await new Promise(r => setTimeout(r, 1000));
-            const retryResp = await fetch('/api/user/role', {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            });
-            // console.log removed for security
-            if (retryResp.ok) {
-              // console.log removed for security
+          if (retryResp.ok) {
+            // Success
+          } else {
+            const retryErrorData = await retryResp.json().catch(() => ({}));
+            console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
+            // Enhanced error message based on specific error
+            let errorMessage = 'Session verification failed. ';
+            if (retryResp.status === 401) {
+              errorMessage += 'Your session has expired. Please log in again.';
+            } else if (retryResp.status === 403) {
+              errorMessage += 'Access denied. Please contact support.';
+            } else if (retryResp.status >= 500) {
+              errorMessage += 'Server error. Please try again later.';
             } else {
-              const retryErrorData = await retryResp.json().catch(() => ({}));
-              console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
-              // Enhanced error message based on specific error
-              let errorMessage = 'Session verification failed. ';
-              if (retryResp.status === 401) {
-                errorMessage += 'Your session has expired. Please log in again.';
-              } else if (retryResp.status === 403) {
-                errorMessage += 'Access denied. Please contact support.';
-              } else if (retryResp.status >= 500) {
-                errorMessage += 'Server error. Please try again later.';
-              } else {
-                errorMessage += 'Please try logging in again.';
-              }
-              showMessage('error', errorMessage);
-              hideLoading();
-              return;
+              errorMessage += 'Please try logging in again.';
             }
+            showMessage('error', errorMessage);
+            hideLoading();
+            return;
           }
-          // console.log removed for security
         }
       } catch (error) {
         console.error('[CLIENT AUTH] Error in session setup:', error);
@@ -328,22 +339,24 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         throw error; // Re-throw to be caught by outer catch
       }
       showMessage('success', 'Logged in successfully');
-      // Get role from multiple sources
-      const sessionUserMetadata = result.data?.session?.user?.user_metadata || {};
-      const sessionRawUserMetadata = result.data?.session?.user?.raw_user_meta_data || {};
-      // console.log removed for security
-      const combinedSessionMetadata = { ...sessionRawUserMetadata, ...sessionUserMetadata };
+      // SECURITY: Get user data from Supabase session, not response
+      // Get role from Supabase session user metadata
+      const { data: { session: clientSession } } = await supabase.auth.getSession();
+      const user = clientSession?.user || result.data?.user;
+      const userMetadata = user?.user_metadata || {};
+      const rawUserMetaData = user?.raw_user_meta_data || {};
+      const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
       const role = result.data?.user?.role
-        || combinedSessionMetadata.role
-        || combinedSessionMetadata.normalized_role
-        || sessionUserMetadata.role
-        || sessionRawUserMetadata.role
+        || combinedMetadata.role
+        || combinedMetadata.normalized_role
+        || userMetadata.role
+        || rawUserMetaData.role
         || null;
       const name = result.data?.user?.fullName
         || (result.data?.user?.firstName && result.data?.user?.lastName ? `${result.data.user.firstName} ${result.data.user.lastName}` : null)
-        || combinedSessionMetadata.name
-        || sessionUserMetadata.name
-        || sessionRawUserMetadata.name
+        || combinedMetadata.name
+        || userMetadata.name
+        || rawUserMetaData.name
         || null;
       // console.log removed for security
       if (role || name) {

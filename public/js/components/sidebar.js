@@ -45,24 +45,19 @@ const menuIcons = {
 };
 async function setSidebarRole() {
   try {
-    console.log('Setting up sidebar...');
     // Get user role with better error handling
     let role = null;
     try {
       role = await getUserRole({ refresh: true });
-      console.log('Retrieved role:', role);
     } catch (error) {
       console.error('Failed to get user role:', error);
       // Try to get role from session as fallback
       try {
         const { supabase } = await import('../config/config.js');
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session data:', session);
         if (session?.user) {
           const metadata = session.user.raw_user_meta_data || session.user.user_metadata || {};
-          console.log('User metadata:', metadata);
           role = metadata.role || metadata.normalized_role;
-          console.log('Fallback role from session:', role);
         }
       } catch (sessionError) {
         console.error('Failed to get role from session:', sessionError);
@@ -74,7 +69,6 @@ async function setSidebarRole() {
         const { getUserMeta } = await import('../auth/authChecker.js');
         const userMeta = getUserMeta();
         role = userMeta?.role;
-        console.log('Role from localStorage:', role);
       } catch (error) {
         console.error('Failed to get role from localStorage:', error);
       }
@@ -85,10 +79,8 @@ async function setSidebarRole() {
       return;
     }
     const roleLower = role.toLowerCase();
-    console.log('Processing role:', roleLower);
     // Define menu items based on role
     const menuItems = getMenuItemsForRole(roleLower);
-    console.log('Menu items for role:', menuItems);
     // Build sidebar HTML
     if (_sidebarEl) {
       _sidebarEl.innerHTML = `
@@ -134,7 +126,6 @@ async function setSidebarRole() {
       // Theme toggle is handled by header.js
       initializeLogout();
       
-      console.log('Sidebar initialized successfully');
     }
   } catch (error) {
     console.error('Failed to set sidebar role:', error);
@@ -153,7 +144,6 @@ async function setSidebarRole() {
   }
 }
 function getMenuItemsForRole(role) {
-  console.log('Getting menu items for role:', role);
   const menuItems = {
     'citizen': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -202,7 +192,6 @@ function getMenuItemsForRole(role) {
   }
   // Return menu items for exact role match
   const items = menuItems[role] || [];
-  console.log('Returning menu items:', items);
   return items;
 }
 // Sidebar search removed per requirements

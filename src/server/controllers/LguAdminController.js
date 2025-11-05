@@ -635,27 +635,40 @@ class LguAdminController {
       // console.log removed for security
       // console.log removed for security
       // Get officer information for assigned complaints
-      const assignedOfficerIds = departmentAssignments
+      const assignedOfficerIds = [...new Set(departmentAssignments
         .filter(a => a.assigned_to)
-        .map(a => a.assigned_to);
+        .map(a => a.assigned_to))];
       let officersMap = {};
       if (assignedOfficerIds && assignedOfficerIds.length > 0) {
         try {
-          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-          if (authError) {
-            console.error('[LGU_ADMIN] Error fetching auth users for officers:', authError);
-          } else if (authUsers?.users) {
-            officersMap = authUsers.users
-              .filter(u => assignedOfficerIds.includes(u.id))
-              .reduce((acc, user) => {
-                acc[user.id] = {
+          // Fetch users by ID individually to avoid pagination issues with listUsers()
+          // This is more efficient and reliable than fetching all users
+          const userPromises = assignedOfficerIds.map(async (officerId) => {
+            try {
+              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(officerId);
+              if (!userError && userData?.user) {
+                const user = userData.user;
+                return {
                   id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email,
                   email: user.email
                 };
-                return acc;
-              }, {});
-          }
+              }
+              return null;
+            } catch (err) {
+              console.warn(`[LGU_ADMIN] Error fetching officer ${officerId}:`, err.message);
+              return null;
+            }
+          });
+          
+          const userResults = await Promise.allSettled(userPromises);
+          officersMap = userResults
+            .filter(result => result.status === 'fulfilled' && result.value !== null)
+            .reduce((acc, result) => {
+              const user = result.value;
+              acc[user.id] = { id: user.id, name: user.name, email: user.email };
+              return acc;
+            }, {});
         } catch (authErr) {
           console.error('[LGU_ADMIN] Auth API error for officers:', authErr);
         }
@@ -665,19 +678,33 @@ class LguAdminController {
       let citizensMap = {};
       if (citizenIds && citizenIds.length > 0) {
         try {
-          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-          if (authError) {
-            console.error('[LGU_ADMIN] Error fetching auth users for citizens:', authError);
-          } else if (authUsers?.users) {
-            citizensMap = authUsers.users
-              .filter(u => citizenIds.includes(u.id))
-              .reduce((acc, user) => {
-                acc[user.id] = {
+          // Fetch users by ID individually to avoid pagination issues with listUsers()
+          // This is more efficient and reliable than fetching all users
+          const userPromises = citizenIds.map(async (citizenId) => {
+            try {
+              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(citizenId);
+              if (!userError && userData?.user) {
+                const user = userData.user;
+                return {
+                  id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email
                 };
-                return acc;
-              }, {});
-          }
+              }
+              return null;
+            } catch (err) {
+              console.warn(`[LGU_ADMIN] Error fetching citizen ${citizenId}:`, err.message);
+              return null;
+            }
+          });
+          
+          const userResults = await Promise.allSettled(userPromises);
+          citizensMap = userResults
+            .filter(result => result.status === 'fulfilled' && result.value !== null)
+            .reduce((acc, result) => {
+              const user = result.value;
+              acc[user.id] = { name: user.name };
+              return acc;
+            }, {});
         } catch (authErr) {
           console.error('[LGU_ADMIN] Auth API error for citizens:', authErr);
         }

@@ -771,11 +771,18 @@ class ComplaintDetails {
             'assigned': 1,
             'in_progress': 2,
             'pending_approval': 3,
-            'completed': 4
+            'completed': 3, // Step 3: awaiting citizen confirmation, not fully completed yet
+            'confirmed': 4, // Step 4: citizen confirmed, fully completed
+            'closed': 4
         };
         // For cancelled complaints, don't show any active steps - gray everything out
         // Otherwise, show progress up to the current step
-        const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+        let currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+        
+        // If citizen has confirmed, show step 4 (all circles completed) even if status is still 'completed'
+        if (!isCancelled && this.complaint.confirmed_by_citizen && (workflowStatus === 'completed' || workflowStatus === 'resolved')) {
+            currentStep = 4;
+        }
         
         // Step labels
         const stepLabels = [

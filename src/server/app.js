@@ -382,28 +382,27 @@ class CitizenLinkApp {
             error: 'targetRole is required'
           });
         }
-        // Prepare new metadata
+        // Prepare new metadata to write via Admin API
         const newMetadata = {
-          ...user.raw_user_meta_data,
+          ...(user.raw_user_meta_data || {}),
           role: targetRole
         };
-        // If switching to citizen, store previous role as base_role for UI logic
         if (targetRole === 'citizen' && previousRole) {
           newMetadata.base_role = previousRole;
+        } else if (targetRole !== 'citizen') {
+          // Leaving citizen mode: clear base_role for clarity
+          delete newMetadata.base_role;
         }
-        // Update user metadata directly using the auth.users table
-        const { error: updateError } = await Database.getClient()
-          .from('auth.users')
-          .update({
-            raw_user_meta_data: newMetadata
-          })
-          .eq('id', user.id);
-        if (updateError) {
-          console.error('Error updating user role:', updateError);
-          return res.status(500).json({
-            success: false,
-            error: 'Failed to update role'
-          });
+
+        // Use Supabase Admin API to update auth user metadata (reliable and supported)
+        const supabase = Database.getClient();
+        const { error: adminUpdateError } = await supabase.auth.admin.updateUserById(user.id, {
+          user_metadata: newMetadata,
+          raw_user_meta_data: newMetadata
+        });
+        if (adminUpdateError) {
+          console.error('Error updating user role via admin API:', adminUpdateError);
+          return res.status(500).json({ success: false, error: 'Failed to update role' });
         }
         res.json({
           success: true,
@@ -730,7 +729,7 @@ class CitizenLinkApp {
     });
 
     // Public pages
-    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'OAuthContinuation', 'success'];
+    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'OAuthContinuation', 'success', 'email-verification-success'];
     publicPages.forEach(page => {
       this.app.get(`/${page}`, (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', `${page}.html`));
