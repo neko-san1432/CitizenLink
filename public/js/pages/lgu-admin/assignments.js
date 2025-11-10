@@ -107,7 +107,7 @@ class LguAdminAssignments {
     document.getElementById('assignments-list').addEventListener('click', (event) => {
       const item = event.target.closest('.assignment-card');
       if (item) {
-        const complaintId = item.dataset.complaintId;
+        const {complaintId} = item.dataset;
         const complaint = this.assignments.find(a => a.complaint_id === complaintId);
         if (complaint) {
           this.selectComplaint(complaint);
@@ -324,28 +324,28 @@ class LguAdminAssignments {
     // View Details buttons (for all complaints)
     document.querySelectorAll('.view-details-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.openComplaintDetailsPanel(complaintId);
       });
     });
     // Assign buttons
     document.querySelectorAll('.assign-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.openAssignmentModal(complaintId);
       });
     });
     // Reassign buttons
     document.querySelectorAll('.reassign-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.openAssignmentModal(complaintId, true);
       });
     });
     // View Assignment buttons (for assigned complaints)
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.viewComplaintDetails(complaintId);
       });
     });
@@ -353,7 +353,7 @@ class LguAdminAssignments {
     document.querySelectorAll('.assignment-card').forEach(card => {
       card.addEventListener('click', (e) => {
         if (e.target.classList.contains('assignment-card')) {
-          const complaintId = e.target.dataset.complaintId;
+          const {complaintId} = e.target.dataset;
           const complaint = this.assignments.find(a => a.complaint_id === complaintId);
           if (complaint) {
             this.selectComplaint(complaint);
@@ -370,9 +370,9 @@ class LguAdminAssignments {
     const complaintSummary = document.getElementById('complaint-summary');
     if (!modal || !form || !officerCheckboxes) {
       console.error('[LGU_ADMIN_ASSIGNMENTS] Modal elements not found:', {
-        modal: !!modal,
-        form: !!form,
-        officerCheckboxes: !!officerCheckboxes
+        modal: Boolean(modal),
+        form: Boolean(form),
+        officerCheckboxes: Boolean(officerCheckboxes)
       });
       return;
     }
@@ -632,8 +632,8 @@ class LguAdminAssignments {
 
   async loadComplaintEvidence(complaintId) {
     try {
-      
-      
+
+
       const evidenceContainer = document.getElementById(`evidence-container-${complaintId}`);
       if (!evidenceContainer) {
         console.error('[LGU_ADMIN_ASSIGNMENTS] Evidence container not found for complaint:', complaintId);
@@ -711,13 +711,13 @@ class LguAdminAssignments {
 
     } catch (error) {
       console.error('[LGU_ADMIN_ASSIGNMENTS] Error loading evidence:', error);
-      
+
       // Try to extract detailed error message
       let errorMessage = 'Failed to load evidence files';
       if (error.response?.data?.details) {
-        const details = error.response.data.details;
+        const {details} = error.response.data;
         if (details.rejectedOfficers && details.rejectedOfficers.length > 0) {
-          const reasons = details.rejectedOfficers.map(o => 
+          const reasons = details.rejectedOfficers.map(o =>
             `${o.email || o.id}: ${o.reason}${o.officerDept ? ` (has: ${o.officerDept}, needs: ${o.requiredDept})` : ''}`
           ).join('; ');
           errorMessage = `Cannot assign: ${reasons}`;
@@ -740,7 +740,7 @@ class LguAdminAssignments {
     // Preview buttons
     document.querySelectorAll(`#evidence-container-${complaintId} .btn-outline`).forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const fileName = e.target.closest('.evidence-item').dataset.fileName;
+        const {fileName} = e.target.closest('.evidence-item').dataset;
         const fileUrl = e.target.onclick.toString().match(/'([^']+)'/)[1];
         this.previewEvidence(fileName, fileUrl);
       });
@@ -749,7 +749,7 @@ class LguAdminAssignments {
     // Download buttons
     document.querySelectorAll(`#evidence-container-${complaintId} .btn-primary`).forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const fileName = e.target.closest('.evidence-item').dataset.fileName;
+        const {fileName} = e.target.closest('.evidence-item').dataset;
         const fileUrl = e.target.onclick.toString().match(/'([^']+)'/)[1];
         this.downloadEvidence(fileName, fileUrl);
       });
@@ -781,7 +781,7 @@ class LguAdminAssignments {
     if (!bytes) return 'Unknown size';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`;
   }
   isImageFile(fileName) {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
@@ -854,7 +854,7 @@ class LguAdminAssignments {
   getPriorityClass(priority) {
     const priorityClasses = {
       'low': 'priority-low',
-      'medium': 'priority-medium', 
+      'medium': 'priority-medium',
       'high': 'priority-high',
       'urgent': 'priority-urgent'
     };

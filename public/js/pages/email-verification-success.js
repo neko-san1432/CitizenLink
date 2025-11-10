@@ -11,13 +11,13 @@ const updateCountdown = () => {
   if (countdownElement) {
     countdownElement.textContent = countdown;
   }
-  
+
   if (countdown <= 0) {
     // Redirect to login page
     window.location.href = REDIRECT_URL;
     return;
   }
-  
+
   countdown--;
   // Update every second
   setTimeout(updateCountdown, 1000);

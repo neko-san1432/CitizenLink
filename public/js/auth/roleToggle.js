@@ -106,7 +106,7 @@ async function switchRole(targetRole) {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        targetRole: targetRole,
+        targetRole,
         previousRole: currentRole
       })
     });
@@ -114,11 +114,11 @@ async function switchRole(targetRole) {
     if (result.success) {
       window.location.reload();
     } else {
-      alert('Failed to switch role: ' + (result.message || 'Unknown error'));
+      alert(`Failed to switch role: ${  result.message || 'Unknown error'}`);
     }
   } catch (error) {
     console.error('[ROLE_TOGGLE] Error switching role:', error);
-    alert('Error switching role: ' + error.message);
+    alert(`Error switching role: ${  error.message}`);
   }
 }
 /**
@@ -138,9 +138,9 @@ function addButtonToHeader(currentRole = 'lgu', baseRole = null) {
       header.appendChild(rightSection);
       headerRight = rightSection;
     } else {
-    return false;
+      return false;
+    }
   }
-}
   // Create and add button with current role and base role
   const button = createRoleButton(currentRole, baseRole);
   headerRight.appendChild(button);
@@ -158,8 +158,8 @@ export async function initializeRoleToggle() {
   isInitialized = true;
   try {
     // Get user role info
-      const response = await fetch('/api/user/role-info', {
-        credentials: 'include',
+    const response = await fetch('/api/user/role-info', {
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
     const result = await response.json();
@@ -192,17 +192,17 @@ export async function canSwitchToCitizen() {
       const baseRole = roleInfoCache.data.base_role;
       return baseRole && baseRole !== 'citizen';
     }
-      const response = await fetch('/api/user/role-info', {
-        credentials: 'include',
+    const response = await fetch('/api/user/role-info', {
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
     const result = await response.json();
     if (!result.success) {
       return false;
     }
-      // Cache the result
-      roleInfoCache = result;
-      roleInfoCacheTime = now;
+    // Cache the result
+    roleInfoCache = result;
+    roleInfoCacheTime = now;
     const baseRole = result.data.base_role;
     return baseRole && baseRole !== 'citizen';
   } catch (error) {
@@ -268,7 +268,7 @@ export async function switchToCitizenMode() {
     const result = await response.json();
     if (result.success) {
       window.location.reload();
-  } else {
+    } else {
       console.error('Failed to switch to citizen mode:', result.message);
     }
   } catch (error) {
@@ -338,7 +338,7 @@ export async function getActualRole() {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeRoleToggle);
 } else {
-    initializeRoleToggle();
+  initializeRoleToggle();
 }
 // Default export
 

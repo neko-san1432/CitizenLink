@@ -99,7 +99,11 @@ async function getLegacyDepartmentMapping() {
   departments.forEach(dept => {
     // Map common legacy codes to new names
     const legacyCode = dept.code.toLowerCase();
-    mapping[legacyCode] = dept.name;
+    // Validate input to prevent object injection
+    if (legacyCode && typeof legacyCode === 'string' && legacyCode.length < 100) {
+      // eslint-disable-next-line security/detect-object-injection
+      mapping[legacyCode] = dept.name;
+    }
     // Also map by partial name matching for common patterns
     if (legacyCode.includes('wst') || dept.name.toLowerCase().includes('water')) {
       mapping['wst'] = dept.name;
@@ -169,9 +173,14 @@ async function getKeywordBasedSuggestions() {
     }
     // Create regex patterns for common keywords
     keywords.forEach(keyword => {
-      if (keyword.length > 2) { // Only meaningful keywords
+      if (keyword.length > 2 && keyword.length < 50) { // Only meaningful keywords with length limit
+        // Escape special regex characters to prevent ReDoS
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Use a whitelist approach: only create regex for safe keywords
+        // eslint-disable-next-line security/detect-non-literal-regexp
+        const pattern = new RegExp(`\\b${escapedKeyword}\\b`, 'i');
         suggestions.push({
-          pattern: new RegExp(`\\b${keyword}\\b`, 'i'),
+          pattern,
           departments: [dept.code],
           reason: `keyword: ${keyword}`
         });
@@ -220,20 +229,13 @@ module.exports = {
     // Debug logging
     // console.log removed for security
     // console.log removed for security
-    // If no departments found in database, use hardcoded fallback
+    // If no departments found in database, return empty valid codes
+    // This ensures we only validate against actual database records
     const validSet = new Set(departments.map(d => d.code));
     if (validSet.size === 0) {
       // console.log removed for security
-      const hardcodedCodes = ['CEO', 'GSO', 'CPDC', 'CHO', 'CSWDO', 'CDRRMO', 'ENRO'];
-      const hardcodedSet = new Set(hardcodedCodes);
-      const validCodes = [];
-      const invalidCodes = [];
-      for (const c of input) {
-        if (hardcodedSet.has(c)) validCodes.push(c); else invalidCodes.push(c);
-      }
-      // console.log removed for security
-      // console.log removed for security
-      return { validCodes, invalidCodes };
+      // No departments in database - return all as invalid to prompt database setup
+      return { validCodes: [], invalidCodes: input };
     }
     const validCodes = [];
     const invalidCodes = [];

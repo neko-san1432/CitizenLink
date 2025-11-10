@@ -228,21 +228,21 @@ class LguAdminAssignments {
     // Assign buttons
     document.querySelectorAll('.assign-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.openAssignmentModal(complaintId);
       });
     });
     // Reassign buttons
     document.querySelectorAll('.reassign-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.openAssignmentModal(complaintId, true);
       });
     });
     // View buttons
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         this.viewComplaintDetails(complaintId);
       });
     });

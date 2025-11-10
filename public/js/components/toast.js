@@ -36,7 +36,7 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
       case 'error': return '✕';
       case 'warning': return '⚠';
       case 'urgent': return '🚨';
-      case 'info': 
+      case 'info':
       default: return 'ℹ';
     }
   };
@@ -66,7 +66,7 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
 
   // Close button
   toast.querySelector('.toast-close')?.addEventListener('click', close);
-  
+
   // Click to navigate (if link provided)
   if (options.link) {
     toast.addEventListener('click', (e) => {

@@ -65,7 +65,7 @@ class NotificationController {
       const deduplicatedNotifications = [];
       const seenKeys = new Set();
       // Sort by created_at descending to keep most recent
-      const sortedNotifications = (notifications || []).sort((a, b) => 
+      const sortedNotifications = (notifications || []).sort((a, b) =>
         new Date(b.created_at) - new Date(a.created_at)
       );
       for (const notification of sortedNotifications) {
@@ -137,7 +137,7 @@ class NotificationController {
       const deduplicatedNotifications = [];
       const seenKeys = new Set();
       // Sort by created_at descending to keep most recent
-      const sortedNotifications = (notifications || []).sort((a, b) => 
+      const sortedNotifications = (notifications || []).sort((a, b) =>
         new Date(b.created_at) - new Date(a.created_at)
       );
       for (const notification of sortedNotifications) {
@@ -193,7 +193,7 @@ class NotificationController {
       const dedupKey = r => `${r.type}|${r.title}|${r.metadata?.complaint_id || ''}`;
       const seenKeys = new Set();
       // Sort by created_at descending to keep most recent
-      const sortedNotifications = (notifications || []).sort((a, b) => 
+      const sortedNotifications = (notifications || []).sort((a, b) =>
         new Date(b.created_at) - new Date(a.created_at)
       );
       for (const notification of sortedNotifications) {

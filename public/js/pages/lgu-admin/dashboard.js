@@ -67,8 +67,8 @@ class LguAdminDashboard {
           <p>No complaint assignments found.</p>
         </div>
       `;
-    return;
-  }
+      return;
+    }
     container.innerHTML = `
       <div class="assignments-list">
         ${this.assignments.map(assignment => this.renderAssignmentCard(assignment)).join('')}

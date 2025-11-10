@@ -22,6 +22,35 @@ class LinkGenerator {
     if (form) {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
+
+    // Generate New Link button
+    const generateBtn = document.getElementById('generateNewLinkBtn');
+    if (generateBtn) {
+      generateBtn.addEventListener('click', () => this.generateLink());
+    }
+
+    // Cancel button
+    const cancelBtn = document.getElementById('cancelGenerateBtn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.cancelGenerate());
+    }
+
+    // Copy link button
+    const copyBtn = document.getElementById('copyLinkBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => this.copyLink());
+    }
+
+    // Filter selects
+    const roleFilter = document.getElementById('roleFilter');
+    if (roleFilter) {
+      roleFilter.addEventListener('change', () => this.filterLinks());
+    }
+
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', () => this.filterLinks());
+    }
   }
   async loadDepartments() {
     try {
@@ -32,7 +61,7 @@ class LinkGenerator {
         const userRole = await this.getUserRole();
         await this.filterDepartmentsByRole(userRole);
         this.populateDepartmentSelect();
-        this.setupRoleRestrictions(userRole);
+        await this.setupRoleRestrictions(userRole);
       }
     } catch (error) {
       console.error('Failed to load departments:', error);
@@ -49,16 +78,44 @@ class LinkGenerator {
   }
   async getHRDepartment(userRole) {
     if (userRole && userRole === 'lgu-hr') {
-      // Get department from user metadata
+      // Get department from API endpoint which has complete metadata
+      try {
+        const response = await apiClient.get('/api/user/role-info');
+        if (response.success && response.data) {
+          // First try direct department field from API response
+          if (response.data.department) {
+            return response.data.department.toUpperCase();
+          }
+          // Then try metadata fields
+          const metadata = response.data.metadata || response.data;
+          const department = metadata.department ||
+                             metadata.dpt ||
+                             metadata.raw_user_meta_data?.department ||
+                             metadata.raw_user_meta_data?.dpt ||
+                             metadata.user_metadata?.department ||
+                             metadata.user_metadata?.dpt;
+          if (department) {
+            return department.toUpperCase();
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to get department from API:', error);
+      }
+      // Fallback: try Supabase session metadata
       try {
         const { supabase } = await import('../../config/config.js');
         const { data: { session } } = await supabase.auth.getSession();
         const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
-        return metadata.dpt || metadata.department || 'WST'; // Fallback to WST if not found
+        const department = metadata.department || metadata.dpt;
+        if (department) {
+          return department.toUpperCase();
+        }
       } catch (error) {
-        console.warn('Failed to get department from metadata:', error);
-        return 'WST'; // Default fallback
+        console.warn('Failed to get department from session:', error);
       }
+      // Last resort: return null instead of hardcoded 'WST'
+      console.warn('No department found in user metadata');
+      return null;
     }
     return null;
   }
@@ -72,7 +129,7 @@ class LinkGenerator {
     }
     // Coordinators and super-admin can see all departments
   }
-  setupRoleRestrictions(userRole) {
+  async setupRoleRestrictions(userRole) {
     // console.log removed for security
     const roleSelect = document.getElementById('role');
     const roleInfo = document.getElementById('role-info');
@@ -85,17 +142,30 @@ class LinkGenerator {
           option.style.display = 'none';
         }
       });
-      // Get HR user's department
-      const hrDepartment = userRole.split('-')[2]?.toUpperCase() || 'WST';
+      // Get HR user's department dynamically from metadata
+      const hrDepartment = await this.getHRDepartment(userRole);
+      if (!hrDepartment) {
+        // If no department found, show a generic message
+        if (roleInfo && roleDescription) {
+          roleDescription.textContent = 'As an LGU-HR, you can only create signup links for your assigned department with officer or admin roles. Please contact your administrator if your department is not set.';
+          roleInfo.style.display = 'block';
+        }
+        return;
+      }
+      const departmentName = this.getDepartmentName(hrDepartment);
       // console.log removed for security
       // Hide the department field completely for LGU-HR
       const departmentField = document.querySelector('.form-group:has(#department)');
       if (departmentField) {
         departmentField.style.display = 'none';
       }
-      // Show role info
+      // Show role info with dynamic department
       if (roleInfo && roleDescription) {
-        roleDescription.textContent = `As an LGU-HR, you can only create signup links for ${hrDepartment} department with officer or admin roles.`;
+        // Only show department code if name lookup failed
+        const displayText = departmentName && departmentName !== hrDepartment
+          ? `${departmentName} (${hrDepartment})`
+          : hrDepartment;
+        roleDescription.textContent = `As an LGU-HR, you can only create signup links for ${displayText} department with officer or admin roles.`;
         roleInfo.style.display = 'block';
       }
     } else if (userRole === 'complaint-coordinator') {
@@ -111,6 +181,20 @@ class LinkGenerator {
         roleInfo.style.display = 'block';
       }
     }
+  }
+  getDepartmentName(departmentCode) {
+    if (!departmentCode) return null;
+    // Try to find department name from loaded departments
+    const dept = this.departments.find(d =>
+      d.code === departmentCode ||
+      d.code === departmentCode.toUpperCase() ||
+      d.code?.toUpperCase() === departmentCode.toUpperCase()
+    );
+    if (dept && dept.name) {
+      return dept.name;
+    }
+    // Return null if not found (not the code itself)
+    return null;
   }
   populateDepartmentSelect() {
     const select = document.getElementById('department');
@@ -144,10 +228,10 @@ class LinkGenerator {
       container.innerHTML = '<div class="no-links">No signup links generated yet</div>';
       return;
     }
-    container.innerHTML = this.links.map(link => {
+    container.innerHTML = this.links.map((link, index) => {
       // console.log removed for security
       return `
-      <div class="link-item ${link.is_expired ? 'expired' : ''} ${link.is_used ? 'used' : ''}">
+      <div class="link-item ${link.is_expired ? 'expired' : ''} ${link.is_used ? 'used' : ''}" data-link-id="${link.id}">
         <div class="link-item-header">
           <span class="link-role">${this.getRoleDisplayName(link.role)}</span>
           <span class="link-status ${this.getStatusClass(link)}">${this.getStatusText(link)}</span>
@@ -163,11 +247,11 @@ class LinkGenerator {
           <div><strong>URL:</strong> <a href="${link.url}" target="_blank">Open Link</a></div>
         </div>
         <div class="link-actions">
-          <button class="btn btn-sm btn-primary" onclick="linkGenerator.copyLinkUrl('${link.url}')">
+          <button class="btn btn-sm btn-primary copy-link-url-btn" data-link-url="${encodeURIComponent(link.url)}">
             Copy URL
           </button>
           ${!link.is_used && !link.is_expired ? `
-            <button class="btn btn-sm btn-warning" onclick="linkGenerator.deactivateLink('${link.id}')">
+            <button class="btn btn-sm btn-warning deactivate-link-btn" data-link-id="${link.id}">
               Deactivate
             </button>
           ` : ''}
@@ -175,6 +259,35 @@ class LinkGenerator {
       </div>
     `;
     }).join('');
+
+    // Attach event listeners to dynamically generated buttons
+    this.attachLinkEventListeners(container);
+  }
+  attachLinkEventListeners(container) {
+    // Copy URL buttons
+    container.querySelectorAll('.copy-link-url-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const url = btn.getAttribute('data-link-url');
+        if (url) {
+          this.copyLinkUrl(decodeURIComponent(url));
+        }
+      });
+    });
+
+    // Deactivate buttons
+    container.querySelectorAll('.deactivate-link-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const linkId = btn.getAttribute('data-link-id');
+        if (linkId) {
+          this.deactivateLink(linkId);
+        }
+      });
+    });
+  }
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   updateStats() {
     const totalElement = document.getElementById('totalLinks');

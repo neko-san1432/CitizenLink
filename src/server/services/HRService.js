@@ -249,6 +249,85 @@ class HRService {
     }
   }
   /**
+  * Get role distribution for pie chart (HR office only)
+  * Returns: hr, admin, officers within the HR's office
+  */
+  async getRoleDistribution(hrId) {
+    try {
+      // Validate HR role
+      const hrRole = await this.roleService.getUserRole(hrId);
+      const isHR = hrRole === 'lgu-hr' || /^lgu-hr/.test(hrRole);
+      const isSuperAdmin = hrRole === 'super-admin';
+      if (!isHR && !isSuperAdmin) {
+        throw new Error('Access denied: HR role required');
+      }
+
+      // Get HR user's department
+      const { data: hrUser, error: hrUserError } = await this.roleService.supabase.auth.admin.getUserById(hrId);
+      if (hrUserError || !hrUser?.user) {
+        throw new Error('Failed to get HR user information');
+      }
+
+      const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
+      const hrDepartment = hrMetadata.department || hrMetadata.dpt;
+
+      // If super admin, they can see all, but for HR we filter by their department
+      const userService = require('./UserService');
+      const result = await userService.getUsers({ includeInactive: false }, { page: 1, limit: 10000 });
+      const allUsers = result.users || [];
+
+      // Filter users by HR's department (if HR has a department)
+      let officeUsers = allUsers;
+      if (hrDepartment && !isSuperAdmin) {
+        officeUsers = allUsers.filter(user => {
+          const userDept = user.department ||
+                          user.dpt ||
+                          user?.raw_user_meta_data?.department ||
+                          user?.raw_user_meta_data?.dpt ||
+                          user?.user_metadata?.department ||
+                          user?.user_metadata?.dpt;
+          return userDept === hrDepartment;
+        });
+      }
+
+      // Count roles within the office
+      let hr = 0;
+      let officers = 0;
+      let admins = 0;
+
+      officeUsers.forEach(user => {
+        const role = String(user.role || '').toLowerCase();
+        const normalizedRole = String(user.normalizedRole || role).toLowerCase();
+
+        // Count HR
+        if (role === 'lgu-hr' || normalizedRole === 'lgu-hr' || /^lgu-hr/.test(role)) {
+          hr++;
+        }
+        // Count admins (LGU admins only)
+        else if (/^lgu-admin/.test(role) || /^lgu-admin/.test(normalizedRole)) {
+          admins++;
+        }
+        // Count officers (simplified 'lgu' and lgu-* excluding admin/hr)
+        else if (role === 'lgu' || /^lgu-(?!admin|hr)/.test(role)) {
+          officers++;
+        }
+      });
+
+      return {
+        success: true,
+        distribution: {
+          hr,
+          officers,
+          admins
+        },
+        department: hrDepartment || 'All'
+      };
+    } catch (error) {
+      console.error('[HR] Get role distribution error:', error);
+      throw error;
+    }
+  }
+  /**
   * Get role change history for a user
   */
   async getUserRoleHistory(userId, hrId) {
@@ -401,16 +480,40 @@ class HRService {
       if (!isHR) {
         throw new Error('Only HR can view signup links');
       }
-      const Database = require('../config/database');
 
+      // Get HR user metadata to check department
+      const { data: hrUser, error: hrUserError } = await this.roleService.supabase.auth.admin.getUserById(hrId);
+      if (hrUserError || !hrUser?.user) {
+        console.error('[HR] Failed to get HR user info:', hrUserError);
+        throw new Error('Failed to get HR user information');
+      }
+
+      // Get HR department from metadata
+      const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
+      const hrDepartment = hrMetadata.department || hrMetadata.dpt;
+
+      const Database = require('../config/database');
       const db = Database.getInstance();
       const supabase = db.getClient();
+
+      // Build query
+      // - Super Admin: see ALL links
+      // - HR: only links they created (optionally same-office filter applied below)
       let query = supabase
         .from('signup_links')
-        .select('*')
-        .eq('created_by', hrId)
-        .order('created_at', { ascending: false });
-      // Apply filters
+        .select('*');
+      if (hrRole !== 'super-admin') {
+        query = query.eq('created_by', hrId);
+      }
+
+      // HR may optionally be restricted to their office; if so, apply department filter by default
+      if (hrRole !== 'super-admin' && hrDepartment) {
+        query = query.eq('department_code', hrDepartment);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      // Apply additional filters
       if (filters.role) {
         query = query.eq('role', filters.role);
       }
@@ -420,10 +523,14 @@ class HRService {
       if (filters.is_active !== undefined) {
         query = query.eq('is_active', filters.is_active);
       }
+
       const { data: links, error } = await query;
       if (error) {
+        console.error('[HR] Database query error:', error);
+        console.error('[HR] Query details - hrId:', hrId, 'hrId type:', typeof hrId, 'hrRole:', hrRole);
         throw new Error('Failed to fetch signup links');
       }
+
       // console.log removed for security
       // Add full URLs and status to each link
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -485,17 +592,52 @@ class HRService {
     try {
       const Database = require('../config/database');
 
-      const db = Database.getInstance();
-      const supabase = db.getClient();
+      // Use static method to ensure proper initialization
+      let supabase;
+      try {
+        supabase = Database.getClient();
+      } catch (dbError) {
+        console.error('[HR] Database initialization error:', dbError.message);
+        return { valid: false, error: 'Database configuration error. Please ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.' };
+      }
+
+      // Verify database connection is working
+      if (!supabase) {
+        console.error('[HR] Database client not available');
+        return { valid: false, error: 'Database configuration error. Please contact support.' };
+      }
+
       const { data: link, error } = await supabase
         .from('signup_links')
         .select('*')
         .eq('code', code)
         .eq('is_active', true)
         .single();
-      if (error || !link) {
+
+      if (error) {
+        console.error('[HR] Database query error:', error.message, error.code, error.details);
+        // Check for authentication errors
+        if (error.code === 'PGRST116' || error.message?.includes('JWT') || error.message?.includes('authentication') || error.message?.includes('permission denied')) {
+          console.error('[HR] Authentication error - check SUPABASE_SERVICE_ROLE_KEY is correct');
+          return { valid: false, error: 'Database authentication error. Please contact support.' };
+        }
+        // Check for missing table errors
+        if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.error('[HR] Table not found - check database schema');
+          return { valid: false, error: 'Database configuration error. Please contact support.' };
+        }
+        // Check for RLS policy errors
+        if (error.message?.includes('RLS') || error.message?.includes('policy')) {
+          console.error('[HR] RLS policy error - service role key should bypass RLS');
+          return { valid: false, error: 'Database permission error. Please contact support.' };
+        }
         return { valid: false, error: 'Invalid or expired signup code' };
       }
+
+      if (!link) {
+        return { valid: false, error: 'Invalid or expired signup code' };
+      }
+
       // Check if expired
       if (link.expires_at && new Date(link.expires_at) < new Date()) {
         return { valid: false, error: 'Signup code has expired' };
@@ -513,7 +655,11 @@ class HRService {
         }
       };
     } catch (error) {
-      console.error('[HR] Validate signup code error:', error);
+      console.error('[HR] Validate signup code error:', error.message, error.stack);
+      // Check for authentication/configuration errors
+      if (error.message?.includes('not configured') || error.message?.includes('SUPABASE')) {
+        return { valid: false, error: 'Database configuration error. Please ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are set.' };
+      }
       return { valid: false, error: 'Failed to validate signup code' };
     }
   }

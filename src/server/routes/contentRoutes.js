@@ -386,7 +386,7 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
       return res.status(500).json({
         success: false,
         error: 'Failed to create notice',
-        details: 'Insert operation returned no data. Verification query: ' + (verifyError ? verifyError.message : 'No matching record found')
+        details: `Insert operation returned no data. Verification query: ${  verifyError ? verifyError.message : 'No matching record found'}`
       });
     }
     const insertedNotice = data[0];

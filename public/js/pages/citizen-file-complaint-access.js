@@ -1,4 +1,4 @@
-    // Citizen File Complaint Access Check
+// Citizen File Complaint Access Check
 import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../auth/roleToggle.js';
 import { getUserRole } from '../auth/authChecker.js';
 import showMessage from '../components/toast.js';

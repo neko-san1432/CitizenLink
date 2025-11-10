@@ -142,6 +142,32 @@ router.get('/departments/all', async (req, res) => {
     });
   }
 });
+// Get ALL departments (alias for /departments/all)
+router.get('/departments', async (req, res) => {
+  try {
+    const supabase = Database.getClient();j;
+    // Get ALL active departments
+    const { data: allDepartments, error: deptError } = await supabase
+      .from('departments')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+    if (deptError) {
+      console.error('[DEPT-API] Departments query error:', deptError);
+      throw deptError;
+    }
+    res.json({
+      success: true,
+      data: allDepartments
+    });
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch departments'
+    });
+  }
+});
 // Get department structure for complaint form (simplified)
 router.get('/complaint-form', async (req, res) => {
   try {

@@ -1,6 +1,7 @@
 // Notification component with lazy loading functionality
 import { brandConfig } from '../config/index.js';
 import apiClient from '../config/apiClient.js';
+import { getNotificationIcon } from '../utils/icons.js';
 
 // Notification state management
 const notificationState = {
@@ -305,7 +306,7 @@ function renderNotifications() {
            data-id="${notification.id}" 
            ${linkAttr}
            style="cursor: ${notification.link ? 'pointer' : 'default'}">
-        <div class="notification-icon">${notification.icon}</div>
+        <div class="notification-icon">${getNotificationIcon(notification.type, { size: 20 })}</div>
         <div class="notification-text">
           <div class="notification-title">${escapeHtml(notification.title)} ${newIndicator}</div>
           <div class="notification-message">${escapeHtml(notification.message)}</div>

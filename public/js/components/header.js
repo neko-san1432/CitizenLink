@@ -106,7 +106,7 @@ export function createHeader() {
 // Initialize global click handler to close dropdowns
 function initializeGlobalClickHandler() {
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', (e) => {
     const notificationPanel = document.getElementById('notification-panel');
     const profilePanel = document.getElementById('profile-panel');
     const notificationBtn = document.getElementById('notification-btn');
@@ -143,7 +143,7 @@ function initializeProfileButton() {
     console.warn('[HEADER] Profile button not found');
     return;
   }
-  profileBtn.addEventListener('click', function(e) {
+  profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
     if (notificationPanel && notificationPanel.classList.contains('show')) {
@@ -173,12 +173,33 @@ function initializeMenuToggle() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', function() {
-      sidebar.classList.toggle('open');
-      menuToggle.classList.toggle('active');
+    menuToggle.addEventListener('click', async () => {
+      // Import sidebar functions dynamically
+      try {
+        const { openSidebar, closeSidebar } = await import('./sidebar.js');
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+        menuToggle.classList.toggle('active');
+        // Update aria-expanded on menu toggle after a brief delay to ensure state is updated
+        setTimeout(() => {
+          menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+        }, 50);
+      } catch (error) {
+        // Fallback to direct class toggle if import fails
+        console.warn('Failed to import sidebar functions, using fallback:', error);
+        sidebar.classList.toggle('open');
+        menuToggle.classList.toggle('active');
+        menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+      }
     });
+    // Set initial aria-expanded state
+    menuToggle.setAttribute('aria-expanded', 'false');
   } else {
-    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
+    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: Boolean(menuToggle), sidebar: Boolean(sidebar) });
   }
 }
 // Initialize theme toggle
@@ -191,7 +212,7 @@ function initializeThemeToggle() {
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
-  themeToggleBtn.addEventListener('click', function() {
+  themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
@@ -221,7 +242,7 @@ function initializeHeaderScroll() {
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         // Scrolling down
         header.style.transform = 'translateY(-100%)';
-    } else {
+      } else {
         // Scrolling up
         header.style.transform = 'translateY(0)';
       }
@@ -246,11 +267,11 @@ function initializeDropdowns() {
   }
 }
 // Initialize header when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // Add a small delay to ensure all elements are ready
   setTimeout(() => {
-    let headerContainer = document.querySelector('.header-container');
-    let headerElement = document.querySelector('#header');
+    const headerContainer = document.querySelector('.header-container');
+    const headerElement = document.querySelector('#header');
     // Try .header-container first, then fall back to #header
     if (headerContainer) {
       const headerHTML = createHeader();
@@ -261,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       console.warn('[HEADER] No header container or header element found!');
       // Try to create a header container as a fallback
-      const body = document.body;
+      const {body} = document;
       if (body) {
         const fallbackHeader = document.createElement('div');
         fallbackHeader.className = 'header-container';

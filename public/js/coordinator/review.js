@@ -3,6 +3,7 @@
  * Handles loading and reviewing individual complaints
  */
 import { Toast } from '../components/toast.js';
+import { getDepartmentNameByIdOrCode, getActiveDepartments } from '../utils/departmentUtils.js';
 
 let currentComplaint = null;
 let complaintId = null;
@@ -44,9 +45,9 @@ async function loadComplaint() {
  */
 async function renderComplaint() {
   // The service returns complaint in nested structure
-  const complaint = currentComplaint.complaint;
-  const similarities = currentComplaint.analysis?.duplicate_candidates || 
-                     currentComplaint.analysis?.similar_complaints || 
+  const {complaint} = currentComplaint;
+  const similarities = currentComplaint.analysis?.duplicate_candidates ||
+                     currentComplaint.analysis?.similar_complaints ||
                      currentComplaint.similarities || [];
   // Hide loading, show content
   document.getElementById('loading').style.display = 'none';
@@ -81,44 +82,10 @@ async function renderComplaint() {
   if (preferredDeptsEl) {
     const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
-      const displayNames = departments.map(dept => {
-        // Check if it's a numeric ID (like "79") or a department code (like "CEO")
-        if (typeof dept === 'number' || /^\d+$/.test(dept)) {
-          // Numeric department ID mapping
-          const numericDeptNames = {
-            '69': 'City Engineering Office',
-            '70': 'City General Services Office',
-            '71': 'City Planning and Development Coordinator',
-            '72': 'Digos City Health Office',
-            '73': 'City Social Welfare and Development Office',
-            '74': 'City Disaster Risk Reduction and Management Office',
-            '75': 'City Environment and Natural Resources Office',
-            '76': 'City Treasurer\'s Office',
-            '77': 'City Economic Enterprise Office',
-            '78': 'Human Resource Management Office',
-            '79': 'Philippine National Police - Digos City Station',
-            '80': 'City Legal Office',
-            '81': 'Office of the City Mayor',
-            '82': 'Public Assistance Desk',
-            '83': 'Office of the City Administrator',
-            '84': 'City Information Office',
-            '85': 'City Accountant\'s Office'
-          };
-          return numericDeptNames[dept.toString()] || `Department ${dept}`;
-        } else {
-          // Department code mapping (fallback for existing codes)
-          const deptNames = {
-            'CEO': 'City Engineering Office',
-            'GSO': 'City General Services Office', 
-            'CPDC': 'City Planning and Development Coordinator',
-            'CHO': 'Digos City Health Office',
-            'CSWDO': 'City Social Welfare and Development Office',
-            'CDRRMO': 'City Disaster Risk Reduction and Management Office',
-            'ENRO': 'City Environment and Natural Resources Office'
-          };
-          return deptNames[dept] || dept;
-        }
-      });
+      // Load department names dynamically
+      const displayNames = await Promise.all(
+        departments.map(dept => getDepartmentNameByIdOrCode(dept))
+      );
       preferredDeptsEl.innerHTML = displayNames.map(name => `<span class="dept-badge">${name}</span>`).join(' ');
     } else {
       preferredDeptsEl.textContent = 'No departments selected by citizen';
@@ -129,45 +96,10 @@ async function renderComplaint() {
   if (preferenceEl) {
     const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
-      // Handle both numeric IDs and department codes
-      const displayNames = departments.map(dept => {
-        // Check if it's a numeric ID (like "79") or a department code (like "CEO")
-        if (typeof dept === 'number' || /^\d+$/.test(dept)) {
-          // Numeric department ID mapping
-          const numericDeptNames = {
-            '69': 'City Engineering Office',
-            '70': 'City General Services Office',
-            '71': 'City Planning and Development Coordinator',
-            '72': 'Digos City Health Office',
-            '73': 'City Social Welfare and Development Office',
-            '74': 'City Disaster Risk Reduction and Management Office',
-            '75': 'City Environment and Natural Resources Office',
-            '76': 'City Treasurer\'s Office',
-            '77': 'City Economic Enterprise Office',
-            '78': 'Human Resource Management Office',
-            '79': 'Philippine National Police - Digos City Station',
-            '80': 'City Legal Office',
-            '81': 'Office of the City Mayor',
-            '82': 'Public Assistance Desk',
-            '83': 'Office of the City Administrator',
-            '84': 'City Information Office',
-            '85': 'City Accountant\'s Office'
-          };
-          return numericDeptNames[dept.toString()] || `Department ${dept}`;
-        } else {
-          // Department code mapping (fallback for existing codes)
-          const deptNames = {
-            'CEO': 'City Engineering Office',
-            'GSO': 'City General Services Office', 
-            'CPDC': 'City Planning and Development Coordinator',
-            'CHO': 'Digos City Health Office',
-            'CSWDO': 'City Social Welfare and Development Office',
-            'CDRRMO': 'City Disaster Risk Reduction and Management Office',
-            'ENRO': 'City Environment and Natural Resources Office'
-          };
-          return deptNames[dept] || dept;
-        }
-      });
+      // Load department names dynamically
+      const displayNames = await Promise.all(
+        departments.map(dept => getDepartmentNameByIdOrCode(dept))
+      );
       preferenceEl.textContent = displayNames.join(', ');
     } else {
       preferenceEl.textContent = 'No preference specified';
@@ -178,18 +110,18 @@ async function renderComplaint() {
     const mapEl = document.getElementById('location-map');
     const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
     const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
-    console.log('[REVIEW] Map setup:', { 
-      mapEl: !!mapEl, 
-      hasLat, 
-      hasLng, 
-      lat: complaint.latitude, 
+    console.log('[REVIEW] Map setup:', {
+      mapEl: Boolean(mapEl),
+      hasLat,
+      hasLng,
+      lat: complaint.latitude,
       lng: complaint.longitude,
       latType: typeof complaint.latitude,
       lngType: typeof complaint.longitude
     });
     if (mapEl && (hasLat || hasLng)) {
       // Use ComplaintMap component
-        if (window.ComplaintMap) {
+      if (window.ComplaintMap) {
         const complaintMap = new window.ComplaintMap('location-map');
         if (hasLat && hasLng) {
           // Add a small delay to ensure map is fully initialized
@@ -223,10 +155,8 @@ async function renderComplaint() {
           console.error('[REVIEW] Fallback map failed:', fallbackError);
         }
       }
-    } else {
-      if (mapEl) {
-        mapEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
-      }
+    } else if (mapEl) {
+      mapEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
     }
   } catch (e) {
     console.warn('[REVIEW] Map init failed:', e);
@@ -318,10 +248,10 @@ function renderEvidence(evidence) {
     return `
       <div class="evidence-item" onclick="openEvidencePreview(${index})" style="cursor: pointer;">
         <div class="evidence-preview">
-          ${isImage(item.fileType, item.fileName) && item.url ? 
-            `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">` :
-            `<div class="evidence-icon" style="display: flex; align-items: center; justify-content: center; height: 120px; font-size: 48px; background: #f3f4f6; border-radius: 8px;">${icon}</div>`
-          }
+          ${isImage(item.fileType, item.fileName) && item.url ?
+    `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">` :
+    `<div class="evidence-icon" style="display: flex; align-items: center; justify-content: center; height: 120px; font-size: 48px; background: #f3f4f6; border-radius: 8px;">${icon}</div>`
+}
           <div class="evidence-info" style="padding: 8px;">
             <div class="evidence-name" style="font-weight: 500; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.fileName}">${item.fileName}</div>
             <div class="evidence-meta" style="font-size: 12px; color: #6b7280;">${item.fileType || 'Unknown type'}${sizeText}</div>
@@ -333,23 +263,23 @@ function renderEvidence(evidence) {
 
   // Store evidence data globally for preview
   window.evidenceData = evidence.map(normalize);
-  
+
   // Test evidence preview functionality
-  
+
 }
 
 /**
  * Open evidence preview modal
  */
 window.openEvidencePreview = function(index) {
-  console.log('[REVIEW] Opening evidence preview:', { 
-    index, 
-    hasPreview: !!window.evidencePreview, 
-    hasData: !!window.evidenceData, 
+  console.log('[REVIEW] Opening evidence preview:', {
+    index,
+    hasPreview: Boolean(window.evidencePreview),
+    hasData: Boolean(window.evidenceData),
     dataLength: window.evidenceData?.length,
     evidence: window.evidenceData?.[index]
   });
-  
+
   if (window.evidencePreview && window.evidenceData && window.evidenceData[index]) {
     window.evidencePreview.show(window.evidenceData[index]);
   } else {
@@ -377,12 +307,12 @@ function renderSimilarComplaints(similarities) {
   `).join('');
 
   // Populate master complaint dropdown
-  masterSelect.innerHTML = '<option value="">Select master complaint...</option>' +
+  masterSelect.innerHTML = `<option value="">Select master complaint...</option>${
     similarities.map(sim => `
       <option value="${sim.similar_complaint_id}">
         ${sim.similar_complaint?.title} (${Math.round(sim.similarity_score * 100)}% match)
       </option>
-    `).join('');
+    `).join('')}`;
 }
 /**
  * Modal functions
@@ -390,7 +320,7 @@ function renderSimilarComplaints(similarities) {
 window.openAssignModal = function() {
   document.getElementById('assign-modal').classList.add('active');
   // Pre-fill priority from complaint
-  const complaint = currentComplaint.complaint;
+  const {complaint} = currentComplaint;
   document.getElementById('assign-priority').value = complaint.priority || 'medium';
   // Load departments dynamically
   loadDepartmentsForAssignment();
@@ -581,32 +511,25 @@ window.markAsUnique = async function() {
  */
 async function loadDepartmentsForAssignment() {
   try {
-    const response = await fetch('/api/departments/active');
-    const result = await response.json();
-    if (result.success && result.data) {
+    const departments = await getActiveDepartments();
+    if (departments && departments.length > 0) {
       const departmentsList = document.getElementById('departments-list');
-      departmentsList.innerHTML = result.data.map(dept => `
+      departmentsList.innerHTML = departments.map(dept => `
         <label>
-          <input type="checkbox" class="dept-check" value="${dept.code}">
-          ${dept.name} (${dept.code})
+          <input type="checkbox" class="dept-check" value="${dept.code || dept.id}">
+          ${dept.name}${dept.code ? ` (${dept.code})` : ''}
         </label>
       `).join('');
     } else {
-      throw new Error(result.error || 'Failed to load departments');
+      throw new Error('No departments available');
     }
   } catch (error) {
     console.error('Error loading departments:', error);
-    // Fallback to hardcoded list if API fails - Updated with new department codes
+    // Show error message instead of hardcoded fallback
     const departmentsList = document.getElementById('departments-list');
-    departmentsList.innerHTML = `
-      <label><input type="checkbox" class="dept-check" value="CEO"> City Engineering Office</label>
-      <label><input type="checkbox" class="dept-check" value="GSO"> City General Services Office</label>
-      <label><input type="checkbox" class="dept-check" value="CPDC"> City Planning and Development Coordinator</label>
-      <label><input type="checkbox" class="dept-check" value="CHO"> Digos City Health Office</label>
-      <label><input type="checkbox" class="dept-check" value="CSWDO"> City Social Welfare and Development Office</label>
-      <label><input type="checkbox" class="dept-check" value="CDRRMO"> City Disaster Risk Reduction and Management Office</label>
-      <label><input type="checkbox" class="dept-check" value="ENRO"> City Environment and Natural Resources Office</label>
-    `;
+    if (departmentsList) {
+      departmentsList.innerHTML = '<p style="color: #e74c3c; padding: 10px;">Failed to load departments. Please refresh the page or contact support.</p>';
+    }
   }
 }
 /**

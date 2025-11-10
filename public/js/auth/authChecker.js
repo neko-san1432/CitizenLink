@@ -81,7 +81,8 @@ export const getUserRole = async (options = {}) => {
     }
     const response = await fetch('/api/user/role', {
       method: 'GET',
-      headers
+      headers,
+      credentials: 'include'
     });
     if (response.ok) {
       const data = await response.json();
@@ -93,6 +94,9 @@ export const getUserRole = async (options = {}) => {
         roleApiCacheTime = now;
         return data.data.role;
       }
+    } else if (response.status === 401) {
+      try { localStorage.removeItem('cl_user_meta'); } catch {}
+      throw new Error('Unauthorized');
     }
   } catch (error) {
     console.warn('Failed to get role from API:', error);
@@ -197,7 +201,7 @@ const MAX_NO_SESSION_ATTEMPTS = 3;
 const isAuthPage = () => {
   try {
     const p = (window.location.pathname || '').toLowerCase();
-    return p === '/login' || p === '/signup' || p === '/resetpassword' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation';
+    return p === '/login' || p === '/signup' || p === '/signup-with-code' || p === '/resetpassword' || p === '/reset-password' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation' || p === '/complete-position-signup';
   } catch { return false; }
 };
 
@@ -332,7 +336,7 @@ try {
       const authEl = document.getElementById('authenticated-buttons');
       const dashboardBtn = document.getElementById('dashboard-btn');
       const logoutBtn = document.getElementById('logout-btn');
-      const onAuthPage = (path === '/login' || path === '/signup');
+      const onAuthPage = (path === '/login' || path === '/signup' || path === '/signup-with-code' || path === '/complete-position-signup');
 
       // Hide unauthenticated buttons on auth pages themselves
       if (onAuthPage) {
@@ -349,15 +353,8 @@ try {
             try {
               const data = await res.json();
               const role = data?.data?.role?.toLowerCase?.();
-              const map = {
-                'citizen': '/dashboard',
-                'lgu-admin': '/dashboard',
-                'complaint-coordinator': '/review-queue',
-                'lgu': '/task-assigned',
-                'super-admin': '/appoint-admins',
-                'lgu-hr': '/link-generator'
-              };
-              const href = map[role] || '/dashboard';
+              // Unified dashboard route for all roles
+              const href = '/dashboard';
               if (dashboardBtn) dashboardBtn.setAttribute('href', href);
             } catch {}
           } else {

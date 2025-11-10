@@ -1,4 +1,6 @@
- require('dotenv').config();
+require('dotenv').config();
+// Initialize console logger early to capture all logs
+require('./src/server/utils/consoleLogger');
 console.log('🚀 Starting CitizenLink Server...');
 // Set development mode if not already set
 if (!process.env.NODE_ENV) {
@@ -17,7 +19,7 @@ try {
   console.log('📊 Config details:', {
     env: config.env,
     port: config.port,
-    supabaseConfigured: !!(config.supabase.url && config.supabase.anonKey)
+    supabaseConfigured: Boolean(config.supabase.url && config.supabase.anonKey)
   });
 } catch (error) {
   console.error('❌ Configuration error:', error.message);

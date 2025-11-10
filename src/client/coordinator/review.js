@@ -456,30 +456,24 @@ async function loadDepartmentsForAssignment() {
   try {
     const response = await fetch('/api/departments/active');
     const result = await response.json();
-    if (result.success && result.data) {
+    if (result.success && result.data && result.data.length > 0) {
       const departmentsList = document.getElementById('departments-list');
       departmentsList.innerHTML = result.data.map(dept => `
         <label>
           <input type="checkbox" class="dept-check" value="${dept.id}">
-          ${dept.name} (${dept.code})
+          ${dept.name}${dept.code ? ` (${dept.code})` : ''}
         </label>
       `).join('');
     } else {
-      throw new Error(result.error || 'Failed to load departments');
+      throw new Error(result.error || 'No departments available');
     }
   } catch (error) {
     console.error('Error loading departments:', error);
-    // Fallback to hardcoded list if API fails - Updated with new department codes
+    // Show error message instead of hardcoded fallback
     const departmentsList = document.getElementById('departments-list');
-    departmentsList.innerHTML = `
-      <label><input type="checkbox" class="dept-check" value="CEO"> City Engineering Office</label>
-      <label><input type="checkbox" class="dept-check" value="GSO"> City General Services Office</label>
-      <label><input type="checkbox" class="dept-check" value="CPDC"> City Planning and Development Coordinator</label>
-      <label><input type="checkbox" class="dept-check" value="CHO"> Digos City Health Office</label>
-      <label><input type="checkbox" class="dept-check" value="CSWDO"> City Social Welfare and Development Office</label>
-      <label><input type="checkbox" class="dept-check" value="CDRRMO"> City Disaster Risk Reduction and Management Office</label>
-      <label><input type="checkbox" class="dept-check" value="ENRO"> City Environment and Natural Resources Office</label>
-    `;
+    if (departmentsList) {
+      departmentsList.innerHTML = '<p style="color: #e74c3c; padding: 10px;">Failed to load departments. Please refresh the page or contact support.</p>';
+    }
   }
 }
 /**

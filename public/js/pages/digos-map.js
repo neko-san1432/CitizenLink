@@ -43,7 +43,7 @@
         // Coordinates are [lng, lat]; Leaflet expects [lat, lng]
         const layer = L.geoJSON(gj, {
           style: styleForBarangay(idx),
-          coordsToLatLng: function(coords) {
+          coordsToLatLng(coords) {
             return new L.LatLng(coords[1], coords[0]);
           }
         }).bindPopup(`<strong>${item.name || 'Barangay'}</strong>`);

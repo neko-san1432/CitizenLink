@@ -7,6 +7,3 @@ export function updateStatCard(elementId, value) {
   element.classList.add('loaded');
 }
 
-
-
-

@@ -175,10 +175,31 @@ function initializeMenuToggle() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      menuToggle.classList.toggle('active');
+    menuToggle.addEventListener('click', async () => {
+      // Import sidebar functions dynamically
+      try {
+        const { openSidebar, closeSidebar } = await import('./sidebar.js');
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+        menuToggle.classList.toggle('active');
+        // Update aria-expanded on menu toggle after a brief delay to ensure state is updated
+        setTimeout(() => {
+          menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+        }, 50);
+      } catch (error) {
+        // Fallback to direct class toggle if import fails
+        console.warn('Failed to import sidebar functions, using fallback:', error);
+        sidebar.classList.toggle('open');
+        menuToggle.classList.toggle('active');
+        menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+      }
     });
+    // Set initial aria-expanded state
+    menuToggle.setAttribute('aria-expanded', 'false');
   } else {
     console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: Boolean(menuToggle), sidebar: Boolean(sidebar) });
   }

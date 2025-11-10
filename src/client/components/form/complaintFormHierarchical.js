@@ -373,20 +373,21 @@ function setupFormSubmission(form, fileHandler) {
       form.appendChild(emptyInput);
     }
     // Add category and subcategory info as hidden inputs
+    // Note: These are UUIDs that reference the categories and subcategories tables
     const categoryId = form.querySelector('#complaintCategory').value;
     const subcategoryId = form.querySelector('#complaintSubcategory').value;
     if (categoryId) {
       const categoryInput = document.createElement('input');
       categoryInput.type = 'hidden';
       categoryInput.name = 'category';
-      categoryInput.value = categoryId;
+      categoryInput.value = categoryId; // UUID from categories table
       form.appendChild(categoryInput);
     }
     if (subcategoryId) {
       const subcategoryInput = document.createElement('input');
       subcategoryInput.type = 'hidden';
       subcategoryInput.name = 'subcategory';
-      subcategoryInput.value = subcategoryId;
+      subcategoryInput.value = subcategoryId; // UUID from subcategories table
       form.appendChild(subcategoryInput);
     }
     try {

@@ -386,30 +386,45 @@ class ComplaintController {
         status,
         type,
         department,
+        category,
         startDate,
         endDate,
         includeResolved = 'true'
       } = req.query;
       // console.log removed for security
       // Map query params to service filters
-      // IMPORTANT: Convert legacy status values to workflow_status
-      let workflowStatus = undefined;
-      if (status) {
-        // Convert legacy status (e.g., "pending review", "in progress", "resolved") 
-        // to workflow_status (e.g., "new", "in_progress", "completed")
-        workflowStatus = getWorkflowFromStatus(status);
-        // If conversion failed (returned original), check if it's already a workflow status
-        if (workflowStatus === status && !['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(status)) {
-          // Try direct workflow status values
-          workflowStatus = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(status) ? status : undefined;
+      // Handle arrays for multiple selections (Express parses multiple query params as arrays)
+      const statusArray = Array.isArray(status) ? status : (status ? [status] : []);
+      const categoryArray = Array.isArray(category) ? category : (category ? [category] : []);
+      const departmentArray = Array.isArray(department) ? department : (department ? [department] : []);
+
+      // Process status filters - separate workflow_status and confirmation_status
+      const workflowStatuses = [];
+      const confirmationStatuses = [];
+      const confirmationStatusList = ['waiting_for_responders', 'waiting_for_complainant', 'confirmed', 'disputed'];
+
+      statusArray.forEach(statusValue => {
+        if (!statusValue) return;
+        const statusLower = statusValue.toLowerCase();
+        if (confirmationStatusList.includes(statusLower)) {
+          confirmationStatuses.push(statusLower);
+        } else {
+          // Convert legacy status to workflow_status
+          const workflowStatus = getWorkflowFromStatus(statusValue);
+          if (workflowStatus && workflowStatus !== statusValue) {
+            workflowStatuses.push(workflowStatus);
+          } else if (['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(statusLower)) {
+            workflowStatuses.push(statusLower);
+          }
         }
-        // console.log removed for security
-      }
+      });
+
       const serviceFilters = {
-        status: workflowStatus,
-        category: req.query.category || undefined,
+        status: workflowStatuses.length > 0 ? workflowStatuses : undefined,
+        confirmationStatus: confirmationStatuses.length > 0 ? confirmationStatuses : undefined,
+        category: categoryArray.length > 0 ? categoryArray : undefined,
         subcategory: req.query.subcategory || undefined,
-        department: department || undefined,
+        department: departmentArray.length > 0 ? departmentArray : undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         includeResolved: includeResolved === 'true'
@@ -612,9 +627,9 @@ class ComplaintController {
    */
   async createAssignment(req, res) {
     try {
-      const complaintId = req.params.complaintId; // Get from URL parameter
+      const {complaintId} = req.params; // Get from URL parameter
       const { officerIds } = req.body;
-      const user = req.user;
+      const {user} = req;
       if (!complaintId || !officerIds || !Array.isArray(officerIds) || officerIds.length === 0) {
         return res.status(400).json({
           success: false,

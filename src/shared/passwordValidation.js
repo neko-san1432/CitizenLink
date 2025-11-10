@@ -37,7 +37,7 @@ function validatePasswordStrength(password) {
     errors.push('Password must contain at least one number');
   }
   // Check for special characters
-  if (PASSWORD_REQUIREMENTS.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (PASSWORD_REQUIREMENTS.requireSpecialChars && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
   // Check for common passwords
@@ -71,7 +71,7 @@ function calculatePasswordStrength(password) {
   if (/[a-z]/.test(password)) score += 1;
   if (/[A-Z]/.test(password)) score += 1;
   if (/\d/.test(password)) score += 1;
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
+  if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score += 1;
 
   // Pattern penalties
   if (/(.)\1{2,}/.test(password)) score -= 1; // Repeated characters

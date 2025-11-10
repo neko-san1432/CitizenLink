@@ -25,6 +25,7 @@ class UserService {
       lastName,
       name, // Single name field (for OAuth users)
       mobileNumber,
+      gender,
       role = 'citizen',
       department = null,
       employeeId = null,
@@ -68,12 +69,16 @@ class UserService {
           // Verification
           email_verified: false,
           mobile_verified: false,
+          gender: gender || null,
           // Preferences
           preferred_language: 'en',
           timezone: 'Asia/Manila',
           email_notifications: true,
           sms_notifications: false,
           push_notifications: true,
+          // Banning system
+          isBanned: false,
+          warningStrike: 0,
           // Timestamps
           updated_at: new Date().toISOString()
         },
@@ -108,11 +113,10 @@ class UserService {
           email_notifications: true,
           sms_notifications: false,
           push_notifications: true,
+          gender: gender || null,
           // Banning system
-          banStrike: 0,
-          banStarted: null,
-          banDuration: null,
-          permanentBan: false,
+          isBanned: false,
+          warningStrike: 0,
           // Timestamps
           updated_at: new Date().toISOString(),
           // OAuth providers
@@ -197,12 +201,42 @@ class UserService {
         throw new Error('User not found');
       }
       // Merge with existing metadata
+      // IMPORTANT: Normalize roles using general normalization function
+      const { normalizeRole } = require('../utils/roleValidation');
+      const normalizedUpdateData = { ...updateData };
+
+      // Normalize role fields if present
+      if (normalizedUpdateData.role) {
+        const originalRole = normalizedUpdateData.role;
+        normalizedUpdateData.role = normalizeRole(normalizedUpdateData.role);
+        if (originalRole !== normalizedUpdateData.role) {
+          console.log('[UserService] Normalizing role from', originalRole, 'to', normalizedUpdateData.role, 'in updateData');
+        }
+      }
+      if (normalizedUpdateData.normalized_role) {
+        normalizedUpdateData.normalized_role = normalizeRole(normalizedUpdateData.normalized_role);
+      }
+      if (normalizedUpdateData.base_role) {
+        normalizedUpdateData.base_role = normalizeRole(normalizedUpdateData.base_role);
+      }
+
       const updatedMetadata = {
         ...(currentUser.raw_user_meta_data || {}),
-        ...updateData,
+        ...normalizedUpdateData,
         updated_by: updatedBy,
         updated_at: new Date().toISOString()
       };
+
+      // Final safety check: ensure we never save unnormalized roles in metadata
+      if (updatedMetadata.role) {
+        updatedMetadata.role = normalizeRole(updatedMetadata.role);
+      }
+      if (updatedMetadata.normalized_role) {
+        updatedMetadata.normalized_role = normalizeRole(updatedMetadata.normalized_role);
+      }
+      if (updatedMetadata.base_role) {
+        updatedMetadata.base_role = normalizeRole(updatedMetadata.base_role);
+      }
       // Update auth user metadata
       const { data: authData, error } = await supabase.auth.admin.updateUserById(userId, {
         user_metadata: updatedMetadata,
@@ -285,17 +319,38 @@ class UserService {
       limit = 20
     } = pagination;
     try {
-      // Fetch all auth users (admin API doesn't support complex filtering)
-      const { data, error } = await supabase.auth.admin.listUsers({
-        page,
-        perPage: limit
-      });
-
-      if (error) {
-        throw new Error(`Failed to fetch users: ${error.message}`);
+      // Try Admin API first (preferred)
+      let users = [];
+      try {
+        const { data, error } = await supabase.auth.admin.listUsers({
+          page,
+          perPage: limit
+        });
+        if (error) throw error;
+        users = (data.users || []).map(user => this.formatUserResponse(user));
+      } catch (adminErr) {
+        // Fallback: direct query to auth.users via PostgREST (requires service role key)
+        // Note: This path provides limited columns; we reconstruct response
+        try {
+          const query = supabase
+            .from('auth.users')
+            .select('id, email, created_at, user_metadata, raw_user_meta_data')
+            .order('created_at', { ascending: false })
+            .range((page - 1) * limit, page * limit - 1);
+          const { data: sqlRows, error: sqlError } = await query;
+          if (sqlError) throw sqlError;
+          users = (sqlRows || []).map(row => this.formatUserResponse({
+            id: row.id,
+            email: row.email,
+            created_at: row.created_at,
+            user_metadata: row.user_metadata || {},
+            raw_user_meta_data: row.raw_user_meta_data || {}
+          }));
+        } catch (sqlErr) {
+          const msg = adminErr?.message || sqlErr?.message || 'Unknown error';
+          throw new Error(`Failed to fetch users: ${msg}`);
+        }
       }
-
-      let users = data.users.map(user => this.formatUserResponse(user));
 
       // Apply client-side filters
       if (role) {
@@ -368,7 +423,13 @@ class UserService {
       'position', 'bio', 'avatar_url', 'preferred_language', 'timezone',
       'email_notifications', 'sms_notifications', 'push_notifications',
       // Role-related fields for admin operations
-      'role', 'normalized_role'
+      'role', 'normalized_role', 'base_role',
+      // Department fields
+      'department', 'dpt',
+      // Status field
+      'status',
+      // Pending approval fields (for signup-with-code workflow)
+      'pending_role', 'pending_department', 'pending_signup_code'
     ];
     const invalidFields = Object.keys(updateData).filter(field => !allowedFields.includes(field));
     if (invalidFields.length > 0) {
@@ -440,6 +501,12 @@ class UserService {
         avatarUrl: combined.avatar_url,
         bio: combined.bio
       },
+      // Banning system
+      isBanned: combined.isBanned === true,
+      warningStrike: combined.warningStrike || 0,
+      banType: combined.banType || null,
+      banExpiresAt: combined.banExpiresAt || null,
+      banReason: combined.banReason || null,
       // Created at from auth.users.created_at
       created_at: authUser.created_at,
       timestamps: {

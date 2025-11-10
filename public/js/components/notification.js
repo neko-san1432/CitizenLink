@@ -1,6 +1,7 @@
 // Notification component with lazy loading functionality
 import { brandConfig } from '../config/index.js';
 import apiClient from '../config/apiClient.js';
+import { getNotificationIcon } from '../utils/icons.js';
 
 // Notification state management
 const notificationState = {
@@ -26,7 +27,7 @@ export function initializeNotificationButton() {
   const retryBtn = document.getElementById('retry-notifications');
   if (notificationBtn && notificationPanel) {
     // Toggle notification panel with smooth animations
-    notificationBtn.addEventListener('click', function(e) {
+    notificationBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       // Close profile panel if open
       const profilePanel = document.getElementById('profile-panel');
@@ -57,32 +58,32 @@ export function initializeNotificationButton() {
     });
     // Close panel when close button is clicked
     if (closeBtn) {
-      closeBtn.addEventListener('click', function(e) {
+      closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         notificationPanel.classList.remove('show');
       });
     }
     // Mark all as read functionality
     if (markAllReadBtn) {
-      markAllReadBtn.addEventListener('click', function() {
+      markAllReadBtn.addEventListener('click', () => {
         markAllNotificationsAsRead();
       });
     }
     // Show more notifications
     if (showMoreBtn) {
-      showMoreBtn.addEventListener('click', function() {
+      showMoreBtn.addEventListener('click', () => {
         loadNotifications(false, false); // Don't show loading for "Show More"
       });
     }
 
     // Retry loading notifications
     if (retryBtn) {
-      retryBtn.addEventListener('click', function() {
+      retryBtn.addEventListener('click', () => {
         loadNotifications(true, true); // Show loading for retry
       });
     }
     // Close panel when clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', (e) => {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
         notificationPanel.classList.remove('show');
       }
@@ -192,7 +193,7 @@ async function loadNotifications(reset = false, showLoading = true) {
     const response = await fetchNotifications(notificationState.page, notificationState.limit);
     if (response.success) {
       const newNotifications = response.data.notifications;
-      const hasMore = response.data.hasMore;
+      const {hasMore} = response.data;
       // Add new notifications to the top of the list
       if (reset) {
         notificationState.notifications = newNotifications;
@@ -287,7 +288,7 @@ function renderNotifications() {
            data-id="${notification.id}" 
            ${linkAttr}
            style="cursor: ${notification.link ? 'pointer' : 'default'}">
-        <div class="notification-icon">${notification.icon}</div>
+        <div class="notification-icon">${getNotificationIcon(notification.type, { size: 20 })}</div>
         <div class="notification-text">
           <div class="notification-title">${escapeHtml(notification.title)} ${newIndicator}</div>
           <div class="notification-message">${escapeHtml(notification.message)}</div>
@@ -301,7 +302,7 @@ function renderNotifications() {
   content.querySelectorAll('.notification-item[data-link]').forEach(item => {
     item.addEventListener('click', async function() {
       const notifId = this.dataset.id;
-      const link = this.dataset.link;
+      const {link} = this.dataset;
       // Mark as read
       try {
         await apiClient.post(`/api/notifications/${notifId}/mark-read`);

@@ -133,6 +133,7 @@ module.exports = {
     'public/examples/',
     'public/components/',
     'public/styles/',
+    'src/server/synthetic-security.js', // Synthetic test file with intentional vulnerabilities
   ],
   // Environment-specific overrides
   overrides: [

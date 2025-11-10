@@ -1,0 +1,444 @@
+/**
+ * HR Dashboard Styles
+ * Comprehensive styling for HR dashboard
+ */
+
+/* HR Dashboard Specific Layout */
+.hr-dashboard {
+  padding: 1rem 2rem 2rem 2rem;
+}
+
+/* Dashboard Grid - Full width layout for HR */
+.hr-dashboard .dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Actions Grid - HR Action Cards */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.action-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.action-card h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-50);
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.help-text {
+  margin-top: 0.375rem;
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--primary-600);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-success {
+  background: var(--success-500);
+  color: white;
+}
+
+.btn-success:hover {
+  background: var(--success-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-warning {
+  background: var(--warning-500);
+  color: var(--gray-800);
+}
+
+.btn-warning:hover {
+  background: var(--warning-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-danger {
+  background: var(--error-500);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: var(--error-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-success.btn-success,
+.btn-danger.btn-danger {
+  background-color: var(--success-500);
+  color: white;
+}
+
+.btn-danger.btn-danger {
+  background-color: var(--error-500);
+}
+
+/* User Grid - Two Column Layout */
+.user-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.user-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+}
+
+.user-panel h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-50);
+}
+
+.user-panel h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* User List */
+.user-list {
+  max-height: 500px;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.user-item {
+  padding: 1rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.user-item:hover {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+  transform: translateX(4px);
+}
+
+.user-item.active {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+  box-shadow: var(--shadow-md);
+}
+
+.user-item-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.user-item-email {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin-bottom: 0.25rem;
+}
+
+.user-item-role {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--gray-200);
+  color: var(--gray-700);
+  margin-top: 0.25rem;
+}
+
+/* User Details */
+.user-details {
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-details h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.user-details p {
+  margin: 0.5rem 0;
+  color: var(--gray-700);
+  font-size: 0.9rem;
+}
+
+.user-details strong {
+  color: var(--gray-800);
+  font-weight: 600;
+}
+
+/* User Complaints */
+#user-complaints {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.complaint-item {
+  padding: 0.75rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background: white;
+}
+
+.complaint-item-title {
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.complaint-item-status {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+/* Office Stats Grid */
+.office-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.dept-stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--primary-500);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dept-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.dept-stat-card h3 {
+  margin: 0 0 1rem 0;
+  color: var(--gray-800);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.dept-counts {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dept-count {
+  text-align: center;
+  flex: 1;
+}
+
+.dept-count-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0.5rem 0;
+  line-height: 1;
+}
+
+.dept-count-label {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* Loading Placeholder */
+.loading-placeholder {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+/* Role History Results */
+#role-history-results {
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.role-history-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.role-history-item:last-child {
+  border-bottom: none;
+}
+
+.role-history-item strong {
+  color: var(--gray-800);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  .user-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hr-dashboard {
+    padding: 1rem;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .office-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dept-counts {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .dept-count {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-card {
+    padding: 1rem;
+  }
+  
+  .user-panel {
+    padding: 1rem;
+  }
+  
+  .dept-stat-card {
+    padding: 1rem;
+  }
+}
+

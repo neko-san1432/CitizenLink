@@ -80,7 +80,8 @@ export const getUserRole = async (options = {}) => {
     }
     const response = await fetch('/api/user/role', {
       method: 'GET',
-      headers
+      headers,
+      credentials: 'include'
     });
     if (response.ok) {
       const data = await response.json();
@@ -90,6 +91,10 @@ export const getUserRole = async (options = {}) => {
         roleApiCacheTime = now;
         return data.data.role;
       }
+    } else if (response.status === 401) {
+      // Session expired or missing; clear cache and trigger re-login path
+      try { localStorage.removeItem('cl_user_meta'); } catch {}
+      throw new Error('Unauthorized');
     }
   } catch (error) {
     console.warn('Failed to get role from API:', error);
@@ -182,7 +187,7 @@ const MAX_NO_SESSION_ATTEMPTS = 3;
 const isAuthPage = () => {
   try {
     const p = (window.location.pathname || '').toLowerCase();
-    return p === '/login' || p === '/signup' || p === '/resetpassword' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation';
+    return p === '/login' || p === '/signup' || p === '/signup-with-code' || p === '/resetpassword' || p === '/reset-password' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation' || p === '/complete-position-signup';
   } catch { return false; }
 };
 

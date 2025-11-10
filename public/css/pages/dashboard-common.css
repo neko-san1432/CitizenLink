@@ -813,6 +813,14 @@
   padding: 0 3%;
   margin: 0}
 
+/* Reduce top padding for role dashboards that appeared too spaced */
+.lgu-dashboard .dashboard-header,
+.lgu-officer-dashboard .dashboard-header,
+.superadmin-dashboard .dashboard-header {
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
 .dashboard-grid {
   max-height: calc(100vh - 180px);
   overflow-y: auto;

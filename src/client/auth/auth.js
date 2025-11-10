@@ -104,6 +104,8 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   const lastName = document.getElementById('lastName')?.value.trim() || '';
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
+  const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+  const gender = document.getElementById('gender')?.value || '';
   const regPass = document.getElementById('regPassword').value;
   const reRegPass = document.getElementById('reRegPassword').value;
   // Early password length checks
@@ -117,9 +119,11 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     lastName: { required: true, minLength: 1, maxLength: 100 },
     email: { required: true, type: 'email' },
     mobile: { required: true, type: 'mobile' },
-    regPassword: { required: true, type: 'password' }
+    regPassword: { required: true, type: 'password' },
+    addressLine1: { required: false, minLength: 0, maxLength: 255 },
+    gender: { required: false }
   };
-  const formData = { firstName, lastName, email, mobile, regPassword: regPass };
+  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, gender };
   const validation = validateAndSanitizeForm(formData, validationRules);
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
@@ -146,6 +150,8 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       firstName: validation.sanitizedData.firstName,
       lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
+      gender: validation.sanitizedData.gender || '',
+      address: { line1: validation.sanitizedData.addressLine1 || '' },
       // role: 'citizen', // backend defaults to citizen
       agreedToTerms: true,
       isOAuth: false // Regular signup

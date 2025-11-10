@@ -3,9 +3,11 @@
  * Handles automatic reminders for unworked/unresponded complaints
  */
 const Database = require('../config/database');
-
-const supabase = Database.getClient();
 const NotificationService = require('./NotificationService');
+
+// Get service role client (bypasses RLS)
+// Note: We get it fresh each time to ensure it's using service role key
+const getServiceClient = () => Database.getClient();
 
 class ReminderService {
 
@@ -54,6 +56,7 @@ class ReminderService {
    */
   async getPendingReminders(now) {
     try {
+      const supabase = getServiceClient();
       // Get complaints that are assigned but haven't been worked on
       const { data: assignedComplaints, error: assignedError } = await supabase
         .from('complaints')
@@ -172,6 +175,7 @@ class ReminderService {
    * Get departments associated with a complaint
    */
   async getComplaintDepartments(complaint) {
+    const supabase = getServiceClient();
     const departments = [];
     // Get departments from department_r array
     if (complaint.department_r && complaint.department_r.length > 0) {
@@ -197,19 +201,40 @@ class ReminderService {
   }
   /**
    * Create reminder record in database
+   * Uses service role client which should bypass RLS
    */
   async createReminderRecord(complaintId, reminderLevel) {
-    const { error } = await supabase
+    // Ensure we're using the service role client (bypasses RLS)
+    const dbClient = Database.getClient();
+
+    const { data, error } = await dbClient
       .from('complaint_reminders')
       .insert({
         complaint_id: complaintId,
         reminder_type: reminderLevel,
         reminded_at: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
+
     if (error) {
       console.error('[REMINDER_SERVICE] Error creating reminder record:', error);
+      console.error('[REMINDER_SERVICE] Error code:', error.code);
+      console.error('[REMINDER_SERVICE] Error message:', error.message);
+      console.error('[REMINDER_SERVICE] Error details:', error.details);
+      console.error('[REMINDER_SERVICE] Error hint:', error.hint);
+
+      // If it's an RLS error, log additional info
+      if (error.code === '42501') {
+        console.error('[REMINDER_SERVICE] RLS policy violation detected.');
+        console.error('[REMINDER_SERVICE] This should not happen with service role key.');
+        console.error('[REMINDER_SERVICE] Please verify SUPABASE_SERVICE_ROLE_KEY is set correctly.');
+      }
+
       throw error;
     }
+
+    return data;
   }
   /**
    * Send reminder notifications
@@ -253,6 +278,7 @@ class ReminderService {
    */
   async notifyCoordinator(complaint, reminder) {
     try {
+      const supabase = getServiceClient();
       // Get coordinator users
       const { data: coordinators } = await supabase.auth.admin.listUsers();
       const coordinatorIds = coordinators?.users
@@ -286,6 +312,7 @@ class ReminderService {
    */
   async notifyDepartmentAdmins(complaint, departments, reminder) {
     try {
+      const supabase = getServiceClient();
       for (const department of departments) {
         // Get department admin users
         const { data: allUsers } = await supabase.auth.admin.listUsers();
@@ -346,6 +373,7 @@ class ReminderService {
    * Get last reminder for a complaint
    */
   async getLastReminder(complaintId) {
+    const supabase = getServiceClient();
     const { data, error } = await supabase
       .from('complaint_reminders')
       .select('*')

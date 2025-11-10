@@ -6,9 +6,10 @@ import showMessage from '../components/toast.js';
 import { escapeHtml } from '../utils/string.js';
 import { formatDate } from '../utils/date.js';
 import { getStatusText } from '../utils/complaint.js';
+import { getActivityIcon, getUpdateIcon } from '../utils/icons.js';
 
 // Dashboard state
-let dashboardData = null;
+const dashboardData = null;
 /**
  * Initialize dashboard
  */
@@ -217,7 +218,7 @@ function renderUpdates(updates) {
       <div class="update-icon">${getUpdateIcon(update.type)}</div>
       <div class="update-content">
         <div class="update-title">${escapeHtml(update.title)}</div>
-        <div class="update-text">${escapeHtml(update.content?.substring(0, 80) + '...')}</div>
+        <div class="update-text">${escapeHtml(`${update.content?.substring(0, 80)  }...`)}</div>
         <div class="update-time">${formatDate(update.created_at)}</div>
       </div>
     </div>
@@ -242,27 +243,7 @@ function getTaskProgress(status) {
   };
   return progressMap[status] || 0;
 }
-// Removed duplicate getTaskStatusText in favor of shared getStatusText
-function getActivityIcon(type) {
-  const iconMap = {
-    'task_assigned': '📝',
-    'task_completed': '✅',
-    'note_added': '📝',
-    'evidence_uploaded': '📷',
-    'status_updated': '🔄'
-  };
-  return iconMap[type] || '📋';
-}
-function getUpdateIcon(type) {
-  const iconMap = {
-    'announcement': '📢',
-    'guideline': '📋',
-    'meeting': '📅',
-    'target': '🎯',
-    'policy': '📜'
-  };
-  return iconMap[type] || '📢';
-}
+// getActivityIcon and getUpdateIcon are now imported from icons.js utility
 // Removed duplicate formatDate and escapeHtml in favor of shared utils
 // Title fallback helper to avoid blank titles
 function getTaskTitle(task) {
@@ -272,7 +253,7 @@ function getTaskTitle(task) {
   const result = (
     complaint.title ||
     complaint.category ||
-    `Complaint ${task?.complaint_id ? '#' + String(task.complaint_id).substring(0, 8) : ''} ${byPriority ? '(' + byPriority + ')' : ''}`.trim()
+    `Complaint ${task?.complaint_id ? `#${  String(task.complaint_id).substring(0, 8)}` : ''} ${byPriority ? `(${  byPriority  })` : ''}`.trim()
   );
   return result;
 }

@@ -6,23 +6,56 @@ import showMessage from '../components/toast.js';
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadDepartmentRoles();
   await loadDashboardData();
   await loadRoleCounts();
-  await loadApiHealth();
-  startTrafficMonitor();
-  await loadLogs();
-  setupFormHandlers();
-  setupUserSearchSA();
+  await loadLatestUsers();
+  await loadRoleDistribution();
+
+  // Setup refresh button event listeners
+  const refreshRoleDistributionBtn = document.getElementById('refresh-role-distribution-btn');
+  if (refreshRoleDistributionBtn) {
+    refreshRoleDistributionBtn.addEventListener('click', loadRoleDistribution);
+  }
+
+  const refreshLatestUsersBtn = document.getElementById('refresh-latest-users-btn');
+  if (refreshLatestUsersBtn) {
+    refreshLatestUsersBtn.addEventListener('click', loadLatestUsers);
+  }
+
+  // Setup help button (placeholder for future implementation)
+  const getHelpBtn = document.getElementById('get-help-btn');
+  if (getHelpBtn) {
+    getHelpBtn.addEventListener('click', () => {
+      showMessage('info', 'Help feature coming soon');
+    });
+  }
 });
+
+// Chart instance for role distribution
+let roleDistributionChart = null;
 /**
  * Load department roles dynamically
  */
 async function loadDepartmentRoles() {
   try {
-    const { apiClient } = await import('../config/apiClient.js');
-    const { data: departments, error } = await apiClient.get('/api/department-structure/departments');
-    if (error) throw error;
+    const apiClient = (await import('../config/apiClient.js')).default;
+    // Prefer the explicit endpoint that exists in routes
+    let departments = [];
+    try {
+      const res = await apiClient.get('/api/department-structure/departments/all');
+      if (res && res.success && Array.isArray(res.data)) {
+        departments = res.data;
+      }
+    } catch {}
+    // Fallback to categories tree if needed
+    if (!departments.length) {
+      const res2 = await apiClient.get('/api/department-structure/categories');
+      if (res2 && res2.success && Array.isArray(res2.data)) {
+        departments = [];
+        res2.data.forEach(cat => cat.subcategories?.forEach(sc => sc.departments?.forEach(d => departments.push(d))));
+      }
+    }
+    // departments loaded via one of the endpoints above
     // Load role swap dropdown
     const roleSwapSelect = document.getElementById('role-swap-role');
     if (roleSwapSelect) {
@@ -110,9 +143,16 @@ async function loadRoleCounts() {
     const meta = await metaRes.json();
     const users = (meta.success && Array.isArray(meta.data)) ? meta.data : [];
     const totalUsers = users.length;
-    const admins = users.filter(u => String(u.role || '').toLowerCase() === 'super-admin' || /^lgu-admin/.test(String(u.role || ''))).length;
-    const hr = users.filter(u => String(u.role || '').toLowerCase() === 'lgu-hr' || /^lgu-hr/.test(String(u.role || ''))).length;
-    const officers = users.filter(u => /^lgu-(?!admin|hr)/.test(String(u.role || ''))).length;
+    // Admins: count LGU admins only (exclude super-admin)
+    const admins = users.filter(u => /^lgu-admin/.test(String(u.role || '').toLowerCase())).length;
+    // HR: include lgu-hr variants
+    const hr = users.filter(u => String(u.role || '').toLowerCase() === 'lgu-hr' || /^lgu-hr/.test(String(u.role || '').toLowerCase())).length;
+    // Officers: include simplified 'lgu' and legacy lgu-* (excluding admin/hr)
+    const roleStr = (r) => String(r || '').toLowerCase();
+    const officers = users.filter(u => {
+      const r = roleStr(u.role);
+      return r === 'lgu' || /^lgu-(?!admin|hr)/.test(r);
+    }).length;
     setText('stat-users', totalUsers);
     setText('stat-admins', admins);
     setText('stat-hr', hr);
@@ -126,24 +166,228 @@ function setText(id, v) {
   if (el) el.textContent = String(v);
 }
 /**
+ * Load role distribution and render pie chart
+ */
+window.loadRoleDistribution = async function loadRoleDistribution() {
+  try {
+    const response = await fetch('/api/superadmin/role-distribution');
+    const result = await response.json();
+
+    if (!result.success || !result.distribution) {
+      console.error('[SUPER_ADMIN] Failed to load role distribution:', result.error);
+      return;
+    }
+
+    const { citizens, hr, officers, admins } = result.distribution;
+    renderRoleDistributionChart({ citizens, hr, officers, admins });
+  } catch (error) {
+    console.error('[SUPER_ADMIN] Load role distribution error:', error);
+  }
+};
+
+/**
+ * Render role distribution pie chart (Super Admin)
+ */
+function renderRoleDistributionChart(data) {
+  const canvas = document.getElementById('role-distribution-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Destroy existing chart if it exists
+  if (roleDistributionChart) {
+    roleDistributionChart.destroy();
+  }
+
+  const values = [data.citizens || 0, data.hr || 0, data.officers || 0, data.admins || 0];
+  const total = values.reduce((a, b) => a + b, 0);
+
+  const chartData = {
+    labels: [
+      `Citizens (${values[0]})`,
+      `HR (${values[1]})`,
+      `Officers (${values[2]})`,
+      `Admins (${values[3]})`
+    ],
+    datasets: [{
+      data: values,
+      backgroundColor: [
+        '#3b82f6', // Blue for Citizens
+        '#10b981', // Green for HR
+        '#f59e0b', // Orange for Officers
+        '#8b5cf6'  // Purple for Admins
+      ],
+      borderColor: '#ffffff',
+      borderWidth: 2
+    }]
+  };
+
+  roleDistributionChart = new Chart(ctx, {
+    type: 'pie',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: {
+              size: 14
+            },
+            generateLabels(chart) {
+              const {data} = chart;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map((label, i) => {
+                  const value = data.datasets[0].data[i];
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return {
+                    text: `${label} - ${percentage}%`,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: data.datasets[0].borderColor,
+                    lineWidth: data.datasets[0].borderWidth,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label.split(' (')[0]}: ${value} users (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Load latest registered users
+ */
+window.loadLatestUsers = async function() {
+  try {
+    const container = document.getElementById('latest-users-container');
+    if (!container) return;
+
+    // Show loading state
+    container.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading latest users...</p>
+      </div>
+    `;
+
+    const response = await fetch('/api/superadmin/latest-users?limit=5');
+    const result = await response.json();
+
+    if (result.success && result.users) {
+      displayLatestUsers(result.users);
+    } else {
+      container.innerHTML = `<p class="empty-state" style="color: #ef4444;">Failed to load users: ${  result.error || 'Unknown error'  }</p>`;
+    }
+  } catch (error) {
+    console.error('[SUPERADMIN] Load latest users error:', error);
+    const container = document.getElementById('latest-users-container');
+    if (container) {
+      container.innerHTML = '<p class="empty-state" style="color: #ef4444;">Failed to load latest users</p>';
+    }
+  }
+};
+
+/**
+ * Display latest registered users
+ */
+function displayLatestUsers(users) {
+  const container = document.getElementById('latest-users-container');
+  if (!container) return;
+
+  if (users.length === 0) {
+    container.innerHTML = '<p class="empty-state">No registered users found</p>';
+    return;
+  }
+
+  const html = `
+    <div class="latest-users-list">
+      ${users.map(user => {
+    const registrationDate = new Date(user.created_at).toLocaleString();
+    const emailConfirmedDate = user.email_confirmed_at ? new Date(user.email_confirmed_at).toLocaleString() : null;
+    const authMethod = user.is_oauth ? 'OAuth' : 'Email';
+    const roleBadge = user.role || 'citizen';
+
+    return `
+          <div class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #e5e7eb; gap: 1rem;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">
+                  ${(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">
+                    ${user.name || user.email || 'Unknown User'}
+                  </div>
+                  <div style="font-size: 0.875rem; color: #6b7280;">
+                    ${user.email || 'No email'}
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: #6b7280; flex-wrap: wrap;">
+                <span><strong>Role:</strong> ${roleBadge}</span>
+                <span><strong>Method:</strong> ${authMethod}</span>
+                ${emailConfirmedDate ? `<span><strong>Confirmed:</strong> ${emailConfirmedDate}</span>` : ''}
+              </div>
+            </div>
+            <div style="text-align: right; font-size: 0.875rem; color: #6b7280;">
+              <div style="font-weight: 500; color: #111827; margin-bottom: 0.25rem;">Registered</div>
+              <div>${registrationDate}</div>
+            </div>
+          </div>
+        `;
+  }).join('')}
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+/**
  * API Health
  */
 async function loadApiHealth() {
   const el = document.getElementById('api-health-status');
+  const indicator = document.getElementById('api-health-indicator');
   if (!el) return;
   try {
     const res = await fetch('/api/health');
     const data = await res.json();
     if (data && data.success) {
       el.textContent = `Healthy • ${new Date(data.timestamp).toLocaleString()}`;
-      el.style.color = '#059669';
+      el.style.color = '#10b981';
+      if (indicator) {
+        indicator.style.background = '#10b981';
+      }
     } else {
       el.textContent = 'Unhealthy';
-      el.style.color = '#b91c1c';
+      el.style.color = '#ef4444';
+      if (indicator) {
+        indicator.style.background = '#ef4444';
+      }
     }
   } catch {
     el.textContent = 'Health check failed';
-    el.style.color = '#b91c1c';
+    el.style.color = '#ef4444';
+    if (indicator) {
+      indicator.style.background = '#ef4444';
+    }
   }
   const btn = document.getElementById('btn-refresh-health');
   if (btn) btn.onclick = loadApiHealth;
@@ -190,7 +434,10 @@ window.loadLogs = async function() {
     }
   } catch (error) {
     console.error('[SUPERADMIN] Load logs error:', error);
-    document.getElementById('logs-container').innerHTML = '<p style="color: #e74c3c;">Failed to load logs</p>';
+    const container = document.getElementById('logs-container');
+    if (container) {
+      container.innerHTML = '<p class="empty-state" style="color: #ef4444;">Failed to load logs</p>';
+    }
   }
 };
 /**
@@ -218,7 +465,7 @@ function displayLogs(logs) {
   // Sort by date
   allLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   if (allLogs.length === 0) {
-    container.innerHTML = '<p style="color: #7f8c8d;">No logs found</p>';
+    container.innerHTML = '<p class="empty-state">No logs found</p>';
     return;
   }
   const html = allLogs.slice(0, 50).map(log => formatLogEntry(log)).join('');
@@ -239,25 +486,25 @@ function formatLogEntry(log) {
     const performerEmail = log.performer?.email || 'System';
     content = `
       <strong>${userEmail}</strong>: ${log.old_role} → ${log.new_role}
-      <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">By: ${performerEmail}</div>
-      ${log.metadata?.reason ? `<div style="margin-top: 5px;">Reason: ${log.metadata.reason}</div>` : ''}
+      <div style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">By: ${performerEmail}</div>
+      ${log.metadata?.reason ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.metadata.reason}</div>` : ''}
     `;
   } else if (log.log_type === 'dept_transfer') {
     typeLabel = 'Dept Transfer';
-    typeColor = '#f39c12';
+    typeColor = '#f59e0b';
     const userEmail = log.user?.email || 'Unknown';
     const performerEmail = log.performer?.email || 'System';
     content = `
       <strong>${userEmail}</strong>: ${log.from_department || 'N/A'} → ${log.to_department}
-      <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">By: ${performerEmail}</div>
-      ${log.reason ? `<div style="margin-top: 5px;">Reason: ${log.reason}</div>` : ''}
+      <div style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">By: ${performerEmail}</div>
+      ${log.reason ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.reason}</div>` : ''}
     `;
   } else if (log.log_type === 'complaint') {
     typeLabel = 'Complaint';
-    typeColor = '#27ae60';
+    typeColor = '#10b981';
     content = `
       <strong>${log.action_type}</strong>: Complaint #${log.complaint_id?.substring(0, 8)}...
-      ${log.details ? `<div style="margin-top: 5px;">${JSON.stringify(log.details)}</div>` : ''}
+      ${log.details ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">${JSON.stringify(log.details)}</div>` : ''}
     `;
   }
 
@@ -265,9 +512,9 @@ function formatLogEntry(log) {
     <div class="log-entry">
       <div class="log-entry-header">
         <span class="log-type" style="background: ${typeColor};">${typeLabel}</span>
-        <span style="color: #7f8c8d; font-size: 0.9rem;">${date}</span>
+        <span class="log-entry-date">${date}</span>
       </div>
-      <div>${content}</div>
+      <div class="log-entry-content">${content}</div>
     </div>
   `;
 }
@@ -338,12 +585,12 @@ function setupUserSearchSA() {
 function renderUserListSA(users) {
   const list = document.getElementById('sa-user-list');
   if (!list) return;
-  if (!users.length) { list.innerHTML = '<p style="color:#7f8c8d;">No users found.</p>'; return; }
+  if (!users.length) { list.innerHTML = '<p class="empty-state">No users found.</p>'; return; }
   list.innerHTML = users.map(u => `
-    <div class="user-item" data-user-id="${u.id}" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
+    <div class="user-item" data-user-id="${u.id}">
       <div><strong>${escapeHtml(u.fullName || u.name || u.email)}</strong></div>
-      <div style="color:#7f8c8d; font-size:0.9rem;">${escapeHtml(u.email || '')}</div>
-      <div style="color:#7f8c8d; font-size:0.9rem;">Role: ${escapeHtml(u.role || '')} | Brgy: ${escapeHtml(u.address?.barangay || '-')}</div>
+      <div style="color:#64748b; font-size:0.875rem; margin-top:0.25rem;">${escapeHtml(u.email || '')}</div>
+      <div style="color:#64748b; font-size:0.875rem; margin-top:0.25rem;">Role: ${escapeHtml(u.role || '')} | Brgy: ${escapeHtml(u.address?.barangay || '-')}</div>
     </div>
   `).join('');
   list.querySelectorAll('.user-item').forEach(el => {
@@ -363,23 +610,23 @@ async function loadUserDetailsSA(userId) {
     if (result.success && result.data) {
       const u = result.data;
       container.innerHTML = `
-        <div style="display:flex; gap:16px; align-items:center;">
-          <div style="width:48px; height:48px; border-radius:50%; background:#eee;"></div>
+        <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>
           <div>
-            <div style="font-weight:700; font-size:1.1rem;">${escapeHtml(u.fullName || u.name || u.email)}</div>
-            <div style="color:#7f8c8d;">${escapeHtml(u.email || '')}</div>
+            <div style="font-weight:700; font-size:1.125rem; color:#1e293b;">${escapeHtml(u.fullName || u.name || u.email)}</div>
+            <div style="color:#64748b; font-size:0.875rem;">${escapeHtml(u.email || '')}</div>
           </div>
         </div>
-        <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-          <div><strong>Role:</strong> ${escapeHtml(u.role || '')}</div>
-          <div><strong>Department:</strong> ${escapeHtml(u.department || '-')}</div>
-          <div><strong>Barangay:</strong> ${escapeHtml(u.address?.barangay || '-')}</div>
-          <div><strong>City:</strong> ${escapeHtml(u.address?.city || '-')}</div>
-          <div><strong>Mobile:</strong> ${escapeHtml(u.mobileNumber || '-')}</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; padding-top:1rem; border-top:1px solid #e2e8f0;">
+          <div><strong style="color:#1e293b;">Role:</strong> <span style="color:#64748b;">${escapeHtml(u.role || '-')}</span></div>
+          <div><strong style="color:#1e293b;">Department:</strong> <span style="color:#64748b;">${escapeHtml(u.department || '-')}</span></div>
+          <div><strong style="color:#1e293b;">Barangay:</strong> <span style="color:#64748b;">${escapeHtml(u.address?.barangay || '-')}</span></div>
+          <div><strong style="color:#1e293b;">City:</strong> <span style="color:#64748b;">${escapeHtml(u.address?.city || '-')}</span></div>
+          <div><strong style="color:#1e293b;">Mobile:</strong> <span style="color:#64748b;">${escapeHtml(u.mobileNumber || '-')}</span></div>
         </div>
       `;
     } else {
-      container.innerHTML = '<p style="color:#e74c3c;">Failed to load user.</p>';
+      container.innerHTML = '<p class="empty-state" style="color:#ef4444;">Failed to load user.</p>';
     }
   } catch (e) {
     console.error('[SUPERADMIN] load user details error:', e);
@@ -393,19 +640,19 @@ async function loadUserComplaintsSA(userId) {
     if (!container) return;
     if (result.success) {
       const complaints = result.data || [];
-      if (!complaints.length) { container.innerHTML = '<p style="color:#7f8c8d;">No complaints found.</p>'; return; }
+      if (!complaints.length) { container.innerHTML = '<p class="empty-state">No complaints found.</p>'; return; }
       container.innerHTML = complaints.map(c => `
-        <div style="padding:12px; border:1px solid #eee; border-radius:6px; margin-bottom:8px; background:#fafafa;">
-          <div style="display:flex; justify-content:space-between;">
-            <strong>${escapeHtml(c.title || 'Untitled')}</strong>
-            <span style="color:#7f8c8d; font-size:0.9rem;">${escapeHtml(c.status || '')}</span>
+        <div style="padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; background:#f8fafc; margin-bottom:0.75rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong style="color:#1e293b;">${escapeHtml(c.title || 'Untitled')}</strong>
+            <span style="color:#64748b; font-size:0.875rem; padding:0.25rem 0.5rem; background:white; border-radius:0.25rem; border:1px solid #e2e8f0;">${escapeHtml(c.status || '')}</span>
           </div>
-          <div style="color:#7f8c8d; font-size:0.9rem;">Type: ${escapeHtml(c.type || '-')}</div>
-          ${c.location_text ? `<div style=\"color:#7f8c8d; font-size:0.9rem;\">${escapeHtml(c.location_text)}</div>` : ''}
+          <div style="color:#64748b; font-size:0.875rem;">Type: ${escapeHtml(c.type || '-')}</div>
+          ${c.location_text ? `<div style=\"color:#64748b; font-size:0.875rem; margin-top:0.25rem;\">${escapeHtml(c.location_text)}</div>` : ''}
         </div>
       `).join('');
     } else {
-      container.innerHTML = '<p style="color:#e74c3c;">Failed to load complaints.</p>';
+      container.innerHTML = '<p class="empty-state" style="color:#ef4444;">Failed to load complaints.</p>';
     }
   } catch (e) {
     console.error('[SUPERADMIN] load user complaints error:', e);

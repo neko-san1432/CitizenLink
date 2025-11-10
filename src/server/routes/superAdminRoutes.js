@@ -15,12 +15,25 @@ router.get('/dashboard',
   (req, res) => superAdminController.getDashboard(req, res)
 );
 /**
- * Role Management
+ * User Management
  */
 router.post('/role-swap',
   authenticateUser,
   requireSuperAdmin,
   (req, res) => superAdminController.roleSwap(req, res)
+);
+/**
+ * Ban/Unban Users
+ */
+router.post('/ban-user',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.banUser(req, res)
+);
+router.post('/unban-user',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.unbanUser(req, res)
 );
 // User listing and details for Super Admin
 router.get('/users',
@@ -113,6 +126,30 @@ router.get('/statistics',
   authenticateUser,
   requireSuperAdmin,
   (req, res) => superAdminController.getStatistics(req, res)
+);
+/**
+ * Latest Registered Users
+ */
+router.get('/latest-users',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getLatestUsers(req, res)
+);
+/**
+ * Terminal/Console Logs
+ */
+router.get('/terminal-logs',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getTerminalLogs(req, res)
+);
+/**
+ * Role Distribution
+ */
+router.get('/role-distribution',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getRoleDistribution(req, res)
 );
 
 module.exports = router;

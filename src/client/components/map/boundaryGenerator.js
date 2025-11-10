@@ -1,15 +1,16 @@
 async function loadBoundaries() {
   try {
     // Wait for map instance to be available with shorter intervals
-    const maxAttempts = 20;
+    const maxAttempts = 50; // Increased attempts
     let attempts = 0;
     while (!window.simpleMap && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 500ms to 100ms
+      await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay to 200ms
       attempts++;
     }
     const M = window.simpleMap;
     if (!M) {
-      throw new Error('Map failed to initialize after multiple attempts');
+      console.warn('[BOUNDARY] Map not available yet, skipping boundary loading');
+      return; // Don't throw error, just skip if map isn't ready
     }
     // Fetch boundaries data
     const response = await fetch('/api/boundaries');
@@ -21,6 +22,9 @@ async function loadBoundaries() {
     if (!Array.isArray(brgyData)) {
       throw new Error('Boundary data is not in correct format');
     }
+    // Store boundaries globally for boundary checking
+    window.cityBoundaries = brgyData;
+
     // Add each barangay boundary to the map
     brgyData.forEach((barangay) => {
       const geojsonLayer = L.geoJSON(barangay.geojson, {
@@ -33,9 +37,9 @@ async function loadBoundaries() {
       });
       geojsonLayer.addTo(M);
     });
-    // Add fit bounds to see if boundaries are outside view
-    const bounds = L.geoJSON(brgyData.map(b => b.geojson)).getBounds();
-    M.fitBounds(bounds, { padding: [20, 20] }); // Add padding for better view
+    // Don't auto-fit bounds - let the heatmap control the view
+    // const bounds = L.geoJSON(brgyData.map(b => b.geojson)).getBounds();
+    // M.fitBounds(bounds, { padding: [20, 20] }); // Add padding for better view
     // console.log removed for security
   } catch (err) {
     console.error('Error loading boundaries:', err.message);
@@ -47,6 +51,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Load boundaries immediately - no delay
     await loadBoundaries();
+
+    // If heatmap visualization exists, reload data to apply boundary filtering
+    if (window.heatmapViz && typeof window.heatmapViz.loadComplaintData === 'function') {
+      console.log('[BOUNDARY] Boundaries loaded, reloading heatmap data with boundary filter');
+      const currentFilters = window.heatmapViz.currentFilters || {};
+      await window.heatmapViz.loadComplaintData(currentFilters);
+
+      // Recreate heatmap and markers with filtered data
+      if (window.heatmapViz.heatmapLayer) {
+        window.heatmapViz.hideHeatmap();
+      }
+      window.heatmapViz.createHeatmapLayer();
+      window.heatmapViz.showHeatmap();
+
+      if (window.heatmapViz.markerLayer) {
+        window.heatmapViz.hideMarkers();
+      }
+      window.heatmapViz.createMarkerLayer();
+      window.heatmapViz.showMarkers();
+
+      // Update statistics if function exists
+      if (typeof window.updateStatistics === 'function') {
+        window.updateStatistics();
+      }
+    }
   } catch (error) {
     console.error('Failed to load boundaries:', error);
   }

@@ -4,9 +4,10 @@
  */
 import showMessage from '../components/toast.js';
 import { initializeRoleToggle } from '../auth/roleToggle.js';
+import { getActivityIcon } from '../utils/icons.js';
 
 // Dashboard state
-let dashboardData = null;
+const dashboardData = null;
 /**
  * Initialize dashboard
  */
@@ -245,18 +246,7 @@ function getTaskStatusText(status) {
   };
   return textMap[status] || 'Unknown';
 }
-function getActivityIcon(type) {
-  const iconMap = {
-    'task_assigned': '📋',
-    'task_completed': '✅',
-    'task_updated': '📝',
-    'note_added': '📄',
-    'status_changed': '🔄',
-    'deadline_approaching': '⏰',
-    'general': '📢'
-  };
-  return iconMap[type] || '📢';
-}
+// getActivityIcon is now imported from icons.js utility
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);

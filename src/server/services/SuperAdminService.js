@@ -37,19 +37,48 @@ class SuperAdminService {
         throw new Error(`Invalid role: ${newRole}`);
       }
 
+      // Prepare metadata - clear department if demoting to citizen
+      const metadata = {
+        reason: reason || 'Role swap by Super Admin',
+        swap_type: 'super_admin_role_swap'
+      };
+
+      // If demoting to citizen, explicitly clear the department
+      if (newRole === 'citizen') {
+        metadata.department = null;
+        metadata.clear_department = true;
+      }
+
+      console.log('[SUPER_ADMIN] Role swap - calling updateUserRole:', {
+        userId,
+        newRole,
+        superAdminId,
+        currentRole,
+        metadata
+      });
+
       // Perform role swap
       const result = await this.roleService.updateUserRole(
         userId,
         newRole,
         superAdminId,
-        {
-          reason: reason || 'Role swap by Super Admin',
-          swap_type: 'super_admin_role_swap'
-        }
+        metadata
       );
+
+      console.log('[SUPER_ADMIN] Role swap - updateUserRole result:', result);
+
+      // Verify the role was actually changed
+      const verifyRole = await this.roleService.getUserRole(userId);
+      console.log('[SUPER_ADMIN] Role swap - verified role after update:', verifyRole);
+
+      if (verifyRole !== newRole) {
+        console.error('[SUPER_ADMIN] WARNING: Role update may have failed. Expected:', newRole, 'Got:', verifyRole);
+      }
+
       return {
         success: true,
         message: `User role changed from ${currentRole} to ${newRole}`,
+        verified_role: verifyRole,
         ...result
       };
     } catch (error) {
@@ -115,29 +144,78 @@ class SuperAdminService {
       if (currentRole !== 'citizen') {
         throw new Error('Can only assign citizens to departments');
       }
-      // Validate target role - must be LGU officer, admin, HR, or coordinator
-      const isLguOfficer = /^lgu-(?!admin|hr)/.test(role);
-      const isLguAdmin = /^lgu-admin/.test(role);
-      const isLguHR = /^lgu-hr/.test(role);
+      // Validate target role - must be LGU officer, admin, HR, coordinator, or super-admin
+      // Note: Roles should NOT include department suffix (e.g., use 'lgu-officer' not 'lgu-ceeo')
+      const isLguOfficer = role === 'lgu-officer' || role === 'lgu';
+      const isLguAdmin = role === 'lgu-admin';
+      const isLguHR = role === 'lgu-hr';
       const isCoordinator = role === 'complaint-coordinator';
-      const isValidRole = isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
+      const isSuperAdmin = role === 'super-admin';
+      const isValidRole = isLguOfficer || isLguAdmin || isLguHR || isCoordinator || isSuperAdmin;
+
+      console.log('[SUPER_ADMIN] Role validation:', {
+        role,
+        isLguOfficer,
+        isLguAdmin,
+        isLguHR,
+        isCoordinator,
+        isSuperAdmin,
+        isValidRole
+      });
+
       if (!isValidRole) {
-        throw new Error('Invalid department role. Must be LGU officer (lgu-*), lgu-admin, lgu-hr, or complaint-coordinator');
+        throw new Error(`Invalid role: "${role}". Must be lgu-officer, lgu-admin, lgu-hr, complaint-coordinator, or super-admin`);
       }
-      // Update role and assign department
+      console.log('[SUPER_ADMIN] Assign citizen - calling updateUserRole:', {
+        userId,
+        role,
+        departmentId,
+        superAdminId,
+        currentRole
+      });
+
+      // Update role and assign department (if not super-admin or complaint-coordinator)
+      const rolesWithoutDept = ['super-admin', 'complaint-coordinator'];
+      const needsDepartment = !rolesWithoutDept.includes(role);
+
+      const metadata = {
+        reason: reason || (role === 'super-admin' ? `Promoted to Super Admin` :
+          role === 'complaint-coordinator' ? `Promoted to Complaint Coordinator` :
+            `Assigned to ${departmentId} as ${role}`),
+        assigned_by_super_admin: true
+      };
+
+      // Only assign department if role requires it
+      if (needsDepartment && departmentId) {
+        metadata.department = departmentId;
+      } else if (!needsDepartment) {
+        // Explicitly clear department for roles that don't need it
+        metadata.department = null;
+        metadata.clear_department = true;
+      }
+
       const result = await this.roleService.updateUserRole(
         userId,
         role,
         superAdminId,
-        {
-          department: departmentId,
-          reason: reason || `Assigned to ${departmentId} as ${role}`,
-          assigned_by_super_admin: true
-        }
+        metadata
       );
+
+      console.log('[SUPER_ADMIN] Assign citizen - updateUserRole result:', result);
+
+      // Verify the role was actually changed
+      const verifyRole = await this.roleService.getUserRole(userId);
+      console.log('[SUPER_ADMIN] Assign citizen - verified role after update:', verifyRole);
+
+      if (verifyRole !== role) {
+        console.error('[SUPER_ADMIN] WARNING: Role update may have failed. Expected:', role, 'Got:', verifyRole);
+        // Still return success but with warning
+      }
+
       return {
         success: true,
         message: `Citizen assigned to ${departmentId} as ${role}`,
+        verified_role: verifyRole,
         ...result
       };
     } catch (error) {
@@ -178,7 +256,6 @@ class SuperAdminService {
           if (date_to) query = query.lte('created_at', date_to);
           const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
           if (error) {
-            console.warn('[SUPER_ADMIN] Role changes query failed, using fallback:', error.message);
             // Fallback: get role changes without joins
             const { data: fallbackData, error: fallbackError } = await this.supabase
               .from('role_changes')
@@ -192,7 +269,6 @@ class SuperAdminService {
             logs.role_changes = data || [];
           }
         } catch (error) {
-          console.warn('[SUPER_ADMIN] Role changes not available:', error.message);
           logs.role_changes = [];
         }
       }
@@ -211,7 +287,6 @@ class SuperAdminService {
           if (date_to) query = query.lte('created_at', date_to);
           const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
           if (error) {
-            console.warn('[SUPER_ADMIN] Department transfers query failed, using fallback:', error.message);
             // Fallback: get department transfers without joins
             const { data: fallbackData, error: fallbackError } = await this.supabase
               .from('department_transfers')
@@ -225,7 +300,6 @@ class SuperAdminService {
             logs.department_transfers = data || [];
           }
         } catch (error) {
-          console.warn('[SUPER_ADMIN] Department transfers not available:', error.message);
           logs.department_transfers = [];
         }
       }
@@ -281,6 +355,137 @@ class SuperAdminService {
       };
     } catch (error) {
       console.error('[SUPER_ADMIN] Get statistics error:', error);
+      throw error;
+    }
+  }
+  /**
+  * Get latest registered users (with confirmed emails or OAuth)
+  */
+  async getLatestRegisteredUsers(superAdminId, limit = 5) {
+    try {
+      // Validate super admin
+      const adminRole = await this.roleService.getUserRole(superAdminId);
+      if (adminRole !== 'super-admin') {
+        throw new Error('Only Super Admin can view latest registered users');
+      }
+
+      const userService = require('./UserService');
+
+      // Get all users (we'll filter for confirmed emails/OAuth)
+      const result = await userService.getUsers({ includeInactive: false }, { page: 1, limit: 1000 });
+      const allUsers = result.users || [];
+
+      // Filter users with confirmed emails or OAuth providers
+      // OAuth users typically have email_confirmed_at set automatically
+      // We need to check the raw auth user data for email_confirmed_at
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
+
+      let confirmedUsers = [];
+      try {
+        // Get users with confirmed emails using admin API
+        const { data: authUsers, error } = await supabase.auth.admin.listUsers({
+          perPage: 1000
+        });
+
+        if (!error && authUsers && authUsers.users) {
+          // Filter users with confirmed emails (email_confirmed_at is not null)
+          // OAuth users typically have email_confirmed_at set automatically
+          const confirmedAuthUsers = authUsers.users.filter(user =>
+            user.email_confirmed_at !== null && user.email_confirmed_at !== undefined
+          );
+
+          // Map to our user format and sort by created_at (newest first)
+          confirmedUsers = confirmedAuthUsers
+            .map(authUser => {
+              const formattedUser = userService.formatUserResponse(authUser);
+              return {
+                ...formattedUser,
+                created_at: authUser.created_at,
+                email_confirmed_at: authUser.email_confirmed_at,
+                is_oauth: Boolean(authUser.app_metadata?.provider && authUser.app_metadata.provider !== 'email')
+              };
+            })
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, limit);
+        }
+      } catch (err) {
+        console.error('[SUPER_ADMIN] Error fetching confirmed users:', err);
+        // Fallback: return users from UserService (may not have confirmation status)
+        confirmedUsers = allUsers
+          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+          .slice(0, limit);
+      }
+
+      return {
+        success: true,
+        users: confirmedUsers
+      };
+    } catch (error) {
+      console.error('[SUPER_ADMIN] Get latest registered users error:', error);
+      throw error;
+    }
+  }
+  /**
+  * Get role distribution for pie chart (super admin)
+  * Returns: citizen, hr, officer, admin (excluding super-admin)
+  */
+  async getRoleDistribution(superAdminId) {
+    try {
+      // Validate super admin
+      const adminRole = await this.roleService.getUserRole(superAdminId);
+      if (adminRole !== 'super-admin') {
+        throw new Error('Only Super Admin can view role distribution');
+      }
+
+      const userService = require('./UserService');
+      const result = await userService.getUsers({ includeInactive: false }, { page: 1, limit: 10000 });
+      const users = result.users || [];
+
+      // Count roles
+      let citizens = 0;
+      let hr = 0;
+      let officers = 0;
+      let admins = 0;
+
+      users.forEach(user => {
+        const role = String(user.role || '').toLowerCase();
+        const normalizedRole = String(user.normalizedRole || role).toLowerCase();
+
+        // Exclude super-admin
+        if (role === 'super-admin' || normalizedRole === 'super-admin') {
+          return;
+        }
+
+        // Count citizens
+        if (role === 'citizen' || normalizedRole === 'citizen') {
+          citizens++;
+        }
+        // Count HR
+        else if (role === 'lgu-hr' || normalizedRole === 'lgu-hr' || /^lgu-hr/.test(role)) {
+          hr++;
+        }
+        // Count admins (LGU admins only, excluding super-admin)
+        else if (/^lgu-admin/.test(role) || /^lgu-admin/.test(normalizedRole)) {
+          admins++;
+        }
+        // Count officers (simplified 'lgu' and lgu-* excluding admin/hr)
+        else if (role === 'lgu' || /^lgu-(?!admin|hr)/.test(role)) {
+          officers++;
+        }
+      });
+
+      return {
+        success: true,
+        distribution: {
+          citizens,
+          hr,
+          officers,
+          admins
+        }
+      };
+    } catch (error) {
+      console.error('[SUPER_ADMIN] Get role distribution error:', error);
       throw error;
     }
   }

@@ -9,45 +9,203 @@
     <title>Complete Your Profile</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/toast.css">
-    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/header-redesign.css">
+    <link rel="stylesheet" href="./css/pages/signup.css">
     <link rel="stylesheet" href="./css/pages/oauth-complete.css">
 </head>
-<body>
-    <div class="container">
-        <h2>Complete Your Profile</h2>
-        <p>Please provide your mobile number to complete registration.</p>
-        
-        <form id="oauthCompleteForm">
-            <input type="text" id="name" name="name" placeholder="Full Name" readonly class="readonly" />
-            <input type="email" id="email" name="email" placeholder="Email" readonly class="readonly" />
-            
-            <div class="phone-input">
-                <span class="phone-prefix">+63</span>
-                <input
-                    type="tel"
-                    id="mobile"
-                    name="mobile"
-                    placeholder="9123456789"
-                    maxlength="10"
-                    pattern="[0-9]{10}"
-                    required
-                    class="phone-number"
-                />
+<body class="auth-page">
+    <!-- Header Container -->
+    <div class="header-container">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">C</div>
+                    <span class="brand-text">CitizenLink</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                    <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
+                    <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Pattern -->
+    <div class="auth-background">
+        <div class="auth-pattern"></div>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="auth-container">
+        <div class="auth-card">
+            <!-- Header Section -->
+            <div class="auth-header">
+                <h1 class="auth-title">Complete Your Profile</h1>
+                <p class="auth-subtitle">Please provide your information to complete registration.</p>
             </div>
 
-            <div id="oauth-complete-captcha"></div>
-            
-            <input type="submit" value="Complete Registration" />
-            
-            <input type="checkbox" required />Check the checkbox if you agree the
-            <a id="toc">Terms and Condition</a> and <a id="pc">Privacy Consent</a>
-        </form>
-        
+            <!-- Form Section (mirrors signup layout) -->
+            <div class="auth-form">
+                <div class="auth-content">
+                    <div class="auth-main">
+                        <form id="oauthCompleteForm" class="signup-form">
+                            <!-- First Name Field -->
+                            <div class="form-group form-half">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input"
+                                        type="text" 
+                                        id="firstName" 
+                                        name="firstName" 
+                                        placeholder="Enter your first name"
+                                        required
+                                        autocomplete="given-name"
+                                        readonly
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Name is set by your OAuth provider"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Last Name Field -->
+                            <div class="form-group form-half">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input"
+                                        type="text" 
+                                        id="lastName" 
+                                        name="lastName" 
+                                        placeholder="Enter your last name"
+                                        required
+                                        autocomplete="family-name"
+                                        readonly
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Name is set by your OAuth provider"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Address Line 1 -->
+                            <div class="form-group form-full">
+                                <label for="addressLine1" class="form-label">Address (Line 1)</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="addressLine1"
+                                        name="addressLine1"
+                                        placeholder="House no., street, barangay"
+                                        autocomplete="address-line1"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="form-group form-half">
+                                <label for="gender" class="form-label">Gender</label>
+                                <div class="input-wrapper">
+                                    <select id="gender" name="gender" class="input">
+                                        <option value="" selected>Select gender</option>
+                                        <option value="he">He</option>
+                                        <option value="she">She</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Email Field (readonly) -->
+                            <div class="form-group form-half">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input"
+                                        type="email" 
+                                        id="email" 
+                                        name="email" 
+                                        placeholder="Email"
+                                        readonly
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Email is set by your OAuth provider"
+                                        class="readonly"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Phone Field -->
+                            <div class="form-group form-half">
+                                <label for="mobile" class="form-label">Phone Number</label>
+                                <div class="phone-input-wrapper">
+                                    <div class="phone-prefix">+63</div>
+                                    <input
+                                        class="input phone-input"
+                                        type="tel"
+                                        id="mobile"
+                                        name="mobile"
+                                        placeholder="9123456789"
+                                        maxlength="10"
+                                        pattern="[0-9]{10}"
+                                        required
+                                        autocomplete="tel"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Terms and Privacy -->
+                            <div class="form-group form-full">
+                                <label class="checkbox-wrapper terms-checkbox">
+                                    <input type="checkbox" id="terms-checkbox" required>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-label">
+                                        I agree to the <a id="toc">Terms and Conditions</a> 
+                                        and <a id="pc">Privacy Consent</a>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Captcha -->
+                            <div id="oauth-complete-captcha" class="captcha-container form-full"></div>
+
+                            <!-- Submit Button -->
+                            <button class="btn btn-primary btn-lg w-full form-full" type="submit">
+                                <span>Complete Registration</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="terms"></div>
         <div id="privacy"></div>
         <div id="toast-container" class="toast-container"></div>
         <script type="module" src="./js/components/toast.js"></script>
-    </div>
+    </main>
 </body>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script type="module" src="./js/auth/oauth-complete.js"></script>

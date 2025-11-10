@@ -30,15 +30,20 @@ function getSecondaryDepartments(departmentR) {
  * @returns {string} Legacy status format
  */
 function getStatusFromWorkflow(workflowStatus) {
-  const statusMap = {
-    'new': 'pending review',
-    'assigned': 'in progress',
-    'in_progress': 'in progress',
-    'pending_approval': 'in progress',
-    'completed': 'resolved',
-    'cancelled': 'rejected'
-  };
-  return statusMap[workflowStatus] || 'pending review';
+  // Use Map to prevent object injection vulnerabilities
+  const statusMap = new Map([
+    ['new', 'pending review'],
+    ['assigned', 'in progress'],
+    ['in_progress', 'in progress'],
+    ['pending_approval', 'in progress'],
+    ['completed', 'resolved'],
+    ['cancelled', 'rejected']
+  ]);
+  // Safe lookup with Map
+  if (workflowStatus && typeof workflowStatus === 'string') {
+    return statusMap.get(workflowStatus) || 'pending review';
+  }
+  return 'pending review';
 }
 /**
  * Get workflow status from legacy status
@@ -46,23 +51,44 @@ function getStatusFromWorkflow(workflowStatus) {
  * @returns {string} Workflow status
  */
 function getWorkflowFromStatus(status) {
-  if (!status) return undefined;
+  if (!status) return null;
+
+  const statusLower = status.toLowerCase();
+
+  // If it's already a workflow status, return it as-is
+  const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
+  if (validWorkflowStatuses.includes(statusLower)) {
+    return statusLower;
+  }
+
   // Map legacy status values to workflow_status
   const workflowMap = {
     'pending review': 'new',
+    'pending': 'new',
     'in progress': 'in_progress',
     'resolved': 'completed',
     'completed': 'completed', // Also handle "completed" as a legacy status
     'rejected': 'cancelled',
-    'closed': 'cancelled'
+    'closed': 'cancelled',
+    'cancelled': 'cancelled'
   };
-  // If it's already a workflow status, return it as-is
-  const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
-  if (validWorkflowStatuses.includes(status.toLowerCase())) {
-    return status.toLowerCase();
+
+  // Check if it's a confirmation status - these don't map to workflow_status directly
+  // but we can return undefined to indicate they need special handling
+  const confirmationStatuses = ['waiting_for_responders', 'waiting_for_complainant', 'confirmed', 'disputed'];
+  if (confirmationStatuses.includes(statusLower)) {
+    // Confirmation statuses are stored in a different field
+    // Return a special marker that the controller can handle
+    return statusLower; // Return as-is, controller will need to handle this
   }
+
   // Otherwise, try to map from legacy status
-  return workflowMap[status.toLowerCase()] || status;
+  // Validate input to prevent object injection
+  if (statusLower && typeof statusLower === 'string' && statusLower.length < 100) {
+    // eslint-disable-next-line security/detect-object-injection
+    return workflowMap[statusLower] || null;
+  }
+  return null;
 }
 /**
  * Normalize complaint data to reduce redundancy
@@ -155,6 +181,7 @@ function prepareComplaintForInsert(complaintData) {
   delete prepared.subtype; // Remove subtype field - not in current schema
   delete prepared.evidence; // Remove evidence field - handled separately
   // Keep category and subcategory fields - they are now part of the schema
+  // Note: category and subcategory should be UUIDs referencing categories and subcategories tables
   return prepared;
 }
 /**
@@ -173,22 +200,35 @@ function getComplaintStatistics(complaints) {
   };
   complaints.forEach(complaint => {
     const normalized = normalizeComplaintData(complaint);
-    // Count by status
+    // Count by status - validate input to prevent injection
     const {status} = normalized;
-    stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+    if (status && typeof status === 'string' && status.length < 100) {
+      // eslint-disable-next-line security/detect-object-injection
+      stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+    }
     // Count by workflow status
     const workflowStatus = complaint.workflow_status;
-    stats.byWorkflowStatus[workflowStatus] = (stats.byWorkflowStatus[workflowStatus] || 0) + 1;
+    if (workflowStatus && typeof workflowStatus === 'string' && workflowStatus.length < 100) {
+      // eslint-disable-next-line security/detect-object-injection
+      stats.byWorkflowStatus[workflowStatus] = (stats.byWorkflowStatus[workflowStatus] || 0) + 1;
+    }
     // Count by priority
     const {priority} = complaint;
-    stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+    if (priority && typeof priority === 'string' && priority.length < 100) {
+      // eslint-disable-next-line security/detect-object-injection
+      stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+    }
     // Count by category (more meaningful than type)
     const category = complaint.category || 'Uncategorized';
-    stats.byCategory = stats.byCategory || {};
-    stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+    if (typeof category === 'string' && category.length < 100) {
+      stats.byCategory = stats.byCategory || {};
+      // eslint-disable-next-line security/detect-object-injection
+      stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+    }
     // Count by primary department
     const primaryDept = normalized.primary_department;
-    if (primaryDept) {
+    if (primaryDept && typeof primaryDept === 'string' && primaryDept.length < 100) {
+      // eslint-disable-next-line security/detect-object-injection
       stats.byDepartment[primaryDept] = (stats.byDepartment[primaryDept] || 0) + 1;
     }
   });

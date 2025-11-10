@@ -29,7 +29,7 @@ CREATE TABLE public.categories (
 CREATE TABLE public.complaint_assignments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   complaint_id uuid NOT NULL,
-  department_id uuid,
+  department_id bigint,
   assigned_by uuid NOT NULL,
   assigned_to uuid,
   status character varying NOT NULL DEFAULT 'pending'::character varying,
@@ -46,7 +46,8 @@ CREATE TABLE public.complaint_assignments (
   CONSTRAINT complaint_assignments_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_assignments_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id),
   CONSTRAINT complaint_assignments_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id),
-  CONSTRAINT complaint_assignments_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
+  CONSTRAINT complaint_assignments_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
+  CONSTRAINT complaint_assignments_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id)
 );
 CREATE TABLE public.complaint_clusters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -287,12 +288,6 @@ CREATE TABLE public.news (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT news_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.notice (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  owner uuid DEFAULT auth.uid(),
-  CONSTRAINT notice_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.notices (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

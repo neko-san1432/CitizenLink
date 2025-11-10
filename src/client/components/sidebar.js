@@ -1,48 +1,94 @@
 import { getUserRole } from '../auth/authChecker.js';
 import { brandConfig } from '../config/brand.js';
+import { getMenuIcon, getIcon } from '../utils/icons.js';
 
 const _sidebarEl = document.getElementById('sidebar');
 const root = window.location.origin;
+let backdropEl = null;
+
 // Initialize sidebar
 if (_sidebarEl) {
   initializeSidebar();
 }
+
 function initializeSidebar() {
   initializeSidebarClose();
   // Theme toggle is handled by header.js
   setTimeout(setSidebarRole, 500); // Wait 500ms for auth to complete
   setActiveMenuItem();
+  // Add accessibility attributes
+  if (_sidebarEl) {
+    _sidebarEl.setAttribute('role', 'navigation');
+    _sidebarEl.setAttribute('aria-label', 'Main navigation');
+    _sidebarEl.setAttribute('aria-expanded', 'false');
+  }
+  // Add Esc key handler
+  document.addEventListener('keydown', handleEscKey);
 }
+
+function handleEscKey(e) {
+  if (e.key === 'Escape' && _sidebarEl && _sidebarEl.classList.contains('open')) {
+    closeSidebar();
+  }
+}
+
+function createBackdrop() {
+  if (!backdropEl) {
+    backdropEl = document.createElement('div');
+    backdropEl.className = 'sidebar-backdrop';
+    backdropEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdropEl);
+
+    // Add click handler to close sidebar
+    backdropEl.addEventListener('click', () => {
+      closeSidebar();
+    });
+  }
+  // Activate backdrop
+  backdropEl.classList.add('active');
+  backdropEl.setAttribute('aria-hidden', 'false');
+}
+
+function removeBackdrop() {
+  if (backdropEl) {
+    backdropEl.classList.remove('active');
+    backdropEl.setAttribute('aria-hidden', 'true');
+    // Remove backdrop after transition
+    setTimeout(() => {
+      if (backdropEl && !backdropEl.classList.contains('active')) {
+        backdropEl.remove();
+        backdropEl = null;
+      }
+    }, 300);
+  }
+}
+
+function openSidebar() {
+  if (_sidebarEl) {
+    _sidebarEl.classList.add('open');
+    _sidebarEl.setAttribute('aria-expanded', 'true');
+    createBackdrop();
+  }
+}
+
+function closeSidebar() {
+  if (_sidebarEl) {
+    _sidebarEl.classList.remove('open');
+    _sidebarEl.setAttribute('aria-expanded', 'false');
+    removeBackdrop();
+  }
+}
+
 function initializeSidebarClose() {
   const closeBtn = document.getElementById('sidebar-close');
   if (closeBtn) {
+    closeBtn.setAttribute('aria-label', 'Close sidebar');
     closeBtn.addEventListener('click', () => {
-      _sidebarEl.classList.remove('open');
+      closeSidebar();
     });
   }
 }
-// Icon mapping for menu items
-const menuIcons = {
-  'dashboard': '📊',
-  'fileComplaint': '📝',
-  'myProfile': '👤',
-  'appointAdmins': '🔐',
-  'departments': '🏢',
-  'role-changer': '🛠️',
-  'link-generator': '🔗',
-  'review-queue': '📋',
-  'assignments': '📋',
-  'heatmap': '🗺️',
-  'publish': '📢',
-  'taskAssigned': '📝',
-  'signout': '🚪',
-  'settings': '⚙️',
-  'hr-dashboard': '👥',
-  'coordinator-dashboard': '📊',
-  'lgu-admin-dashboard': '🏛️',
-  'lgu-officer-dashboard': '👮',
-  'super-admin-dashboard': '👑'
-};
+// Icon mapping now uses SVG icons from icons.js utility
 async function setSidebarRole() {
   try {
     // console.log removed for security
@@ -100,13 +146,13 @@ async function setSidebarRole() {
               <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
-  <button id="sidebar-close" class="sidebar-close">×</button>
+  <button id="sidebar-close" class="sidebar-close" aria-label="Close sidebar">×</button>
 </div>
         
 <div class="sidebar-menu">
           ${menuItems.map(item => `
-            <a href="${root}${item.url}" data-icon="${item.icon}">
-              <span class="menu-icon">${menuIcons[item.icon] || '📄'}</span>
+            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label}">
+              <span class="menu-icon">${getMenuIcon(item.icon, { size: 20 })}</span>
               <span>${item.label}</span>
             </a>
           `).join('')}
@@ -115,14 +161,14 @@ async function setSidebarRole() {
 <div class="sidebar-bottom">
   <div class="theme-toggle" id="theme-toggle">
     <div class="theme-toggle-label">
-      <span class="menu-icon">🌙</span>
+      <span class="menu-icon">${getIcon('darkMode', { size: 20 })}</span>
       <span>Dark Mode</span>
     </div>
     <div class="toggle-switch" id="toggle-switch"></div>
   </div>
           <div class="sidebar-footer">
-            <a href="/logout" class="logout-link" data-icon="signout">
-              <span class="menu-icon">${menuIcons.signout}</span>
+            <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
+              <span class="menu-icon">${getMenuIcon('signout', { size: 20 })}</span>
               <span>Sign Out</span>
             </a>
           </div>
@@ -133,6 +179,8 @@ async function setSidebarRole() {
       initializeSidebarClose();
       // Theme toggle is handled by header.js
       initializeLogout();
+      // Update active menu items with aria-current
+      setActiveMenuItem();
 
       // console.log removed for security
     }
@@ -143,7 +191,7 @@ async function setSidebarRole() {
       _sidebarEl.innerHTML = `
         <div class="sidebar-error">
           <div class="error-message">
-            <h3>⚠️ Error</h3>
+            <h3>${getIcon('alert', { size: 24 })} Error</h3>
             <p>Failed to load sidebar. Please refresh the page.</p>
             <button onclick="window.location.reload()" class="retry-btn">Retry</button>
           </div>
@@ -153,28 +201,41 @@ async function setSidebarRole() {
   }
 }
 function getMenuItemsForRole(role) {
+  // Import normalization function
+  const { normalizeRole } = require('../utils/roleUtils');
+
+  // Normalize role using general normalization function
+  const originalRole = role;
+  role = normalizeRole(role);
+  if (originalRole !== role) {
+    console.log('[SIDEBAR] Normalizing role from', originalRole, 'to', role, 'for menu items');
+  }
+
   // console.log removed for security
   const menuItems = {
     'citizen': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/fileComplaint', icon: 'fileComplaint', label: 'File Complaint' },
-      { url: '/digos-map', icon: 'map', label: 'Digos City Map' },
+      { url: '/digos-map', icon: 'heatmap', label: 'Digos City Map' },
       { url: '/departments', icon: 'departments', label: 'Departments' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'super-admin': [
-      { url: '/appoint-admins', icon: 'appointAdmins', label: 'Appoint Admins' },
+      { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+      { url: '/super-admin/pending-signups', icon: 'review-queue', label: 'Pending Signups' },
+      { url: '/super-admin/user-manager', icon: 'role-changer', label: 'User Manager' },
+      { url: '/super-admin/link-generator', icon: 'link-generator', label: 'Link Generator' },
+      { url: '/super-admin/server-logs', icon: 'server-logs', label: 'Server logs' },
       { url: '/departments', icon: 'departments', label: 'Departments' },
-      { url: '/role-changer', icon: 'role-changer', label: 'Role Changer' },
-      { url: '/settings', icon: 'settings', label: 'Settings' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'lgu-hr': [
+      { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/link-generator', icon: 'link-generator', label: 'Link Generator' },
-      { url: '/role-changer', icon: 'role-changer', label: 'Role Changer' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],
     'complaint-coordinator': [
+      { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/review-queue', icon: 'review-queue', label: 'Review Queue' },
       { url: '/assignments', icon: 'assignments', label: 'Assignments' },
       { url: '/heatmap', icon: 'heatmap', label: 'Heatmap' },
@@ -197,13 +258,14 @@ function getMenuItemsForRole(role) {
   }
   if (role === 'lgu') {
     return [
+      { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/task-assigned', icon: 'taskAssigned', label: 'Task Assigned' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ];
   }
   // Return menu items for exact role match
   const items = menuItems[role] || [];
-  // console.log removed for security
+  console.log('[SIDEBAR] Menu items for role:', role, 'found', items.length, 'items');
   return items;
 }
 // Sidebar search removed per requirements
@@ -259,8 +321,10 @@ function setActiveMenuItem() {
     const href = item.getAttribute('href');
     if (href && currentPath.includes(href.replace(root, ''))) {
       item.classList.add('active');
+      item.setAttribute('aria-current', 'page');
     } else {
       item.classList.remove('active');
+      item.removeAttribute('aria-current');
     }
   });
 }
@@ -271,4 +335,4 @@ document.addEventListener('DOMContentLoaded', () => {
   updateToggleSwitch(savedTheme === 'dark');
 });
 
-export { initializeSidebar, setActiveMenuItem };
+export { initializeSidebar, setActiveMenuItem, openSidebar, closeSidebar };

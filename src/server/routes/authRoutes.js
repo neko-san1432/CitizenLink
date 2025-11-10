@@ -62,11 +62,11 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
     if (!anonKey || !supabaseUrl) {
       console.error('[FORGOT_PASSWORD] Missing SUPABASE_ANON_KEY or SUPABASE_URL');
       console.error('[FORGOT_PASSWORD] Config check:', {
-        hasConfig: !!config,
-        hasSupabaseConfig: !!config.supabase,
-        hasAnonKey: !!config.supabase?.anonKey,
-        hasEnvAnonKey: !!process.env.SUPABASE_ANON_KEY,
-        hasSupabaseUrl: !!process.env.SUPABASE_URL
+        hasConfig: Boolean(config),
+        hasSupabaseConfig: Boolean(config.supabase),
+        hasAnonKey: Boolean(config.supabase?.anonKey),
+        hasEnvAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+        hasSupabaseUrl: Boolean(process.env.SUPABASE_URL)
       });
       return res.status(500).json({
         success: false,
@@ -125,10 +125,10 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
                 link: adminData.action_link,
                 development: true
               });
-            } else {
-              console.error('[FORGOT_PASSWORD] Admin API also failed:', adminError?.message || 'Unknown error');
-              console.error('[FORGOT_PASSWORD] This suggests the service role key may not have proper permissions');
             }
+            console.error('[FORGOT_PASSWORD] Admin API also failed:', adminError?.message || 'Unknown error');
+            console.error('[FORGOT_PASSWORD] This suggests the service role key may not have proper permissions');
+
           } catch (adminErr) {
             console.error('[FORGOT_PASSWORD] Admin API exception:', adminErr.message);
           }
@@ -204,8 +204,8 @@ router.post('/debug/generate-recovery-link', passwordResetLimiter, ErrorHandler.
         code: error.code,
         fullError: JSON.stringify(error)
       });
-      return res.status(400).json({ 
-        success: false, 
+      return res.status(400).json({
+        success: false,
         error: error.message || 'Failed to generate recovery link',
         errorCode: error.code,
         errorStatus: error.status,
@@ -216,16 +216,16 @@ router.post('/debug/generate-recovery-link', passwordResetLimiter, ErrorHandler.
 
     return res.json({
       success: true,
-      link: link,
+      link,
       hashedToken: data?.hashed_token || null,
       note: link ? 'Recovery link generated successfully' : 'Link generated but format unexpected'
     });
   } catch (error) {
     console.error('[DEBUG] Generate recovery link exception:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       error: 'Internal server error',
-      details: error.message 
+      details: error.message
     });
   }
 }));
@@ -281,10 +281,10 @@ router.post('/debug/find-user', passwordResetLimiter, ErrorHandler.asyncWrapper(
     }
     const projectRef = (process.env.SUPABASE_URL || '').split('https://').pop()?.split('.supabase.co')[0] || null;
 
-    return res.json({ 
-      success: true, 
-      projectRef, 
-      exists: !!found, 
+    return res.json({
+      success: true,
+      projectRef,
+      exists: Boolean(found),
       userId: found?.id || null,
       email: found?.email || null,
       errorDetails: errorDetails || null,
@@ -292,10 +292,10 @@ router.post('/debug/find-user', passwordResetLimiter, ErrorHandler.asyncWrapper(
     });
   } catch (error) {
     console.error('[DEBUG] Find user exception:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       error: 'Internal server error',
-      details: error.message 
+      details: error.message
     });
   }
 }));
@@ -330,11 +330,11 @@ router.get('/debug/env', ErrorHandler.asyncWrapper(async (req, res) => {
         adminTest = { canAccess: false, error: err.message };
       }
     }
-    return res.json({ 
-      success: true, 
-      projectRef, 
-      supabaseUrl: url, 
-      hasServiceKey, 
+    return res.json({
+      success: true,
+      projectRef,
+      supabaseUrl: url,
+      hasServiceKey,
       serviceKeyPrefix,
       serviceKeyLength,
       adminTest,
@@ -426,6 +426,12 @@ router.get('/confirm-password-change', ErrorHandler.asyncWrapper(AuthController.
  * @access  Private
  */
 router.post('/change-password', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.changePassword));
+/**
+ * @route   POST /api/auth/request-email-change
+ * @desc    Request email change with email confirmation
+ * @access  Private
+ */
+router.post('/request-email-change', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.requestEmailChange));
 /**
  * @route   POST /api/auth/logout
  * @desc    Logout user

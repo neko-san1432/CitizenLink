@@ -20,11 +20,18 @@ class RoleManagementService {
   */
   async updateUserRole(userId, newRole, performedBy, metadata = {}) {
     try {
-      // Validate role
+      // Validate role - only allow exact matches from USER_ROLES
+      // Roles should NOT include department suffixes (department is stored in metadata)
       const validRoles = Object.values(USER_ROLES);
-      if (!validRoles.includes(newRole)) {
-        throw new Error(`Invalid role: ${newRole}`);
+      // Also allow 'lgu-officer' as an alias for 'lgu'
+      const normalizedRole = newRole === 'lgu-officer' ? 'lgu' : newRole;
+
+      if (!validRoles.includes(normalizedRole)) {
+        throw new Error(`Invalid role: ${newRole}. Valid roles are: ${validRoles.join(', ')}, or 'lgu-officer'`);
       }
+
+      // Use normalized role for consistency
+      const finalRole = normalizedRole;
       // Get current user data
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
@@ -32,33 +39,97 @@ class RoleManagementService {
         throw new Error('User not found');
       }
       const {user} = currentUser;
-      const currentMetadata = user.raw_user_meta_data || {};
+      // Check both raw_user_meta_data and user_metadata for current role
+      const rawMetadata = user.raw_user_meta_data || {};
+      const userMetadata = user.user_metadata || {};
+      const currentMetadata = { ...userMetadata, ...rawMetadata }; // raw_user_meta_data takes priority
       const currentRole = currentMetadata.role || 'citizen';
+
+      console.log('[ROLE] Current user metadata:', {
+        userId,
+        raw_user_meta_data_role: rawMetadata.role,
+        user_metadata_role: userMetadata.role,
+        currentRole
+      });
       // Create updated metadata
       const updatedMetadata = {
         ...currentMetadata,
-        role: newRole,
+        role: finalRole, // Use normalized role
         previous_role: currentRole,
         role_updated_at: new Date().toISOString(),
         role_updated_by: performedBy,
-        ...(metadata.department && { department: metadata.department }),
         ...(metadata.reason && { role_change_reason: metadata.reason })
       };
+
+      // Handle department assignment or clearing
+      if (metadata.clear_department || (metadata.department === null && newRole === 'citizen')) {
+        // Remove department when demoting to citizen
+        delete updatedMetadata.department;
+      } else if (metadata.department) {
+        // Assign department if provided
+        updatedMetadata.department = metadata.department;
+      }
       // Update user metadata using Supabase Admin API
+      // Update both raw_user_meta_data and user_metadata for consistency
+      console.log('[ROLE] Updating user metadata:', {
+        userId,
+        newRole,
+        updatedMetadata: {
+          role: updatedMetadata.role,
+          department: updatedMetadata.department,
+          previous_role: updatedMetadata.previous_role
+        }
+      });
+
       const { data: updatedUser, error: updateError } = await this.supabase.auth.admin.updateUserById(
         userId,
         {
-          raw_user_meta_data: updatedMetadata
+          raw_user_meta_data: updatedMetadata,
+          user_metadata: updatedMetadata
         }
       );
-      if (updateError) throw updateError;
+
+      if (updateError) {
+        console.error('[ROLE] Update user error:', updateError);
+        throw updateError;
+      }
+
+      // Verify the update was successful
+      if (!updatedUser || !updatedUser.user) {
+        throw new Error('User update returned no data');
+      }
+
+      // Double-check by fetching the user again
+      const { data: verifyUser, error: verifyError } = await this.supabase.auth.admin.getUserById(userId);
+      if (verifyError) {
+        console.warn('[ROLE] Could not verify update:', verifyError);
+      } else {
+        const verifiedRole = verifyUser.user.raw_user_meta_data?.role || verifyUser.user.user_metadata?.role;
+        console.log('[ROLE] Role updated and verified:', {
+          userId,
+          oldRole: currentRole,
+          newRole: finalRole,
+          updatedRole: updatedUser.user.raw_user_meta_data?.role || updatedUser.user.user_metadata?.role,
+          verifiedRole,
+          match: verifiedRole === finalRole
+        });
+
+        if (verifiedRole !== finalRole) {
+          console.error('[ROLE] WARNING: Role mismatch after update!', {
+            expected: finalRole,
+            got: verifiedRole,
+            raw_meta: verifyUser.user.raw_user_meta_data?.role,
+            user_meta: verifyUser.user.user_metadata?.role
+          });
+        }
+      }
       // Log the role change
-      await this.logRoleChange(userId, currentRole, newRole, performedBy, metadata);
+      await this.logRoleChange(userId, currentRole, finalRole, performedBy, metadata);
       return {
         success: true,
         user: updatedUser.user,
         previous_role: currentRole,
-        new_role: newRole
+        new_role: finalRole
       };
     } catch (error) {
       console.error('[ROLE] Update role error:', error);

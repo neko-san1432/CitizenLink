@@ -47,10 +47,10 @@ class EnhancedHeatmapController {
             this.controls.attach();
           }
         } else {
-      console.warn('[ENHANCED-HEATMAP] Controls not found; continuing without controls');
+          console.warn('[ENHANCED-HEATMAP] Controls not found; continuing without controls');
         }
       } catch (e) {
-      console.warn('[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls', e);
+        console.warn('[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls', e);
       }
       // Load initial data
       await this.loadData();
@@ -128,10 +128,8 @@ class EnhancedHeatmapController {
           if (!map.hasLayer(this.heatmapViz.markerLayer)) {
             this.heatmapViz.showMarkers();
           }
-        } else {
-          if (map.hasLayer(this.heatmapViz.markerLayer)) {
-            this.heatmapViz.hideMarkers();
-          }
+        } else if (map.hasLayer(this.heatmapViz.markerLayer)) {
+          this.heatmapViz.hideMarkers();
         }
       }
       this.refreshVisualization();
@@ -711,7 +709,7 @@ class EnhancedHeatmapController {
     if (data.length === 0) return 0;
     // Simple density calculation based on area and point count
     const bounds = this.map.getBounds();
-    const area = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) * 
+    const area = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) *
                  bounds.getNorthEast().distanceTo(bounds.getNorthWest());
     return Math.round((data.length / area) * 1000) / 1000;
   }

@@ -2,6 +2,14 @@ import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { validateAndSanitizeForm } from '../utils/validation.js';
 
+// Add spinner animation if not present
+if (!document.getElementById('spinner-animation')) {
+  const style = document.createElement('style');
+  style.id = 'spinner-animation';
+  style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+}
+
 // Get signup code from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
 const signupCode = urlParams.get('code');
@@ -39,12 +47,33 @@ async function signupWithOAuth(provider) {
     showMessage('error', `Failed to sign in with ${provider}`);
   }
 }
+// Function to initialize signup code validation
+function initializeSignupCodeValidation() {
+  // Check if signup code is provided in URL
+  if (!signupCode) {
+    showMessage('error', 'No signup code provided in URL');
+    // Disable form if no code
+    const form = document.getElementById('signup-form');
+    if (form) {
+      form.style.opacity = '0.5';
+      form.style.pointerEvents = 'none';
+    }
+  } else {
+    // Validate signup code automatically on page load
+    validateSignupCode(signupCode);
+  }
+}
+
 // Attach OAuth button listeners (no inline handlers for CSP)
 document.getElementById('oauth-google')?.addEventListener('click', () => signupWithOAuth('google'));
 document.getElementById('oauth-facebook')?.addEventListener('click', () => signupWithOAuth('facebook'));
-// Check if signup code is provided in URL
-if (!signupCode) {
-  showMessage('error', 'No signup code provided in URL');
+
+// Initialize validation when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeSignupCodeValidation);
+} else {
+  // DOM is already loaded, run immediately
+  initializeSignupCodeValidation();
 }
 async function validateSignupCode(code) {
   try {
@@ -83,6 +112,8 @@ if (signupForm) {
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
+      addressLine1: formData.get('addressLine1'),
+      gender: formData.get('gender'),
       email: formData.get('email'),
       mobile: formData.get('mobile'),
       password: formData.get('password'),
@@ -104,11 +135,9 @@ if (signupForm) {
     }
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
-    const buttonText = submitButton.querySelector('.button-text');
-    const buttonLoading = submitButton.querySelector('.button-loading');
-    buttonText.style.display = 'none';
-    buttonLoading.style.display = 'flex';
+    const originalHTML = submitButton.innerHTML;
     submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;vertical-align:middle;margin-right:8px;animation:spin 0.8s linear infinite"></span>Creating Account...';
     try {
       // Submit via API
       const response = await fetch('/api/auth/signup-with-code', {
@@ -116,6 +145,8 @@ if (signupForm) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: validation.sanitizedData.name,
+          addressLine1: data.addressLine1 || '',
+          gender: data.gender || '',
           email: validation.sanitizedData.email,
           mobileNumber: `+63${validation.sanitizedData.mobile}`,
           password: data.password,
@@ -152,8 +183,7 @@ if (signupForm) {
       showMessage('error', 'Registration failed. Please try again.');
     } finally {
       // Reset button state
-      buttonText.style.display = 'block';
-      buttonLoading.style.display = 'none';
+      submitButton.innerHTML = originalHTML;
       submitButton.disabled = false;
     }
   });

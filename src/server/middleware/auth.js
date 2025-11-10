@@ -105,8 +105,10 @@ const authenticateUser = async (req, res, next) => {
       emailVerified: Boolean(tokenUser.email_confirmed_at),
       phoneVerified: combinedMetadata.phone_verified || false,
       // Security
-      isBanned: combinedMetadata.permanentBan || false,
-      banStrike: combinedMetadata.banStrike || 0
+      isBanned: combinedMetadata.isBanned === true,
+      warningStrike: combinedMetadata.warningStrike || 0,
+      banType: combinedMetadata.banType || null,
+      banExpiresAt: combinedMetadata.banExpiresAt || null
     };
     next();
   } catch (error) {

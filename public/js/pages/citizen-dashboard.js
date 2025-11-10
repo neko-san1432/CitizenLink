@@ -82,7 +82,7 @@ class ContentBannerManager {
     // But still prefer newer if there's any date difference
     const scoreA = this.getPriorityScore(a);
     const scoreB = this.getPriorityScore(b);
-    
+
     // If one is urgent and other is not, and dates are same day, prioritize urgent
     if (Math.abs(dateDiff) <= oneDay && scoreA !== scoreB) {
       // If urgent (score 4), it can override same-day items
@@ -95,7 +95,7 @@ class ContentBannerManager {
       // For non-urgent priorities, still prefer newer
       return dateDiff;
     }
-    
+
     // Same priority or not urgent, newest first
     return dateDiff;
   }
@@ -104,38 +104,38 @@ class ContentBannerManager {
   addToQueue(newItem) {
     const contentType = newItem.content_type;
     if (!this.queues[contentType]) return;
-    
+
     const queue = this.queues[contentType];
     const currentIndex = this.currentIndices[contentType];
     const newScore = this.getPriorityScore(newItem);
-    
+
     // Check if item already exists (avoid duplicates)
     const exists = queue.some(item => item.id === newItem.id);
     if (exists) return;
-    
+
     // If queue is empty, just add it
     if (queue.length === 0) {
       queue.push(newItem);
       this.currentIndices[contentType] = 0;
       return;
     }
-    
+
     const currentDisplaying = queue[currentIndex];
     const currentScore = currentDisplaying ? this.getPriorityScore(currentDisplaying) : 0;
-    
+
     // If urgent and higher than current, replace current immediately
     if (newScore === PRIORITY_SCORES.urgent && newScore > currentScore) {
       // Save current item to re-insert later
       const currentItem = currentDisplaying;
-      
+
       // Remove current item temporarily
       if (currentItem) {
         queue.splice(currentIndex, 1);
       }
-      
+
       // Insert urgent item at current position
       queue.splice(currentIndex, 0, newItem);
-      
+
       // Re-insert current item after urgent (maintain position)
       if (currentItem && queue.length > currentIndex + 1) {
         queue.splice(currentIndex + 1, 0, currentItem);
@@ -143,24 +143,24 @@ class ContentBannerManager {
         // If queue was empty, just add it
         queue.push(currentItem);
       }
-      
+
       // Keep current index pointing to urgent item
       this.currentIndices[contentType] = currentIndex;
       this.updateDisplay();
       return;
     }
-    
+
     // If high priority, insert right after current item
     if (newScore === PRIORITY_SCORES.high && currentDisplaying) {
       const insertIndex = (currentIndex + 1) % (queue.length + 1);
       queue.splice(insertIndex, 0, newItem);
       return;
     }
-    
+
     // Normal insertion with priority sorting
     const insertIndex = this.findInsertPosition(queue, newItem, newScore);
     queue.splice(insertIndex, 0, newItem);
-    
+
     // Adjust current index if item was inserted before it
     if (insertIndex <= currentIndex) {
       this.currentIndices[contentType] = currentIndex + 1;
@@ -170,7 +170,7 @@ class ContentBannerManager {
   // Find position to insert item based on priority
   findInsertPosition(queue, item, score) {
     if (queue.length === 0) return 0;
-    
+
     for (let i = 0; i < queue.length; i++) {
       const itemScore = this.getPriorityScore(queue[i]);
       if (score > itemScore) {
@@ -184,7 +184,7 @@ class ContentBannerManager {
         }
       }
     }
-    
+
     return queue.length;
   }
 
@@ -341,8 +341,8 @@ class ContentBannerManager {
       } else if (item.content_type === 'notice') {
         badge = '<span class="content-badge">[Announcement]</span>';
       }
-      const itemClass = item.content_type === 'news' ? 
-        'content-banner-item active news-item' : 
+      const itemClass = item.content_type === 'news' ?
+        'content-banner-item active news-item' :
         'content-banner-item active';
       itemHTML += `
         <div class="${itemClass}">
@@ -461,9 +461,9 @@ async function loadMyComplaints() {
       total: result.pagination?.total || 0,
       page: result.pagination?.page,
       totalPages: result.pagination?.totalPages,
-      data: result.data?.map(c => ({ 
-        id: c.id, 
-        title: c.title, 
+      data: result.data?.map(c => ({
+        id: c.id,
+        title: c.title,
         status: c.workflow_status,
         is_duplicate: c.is_duplicate,
         cancelled_at: c.cancelled_at
@@ -493,12 +493,12 @@ function renderMyComplaints(complaints, totalCount = null) {
   }
   console.debug('[CITIZEN_DASHBOARD] Render complaints inputs', {
     count: complaints.length,
-    totalCount: totalCount,
-    complaints: complaints.map(c => ({ 
-      id: c.id, 
-      title: c.title, 
-      status: c.workflow_status || c.status, 
-      submitted_at: c.submitted_at 
+    totalCount,
+    complaints: complaints.map(c => ({
+      id: c.id,
+      title: c.title,
+      status: c.workflow_status || c.status,
+      submitted_at: c.submitted_at
     }))
   });
   if (complaints.length === 0) {
@@ -527,7 +527,7 @@ function renderMyComplaints(complaints, totalCount = null) {
     return true;
   });
 
-  
+
   console.debug('[CITIZEN_DASHBOARD] Render complaints derived metrics', {
     total: complaints.length,
     filtered: filteredComplaints.length,
@@ -539,7 +539,7 @@ function renderMyComplaints(complaints, totalCount = null) {
     const status = complaint.workflow_status || complaint.status || 'new';
     const statusClass = status.toLowerCase().replace(/[_\s]/g, '-');
     const statusLabel = formatStatus(status);
-    
+
     // Add visual indicator for duplicates and cancelled
     let statusBadge = '';
     if (complaint.is_duplicate) {
@@ -573,7 +573,7 @@ function renderMyComplaints(complaints, totalCount = null) {
  */
 function formatStatus(status) {
   if (!status) return 'New';
-  return status.split('_').map(word => 
+  return status.split('_').map(word =>
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 }
@@ -598,12 +598,12 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
   // For cancelled complaints, don't show any active steps - gray everything out
   // Otherwise, show progress up to the current step
   let currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
-  
+
   // If citizen has confirmed, show step 4 (all circles completed) even if status is still 'completed'
   if (!isCancelled && confirmedByCitizen && (workflowStatus === 'completed' || workflowStatus === 'resolved')) {
     currentStep = 4;
   }
-  
+
   // Node colors for each step (orange → red → pink → purple)
   const nodeColors = [
     '#3b82f6',
@@ -634,7 +634,7 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
       }
     }
     // No glow/box-shadow for nodes
-    let boxShadow = 'none';
+    const boxShadow = 'none';
     stepperHTML += `
       <div class="compact-stepper-step ${isActive ? 'active' : ''}">
         <div class="compact-stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>

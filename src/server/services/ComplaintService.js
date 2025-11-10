@@ -47,6 +47,7 @@ class ComplaintService {
       preferred_departments: preferredDepartments,
       // Initially empty - will be populated by coordinator assignment
       department_r: []
+      // Note: category and subcategory fields are passed through as-is (UUIDs from categories/subcategories tables)
     };
 
     // Prepare data for insertion using utility functions
@@ -345,7 +346,7 @@ class ComplaintService {
       try {
         const { data: submitterData, error: submitterError } = await this.complaintRepo.supabase.auth.admin.getUserById(complaint.submitted_by);
         if (!submitterError && submitterData?.user) {
-          const user = submitterData.user;
+          const {user} = submitterData;
           const meta = user.user_metadata || {};
           const rawMeta = user.raw_user_meta_data || {};
           const combined = { ...rawMeta, ...meta };
@@ -544,6 +545,7 @@ class ComplaintService {
     // console.log removed for security
     const {
       status,
+      confirmationStatus,
       category,
       subcategory,
       department,
@@ -582,10 +584,15 @@ class ComplaintService {
       // console.log removed for security
       // Log filter parameters
       // console.log removed for security
-      // Filter by workflow_status
+      // Filter by workflow_status (supports array for multiple values)
       if (status) {
-        // If a specific status is requested, filter by it
-        query = query.eq('workflow_status', status);
+        if (Array.isArray(status) && status.length > 0) {
+          // Multiple statuses - use .in() for OR filtering
+          query = query.in('workflow_status', status);
+        } else if (!Array.isArray(status)) {
+          // Single status
+          query = query.eq('workflow_status', status);
+        }
         // console.log removed for security
       } else {
         // No status filter - check if we should exclude resolved
@@ -598,15 +605,50 @@ class ComplaintService {
           // console.log removed for security
         }
       }
+
+      // Filter by confirmation_status (supports array for multiple values)
+      if (confirmationStatus) {
+        if (Array.isArray(confirmationStatus) && confirmationStatus.length > 0) {
+          // Multiple confirmation statuses - use .in() for OR filtering
+          query = query.in('confirmation_status', confirmationStatus);
+        } else if (!Array.isArray(confirmationStatus)) {
+          // Single confirmation status
+          query = query.eq('confirmation_status', confirmationStatus);
+        }
+        // console.log removed for security
+      }
       // No 'type' field in schema; do not filter by it
-      // Filter by department
+      // Filter by department - checks department_r array (text array field)
+      // Only complaints with the selected department code in their department_r array will be returned
       if (department) {
-        query = query.contains('department_r', [department]);
+        console.log('[COMPLAINT-SERVICE] Filtering by department:', department);
+        if (Array.isArray(department) && department.length > 0) {
+          // Multiple departments - check if any department in department_r array matches
+          // Use .or() with multiple .contains() conditions to check if department_r contains any of the selected codes
+          const deptConditions = department.map(dept => `department_r.cs.{${dept}}`).join(',');
+          console.log('[COMPLAINT-SERVICE] Department filter conditions:', deptConditions);
+          if (deptConditions) {
+            query = query.or(deptConditions);
+          }
+        } else if (!Array.isArray(department)) {
+          // Single department - check if department_r array contains this department code
+          console.log('[COMPLAINT-SERVICE] Single department filter:', department);
+          query = query.contains('department_r', [department]);
+        }
+      } else {
+        console.log('[COMPLAINT-SERVICE] No department filter applied');
       }
-      // Filter by category and subcategory (direct columns in schema)
+      // Filter by category (UUIDs from categories table, supports array for multiple values)
       if (category) {
-        query = query.eq('category', category);
+        if (Array.isArray(category) && category.length > 0) {
+          // Multiple categories - use .in() for OR filtering
+          query = query.in('category', category);
+        } else if (!Array.isArray(category)) {
+          // Single category
+          query = query.eq('category', category);
+        }
       }
+      // Filter by subcategory (UUID from subcategories table)
       if (subcategory) {
         query = query.eq('subcategory', subcategory);
       }
@@ -721,6 +763,19 @@ class ComplaintService {
         }
       }
       // Transform data for heatmap
+      // Debug: Log department_r data before transformation
+      if (data && data.length > 0) {
+        const deptSample = data.slice(0, 3).map(c => ({
+          id: c.id,
+          title: c.title,
+          department_r: c.department_r,
+          dept_r_type: typeof c.department_r,
+          dept_r_isArray: Array.isArray(c.department_r),
+          dept_r_length: Array.isArray(c.department_r) ? c.department_r.length : 'N/A'
+        }));
+        console.log('[COMPLAINT-SERVICE] Sample complaints before transformation:', deptSample);
+      }
+
       const transformedData = data
         .map(complaint => {
           // Parse coordinates carefully
@@ -731,24 +786,42 @@ class ComplaintService {
             console.warn('[COMPLAINT-SERVICE] Skipping complaint with invalid coordinates:', complaint.id, { lat: complaint.latitude, lng: complaint.longitude });
             return null;
           }
+
+          // Ensure department_r is properly handled
+          const departmentR = Array.isArray(complaint.department_r) ? complaint.department_r :
+            (complaint.department_r ? [complaint.department_r] : []);
+
           return {
             id: complaint.id,
             title: complaint.title,
             status: complaint.workflow_status,
             priority: complaint.priority || 'medium',
-            lat: lat,
-            lng: lng,
+            lat,
+            lng,
             location: complaint.location_text || '',
             submittedAt: complaint.submitted_at,
-            department: complaint.department_r && complaint.department_r.length > 0 ? complaint.department_r[0] : 'Unknown',
-            departments: complaint.department_r || [],
-            secondaryDepartments: complaint.department_r && complaint.department_r.length > 1 ? complaint.department_r.slice(1) : [],
+            department: departmentR.length > 0 ? departmentR[0] : 'Unknown',
+            departments: departmentR, // Always return as array
+            secondaryDepartments: departmentR.length > 1 ? departmentR.slice(1) : [],
             type: complaint.category || 'General',
             category: complaint.category,
-            subcategory: complaint.subcategory
+            subcategory: complaint.subcategory,
+            // Keep original for debugging
+            department_r: departmentR
           };
         })
         .filter(Boolean); // Remove null entries
+
+      // Debug: Log transformed data
+      if (transformedData.length > 0) {
+        const transformedSample = transformedData.slice(0, 3).map(c => ({
+          id: c.id,
+          title: c.title,
+          departments: c.departments,
+          department_r: c.department_r
+        }));
+        console.log('[COMPLAINT-SERVICE] Sample complaints after transformation:', transformedSample);
+      }
       // console.log removed for security
       // console.log removed for security
       // console.log removed for security
@@ -1557,7 +1630,7 @@ class ComplaintService {
   async confirmResolution(complaintId, citizenId, confirmed, feedback = null) {
     try {
       // Use repository client (service-role) to avoid RLS issues
-      const supabase = this.complaintRepo.supabase;
+      const {supabase} = this.complaintRepo;
       // First, verify the complaint exists and citizen has access
       const { data: complaint, error: complaintError } = await supabase
         .from('complaints')

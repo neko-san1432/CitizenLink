@@ -54,11 +54,28 @@ class HeatmapControls {
           <label>Status Filter:</label>
           <select id="status-filter">
             <option value="">All Statuses</option>
-            <option value="pending review">Pending Review</option>
-            <option value="in progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-            <option value="rejected">Rejected</option>
+            <optgroup label="Standard Status">
+              <option value="new">New</option>
+              <option value="pending">Pending</option>
+              <option value="in progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="completed">Completed</option>
+              <option value="closed">Closed</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </optgroup>
+            <optgroup label="Workflow Status">
+              <option value="new">New</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress (Workflow)</option>
+              <option value="pending_approval">Pending Approval</option>
+            </optgroup>
+            <optgroup label="Confirmation Status">
+              <option value="waiting_for_responders">Waiting for Responders</option>
+              <option value="waiting_for_complainant">Waiting for Complainant</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="disputed">Disputed</option>
+            </optgroup>
           </select>
         </div>
 
@@ -555,12 +572,67 @@ class HeatmapControls {
     }
   }
   /**
+   * Get user's department code
+   */
+  async getUserDepartment() {
+    try {
+      const apiClientModule = await import('../../config/apiClient.js');
+      const apiClient = apiClientModule.default;
+      const response = await apiClient.get('/api/user/role-info');
+      if (response.success && response.data) {
+        // Try multiple possible field names for department
+        const department = response.data.department ||
+                          response.data.dpt ||
+                          response.data.metadata?.department ||
+                          response.data.metadata?.dpt ||
+                          response.data.raw_user_meta_data?.department ||
+                          response.data.raw_user_meta_data?.dpt;
+        if (department) {
+          return department.toUpperCase();
+        }
+      }
+    } catch (error) {
+      console.warn('[HEATMAP_CONTROLS] Failed to get user department:', error);
+    }
+    // Fallback: try Supabase session
+    try {
+      const { supabase } = await import('../../config/config.js');
+      const { data: { session } } = await supabase.auth.getSession();
+      const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+      const department = metadata.department || metadata.dpt;
+      if (department) {
+        return department.toUpperCase();
+      }
+    } catch (error) {
+      console.warn('[HEATMAP_CONTROLS] Failed to get department from session:', error);
+    }
+    return null;
+  }
+
+  /**
    * Load departments dynamically
    */
   async loadDepartments() {
     try {
       const { getDepartments } = await import('../../utils/departmentUtils.js');
       const departments = await getDepartments();
+
+      // Get user's department and sort departments to put user's office first
+      const userDepartmentCode = await this.getUserDepartment();
+      if (userDepartmentCode && departments && departments.length > 0) {
+        // Sort: user's department first, then others
+        departments.sort((a, b) => {
+          const aCode = (a.code || '').toUpperCase();
+          const bCode = (b.code || '').toUpperCase();
+          const aIsUserDept = aCode === userDepartmentCode;
+          const bIsUserDept = bCode === userDepartmentCode;
+
+          if (aIsUserDept && !bIsUserDept) return -1;
+          if (!aIsUserDept && bIsUserDept) return 1;
+          return 0; // Keep original order for non-matching items
+        });
+      }
+
       const departmentSelect = document.getElementById('department-filter');
       if (departmentSelect) {
         // Remove loading placeholder
@@ -572,7 +644,11 @@ class HeatmapControls {
         departments.forEach(dept => {
           const option = document.createElement('option');
           option.value = dept.code;
-          option.textContent = `${dept.name} (${dept.code})`;
+          const isUserDept = userDepartmentCode && (dept.code || '').toUpperCase() === userDepartmentCode;
+          option.textContent = `${dept.name} (${dept.code})${isUserDept ? ' ★' : ''}`;
+          if (isUserDept) {
+            option.style.fontWeight = 'bold';
+          }
           departmentSelect.appendChild(option);
         });
       }

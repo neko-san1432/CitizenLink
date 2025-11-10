@@ -74,7 +74,8 @@ async function validateUserRole(role) {
     roleType = 'lgu-hr';
     departmentCode = null; // Department stored separately in metadata
   }
-  else if (roleLower === 'lgu') {
+  else if (roleLower === 'lgu' || roleLower === 'lgu-officer') {
+    // Accept both 'lgu' and 'lgu-officer' for backward compatibility
     roleType = 'lgu-officer';
     departmentCode = null; // Department stored separately in metadata
   }
@@ -115,13 +116,58 @@ async function validateUserRole(role) {
   };
 }
 /**
+ * Normalize role to simplified form
+ * Handles variations like:
+ * - lgu-officer → lgu
+ * - lgu-admin-{dept} → lgu-admin (if needed)
+ * - Any role ending with -officer → base role without -officer
+ * @param {string} role - User role to normalize
+ * @returns {string} Normalized role
+ */
+function normalizeRole(role) {
+  if (!role || typeof role !== 'string') return 'citizen';
+
+  const roleLower = role.toLowerCase().trim();
+
+  // Standard roles that don't need normalization
+  if (['citizen', 'super-admin', 'complaint-coordinator'].includes(roleLower)) {
+    return roleLower;
+  }
+
+  // Handle simplified LGU roles
+  if (roleLower === 'lgu-admin') return 'lgu-admin';
+  if (roleLower === 'lgu-hr') return 'lgu-hr';
+  if (roleLower === 'lgu') return 'lgu';
+
+  // Normalize any role ending with -officer to base role
+  // e.g., lgu-officer → lgu, anyrole-officer → anyrole
+  if (roleLower.endsWith('-officer')) {
+    const baseRole = roleLower.replace(/-officer$/, '');
+    // If base role is valid, return it; otherwise keep original
+    if (['lgu', 'lgu-admin', 'lgu-hr'].includes(baseRole)) {
+      return baseRole;
+    }
+    // For other roles ending in -officer, remove the suffix
+    return baseRole || 'citizen';
+  }
+
+  // Handle legacy department-scoped roles (optional normalization)
+  // lgu-admin-{dept} → lgu-admin (if you want to simplify)
+  // Currently keeping as-is, but can be enabled if needed:
+  // if (roleLower.startsWith('lgu-admin-')) return 'lgu-admin';
+  // if (roleLower.startsWith('lgu-hr-')) return 'lgu-hr';
+
+  // Default: return as-is or citizen
+  return roleLower || 'citizen';
+}
+
+/**
  * Extract department code from role
  * @param {string} role - User role
  * @returns {string|null} Department code or null
  */
 function extractDepartmentCode(role) {
   if (!role || typeof role !== 'string') return null;
-  const roleLower = role.toLowerCase().trim();
   // With simplified roles, department is stored separately in metadata
   // This function now returns null as department is not extracted from role
   return null;
@@ -177,6 +223,7 @@ module.exports = {
   getValidDepartmentCodes,
   isValidDepartmentCode,
   validateUserRole,
+  normalizeRole,
   extractDepartmentCode,
   getDepartmentByCode,
   clearDepartmentCodesCache,

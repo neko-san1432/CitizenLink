@@ -23,6 +23,3 @@ export function formatDateLocale(dateString) {
   return date.toLocaleString();
 }
 
-
-
-

@@ -43,6 +43,3 @@ export function getPriorityClass(priority) {
   return priorityClasses[priority] || 'priority-medium';
 }
 
-
-
-

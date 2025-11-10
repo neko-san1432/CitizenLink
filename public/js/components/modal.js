@@ -81,7 +81,7 @@ class ModalManager {
     this.modalOverlay.classList.remove('active');
     document.body.classList.remove('modal-open');
     // Call onClose callback if provided
-    const onClose = modal.dataset.onClose;
+    const {onClose} = modal.dataset;
     if (onClose && typeof window[onClose] === 'function') {
       window[onClose]();
     }

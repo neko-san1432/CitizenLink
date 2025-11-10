@@ -1,16 +1,16 @@
 // LGU Admin Heatmap Page Script
 let heatmapController = null;
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Initialize heatmap controller
     heatmapController = new HeatmapController();
     await heatmapController.initialize('map');
   } catch (error) {
-    console.error("Error initializing heatmap:", error);
-    const statusDiv = document.getElementById("status");
+    console.error('Error initializing heatmap:', error);
+    const statusDiv = document.getElementById('status');
     if (statusDiv) {
-      statusDiv.textContent = "Error loading heatmap";
-      statusDiv.classList.add("error");
+      statusDiv.textContent = 'Error loading heatmap';
+      statusDiv.classList.add('error');
     }
   }
   // Menu button functionality with mutual exclusivity
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (heatmapControls) {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.target.id === 'heatmap-controls' && 
+        if (mutation.target.id === 'heatmap-controls' &&
             mutation.attributeName === 'class') {
           const isControlsVisible = !heatmapControls.classList.contains('collapsed');
           // If controls are being shown and sidebar is open, close sidebar

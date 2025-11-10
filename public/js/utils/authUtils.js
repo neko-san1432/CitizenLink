@@ -2,11 +2,11 @@ import { storageAvailable } from './storage.js';
 
 export default function getCurrentUser() {
   // Determine which storage to use
-  const useStorage = storageAvailable('localStorage') ? 
-                     localStorage : 
-                     storageAvailable('sessionStorage') ? 
-                     sessionStorage : 
-                     null;
+  const useStorage = storageAvailable('localStorage') ?
+    localStorage :
+    storageAvailable('sessionStorage') ?
+      sessionStorage :
+      null;
   if (!useStorage) {
     console.error('No storage mechanism available');
     return null;

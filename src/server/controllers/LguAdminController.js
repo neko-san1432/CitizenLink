@@ -100,13 +100,21 @@ class LguAdminController {
       // Get assignment details for each complaint
       const complaintsWithAssignments = await Promise.all(
         complaints.map(async (complaint) => {
+          // Get all assignments for this complaint
           const { data: assignments } = await supabase
             .from('complaint_assignments')
-            .select('assigned_to, status, assigned_at, assigned_by')
+            .select('assigned_to, status, assigned_at, assigned_by, department_id')
             .eq('complaint_id', complaint.id);
+
+          // Check if complaint is assigned to this admin's department
+          const isAssignedToDepartment = assignments?.some(
+            assignment => assignment.department_id === department.id
+          ) || false;
+
           return {
             ...complaint,
-            assignments: assignments || []
+            assignments: assignments || [],
+            is_assigned_to_department: isAssignedToDepartment
           };
         })
       );
@@ -265,16 +273,16 @@ class LguAdminController {
         const isAnyLguUser = (role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin' || /^lgu-(?!hr)/.test(role));
 
         if (!isAnyLguUser) {
-          console.error('[LGU_ADMIN] Officer is not an LGU user:', { 
-            officerId, 
+          console.error('[LGU_ADMIN] Officer is not an LGU user:', {
+            officerId,
             officerEmail: officer.email,
             role,
             departmentCode,
             metadata,
             rawMetadata
           });
-          rejectedOfficers.push({ 
-            id: officerId, 
+          rejectedOfficers.push({
+            id: officerId,
             email: officer.email,
             reason: 'Officer is not an LGU user',
             role,
@@ -304,7 +312,7 @@ class LguAdminController {
           error: 'No valid officers found for assignment',
           details: {
             totalOfficers: officersToAssign.length,
-            rejectedOfficers: rejectedOfficers,
+            rejectedOfficers,
             adminDepartment: departmentCode
           }
         });
@@ -434,7 +442,7 @@ class LguAdminController {
       const { status, sub_type, priority } = req.query; // Get filters from query params
 
       // Enhanced debug logging
-   
+
 
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department ||
@@ -581,7 +589,7 @@ class LguAdminController {
       // Fetch complaint details for assignments that weren't in the initial complaints list
       const existingComplaintIds = new Set(complaints.map(c => c.id));
       const missingComplaintIds = assignmentComplaintIds.filter(id => !existingComplaintIds.has(id));
-      
+
       let allComplaints = [...complaints];
       if (missingComplaintIds.length > 0) {
         const { data: missingComplaints, error: missingError } = await supabase
@@ -647,7 +655,7 @@ class LguAdminController {
             try {
               const { data: userData, error: userError } = await supabase.auth.admin.getUserById(officerId);
               if (!userError && userData?.user) {
-                const user = userData.user;
+                const {user} = userData;
                 return {
                   id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email,
@@ -660,7 +668,7 @@ class LguAdminController {
               return null;
             }
           });
-          
+
           const userResults = await Promise.allSettled(userPromises);
           officersMap = userResults
             .filter(result => result.status === 'fulfilled' && result.value !== null)
@@ -684,7 +692,7 @@ class LguAdminController {
             try {
               const { data: userData, error: userError } = await supabase.auth.admin.getUserById(citizenId);
               if (!userError && userData?.user) {
-                const user = userData.user;
+                const {user} = userData;
                 return {
                   id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email
@@ -696,7 +704,7 @@ class LguAdminController {
               return null;
             }
           });
-          
+
           const userResults = await Promise.allSettled(userPromises);
           citizensMap = userResults
             .filter(result => result.status === 'fulfilled' && result.value !== null)
