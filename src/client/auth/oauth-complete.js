@@ -1,6 +1,7 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { validateAndSanitizeForm } from '../utils/validation.js';
+import { renderPrivacyNotice } from '../utils/privacyContent.js';
 
 // reCAPTCHA setup - using auto-rendered captcha from HTML
 const oauthCompleteCaptchaWidgetId = 0; // Default ID for auto-rendered captchas
@@ -236,11 +237,13 @@ if (oauthCompleteForm) {
   });
 }
 // Terms and Privacy handlers
-document.getElementById('toc').addEventListener('click', () => {
+document.getElementById('toc').addEventListener('click', (event) => {
+  event.preventDefault();
   document.getElementById('terms').innerHTML = '<h3>Terms and Conditions</h3><p>Your terms content here...</p>';
 });
-document.getElementById('pc').addEventListener('click', () => {
-  document.getElementById('privacy').innerHTML = '<h3>Privacy Policy</h3><p>Your privacy policy content here...</p>';
+document.getElementById('pc').addEventListener('click', (event) => {
+  event.preventDefault();
+  renderPrivacyNotice('#privacy', { headingTag: 'h3' });
 });
 // Prefill data on page load
 prefillOAuthData();

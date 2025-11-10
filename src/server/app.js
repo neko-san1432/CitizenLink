@@ -799,6 +799,9 @@ class CitizenLinkApp {
       const filePath = path.join(config.rootDir, 'views', 'pages', 'auth', 'signup-with-code.html');
       res.sendFile(filePath);
     });
+    this.app.get(['/privacy-notice', '/privacy'], (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'privacy-notice.html'));
+    });
     // Public API endpoints
     this.app.get('/api/boundaries', apiLimiter, async (req, res) => {
       try {

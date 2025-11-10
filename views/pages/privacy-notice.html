@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Notice • CitizenLink</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/privacy-notice.css">
+</head>
+<body>
+    <div class="header-container">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">C</div>
+                    <span class="brand-text">CitizenLink</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                    <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
+                    <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
+                </div>
+                <div id="authenticated-buttons" class="hidden flex items-center gap-2">
+                    <a href="/dashboard" id="dashboard-btn" class="btn btn-primary">Go to Dashboard</a>
+                    <button id="logout-btn" type="button" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="privacy-page container">
+        <section class="privacy-hero">
+            <h1>Privacy Notice</h1>
+            <p>
+                CitizenLink is committed to upholding your right to privacy while delivering responsive public service.
+                This notice explains how we collect, use, protect, and share your personal data when you use our services.
+            </p>
+        </section>
+
+        <section id="privacy-notice-content" class="privacy-content"></section>
+
+        <section class="privacy-actions">
+            <h2>Need help with your data?</h2>
+            <p>If you have questions or would like to exercise your privacy rights, contact the Digos City LGU Data Protection Officer.</p>
+            <ul>
+                <li>Email: <a href="mailto:privacy@digoscity.gov.ph">privacy@digoscity.gov.ph</a></li>
+                <li>Phone: <a href="tel:+63825551234">(082) 555-1234</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="site-footer footer">
+        <small>© <span id="year"></span> CitizenLink. All rights reserved.</small>
+        <nav class="footer-links">
+            <a href="/privacy-notice">Privacy Notice</a>
+            <a href="/privacy-notice#privacy-notice-content">Privacy Policy</a>
+        </nav>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/index-page.js"></script>
+    <script type="module" src="/js/pages/privacy-notice.js"></script>
+</body>
+</html>
+

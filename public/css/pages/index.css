@@ -50,6 +50,23 @@
 .footer small {
   font-size: 0.875rem}
 
+.footer-links {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.footer-links a {
+  color: var(--primary-600);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
 /* Auth buttons styling */
 #auth-buttons {
   position: absolute;

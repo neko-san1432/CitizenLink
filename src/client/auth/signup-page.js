@@ -1,5 +1,6 @@
 // Signup page specific functionality
 import { supabase } from '../config/config.js';
+import { renderPrivacyNotice } from '../utils/privacyContent.js';
 
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
@@ -55,6 +56,7 @@ const initializeSignupPage = () => {
     const termsCheckbox = document.getElementById('terms-checkbox');
     if (termsCheckbox) termsCheckbox.checked = true;
   });
+  renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
 };
 // --- Live password strength meter wiring ---
 function attachPasswordStrengthMeter() {

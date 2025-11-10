@@ -1,6 +1,7 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { validateAndSanitizeForm } from '../utils/validation.js';
+import { renderPrivacyNotice } from '../utils/privacyContent.js';
 
 // Add spinner animation if not present
 if (!document.getElementById('spinner-animation')) {
@@ -70,10 +71,14 @@ document.getElementById('oauth-facebook')?.addEventListener('click', () => signu
 
 // Initialize validation when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeSignupCodeValidation);
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeSignupCodeValidation();
+    renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
+  });
 } else {
   // DOM is already loaded, run immediately
   initializeSignupCodeValidation();
+  renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
 }
 async function validateSignupCode(code) {
   try {
