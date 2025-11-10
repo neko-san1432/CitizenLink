@@ -63,7 +63,7 @@ const cspConfig = {
 };
 // Add upgrade-insecure-requests only in production
 if (process.env.NODE_ENV === 'production') {
-  cspConfig.directives.upgradeInsecureRequests = true;
+  cspConfig.directives.upgradeInsecureRequests = [];
 } else {
   // Explicitly remove upgrade-insecure-requests in development
   delete cspConfig.directives.upgradeInsecureRequests;
