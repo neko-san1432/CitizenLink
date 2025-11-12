@@ -151,3 +151,58 @@
 @media (prefers-reduced-motion: reduce) {
   .hero::before {}
 }
+
+/* Dark Mode Styles */
+html.dark .hero {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+html.dark .hero::before {
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(29, 78, 216, 0.15) 0%, transparent 50%);
+}
+
+html.dark .hero h1 {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+html.dark .hero p {
+  color: #94a3b8;
+}
+
+html.dark .footer {
+  background: #1e293b;
+  color: #94a3b8;
+  border-top-color: #334155;
+}
+
+html.dark .footer-links a {
+  color: #60a5fa;
+}
+
+html.dark .footer-links a:hover {
+  color: #93c5fd;
+}
+
+html.dark .hero .card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .hero .card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  border-color: #475569;
+}
+
+html.dark .hero .card-title {
+  color: #f1f5f9;
+}
+
+html.dark .hero .card p {
+  color: #94a3b8;
+}

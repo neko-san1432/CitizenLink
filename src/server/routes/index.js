@@ -25,6 +25,7 @@ const contentRoutes = require('./contentRoutes');
 const rateLimitRoutes = require('./rateLimitRoutes');
 const healthRoutes = require('./healthRoutes');
 const departmentStructureRoutes = require('./departmentStructureRoutes');
+const complianceRoutes = require('./complianceRoutes');
 
 const router = express.Router();
 // CAPTCHA routes
@@ -48,5 +49,6 @@ router.use('/content', contentRoutes);
 router.use('/rate-limit', rateLimitRoutes);
 router.use('/health', healthRoutes);
 router.use('/department-structure', departmentStructureRoutes);
+router.use('/compliance', complianceRoutes);
 
 module.exports = router;

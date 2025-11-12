@@ -51,18 +51,18 @@
                 <div class="auth-content">
                     <div class="auth-main">
                         <form id="oauthCompleteForm" class="signup-form">
-                            <!-- First Name Field -->
+            <!-- First Name Field -->
                             <div class="form-group form-half">
-                                <label for="firstName" class="form-label">First Name</label>
+                <label for="firstName" class="form-label">First Name</label>
                                 <div class="input-wrapper">
-                                    <input 
+                <input 
                                         class="input"
-                                        type="text" 
-                                        id="firstName" 
-                                        name="firstName" 
-                                        placeholder="Enter your first name"
-                                        required
-                                        autocomplete="given-name"
+                    type="text" 
+                    id="firstName" 
+                    name="firstName" 
+                    placeholder="Enter your first name"
+                    required
+                    autocomplete="given-name"
                                         readonly
                                         disabled
                                         aria-disabled="true"
@@ -75,20 +75,20 @@
                                         </svg>
                                     </div>
                                 </div>
-                            </div>
+            </div>
 
-                            <!-- Last Name Field -->
+            <!-- Last Name Field -->
                             <div class="form-group form-half">
-                                <label for="lastName" class="form-label">Last Name</label>
+                <label for="lastName" class="form-label">Last Name</label>
                                 <div class="input-wrapper">
-                                    <input 
+                <input 
                                         class="input"
-                                        type="text" 
-                                        id="lastName" 
-                                        name="lastName" 
-                                        placeholder="Enter your last name"
-                                        required
-                                        autocomplete="family-name"
+                    type="text" 
+                    id="lastName" 
+                    name="lastName" 
+                    placeholder="Enter your last name"
+                    required
+                    autocomplete="family-name"
                                         readonly
                                         disabled
                                         aria-disabled="true"
@@ -101,50 +101,50 @@
                                         </svg>
                                     </div>
                                 </div>
-                            </div>
+            </div>
 
-                            <!-- Address Line 1 -->
+            <!-- Address Line 1 -->
                             <div class="form-group form-full">
-                                <label for="addressLine1" class="form-label">Address (Line 1)</label>
+                <label for="addressLine1" class="form-label">Address (Line 1)</label>
                                 <div class="input-wrapper">
-                                    <input
+                <input
                                         class="input"
-                                        type="text"
-                                        id="addressLine1"
-                                        name="addressLine1"
-                                        placeholder="House no., street, barangay"
-                                        autocomplete="address-line1"
+                    type="text"
+                    id="addressLine1"
+                    name="addressLine1"
+                    placeholder="House no., street, barangay"
+                    autocomplete="address-line1"
                                     >
                                 </div>
-                            </div>
+            </div>
 
-                            <!-- Gender -->
+            <!-- Gender -->
                             <div class="form-group form-half">
-                                <label for="gender" class="form-label">Gender</label>
+                <label for="gender" class="form-label">Gender</label>
                                 <div class="input-wrapper">
                                     <select id="gender" name="gender" class="input">
-                                        <option value="" selected>Select gender</option>
-                                        <option value="he">He</option>
-                                        <option value="she">She</option>
-                                    </select>
+                    <option value="" selected>Select gender</option>
+                    <option value="he">He</option>
+                    <option value="she">She</option>
+                </select>
                                 </div>
-                            </div>
+            </div>
 
-                            <!-- Email Field (readonly) -->
+            <!-- Email Field (readonly) -->
                             <div class="form-group form-half">
-                                <label for="email" class="form-label">Email Address</label>
+                <label for="email" class="form-label">Email Address</label>
                                 <div class="input-wrapper">
-                                    <input 
+                <input 
                                         class="input"
-                                        type="email" 
-                                        id="email" 
-                                        name="email" 
-                                        placeholder="Email"
-                                        readonly
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Email"
+                    readonly 
                                         disabled
                                         aria-disabled="true"
                                         title="Email is set by your OAuth provider"
-                                        class="readonly"
+                    class="readonly"
                                     >
                                     <div class="input-icon">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -153,42 +153,42 @@
                                         </svg>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Phone Field -->
+            </div>
+            
+            <!-- Phone Field -->
                             <div class="form-group form-half">
-                                <label for="mobile" class="form-label">Phone Number</label>
+                <label for="mobile" class="form-label">Phone Number</label>
                                 <div class="phone-input-wrapper">
                                     <div class="phone-prefix">+63</div>
-                                    <input
+                    <input
                                         class="input phone-input"
-                                        type="tel"
-                                        id="mobile"
-                                        name="mobile"
-                                        placeholder="9123456789"
-                                        maxlength="10"
-                                        pattern="[0-9]{10}"
-                                        required
-                                        autocomplete="tel"
+                        type="tel"
+                        id="mobile"
+                        name="mobile"
+                        placeholder="9123456789"
+                        maxlength="10"
+                        pattern="[0-9]{10}"
+                        required
+                        autocomplete="tel"
                                     >
-                                </div>
-                            </div>
+                </div>
+            </div>
 
-                            <!-- Terms and Privacy -->
+            <!-- Terms and Privacy -->
                             <div class="form-group form-full">
                                 <label class="checkbox-wrapper terms-checkbox">
                                     <input type="checkbox" id="terms-checkbox" required>
                                     <span class="checkbox-custom"></span>
-                                    <span class="checkbox-label">
-                                        I agree to the <a id="toc">Terms and Conditions</a> 
-                                        and <a id="pc">Privacy Consent</a>
-                                    </span>
-                                </label>
-                            </div>
+                    <span class="checkbox-label">
+                        I agree to the <a id="toc">Terms and Conditions</a> 
+                        and <a id="pc">Privacy Consent</a>
+                    </span>
+                </label>
+            </div>
 
-                            <!-- Captcha -->
+            <!-- Captcha -->
                             <div id="oauth-complete-captcha" class="captcha-container form-full"></div>
-
+            
                             <!-- Submit Button -->
                             <button class="btn btn-primary btn-lg w-full form-full" type="submit">
                                 <span>Complete Registration</span>
@@ -196,7 +196,7 @@
                                     <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
-                        </form>
+        </form>
                     </div>
                 </div>
             </div>

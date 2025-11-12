@@ -612,3 +612,280 @@
         padding: 16px;
     }
 }
+
+/* Dark Mode Styles */
+html.dark .review-container {
+    background-color: #0f172a;
+}
+
+html.dark .back-button {
+    background: #334155;
+    color: #cbd5e1;
+}
+
+html.dark .back-button:hover {
+    background: #475569;
+    color: #f1f5f9;
+}
+
+html.dark .review-header {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .review-header h1 {
+    color: #f1f5f9;
+}
+
+html.dark .meta-item strong {
+    color: #94a3b8;
+}
+
+html.dark .meta-item span {
+    color: #cbd5e1;
+}
+
+html.dark .review-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .section-title {
+    color: #f1f5f9;
+}
+
+html.dark .detail-label {
+    color: #94a3b8;
+}
+
+html.dark .detail-value {
+    color: #cbd5e1;
+}
+
+html.dark .detail-value strong {
+    color: #f1f5f9;
+}
+
+html.dark .location-map {
+    border-color: #334155;
+}
+
+html.dark .evidence-item {
+    border-color: #334155;
+}
+
+html.dark .evidence-item .file-icon {
+    background: #0f172a;
+    color: #94a3b8;
+}
+
+html.dark .similar-complaints {
+    background: #78350f;
+    border-color: #f59e0b;
+}
+
+html.dark .similar-item {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+html.dark .similar-title {
+    color: #fbbf24;
+}
+
+html.dark .similar-description {
+    color: #fcd34d;
+}
+
+html.dark .decision-panel {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+html.dark .modal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+html.dark .modal-dialog {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .modal-header h2 {
+    color: #f1f5f9;
+}
+
+html.dark .modal-close {
+    color: #94a3b8;
+}
+
+html.dark .modal-close:hover {
+    color: #cbd5e1;
+}
+
+html.dark .form-group label {
+    color: #cbd5e1;
+}
+
+html.dark .form-select,
+html.dark .form-input,
+html.dark .form-textarea {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+html.dark .form-select:focus,
+html.dark .form-input:focus,
+html.dark .form-textarea:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .form-checkbox {
+    border-color: #334155;
+    background: #0f172a;
+}
+
+html.dark .form-checkbox:hover {
+    border-color: #60a5fa;
+    background: #1e3a8a;
+}
+
+html.dark .departments-selection {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+html.dark .department-option {
+    color: #cbd5e1;
+}
+
+html.dark .department-option:hover {
+    background: #1e293b;
+}
+
+html.dark .department-name {
+    color: #cbd5e1;
+}
+
+html.dark .department-code {
+    color: #94a3b8;
+}
+
+html.dark .loading {
+    color: #94a3b8;
+}
+
+html.dark .loading .spinner {
+    border-color: #334155;
+    border-top-color: #60a5fa;
+}
+
+html.dark .loading-text {
+    color: #94a3b8;
+}
+
+html.dark .empty-state {
+    color: #94a3b8;
+}
+
+html.dark .empty-state h2 {
+    color: #cbd5e1;
+}
+
+/* Complainant Info Panel */
+.complainant-info-panel {
+    margin-bottom: 24px;
+}
+
+.complainant-loading,
+.complainant-empty {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.complainant-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.complainant-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.complainant-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.complainant-value {
+    font-size: 0.875rem;
+    color: #374151;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.complainant-link {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.complainant-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.complainant-id {
+    font-family: var(--font-mono, 'Courier New', monospace);
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    max-width: fit-content;
+}
+
+/* Dark mode for complainant panel */
+html.dark .complainant-loading,
+html.dark .complainant-empty {
+    color: #94a3b8;
+}
+
+html.dark .complainant-label {
+    color: #94a3b8;
+}
+
+html.dark .complainant-value {
+    color: #cbd5e1;
+}
+
+html.dark .complainant-link {
+    color: #60a5fa;
+}
+
+html.dark .complainant-link:hover {
+    color: #93c5fd;
+}
+
+html.dark .complainant-id {
+    color: #94a3b8;
+    background: #0f172a;
+}
+
+html.dark .empty-state p {
+    color: #94a3b8;
+}

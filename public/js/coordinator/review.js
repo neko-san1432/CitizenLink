@@ -18,8 +18,128 @@ document.addEventListener('DOMContentLoaded', async () => {
     showError('No complaint ID provided');
     return;
   }
+  setupEventListeners();
   await loadComplaint();
 });
+
+/**
+ * Setup event listeners for all buttons and forms
+ */
+function setupEventListeners() {
+  // Return to dashboard button
+  const returnDashboardBtn = document.getElementById('return-dashboard-btn');
+  if (returnDashboardBtn) {
+    returnDashboardBtn.addEventListener('click', () => {
+      window.location.href = '/dashboard';
+    });
+  }
+
+  // Action buttons
+  const assignBtn = document.getElementById('assign-btn');
+  if (assignBtn) {
+    assignBtn.addEventListener('click', () => window.openAssignModal());
+  }
+
+  const duplicateBtn = document.getElementById('duplicate-btn');
+  if (duplicateBtn) {
+    duplicateBtn.addEventListener('click', () => window.openDuplicateModal());
+  }
+
+  const relatedBtn = document.getElementById('related-btn');
+  if (relatedBtn) {
+    relatedBtn.addEventListener('click', () => window.linkRelatedComplaints());
+  }
+
+  const rejectBtn = document.getElementById('reject-btn');
+  if (rejectBtn) {
+    rejectBtn.addEventListener('click', () => window.showRejectModal());
+  }
+
+  const falseComplaintBtn = document.getElementById('false-complaint-btn');
+  if (falseComplaintBtn) {
+    falseComplaintBtn.addEventListener('click', () => window.openFalseComplaintModal());
+  }
+
+  const uniqueBtn = document.getElementById('unique-btn');
+  if (uniqueBtn) {
+    uniqueBtn.addEventListener('click', () => window.markAsUnique());
+  }
+
+  // Modal close buttons
+  const closeAssignModal = document.getElementById('close-assign-modal');
+  if (closeAssignModal) {
+    closeAssignModal.addEventListener('click', () => window.closeModal('assign-modal'));
+  }
+
+  const closeDuplicateModal = document.getElementById('close-duplicate-modal');
+  if (closeDuplicateModal) {
+    closeDuplicateModal.addEventListener('click', () => window.closeModal('duplicate-modal'));
+  }
+
+  const closeRejectModal = document.getElementById('close-reject-modal');
+  if (closeRejectModal) {
+    closeRejectModal.addEventListener('click', () => window.closeModal('reject-modal'));
+  }
+
+  const closeFalseComplaintModal = document.getElementById('close-false-complaint-modal');
+  if (closeFalseComplaintModal) {
+    closeFalseComplaintModal.addEventListener('click', () => window.closeModal('false-complaint-modal'));
+  }
+
+  // Cancel buttons
+  const cancelAssignBtn = document.getElementById('cancel-assign-btn');
+  if (cancelAssignBtn) {
+    cancelAssignBtn.addEventListener('click', () => window.closeModal('assign-modal'));
+  }
+
+  const cancelDuplicateBtn = document.getElementById('cancel-duplicate-btn');
+  if (cancelDuplicateBtn) {
+    cancelDuplicateBtn.addEventListener('click', () => window.closeModal('duplicate-modal'));
+  }
+
+  const cancelRejectBtn = document.getElementById('cancel-reject-btn');
+  if (cancelRejectBtn) {
+    cancelRejectBtn.addEventListener('click', () => window.closeModal('reject-modal'));
+  }
+
+  const cancelFalseComplaintBtn = document.getElementById('cancel-false-complaint-btn');
+  if (cancelFalseComplaintBtn) {
+    cancelFalseComplaintBtn.addEventListener('click', () => window.closeModal('false-complaint-modal'));
+  }
+
+  // Form submissions
+  const assignForm = document.getElementById('assign-form');
+  if (assignForm) {
+    assignForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      window.handleAssign(e);
+    });
+  }
+
+  const duplicateForm = document.getElementById('duplicate-form');
+  if (duplicateForm) {
+    duplicateForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      window.handleDuplicate(e);
+    });
+  }
+
+  const rejectForm = document.getElementById('reject-form');
+  if (rejectForm) {
+    rejectForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      window.handleReject(e);
+    });
+  }
+
+  const falseComplaintForm = document.getElementById('false-complaint-form');
+  if (falseComplaintForm) {
+    falseComplaintForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      window.handleFalseComplaint(e);
+    });
+  }
+}
 /**
  * Load complaint details
  */
@@ -58,6 +178,8 @@ async function renderComplaint() {
   document.getElementById('submitted-date').textContent = formatDate(complaint.submitted_at);
   document.getElementById('submitter-name').textContent =
     complaint.submitted_by_profile?.name || complaint.submitted_by_profile?.email || 'Unknown';
+  // Render complainant info panel
+  renderComplainantInfo(complaint.submitted_by_profile);
   // Status badge
   const statusEl = document.getElementById('complaint-status');
   const status = complaint.workflow_status || complaint.status || 'unknown';
@@ -246,7 +368,7 @@ function renderEvidence(evidence) {
     const sizeText = item.fileSize ? ` · ${formatSize(item.fileSize)}` : '';
     const icon = getFileIcon(item.fileType, item.fileName);
     return `
-      <div class="evidence-item" onclick="openEvidencePreview(${index})" style="cursor: pointer;">
+      <div class="evidence-item" data-evidence-index="${index}" style="cursor: pointer;">
         <div class="evidence-preview">
           ${isImage(item.fileType, item.fileName) && item.url ?
     `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">` :
@@ -264,8 +386,13 @@ function renderEvidence(evidence) {
   // Store evidence data globally for preview
   window.evidenceData = evidence.map(normalize);
 
-  // Test evidence preview functionality
-
+  // Attach event listeners for evidence items
+  document.querySelectorAll('.evidence-item').forEach(item => {
+    const index = parseInt(item.getAttribute('data-evidence-index'));
+    item.addEventListener('click', () => {
+      window.openEvidencePreview(index);
+    });
+  });
 }
 
 /**
@@ -325,7 +452,7 @@ window.openAssignModal = function() {
   // Load departments dynamically
   loadDepartmentsForAssignment();
 };
-window.showDuplicateModal = function() {
+window.openDuplicateModal = function() {
   document.getElementById('duplicate-modal').classList.add('active');
 };
 window.linkRelatedComplaints = function() {
@@ -540,6 +667,113 @@ function showError(message) {
   document.getElementById('error-message').style.display = 'block';
   document.getElementById('error-text').textContent = message;
 }
+/**
+ * Render complainant information panel
+ */
+function renderComplainantInfo(profile) {
+  const contentEl = document.getElementById('complainant-info-content');
+  if (!contentEl) return;
+
+  if (!profile) {
+    contentEl.innerHTML = '<div class="complainant-empty">No complainant information available</div>';
+    return;
+  }
+
+  const name = profile.name || profile.email || 'Unknown';
+  const email = profile.email || 'Not provided';
+  const firstName = profile.firstName || '';
+  const lastName = profile.lastName || '';
+  
+  // Get phone number from multiple possible fields
+  const rawMeta = profile.raw_user_meta_data || {};
+  const phoneNumber = profile.mobileNumber || 
+                     profile.mobile || 
+                     rawMeta.mobile_number || 
+                     rawMeta.mobile || 
+                     rawMeta.phone_number || 
+                     rawMeta.phone || 
+                     null;
+  
+  // Get address from metadata - check multiple formats
+  const address = rawMeta.address || {};
+  const addressParts = [];
+  
+  // Check for address_line_1, address_line_2 format
+  if (rawMeta.address_line_1) addressParts.push(rawMeta.address_line_1);
+  if (rawMeta.address_line_2) addressParts.push(rawMeta.address_line_2);
+  
+  // Check for nested address object
+  if (address.line1) addressParts.push(address.line1);
+  if (address.line2) addressParts.push(address.line2);
+  
+  // Check for old format
+  if (rawMeta.addressLine1 && !addressParts.includes(rawMeta.addressLine1)) {
+    addressParts.push(rawMeta.addressLine1);
+  }
+  if (rawMeta.addressLine2 && !addressParts.includes(rawMeta.addressLine2)) {
+    addressParts.push(rawMeta.addressLine2);
+  }
+  
+  // Add city, province, barangay, postal code if available
+  if (rawMeta.city || address.city) addressParts.push(rawMeta.city || address.city);
+  if (rawMeta.barangay || address.barangay) addressParts.push(rawMeta.barangay || address.barangay);
+  if (rawMeta.province || address.province) addressParts.push(rawMeta.province || address.province);
+  if (rawMeta.postal_code || address.postalCode) addressParts.push(rawMeta.postal_code || address.postalCode);
+  
+  const fullAddress = addressParts.filter(Boolean).join(', ') || null;
+
+  contentEl.innerHTML = `
+    <div class="complainant-details">
+      <div class="complainant-field">
+        <div class="complainant-label">Name</div>
+        <div class="complainant-value">${escapeHtml(name)}</div>
+      </div>
+      ${firstName || lastName ? `
+      <div class="complainant-field">
+        <div class="complainant-label">Full Name</div>
+        <div class="complainant-value">${escapeHtml(`${firstName} ${lastName}`.trim() || name)}</div>
+      </div>
+      ` : ''}
+      <div class="complainant-field">
+        <div class="complainant-label">Email</div>
+        <div class="complainant-value">
+          <a href="mailto:${escapeHtml(email)}" class="complainant-link">${escapeHtml(email)}</a>
+        </div>
+      </div>
+      <div class="complainant-field">
+        <div class="complainant-label">Phone Number</div>
+        <div class="complainant-value">
+          ${phoneNumber ? `
+          <a href="tel:${escapeHtml(phoneNumber)}" class="complainant-link">${escapeHtml(phoneNumber)}</a>
+          ` : '<span style="color: #9ca3af;">Not provided</span>'}
+        </div>
+      </div>
+      <div class="complainant-field">
+        <div class="complainant-label">Address</div>
+        <div class="complainant-value">
+          ${fullAddress ? escapeHtml(fullAddress) : '<span style="color: #9ca3af;">Not provided</span>'}
+        </div>
+      </div>
+      ${profile.id ? `
+      <div class="complainant-field">
+        <div class="complainant-label">User ID</div>
+        <div class="complainant-value complainant-id">${escapeHtml(profile.id.substring(0, 8))}...</div>
+      </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 /**
  * Format date
  */

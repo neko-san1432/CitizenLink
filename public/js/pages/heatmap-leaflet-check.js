@@ -6,3 +6,6 @@ if (typeof L !== 'undefined' && L.heatLayer) {
   console.error('❌ Leaflet.heat plugin failed to load');
 }
 
+
+
+

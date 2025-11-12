@@ -212,24 +212,80 @@ class ComplaintDetails {
     if (canSeeComplainant && this.complaint.submitted_by_profile) {
       const profile = this.complaint.submitted_by_profile;
       const name = profile.name || profile.email || 'Unknown';
-      const email = profile.email || '—';
-      const mobile = profile.mobileNumber || profile.mobile || '—';
+      const email = profile.email || 'Not provided';
+      const firstName = profile.firstName || '';
+      const lastName = profile.lastName || '';
+      
+      // Get phone number from multiple possible fields
+      const rawMeta = profile.raw_user_meta_data || {};
+      const phoneNumber = profile.mobileNumber || 
+                         profile.mobile || 
+                         rawMeta.mobile_number || 
+                         rawMeta.mobile || 
+                         rawMeta.phone_number || 
+                         rawMeta.phone || 
+                         null;
+      
+      // Get address from metadata - check multiple formats
+      const address = rawMeta.address || {};
+      const addressParts = [];
+      
+      // Check for address_line_1, address_line_2 format
+      if (rawMeta.address_line_1) addressParts.push(rawMeta.address_line_1);
+      if (rawMeta.address_line_2) addressParts.push(rawMeta.address_line_2);
+      
+      // Check for nested address object
+      if (address.line1) addressParts.push(address.line1);
+      if (address.line2) addressParts.push(address.line2);
+      
+      // Check for old format
+      if (rawMeta.addressLine1 && !addressParts.includes(rawMeta.addressLine1)) {
+        addressParts.push(rawMeta.addressLine1);
+      }
+      if (rawMeta.addressLine2 && !addressParts.includes(rawMeta.addressLine2)) {
+        addressParts.push(rawMeta.addressLine2);
+      }
+      
+      // Add city, province, barangay, postal code if available
+      if (rawMeta.city || address.city) addressParts.push(rawMeta.city || address.city);
+      if (rawMeta.barangay || address.barangay) addressParts.push(rawMeta.barangay || address.barangay);
+      if (rawMeta.province || address.province) addressParts.push(rawMeta.province || address.province);
+      if (rawMeta.postal_code || address.postalCode) addressParts.push(rawMeta.postal_code || address.postalCode);
+      
+      const fullAddress = addressParts.filter(Boolean).join(', ') || null;
+
       complainantInfo.innerHTML = `
                 <div class="complainant-details">
                     <div class="complainant-field">
                         <span class="field-label">Name:</span>
                         <span class="field-value">${this.escapeHtml(name)}</span>
                     </div>
+                    ${firstName || lastName ? `
                     <div class="complainant-field">
-                        <span class="field-label">Email:</span>
-                        <span class="field-value">${this.escapeHtml(email)}</span>
-                    </div>
-                    ${mobile !== '—' ? `
-                    <div class="complainant-field">
-                        <span class="field-label">Mobile:</span>
-                        <span class="field-value">${this.escapeHtml(mobile)}</span>
+                        <span class="field-label">Full Name:</span>
+                        <span class="field-value">${this.escapeHtml(`${firstName} ${lastName}`.trim() || name)}</span>
                     </div>
                     ` : ''}
+                    <div class="complainant-field">
+                        <span class="field-label">Email:</span>
+                        <span class="field-value">
+                            <a href="mailto:${this.escapeHtml(email)}" class="complainant-link">${this.escapeHtml(email)}</a>
+                        </span>
+                    </div>
+                    <div class="complainant-field">
+                        <span class="field-label">Phone Number:</span>
+                        <span class="field-value">
+                            ${phoneNumber ? `
+                            <a href="tel:${this.escapeHtml(phoneNumber)}" class="complainant-link">${this.escapeHtml(phoneNumber)}</a>
+                            ` : '<span style="color: #9ca3af;">Not provided</span>'}
+                        </span>
+                    </div>
+                    <div class="complainant-field">
+                        <span class="field-label">Address:</span>
+                        <span class="field-value">
+                            ${fullAddress ? this.escapeHtml(fullAddress) : '<span style="color: #9ca3af;">Not provided</span>'}
+                        </span>
+                    </div>
                 </div>
             `;
       complainantSection.style.display = 'block';

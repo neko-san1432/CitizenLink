@@ -33,8 +33,6 @@ export function initializeNotificationButton() {
       const profilePanel = document.getElementById('profile-panel');
       if (profilePanel && profilePanel.classList.contains('show')) {
         profilePanel.classList.remove('show');
-        profilePanel.style.opacity = '0';
-        profilePanel.style.transform = 'translateY(-10px)';
         setTimeout(() => {
           profilePanel.style.display = 'none';
         }, 300);
@@ -43,17 +41,23 @@ export function initializeNotificationButton() {
       if (notificationPanel.classList.contains('show')) {
         // Close
         notificationPanel.classList.remove('show');
+        setTimeout(() => {
+          notificationPanel.style.display = 'none';
+        }, 300);
       } else {
         // Open
-        notificationPanel.classList.add('show');
+        notificationPanel.style.display = 'block';
+        // Force reflow to ensure display is set before adding show class
+        notificationPanel.offsetHeight;
+        setTimeout(() => {
+          notificationPanel.classList.add('show');
+          // Load notifications when panel is opened (only show loading on first load)
+          loadNotifications(true, notificationState.isFirstLoad);
+        }, 10);
       }
       // Debug positioning
       if (notificationPanel.classList.contains('show')) {
         const rect = notificationPanel.getBoundingClientRect();
-      }
-      // Load notifications when panel is opened (only show loading on first load)
-      if (notificationPanel.classList.contains('show')) {
-        loadNotifications(true, notificationState.isFirstLoad);
       }
     });
     // Close panel when close button is clicked
@@ -61,6 +65,9 @@ export function initializeNotificationButton() {
       closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         notificationPanel.classList.remove('show');
+        setTimeout(() => {
+          notificationPanel.style.display = 'none';
+        }, 300);
       });
     }
     // Mark all as read functionality
@@ -85,7 +92,12 @@ export function initializeNotificationButton() {
     // Close panel when clicking outside
     document.addEventListener('click', (e) => {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
-        notificationPanel.classList.remove('show');
+        if (notificationPanel.classList.contains('show')) {
+          notificationPanel.classList.remove('show');
+          setTimeout(() => {
+            notificationPanel.style.display = 'none';
+          }, 300);
+        }
       }
     });
     // Initial notification count load
@@ -100,6 +112,9 @@ export function closeNotificationPanel() {
   const notificationPanel = document.getElementById('notification-panel');
   if (notificationPanel && notificationPanel.classList.contains('show')) {
     notificationPanel.classList.remove('show');
+    setTimeout(() => {
+      notificationPanel.style.display = 'none';
+    }, 300);
   }
 }
 // Start real-time polling

@@ -823,3 +823,120 @@
 .controls-content::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
+
+/* Dark Mode Styles */
+html.dark .heatmap-header {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .header-title h1 {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+html.dark .header-title p {
+  color: #94a3b8;
+}
+
+html.dark .enhanced-controls {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .controls-header {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+html.dark .controls-header h2 {
+  color: #f1f5f9;
+}
+
+html.dark .control-section {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+html.dark .control-section h3 {
+  color: #f1f5f9;
+}
+
+html.dark .control-section p {
+  color: #94a3b8;
+}
+
+html.dark .stat-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .stat-number {
+  color: #60a5fa;
+}
+
+html.dark .stat-label {
+  color: #94a3b8;
+}
+
+html.dark .filter-group label {
+  color: #cbd5e1;
+}
+
+html.dark .filter-select,
+html.dark .filter-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+html.dark .filter-select:focus,
+html.dark .filter-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+html.dark .btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+html.dark .btn-secondary {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+html.dark .btn-secondary:hover {
+  background: #475569;
+}
+
+html.dark .legend-item {
+  color: #cbd5e1;
+}
+
+html.dark .legend-color {
+  border-color: #334155;
+}
+
+html.dark .center-pulse {
+  border-color: #1e293b;
+}
+
+html.dark .controls-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+html.dark .controls-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+}
+
+html.dark .controls-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 100%);
+}

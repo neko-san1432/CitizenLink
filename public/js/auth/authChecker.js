@@ -57,6 +57,8 @@ export const clearOAuthContext = () => {
 let roleApiCache = null;
 let roleApiCacheTime = 0;
 const CACHE_DURATION = 5000; // 5 seconds cache
+// Flag to prevent multiple role change checks
+let isCheckingRoleChange = false;
 // Global role getter
 
 export const getUserRole = async (options = {}) => {
@@ -182,6 +184,8 @@ export const initializeAuthListener = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: session.access_token })
         });
+        // Check for role changes when token refreshes (e.g., user was promoted)
+        await checkAndUpdateRoleChange();
         // console.log removed for security
       } catch (error) {
         console.error('Failed to update server cookie:', error);
@@ -320,6 +324,111 @@ export const logout = async () => {
     // Force redirect even if logout fails
     window.location.href = '/login';
   }
+};
+/**
+ * Check for role changes and update UI accordingly
+ * Called when token refreshes to detect promotions/demotions
+ */
+const checkAndUpdateRoleChange = async () => {
+  // Prevent multiple simultaneous checks
+  if (isCheckingRoleChange) {
+    return;
+  }
+  
+  // Don't check on auth pages
+  if (isAuthPage()) {
+    return;
+  }
+  
+  isCheckingRoleChange = true;
+  
+  try {
+    // Get current cached role
+    const cachedMeta = getUserMeta();
+    const oldRole = cachedMeta?.role;
+    
+    // If no cached role, this might be first load - skip check
+    if (!oldRole) {
+      isCheckingRoleChange = false;
+      return;
+    }
+    
+    // Fetch fresh role from API (bypasses cache)
+    const newRole = await getUserRole({ refresh: true });
+    
+    // Check if role changed
+    if (newRole && oldRole !== newRole) {
+      console.log(`[ROLE_CHANGE] Role changed from ${oldRole} to ${newRole}`);
+      
+      // Refresh metadata from session
+      await refreshMetaFromSession();
+      
+      // Clear API cache to force fresh data
+      roleApiCache = null;
+      roleApiCacheTime = 0;
+      
+      // Dispatch custom event to notify components
+      window.dispatchEvent(new CustomEvent('userRoleChanged', {
+        detail: { oldRole, newRole }
+      }));
+      
+      // Show notification to user
+      try {
+        const { default: showMessage } = await import('../components/toast.js');
+        const roleDisplayName = formatRoleNameForDisplay(newRole);
+        showMessage('info', `Your role has been updated to ${roleDisplayName}. Refreshing page...`, 5000);
+      } catch (toastError) {
+        console.error('[ROLE_CHANGE] Failed to show toast:', toastError);
+      }
+      
+      // Reload page to ensure all components update with new role
+      // This ensures sidebar, header, permissions, etc. all reflect the new role
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  } catch (error) {
+    console.error('[ROLE_CHANGE] Error checking role change:', error);
+  } finally {
+    isCheckingRoleChange = false;
+  }
+};
+
+/**
+ * Format role name for display in notifications
+ */
+const formatRoleNameForDisplay = (role) => {
+  if (!role) return 'Unknown';
+  
+  const roleNames = {
+    'citizen': 'Citizen',
+    'lgu': 'LGU Officer',
+    'lgu-admin': 'LGU Admin',
+    'complaint-coordinator': 'Complaint Coordinator',
+    'super-admin': 'Super Admin',
+    'hr': 'HR',
+    'lgu-hr': 'LGU HR'
+  };
+  
+  // Handle LGU officer roles with department codes
+  if (/^lgu-(?!admin|hr)/.test(role)) {
+    const dept = role.replace(/^lgu-/, '').toUpperCase();
+    return `LGU Officer (${dept})`;
+  }
+  
+  // Handle LGU admin roles with department codes
+  if (/^lgu-admin-/.test(role)) {
+    const dept = role.replace(/^lgu-admin-/, '').toUpperCase();
+    return `LGU Admin (${dept})`;
+  }
+  
+  // Handle LGU HR roles with department codes
+  if (/^lgu-hr-/.test(role)) {
+    const dept = role.replace(/^lgu-hr-/, '').toUpperCase();
+    return `HR (${dept})`;
+  }
+  
+  return roleNames[role] || role;
 };
 try {
   // expose globally for anywhere in the app

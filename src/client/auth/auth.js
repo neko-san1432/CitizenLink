@@ -105,12 +105,28 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
   const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+  const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
+  const city = document.getElementById('city')?.value.trim() || '';
+  const province = document.getElementById('province')?.value.trim() || '';
+  const postalCode = document.getElementById('postalCode')?.value.trim() || '';
+  const barangay = document.getElementById('barangay')?.value.trim() || '';
   const gender = document.getElementById('gender')?.value || '';
   const regPass = document.getElementById('regPassword').value;
   const reRegPass = document.getElementById('reRegPassword').value;
   // Early password length checks
   if (!regPass || regPass.length < 8) {
     showMessage('error', 'Password must be at least 8 characters long');
+    return;
+  }
+  // Validate address fields - if any address field is provided, city and province are required
+  const hasAddressFields = addressLine1 || addressLine2 || city || province || postalCode || barangay;
+  if (hasAddressFields && (!city || !province)) {
+    showMessage('error', 'City and province are required when providing address information');
+    return;
+  }
+  // Validate postal code format if provided
+  if (postalCode && !/^\d{4}$/.test(postalCode)) {
+    showMessage('error', 'Postal code must be 4 digits');
     return;
   }
   // Validate form data
@@ -121,9 +137,14 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     mobile: { required: true, type: 'mobile' },
     regPassword: { required: true, type: 'password' },
     addressLine1: { required: false, minLength: 0, maxLength: 255 },
+    addressLine2: { required: false, minLength: 0, maxLength: 255 },
+    city: { required: false, minLength: 0, maxLength: 100 },
+    province: { required: false, minLength: 0, maxLength: 100 },
+    postalCode: { required: false, minLength: 0, maxLength: 4 },
+    barangay: { required: false, minLength: 0, maxLength: 100 },
     gender: { required: false }
   };
-  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, gender };
+  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, city, province, postalCode, barangay, gender };
   const validation = validateAndSanitizeForm(formData, validationRules);
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
@@ -151,7 +172,14 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
       gender: validation.sanitizedData.gender || '',
-      address: { line1: validation.sanitizedData.addressLine1 || '' },
+      address: {
+        line1: validation.sanitizedData.addressLine1 || '',
+        line2: validation.sanitizedData.addressLine2 || '',
+        city: validation.sanitizedData.city || '',
+        province: validation.sanitizedData.province || '',
+        postalCode: validation.sanitizedData.postalCode || '',
+        barangay: validation.sanitizedData.barangay || ''
+      },
       // role: 'citizen', // backend defaults to citizen
       agreedToTerms: true,
       isOAuth: false // Regular signup
@@ -260,70 +288,55 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     });
     const result = await response.json();
     if (result.success) {
-      // SECURITY: Server sets HttpOnly cookie, client also signs in to get Supabase session
+      // SECURITY: Server handles all authentication and sets HttpOnly cookie
+      // Client syncs Supabase session state using refresh token from server response
       try {
-        // Sign in client-side with Supabase to sync session (server already set cookie)
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password: pass
-        });
-        if (authError || !authData?.session?.access_token) {
-          console.error('[CLIENT AUTH] ❌ Failed to sync session:', authError);
-          // Server already set cookie, so continue anyway
-          // But try to get session if available
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.access_token) {
-            showMessage('error', 'Failed to establish session. Please try again.');
-            hideLoading();
-            return;
+        // Server already authenticated and set cookie, now sync client-side Supabase session
+        const refreshToken = result.data?.refresh_token;
+        const expiresAt = result.data?.expires_at;
+        
+        if (refreshToken) {
+          // Use refresh token to get full Supabase session without re-authenticating
+          const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession({
+            refresh_token: refreshToken
+          });
+          
+          if (refreshError || !sessionData?.session) {
+            console.warn('[CLIENT AUTH] ⚠️ Failed to sync Supabase session:', refreshError?.message);
+            // Server cookie is still valid, continue with server-side auth only
+            // Some client-side Supabase features may not work, but core functionality will
+          } else {
+            // Successfully synced Supabase session
+            // Server cookie is already set, client session is now synced
           }
+        } else {
+          console.warn('[CLIENT AUTH] ⚠️ No refresh token in response, client-side Supabase features may be limited');
         }
-        // Get token from Supabase session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session?.access_token) {
-          console.error('[CLIENT AUTH] ❌ Failed to get session:', sessionError);
-          showMessage('error', 'Failed to establish session. Please try again.');
-          hideLoading();
-          return;
-        }
-        const accessToken = session.access_token;
-        // Update server cookie with token from Supabase session
-        const ok = await setServerSessionCookie(accessToken, remember);
-        if (!ok) {
-          console.error('[CLIENT AUTH] ❌ Failed to establish session');
-          showMessage('error', 'Failed to establish session. Please try again.');
-          hideLoading();
-          return;
-        }
-        // Wait a moment for cookie to be set
-        await new Promise(r => setTimeout(r, 100));
-        // Verify cookie by hitting a protected endpoint before redirecting
+        
+        // Verify session by hitting a protected endpoint
+        await new Promise(r => setTimeout(r, 100)); // Brief wait for cookie to be set
         const resp = await fetch('/api/user/role', {
           method: 'GET',
           credentials: 'include', // Ensure cookies are sent
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         });
+        
         if (!resp.ok) {
-          const errorData = await resp.json().catch(() => ({}));
           // Try one more time with a longer wait
           await new Promise(r => setTimeout(r, 1000));
           const retryResp = await fetch('/api/user/role', {
             method: 'GET',
             credentials: 'include',
             headers: {
-              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json'
             }
           });
-          if (retryResp.ok) {
-            // Success
-          } else {
+          
+          if (!retryResp.ok) {
             const retryErrorData = await retryResp.json().catch(() => ({}));
-            console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
-            // Enhanced error message based on specific error
+            console.error('[CLIENT AUTH] ❌ Session verification failed:', retryErrorData);
             let errorMessage = 'Session verification failed. ';
             if (retryResp.status === 401) {
               errorMessage += 'Your session has expired. Please log in again.';
@@ -340,34 +353,32 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
           }
         }
       } catch (error) {
-        console.error('[CLIENT AUTH] Error in session setup:', error);
-        hideLoading();
-        throw error; // Re-throw to be caught by outer catch
+        console.error('[CLIENT AUTH] Error in session sync:', error);
+        // Don't fail login if session sync fails - server cookie is still valid
+        // Log error but continue with server-side authentication
       }
       showMessage('success', 'Logged in successfully');
-      // SECURITY: Get user data from Supabase session, not response
-      // Get role from Supabase session user metadata
-      const { data: { session: clientSession } } = await supabase.auth.getSession();
-      const user = clientSession?.user || result.data?.user;
-      const userMetadata = user?.user_metadata || {};
-      const rawUserMetaData = user?.raw_user_meta_data || {};
-      const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
-      const role = result.data?.user?.role
-        || combinedMetadata.role
-        || combinedMetadata.normalized_role
-        || userMetadata.role
-        || rawUserMetaData.role
-        || null;
-      const name = result.data?.user?.fullName
-        || (result.data?.user?.firstName && result.data?.user?.lastName ? `${result.data.user.firstName} ${result.data.user.lastName}` : null)
-        || combinedMetadata.name
-        || userMetadata.name
-        || rawUserMetaData.name
-        || null;
-      // console.log removed for security
+      // SECURITY: Use user data from server response (server is source of truth)
+      // Fall back to Supabase session only if server data is incomplete
+      const serverUser = result.data?.user;
+      let role = serverUser?.role || serverUser?.normalizedRole || null;
+      let name = serverUser?.name || serverUser?.fullName || null;
+      
+      // If server data is incomplete, try to get from Supabase session
+      if (!role || !name) {
+        const { data: { session: clientSession } } = await supabase.auth.getSession();
+        if (clientSession?.user) {
+          const userMetadata = clientSession.user.user_metadata || {};
+          const rawUserMetaData = clientSession.user.raw_user_meta_data || {};
+          const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+          role = role || combinedMetadata.role || combinedMetadata.normalized_role || null;
+          name = name || combinedMetadata.name || null;
+        }
+      }
+      
+      // Save user metadata for client-side use
       if (role || name) {
         saveUserMeta({ role, name });
-        // console.log removed for security
       }
       // Check if user has completed registration
       if (!role || !name) {
@@ -434,30 +445,7 @@ if (fbBtn) {
   });
 }
 // Email field remains empty and editable for both login and register
-// Utility to post session cookie with remember flag
-async function setServerSessionCookie(accessToken, remember) {
-  try {
-    // console.log removed for security
-    // console.log removed for security
-    const resp = await fetch('/auth/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ access_token: accessToken, remember: Boolean(remember) })
-    });
-    // console.log removed for security
-    const responseData = await resp.json();
-    // console.log removed for security
-    if (!resp.ok) {
-      console.error('[CLIENT AUTH] ❌ Failed to set session cookie:', responseData);
-      return false;
-    }
-    return responseData.success === true;
-  } catch (error) {
-    console.error('[CLIENT AUTH] 💥 Server session cookie error:', error);
-    return false;
-  }
-}
+// Note: Session cookie is now set by server during login - no client-side cookie setting needed
 // If not remembered, clear cookie on unload (best-effort for session cleanup)
 (function setupEphemeralSessionCleanup(){
   try {

@@ -2,7 +2,7 @@
  * False Complaint Marker Component
  * Handles marking complaints as false with reasons and evidence
  */
-import { supabase } from '../../config/config.js';
+import { supabase } from '/js/config/config.js';
 
 class FalseComplaintMarker {
 

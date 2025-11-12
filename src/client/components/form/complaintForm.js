@@ -113,11 +113,22 @@ export async function initializeComplaintForm() {
     console.error('[COMPLAINT FORM] Missing required elements:', missingElements);
     return;
   }
-  // Initialize file handler
+  // Initialize file handler with upload state callback
   const fileHandler = createComplaintFileHandler({
     previewContainer: elements.filePreview,
     onFilesChange: (files) => {
       // console.log removed for security
+    },
+    onUploadStateChange: (isUploading) => {
+      // Disable/enable buttons based on upload state
+      const submitBtn = elements.form.querySelector('.submit-btn');
+      const cancelBtn = elements.form.querySelector('.cancel-btn') || document.querySelector('.cancel-btn');
+      if (submitBtn) {
+        submitBtn.disabled = isUploading;
+      }
+      if (cancelBtn) {
+        cancelBtn.disabled = isUploading;
+      }
     }
   });
   // Setup form functionality
@@ -224,8 +235,8 @@ function setupFormSubmission(form, fileHandler) {
     try {
       // Get current files
       const selectedFiles = fileHandler.getFiles();
-      // Submit the complaint
-      const result = await handleComplaintSubmit(form, selectedFiles);
+      // Submit the complaint with fileHandler for progress tracking
+      const result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
       // console.log removed for security
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());

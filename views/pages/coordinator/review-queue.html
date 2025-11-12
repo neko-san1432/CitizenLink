@@ -53,7 +53,7 @@
                 <div class="filters">
                     <div class="filter-group">
                         <label for="filter-priority">Priority</label>
-                        <select id="filter-priority" onchange="applyFilters()">
+                        <select id="filter-priority">
                             <option value="">All Priorities</option>
                             <option value="urgent">Urgent</option>
                             <option value="high">High</option>
@@ -63,7 +63,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="filter-type">Category</label>
-                        <select id="filter-type" onchange="applyFilters()">
+                        <select id="filter-type">
                             <option value="">All Categories</option>
                             <option value="Infrastructure">Infrastructure</option>
                             <option value="Sanitation">Sanitation</option>
@@ -74,7 +74,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="filter-similar">Duplicates</label>
-                        <select id="filter-similar" onchange="applyFilters()">
+                        <select id="filter-similar">
                             <option value="">All Complaints</option>
                             <option value="yes">With Similar Complaints</option>
                             <option value="no">No Duplicates</option>
@@ -82,7 +82,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="search-input">Search</label>
-                        <input type="text" id="search-input" placeholder="Search complaints..." oninput="applyFilters()">
+                        <input type="text" id="search-input" placeholder="Search complaints...">
                     </div>
                 </div>
 
@@ -100,6 +100,24 @@
 
                 <!-- Complaint List -->
                 <div id="complaint-list" class="complaint-list" style="display: none;"></div>
+
+                <!-- Pagination -->
+                <div id="pagination-container" class="pagination-container" style="display: none;">
+                    <div class="pagination-info">
+                        <span id="page-info">Page 1 of 1</span>
+                        <span class="pagination-separator">•</span>
+                        <span id="items-info">Showing 0 of 0 complaints</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prev-page" class="pagination-btn" disabled>
+                            <span>←</span> Previous
+                        </button>
+                        <div id="page-numbers" class="page-numbers"></div>
+                        <button id="next-page" class="pagination-btn">
+                            Next <span>→</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

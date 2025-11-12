@@ -142,3 +142,80 @@
   }
 }
 
+/* Dark Mode Styles */
+html.dark .privacy-page {
+  color: #e2e8f0;
+  background-color: #0f172a;
+}
+
+html.dark .privacy-hero h1 {
+  color: #60a5fa;
+}
+
+html.dark .privacy-hero p {
+  color: #94a3b8;
+}
+
+html.dark .privacy-content {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .privacy-content h2,
+html.dark .privacy-content h3 {
+  color: #f1f5f9;
+}
+
+html.dark .privacy-content li {
+  color: #cbd5e1;
+}
+
+html.dark .privacy-note {
+  background: rgba(59, 130, 246, 0.15);
+  border-left-color: #60a5fa;
+  color: #93c5fd;
+}
+
+html.dark .privacy-updated {
+  color: #94a3b8;
+}
+
+html.dark .privacy-actions {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(14, 165, 233, 0.2));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark .privacy-actions h2 {
+  color: #f1f5f9;
+}
+
+html.dark .privacy-actions p {
+  color: #cbd5e1;
+}
+
+html.dark .privacy-actions li {
+  color: #e2e8f0;
+}
+
+html.dark .privacy-actions a {
+  color: #60a5fa;
+}
+
+html.dark .privacy-actions a:hover {
+  color: #93c5fd;
+}
+
+html.dark .footer {
+  background: #1e293b;
+  color: #94a3b8;
+  border-top-color: #334155;
+}
+
+html.dark .footer-links a {
+  color: #60a5fa;
+}
+
+html.dark .footer-links a:hover {
+  color: #93c5fd;
+}

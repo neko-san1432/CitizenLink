@@ -10,6 +10,7 @@ const { ErrorHandler } = require('./middleware/errorHandler');
 const { securityHeaders, cspConfig, customSecurityHeaders } = require('./middleware/security');
 const { apiLimiter, authLimiter } = require('./middleware/rateLimiting');
 const InputSanitizer = require('./middleware/inputSanitizer');
+const { enforceHTTPS, trustProxy } = require('./middleware/httpsEnforcement');
 
 class CitizenLinkApp {
 
@@ -20,6 +21,10 @@ class CitizenLinkApp {
     this.initializeErrorHandling();
   }
   initializeMiddleware() {
+    // Trust proxy for accurate IP detection (for HTTPS enforcement)
+    trustProxy(this.app);
+    // HTTPS enforcement (must be before other middleware)
+    this.app.use(enforceHTTPS);
     // Enhanced security headers (applied first)
     this.app.use(securityHeaders);
     this.app.use(customSecurityHeaders);
@@ -59,28 +64,17 @@ class CitizenLinkApp {
     // Session cookie helpers for client
     this.app.post('/auth/session', authLimiter, (req, res) => {
       try {
-        // console.log removed for security
-        // console.log removed for security
         const token = req.body?.access_token;
         const remember = Boolean(req.body?.remember);
-        // console.log removed for security
+        
         if (!token) {
-          // console.log removed for security
-          // console.log removed for security
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
-        const cookieOptions = {
-          httpOnly: true, // Set back to true for security
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 315360000000 // 10 years for development (permanent)
-        };
-        // console.log removed for security
-        // console.log removed for security
+        
+        const { getCookieOptions } = require('./utils/authUtils');
+        const cookieOptions = getCookieOptions(remember);
         res.cookie('sb_access_token', token, cookieOptions);
-        // console.log removed for security
-        // console.log removed for security
+        
         return res.json({ success: true });
       } catch (e) {
         console.error('[SERVER SESSION] 💥 Error setting session cookie:', e);
@@ -94,6 +88,47 @@ class CitizenLinkApp {
         return res.json({ success: true });
       } catch (e) {
         return res.status(500).json({ success: false, error: 'Failed to clear session' });
+      }
+    });
+    // Get session token for client-side Supabase sync (requires valid cookie)
+    // Note: This endpoint returns the access token from cookie for client-side Supabase use
+    // The refresh token should be obtained from the login response, not this endpoint
+    this.app.get('/auth/session/token', authLimiter, async (req, res) => {
+      try {
+        const token = req.cookies?.sb_access_token;
+        if (!token) {
+          return res.status(401).json({
+            success: false,
+            error: 'No session token found'
+          });
+        }
+        // Validate token and get user info
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (userError || !user) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid session token'
+          });
+        }
+        // Return access token for client-side Supabase use
+        // Note: Refresh token is only provided during login, not from this endpoint
+        return res.json({
+          success: true,
+          data: {
+            access_token: token,
+            token_type: 'bearer',
+            user: {
+              id: user.id,
+              email: user.email
+            }
+          }
+        });
+      } catch (error) {
+        console.error('[SESSION TOKEN] Error:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get session token'
+        });
       }
     });
     // Debug endpoint (development only)
@@ -480,9 +515,7 @@ class CitizenLinkApp {
       const baseRole = metaBase || (role !== 'citizen' ? role : null);
       // Extract department from user object (set by auth middleware)
       const department = user.department || null;
-      // Debug logging
-      // console.log removed for security
-      // console.log removed for security
+      
       res.json({
         success: true,
         data: {
@@ -580,13 +613,10 @@ class CitizenLinkApp {
     // Session health endpoint for monitoring (public - no auth required)
     this.app.get('/auth/session/health', async (req, res) => {
       try {
-        // console.log removed for security
-
         // Check if user has valid session cookie
         const token = req.cookies?.sb_access_token;
 
         if (!token) {
-          // console.log removed for security
           return res.status(401).json({
             success: false,
             error: 'No session token found',
@@ -597,13 +627,10 @@ class CitizenLinkApp {
           });
         }
 
-        // console.log removed for security
-
         // Try to validate token with Supabase using the correct method
         const { data: { user }, error } = await Database.getClient().auth.getUser(token);
 
         if (error || !user) {
-          // console.log removed for security
           return res.status(401).json({
             success: false,
             error: 'Invalid session token',
@@ -614,16 +641,11 @@ class CitizenLinkApp {
           });
         }
 
-        // console.log removed for security
-
         // Extract role from user metadata
-        const userMetadata = user.user_metadata || {};
-        const rawUserMetaData = user.raw_user_meta_data || {};
-        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const { extractUserMetadata } = require('./utils/authUtils');
+        const combinedMetadata = extractUserMetadata(user);
         const role = combinedMetadata.role || 'citizen';
         const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
-
-        // console.log removed for security
 
         res.json({
           success: true,
@@ -681,21 +703,14 @@ class CitizenLinkApp {
         }
 
         // Update server cookie with fresh session
-        const cookieOptions = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 4 * 60 * 60 * 1000 // 4 hours
-        };
-
+        const { getCookieOptions } = require('./utils/authUtils');
+        const cookieOptions = getCookieOptions(false); // Regular session, not "remember me"
         res.cookie('sb_access_token', session.access_token, cookieOptions);
 
         // Extract user info from session
-        const {user} = session;
-        const userMetadata = user.user_metadata || {};
-        const rawUserMetaData = user.raw_user_meta_data || {};
-        const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+        const { user } = session;
+        const { extractUserMetadata } = require('./utils/authUtils');
+        const combinedMetadata = extractUserMetadata(user);
         const role = combinedMetadata.role || 'citizen';
         const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
 
@@ -876,10 +891,9 @@ class CitizenLinkApp {
 
       const reminderService = new ReminderService();
       reminderService.startScheduler();
-      // console.log removed for security
+      
       this.app.listen(port, () => {
-        // console.log removed for security
-        // console.log removed for security
+        console.log(`Server running on port ${port}`);
       });
     } catch (error) {
       console.error('Failed to start server:', error);

@@ -175,175 +175,7 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
     });
   }
 }));
-/**
- * @route   POST /api/auth/debug/generate-recovery-link
- * @desc    Dev-only: generate a recovery link without sending email
- * @access  Public (disabled in production)
- */
-router.post('/debug/generate-recovery-link', passwordResetLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
-  try {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({ success: false, error: 'Not available in production' });
-    }
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
-    }
-    const redirectTo = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password`;
-    // Try to generate the recovery link
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email,
-      options: { redirectTo }
-    });
-    if (error) {
-      console.error('[DEBUG] generateLink error:', error);
-      console.error('[DEBUG] Error details:', {
-        message: error.message,
-        status: error.status,
-        code: error.code,
-        fullError: JSON.stringify(error)
-      });
-      return res.status(400).json({
-        success: false,
-        error: error.message || 'Failed to generate recovery link',
-        errorCode: error.code,
-        errorStatus: error.status,
-        details: 'Admin API may require service role key. Check SUPABASE_SERVICE_ROLE_KEY in .env'
-      });
-    }
-    const link = (data && (data.properties?.action_link || data.action_link)) || null;
-
-    return res.json({
-      success: true,
-      link,
-      hashedToken: data?.hashed_token || null,
-      note: link ? 'Recovery link generated successfully' : 'Link generated but format unexpected'
-    });
-  } catch (error) {
-    console.error('[DEBUG] Generate recovery link exception:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      details: error.message
-    });
-  }
-}));
-/**
- * @route   POST /api/auth/debug/find-user
- * @desc    Dev-only: check if an email exists in the auth users of this project
- * @access  Public (disabled in production)
- */
-router.post('/debug/find-user', passwordResetLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
-  try {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({ success: false, error: 'Not available in production' });
-    }
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
-    }
-    // Try multiple approaches to find the user
-    let found = null;
-    let errorDetails = null;
-    // Approach 1: Try listUsers with pagination
-    try {
-      const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      if (error) {
-        errorDetails = { method: 'listUsers', error: error.message, code: error.status, fullError: JSON.stringify(error) };
-        console.error('[DEBUG] listUsers error:', error);
-      } else {
-        const users = Array.isArray(data?.users) ? data.users : Array.isArray(data) ? data : [];
-        found = users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
-      }
-    } catch (err) {
-      errorDetails = { method: 'listUsers', error: err.message, fullError: String(err) };
-      console.error('[DEBUG] listUsers exception:', err);
-    }
-    // Approach 2: If listUsers failed, try to query auth.users directly via SQL
-    if (!found && errorDetails) {
-      try {
-        // Try a direct query to auth.users (this requires service role)
-        const { data: sqlData, error: sqlError } = await supabase
-          .from('auth.users')
-          .select('id, email')
-          .ilike('email', email)
-          .limit(1)
-          .single();
-        if (!sqlError && sqlData) {
-          found = sqlData;
-        } else {
-          console.error('[DEBUG] SQL query error:', sqlError);
-        }
-      } catch (sqlErr) {
-        console.error('[DEBUG] SQL query exception:', sqlErr);
-      }
-    }
-    const projectRef = (process.env.SUPABASE_URL || '').split('https://').pop()?.split('.supabase.co')[0] || null;
-
-    return res.json({
-      success: true,
-      projectRef,
-      exists: Boolean(found),
-      userId: found?.id || null,
-      email: found?.email || null,
-      errorDetails: errorDetails || null,
-      note: found ? 'User found' : 'User not found (admin API may be restricted)'
-    });
-  } catch (error) {
-    console.error('[DEBUG] Find user exception:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      details: error.message
-    });
-  }
-}));
-/**
- * @route   GET /api/auth/debug/env
- * @desc    Dev-only: show which Supabase project this server is pointed to
- * @access  Public (disabled in production)
- */
-router.get('/debug/env', ErrorHandler.asyncWrapper(async (req, res) => {
-  try {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({ success: false, error: 'Not available in production' });
-    }
-    const url = process.env.SUPABASE_URL || null;
-    const projectRef = url ? url.replace('https://', '').split('.supabase.co')[0] : null;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const hasServiceKey = Boolean(serviceKey);
-    const serviceKeyPrefix = serviceKey ? serviceKey.slice(0, 6) : null;
-    const serviceKeyLength = serviceKey.length;
-    // Test if the service key actually works for admin operations
-    let adminTest = { canAccess: false, error: null };
-    if (hasServiceKey) {
-      try {
-        // Try a simple admin call to test the key
-        const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
-        if (error) {
-          adminTest = { canAccess: false, error: error.message, code: error.code };
-        } else {
-          adminTest = { canAccess: true, note: 'Admin API accessible' };
-        }
-      } catch (err) {
-        adminTest = { canAccess: false, error: err.message };
-      }
-    }
-    return res.json({
-      success: true,
-      projectRef,
-      supabaseUrl: url,
-      hasServiceKey,
-      serviceKeyPrefix,
-      serviceKeyLength,
-      adminTest,
-      note: serviceKeyPrefix === 'eyJhbG' ? 'Key looks like a JWT (correct format)' : 'Key format may be incorrect'
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, error: 'Internal error', details: error.message });
-  }
-}));
+// Debug endpoints removed for security - use proper admin tools instead
 /**
  * @route   POST /api/auth/reset-password
  * @desc    Reset user password
@@ -370,17 +202,44 @@ router.post('/reset-password', csrfProtection, ErrorHandler.asyncWrapper(async (
         error: 'Password must be at least 4 characters'
       });
     }
-    // Verify reset token and update password
-    const { error } = await supabase.auth.verifyOtp({
+    // Verify reset token
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
       token_hash: token,
       type: 'recovery'
     });
-    if (error) {
+    if (verifyError || !verifyData?.user) {
       return res.status(400).json({
         success: false,
         error: 'Invalid or expired reset token'
       });
     }
+    
+    // Validate password strength
+    const { validatePasswordStrength } = require('../../shared/passwordValidation');
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password does not meet security requirements',
+        details: passwordValidation.errors
+      });
+    }
+    
+    // Update password using Supabase's updateUser (requires session)
+    // Since we verified the OTP, we need to create a session first
+    // Use admin API to update password directly
+    const { error: updateError } = await supabase.auth.admin.updateUserById(verifyData.user.id, {
+      password: password
+    });
+    
+    if (updateError) {
+      console.error('[PASSWORD RESET] Failed to update password:', updateError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to reset password. Please try again.'
+      });
+    }
+    
     res.json({
       success: true,
       message: 'Password reset successfully'
@@ -546,13 +405,8 @@ router.post('/refresh', authLimiter, ErrorHandler.asyncWrapper(async (req, res) 
       });
     }
     // Update session cookie with proper expiration
-    res.cookie('sb_access_token', data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 4 * 60 * 60 * 1000 // 4 hours
-    });
+    const { getCookieOptions } = require('../utils/authUtils');
+    res.cookie('sb_access_token', data.session.access_token, getCookieOptions(false));
     res.json({
       success: true,
       data: {

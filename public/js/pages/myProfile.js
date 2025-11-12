@@ -87,7 +87,19 @@ function formatRoleDisplay(role) {
 }
 
 function renderProfile(profile) {
-  const name = profile?.name || profile?.full_name || 'User';
+  // Extract name fields
+  const firstName = profile?.firstName || profile?.first_name || '';
+  const lastName = profile?.lastName || profile?.last_name || '';
+  const middleName = profile?.middleName || profile?.middle_name || '';
+  
+  // Build display name
+  let name = profile?.name || profile?.full_name || '';
+  if (!name && (firstName || lastName)) {
+    const parts = [firstName, middleName, lastName].filter(Boolean);
+    name = parts.join(' ') || 'User';
+  }
+  if (!name) name = 'User';
+  
   const email = profile?.email || '—';
   // Mobile number from raw_user_meta_data (already extracted in backend)
   const mobile = profile?.mobileNumber || profile?.mobile_number || profile?.mobile || '—';
@@ -318,45 +330,60 @@ function wireChangePassword() {
   });
 }
 
-// Form toggle handler
-function wireFormToggle() {
-  const toggleBtn = document.getElementById('toggle-edit-form');
-  const form = document.getElementById('profile-edit-form');
-  const cancelBtn = document.getElementById('cancel-edit-form');
-
-  if (toggleBtn && form) {
-    toggleBtn.addEventListener('click', () => {
-      form.style.display = 'flex';
-      toggleBtn.style.display = 'none';
-    });
-  }
-
-  if (cancelBtn && form && toggleBtn) {
-    cancelBtn.addEventListener('click', () => {
-      form.style.display = 'none';
-      toggleBtn.style.display = 'block';
-      form.reset();
-    });
-  }
-}
-
 // Name inline editing
 function wireNameEdit() {
   const editIcon = document.getElementById('edit-name-icon');
   const nameDisplay = document.getElementById('profile-name-display');
   const nameEdit = document.getElementById('profile-name-edit');
-  const nameInput = document.getElementById('edit-name-input');
+  const firstNameInput = document.getElementById('edit-first-name-input');
+  const middleNameInput = document.getElementById('edit-middle-name-input');
+  const lastNameInput = document.getElementById('edit-last-name-input');
   const saveBtn = document.getElementById('save-name-btn');
   const cancelBtn = document.getElementById('cancel-name-btn');
 
-  if (!editIcon || !nameDisplay || !nameEdit || !nameInput) return;
+  if (!editIcon || !nameDisplay || !nameEdit || !firstNameInput || !lastNameInput) return;
 
-  editIcon.addEventListener('click', () => {
+  // Load current name values when opening edit
+  const loadNameValues = async () => {
+    try {
+      const res = await fetch('/api/auth/profile');
+      const json = await res.json().catch(() => ({}));
+      if (json?.data) {
+        const profile = json.data;
+        firstNameInput.value = profile?.firstName || profile?.first_name || '';
+        middleNameInput.value = profile?.middleName || profile?.middle_name || '';
+        lastNameInput.value = profile?.lastName || profile?.last_name || '';
+      } else {
+        // Fallback: try to parse from display name
+        const nameParts = nameDisplay.textContent.trim().split(' ');
+        if (nameParts.length >= 2) {
+          firstNameInput.value = nameParts[0] || '';
+          lastNameInput.value = nameParts[nameParts.length - 1] || '';
+          if (nameParts.length > 2) {
+            middleNameInput.value = nameParts.slice(1, -1).join(' ') || '';
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[PROFILE] Failed to load name values:', err);
+      // Fallback: try to parse from display name
+      const nameParts = nameDisplay.textContent.trim().split(' ');
+      if (nameParts.length >= 2) {
+        firstNameInput.value = nameParts[0] || '';
+        lastNameInput.value = nameParts[nameParts.length - 1] || '';
+        if (nameParts.length > 2) {
+          middleNameInput.value = nameParts.slice(1, -1).join(' ') || '';
+        }
+      }
+    }
+  };
+
+  editIcon.addEventListener('click', async () => {
     nameDisplay.style.display = 'none';
     editIcon.style.display = 'none';
     nameEdit.style.display = 'flex';
-    nameInput.value = nameDisplay.textContent;
-    nameInput.focus();
+    await loadNameValues();
+    firstNameInput.focus();
   });
 
   cancelBtn?.addEventListener('click', () => {
@@ -366,9 +393,17 @@ function wireNameEdit() {
   });
 
   saveBtn?.addEventListener('click', async () => {
-    const newName = nameInput.value.trim();
-    if (!newName || newName.length < 2) {
-      showMessage('error', 'Name must be at least 2 characters', 3000);
+    const firstName = firstNameInput.value.trim();
+    const middleName = middleNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+
+    if (!firstName || !lastName) {
+      showMessage('error', 'First name and last name are required', 3000);
+      return;
+    }
+
+    if (firstName.length < 2 || lastName.length < 2) {
+      showMessage('error', 'First and last names must be at least 2 characters', 3000);
       return;
     }
 
@@ -377,13 +412,25 @@ function wireNameEdit() {
     nameEdit.classList.add('inline-edit-loading');
 
     try {
+      const updateData = {
+        first_name: firstName,
+        last_name: lastName
+      };
+      if (middleName) {
+        updateData.middle_name = middleName;
+      }
+
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
+        body: JSON.stringify(updateData)
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to update name');
+
+      // Build new display name
+      const parts = [firstName, middleName, lastName].filter(Boolean);
+      const newName = parts.join(' ');
 
       // Update display
       nameDisplay.textContent = newName;
@@ -394,7 +441,7 @@ function wireNameEdit() {
       // Update avatar initial
       const initialEl = document.getElementById('profile-initial');
       if (initialEl) {
-        initialEl.textContent = newName.charAt(0).toUpperCase();
+        initialEl.textContent = firstName.charAt(0).toUpperCase();
       }
 
       showMessage('success', 'Name updated successfully', 3000);
@@ -410,6 +457,7 @@ function wireNameEdit() {
 
 // Email modal handler
 function wireEmailEdit() {
+  // Remove any existing event listeners by cloning and replacing the element
   const editIcon = document.getElementById('edit-email-icon');
   const modal = document.getElementById('email-change-modal');
   const closeBtn = document.getElementById('close-email-modal');
@@ -417,63 +465,134 @@ function wireEmailEdit() {
   const form = document.getElementById('email-change-form');
   const newEmailInput = document.getElementById('new-email-input');
   const currentPasswordInput = document.getElementById('current-password-email');
+  const currentEmailDisplay = document.getElementById('current-email-display');
 
-  if (!editIcon || !modal) return;
+  if (!editIcon) {
+    console.warn('[PROFILE] Email edit icon not found');
+    return;
+  }
+  
+  if (!modal) {
+    console.warn('[PROFILE] Email change modal not found');
+    return;
+  }
 
-  editIcon.addEventListener('click', () => {
+  // Clone the icon to remove any existing event listeners
+  const newEditIcon = editIcon.cloneNode(true);
+  editIcon.parentNode.replaceChild(newEditIcon, editIcon);
+
+  // Set current email in modal when opening
+  const updateCurrentEmail = () => {
+    const emailDisplay = document.getElementById('profile-email-display');
+    if (emailDisplay && currentEmailDisplay) {
+      currentEmailDisplay.textContent = emailDisplay.textContent.trim() || '—';
+    }
+  };
+
+  newEditIcon.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[PROFILE] Email edit icon clicked');
+    updateCurrentEmail();
+    // Ensure modal is visible with proper styles - remove inline display:none
+    modal.removeAttribute('style');
     modal.style.display = 'flex';
-    newEmailInput?.focus();
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '10002';
+    // Focus on new email input after a short delay to ensure modal is visible
+    setTimeout(() => {
+      newEmailInput?.focus();
+    }, 200);
   });
 
   const closeModal = () => {
     modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
     form?.reset();
+    // Clear password field for security
+    if (currentPasswordInput) {
+      currentPasswordInput.value = '';
+    }
   };
 
-  closeBtn?.addEventListener('click', closeModal);
-  cancelBtn?.addEventListener('click', closeModal);
+  // Use event delegation or ensure single attachment
+  // Remove old listeners by replacing elements
+  if (closeBtn) {
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    newCloseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+  }
+  
+  if (cancelBtn) {
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    newCancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+  }
 
   // Close on overlay click
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newEmail = newEmailInput?.value.trim() || '';
-    const currentPassword = currentPasswordInput?.value || '';
-
-    if (!newEmail || !currentPassword) {
-      showMessage('error', 'Both email and password are required', 3000);
-      return;
-    }
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending...';
-    }
-
-    try {
-      const res = await fetch('/api/auth/request-email-change', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newEmail, currentPassword })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request email change');
-
-      showMessage('success', json.message || 'Confirmation email sent! Please check your new email inbox.', 5000);
+    if (e.target === modal) {
       closeModal();
-    } catch (err) {
-      showMessage('error', err.message || 'Failed to request email change', 4000);
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Request Email Change';
-      }
     }
   });
+
+  // Prevent modal from closing when clicking inside modal content
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const newEmail = newEmailInput?.value.trim() || '';
+      const currentPassword = currentPasswordInput?.value || '';
+
+      if (!newEmail || !currentPassword) {
+        showMessage('error', 'Both email and password are required', 3000);
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+      }
+
+      try {
+        const res = await fetch('/api/auth/request-email-change', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newEmail, currentPassword })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request email change');
+
+        showMessage('success', json.message || 'Confirmation email sent! Please check your new email inbox.', 5000);
+        closeModal();
+      } catch (err) {
+        showMessage('error', err.message || 'Failed to request email change', 4000);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Request Email Change';
+        }
+      }
+    });
+  }
 }
 
 // Mobile inline editing
@@ -678,54 +797,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderProfile(profile);
     renderComplaints(data, role);
-
-    // Prefill edit form (legacy form)
-    const nameInput = document.getElementById('edit-name');
-    const mobileInput = document.getElementById('edit-mobile');
-    if (nameInput) nameInput.value = profile?.name || profile?.full_name || '';
-    if (mobileInput) mobileInput.value = profile?.mobileNumber || profile?.mobile_number || profile?.mobile || '';
   } catch (err) {
     showMessage('error', err.message || 'Failed to load profile', 4000);
   }
 
   // Wire up all handlers
   wireChangePassword();
-  wireFormToggle();
   wireNameEdit();
   wireEmailEdit();
   wireMobileEdit();
   wireAddressEdit();
-
-  // Wire up legacy form (for backward compatibility)
-  const form = document.getElementById('profile-edit-form');
-  const toggleBtn = document.getElementById('toggle-edit-form');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = (document.getElementById('edit-name')?.value || '').trim();
-      const mobile = (document.getElementById('edit-mobile')?.value || '').trim();
-
-      if (!name && !mobile) {
-        showMessage('error', 'Enter a name or mobile number to update', 3000);
-        return;
-      }
-      try {
-        const res = await fetch('/api/auth/profile', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, mobileNumber: mobile })
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to update profile');
-        // Re-render with updated data
-        renderProfile(json.data);
-        // Hide form and show toggle button
-        form.style.display = 'none';
-        if (toggleBtn) toggleBtn.style.display = 'block';
-        showMessage('success', 'Profile updated successfully', 3000);
-      } catch (err) {
-        showMessage('error', err.message || 'Update failed', 4000);
-      }
-    });
-  }
 });

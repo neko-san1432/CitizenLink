@@ -1,11 +1,12 @@
 const UserService = require('../services/UserService');
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 const Database = require('../config/database');
+const { extractUserMetadata, getCookieOptions, createErrorResponse } = require('../utils/authUtils');
+const { validateEmail, validatePasswordMatch, validateAddress, validateRequiredFields } = require('../utils/inputValidation');
 
 const supabase = Database.getClient();
 const { validatePasswordStrength } = require('../../shared/passwordValidation');
 const { validateUserRole } = require('../utils/roleValidation');
-const crypto = require('crypto');
 
 class AuthController {
   /**
@@ -29,6 +30,7 @@ class AuthController {
         agreedToTerms,
         isOAuth = false
       } = req.body;
+      
       // Validation
       if (!agreedToTerms) {
         return res.status(400).json({
@@ -36,10 +38,13 @@ class AuthController {
           error: 'You must agree to the terms and conditions'
         });
       }
-      if (password !== confirmPassword) {
+      
+      // Validate password match
+      const passwordMatch = validatePasswordMatch(password, confirmPassword);
+      if (!passwordMatch.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'Passwords do not match'
+          error: passwordMatch.error
         });
       }
       // Validate password strength
@@ -114,10 +119,22 @@ class AuthController {
   async login(req, res) {
     try {
       const { email, password, remember = false, skipCaptcha = false } = req.body;
-      if (!email || !password) {
+      
+      // Validate required fields
+      const requiredFields = validateRequiredFields(req.body, ['email', 'password']);
+      if (!requiredFields.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'Email and password are required'
+          error: `${requiredFields.missingFields.join(', ')} ${requiredFields.missingFields.length === 1 ? 'is' : 'are'} required`
+        });
+      }
+      
+      // Validate email format
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: emailValidation.error
         });
       }
       // Supabase Auth login
@@ -126,21 +143,52 @@ class AuthController {
         password
       });
       if (authError) {
+        // Log detailed error server-side only
+        console.error('[LOGIN] Authentication failed:', {
+          email: email.toLowerCase(),
+          error: authError.message,
+          code: authError.code,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Check if user exists to determine if it's "user not found" vs "wrong password"
+        // Note: This exposes user enumeration, but provides better UX with specific error messages
+        let isUserNotFound = false;
+        try {
+          const { data: userData, error: getUserError } = await supabase.auth.admin.getUserByEmail(email.toLowerCase());
+          // If getUserByEmail fails or returns no user, user doesn't exist
+          if (getUserError || !userData?.user) {
+            isUserNotFound = true;
+          }
+        } catch (checkError) {
+          // If admin API check fails, fall back to error message pattern matching
+          const errorMessage = authError.message?.toLowerCase() || '';
+          const errorCode = authError.code?.toLowerCase() || '';
+          
+          isUserNotFound = 
+            errorMessage.includes('user not found') ||
+            errorMessage.includes('no user found') ||
+            errorMessage.includes('user does not exist') ||
+            errorCode === 'user_not_found';
+        }
+        
+        const errorResponse = isUserNotFound 
+          ? 'User not found'
+          : 'Invalid email or password';
+        
         return res.status(401).json({
           success: false,
-          error: 'Invalid email or password'
+          error: errorResponse
         });
       }
       const userId = authData.user.id;
-      // Create user object from auth data instead of calling UserService.getUserById
-      // This avoids the admin API call that might be failing
-      const userMetadata = authData.user.user_metadata || {};
-      const rawUserMetaData = authData.user.raw_user_meta_data || {};
-      const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+      
+      // Extract and combine user metadata
+      const combinedMetadata = extractUserMetadata(authData.user);
 
       // Check ban status
       const isBanned = combinedMetadata.isBanned === true;
-      const {banExpiresAt} = combinedMetadata;
+      const { banExpiresAt } = combinedMetadata;
 
       if (isBanned && banExpiresAt) {
         const expirationDate = new Date(banExpiresAt);
@@ -160,9 +208,7 @@ class AuthController {
           });
         }
         // Ban has expired, automatically unban (handled by UserManagementService on next check)
-        // For now, we'll allow login but the system should unban them
         console.log('[LOGIN] Ban expired for user:', userId);
-
       }
 
       // Build user object from metadata
@@ -170,6 +216,7 @@ class AuthController {
                       `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
                       authData.user.email?.split('@')[0] ||
                       'Unknown User';
+      
       const user = {
         id: authData.user.id,
         email: authData.user.email,
@@ -188,13 +235,12 @@ class AuthController {
         isBanned: isBanned && banExpiresAt && new Date(banExpiresAt) > new Date(),
         warningStrike: combinedMetadata.warningStrike || 0,
         // Include raw metadata for reference
-        user_metadata: userMetadata,
-        raw_user_meta_data: rawUserMetaData
+        user_metadata: authData.user.user_metadata || {},
+        raw_user_meta_data: authData.user.raw_user_meta_data || {}
       };
-      // console.log removed for security
+
       // Check if user is active (skip for pending_verification on first login)
       if (user.status && user.status !== 'active' && user.status !== 'pending_verification') {
-        // console.log removed for security
         return res.status(403).json({
           success: false,
           error: `Account is ${user.status}. Please contact support.`
@@ -236,39 +282,25 @@ class AuthController {
       };
       const ipAddress = resolveClientIp(req);
       const userAgent = req.get('User-Agent');
-      // console.log removed for security
+      
       try {
         await UserService.trackLogin(userId, ipAddress, userAgent);
-        // console.log removed for security
       } catch (trackError) {
         console.warn('[LOGIN] ⚠️ Login tracking failed:', trackError.message);
       }
       // Set session cookie with proper expiration
-      const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 315360000000, // 10 years for development (permanent)
-        // Removed domain to use default
-      };
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // Set the cookie
-      // console.log removed for security
+      const cookieOptions = getCookieOptions(remember);
       res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
-      // console.log removed for security
-      // SECURITY: Removed non-httpOnly debug cookie to prevent token exposure
-      // Verify cookies are set in response headers
-      // console.log removed for security
-      // console.log removed for security
-      // SECURITY: Tokens are set in HttpOnly cookies, not in response body
+      
+      // SECURITY: Access token is set in HttpOnly cookie for server-side use
+      // Return refresh token in response for client-side Supabase session sync (less sensitive than access token)
       res.json({
         success: true,
         data: {
-          user
-          // Tokens are set in HttpOnly cookies only, not exposed in response
+          user,
+          // Refresh token for client-side Supabase session sync (not stored in HttpOnly cookie)
+          refresh_token: authData.session.refresh_token,
+          expires_at: authData.session.expires_at
         },
         message: 'Login successful'
       });
@@ -327,9 +359,8 @@ class AuthController {
 
       // Validate address fields if provided
       if (updateData.postal_code) {
-        // Philippines postal code format: 4 digits
-        const postalCodeRegex = /^\d{4}$/;
-        if (!postalCodeRegex.test(updateData.postal_code)) {
+        const { isValidPostalCode } = require('../utils/inputValidation');
+        if (!isValidPostalCode(updateData.postal_code)) {
           return res.status(400).json({
             success: false,
             error: 'Postal code must be 4 digits'
@@ -338,14 +369,16 @@ class AuthController {
       }
 
       // Validate required address components if any address field is provided
-      const hasAddressFields = updateData.address_line_1 || updateData.city || updateData.province;
-      if (hasAddressFields) {
-        if (!updateData.city || !updateData.province) {
-          return res.status(400).json({
-            success: false,
-            error: 'City and province are required when providing address information'
-          });
-        }
+      const addressValidation = validateAddress({
+        line1: updateData.address_line_1,
+        city: updateData.city,
+        province: updateData.province
+      });
+      if (!addressValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: addressValidation.error
+        });
       }
 
       const user = await UserService.updateUser(userId, updateData, userId);
@@ -472,11 +505,11 @@ class AuthController {
       }
 
       // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) {
+      const emailValidation = validateEmail(newEmail);
+      if (!emailValidation.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid email format'
+          error: emailValidation.error
         });
       }
 
@@ -500,14 +533,41 @@ class AuthController {
         });
       }
 
-      // Use Supabase's updateUser to change email (this will send a confirmation email)
+      // Check if email is already in use before attempting change
+      // This prevents partial updates if email is taken
+      try {
+        const { data: existingUser } = await supabase.auth.admin.getUserByEmail(newEmail);
+        if (existingUser?.user) {
+          return res.status(400).json({
+            success: false,
+            error: 'This email address is already registered'
+          });
+        }
+      } catch (checkError) {
+        // If check fails, continue - Supabase will catch duplicate on update
+        console.warn('[EMAIL CHANGE] Email availability check failed:', checkError.message);
+      }
+
+      // Store original email for rollback
+      const originalEmail = currentEmail;
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      
+      // Use Supabase's updateUser to change email (this will send a confirmation email)
       const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         email: newEmail,
         email_confirm: false // This will trigger a confirmation email
       });
 
       if (updateError) {
+        // Log detailed error server-side only
+        console.error('[EMAIL CHANGE] Failed to update email:', {
+          userId,
+          originalEmail,
+          newEmail,
+          error: updateError.message,
+          code: updateError.code
+        });
+        
         // Check if email is already in use
         const errorMsg = String(updateError.message || '').toLowerCase();
         if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate')) {
@@ -516,9 +576,36 @@ class AuthController {
             error: 'This email address is already registered'
           });
         }
+        
+        // Generic error message for client
         return res.status(400).json({
           success: false,
           error: 'Failed to initiate email change. Please try again later.'
+        });
+      }
+
+      // Verify the update was successful
+      if (!updateData?.user || updateData.user.email !== newEmail) {
+        console.error('[EMAIL CHANGE] Email update verification failed:', {
+          userId,
+          expectedEmail: newEmail,
+          actualEmail: updateData?.user?.email
+        });
+        
+        // Attempt rollback
+        try {
+          await supabase.auth.admin.updateUserById(userId, {
+            email: originalEmail,
+            email_confirm: true // Keep original email confirmed
+          });
+        } catch (rollbackError) {
+          console.error('[EMAIL CHANGE] Rollback failed:', rollbackError);
+          // Critical: email change partially completed but rollback failed
+        }
+        
+        return res.status(500).json({
+          success: false,
+          error: 'Email change verification failed. Please contact support.'
         });
       }
 
@@ -532,8 +619,19 @@ class AuthController {
       });
 
       if (emailError) {
-        console.warn('Email change confirmation sending failed:', emailError.message);
-        // Still return success as the email change was initiated
+        console.error('[EMAIL CHANGE] Confirmation email failed:', {
+          userId,
+          newEmail,
+          error: emailError.message
+        });
+        
+        // Email change was initiated but confirmation email failed
+        // Don't rollback - user can request resend
+        return res.status(200).json({
+          success: true,
+          message: 'Email change initiated, but confirmation email could not be sent. Please contact support or try again later.',
+          warning: true
+        });
       }
 
       res.json({
@@ -796,7 +894,6 @@ class AuthController {
         lastName,
         name,
         mobileNumber,
-        addressLine1,
         gender,
         signupCode,
         address = {},
@@ -837,8 +934,14 @@ class AuthController {
           details: passwordValidation.errors
         });
       }
-      // Prepare address object with addressLine1 if provided
-      const userAddress = addressLine1 ? { ...address, line1: addressLine1 } : address;
+      // Validate address fields if provided
+      const addressValidation = validateAddress(address);
+      if (!addressValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: addressValidation.error
+        });
+      }
 
       // Create user as citizen first with pending approval metadata
       const pendingUser = await UserService.createUser({
@@ -852,7 +955,7 @@ class AuthController {
         role: 'citizen',
         department: null,
         employeeId: null,
-        address: userAddress,
+        address,
         isOAuth
       });
       // Store intent for approval in user metadata
@@ -961,11 +1064,69 @@ class AuthController {
         phone_verified: Boolean(mobile),
         updated_at: new Date().toISOString()
       };
-      // Update user metadata in auth.users (avoid admin API)
-      // For OAuth HR completion, we'll need to use the session-based approach
-      // Since we can't use admin APIs, this operation might need to be handled differently
-      console.warn('[OAUTH HR] Admin API not available for user metadata updates');
-      return res.json({ success: true, message: 'OAuth registration (HR) completed successfully (metadata update may be limited)' });
+      // Update user metadata using admin API
+      const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        user_metadata: completeMetadata,
+        raw_user_meta_data: completeMetadata
+      });
+
+      if (updateError) {
+        console.error('[OAUTH HR] Failed to update user metadata:', {
+          userId,
+          error: updateError.message,
+          code: updateError.code
+        });
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to complete OAuth registration. Please contact support.'
+        });
+      }
+
+      // Verify the update was successful
+      if (!updatedUser?.user) {
+        console.error('[OAUTH HR] User update verification failed');
+        return res.status(500).json({
+          success: false,
+          error: 'OAuth registration verification failed. Please contact support.'
+        });
+      }
+
+      // Verify metadata was actually updated
+      const updatedMetadata = updatedUser.user.user_metadata || updatedUser.user.raw_user_meta_data || {};
+      const metadataMatches = updatedMetadata.role === completeMetadata.role && 
+                              updatedMetadata.department === completeMetadata.department;
+      
+      if (!metadataMatches) {
+        console.error('[OAUTH HR] Metadata update verification failed:', {
+          userId,
+          expected: { role: completeMetadata.role, department: completeMetadata.department },
+          actual: { role: updatedMetadata.role, department: updatedMetadata.department }
+        });
+        return res.status(500).json({
+          success: false,
+          error: 'OAuth registration completed but metadata update verification failed. Please contact support.'
+        });
+      }
+
+      // Mark signup code as used (only if update was successful)
+      try {
+        await hrService.markSignupCodeUsed(signupCode, userId);
+      } catch (markError) {
+        console.error('[OAUTH HR] Failed to mark signup code as used:', markError);
+        // Don't fail the request, but log the error
+        // The code will remain unused, which is safer than marking it used incorrectly
+      }
+
+      return res.json({
+        success: true,
+        message: 'OAuth registration (HR) completed successfully',
+        data: {
+          id: updatedUser.user.id,
+          email: updatedUser.user.email,
+          role: completeMetadata.role,
+          department: completeMetadata.department
+        }
+      });
     } catch (error) {
       console.error('Complete OAuth HR error:', error);
       return res.status(500).json({ success: false, error: 'Failed to complete OAuth registration' });

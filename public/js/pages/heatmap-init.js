@@ -115,6 +115,119 @@ let currentFilters = {
   }
 })();
 
+// Calculate date range from complaint data
+function calculateDateRange(complaintData) {
+  if (!complaintData || complaintData.length === 0) {
+    return { oldest: null, latest: null };
+  }
+
+  let oldest = null;
+  let latest = null;
+
+  complaintData.forEach(complaint => {
+    const complaintDate = new Date(complaint.submittedAt || complaint.submitted_at);
+    if (isNaN(complaintDate.getTime())) {
+      return; // Skip invalid dates
+    }
+
+    if (!oldest || complaintDate < oldest) {
+      oldest = new Date(complaintDate);
+    }
+    if (!latest || complaintDate > latest) {
+      latest = new Date(complaintDate);
+    }
+  });
+
+  return { oldest, latest };
+}
+
+// Setup date picker constraints based on complaint data and selected dates
+function setupDatePickerConstraints() {
+  const dateStart = document.getElementById('date-range-start');
+  const dateEnd = document.getElementById('date-range-end');
+  
+  if (!dateStart || !dateEnd || !heatmapViz || !heatmapViz.allComplaintData) {
+    return;
+  }
+
+  const { oldest, latest } = calculateDateRange(heatmapViz.allComplaintData);
+  
+  if (!oldest || !latest) {
+    console.warn('[HEATMAP] No valid complaint dates found for date range restriction');
+    return;
+  }
+
+  // Format dates as YYYY-MM-DD for HTML5 date inputs
+  const oldestDateStr = oldest.toISOString().split('T')[0];
+  const latestDateStr = latest.toISOString().split('T')[0];
+
+  // Get currently selected dates
+  const selectedStartDate = dateStart.value;
+  const selectedEndDate = dateEnd.value;
+
+  // Set base min/max for both inputs (oldest to latest complaint dates)
+  dateStart.setAttribute('min', oldestDateStr);
+  dateStart.setAttribute('max', latestDateStr);
+  dateEnd.setAttribute('min', oldestDateStr);
+  dateEnd.setAttribute('max', latestDateStr);
+
+  // Apply dynamic constraints based on selected dates
+  updateDatePickerConstraints(selectedStartDate, selectedEndDate);
+}
+
+// Update date picker constraints dynamically when dates are selected
+function updateDatePickerConstraints(selectedStartDate, selectedEndDate) {
+  const dateStart = document.getElementById('date-range-start');
+  const dateEnd = document.getElementById('date-range-end');
+  
+  if (!dateStart || !dateEnd || !heatmapViz || !heatmapViz.allComplaintData) {
+    return;
+  }
+
+  const { oldest, latest } = calculateDateRange(heatmapViz.allComplaintData);
+  if (!oldest || !latest) {
+    return;
+  }
+
+  const oldestDateStr = oldest.toISOString().split('T')[0];
+  const latestDateStr = latest.toISOString().split('T')[0];
+
+  // Start date: min = oldest, max = selected end date (or latest if no end date selected)
+  if (selectedEndDate) {
+    dateStart.setAttribute('max', selectedEndDate);
+  } else {
+    dateStart.setAttribute('max', latestDateStr);
+  }
+  dateStart.setAttribute('min', oldestDateStr);
+
+  // End date: min = selected start date (or oldest if no start date selected), max = latest
+  if (selectedStartDate) {
+    dateEnd.setAttribute('min', selectedStartDate);
+  } else {
+    dateEnd.setAttribute('min', oldestDateStr);
+  }
+  dateEnd.setAttribute('max', latestDateStr);
+
+  // Clear invalid selections
+  if (selectedStartDate && selectedEndDate) {
+    const startDate = new Date(selectedStartDate);
+    const endDate = new Date(selectedEndDate);
+    
+    if (startDate > endDate) {
+      // Start date is after end date - clear the one that violates constraint
+      const startMax = new Date(dateStart.getAttribute('max'));
+      const endMin = new Date(dateEnd.getAttribute('min'));
+      
+      if (startDate > startMax) {
+        dateStart.value = '';
+      }
+      if (endDate < endMin) {
+        dateEnd.value = '';
+      }
+    }
+  }
+}
+
 // Load complaint data (only called once on initial load, then filters are applied client-side)
 async function loadComplaintData() {
   try {
@@ -124,6 +237,9 @@ async function loadComplaintData() {
     // Get the count of all complaints
     const totalCount = heatmapViz.allComplaintData ? heatmapViz.allComplaintData.length : 0;
     console.log(`[HEATMAP] Loaded ${totalCount} total complaint(s)`);
+
+    // Setup date picker constraints based on loaded complaint data
+    setupDatePickerConstraints();
 
     // Create heatmap layer with all data
     heatmapViz.createHeatmapLayer();
@@ -490,12 +606,20 @@ function setupControlPanel() {
     
     if (dateStart) {
       dateStart.addEventListener('change', () => {
+        // Update constraints when start date changes
+        const selectedStartDate = dateStart.value;
+        const selectedEndDate = dateEnd ? dateEnd.value : '';
+        updateDatePickerConstraints(selectedStartDate, selectedEndDate);
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
     }
     
     if (dateEnd) {
       dateEnd.addEventListener('change', () => {
+        // Update constraints when end date changes
+        const selectedStartDate = dateStart ? dateStart.value : '';
+        const selectedEndDate = dateEnd.value;
+        updateDatePickerConstraints(selectedStartDate, selectedEndDate);
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
     }
@@ -504,6 +628,8 @@ function setupControlPanel() {
       clearDateRange.addEventListener('click', () => {
         if (dateStart) dateStart.value = '';
         if (dateEnd) dateEnd.value = '';
+        // Reset constraints to base range
+        updateDatePickerConstraints('', '');
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
     }
@@ -571,35 +697,6 @@ function setupControlPanel() {
     }
   }
 
-  // Setup individual filter panel toggles (each panel slides in/out independently)
-  function setupIndividualFilterPanels() {
-    document.querySelectorAll('.filter-panel-header[data-panel-id]').forEach(header => {
-      header.addEventListener('click', function(e) {
-        // Don't toggle if clicking on a checkbox or input inside
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.closest('input') || e.target.closest('label')) {
-          return;
-        }
-        
-        const panelId = this.getAttribute('data-panel-id');
-        if (panelId) {
-          const filterPanel = document.getElementById(panelId);
-          if (filterPanel) {
-            filterPanel.classList.toggle('collapsed');
-            const isCollapsed = filterPanel.classList.contains('collapsed');
-            console.log(`[FILTER-PANEL] ${panelId} ${isCollapsed ? 'collapsed' : 'expanded'}`);
-          }
-        }
-      });
-    });
-    console.log('[FILTER-PANEL] Individual filter panels initialized');
-  }
-
-  // Initialize filter panels after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupIndividualFilterPanels);
-  } else {
-    setupIndividualFilterPanels();
-  }
 
   // Reset filters
   const resetFiltersBtn = document.getElementById('reset-filters-btn');
@@ -676,14 +773,12 @@ function setupControlPanel() {
     // This can be used to control when markers appear
   });
 
-  // Load categories and departments
-  loadCategories();
-  loadDepartments();
-  
-  // Setup auto-filtering after a short delay to ensure checkboxes are loaded
-  setTimeout(() => {
+    // Load categories and departments
+    loadCategories();
+    loadDepartments();
+    
+    // Setup auto-filtering immediately (checkboxes are already in HTML for status)
     setupAutoFiltering();
-  }, 500);
 }
 
 // Load categories

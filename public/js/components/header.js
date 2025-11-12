@@ -115,8 +115,6 @@ function initializeGlobalClickHandler() {
     if (notificationPanel && notificationPanel.classList.contains('show')) {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
         notificationPanel.classList.remove('show');
-        notificationPanel.style.opacity = '0';
-        notificationPanel.style.transform = 'translateY(-10px)';
         setTimeout(() => {
           notificationPanel.style.display = 'none';
         }, 300);
@@ -126,8 +124,6 @@ function initializeGlobalClickHandler() {
     if (profilePanel && profilePanel.classList.contains('show')) {
       if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
         profilePanel.classList.remove('show');
-        profilePanel.style.opacity = '0';
-        profilePanel.style.transform = 'translateY(-10px)';
         setTimeout(() => {
           profilePanel.style.display = 'none';
         }, 300);
@@ -143,30 +139,45 @@ function initializeProfileButton() {
     console.warn('[HEADER] Profile button not found');
     return;
   }
+  
+  const updateProfilePanelPosition = () => {
+    const profilePanel = document.getElementById('profile-panel');
+    if (!profilePanel) return;
+    
+    const profileBtnRect = profileBtn.getBoundingClientRect();
+    const headerHeight = 64; // Approximate header height
+    
+    // Position panel below the profile button, aligned to the right
+    profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;
+    profilePanel.style.right = `${window.innerWidth - profileBtnRect.right}px`;
+    profilePanel.style.left = 'auto';
+  };
+  
   profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
     if (notificationPanel && notificationPanel.classList.contains('show')) {
       notificationPanel.classList.remove('show');
-      notificationPanel.style.opacity = '0';
-      notificationPanel.style.transform = 'translateY(-10px)';
       setTimeout(() => { notificationPanel.style.display = 'none'; }, 300);
     }
     const profilePanel = document.getElementById('profile-panel');
     if (profilePanel.classList.contains('show')) {
       profilePanel.classList.remove('show');
-      profilePanel.style.opacity = '0';
-      profilePanel.style.transform = 'translateY(-10px)';
       setTimeout(() => { profilePanel.style.display = 'none'; }, 300);
     } else {
-      profilePanel.classList.add('show');
+      // Update position before showing
+      updateProfilePanelPosition();
       profilePanel.style.display = 'block';
+      // Force reflow to ensure display is set before adding show class
+      profilePanel.offsetHeight;
       setTimeout(() => {
-        profilePanel.style.opacity = '1';
-        profilePanel.style.transform = 'translateY(0)';
+        profilePanel.classList.add('show');
       }, 10);
     }
   });
+  
+  // Update position on window resize
+  window.addEventListener('resize', updateProfilePanelPosition);
 }
 // Initialize menu toggle
 function initializeMenuToggle() {
@@ -212,16 +223,30 @@ function initializeThemeToggle() {
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
+  
+  // Update sidebar toggle if it exists
+  const sidebarToggleSwitch = document.getElementById('sidebar-toggle-switch');
+  if (sidebarToggleSwitch) {
+    sidebarToggleSwitch.classList.toggle('active', savedTheme === 'dark');
+  }
+  
   themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    
     // Update button appearance
     themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
+    
+    // Sync sidebar toggle switch
+    if (sidebarToggleSwitch) {
+      sidebarToggleSwitch.classList.toggle('active', newTheme === 'dark');
+    }
   });
+  
   function applyTheme(theme) {
     const rootElement = document.documentElement;
     if (theme === 'dark') {
@@ -232,23 +257,34 @@ function initializeThemeToggle() {
   }
 }
 // Initialize header scroll behavior
+// DISABLED: Header should always remain visible
 function initializeHeaderScroll() {
-  let lastScrollY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-    const header = document.querySelector('.header-content');
-    if (header) {
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
-        header.style.transform = 'translateY(-100%)';
-      } else {
-        // Scrolling up
-        header.style.transform = 'translateY(0)';
-      }
-    }
-    lastScrollY = currentScrollY;
-  });
+  // Scroll behavior disabled - header should always be visible
+  // This prevents the header from hiding when scrolling down
+  
+  // Reset any existing transform styles that might have been applied
+  const header = document.querySelector('.header-content');
+  if (header) {
+    header.style.transform = 'translateY(0)';
+    header.style.transition = 'transform 0.3s ease';
+  }
+  
+  // Old code (disabled):
+  // let lastScrollY = window.scrollY;
+  // window.addEventListener('scroll', () => {
+  //   const currentScrollY = window.scrollY;
+  //   const header = document.querySelector('.header-content');
+  //   if (header) {
+  //     if (currentScrollY > lastScrollY && currentScrollY > 100) {
+  //       // Scrolling down
+  //       header.style.transform = 'translateY(-100%)';
+  //     } else {
+  //       // Scrolling up
+  //       header.style.transform = 'translateY(0)';
+  //     }
+  //   }
+  //   lastScrollY = currentScrollY;
+  // });
 }
 // Initialize dropdowns
 function initializeDropdowns() {

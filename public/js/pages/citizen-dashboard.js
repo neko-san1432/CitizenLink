@@ -426,6 +426,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('[CITIZEN_DASHBOARD] Error initializing role toggle:', error);
   }
+  
+  // Attach event listeners to buttons (replacing inline onclick handlers)
+  const viewMapBtn = document.getElementById('view-map-btn');
+  if (viewMapBtn) {
+    viewMapBtn.addEventListener('click', () => {
+      window.viewMap();
+    });
+  }
+  
+  const getHelpBtn = document.getElementById('get-help-btn');
+  if (getHelpBtn) {
+    getHelpBtn.addEventListener('click', () => {
+      window.getHelp();
+    });
+  }
+  
+  const viewAllComplaintsBtn = document.getElementById('view-all-complaints-btn');
+  if (viewAllComplaintsBtn) {
+    viewAllComplaintsBtn.addEventListener('click', () => {
+      window.viewAllComplaints();
+    });
+  }
 });
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
@@ -549,7 +571,7 @@ function renderMyComplaints(complaints, totalCount = null) {
       statusBadge = '<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.5rem;">(Cancelled)</span>';
     }
     return `
-    <div class="complaint-item" onclick="viewComplaintDetail('${complaint.id}')">
+    <div class="complaint-item" data-complaint-id="${escapeHtml(complaint.id)}">
       <div class="complaint-header">
         <h4 class="complaint-title">${escapeHtml(complaint.title)}${statusBadge}</h4>
         <span class="complaint-status status-${statusClass}">${statusLabel}</span>
@@ -567,6 +589,16 @@ function renderMyComplaints(complaints, totalCount = null) {
   `;
   }).join('');
   container.innerHTML = countInfo + html;
+  
+  // Attach event listeners to complaint items using event delegation
+  container.querySelectorAll('.complaint-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const complaintId = item.getAttribute('data-complaint-id');
+      if (complaintId) {
+        window.viewComplaintDetail(complaintId);
+      }
+    });
+  });
 }
 /**
  * Helper functions

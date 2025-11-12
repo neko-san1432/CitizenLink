@@ -418,7 +418,7 @@ class UserService {
   }
   validateUpdateData(updateData) {
     const allowedFields = [
-      'first_name', 'last_name', 'mobile_number', 'date_of_birth', 'gender',
+      'first_name', 'last_name', 'middle_name', 'mobile_number', 'date_of_birth', 'gender',
       'address_line_1', 'address_line_2', 'city', 'province', 'postal_code', 'barangay',
       'position', 'bio', 'avatar_url', 'preferred_language', 'timezone',
       'email_notifications', 'sms_notifications', 'push_notifications',
@@ -456,13 +456,17 @@ class UserService {
     const meta = authUser.user_metadata || {};
     const rawMeta = authUser.raw_user_meta_data || {};
     const combined = { ...rawMeta, ...meta };
-    // Use name as primary, generate from first_name + last_name as fallback
-    const displayName = combined.name || `${combined.first_name || 'Unknown'} ${combined.last_name || 'User'}`.trim();
+    // Use name as primary, generate from first_name + middle_name + last_name as fallback
+    const displayName = combined.name || 
+      (combined.first_name || combined.last_name 
+        ? [combined.first_name, combined.middle_name, combined.last_name].filter(Boolean).join(' ').trim()
+        : 'Unknown User');
     return {
       id: authUser.id,
       email: authUser.email,
       firstName: combined.first_name,
       lastName: combined.last_name,
+      middleName: combined.middle_name,
       name: displayName,
       fullName: displayName, // Keep for backwards compatibility
       // Mobile number from raw_user_meta_data (priority) or user_metadata

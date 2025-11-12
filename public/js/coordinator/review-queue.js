@@ -154,15 +154,17 @@ class ReviewQueue {
             `;
     }
     return `
-            <div class="complaint-card" data-complaint-id="${complaint.id}">
+            <div class="complaint-card ${complaint.priority?.toLowerCase() || 'medium'}" data-complaint-id="${complaint.id}">
                 <div class="complaint-header">
-                    <div class="complaint-id">#${complaint.id}</div>
+                    <div>
+                        <div class="complaint-id">#${complaint.id}</div>
+                        <h3 class="complaint-title">${complaint.title || 'Untitled Complaint'}</h3>
+                    </div>
                     <div class="complaint-status status-${complaint.workflow_status?.toLowerCase() || complaint.status?.toLowerCase() || 'pending'}">
                         ${complaint.workflow_status || complaint.status || 'Pending'}
                     </div>
                 </div>
                 <div class="complaint-content">
-                    <h3 class="complaint-title">${complaint.title || 'Untitled Complaint'}</h3>
                     <p class="complaint-description">${complaint.descriptive_su || complaint.description || 'No description provided'}</p>
                     <div class="complaint-meta">
                         <span class="badge ${priorityBadge}">${complaint.priority || 'Medium'}</span>
@@ -225,31 +227,120 @@ class ReviewQueue {
   }
   updatePagination(totalItems) {
     const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+    const paginationContainer = document.getElementById('pagination-container');
+    const pageInfo = document.getElementById('page-info');
+    const itemsInfo = document.getElementById('items-info');
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
-    const pageInfo = document.getElementById('page-info');
+    const pageNumbers = document.getElementById('page-numbers');
+
+    // Show/hide pagination container
+    if (totalPages > 1) {
+      if (paginationContainer) paginationContainer.style.display = 'flex';
+    } else {
+      if (paginationContainer) paginationContainer.style.display = 'none';
+      return;
+    }
+
+    // Update page info
+    if (pageInfo) {
+      pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+    }
+
+    // Update items info
+    if (itemsInfo) {
+      const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
+      const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
+      itemsInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} complaints`;
+    }
+
+    // Update prev/next buttons
     if (prevBtn) {
       prevBtn.disabled = this.currentPage === 1;
     }
     if (nextBtn) {
       nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
     }
-    if (pageInfo) {
-      pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+
+    // Generate page numbers
+    if (pageNumbers) {
+      pageNumbers.innerHTML = '';
+      const maxVisiblePages = 7;
+      let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      // Adjust start page if we're near the end
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      // First page
+      if (startPage > 1) {
+        const firstBtn = document.createElement('button');
+        firstBtn.className = 'page-number';
+        firstBtn.textContent = '1';
+        firstBtn.addEventListener('click', () => this.goToPage(1));
+        pageNumbers.appendChild(firstBtn);
+
+        if (startPage > 2) {
+          const ellipsis = document.createElement('span');
+          ellipsis.className = 'page-number ellipsis';
+          ellipsis.textContent = '...';
+          pageNumbers.appendChild(ellipsis);
+        }
+      }
+
+      // Page numbers
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'page-number';
+        if (i === this.currentPage) {
+          pageBtn.classList.add('active');
+        }
+        pageBtn.textContent = i.toString();
+        pageBtn.addEventListener('click', () => this.goToPage(i));
+        pageNumbers.appendChild(pageBtn);
+      }
+
+      // Last page
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const ellipsis = document.createElement('span');
+          ellipsis.className = 'page-number ellipsis';
+          ellipsis.textContent = '...';
+          pageNumbers.appendChild(ellipsis);
+        }
+
+        const lastBtn = document.createElement('button');
+        lastBtn.className = 'page-number';
+        lastBtn.textContent = totalPages.toString();
+        lastBtn.addEventListener('click', () => this.goToPage(totalPages));
+        pageNumbers.appendChild(lastBtn);
+      }
+    }
+  }
+
+  goToPage(page) {
+    const totalPages = Math.ceil(this.getFilteredComplaints().length / this.itemsPerPage);
+    if (page >= 1 && page <= totalPages) {
+      this.currentPage = page;
+      this.renderComplaints();
+      // Scroll to top of complaint list
+      const complaintList = document.getElementById('complaint-list');
+      if (complaintList) {
+        complaintList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   }
   previousPage() {
-
     if (this.currentPage > 1) {
-      this.currentPage--;
-      this.renderComplaints();
+      this.goToPage(this.currentPage - 1);
     }
   }
   nextPage() {
     const totalPages = Math.ceil(this.getFilteredComplaints().length / this.itemsPerPage);
     if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.renderComplaints();
+      this.goToPage(this.currentPage + 1);
     }
   }
   async viewComplaint(complaintId) {

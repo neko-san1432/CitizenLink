@@ -31,12 +31,14 @@ class RuleBasedSuggestionService {
     for (const d of seed) scores.set(d, { score: 2.0, reasons: ['type match'] });
     // Apply keyword rules
     for (const rule of keywordRules) {
-      if (rule.re.test(text)) {
-        for (const d of rule.depts) {
+      // Check if rule has pattern property and it's a valid RegExp
+      if (rule.pattern && typeof rule.pattern.test === 'function' && rule.pattern.test(text)) {
+        const departments = rule.departments || rule.depts || [];
+        for (const d of departments) {
           if (!scores.has(d)) scores.set(d, { score: 0, reasons: [] });
           const entry = scores.get(d);
           entry.score += 1.0;
-          entry.reasons.push(rule.reason);
+          entry.reasons.push(rule.reason || 'keyword match');
         }
       }
     }

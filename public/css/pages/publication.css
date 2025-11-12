@@ -36,5 +36,63 @@
   .pub-list, .pub-detail { height: auto; max-height: 60vh }
 }
 
+/* Dark Mode Styles */
+html.dark .pub-tab {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
 
+html.dark .pub-tab.active {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
 
+html.dark .filter-group label {
+  color: #94a3b8;
+}
+
+html.dark .pub-list,
+html.dark .pub-detail {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .pub-list {
+  border-right-color: #334155;
+}
+
+html.dark .pub-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+html.dark .pub-card:hover {
+  background: #1e293b;
+}
+
+html.dark .pub-card.selected {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+}
+
+html.dark .pub-card-title {
+  color: #f1f5f9;
+}
+
+html.dark .pub-card-meta {
+  color: #94a3b8;
+}
+
+html.dark .pub-detail h2 {
+  color: #f1f5f9;
+}
+
+html.dark .pub-detail .meta {
+  color: #94a3b8;
+}
+
+html.dark .pub-detail .content {
+  color: #cbd5e1;
+}

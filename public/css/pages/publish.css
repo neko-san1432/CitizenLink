@@ -236,3 +236,90 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Dark Mode Styles */
+html.dark #app h1 {
+  color: #f1f5f9;
+}
+
+html.dark .form-label {
+  color: #cbd5e1;
+}
+
+html.dark .input,
+html.dark .textarea,
+html.dark .select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+html.dark .input::placeholder,
+html.dark .textarea::placeholder {
+  color: #64748b;
+}
+
+html.dark .input:focus,
+html.dark .textarea:focus,
+html.dark .select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .input:focus-visible,
+html.dark .select:focus-visible,
+html.dark .textarea:focus-visible {
+  outline-color: #60a5fa;
+}
+
+html.dark .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+html.dark .btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+html.dark .btn-secondary {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+html.dark .btn-secondary:hover {
+  background: #475569;
+}
+
+html.dark .form-help {
+  color: #94a3b8;
+}
+
+html.dark .form-error {
+  color: #f87171;
+}
+
+html.dark .checkbox-label {
+  color: #cbd5e1;
+}
+
+html.dark .checkbox-label input[type="checkbox"] {
+  accent-color: #3b82f6;
+}
+
+html.dark .form-group-row {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .form-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .form-section-title {
+  color: #f1f5f9;
+}
+
+html.dark .form-section-description {
+  color: #94a3b8;
+}
+

@@ -256,21 +256,61 @@ class CoordinatorDashboard {
 
   setupEventListeners() {
     // Quick action buttons
-    const quickActions = {
-      'review-queue': () => window.location.href = '/coordinator/review-queue',
-      'bulk-assign': () => this.bulkAssignComplaints(),
-      'detect-clusters': () => this.detectNewClusters()
-    };
-    Object.entries(quickActions).forEach(([id, action]) => {
-      const button = document.getElementById(`quick-${id}`);
-      if (button) {
-        button.addEventListener('click', action);
-      }
-    });
-    // Analytics period selector
-    const periodSelect = document.getElementById('analytics-period');
-    if (periodSelect) {
-      periodSelect.addEventListener('change', () => this.loadStats());
+    const reviewQueueBtn = document.getElementById('review-queue-btn');
+    if (reviewQueueBtn) {
+      reviewQueueBtn.addEventListener('click', () => {
+        window.location.href = '/review-queue';
+      });
+    }
+
+    const bulkAssignBtn = document.getElementById('bulk-assign-btn');
+    if (bulkAssignBtn) {
+      bulkAssignBtn.addEventListener('click', () => this.bulkAssignComplaints());
+    }
+
+    const detectClustersBtn = document.getElementById('detect-clusters-btn');
+    if (detectClustersBtn) {
+      detectClustersBtn.addEventListener('click', () => this.detectNewClusters());
+    }
+
+    const detectClustersSectionBtn = document.getElementById('detect-clusters-section-btn');
+    if (detectClustersSectionBtn) {
+      detectClustersSectionBtn.addEventListener('click', () => this.detectNewClusters());
+    }
+
+    const generateReportBtn = document.getElementById('generate-report-btn');
+    if (generateReportBtn) {
+      generateReportBtn.addEventListener('click', () => this.generateReport());
+    }
+
+    const manageDepartmentsBtn = document.getElementById('manage-departments-btn');
+    if (manageDepartmentsBtn) {
+      manageDepartmentsBtn.addEventListener('click', () => this.manageDepartments());
+    }
+
+    const helpBtn = document.getElementById('help-btn');
+    if (helpBtn) {
+      helpBtn.addEventListener('click', () => this.getHelp());
+    }
+
+    const viewFullQueueBtn = document.getElementById('view-full-queue-btn');
+    if (viewFullQueueBtn) {
+      viewFullQueueBtn.addEventListener('click', () => {
+        window.location.href = '/review-queue';
+      });
+    }
+
+    const refreshActivityBtn = document.getElementById('refresh-activity-btn');
+    if (refreshActivityBtn) {
+      refreshActivityBtn.addEventListener('click', () => this.loadRecentQueue());
+    }
+
+    // Queue filter selector
+    const queueFilter = document.getElementById('queue-filter');
+    if (queueFilter) {
+      queueFilter.addEventListener('change', (e) => {
+        this.filterQueue(e.target.value);
+      });
     }
   }
 
@@ -298,6 +338,26 @@ class CoordinatorDashboard {
       }
     } catch (error) {
     }
+  }
+
+  async generateReport() {
+    // Implementation for report generation
+    window.location.href = '/coordinator/review-queue?report=true';
+  }
+
+  async manageDepartments() {
+    // Implementation for department management
+    window.location.href = '/departments';
+  }
+
+  async getHelp() {
+    // Implementation for help
+    alert('Help documentation coming soon!');
+  }
+
+  async filterQueue(filter) {
+    // Implementation for queue filtering
+    await this.loadRecentQueue();
   }
 
   startAutoRefresh() {

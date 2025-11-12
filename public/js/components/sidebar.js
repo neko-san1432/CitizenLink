@@ -150,13 +150,13 @@ async function setSidebarRole() {
           `).join('')}
 </div>
         
-<div class="sidebar-bottom">
-  <div class="theme-toggle" id="theme-toggle">
+        <div class="sidebar-bottom">
+  <div class="theme-toggle" id="sidebar-theme-toggle">
     <div class="theme-toggle-label">
       <span class="menu-icon">${getIcon('darkMode', { size: 20 })}</span>
       <span>Dark Mode</span>
     </div>
-    <div class="toggle-switch" id="toggle-switch"></div>
+    <div class="toggle-switch" id="sidebar-toggle-switch"></div>
   </div>
           <div class="sidebar-footer">
             <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
@@ -169,7 +169,8 @@ async function setSidebarRole() {
 
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
-      // Theme toggle is handled by header.js
+      // Initialize sidebar theme toggle
+      initializeSidebarThemeToggle();
       initializeLogout();
       // Update active menu items with aria-current
       setActiveMenuItem();
@@ -298,15 +299,64 @@ function applyTheme(theme) {
   }
 }
 function updateToggleSwitch(isDark) {
-  const toggleSwitch = document.getElementById('toggle-switch');
+  const toggleSwitch = document.getElementById('sidebar-toggle-switch');
   if (toggleSwitch) {
-
     if (isDark) {
       toggleSwitch.classList.add('active');
     } else {
       toggleSwitch.classList.remove('active');
     }
   }
+}
+
+/**
+ * Initialize sidebar theme toggle
+ */
+function initializeSidebarThemeToggle() {
+  const sidebarThemeToggle = document.getElementById('sidebar-theme-toggle');
+  if (!sidebarThemeToggle) {
+    return;
+  }
+  
+  // Load saved theme and update toggle state
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const isDark = savedTheme === 'dark';
+  updateToggleSwitch(isDark);
+  
+  // Add click handler
+  sidebarThemeToggle.addEventListener('click', () => {
+    const rootElement = document.documentElement;
+    const currentIsDark = rootElement.classList.contains('dark');
+    const newTheme = currentIsDark ? 'light' : 'dark';
+    
+    // Apply theme
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Update toggle switch
+    updateToggleSwitch(!currentIsDark);
+    
+    // Also update header toggle if it exists
+    const headerThemeToggle = document.getElementById('theme-toggle');
+    if (headerThemeToggle) {
+      headerThemeToggle.title = currentIsDark ? 'Switch to light mode' : 'Switch to dark mode';
+      // Update header toggle icon/text if it has textContent
+      if (headerThemeToggle.textContent) {
+        headerThemeToggle.textContent = currentIsDark ? '🌙' : '☀️';
+      }
+    }
+  });
+  
+  // Listen for theme changes from header toggle (sync both ways)
+  const observer = new MutationObserver(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    updateToggleSwitch(isDark);
+  });
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
 }
 function initializeLogout() {
   const logoutLink = document.querySelector('.logout-link');

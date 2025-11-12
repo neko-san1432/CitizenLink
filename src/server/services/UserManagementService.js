@@ -229,30 +229,21 @@ class UserManagementService {
   /**
    * Log ban/unban actions for audit trail
    */
-  async logBanAction(userId, action, performedBy, banData) {
+  async logBanAction(userId, action, performedBy, banData, ipAddress = null, userAgent = null) {
     try {
-      // You can create a ban_logs table or use audit_logs
-      // For now, we'll use audit_logs if it exists
-      const logEntry = {
-        user_id: userId,
-        action_type: `user_${action}`,
-        performed_by: performedBy,
-        metadata: {
+      const AuditLogRepository = require('../repositories/AuditLogRepository');
+      const auditLog = new AuditLogRepository();
+
+      await auditLog.log(`user_${action}`, performedBy, {
+        targetType: 'user',
+        targetId: userId,
+        details: {
           ...banData,
           timestamp: new Date().toISOString()
         },
-        created_at: new Date().toISOString()
-      };
-
-      // Try to insert into audit_logs if table exists
-      const { error } = await this.supabase
-        .from('audit_logs')
-        .insert(logEntry);
-
-      if (error) {
-        console.warn('[USER_MGMT] Failed to log ban action:', error);
-        // Don't throw - logging failure shouldn't break the operation
-      }
+        ipAddress,
+        userAgent
+      });
     } catch (error) {
       console.warn('[USER_MGMT] Log ban action error:', error);
       // Don't throw - logging failure shouldn't break the operation
