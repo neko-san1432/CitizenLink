@@ -1,30 +1,29 @@
 async function loadBoundaries() {
   try {
     // Wait for map instance to be available with shorter intervals
-    const maxAttempts = 20;
+    const maxAttempts = 50; // Increased attempts
     let attempts = 0;
-
     while (!window.simpleMap && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 500ms to 100ms
+      await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay to 200ms
       attempts++;
     }
-
     const M = window.simpleMap;
     if (!M) {
-      throw new Error('Map failed to initialize after multiple attempts');
+      console.warn('[BOUNDARY] Map not available yet, skipping boundary loading');
+      return; // Don't throw error, just skip if map isn't ready
     }
-
     // Fetch boundaries data
     const response = await fetch('/api/boundaries');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const brgyData = await response.json();
-
     // Check if brgyData is an array
     if (!Array.isArray(brgyData)) {
       throw new Error('Boundary data is not in correct format');
     }
+    // Store boundaries globally for boundary checking
+    window.cityBoundaries = brgyData;
 
     // Add each barangay boundary to the map
     brgyData.forEach((barangay) => {
@@ -35,33 +34,52 @@ async function loadBoundaries() {
           opacity: 1,
           fillOpacity: 0, // Slight fill for better visibility
         },
-
       });
-
       geojsonLayer.addTo(M);
     });
-
-    // Add fit bounds to see if boundaries are outside view
-    const bounds = L.geoJSON(brgyData.map(b => b.geojson)).getBounds();
-    M.fitBounds(bounds, { padding: [20, 20] }); // Add padding for better view
-
+    // Don't auto-fit bounds - let the heatmap control the view
+    // const bounds = L.geoJSON(brgyData.map(b => b.geojson)).getBounds();
+    // M.fitBounds(bounds, { padding: [20, 20] }); // Add padding for better view
     // console.log removed for security
   } catch (err) {
     console.error('Error loading boundaries:', err.message);
     console.error('Stack:', err.stack);
   }
 }
-
 // Initialize boundaries when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Load boundaries immediately - no delay
     await loadBoundaries();
+
+    // If heatmap visualization exists, reload data to apply boundary filtering
+    if (window.heatmapViz && typeof window.heatmapViz.loadComplaintData === 'function') {
+      console.log('[BOUNDARY] Boundaries loaded, reloading heatmap data with boundary filter');
+      const currentFilters = window.heatmapViz.currentFilters || {};
+      await window.heatmapViz.loadComplaintData(currentFilters);
+
+      // Recreate heatmap and markers with filtered data
+      if (window.heatmapViz.heatmapLayer) {
+        window.heatmapViz.hideHeatmap();
+      }
+      window.heatmapViz.createHeatmapLayer();
+      window.heatmapViz.showHeatmap();
+
+      if (window.heatmapViz.markerLayer) {
+        window.heatmapViz.hideMarkers();
+      }
+      window.heatmapViz.createMarkerLayer();
+      window.heatmapViz.showMarkers();
+
+      // Update statistics if function exists
+      if (typeof window.updateStatistics === 'function') {
+        window.updateStatistics();
+      }
+    }
   } catch (error) {
     console.error('Failed to load boundaries:', error);
   }
 });
-
 /**
  * Create an inverted city boundary mask that fills everything OUTSIDE the city
  * @param {L.Map} map - Leaflet map instance
@@ -70,13 +88,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function addCityBoundary(map, brgyData) {
   try {
     // console.log removed for security
-
     // Create a feature collection from all barangay geojson
     const allFeatures = brgyData.map(barangay => barangay.geojson);
-
     // Calculate the convex hull (outer boundary) of all barangays
     const cityBoundary = calculateConvexHull(allFeatures);
-
     if (cityBoundary) {
       // Create a world rectangle that covers the entire map
       const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
@@ -90,7 +105,6 @@ async function addCityBoundary(map, brgyData) {
           ]]
         }
       };
-
       // Create the inverted mask using a "donut" polygon
       const invertedMask = {
         type: 'Feature',
@@ -103,7 +117,6 @@ async function addCityBoundary(map, brgyData) {
           ]
         }
       };
-
       // Create the inverted mask layer
       const maskLayer = L.geoJSON(invertedMask, {
         style: {
@@ -122,7 +135,6 @@ async function addCityBoundary(map, brgyData) {
           `);
         }
       });
-
       // Add inverted mask to map
       maskLayer.addTo(map);
       // console.log removed for security

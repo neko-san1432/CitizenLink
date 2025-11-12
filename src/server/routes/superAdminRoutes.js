@@ -4,10 +4,8 @@ const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 const superAdminController = new SuperAdminController();
-
 // All routes require Super Admin role
 const requireSuperAdmin = requireRole(['super-admin']);
-
 /**
  * Dashboard
  */
@@ -16,16 +14,27 @@ router.get('/dashboard',
   requireSuperAdmin,
   (req, res) => superAdminController.getDashboard(req, res)
 );
-
 /**
- * Role Management
+ * User Management
  */
 router.post('/role-swap',
   authenticateUser,
   requireSuperAdmin,
   (req, res) => superAdminController.roleSwap(req, res)
 );
-
+/**
+ * Ban/Unban Users
+ */
+router.post('/ban-user',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.banUser(req, res)
+);
+router.post('/unban-user',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.unbanUser(req, res)
+);
 // User listing and details for Super Admin
 router.get('/users',
   authenticateUser,
@@ -33,15 +42,14 @@ router.get('/users',
   async (req, res) => {
     try {
       const UserService = require('../services/UserService');
+
       const { search, barangay, role, department, status, page, limit } = req.query;
       const filters = { role, department, status, search, includeInactive: true };
       const pagination = { page: page ? parseInt(page) : 1, limit: limit ? parseInt(limit) : 20 };
       const result = await UserService.getUsers(filters, pagination);
-
       const filteredUsers = barangay
         ? (result.users || []).filter(u => (u.address?.barangay || '').toLowerCase() === String(barangay).toLowerCase())
         : result.users;
-
       return res.json({ success: true, data: filteredUsers, pagination: result.pagination });
     } catch (error) {
       console.error('[SUPERADMIN_ROUTES] users list error:', error);
@@ -49,13 +57,13 @@ router.get('/users',
     }
   }
 );
-
 router.get('/users/:id',
   authenticateUser,
   requireSuperAdmin,
   async (req, res) => {
     try {
       const UserService = require('../services/UserService');
+
       const user = await UserService.getUserById(req.params.id);
       if (!user) return res.status(404).json({ success: false, error: 'User not found' });
       return res.json({ success: true, data: user });
@@ -65,13 +73,13 @@ router.get('/users/:id',
     }
   }
 );
-
 router.get('/users/:id/complaints',
   authenticateUser,
   requireSuperAdmin,
   async (req, res) => {
     try {
       const ComplaintService = require('../services/ComplaintService');
+
       const service = new ComplaintService();
       const options = {
         page: req.query.page ? parseInt(req.query.page) : 1,
@@ -87,7 +95,6 @@ router.get('/users/:id/complaints',
     }
   }
 );
-
 /**
  * Department Transfers
  */
@@ -96,7 +103,6 @@ router.post('/transfer-department',
   requireSuperAdmin,
   (req, res) => superAdminController.transferDepartment(req, res)
 );
-
 /**
  * Citizen Assignment
  */
@@ -105,7 +111,6 @@ router.post('/assign-citizen',
   requireSuperAdmin,
   (req, res) => superAdminController.assignCitizen(req, res)
 );
-
 /**
  * System Logs
  */
@@ -114,7 +119,6 @@ router.get('/logs',
   requireSuperAdmin,
   (req, res) => superAdminController.getLogs(req, res)
 );
-
 /**
  * System Statistics
  */
@@ -122,6 +126,30 @@ router.get('/statistics',
   authenticateUser,
   requireSuperAdmin,
   (req, res) => superAdminController.getStatistics(req, res)
+);
+/**
+ * Latest Registered Users
+ */
+router.get('/latest-users',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getLatestUsers(req, res)
+);
+/**
+ * Terminal/Console Logs
+ */
+router.get('/terminal-logs',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getTerminalLogs(req, res)
+);
+/**
+ * Role Distribution
+ */
+router.get('/role-distribution',
+  authenticateUser,
+  requireSuperAdmin,
+  (req, res) => superAdminController.getRoleDistribution(req, res)
 );
 
 module.exports = router;

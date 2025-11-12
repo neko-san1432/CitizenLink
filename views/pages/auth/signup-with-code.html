@@ -7,118 +7,401 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Sign Up - CitizenLink</title>
-    <link rel="stylesheet" href="/css/auth.css">
-    <link rel="stylesheet" href="/css/components/toast.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/pages/signup-with-code.css">
-    <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/signup.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
-<body>
-    <div class="auth-container">
+<body class="auth-page">
+    <!-- Header Container -->
+    <div class="header-container">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">C</div>
+                    <span class="brand-text">CitizenLink</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                    <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
+                    <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Background Pattern -->
+    <div class="auth-background">
+        <div class="auth-pattern"></div>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="auth-container">
         <div class="auth-card">
+            <!-- Header Section -->
             <div class="auth-header">
-                <div class="auth-logo-placeholder">CL</div>
-                <h1>Create Account</h1>
-                <p>Complete your registration for your LGU position</p>
+                <h1 class="auth-title">Create your account</h1>
+                <p class="auth-subtitle">Complete your registration for your LGU position</p>
             </div>
 
-            <form id="signup-form" class="auth-form">
-                <div class="form-group" style="display: none;">
-                    <label for="signupCode">Signup Code</label>
-                    <input type="text" id="signupCode" name="signupCode" required 
-                           placeholder="Enter your signup code" readonly>
-                    <small>This code was provided by your HR department</small>
-                </div>
+            <!-- Form Section -->
+            <div class="auth-form">
+                <div class="auth-content">
+                    <!-- Main Signup Form -->
+                    <div class="auth-main">
+                        <form id="signup-form" class="signup-form">
+                            <!-- Signup Code (Hidden) -->
+                            <div class="form-group form-full" style="display: none;">
+                                <label for="signupCode" class="form-label">Signup Code</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="text" 
+                                        id="signupCode" 
+                                        name="signupCode" 
+                                        placeholder="Enter your signup code" 
+                                        required 
+                                        readonly
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <small style="color: var(--gray-500); font-size: 0.875rem; margin-top: 0.5rem; display: block;">This code was provided by your HR department</small>
+                            </div>
 
-                <!-- Email Signup Section -->
-                <div class="form-section">
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" required 
-                               placeholder="Enter your full name">
+                            <!-- Full Name Field -->
+                            <div class="form-group form-full">
+                                <label for="name" class="form-label">Full Name</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="text" 
+                                        id="name" 
+                                        name="name" 
+                                        placeholder="Enter your full name"
+                                        required
+                                        autocomplete="name"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Address Line 1 -->
+                            <div class="form-group form-full">
+                                <label for="addressLine1" class="form-label">Address Line 1 *</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="addressLine1"
+                                        name="addressLine1"
+                                        placeholder="House no., street"
+                                        autocomplete="address-line1"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Address Line 2 -->
+                            <div class="form-group form-full">
+                                <label for="addressLine2" class="form-label">Address Line 2 (Optional)</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="addressLine2"
+                                        name="addressLine2"
+                                        placeholder="Unit, building, subdivision"
+                                        autocomplete="address-line2"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- City and Province -->
+                            <div class="form-group form-half">
+                                <label for="city" class="form-label">City *</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="city"
+                                        name="city"
+                                        placeholder="Enter city"
+                                        autocomplete="address-level2"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="form-group form-half">
+                                <label for="province" class="form-label">Province *</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="province"
+                                        name="province"
+                                        placeholder="Enter province"
+                                        autocomplete="address-level1"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Postal Code and Barangay -->
+                            <div class="form-group form-half">
+                                <label for="postalCode" class="form-label">Postal Code</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="postalCode"
+                                        name="postalCode"
+                                        placeholder="4 digits (e.g., 1234)"
+                                        maxlength="4"
+                                        pattern="[0-9]{4}"
+                                        autocomplete="postal-code"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="form-group form-half">
+                                <label for="barangay" class="form-label">Barangay</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="barangay"
+                                        name="barangay"
+                                        placeholder="Enter barangay"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="form-group form-half">
+                                <label for="gender" class="form-label">Gender</label>
+                                <div class="input-wrapper">
+                                    <select id="gender" name="gender" class="input">
+                                        <option value="" selected>Select gender</option>
+                                        <option value="he">He</option>
+                                        <option value="she">She</option>
+                                    </select>
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="form-group form-half">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="email" 
+                                        id="email" 
+                                        name="email" 
+                                        placeholder="Enter your email"
+                                        required
+                                        autocomplete="email"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phone Field -->
+                            <div class="form-group form-half">
+                                <label for="mobile" class="form-label">Phone Number</label>
+                                <div class="phone-input-wrapper">
+                                    <div class="phone-prefix">+63</div>
+                                    <input 
+                                        class="input phone-input" 
+                                        type="tel" 
+                                        id="mobile" 
+                                        name="mobile" 
+                                        placeholder="9123456789"
+                                        maxlength="10"
+                                        pattern="[0-9]{10}"
+                                        required
+                                        autocomplete="tel"
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Password Field -->
+                            <div class="form-group form-half">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="password" 
+                                        id="password" 
+                                        name="password" 
+                                        placeholder="Create a strong password"
+                                        required
+                                        autocomplete="new-password"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password Field -->
+                            <div class="form-group form-half">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="password" 
+                                        id="confirmPassword" 
+                                        name="confirmPassword" 
+                                        placeholder="Confirm your password"
+                                        required
+                                        autocomplete="new-password"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Privacy -->
+                            <div class="form-group form-full">
+                                <label class="checkbox-wrapper terms-checkbox">
+                                    <input type="checkbox" id="agreedToTerms" name="agreedToTerms" required>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-label">
+                                        I agree to the <a href="#" class="terms-link" data-open-terms>Terms and Conditions</a> 
+                                        and <a href="#" class="terms-link" data-open-privacy>Privacy Policy</a>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button class="btn btn-primary btn-lg w-full form-full" type="submit">
+                                <span class="button-text">Create Account</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </form>
                     </div>
 
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required 
-                               placeholder="Enter your email address">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mobile">Mobile Number</label>
-                        <div class="mobile-input">
-                            <span class="country-code">+63</span>
-                            <input type="tel" id="mobile" name="mobile" required 
-                                   placeholder="9123456789" pattern="[0-9]{10}">
+                    <!-- OAuth Sidebar -->
+                    <div class="auth-sidebar">
+                        <div class="oauth-section">
+                            <h3 class="oauth-title">Quick Sign Up</h3>
+                            <div class="oauth-buttons">
+                                <button id="oauth-google" type="button" class="btn btn-secondary oauth-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    <span>Continue with Google</span>
+                                </button>
+                                <button id="oauth-facebook" type="button" class="btn btn-secondary oauth-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                    <span>Continue with Facebook</span>
+                                </button>
+                            </div>
                         </div>
-                        <small>Enter 10-digit mobile number without +63</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required 
-                               placeholder="Enter your password">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required 
-                               placeholder="Confirm your password">
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="agreedToTerms" name="agreedToTerms" required>
-                        <label for="agreedToTerms">
-                            I agree to the <a href="/terms" target="_blank">Terms and Conditions</a> 
-                            and <a href="/privacy" target="_blank">Privacy Policy</a>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="auth-button">
-                        <span class="button-text">Create Account</span>
-                        <span class="button-loading hidden">
-                            <div class="spinner"></div>
-                            Creating Account...
-                        </span>
-                    </button>
-                </div>
-
-                <!-- Divider -->
-                <div class="auth-divider">
-                    <span>or</span>
-                </div>
-
-                <!-- OAuth Section -->
-                <div class="form-section">
-                    <div class="oauth-buttons">
-                        <button type="button" class="btn btn-oauth google" id="oauth-google">
-                            <svg width="20" height="20" viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                            </svg>
-                            Continue with Google
-                        </button>
-                        <button type="button" class="btn btn-oauth facebook" id="oauth-facebook">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            Continue with Facebook
-                        </button>
                     </div>
                 </div>
-            </form>
+            </div>
 
+            <!-- Footer -->
             <div class="auth-footer">
-                <p>Already have an account? <a href="/login">Sign In</a></p>
+                <p>Already have an account? <a href="/login" class="auth-link">Sign in</a></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Scripts -->
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/auth/signupWithCode.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    
+    <!-- Simple Modal HTML -->
+    <div id="termsModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Terms and Conditions</h3>
+                <button class="modal-close" data-modal="termsModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
+                <h4>By using CitizenLink, you agree to the following terms:</h4>
+                <ul>
+                    <li>Provide accurate information when filing complaints</li>
+                    <li>Use the platform responsibly and lawfully</li>
+                    <li>Respect other users and government officials</li>
+                    <li>Do not submit false or malicious reports</li>
+                    <li>Maintain the confidentiality of your account credentials</li>
+                    <li>Report any security concerns immediately</li>
+                </ul>
+                <p><strong>These terms may be updated periodically. Continued use constitutes acceptance of changes.</strong></p>
+            </div>
+            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" data-modal="termsModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                <button class="btn btn-primary" data-accept="terms" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container"></div>
+    <div id="privacyModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Privacy Policy</h3>
+                <button class="modal-close" data-modal="privacyModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
+            </div>
+            <div class="modal-body privacy-content" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
+                <div id="privacyModalContent"></div>
+            </div>
+            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" data-modal="privacyModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                <button class="btn btn-primary" data-accept="privacy" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
+            </div>
+        </div>
+    </div>
 
-    <script type="module" src="../../../js/auth/signupWithCode.js"></script>
+    <script src="/js/signup-modal.js"></script>
 </body>
 </html>

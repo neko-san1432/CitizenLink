@@ -4,7 +4,6 @@ import showMessage from '../../components/toast.js';
 function renderForm(type) {
   const container = document.getElementById('publish-form');
   if (!container) return;
-
   if (type === 'news') {
     container.innerHTML = `
       <form id="news-form" class="form-grid">
@@ -103,16 +102,14 @@ function renderForm(type) {
       </form>
     `;
   }
-
   wireFormHandlers(type);
 }
-
 function toIsoOrNull(value) {
   if (!value) return null;
   try { return new Date(value).toISOString(); } catch { return null; }
 }
-
 function wireFormHandlers(type) {
+
   if (type === 'news') {
     const form = document.getElementById('news-form');
     if (!form) return;
@@ -128,11 +125,7 @@ function wireFormHandlers(type) {
           category: category || null,
           status: 'published'
         };
-        
-        console.log('[PUBLISH] Submitting news:', payload);
         const response = await apiClient.post('/api/content/news', payload);
-        console.log('[PUBLISH] Response:', response);
-        
         if (response && response.success) {
           showMessage('success', 'News published successfully');
           form.reset();
@@ -148,7 +141,6 @@ function wireFormHandlers(type) {
       }
     });
   }
-
   if (type === 'events') {
     const form = document.getElementById('event-form');
     if (!form) return;
@@ -159,17 +151,14 @@ function wireFormHandlers(type) {
         const category = document.getElementById('event-category').value.trim();
         const eventDate = document.getElementById('event-date').value;
         const eventDescription = document.getElementById('event-description').value.trim();
-        
         if (!eventDescription) {
           showMessage('error', 'Description is required');
           return;
         }
-        
         if (!eventDate) {
           showMessage('error', 'Start date is required');
           return;
         }
-        
         const payload = {
           title: document.getElementById('event-title').value.trim(),
           description: eventDescription,
@@ -179,11 +168,7 @@ function wireFormHandlers(type) {
           category: category || null,
           status: 'upcoming'
         };
-        
-        console.log('[PUBLISH] Submitting event:', payload);
         const response = await apiClient.post('/api/content/events', payload);
-        console.log('[PUBLISH] Response:', response);
-        
         if (response && response.success) {
           showMessage('success', 'Event published successfully');
           form.reset();
@@ -199,7 +184,6 @@ function wireFormHandlers(type) {
       }
     });
   }
-
   if (type === 'notices') {
     const form = document.getElementById('notice-form');
     if (!form) return;
@@ -214,11 +198,7 @@ function wireFormHandlers(type) {
           valid_until: toIsoOrNull(document.getElementById('notice-valid-until').value),
           status: 'active'
         };
-        
-        console.log('[PUBLISH] Submitting notice:', payload);
         const response = await apiClient.post('/api/content/notices', payload);
-        console.log('[PUBLISH] Response:', response);
-        
         if (response && response.success) {
           showMessage('success', 'Notice published successfully');
           form.reset();
@@ -235,7 +215,6 @@ function wireFormHandlers(type) {
     });
   }
 }
-
 function init() {
   const typeSelect = document.getElementById('content-type');
   if (!typeSelect) return;
@@ -250,7 +229,4 @@ function init() {
   renderForm(typeSelect.value);
   typeSelect.addEventListener('change', (e) => renderForm(e.target.value));
 }
-
 document.addEventListener('DOMContentLoaded', init);
-
-

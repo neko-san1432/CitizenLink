@@ -1,11 +1,11 @@
 // Modern Toast Notification System
 class ToastManager {
+
   constructor() {
     this.toasts = [];
     this.container = null;
     this.init();
   }
-
   init() {
     // Create toast container if it doesn't exist
     this.container = document.getElementById('toast');
@@ -16,33 +16,26 @@ class ToastManager {
       document.body.appendChild(this.container);
     }
   }
-
   show(type, message, options = {}) {
     const toast = this.createToast(type, message, options);
     this.container.appendChild(toast);
     this.toasts.push(toast);
-
     // Trigger animation
     requestAnimationFrame(() => {
       toast.classList.add('toast-show');
     });
-
     // Auto remove after duration
     const duration = options.duration || this.getDuration(type);
     setTimeout(() => {
       this.remove(toast);
     }, duration);
-
     return toast;
   }
-
   createToast(type, message, options = {}) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-
     const icon = this.getIcon(type);
     const title = this.getTitle(type);
-
     toast.innerHTML = `
       <div class="toast-content">
         <div class="toast-icon">${icon}</div>
@@ -59,17 +52,14 @@ class ToastManager {
       </div>
       <div class="toast-progress"></div>
     `;
-
     // Add click to dismiss
     toast.addEventListener('click', (e) => {
       if (!e.target.closest('.toast-close')) {
         this.remove(toast);
       }
     });
-
     return toast;
   }
-
   getIcon(type) {
     const icons = {
       success: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

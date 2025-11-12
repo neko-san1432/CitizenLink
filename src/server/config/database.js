@@ -1,11 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
 
 class Database {
+
   constructor() {
     this.supabase = null;
     this._initialized = false;
   }
-
   // Singleton pattern to prevent multiple instances
   static getInstance() {
     if (!Database._instance) {
@@ -13,32 +13,27 @@ class Database {
     }
     return Database._instance;
   }
-
   // Static method to get client directly
   static getClient() {
     return Database.getInstance().getClient();
   }
-
   _initialize() {
+
     if (this._initialized) {
       return;
     }
-
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
     if (!supabaseUrl || !serviceRoleKey) {
       console.warn('⚠️  Missing Supabase environment variables. Database functionality will be limited.');
       this.supabase = null;
       this._initialized = true;
       return;
     }
-
     // Service role key automatically bypasses RLS policies
     this.supabase = createClient(supabaseUrl, serviceRoleKey);
     this._initialized = true;
   }
-
   getClient() {
     this._initialize();
     if (!this.supabase) {
@@ -46,7 +41,6 @@ class Database {
     }
     return this.supabase;
   }
-
   async testConnection() {
     // console.log removed for security
     this._initialize();
@@ -55,14 +49,12 @@ class Database {
       console.error('Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
       return false;
     }
-
     try {
       // console.log removed for security
       // Test basic connection by checking if we can list tables
       // This is more reliable than querying a specific table that might not exist
       const { data, error } = await this.supabase
         .rpc('get_current_user');
-
       // If the RPC function doesn't exist, try a simple query that should work
       if (error && error.message.includes('function')) {
         // console.log removed for security
@@ -75,7 +67,6 @@ class Database {
         // console.log removed for security
         return true;
       }
-
       // console.log removed for security
       return true;
     } catch (error) {

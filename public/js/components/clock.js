@@ -1,4 +1,4 @@
-function formatTwo(n) { return n < 10 ? '0' + n : String(n); }
+function formatTwo(n) { return n < 10 ? `0${  n}` : String(n); }
 
 function renderClock() {
   const el = document.getElementById('dashboard-clock');
@@ -8,7 +8,7 @@ function renderClock() {
   const m = formatTwo(now.getMinutes());
   const s = formatTwo(now.getSeconds());
   const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-  el.innerHTML = '<span class="time">' + h + ':' + m + ':' + s + '</span><span class="date">' + dateStr + '</span>';
+  el.innerHTML = `<span class="time">${  h  }:${  m  }:${  s  }</span><span class="date">${  dateStr  }</span>`;
 }
 
 export function initDashboardClock() {
@@ -16,9 +16,7 @@ export function initDashboardClock() {
   renderClock();
   setInterval(renderClock, 1000);
 }
-
 // auto-init if included directly
 document.addEventListener('DOMContentLoaded', () => {
   initDashboardClock();
 });
-

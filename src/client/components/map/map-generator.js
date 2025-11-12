@@ -3,7 +3,6 @@
  * Extracted from lgu-heatmap.js for reusability
  * Only includes essential map initialization and tile layer switching
  */
-
 // Global map reference
 window.simpleMap = null;
 /**
@@ -19,27 +18,23 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       window.simpleMap.invalidateSize();
       return window.simpleMap;
     }
-
     // Ensure map container exists and has dimensions
     let mapContainer = document.getElementById(containerId);
     if (!mapContainer) {
       console.error(`Map container with ID '${containerId}' not found`);
       return null;
     }
-
     // Check if container has dimensions
     const rect = mapContainer.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
       setTimeout(() => initializeSimpleMap(containerId, options), 100);
       return null;
     }
-
     // Ensure container is visible and has proper dimensions
     if (rect.width < 100 || rect.height < 100) {
       setTimeout(() => initializeSimpleMap(containerId, options), 200);
       return null;
     }
-
     // Default map options
     const defaultOptions = {
       center: [0,0], // Digos City, Philippines
@@ -56,10 +51,8 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       maxBounds: L.latLngBounds([6.0, 125.0], [7.0, 125.7]),
       maxZoom: 18,
     };
-
     // Merge with provided options
     const mapOptions = { ...defaultOptions, ...options };
-
     // If container is already bound to a Leaflet map, reuse or force a clean host
     if (mapContainer.classList.contains('leaflet-container') || mapContainer._leaflet_id) {
       if (window.simpleMap) {
@@ -70,7 +63,6 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       mapContainer.parentNode.replaceChild(fresh, mapContainer);
       mapContainer = fresh;
     }
-
     // Create map
     const map = L.map(mapContainer, {
       zoomControl: mapOptions.zoomControl,
@@ -93,19 +85,15 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
     });
     // console.log removed for security
     // console.log removed for security
-
     // Expose globally
     window.simpleMap = map;
-
     // Add tile layers
     const tileLayers = createTileLayers();
     // console.log removed for security
-
     // Validate tile layers were created
     if (!tileLayers || Object.keys(tileLayers).length === 0) {
       throw new Error('Failed to create tile layers');
     }
-
     // Add default tile layer
     const defaultLayer = tileLayers['OpenStreetMap'];
     if (!defaultLayer) {
@@ -114,16 +102,13 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
     }
     // console.log removed for security
     defaultLayer.addTo(map);
-
     // Add layer control for tile switching (positioned below other controls)
     const layerControl = L.control.layers(tileLayers, {}, {
       position: 'topleft'
     }).addTo(map);
-
     // Store references globally
     window.simpleMapLayers = tileLayers;
     window.simpleMapLayerControl = layerControl;
-
     // Add resize observer to handle container size changes
     if (window.ResizeObserver) {
       const resizeObserver = new ResizeObserver(() => {
@@ -132,21 +117,17 @@ async function initializeSimpleMap(containerId = 'map', options = {}) {
       resizeObserver.observe(mapContainer);
       window._simpleMapResizeObserver = resizeObserver;
     }
-
     // Ensure map size is correct after load
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
-
     // console.log removed for security
     return map;
-
   } catch (error) {
     console.error('Error initializing simple map:', error);
     return null;
   }
 }
-
 /**
  * Create tile layers for the map
  * @returns {Object} - Object containing tile layer instances
@@ -161,7 +142,6 @@ function createTileLayers() {
         maxZoom: 19,
       }
     ),
-
     // Standard Light
     'Standard Light': L.tileLayer(
       'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -170,7 +150,6 @@ function createTileLayers() {
         maxZoom: 19,
       }
     ),
-
     // Standard Dark
     'Standard Dark': L.tileLayer(
       'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -179,7 +158,6 @@ function createTileLayers() {
         maxZoom: 19,
       }
     ),
-
     // Satellite imagery
     'Satellite': L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -188,7 +166,6 @@ function createTileLayers() {
         maxZoom: 19,
       }
     ),
-
     // Terrain
     'Terrain': L.tileLayer(
       'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
@@ -198,50 +175,44 @@ function createTileLayers() {
       }
     ),
   };
-
   return tileLayers;
 }
-
 /**
  * Switch to a specific tile layer
  * @param {string} layerName - Name of the layer to switch to
  * @returns {boolean} - Success status
  */
 function switchTileLayer(layerName) {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     console.error('Map not initialized');
     return false;
   }
-
   const targetLayer = window.simpleMapLayers[layerName];
   if (!targetLayer) {
     console.error(`Layer '${layerName}' not found`);
     return false;
   }
-
   // Remove all current tile layers
   Object.values(window.simpleMapLayers).forEach(layer => {
     if (window.simpleMap.hasLayer(layer)) {
       window.simpleMap.removeLayer(layer);
     }
   });
-
   // Add the target layer
   targetLayer.addTo(window.simpleMap);
-
   // console.log removed for security
   return true;
 }
-
 /**
  * Get current active tile layer name
  * @returns {string|null} - Name of current active layer or null
  */
 function getCurrentTileLayer() {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     return null;
   }
-
   for (const [name, layer] of Object.entries(window.simpleMapLayers)) {
     if (window.simpleMap.hasLayer(layer)) {
       return name;
@@ -249,7 +220,6 @@ function getCurrentTileLayer() {
   }
   return null;
 }
-
 /**
  * Get list of available tile layers
  * @returns {Array<string>} - Array of layer names
@@ -257,7 +227,6 @@ function getCurrentTileLayer() {
 function getAvailableTileLayers() {
   return window.simpleMapLayers ? Object.keys(window.simpleMapLayers) : [];
 }
-
 /**
  * Add a custom tile layer
  * @param {string} name - Name for the layer
@@ -266,85 +235,73 @@ function getAvailableTileLayers() {
  * @returns {boolean} - Success status
  */
 function addCustomTileLayer(name, url, options = {}) {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     console.error('Map not initialized');
     return false;
   }
-
   const customLayer = L.tileLayer(url, {
     attribution: 'Custom Layer',
     maxZoom: 19,
     ...options
   });
-
   window.simpleMapLayers[name] = customLayer;
-
   // Update layer control
   if (window.simpleMapLayerControl) {
     window.simpleMapLayerControl.addOverlay(customLayer, name);
   }
-
   // console.log removed for security
   return true;
 }
-
 /**
  * Remove a tile layer
  * @param {string} name - Name of the layer to remove
  * @returns {boolean} - Success status
  */
 function removeTileLayer(name) {
+
   if (!window.simpleMap || !window.simpleMapLayers || !window.simpleMapLayers[name]) {
     console.error(`Layer '${name}' not found`);
     return false;
   }
-
   const layer = window.simpleMapLayers[name];
-
   // Remove from map if active
   if (window.simpleMap.hasLayer(layer)) {
     window.simpleMap.removeLayer(layer);
   }
-
   // Remove from layer control
   if (window.simpleMapLayerControl) {
     window.simpleMapLayerControl.removeLayer(layer);
   }
-
   // Remove from layers object
   delete window.simpleMapLayers[name];
-
   // console.log removed for security
   return true;
 }
-
 /**
  * Clean up map resources
  */
 function destroySimpleMap() {
+
   if (window.simpleMap) {
     window.simpleMap.remove();
     window.simpleMap = null;
   }
-
   if (window.simpleMapLayers) {
     window.simpleMapLayers = null;
   }
-
   if (window.simpleMapLayerControl) {
     window.simpleMapLayerControl = null;
   }
-
   if (window._simpleMapResizeObserver) {
     window._simpleMapResizeObserver.disconnect();
     window._simpleMapResizeObserver = null;
   }
-
   // console.log removed for security
 }
-
 // Export functions for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+
   module.exports = {
     initializeSimpleMap,
     switchTileLayer,

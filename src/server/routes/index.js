@@ -7,6 +7,7 @@ const supabaseRoutes = require('./supabaseRoutes');
 const captchaRoutes = require('./captchaRoutes');
 const coordinatorRoutes = require('./coordinatorRoutes');
 const { apiLimiter } = require('../middleware/rateLimiting');
+
 let hrRoutes;
 try {
   hrRoutes = require('./hrRoutes');
@@ -24,18 +25,15 @@ const contentRoutes = require('./contentRoutes');
 const rateLimitRoutes = require('./rateLimitRoutes');
 const healthRoutes = require('./healthRoutes');
 const departmentStructureRoutes = require('./departmentStructureRoutes');
+const complianceRoutes = require('./complianceRoutes');
 
 const router = express.Router();
-
 // CAPTCHA routes
 router.use('/captcha', captchaRoutes);
-
 // Supabase public config
 router.use('/supabase', supabaseRoutes);
-
 // Auth routes
 router.use('/auth', authRoutes);
-
 // Resource routes
 router.use('/complaints', complaintRoutes);
 router.use('/departments', departmentRoutes);
@@ -51,6 +49,6 @@ router.use('/content', contentRoutes);
 router.use('/rate-limit', rateLimitRoutes);
 router.use('/health', healthRoutes);
 router.use('/department-structure', departmentStructureRoutes);
-
+router.use('/compliance', complianceRoutes);
 
 module.exports = router;

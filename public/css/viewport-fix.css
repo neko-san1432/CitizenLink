@@ -51,8 +51,15 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
-  padding: 0 1%;
+  padding-left: 1%;
+  padding-right: 1%;
   margin: 0;
+}
+
+/* Coordinator dashboard needs minimal top padding for fixed header */
+#app.coordinator-dashboard,
+.coordinator-dashboard {
+  padding-top: 1rem; /* Minimal padding - header already has its own spacing */
 }
 
 /* Exclude heatmap pages from responsive padding (they need full-width for map) */

@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
       history.back();
     });
   }
-
   // Optional: log for analytics without inline scripts
   try {
     // console.log removed for security

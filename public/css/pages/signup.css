@@ -490,6 +490,12 @@
   gap: var(--space-1);
 }
 
+@media (min-width: 769px) {
+  .password-strength {
+    margin-top: 0.25rem;
+  }
+}
+
 .strength-bar {
   width: 100%;
   height: 4px;
@@ -1369,7 +1375,7 @@ html, body {
 .auth-container {
   z-index: 1;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -1377,9 +1383,9 @@ html, body {
   padding: 0;
 }
 
-@media (min-width: 1024px) { .auth-container { max-width: 1000px; } }
-@media (min-width: 1280px) { .auth-container { max-width: 1100px; } }
-@media (min-width: 1536px) { .auth-container { max-width: 1200px; } }
+@media (min-width: 1024px) { .auth-container { max-width: 1400px; } }
+@media (min-width: 1280px) { .auth-container { max-width: 1600px; } }
+@media (min-width: 1536px) { .auth-container { max-width: 1800px; } }
 
 .auth-card {
   width: 100%;
@@ -1413,9 +1419,9 @@ html, body {
 /* Middle area with internal scroll when needed */
 .auth-form { padding: 0; display: flex; flex-direction: column; min-height: 0; }
 .auth-content { display: flex; flex: 1; gap: clamp(8px, 1vw, 16px); min-height: 0; padding: 0 clamp(8px, 1vw, 16px) clamp(8px, 1vw, 16px); overflow: auto; }
-@media (min-width: 1024px) { .auth-content { gap: 1rem; padding: 0 1rem 1rem; } }
-@media (min-width: 1280px) { .auth-content { gap: 1.25rem; padding: 0 1.25rem 1.25rem; } }
-@media (min-width: 1536px) { .auth-content { gap: 1.5rem; padding: 0 1.5rem 1.5rem; } }
+@media (min-width: 1024px) { .auth-content { gap: 1rem; padding: 0 1rem 0.75rem; } }
+@media (min-width: 1280px) { .auth-content { gap: 1.25rem; padding: 0 1.25rem 0.75rem; } }
+@media (min-width: 1536px) { .auth-content { gap: 1.5rem; padding: 0 1.5rem 0.75rem; } }
 
 /* 50-50 split between form and OAuth - desktop only */
 @media (min-width: 769px) {
@@ -1423,12 +1429,12 @@ html, body {
   .auth-main { display: flex; flex-direction: column; justify-content: center; padding: clamp(4px, 0.5vw, 8px) 0; }
   .auth-sidebar { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: clamp(4px, 0.5vw, 8px); border-left: 1px solid var(--gray-200); }
 }
-@media (min-width: 1024px) { .auth-main { padding: 0.75rem 0; } .auth-sidebar { padding: 0.75rem; } }
-@media (min-width: 1280px) { .auth-main { padding: 1rem 0; } .auth-sidebar { padding: 1rem; } }
-@media (min-width: 1536px) { .auth-main { padding: 1.25rem 0; } .auth-sidebar { padding: 1.25rem; } }
+@media (min-width: 1024px) { .auth-main { padding: 0.5rem 0; } .auth-sidebar { padding: 0.5rem; } }
+@media (min-width: 1280px) { .auth-main { padding: 0.5rem 0; } .auth-sidebar { padding: 0.5rem; } }
+@media (min-width: 1536px) { .auth-main { padding: 0.5rem 0; } .auth-sidebar { padding: 0.5rem; } }
 
 /* Compact inputs and labels */
-.form-group { margin-bottom: clamp(12px, 1.5vw, 18px); }
+.form-group { margin-bottom: clamp(8px, 1vw, 12px); }
 .input-wrapper { position: relative; display: flex; align-items: center; }
 .input-wrapper .input { padding-left: 2.25rem; padding-right: 0.75rem; width: 100%; }
 .input-icon { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; z-index: 2; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
@@ -1453,24 +1459,24 @@ html, body {
 .btn.w-full { width: 100%; }
 
 /* Footer tighter */
-.auth-footer { padding: clamp(12px, 1.5vw, 18px); border-top: 1px solid var(--gray-200); text-align: center; background: var(--gray-50); }
+.auth-footer { padding: clamp(8px, 1vw, 12px); border-top: 1px solid var(--gray-200); text-align: center; background: var(--gray-50); }
 
 /* Reduce extra vertical margins */
-.login-form, .signup-form { gap: 0.75rem; }
+.login-form, .signup-form { gap: 0.5rem; }
 .form-options { margin: 0.5rem 0; }
 
 /* reCAPTCHA: reserved hook for future scaling overrides */
 
 /* Reduce top padding inside the signup form components - desktop only */
 @media (min-width: 769px) {
-  .auth-main { padding: 0.25rem 0; }
+  .auth-main { padding: 0.15rem 0; }
 }
 @media (min-width: 769px) {
-  .signup-form { gap: 0.6rem; }
-  .auth-main .form-group { margin-top: 0.25rem; }
+  .signup-form { gap: 0.4rem; }
+  .auth-main .form-group { margin-bottom: 0.5rem; margin-top: 0; }
   .auth-main .form-options { margin-top: 0.25rem; }
-  .auth-main .captcha-container { margin-top: 0.25rem; }
-  .auth-main .btn { margin-top: 0.5rem; }
+  .auth-main .captcha-container { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+  .auth-main .btn { margin-top: 0.25rem; }
 }
 
 /* Neutralize default browser validation indicators */
@@ -1518,11 +1524,11 @@ html, body {
   display: grid;
   grid-template-columns: 1fr;
   grid-column-gap: clamp(12px, 1.5vw, 20px);
-  grid-row-gap: 0.75rem;
+  grid-row-gap: 0.5rem;
 }
 
 @media (min-width: 1024px) {
-  .signup-form { grid-template-columns: 1fr 1fr; }
+  .signup-form { grid-template-columns: 1fr 1fr; grid-row-gap: 0.5rem; }
 }
 
 /* Width helpers */
@@ -1545,6 +1551,8 @@ html, body {
     padding-left: clamp(8px, 1.25vw, 20px);
     padding-right: clamp(8px, 1.25vw, 20px);
     box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
   }
 }
 
@@ -1557,8 +1565,8 @@ html, body {
 }
 
 /* Final compact override to force small header when multiple blocks exist */
-.auth-header { padding: 12px 16px 10px !important; }
-.auth-title { margin: 0 0 4px !important; line-height: 1.2; }
+.auth-header { padding: 10px 16px 8px !important; }
+.auth-title { margin: 0 0 3px !important; line-height: 1.2; }
 .auth-subtitle { margin: 0 !important; }
 
 .auth-title { font-size: 1.4rem; font-weight: 700; color: var(--gray-900); margin: 0; letter-spacing: -0.02em; line-height: 1.15; }
@@ -1569,7 +1577,7 @@ html, body {
 @media (min-width: 1536px) { .auth-title { font-size: 1.9rem; } .auth-subtitle { font-size: 1.1rem; } }
 
 /* Ensure visible spacing above form under header tabs (mobile and desktop) */
-.auth-card .auth-form { padding-top: 0.9rem !important; }
+.auth-card .auth-form { padding-top: 0.5rem !important; }
 @media (max-width: 480px) { .auth-card .auth-form { padding-top: 0rem !important; } }
 
 /* Extra headroom under the fixed header so the form is fully visible */

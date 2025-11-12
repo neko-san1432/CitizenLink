@@ -2,19 +2,17 @@
  * Evidence Preview Modal Component
  * Handles previewing evidence files in a popup modal
  */
-
 class EvidencePreview {
+
   constructor() {
     this.modal = null;
     this.currentFile = null;
     this.init();
   }
-
   init() {
     this.createModal();
     this.bindEvents();
   }
-
   createModal() {
     // Create modal HTML
     const modalHTML = `
@@ -41,31 +39,25 @@ class EvidencePreview {
         </div>
       </div>
     `;
-
     // Add to body if not exists
     if (!document.getElementById('evidence-preview-modal')) {
       document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
-
     this.modal = document.getElementById('evidence-preview-modal');
   }
-
   bindEvents() {
     // Close button events
     const closeBtn = document.getElementById('evidence-preview-close');
     const closeBtn2 = document.getElementById('evidence-close-btn');
     const overlay = this.modal.querySelector('.evidence-preview-overlay');
-
     if (closeBtn) closeBtn.addEventListener('click', () => this.close());
     if (closeBtn2) closeBtn2.addEventListener('click', () => this.close());
     if (overlay) overlay.addEventListener('click', () => this.close());
-
     // Download button
     const downloadBtn = document.getElementById('evidence-download-btn');
     if (downloadBtn) {
       downloadBtn.addEventListener('click', () => this.downloadFile());
     }
-
     // ESC key to close
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.modal.style.display !== 'none') {
@@ -73,36 +65,28 @@ class EvidencePreview {
       }
     });
   }
-
   show(file) {
     this.currentFile = file;
     this.loadContent(file);
     this.modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
-
   close() {
     this.modal.style.display = 'none';
     document.body.style.overflow = '';
     this.currentFile = null;
   }
-
   loadContent(file) {
     const title = document.getElementById('evidence-preview-title');
     const body = document.getElementById('evidence-preview-body');
-
     if (title) title.textContent = file.fileName || 'Evidence Preview';
-
     // Check for both publicUrl and signedUrl (from coordinator repository)
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
-    
     if (!fileUrl) {
       body.innerHTML = '<div class="evidence-error">Unable to load file preview</div>';
       return;
     }
-
     const fileType = this.getFileType(file.fileType || file.mimeType);
-    
     switch (fileType) {
       case 'image':
         this.loadImagePreview(body, file);
@@ -120,18 +104,14 @@ class EvidencePreview {
         this.loadGenericPreview(body, file);
     }
   }
-
   getFileType(mimeType) {
     if (!mimeType) return 'unknown';
-    
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType.startsWith('video/')) return 'video';
     if (mimeType.startsWith('audio/')) return 'audio';
     if (mimeType === 'application/pdf') return 'pdf';
-    
     return 'unknown';
   }
-
   loadImagePreview(container, file) {
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
     container.innerHTML = `
@@ -145,7 +125,6 @@ class EvidencePreview {
       </div>
     `;
   }
-
   loadPdfPreview(container, file) {
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
     container.innerHTML = `
@@ -159,7 +138,6 @@ class EvidencePreview {
       </div>
     `;
   }
-
   loadVideoPreview(container, file) {
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
     container.innerHTML = `
@@ -176,7 +154,6 @@ class EvidencePreview {
       </div>
     `;
   }
-
   loadAudioPreview(container, file) {
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
     container.innerHTML = `
@@ -193,7 +170,6 @@ class EvidencePreview {
       </div>
     `;
   }
-
   loadGenericPreview(container, file) {
     container.innerHTML = `
       <div class="evidence-generic-container">
@@ -209,13 +185,10 @@ class EvidencePreview {
       </div>
     `;
   }
-
   downloadFile() {
     if (!this.currentFile) return;
-    
     const fileUrl = this.currentFile.publicUrl || this.currentFile.signedUrl || this.currentFile.url;
     if (!fileUrl) return;
-    
     const link = document.createElement('a');
     link.href = fileUrl;
     link.download = this.currentFile.fileName;
@@ -224,26 +197,20 @@ class EvidencePreview {
     link.click();
     document.body.removeChild(link);
   }
-
   formatFileSize(bytes) {
     if (!bytes) return 'Unknown size';
-    
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }
 }
-
 // Export for use in other modules
 window.EvidencePreview = EvidencePreview;
-
 // Auto-initialize if DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     window.evidencePreview = new EvidencePreview();
-    console.log('[EVIDENCE_PREVIEW] Initialized');
   });
 } else {
   window.evidencePreview = new EvidencePreview();
-  console.log('[EVIDENCE_PREVIEW] Initialized');
 }

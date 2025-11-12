@@ -2,17 +2,47 @@
  * HR Dashboard
  * Role management interface for HR personnel
  */
-
 import showMessage from '../components/toast.js';
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
   await loadDashboardData();
   await loadDepartmentStats();
+  await loadRoleDistribution();
   setupFormHandlers();
   setupUserSearch();
+
+  // Setup refresh button event listener
+  const refreshRoleDistributionBtn = document.getElementById('refresh-role-distribution-btn');
+  if (refreshRoleDistributionBtn) {
+    refreshRoleDistributionBtn.addEventListener('click', loadRoleDistribution);
+  }
+
+  // Setup quick action buttons (placeholders for future implementation)
+  const promoteUserBtn = document.getElementById('promote-user-btn');
+  if (promoteUserBtn) {
+    promoteUserBtn.addEventListener('click', () => {
+      showMessage('info', 'Please use the User Management section to promote users');
+    });
+  }
+
+  const demoteUserBtn = document.getElementById('demote-user-btn');
+  if (demoteUserBtn) {
+    demoteUserBtn.addEventListener('click', () => {
+      showMessage('info', 'Please use the User Management section to demote users');
+    });
+  }
+
+  const getHelpBtn = document.getElementById('get-help-btn');
+  if (getHelpBtn) {
+    getHelpBtn.addEventListener('click', () => {
+      showMessage('info', 'Help feature coming soon');
+    });
+  }
 });
 
+// Chart instance for role distribution
+let roleDistributionChart = null;
 /**
  * Load dashboard data
  */
@@ -20,7 +50,6 @@ async function loadDashboardData() {
   try {
     const response = await fetch('/api/hr/dashboard');
     const result = await response.json();
-
     if (result.success) {
       updateStatistics(result.data.statistics);
     }
@@ -28,7 +57,6 @@ async function loadDashboardData() {
     console.error('[HR] Load dashboard error:', error);
   }
 }
-
 /**
  * Update statistics display
  */
@@ -38,7 +66,6 @@ function updateStatistics(stats) {
   document.getElementById('stat-promotions').textContent = stats.promotions_this_month || 0;
   document.getElementById('stat-demotions').textContent = stats.demotions_this_month || 0;
 }
-
 /**
  * Load department statistics
  */
@@ -46,7 +73,6 @@ async function loadDepartmentStats() {
   try {
     const response = await fetch('/api/hr/users?limit=1000');
     const result = await response.json();
-
     if (result.success && result.data) {
       const users = result.data;
       const departmentStats = calculateDepartmentStats(users);
@@ -59,39 +85,152 @@ async function loadDepartmentStats() {
     renderDepartmentStats([]);
   }
 }
-
 /**
  * Calculate department statistics from user data
  */
 function calculateDepartmentStats(users) {
   const deptMap = new Map();
-
+  const seenUserIds = new Set();
   users.forEach(user => {
+    if (user && user.id) {
+      if (seenUserIds.has(user.id)) return; // avoid double counting same user
+      seenUserIds.add(user.id);
+    }
     const role = String(user.role || '').toLowerCase();
-    const department = user.department || 'Unknown';
+    // Derive department from multiple sources; skip if missing
+    const department = user.department
+      || user.dpt
+      || user?.raw_user_meta_data?.department
+      || user?.raw_user_meta_data?.dpt
+      || user?.user_metadata?.department
+      || user?.user_metadata?.dpt
+      || null;
+    if (!department) return; // Ignore records without an office to avoid 'Unknown'
 
     if (!deptMap.has(department)) {
       deptMap.set(department, { admins: 0, officers: 0 });
     }
-
     const deptStats = deptMap.get(department);
-
     // Count admins (lgu-admin-* roles)
     if (role === 'lgu-admin' || /^lgu-admin-/.test(role)) {
       deptStats.admins++;
+      return;
     }
-    // Count officers (lgu-* roles but not admin or hr)
-    else if (/^lgu-(?!admin|hr)/.test(role)) {
+    // Count officers: include simplified 'lgu' and legacy lgu-* except admin/hr
+    if (role === 'lgu' || /^lgu-(?!admin|hr)/.test(role)) {
       deptStats.officers++;
     }
   });
-
   return Array.from(deptMap.entries()).map(([dept, stats]) => ({
     department: dept,
     admins: stats.admins,
     officers: stats.officers,
     total: stats.admins + stats.officers
   })).sort((a, b) => b.total - a.total);
+}
+/**
+ * Load role distribution and render pie chart
+ */
+window.loadRoleDistribution = async function loadRoleDistribution() {
+  try {
+    const response = await fetch('/api/hr/role-distribution');
+    const result = await response.json();
+
+    if (!result.success || !result.distribution) {
+      console.error('[HR] Failed to load role distribution:', result.error);
+      return;
+    }
+
+    const { hr, officers, admins } = result.distribution;
+    renderRoleDistributionChart({ hr, officers, admins });
+  } catch (error) {
+    console.error('[HR] Load role distribution error:', error);
+  }
+};
+
+/**
+ * Render role distribution pie chart (HR)
+ */
+function renderRoleDistributionChart(data) {
+  const canvas = document.getElementById('role-distribution-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Destroy existing chart if it exists
+  if (roleDistributionChart) {
+    roleDistributionChart.destroy();
+  }
+
+  const values = [data.hr || 0, data.officers || 0, data.admins || 0];
+  const total = values.reduce((a, b) => a + b, 0);
+
+  const chartData = {
+    labels: [
+      `HR (${values[0]})`,
+      `Officers (${values[1]})`,
+      `Admins (${values[2]})`
+    ],
+    datasets: [{
+      data: values,
+      backgroundColor: [
+        '#10b981', // Green for HR
+        '#f59e0b', // Orange for Officers
+        '#8b5cf6'  // Purple for Admins
+      ],
+      borderColor: '#ffffff',
+      borderWidth: 2
+    }]
+  };
+
+  roleDistributionChart = new Chart(ctx, {
+    type: 'pie',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: {
+              size: 14
+            },
+            generateLabels(chart) {
+              const {data} = chart;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map((label, i) => {
+                  const value = data.datasets[0].data[i];
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return {
+                    text: `${label} - ${percentage}%`,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: data.datasets[0].borderColor,
+                    lineWidth: data.datasets[0].borderWidth,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label.split(' (')[0]}: ${value} users (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 /**
@@ -100,12 +239,10 @@ function calculateDepartmentStats(users) {
 function renderDepartmentStats(stats) {
   const container = document.getElementById('department-stats');
   if (!container) return;
-
   if (!stats.length) {
     container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No department data available.</p>';
     return;
   }
-
   const html = stats.map(dept => `
     <div class="dept-stat-card">
       <h3>${escapeHtml(dept.department)}</h3>
@@ -125,74 +262,145 @@ function renderDepartmentStats(stats) {
       </div>
     </div>
   `).join('');
-
   container.innerHTML = html;
 }
-
 /**
  * Setup form handlers
  */
 function setupFormHandlers() {
-  // Promote to Officer
-  document.getElementById('promote-officer-form').addEventListener('submit', async (e) => {
+  // Forms are optional (they may be removed from the page)
+  const promoteOfficerForm = document.getElementById('promote-officer-form');
+  if (promoteOfficerForm) promoteOfficerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('promote-officer-user').value;
     const department = document.getElementById('promote-officer-dept').value;
     const reason = document.getElementById('promote-officer-reason').value;
-
     await promoteToOfficer(userId, department, reason);
   });
-
-  // Promote to Admin
-  document.getElementById('promote-admin-form').addEventListener('submit', async (e) => {
+  const promoteAdminForm = document.getElementById('promote-admin-form');
+  if (promoteAdminForm) promoteAdminForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('promote-admin-user').value;
     const department = document.getElementById('promote-admin-dept').value;
     const reason = document.getElementById('promote-admin-reason').value;
-
     await promoteToAdmin(userId, department, reason);
   });
-
-  // Demote to Officer
-  document.getElementById('demote-officer-form').addEventListener('submit', async (e) => {
+  const demoteOfficerForm = document.getElementById('demote-officer-form');
+  if (demoteOfficerForm) demoteOfficerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('demote-officer-user').value;
     const reason = document.getElementById('demote-officer-reason').value;
-
     await demoteToOfficer(userId, reason);
   });
-
-  // Strip Titles
-  document.getElementById('strip-titles-form').addEventListener('submit', async (e) => {
+  const stripTitlesForm = document.getElementById('strip-titles-form');
+  if (stripTitlesForm) stripTitlesForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('strip-titles-user').value;
     const reason = document.getElementById('strip-titles-reason').value;
-
     if (!confirm('Are you sure you want to strip all titles from this user? This will revert them to citizen status.')) {
       return;
     }
-
     await stripTitles(userId, reason);
   });
-
-  // Assign Department
-  document.getElementById('assign-dept-form').addEventListener('submit', async (e) => {
+  const assignDeptForm = document.getElementById('assign-dept-form');
+  if (assignDeptForm) assignDeptForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('assign-dept-user').value;
     const departmentId = document.getElementById('assign-dept-id').value;
-
     await assignDepartment(userId, departmentId);
   });
-
-  // View Role History
-  document.getElementById('role-history-form').addEventListener('submit', async (e) => {
+  const roleHistoryForm = document.getElementById('role-history-form');
+  if (roleHistoryForm) roleHistoryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('role-history-user').value;
-
     await viewRoleHistory(userId);
   });
 }
 
+// Pending Signup Approvals Panel
+async function loadPendingSignups() {
+  try {
+    const res = await fetch('/api/hr/pending-signups');
+    const json = await res.json();
+    const container = document.getElementById('pending-signups');
+    if (!container) return;
+    if (!json.success) {
+      container.innerHTML = '<p style="color:#7f8c8d;">Failed to load pending signups</p>';
+      return;
+    }
+    const users = json.data || [];
+    if (users.length === 0) {
+      container.innerHTML = '<p style="color:#7f8c8d;">No pending signups.</p>';
+      return;
+    }
+    container.innerHTML = users.map(u => {
+      const name = (u.name || u.fullName || u.email || u.id);
+      const dept = u?.raw_user_meta_data?.pending_department || u?.user_metadata?.pending_department || '-';
+      const role = u?.raw_user_meta_data?.pending_role || u?.user_metadata?.pending_role || '-';
+      return `
+        <div class="user-item">
+          <div class="user-item-name">${escapeHtml(name)}</div>
+          <div class="user-item-email">${escapeHtml(u.email || '')}</div>
+          <div class="user-item-role">Requested: ${escapeHtml(role)} @ ${escapeHtml(String(dept))}</div>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="btn btn-success btn-sm" data-approve="${u.id}">Approve</button>
+            <button class="btn btn-danger btn-sm" data-reject="${u.id}">Reject</button>
+          </div>
+        </div>`;
+    }).join('');
+    // Bind actions
+    container.querySelectorAll('[data-approve]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-approve');
+        await approvePending(id);
+      });
+    });
+    container.querySelectorAll('[data-reject]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-reject');
+        await rejectPending(id);
+      });
+    });
+  } catch (e) {
+    const container = document.getElementById('pending-signups');
+    if (container) container.innerHTML = '<p style="color:#7f8c8d;">Failed to load pending signups</p>';
+  }
+}
+
+async function approvePending(userId) {
+  try {
+    const res = await fetch(`/api/hr/pending-signups/${encodeURIComponent(userId)}/approve`, { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      showMessage('success', 'Approved');
+      await loadPendingSignups();
+      await loadDashboardData();
+    } else {
+      showMessage('error', json.error || 'Failed to approve');
+    }
+  } catch (e) {
+    showMessage('error', 'Failed to approve');
+  }
+}
+
+async function rejectPending(userId) {
+  try {
+    const res = await fetch(`/api/hr/pending-signups/${encodeURIComponent(userId)}/reject`, { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      showMessage('success', 'Rejected');
+      await loadPendingSignups();
+      await loadDashboardData();
+    } else {
+      showMessage('error', json.error || 'Failed to reject');
+    }
+  } catch (e) {
+    showMessage('error', 'Failed to reject');
+  }
+}
+
+// Kick-off pending list load when dashboard is ready
+try { loadPendingSignups(); } catch {}
 /**
  * User search & detail wiring
  */
@@ -200,7 +408,6 @@ function setupUserSearch() {
   const searchBtn = document.getElementById('user-search-btn');
   const searchInput = document.getElementById('user-search-input');
   const barangayInput = document.getElementById('user-filter-barangay');
-
   async function runSearch() {
     const q = encodeURIComponent(searchInput.value || '');
     const brgy = encodeURIComponent(barangayInput.value || '');
@@ -218,13 +425,11 @@ function setupUserSearch() {
       renderUserList([]);
     }
   }
-
   if (searchBtn) searchBtn.addEventListener('click', runSearch);
   if (searchInput) searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') runSearch();
   });
 }
-
 function renderUserList(users) {
   const list = document.getElementById('user-list');
   if (!list) return;
@@ -281,7 +486,6 @@ async function loadUserDetails(userId) {
     console.error('[HR] load user details error:', err);
   }
 }
-
 async function loadUserComplaints(userId) {
   try {
     const res = await fetch(`/api/hr/users/${userId}/complaints?limit=10`);
@@ -311,7 +515,6 @@ async function loadUserComplaints(userId) {
     console.error('[HR] load user complaints error:', err);
   }
 }
-
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s)
@@ -321,7 +524,6 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
 /**
  * Promote to Officer
  */
@@ -338,9 +540,7 @@ async function promoteToOfficer(userId, department, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('promote-officer-form').reset();
@@ -353,7 +553,6 @@ async function promoteToOfficer(userId, department, reason) {
     showMessage('error', 'Failed to promote user');
   }
 }
-
 /**
  * Promote to Admin
  */
@@ -370,9 +569,7 @@ async function promoteToAdmin(userId, department, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('promote-admin-form').reset();
@@ -385,7 +582,6 @@ async function promoteToAdmin(userId, department, reason) {
     showMessage('error', 'Failed to promote user');
   }
 }
-
 /**
  * Demote to Officer
  */
@@ -401,9 +597,7 @@ async function demoteToOfficer(userId, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('demote-officer-form').reset();
@@ -416,7 +610,6 @@ async function demoteToOfficer(userId, reason) {
     showMessage('error', 'Failed to demote user');
   }
 }
-
 /**
  * Strip Titles
  */
@@ -432,9 +625,7 @@ async function stripTitles(userId, reason) {
         reason
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('strip-titles-form').reset();
@@ -447,7 +638,6 @@ async function stripTitles(userId, reason) {
     showMessage('error', 'Failed to strip titles');
   }
 }
-
 /**
  * Assign Department
  */
@@ -463,9 +653,7 @@ async function assignDepartment(userId, departmentId) {
         department_id: departmentId
       })
     });
-
     const result = await response.json();
-
     if (result.success) {
       showMessage('success', result.message);
       document.getElementById('assign-dept-form').reset();
@@ -477,7 +665,6 @@ async function assignDepartment(userId, departmentId) {
     showMessage('error', 'Failed to assign department');
   }
 }
-
 /**
  * View Role History
  */
@@ -485,15 +672,13 @@ async function viewRoleHistory(userId) {
   try {
     const response = await fetch(`/api/hr/role-history/${userId}`);
     const result = await response.json();
-
     const container = document.getElementById('role-history-results');
-
     if (result.success && result.history) {
+
       if (result.history.length === 0) {
         container.innerHTML = '<p style="color: #7f8c8d;">No role history found for this user.</p>';
         return;
       }
-
       const html = `
         <div style="margin-top: 20px;">
           <h4>Role Change History</h4>

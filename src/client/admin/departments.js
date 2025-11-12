@@ -2,24 +2,22 @@ import apiClient from '../config/apiClient.js';
 import showMessage from '../components/toast.js';
 
 class DepartmentManager {
+
   constructor() {
     this.departments = [];
     this.currentDepartment = null;
     this.init();
   }
-
   async init() {
     await this.loadDepartments();
     this.setupEventListeners();
     this.startStatusRefresh();
   }
-
   setupEventListeners() {
     const form = document.getElementById('departmentForm');
     if (form) {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
-
     // Auto-format department code
     const codeInput = document.getElementById('departmentCode');
     if (codeInput) {
@@ -28,7 +26,6 @@ class DepartmentManager {
       });
     }
   }
-
   async loadDepartments() {
     try {
       const response = await apiClient.get('/api/departments/active');
@@ -44,7 +41,6 @@ class DepartmentManager {
       showMessage('error', 'Failed to load departments');
     }
   }
-
   async loadOfficersForAllDepartments() {
     const promises = this.departments.map(async (dept) => {
       try {
@@ -66,14 +62,11 @@ class DepartmentManager {
         dept.officersVisible = false;
       }
     });
-
     await Promise.all(promises);
   }
-
   renderDepartments() {
     const grid = document.getElementById('departmentGrid');
     if (!grid) return;
-
     // Use safer DOM manipulation instead of innerHTML
     grid.innerHTML = '';
     const safeHtml = this.departments.map(dept => `
@@ -116,7 +109,6 @@ class DepartmentManager {
 }
           </div>
         </div>
-
         <div class="department-actions">
           <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
             Edit
@@ -136,11 +128,9 @@ class DepartmentManager {
     Array.from(doc.body.children).forEach(child => fragment.appendChild(child.cloneNode(true)));
     grid.appendChild(fragment);
   }
-
   // Enhanced HTML sanitization function
   sanitizeHtml(html) {
     if (!html || typeof html !== 'string') return '';
-
     // Use DOMPurify for comprehensive sanitization
     if (typeof DOMPurify !== 'undefined') {
       return DOMPurify.sanitize(html, {
@@ -152,7 +142,6 @@ class DepartmentManager {
         KEEP_CONTENT: true
       });
     }
-
     // Fallback sanitization if DOMPurify is not available
     return html
       // Remove script tags and their content
@@ -184,20 +173,16 @@ class DepartmentManager {
       // Remove src with javascript
       .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
   }
-
   updateStats() {
     const totalElement = document.getElementById('totalCount');
     const activeElement = document.getElementById('activeCount');
-
     if (totalElement) totalElement.textContent = this.departments.length;
     if (activeElement) {
       activeElement.textContent = this.departments.filter(d => d.is_active).length;
     }
   }
-
   async handleSubmit(e) {
     e.preventDefault();
-
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
@@ -205,7 +190,6 @@ class DepartmentManager {
       description: formData.get('description'),
       is_active: formData.has('is_active')
     };
-
     try {
       let response;
       if (this.currentDepartment) {
@@ -213,7 +197,6 @@ class DepartmentManager {
       } else {
         response = await apiClient.post('/api/departments', data);
       }
-
       if (response.success) {
         showMessage('success', response.message);
         this.closeModal();
@@ -224,13 +207,11 @@ class DepartmentManager {
       showMessage('error', error.message || 'Operation failed');
     }
   }
-
   openModal(mode = 'add', department = null) {
     this.currentDepartment = department;
     const modal = document.getElementById('departmentModal');
     const title = document.getElementById('modalTitle');
     const form = document.getElementById('departmentForm');
-
     if (mode === 'edit' && department) {
       title.textContent = 'Edit Department';
       document.getElementById('departmentName').value = department.name;
@@ -241,39 +222,31 @@ class DepartmentManager {
       title.textContent = 'Add Department';
       form.reset();
     }
-
     modal.style.display = 'block';
   }
-
   closeModal() {
     const modal = document.getElementById('departmentModal');
     modal.style.display = 'none';
     this.currentDepartment = null;
   }
-
   editDepartment(id) {
     const department = this.departments.find(d => d.id === id);
     if (department) {
       this.openModal('edit', department);
     }
   }
-
   async toggleStatus(id) {
     const department = this.departments.find(d => d.id === id);
     if (!department) return;
-
     const newStatus = !department.is_active;
     const action = newStatus ? 'activate' : 'deactivate';
-
     if (!confirm(`Are you sure you want to ${action} "${department.name}"?`)) {
       return;
     }
-
     try {
       const response = await apiClient.put(`/api/departments/${id}`, {
         is_active: newStatus
       });
-
       if (response.success) {
         showMessage('success', `Department ${action}d successfully`);
         await this.loadDepartments();
@@ -283,61 +256,46 @@ class DepartmentManager {
       showMessage('error', error.message || 'Operation failed');
     }
   }
-
   toggleOfficers(departmentId) {
     const department = this.departments.find(d => d.id === departmentId);
     if (!department) return;
-
     department.officersVisible = !department.officersVisible;
     this.renderDepartments();
   }
-
   getLastSeenText(lastSignInAt) {
     if (!lastSignInAt) return 'Never';
-
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
-
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-
     return lastSignIn.toLocaleDateString();
   }
-
   getStatusClass(isOnline, lastSignInAt) {
     if (isOnline) return 'status-online';
-
     if (!lastSignInAt) return 'status-offline';
-
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = (now - lastSignIn) / (1000 * 60);
 
     // Consider "away" if last seen within 1 hour but not online
     if (diffInMinutes < 60) return 'status-away';
-
     return 'status-offline';
   }
-
   startStatusRefresh() {
     // Refresh status every 2 minutes
     setInterval(() => {
       this.refreshOfficerStatus();
     }, 2 * 60 * 1000);
   }
-
   async refreshOfficerStatus() {
     // Only refresh if officers are visible
     const hasVisibleOfficers = this.departments.some(dept => dept.officersVisible);
     if (!hasVisibleOfficers) return;
-
     try {
       // Reload officers for all departments
       await this.loadOfficersForAllDepartments();
@@ -347,31 +305,26 @@ class DepartmentManager {
     }
   }
 }
-
 // Global functions for onclick handlers
 window.openModal = (mode) => {
   if (window.departmentManager) {
     window.departmentManager.openModal(mode);
   }
 };
-
 window.closeModal = () => {
   if (window.departmentManager) {
     window.departmentManager.closeModal();
   }
 };
-
 window.toggleOfficers = (departmentId) => {
   if (window.departmentManager) {
     window.departmentManager.toggleOfficers(departmentId);
   }
 };
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   window.departmentManager = new DepartmentManager();
 });
-
 // Close modal when clicking outside
 window.addEventListener('click', (e) => {
   const modal = document.getElementById('departmentModal');
@@ -379,4 +332,3 @@ window.addEventListener('click', (e) => {
     window.departmentManager?.closeModal();
   }
 });
-

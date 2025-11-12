@@ -1,33 +1,17 @@
 {
   "name": "citizenlink",
   "version": "2.0.0",
-  "description": "Modern Citizen Complaint Management System with Clean Architecture",
+  "description": "Modern Citizen Complaint Management System with Clean Architecture Specifically for Digos City",
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js --watch src --watch config",
-    "prod": "NODE_ENV=production node server.js",
-    "test": "jest",
-    "lint": "eslint src/**/*.js",
-    "lint:fix": "eslint src/**/*.js --fix",
-    "migrate": "node scripts/migrate.js",
-    "seed": "node scripts/seed.js",
-    "codeql-scan": "node scripts/codeql-local-scan.js",
-    "codeql-scan-verbose": "node scripts/codeql-local-scan.js --verbose",
-    "codeql-scan-sarif": "node scripts/codeql-local-scan.js --output-format=sarif",
-    "generate-violations": "node scripts/simple-violation-generator.js",
-    "security-scan": "node scripts/security-autoresolve.js",
-    "security-scan-detailed": "node scripts/security-scan-detailed.js",
-    "comprehensive-autofix": "node scripts/comprehensive-autofix.js",
-    "security-audit-npm": "npm audit --audit-level=moderate",
-    "comprehensive-scan": "npm run enhanced-security-audit && npm run lint 2>/dev/null || true && npm run codeql-scan-verbose 2>/dev/null || true",
-    "setup-dev": "node scripts/setup-dev-env.js",
-    "setup-actions": "node scripts/setup-github-actions.js",
-    "fix-indentation": "node scripts/fix-service-indentation.js",
-    "fix-all-indentation": "node scripts/fix-all-indentation.js",
-    "rate-limit": "node scripts/rate-limit-manager.js",
-    "cleanup": "node scripts/cleanup-unused-files.js"
+    "test": "jest --config tests/setup/jest.config.js",
+    "test:watch": "jest --config tests/setup/jest.config.js --watch",
+    "test:coverage": "jest --config tests/setup/jest.config.js --coverage",
+    "test:security": "jest --config tests/setup/jest.config.js tests/security",
+    "test:functional": "jest --config tests/setup/jest.config.js tests/functional"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
@@ -53,7 +37,8 @@
     "gzip-cli": "^1.0.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
-    "postcss": "^8.5.6"
+    "postcss": "^8.5.6",
+    "sharp": "^0.34.5"
   },
   "keywords": [
     "citizen",

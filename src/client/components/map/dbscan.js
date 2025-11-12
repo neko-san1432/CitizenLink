@@ -2,13 +2,12 @@
  * DBSCAN (Density-Based Spatial Clustering of Applications with Noise) Algorithm
  * Implementation for complaint location clustering
  */
-
 class DBSCAN {
+
   constructor(eps = 0.01, minPts = 3) {
     this.eps = eps; // Maximum distance between two samples for one to be considered in the neighborhood of the other
     this.minPts = minPts; // Minimum number of samples in a neighborhood for a point to be considered a core point
   }
-
   /**
    * Calculate distance between two points using Haversine formula
    * @param {Object} point1 - {lat, lng}
@@ -208,6 +207,7 @@ class DBSCAN {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+
   module.exports = DBSCAN;
 } else {
   window.DBSCAN = DBSCAN;

@@ -1,12 +1,12 @@
 const Database = require('../config/database');
 
 class InvitationTokenRepository {
+
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
     this.table = 'invitation_tokens';
   }
-
   async createToken(tokenData) {
     const { data, error } = await this.supabase
       .from(this.table)
@@ -16,7 +16,6 @@ class InvitationTokenRepository {
     if (error) throw error;
     return data;
   }
-
   async getToken(token) {
     const { data, error } = await this.supabase
       .from(this.table)
@@ -26,7 +25,6 @@ class InvitationTokenRepository {
     if (error) throw error;
     return data;
   }
-
   async incrementUse(token) {
     const { data, error } = await this.supabase
       .from(this.table)
@@ -50,7 +48,6 @@ class InvitationTokenRepository {
     }
     return data;
   }
-
   async deactivate(token) {
     const { data, error } = await this.supabase
       .from(this.table)
@@ -61,7 +58,6 @@ class InvitationTokenRepository {
     if (error) throw error;
     return data;
   }
-
   async cleanupExpired(nowIso = new Date().toISOString()) {
     const { error } = await this.supabase
       .from(this.table)

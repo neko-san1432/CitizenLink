@@ -3,33 +3,26 @@ const Database = require('../config/database');
 const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
-
 // ============================================================================
 // NEWS ROUTES
 // ============================================================================
-
 // GET /api/content/news - Get all published news
 router.get('/news', async (req, res) => {
   try {
     const { limit = 10, offset = 0, category, from, to, office, status } = req.query;
-
     let query = Database.getClient()
       .from('news')
       .select('*')
       .eq('status', status || 'published')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1);
-
     if (category) query = query.eq('category', category);
     // map office -> category for filtering
     if (office) query = query.eq('category', office);
     if (from) query = query.gte('published_at', from);
     if (to) query = query.lte('published_at', to);
-
     const { data, error } = await query;
-
     if (error) throw error;
-
     return res.json({
       success: true,
       data,
@@ -43,28 +36,23 @@ router.get('/news', async (req, res) => {
     });
   }
 });
-
 // GET /api/content/news/:id - Get single news article
 router.get('/news/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
     const { data, error } = await Database.getClient()
       .from('news')
       .select('*')
       .eq('id', id)
       .eq('status', 'published')
       .single();
-
     if (error) throw error;
-
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'News article not found'
       });
     }
-
     return res.json({
       success: true,
       data
@@ -77,19 +65,16 @@ router.get('/news/:id', async (req, res) => {
     });
   }
 });
-
 // POST /api/content/news - Create news (admin only)
 router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
     const { title, content, excerpt, image_url, category, tags, status } = req.body;
-
     if (!title || !content) {
       return res.status(400).json({
         success: false,
         error: 'Title and content are required'
       });
     }
-
     // Convert empty strings to null for optional fields
     const newsData = {
       title: title.trim(),
@@ -102,15 +87,12 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
       published_at: status === 'published' ? new Date().toISOString() : null,
       author_id: req.user?.id
     };
-
     // console.log removed for security
-
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
       .from('news')
       .insert([newsData])
       .select();
-
     if (error) {
       console.error('[CONTENT] Database error inserting news:', error);
       console.error('[CONTENT] Error code:', error.code);
@@ -125,7 +107,6 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
         hint: error.hint
       });
     }
-
     if (!data || data.length === 0) {
       console.error('[CONTENT] Insert succeeded but no data returned');
       return res.status(500).json({
@@ -134,10 +115,8 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
         details: 'Insert operation returned no data'
       });
     }
-
     const insertedNews = data[0];
     // console.log removed for security
-
     return res.json({
       success: true,
       data: insertedNews
@@ -151,16 +130,13 @@ router.post('/news', authenticateUser, requireRole(['lgu-admin']), async (req, r
     });
   }
 });
-
 // ============================================================================
 // EVENTS ROUTES
 // ============================================================================
-
 // GET /api/content/events - Get upcoming events
 router.get('/events', async (req, res) => {
   try {
     const { limit = 10, offset = 0, status = 'upcoming', from, to, office } = req.query;
-
     const { data, error } = await Database.getClient()
       .from('events')
       .select('*')
@@ -169,15 +145,12 @@ router.get('/events', async (req, res) => {
       .lte('event_date', to || '9999-12-31T23:59:59.999Z')
       .order('event_date', { ascending: true })
       .range(offset, offset + limit - 1);
-
     if (office) {
       // Filter by organizer as office proxy
       const filtered = (data || []).filter(e => (e.organizer || '').toLowerCase() === String(office).toLowerCase());
       return res.json({ success: true, data: filtered, count: filtered.length });
     }
-
     if (error) throw error;
-
     return res.json({
       success: true,
       data,
@@ -191,27 +164,22 @@ router.get('/events', async (req, res) => {
     });
   }
 });
-
 // GET /api/content/events/:id - Get single event
 router.get('/events/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
     const { data, error } = await Database.getClient()
       .from('events')
       .select('*')
       .eq('id', id)
       .single();
-
     if (error) throw error;
-
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'Event not found'
       });
     }
-
     return res.json({
       success: true,
       data
@@ -224,7 +192,6 @@ router.get('/events/:id', async (req, res) => {
     });
   }
 });
-
 // POST /api/content/events - Create event (admin only)
 router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
@@ -241,14 +208,12 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
       max_participants,
       registration_required
     } = req.body;
-
     if (!title || !description || !event_date) {
       return res.status(400).json({
         success: false,
         error: 'Title, description, and event date are required'
       });
     }
-
     // Convert empty strings to null for optional fields
     const eventData = {
       title: title.trim(),
@@ -265,22 +230,18 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
       status: 'upcoming',
       created_by: req.user?.id
     };
-
     // console.log removed for security
-
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
       .from('events')
       .insert([eventData])
       .select();
-
     if (error) {
       console.error('[CONTENT] Database error inserting event:', error);
       console.error('[CONTENT] Error code:', error.code);
       console.error('[CONTENT] Error message:', error.message);
       throw error;
     }
-
     if (!data || data.length === 0) {
       console.error('[CONTENT] Insert succeeded but no data returned');
       return res.status(500).json({
@@ -289,10 +250,8 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
         details: 'Insert operation returned no data'
       });
     }
-
     const insertedEvent = data[0];
     // console.log removed for security
-
     return res.json({
       success: true,
       data: insertedEvent
@@ -306,16 +265,13 @@ router.post('/events', authenticateUser, requireRole(['lgu-admin']), async (req,
     });
   }
 });
-
 // ============================================================================
 // NOTICES ROUTES
 // ============================================================================
-
 // GET /api/content/notices - Get active notices
 router.get('/notices', async (req, res) => {
   try {
     const { limit = 10, offset = 0, priority, from, to, office, status = 'active' } = req.query;
-
     let query = Database.getClient()
       .from('notices')
       .select('*')
@@ -324,16 +280,12 @@ router.get('/notices', async (req, res) => {
       .order('priority', { ascending: false })
       .order('valid_from', { ascending: false })
       .range(offset, offset + limit - 1);
-
     if (priority) query = query.eq('priority', priority);
     if (office) query = query.eq('type', office);
     if (from) query = query.gte('created_at', from);
     if (to) query = query.lte('created_at', to);
-
     const { data, error } = await query;
-
     if (error) throw error;
-
     return res.json({
       success: true,
       data,
@@ -347,27 +299,22 @@ router.get('/notices', async (req, res) => {
     });
   }
 });
-
 // GET /api/content/notices/:id - Get single notice
 router.get('/notices/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
     const { data, error } = await Database.getClient()
       .from('notices')
       .select('*')
       .eq('id', id)
       .single();
-
     if (error) throw error;
-
     if (!data) {
       return res.status(404).json({
         success: false,
         error: 'Notice not found'
       });
     }
-
     return res.json({
       success: true,
       data
@@ -380,7 +327,6 @@ router.get('/notices/:id', async (req, res) => {
     });
   }
 });
-
 // POST /api/content/notices - Create notice (admin only)
 router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req, res) => {
   try {
@@ -394,14 +340,12 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
       valid_from,
       valid_until
     } = req.body;
-
     if (!title || !content) {
       return res.status(400).json({
         success: false,
         error: 'Title and content are required'
       });
     }
-
     // Convert empty strings to null for optional fields
     const noticeData = {
       title: title.trim(),
@@ -415,15 +359,12 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
       status: 'active',
       created_by: req.user?.id
     };
-
     // console.log removed for security
-
     const dbClient = Database.getClient();
     const { data, error } = await dbClient
       .from('notices')
       .insert([noticeData])
       .select();
-
     if (error) {
       console.error('[CONTENT] Database error inserting notice:', error);
       console.error('[CONTENT] Error code:', error.code);
@@ -431,7 +372,6 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
       console.error('[CONTENT] Error details:', error.details);
       throw error;
     }
-
     if (!data || data.length === 0) {
       console.error('[CONTENT] Insert succeeded but no data returned');
       // Try to query the notices table to verify insert
@@ -442,18 +382,15 @@ router.post('/notices', authenticateUser, requireRole(['lgu-admin']), async (req
         .eq('created_by', noticeData.created_by)
         .order('created_at', { ascending: false })
         .limit(1);
-      
       // console.log removed for security
       return res.status(500).json({
         success: false,
         error: 'Failed to create notice',
-        details: 'Insert operation returned no data. Verification query: ' + (verifyError ? verifyError.message : 'No matching record found')
+        details: `Insert operation returned no data. Verification query: ${  verifyError ? verifyError.message : 'No matching record found'}`
       });
     }
-
     const insertedNotice = data[0];
     // console.log removed for security
-
     return res.json({
       success: true,
       data: insertedNotice

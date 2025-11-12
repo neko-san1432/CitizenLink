@@ -7,15 +7,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>HR Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../../css/toast.css">
-    <link rel="stylesheet" href="../../css/components/clock.css">
-    <link rel="stylesheet" href="../../css/components/sidebar.css">
-    <link rel="stylesheet" href="../../css/app.css">
-    <link rel="stylesheet" href="../../css/header-redesign.css">
-    <link rel="stylesheet" href="../../css/pages/dashboard-common.css">
-    <link rel="stylesheet" href="../../css/pages/hr-dashboard.css">
-    <link rel="stylesheet" href="../../css/viewport-fix.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/components/clock.css">
+    <link rel="stylesheet" href="/css/components/sidebar.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/header-redesign.css">
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css">
+    <link rel="stylesheet" href="/css/pages/hr-dashboard.css">
+    <link rel="stylesheet" href="/css/viewport-fix.css">
     <style>
         .office-stats-grid {
             display: grid;
@@ -79,11 +79,11 @@
                         <div class="quick-action-icon">🔄</div>
                         <div class="quick-action-text">Roles</div>
                     </a>
-                    <button class="quick-action-btn quick-action-btn--sm" onclick="promoteUser()">
+                    <button class="quick-action-btn quick-action-btn--sm" id="promote-user-btn">
                         <div class="quick-action-icon">⬆️</div>
                         <div class="quick-action-text">Promote</div>
                     </button>
-                    <button class="quick-action-btn quick-action-btn--sm" onclick="demoteUser()">
+                    <button class="quick-action-btn quick-action-btn--sm" id="demote-user-btn">
                         <div class="quick-action-icon">⬇️</div>
                         <div class="quick-action-text">Demote</div>
                     </button>
@@ -91,7 +91,7 @@
                         <div class="quick-action-icon">👤</div>
                         <div class="quick-action-text">Profile</div>
                     </a>
-                    <button class="quick-action-btn quick-action-btn--sm" onclick="getHelp()">
+                    <button class="quick-action-btn quick-action-btn--sm" id="get-help-btn">
                         <div class="quick-action-icon">❓</div>
                         <div class="quick-action-text">Help</div>
                     </button>
@@ -101,42 +101,20 @@
             <!-- Main Content Grid -->
             <div class="dashboard-grid">
 
-                <!-- Statistics Overview -->
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">📊 Staff Statistics</h2>
-                    </div>
-                    <div class="stats-grid" id="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">👮</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Officers</div>
-                                <div class="stat-value" id="stat-officers">0</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">👔</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Admins</div>
-                                <div class="stat-value" id="stat-admins">0</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">⬆️</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Promotions (Month)</div>
-                                <div class="stat-value" id="stat-promotions">0</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">⬇️</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Demotions (Month)</div>
-                                <div class="stat-value" id="stat-demotions">0</div>
-                            </div>
-                        </div>
+                
+
+            <!-- Role Distribution Pie Chart -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">📊 Role Distribution</h2>
+                    <div class="section-controls">
+                        <button class="btn btn-info" id="refresh-role-distribution-btn">Refresh</button>
                     </div>
                 </div>
+                <div class="content-container" style="display: flex; justify-content: center; align-items: center; padding: 2rem;">
+                    <canvas id="role-distribution-chart" style="max-width: 500px; max-height: 500px;"></canvas>
+                </div>
+            </div>
 
             <!-- Department Statistics -->
             <div class="section-header">
@@ -148,123 +126,18 @@
                 </div>
             </div>
 
-            <!-- Actions Section -->
-            <div class="section-header">
-                <h2 class="section-title">HR Actions</h2>
-            </div>
-
-            <div class="actions-grid">
-                <!-- Promote to Officer -->
-                <div class="action-card">
-                    <h3>🎖️ Promote to LGU Officer</h3>
-                    <form id="promote-officer-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="promote-officer-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be a citizen</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Office</label>
-                            <input type="text" id="promote-officer-dept" placeholder="e.g., engineering" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Optional)</label>
-                            <textarea id="promote-officer-reason" placeholder="Enter reason for promotion"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success">Promote to Officer</button>
-                    </form>
-                </div>
-
-                <!-- Promote to Admin -->
-                <div class="action-card">
-                    <h3>👔 Promote to LGU Admin</h3>
-                    <form id="promote-admin-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="promote-admin-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be an LGU Officer</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Office</label>
-                            <input type="text" id="promote-admin-dept" placeholder="e.g., engineering">
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Optional)</label>
-                            <textarea id="promote-admin-reason" placeholder="Enter reason for promotion"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Promote to Admin</button>
-                    </form>
-                </div>
-
-                <!-- Demote to Officer -->
-                <div class="action-card">
-                    <h3>⬇️ Demote Admin to Officer</h3>
-                    <form id="demote-officer-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="demote-officer-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be an LGU Admin</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason</label>
-                            <textarea id="demote-officer-reason" placeholder="Enter reason for demotion" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-warning">Demote to Officer</button>
-                    </form>
-                </div>
-
-                <!-- Strip Titles -->
-                <div class="action-card">
-                    <h3>🚫 Strip All Titles</h3>
-                    <form id="strip-titles-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="strip-titles-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">Revert user to citizen status</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Required)</label>
-                            <textarea id="strip-titles-reason" placeholder="Enter detailed reason for stripping titles" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-danger">Strip Titles</button>
-                    </form>
-                </div>
-
-                <!-- Assign Department -->
-                <div class="action-card">
-                    <h3>🏢 Assign to Office</h3>
-                    <form id="assign-dept-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="assign-dept-user" placeholder="Enter user ID or email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Office ID</label>
-                            <input type="text" id="assign-dept-id" placeholder="e.g., engineering" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Assign Office</button>
-                    </form>
-                </div>
-
-                <!-- View Role History -->
-                <div class="action-card">
-                    <h3>📜 View Role History</h3>
-                    <form id="role-history-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="role-history-user" placeholder="Enter user ID or email" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">View History</button>
-                    </form>
-                    <div id="role-history-results" style="margin-top: 20px;"></div>
-                </div>
-            </div>
+            <!-- HR action cards removed by request -->
 
             <!-- User Management -->
             <div class="section-header">
                 <h2 class="section-title">User Management</h2>
             </div>
             <div class="user-grid">
+                <!-- Pending Signups -->
+                <div class="user-panel">
+                    <h3 style="margin-top:0;">Pending Signups</h3>
+                    <div id="pending-signups" class="user-list"></div>
+                </div>
                 <!-- Search & List -->
                 <div class="user-panel">
                     <h3 style="margin-top:0;">Search Users</h3>
@@ -299,11 +172,12 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
-    <script type="module" src="../../js/auth/roleToggle.js"></script>
-    <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/hr/dashboard.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script src="https://unpkg.com/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="/js/hr/dashboard.js"></script>
 </body>
 </html>

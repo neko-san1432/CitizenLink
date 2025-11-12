@@ -3,10 +3,171 @@
  * Integrates with Leaflet maps and DBSCAN clustering
  */
 
+// Helper function to check if a point is inside a GeoJSON polygon
+function isPointInPolygon(lat, lng, geojson) {
+  if (!geojson) return false;
+  
+  // Handle case where geojson is already a geometry object
+  let geometry = geojson;
+  if (geojson.geometry) {
+    geometry = geojson.geometry;
+  }
+  
+  if (!geometry || !geometry.coordinates) return false;
+  
+  if (geometry.type === 'Polygon') {
+    return isPointInPolygonCoords(lat, lng, geometry.coordinates);
+  } else if (geometry.type === 'MultiPolygon') {
+    // MultiPolygon coordinates: [[[ring1], [ring2]], ...] where each outer element is a polygon
+    // Check if point is in any of the polygons
+    return geometry.coordinates.some(polygon => isPointInPolygonCoords(lat, lng, polygon));
+  }
+  return false;
+}
+
+// Ray casting algorithm for point-in-polygon check
+// coordinates can be:
+// - Polygon: [outerRing, innerRing1, ...] where each ring is [[lng, lat], [lng, lat], ...]
+// - MultiPolygon polygon: [[ring1], [ring2], ...] where each ring is [[lng, lat], [lng, lat], ...]
+function isPointInPolygonCoords(lat, lng, coordinates) {
+  if (!coordinates || coordinates.length === 0) return false;
+  
+  // Check if this is a MultiPolygon structure (nested deeper)
+  // MultiPolygon coordinates structure: [[[ring1], [ring2]], ...]
+  // If coordinates[0][0] is an array of arrays (not just numbers), it's a MultiPolygon polygon
+  if (Array.isArray(coordinates[0]) && 
+      Array.isArray(coordinates[0][0]) && 
+      Array.isArray(coordinates[0][0][0])) {
+    // This is a MultiPolygon polygon: [[[ring1]], [[ring2]], ...]
+    // Each element is a polygon with rings
+    return coordinates.some(polygon => isPointInPolygonCoords(lat, lng, polygon));
+  }
+  
+  // Single polygon: coordinates is [outerRing, innerRing1, innerRing2, ...]
+  // Each ring is [[lng, lat], [lng, lat], ...]
+  const outerRing = coordinates[0];
+  if (!outerRing || !Array.isArray(outerRing) || outerRing.length === 0) return false;
+  
+  let inside = false;
+  
+  // Ray casting algorithm: cast a horizontal ray from (lat, lng) going right (increasing longitude)
+  // GeoJSON coordinates are [longitude, latitude]
+  for (let i = 0, j = outerRing.length - 1; i < outerRing.length; j = i++) {
+    const lng1 = outerRing[i][0]; // longitude of point i
+    const lat1 = outerRing[i][1]; // latitude of point i
+    const lng2 = outerRing[j][0]; // longitude of point j
+    const lat2 = outerRing[j][1]; // latitude of point j
+    
+    // Skip horizontal edges (they don't contribute to the intersection count)
+    if (Math.abs(lat2 - lat1) < 1e-10) continue;
+    
+    // Check if the horizontal ray from (lat, lng) intersects the edge from (lat1, lng1) to (lat2, lng2)
+    // The ray intersects if:
+    // 1. The point's latitude is between the edge's latitudes (or the edge crosses the point's latitude)
+    // 2. The intersection longitude is to the right of the point's longitude
+    const latBetween = (lat1 > lat) !== (lat2 > lat);
+    if (latBetween) {
+      // Calculate the longitude where the edge crosses the point's latitude
+      const intersectLng = (lat - lat1) * (lng2 - lng1) / (lat2 - lat1) + lng1;
+      // If the intersection is to the right of the point, count it
+      if (lng < intersectLng) {
+        inside = !inside;
+      }
+    }
+  }
+  
+  // Check if point is in any inner rings (holes)
+  for (let ringIndex = 1; ringIndex < coordinates.length; ringIndex++) {
+    const innerRing = coordinates[ringIndex];
+    let inHole = false;
+    
+    for (let i = 0, j = innerRing.length - 1; i < innerRing.length; j = i++) {
+      const lng1 = innerRing[i][0]; // longitude of point i
+      const lat1 = innerRing[i][1]; // latitude of point i
+      const lng2 = innerRing[j][0]; // longitude of point j
+      const lat2 = innerRing[j][1]; // latitude of point j
+      
+      // Skip horizontal edges
+      if (Math.abs(lat2 - lat1) < 1e-10) continue;
+      
+      const latBetween = (lat1 > lat) !== (lat2 > lat);
+      if (latBetween) {
+        const intersectLng = (lat - lat1) * (lng2 - lng1) / (lat2 - lat1) + lng1;
+        if (lng < intersectLng) {
+          inHole = !inHole;
+        }
+      }
+    }
+    
+    if (inHole) {
+      inside = false; // Point is in a hole, so it's outside
+      break;
+    }
+  }
+  
+  return inside;
+}
+
+// Check if coordinates are within any barangay boundary
+function isWithinCityBoundary(lat, lng) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+  
+  // Check if boundaries are loaded
+  if (!window.cityBoundaries || !Array.isArray(window.cityBoundaries)) {
+    // Fallback to bounding box if boundaries not loaded
+    const minLat = 6.6;
+    const maxLat = 7.0;
+    const minLng = 125.0;
+    const maxLng = 125.7;
+    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+  }
+  
+  // Debug: Log boundary structure once
+  if (!window._boundaryDebugged && window.cityBoundaries.length > 0) {
+    window._boundaryDebugged = true;
+    const firstBoundary = window.cityBoundaries[0];
+    console.log('[BOUNDARY] First boundary structure:', {
+      hasGeojson: Boolean(firstBoundary.geojson),
+      geojsonType: firstBoundary.geojson?.type,
+      hasGeometry: Boolean(firstBoundary.geojson?.geometry),
+      geometryType: firstBoundary.geojson?.geometry?.type,
+      hasCoordinates: Boolean(firstBoundary.geojson?.coordinates),
+      hasGeometryCoordinates: Boolean(firstBoundary.geojson?.geometry?.coordinates),
+      boundaryCount: window.cityBoundaries.length
+    });
+    
+    // Test with a known point inside Digos City (approximate center)
+    const testLat = 6.85;
+    const testLng = 125.35;
+    let testResult = false;
+    for (const boundary of window.cityBoundaries) {
+      if (boundary && boundary.geojson && isPointInPolygon(testLat, testLng, boundary.geojson)) {
+        testResult = true;
+        break;
+      }
+    }
+    console.log(`[BOUNDARY] Test point (${testLat}, ${testLng}) - within boundary: ${testResult}`);
+  }
+  
+  // Check if point is within any barangay boundary
+  for (const boundary of window.cityBoundaries) {
+    if (boundary && boundary.geojson) {
+      if (isPointInPolygon(lat, lng, boundary.geojson)) {
+      return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
 class HeatmapVisualization {
+
   constructor(map) {
     this.map = map;
     this.complaintData = [];
+    this.allComplaintData = []; // Store all complaints for client-side filtering
+    this.markerMap = new Map(); // Map complaint ID to marker for quick lookup
     this.clusters = [];
     this.heatmapLayer = null;
     this.markerLayer = null;
@@ -14,7 +175,7 @@ class HeatmapVisualization {
     this.dbscan = new DBSCAN();
     this.isClusteringEnabled = false;
     this.currentFilters = {};
-
+    this.filterByBoundary = true; // Enable boundary filtering by default
     // Heatmap configuration
     this.heatmapConfig = {
       radius: 30,
@@ -32,7 +193,6 @@ class HeatmapVisualization {
         1.0: 'red'
       }
     };
-
     // Cluster configuration
     this.clusterConfig = {
       eps: 0.01, // ~1km
@@ -42,7 +202,6 @@ class HeatmapVisualization {
         '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
       ]
     };
-
     // Setup zoom listener for dynamic marker sizing
     if (this.map) {
       this.map.on('zoomend', () => {
@@ -50,7 +209,6 @@ class HeatmapVisualization {
       });
     }
   }
-
   /**
    * Load complaint data from API
    * @param {Object} filters - Filter options
@@ -59,83 +217,127 @@ class HeatmapVisualization {
     try {
       // console.log removed for security
       this.currentFilters = filters;
-
+      // Reset filtered count for this load
+      this._filteredCount = 0;
       const queryParams = new URLSearchParams();
       // Explicitly include resolved complaints by default for heatmap
       queryParams.append('includeResolved', filters.includeResolved !== false ? 'true' : 'false');
-      
       Object.entries(filters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === 'includeResolved') return;
         if (value !== null && value !== undefined && value !== '') {
+          // Handle array values (multiple selections)
+          if (Array.isArray(value) && value.length > 0) {
+            value.forEach(v => queryParams.append(key, v));
+          } else if (!Array.isArray(value)) {
           queryParams.append(key, value);
+          }
         }
       });
-      
       // console.log removed for security
-
       // Use apiClient for authenticated requests
       const apiClientModule = await import('../../config/apiClient.js');
       const apiClient = apiClientModule.default;
       // console.log removed for security
-
       const result = await apiClient.get(`/api/complaints/locations?${queryParams}`);
-
       // Backend service already returns data with lat/lng fields correctly formatted
       const raw = Array.isArray(result.data) ? result.data : [];
-
       // console.log removed for security
-      
       // Log first item structure for debugging
       if (raw.length > 0) {
         // console.log removed for security
         // console.log removed for security
       }
-      
       // Debug: Check if we're only getting one complaint
       if (raw.length === 1) {
         console.warn('[HEATMAP] ⚠️ WARNING: Only 1 complaint received from API!');
         console.warn('[HEATMAP] Filters applied:', filters);
         console.warn('[HEATMAP] Check backend logs to see how many complaints exist in database.');
       }
-
       // Backend already provides lat/lng, so we just need to validate
-      this.complaintData = raw
+      // Store all valid complaints (only filter by boundary, not by status/category/department)
+      // Debug: Log sample complaint to check department fields
+      if (raw.length > 0) {
+        console.log('[HEATMAP] Sample complaint data structure:', {
+          id: raw[0].id,
+          title: raw[0].title,
+          departments: raw[0].departments,
+          department_r: raw[0].department_r,
+          departments_type: typeof raw[0].departments,
+          departments_isArray: Array.isArray(raw[0].departments),
+          allKeys: Object.keys(raw[0])
+        });
+      }
+
+      this.allComplaintData = raw
         .filter((item) => {
           // Ensure lat/lng exist and are valid numbers
           const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
           const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
-          
           const isValid = Number.isFinite(lat) && Number.isFinite(lng) &&
                           lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-          
           if (!isValid) {
             console.warn('[HEATMAP] Skipping complaint with invalid coordinates:', item.id, { lat: item.lat, lng: item.lng });
+            return false;
           }
           
-          return isValid;
+          // Filter by boundary if enabled (this is the only server-side filter we keep)
+          if (this.filterByBoundary) {
+            const withinBoundary = isWithinCityBoundary(lat, lng);
+            if (!withinBoundary) {
+              // Only log first few filtered complaints to avoid console spam
+              if (!this._filteredCount) this._filteredCount = 0;
+              if (this._filteredCount < 3) {
+              console.log('[HEATMAP] Filtering out complaint outside city boundaries:', item.id, { lat, lng });
+              }
+              this._filteredCount++;
+              return false;
+            }
+          }
+          
+          return true;
         })
         .map((item) => {
           // Ensure numeric types
           const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
           const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
-          
           return {
             ...item,
             lat,
             lng,
             // Ensure required fields have defaults
             priority: item.priority || 'medium',
-            status: item.status || 'pending review',
+            status: item.status || item.workflow_status || 'new',
+            workflow_status: item.workflow_status || item.status || 'new',
+            confirmation_status: item.confirmation_status || 'pending',
             title: item.title || 'Complaint',
             type: item.type || item.category || 'General',
+            category: item.category || item.type || 'General',
             location: item.location || item.location_text || '',
             submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
           };
         });
-
+      
+      // Apply client-side filters to determine visible complaints
+      this.applyClientSideFilters(filters);
+      
+      // Log summary of filtering
+      console.log(`[HEATMAP] Data loading summary:`);
+      console.log(`  - Raw data from API: ${raw.length} complaints`);
+      console.log(`  - After coordinate validation: ${this.allComplaintData.length} complaints`);
+      if (this.filterByBoundary && this._filteredCount > 0) {
+        console.log(`  - Filtered out by boundary: ${this._filteredCount} complaint(s)`);
+        console.log(`  - Remaining within boundaries: ${this.allComplaintData.length} complaint(s)`);
+      }
+      console.log(`  - After client-side filters: ${this.complaintData.length} complaint(s) visible`);
+      
+      // Debug: Check if we're missing complaints
+      if (raw.length > this.allComplaintData.length) {
+        const missing = raw.length - this.allComplaintData.length;
+        console.warn(`[HEATMAP] ⚠️ WARNING: ${missing} complaint(s) were filtered out (invalid coordinates or outside boundaries)`);
+      }
+      
       // console.log removed for security
-
       // console.log removed for security
       // console.log removed for security
       return this.complaintData;
@@ -144,25 +346,32 @@ class HeatmapVisualization {
       throw error;
     }
   }
-
   /**
    * Create heatmap layer from complaint data
    */
   createHeatmapLayer() {
-    if (!this.complaintData || this.complaintData.length === 0) {
-      console.warn('[HEATMAP] No complaint data available for heatmap');
-      return null;
+    // Clear old heatmap layer before creating new one
+    if (this.heatmapLayer) {
+      // Remove from map if it's still attached
+      if (this.map && this.map.hasLayer(this.heatmapLayer)) {
+        this.map.removeLayer(this.heatmapLayer);
+      }
+      // Remove reference
+      this.heatmapLayer = null;
     }
 
+    if (!this.complaintData || this.complaintData.length === 0) {
+      console.warn('[HEATMAP] No complaint data available for heatmap');
+      this.heatmapLayer = null;
+      return null;
+    }
     // Convert complaint data to heatmap format
     const heatmapData = this.complaintData.map(complaint => [
       complaint.lat,
       complaint.lng,
       this.getIntensityValue(complaint)
     ]);
-
     // console.log removed for security
-
     // Create heatmap layer using Leaflet.heat
     try {
       this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
@@ -173,7 +382,6 @@ class HeatmapVisualization {
       return null;
     }
   }
-
   /**
    * Calculate intensity value for heatmap based on complaint properties
    * @param {Object} complaint - Complaint data
@@ -181,7 +389,6 @@ class HeatmapVisualization {
    */
   getIntensityValue(complaint) {
     let intensity = 0.5; // Base intensity
-
     // Adjust based on priority
     const priorityWeights = {
       'low': 0.3,
@@ -190,7 +397,6 @@ class HeatmapVisualization {
       'urgent': 1.0
     };
     intensity = priorityWeights[complaint.priority] || 0.5;
-
     // Adjust based on status
     const statusWeights = {
       'pending review': 1.0,
@@ -200,65 +406,350 @@ class HeatmapVisualization {
       'rejected': 0.2
     };
     intensity *= statusWeights[complaint.status] || 0.5;
-
     // Adjust based on recency (more recent = higher intensity)
     const daysSinceSubmission = (Date.now() - new Date(complaint.submittedAt).getTime()) / (1000 * 60 * 60 * 24);
     const recencyFactor = Math.max(0.1, 1 - (daysSinceSubmission / 30)); // Decay over 30 days
     intensity *= recencyFactor;
-
     return Math.min(1.0, Math.max(0.1, intensity));
+  }
+  /**
+   * Apply client-side filters to determine which complaints should be visible
+   * @param {Object} filters - Filter criteria
+   */
+  applyClientSideFilters(filters = {}) {
+    console.log('[FILTER] applyClientSideFilters called with filters:', filters);
+    console.log('[FILTER] Total complaints before filtering:', this.allComplaintData?.length || 0);
+
+    if (!this.allComplaintData || this.allComplaintData.length === 0) {
+      console.log('[FILTER] No complaint data available');
+      this.complaintData = [];
+      return;
+    }
+
+    // Debug: Check sample complaints for department data
+    const sampleComplaints = this.allComplaintData.slice(0, 5);
+    console.log('[FILTER] Sample complaints before filtering:', sampleComplaints.map(c => ({
+      id: c.id,
+      title: c.title?.substring(0, 30),
+      departments: c.departments,
+      department_r: c.department_r,
+      hasDepartments: Array.isArray(c.departments) && c.departments.length > 0,
+      hasDepartmentR: Array.isArray(c.department_r) && c.department_r.length > 0,
+      allKeys: Object.keys(c)
+    })));
+
+    this.complaintData = this.allComplaintData.filter((complaint) => {
+      // Filter by status
+      if (filters.status && filters.status !== '') {
+        const statusArray = Array.isArray(filters.status) ? filters.status : [filters.status];
+        const complaintStatus = (complaint.status || complaint.workflow_status || 'new').toLowerCase();
+        const complaintWorkflowStatus = (complaint.workflow_status || 'new').toLowerCase();
+        const complaintConfirmationStatus = (complaint.confirmation_status || 'pending').toLowerCase();
+        
+        // Check if complaint matches any selected status
+        const matchesStatus = statusArray.some(filterStatus => {
+          const filterLower = filterStatus.toLowerCase();
+          // Map legacy status to workflow status
+          const statusMap = {
+            'pending review': 'new',
+            'pending': 'new',
+            'in progress': 'in_progress',
+            'resolved': 'completed',
+            'completed': 'completed',
+            'closed': 'cancelled',
+            'rejected': 'cancelled',
+            'cancelled': 'cancelled'
+          };
+          
+          const mappedStatus = statusMap[filterLower] || filterLower;
+          
+          // Check workflow_status
+          if (mappedStatus === complaintWorkflowStatus) return true;
+          // Check confirmation_status
+          if (filterLower === complaintConfirmationStatus) return true;
+          // Check legacy status field
+          if (filterLower === complaintStatus) return true;
+          
+          return false;
+        });
+        
+        if (!matchesStatus) return false;
+      }
+
+      // Filter by category (UUIDs from categories table)
+      if (filters.category && filters.category !== '') {
+        const categoryArray = Array.isArray(filters.category) ? filters.category : [filters.category];
+        // complaint.category should be a UUID that matches the filter UUIDs
+        const complaintCategory = complaint.category || '';
+        if (!complaintCategory || !categoryArray.includes(complaintCategory)) return false;
+      }
+
+      // Filter by subcategory (UUIDs from subcategories table)
+      if (filters.subcategory && filters.subcategory !== '') {
+        const subcategoryArray = Array.isArray(filters.subcategory) ? filters.subcategory : [filters.subcategory];
+        // complaint.subcategory should be a UUID that matches the filter UUIDs
+        const complaintSubcategory = complaint.subcategory || '';
+        if (!complaintSubcategory || !subcategoryArray.includes(complaintSubcategory)) return false;
+      }
+
+      // Filter by department - checks departments array (backend transforms department_r to departments)
+      if (filters.department && filters.department !== '') {
+        const departmentArray = Array.isArray(filters.department) ? filters.department : [filters.department];
+        // Get complaint's assigned departments - backend returns as 'departments' field (from department_r)
+        // Fallback to department_r in case backend format changes
+        const complaintDepartments = Array.isArray(complaint.departments) ? complaint.departments :
+          (Array.isArray(complaint.department_r) ? complaint.department_r : []);
+
+        // Debug logging
+        if (departmentArray.length > 0) {
+          console.log('[FILTER] Department filter check:', {
+            filterDepts: departmentArray,
+            complaintDepts: complaintDepartments,
+            complaintId: complaint.id,
+            complaintTitle: complaint.title,
+            hasDepartments: complaint.departments ? 'yes' : 'no',
+            hasDepartmentR: complaint.department_r ? 'yes' : 'no'
+          });
+        }
+
+        // If complaint has no departments assigned, exclude it from results
+        if (complaintDepartments.length === 0) {
+          console.log('[FILTER] Complaint has no departments, excluding:', complaint.id);
+          return false;
+        }
+
+        // Check if any selected department code matches any department in departments array
+        // Use case-insensitive comparison to handle any case variations
+        const matchesDepartment = departmentArray.some(filterDept => {
+          const filterDeptUpper = String(filterDept || '').toUpperCase().trim();
+          return complaintDepartments.some(complaintDept => {
+            const complaintDeptUpper = String(complaintDept || '').toUpperCase().trim();
+            return complaintDeptUpper === filterDeptUpper;
+          });
+        });
+
+        if (!matchesDepartment) {
+          console.log('[FILTER] No department match, excluding:', {
+            complaintId: complaint.id,
+            filterDepts: departmentArray,
+            complaintDepts: complaintDepartments
+          });
+          return false;
+        }
+
+        console.log('[FILTER] Department match found:', complaint.id);
+      }
+
+      // Filter by includeResolved
+      if (filters.includeResolved === false) {
+        const workflowStatus = (complaint.workflow_status || 'new').toLowerCase();
+        if (workflowStatus === 'completed' || workflowStatus === 'cancelled') {
+          return false;
+        }
+      }
+
+      // Filter by date range
+      if (filters.startDate || filters.endDate) {
+        const complaintDate = new Date(complaint.submittedAt || complaint.submitted_at);
+        if (isNaN(complaintDate.getTime())) {
+          return false; // Invalid date, exclude
+        }
+        
+        if (filters.startDate) {
+          const startDate = new Date(filters.startDate);
+          startDate.setHours(0, 0, 0, 0);
+          if (complaintDate < startDate) {
+            return false;
+          }
+        }
+        
+        if (filters.endDate) {
+          const endDate = new Date(filters.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          if (complaintDate > endDate) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+
+    // Debug logging after filtering
+    console.log('[FILTER] Filtering complete:', {
+      totalBefore: this.allComplaintData.length,
+      totalAfter: this.complaintData.length,
+      filteredOut: this.allComplaintData.length - this.complaintData.length,
+      departmentFilter: filters.department,
+      sampleFiltered: this.complaintData.slice(0, 3).map(c => ({
+        id: c.id,
+        title: c.title?.substring(0, 30),
+        departments: c.departments,
+        hasDepartments: Array.isArray(c.departments) && c.departments.length > 0
+      }))
+    });
   }
 
   /**
-   * Create individual complaint markers
+   * Create individual complaint markers (only called once on initial load)
    */
   createMarkerLayer() {
-    if (!this.complaintData || this.complaintData.length === 0) {
-      console.warn('[HEATMAP] No complaint data to create markers from');
-      return null;
+    // Only create markers if they don't exist yet
+    if (this.markerLayer && this.markerLayer.getLayers().length > 0) {
+      console.log('[HEATMAP] Markers already exist, skipping recreation');
+      // Don't update visibility here - let the caller handle it based on zoom level
+      return this.markerLayer;
     }
 
-    // console.log removed for security
+    if (!this.allComplaintData || this.allComplaintData.length === 0) {
+      console.warn('[HEATMAP] No complaint data to create markers from');
+      this.markerLayer = null;
+      return null;
+    }
+    
+    // Create marker layer and store all markers
+    // IMPORTANT: Do NOT add layer to map during creation - caller will handle visibility
     this.markerLayer = L.layerGroup();
-
-    this.complaintData.forEach((complaint, index) => {
-      // console.log removed for security
-      
+    this.markerMap.clear();
+    
+    this.allComplaintData.forEach((complaint, index) => {
       try {
         const marker = this.createComplaintMarker(complaint, index);
+        // Add marker to layer group (but NOT to map)
         this.markerLayer.addLayer(marker);
-        // console.log removed for security
+        // Store marker reference by complaint ID for quick lookup
+        if (complaint.id) {
+          this.markerMap.set(complaint.id, marker);
+        }
+        // Ensure marker is NOT on the map (safety check)
+        if (this.map && this.map.hasLayer(marker)) {
+          this.map.removeLayer(marker);
+        }
       } catch (error) {
         console.error(`[HEATMAP] Failed to create marker ${index + 1}:`, error, complaint);
       }
     });
-
-    // console.log removed for security
+    
+    console.log(`[HEATMAP] Created ${this.markerLayer.getLayers().length} marker(s) for all complaints`);
+    
+    // CRITICAL: Ensure marker layer is NOT on the map during creation
+    // The caller will handle adding/removing based on zoom level and initial load state
+    if (this.map && this.map.hasLayer(this.markerLayer)) {
+      this.map.removeLayer(this.markerLayer);
+    }
+    
+    // Don't apply visibility here - let the caller handle it based on zoom level
+    // Markers will be shown/hidden by updateZoomBasedVisibility() in heatmap-init.js
+    
     return this.markerLayer;
   }
 
   /**
+   * Update marker visibility based on current filters (show/hide without removing)
+   */
+  updateMarkerVisibility() {
+    if (!this.markerLayer || !this.map) return;
+
+    // Check if we're in initial load mode (markers should stay hidden)
+    // This is a safety check - the caller should prevent this during initial load
+    if (window.isInitialLoad === true) {
+      // During initial load, don't show markers - just ensure they're hidden
+      this.markerLayer.eachLayer((marker) => {
+        if (this.map.hasLayer(marker)) {
+          this.map.removeLayer(marker);
+        }
+      });
+      if (this.map.hasLayer(this.markerLayer)) {
+        this.map.removeLayer(this.markerLayer);
+      }
+      return;
+    }
+
+    // Apply filters to determine which complaints should be visible
+    this.applyClientSideFilters(this.currentFilters || {});
+
+    const visibleComplaintIds = new Set(this.complaintData.map(c => c.id));
+    let visibleCount = 0;
+    let hiddenCount = 0;
+
+    // Ensure marker layer is on the map first (only if not initial load)
+    if (!this.map.hasLayer(this.markerLayer)) {
+      this.markerLayer.addTo(this.map);
+    }
+
+    // Update visibility of each marker
+    this.markerLayer.eachLayer((marker) => {
+      // Get complaint ID from marker (try multiple ways)
+      const complaintId = marker._complaintId || 
+                         marker.options?.complaintId ||
+                         (this.markerMap && Array.from(this.markerMap.entries()).find(([id, m]) => m === marker)?.[0]);
+      
+      // Determine if marker should be visible
+      let shouldBeVisible = false;
+      if (complaintId) {
+        shouldBeVisible = visibleComplaintIds.has(complaintId);
+      } else {
+        // Fallback: check by coordinates (less reliable but works if ID is missing)
+        const latLng = marker.getLatLng();
+        shouldBeVisible = this.complaintData.some(c => 
+          Math.abs(c.lat - latLng.lat) < 0.0001 && 
+          Math.abs(c.lng - latLng.lng) < 0.0001
+        );
+      }
+
+      // Show or hide marker based on filter match
+      // Note: Markers are part of markerLayer, so we manage visibility by adding/removing from layer
+      if (shouldBeVisible) {
+        // Show marker - ensure it's in the layer (it should be, but check anyway)
+        if (!this.markerLayer.hasLayer(marker)) {
+          this.markerLayer.addLayer(marker);
+        }
+        // Also ensure it's visible on the map
+        if (!this.map.hasLayer(marker)) {
+          marker.addTo(this.map);
+        }
+        visibleCount++;
+      } else {
+        // Hide marker by removing from map (but keep in layer for later)
+        if (this.map.hasLayer(marker)) {
+          this.map.removeLayer(marker);
+        }
+        hiddenCount++;
+      }
+    });
+
+    console.log(`[HEATMAP] Marker visibility triggered: ${visibleCount} visible, ${hiddenCount} hidden (total: ${this.markerLayer.getLayers().length})`);
+    
+    // Dispatch custom event for marker visibility update
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      const event = new CustomEvent('markerVisibilityUpdated', {
+        detail: {
+          visibleCount,
+          hiddenCount,
+          totalCount: this.markerLayer.getLayers().length
+        }
+      });
+      window.dispatchEvent(event);
+    }
+  }
+  /**
    * Create clickable circles for complaints
    */
   createCircleLayer() {
+
     if (!this.complaintData || this.complaintData.length === 0) {
       return null;
     }
-
     this.circleLayer = L.layerGroup();
-
     // console.log removed for security
-
     this.complaintData.forEach((complaint, index) => {
       // console.log removed for security
       const circle = this.createComplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
     });
-
     // console.log removed for security
     return this.circleLayer;
   }
-
   /**
    * Create individual complaint marker
    * @param {Object} complaint - Complaint data
@@ -270,19 +761,20 @@ class HeatmapVisualization {
     const marker = L.marker([complaint.lat, complaint.lng], { 
       icon,
       // Add z-index offset to prevent stacking
-      zIndexOffset: 1000 + index * 10
+      zIndexOffset: 1000 + index * 10,
+      // Store complaint ID for filtering
+      complaintId: complaint.id
     });
-
+    // Also store directly on marker for quick access
+    marker._complaintId = complaint.id;
     // Create popup content
     const popupContent = this.createComplaintPopup(complaint);
     marker.bindPopup(popupContent, {
-      maxWidth: 300,
+      maxWidth: 250,
       className: 'complaint-popup'
     });
-
     return marker;
   }
-
   /**
    * Create clickable circle for complaint
    * @param {Object} complaint - Complaint data
@@ -295,7 +787,6 @@ class HeatmapVisualization {
       'high': '#fd7e14',
       'urgent': '#dc3545'
     };
-
     const statusColors = {
       'pending review': '#6c757d',
       'in progress': '#17a2b8',
@@ -303,11 +794,9 @@ class HeatmapVisualization {
       'closed': '#6c757d',
       'rejected': '#dc3545'
     };
-
     // Use priority color for fill, status color for border
     const fillColor = priorityColors[complaint.priority] || '#6c757d';
     const borderColor = statusColors[complaint.status] || '#6c757d';
-
     // Circle size based on priority
     const radiusSizes = {
       'low': 50,
@@ -315,9 +804,7 @@ class HeatmapVisualization {
       'high': 100,
       'urgent': 125
     };
-
     const radius = radiusSizes[complaint.priority] || 75;
-
     const circle = L.circle([complaint.lat, complaint.lng], {
       radius,
       color: borderColor,
@@ -327,7 +814,6 @@ class HeatmapVisualization {
       fillOpacity: 0.4,
       className: 'complaint-circle'
     });
-
     // Add hover effects
     circle.on('mouseover', function(e) {
       this.setStyle({
@@ -335,34 +821,29 @@ class HeatmapVisualization {
         fillOpacity: 0.6
       });
     });
-
     circle.on('mouseout', function(e) {
       this.setStyle({
         weight: 3,
         fillOpacity: 0.4
       });
     });
-
     // Create detailed popup content (async)
     circle.bindPopup(async () => {
       return await this.createDetailedComplaintPopup(complaint);
     }, {
-      maxWidth: 400,
+      maxWidth: 280,
       className: 'complaint-circle-popup',
       closeButton: true,
       autoClose: false,
       keepInView: true
     });
-
     // Add click event for additional actions
     circle.on('click', (e) => {
       // console.log removed for security
       // You can add additional click actions here
     });
-
     return circle;
   }
-
   /**
    * Get appropriate icon for complaint
    * @param {Object} complaint - Complaint data
@@ -370,20 +851,57 @@ class HeatmapVisualization {
    * @returns {L.Icon} Leaflet icon
    */
   getComplaintIcon(complaint, index = 0) {
-    // Use distinct colors for each marker to make them easily distinguishable
-    const distinctColors = ['#dc3545', '#007bff', '#28a745', '#ffc107', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997'];
-    const color = distinctColors[index % distinctColors.length] || '#6c757d';
+    // Color based on complaint status
+    // Handles both 'status' and 'workflow_status' fields
+    const statusColors = {
+      // Standard status values
+      'pending review': '#6c757d',      // Gray
+      'pending': '#6c757d',             // Gray
+      'in progress': '#17a2b8',         // Cyan/Teal
+      'in_progress': '#17a2b8',         // Cyan/Teal (workflow_status format)
+      'resolved': '#28a745',            // Green
+      'closed': '#6c757d',              // Gray
+      'rejected': '#dc3545',            // Red
+      'cancelled': '#6c757d',           // Gray
+      'completed': '#28a745',           // Green
+      // Workflow status values
+      'new': '#6c757d',                 // Gray
+      'assigned': '#ffc107',             // Yellow
+      'pending_approval': '#fd7e14',    // Orange
+      // Confirmation status values
+      'waiting_for_responders': '#17a2b8',    // Cyan
+      'waiting_for_complainant': '#ffc107',    // Yellow
+      'confirmed': '#28a745',                  // Green
+      'disputed': '#dc3545'                    // Red
+    };
+    
+    // Check both status and workflow_status fields
+    let status = (complaint.status || complaint.workflow_status || 'pending review').toLowerCase();
+    
+    // If status is not found, try confirmation_status
+    if (!statusColors[status] && complaint.confirmation_status) {
+      status = complaint.confirmation_status.toLowerCase();
+    }
+    
+    const color = statusColors[status] || '#6c757d'; // Default to gray if status unknown
     
     // Dynamic sizing based on zoom level
     const currentZoom = this.map ? this.map.getZoom() : 12;
-    const baseSize = 20; // Base size in pixels
+    const baseSize = 12; // Base size in pixels
     const zoomFactor = Math.max(0.7, Math.min(1.5, currentZoom / 12)); // Scale between 0.7x and 1.5x
     const size = Math.round(baseSize * zoomFactor);
-    const fontSize = Math.round(11 * zoomFactor);
     const borderWidth = Math.max(2, Math.round(2 * zoomFactor));
     
-    const markerNumber = index + 1;
-
+    // Add a small border color based on priority for additional visual distinction
+    const priorityBorderColors = {
+      'low': '#28a745',      // Green border
+      'medium': '#ffc107',   // Yellow border
+      'high': '#fd7e14',     // Orange border
+      'urgent': '#dc3545'    // Red border
+    };
+    const priority = (complaint.priority || 'medium').toLowerCase();
+    const borderColor = priorityBorderColors[priority] || '#ffffff';
+    
     return L.divIcon({
       html: `<div style="
         background-color: ${color};
@@ -394,21 +912,18 @@ class HeatmapVisualization {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: ${fontSize}px;
-        font-weight: bold;
-        border: ${borderWidth}px solid white;
+        border: ${borderWidth}px solid ${borderColor};
         box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         z-index: ${1000 + index};
         position: relative;
         cursor: pointer;
         transition: all 0.2s ease;
-      ">${markerNumber}</div>`,
+      "></div>`,
       className: 'complaint-marker',
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2]
     });
   }
-
   /**
    * Create popup content for complaint
    * @param {Object} complaint - Complaint data
@@ -417,17 +932,20 @@ class HeatmapVisualization {
   createComplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
     const priorityClass = complaint.priority.replace(' ', '-').toLowerCase();
+    const assignedOffices = (complaint.departments && complaint.departments.length > 0)
+      ? complaint.departments.join(', ')
+      : (complaint.department || 'Not assigned');
 
     return `
-      <div class="complaint-popup-content">
-        <h4>${complaint.title}</h4>
-        <div class="complaint-details">
-          <p><strong>Type:</strong> ${complaint.type}</p>
-          <p><strong>Status:</strong> <span class="status-${complaint.status.replace(' ', '-')}">${complaint.status}</span></p>
-          <p><strong>Priority:</strong> <span class="priority-${priorityClass}">${complaint.priority}</span></p>
-          <p><strong>Location:</strong> ${complaint.location}</p>
-          <p><strong>Submitted:</strong> ${submittedDate}</p>
-          ${complaint.department ? `<p><strong>Department:</strong> ${complaint.department}</p>` : ''}
+      <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
+        <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${complaint.title}</h4>
+        <div class="complaint-details" style="margin: 0; padding: 0;">
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${complaint.type}</p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(' ', '-')}">${complaint.status}</span></p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${complaint.priority}</span></p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${complaint.location}</p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
       </div>
     `;
@@ -443,6 +961,9 @@ class HeatmapVisualization {
     const submittedTime = new Date(complaint.submittedAt).toLocaleTimeString();
     const priorityClass = complaint.priority.replace(' ', '-').toLowerCase();
     const statusClass = complaint.status.replace(' ', '-').toLowerCase();
+    const assignedOffices = (complaint.departments && complaint.departments.length > 0)
+      ? complaint.departments.join(', ')
+      : (complaint.department || 'Not assigned');
 
     // Calculate days since submission
     const daysSinceSubmission = Math.floor((Date.now() - new Date(complaint.submittedAt).getTime()) / (1000 * 60 * 60 * 24));
@@ -452,46 +973,40 @@ class HeatmapVisualization {
 
     if (!hasAccess) {
       return `
-        <div class="complaint-detail-popup">
-          <div class="popup-header">
-            <h3>${complaint.title}</h3>
-            <div class="complaint-badges">
-              <span class="badge priority-${priorityClass}">${complaint.priority.toUpperCase()}</span>
-              <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
+        <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
+          <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
+            <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${complaint.title}</h3>
+            <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
+              <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
+              <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
             </div>
           </div>
-
-          <div class="popup-content">
-            <div class="complaint-info">
-              <div class="info-row">
-                <span class="label">Type:</span>
+          <div class="popup-content" style="margin: 0; padding: 0;">
+            <div class="complaint-info" style="margin: 0; padding: 0;">
+              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+                <span class="label" style="font-weight: bold;">Type:</span>
                 <span class="value">${complaint.type}</span>
               </div>
-
-              <div class="info-row">
-                <span class="label">Location:</span>
-                <span class="value">${complaint.location}</span>
+              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+                <span class="label" style="font-weight: bold;">Location:</span>
+                <span class="value" style="text-align: right; max-width: 60%;">${complaint.location}</span>
               </div>
-
-              <div class="info-row">
-                <span class="label">Department:</span>
-                <span class="value">${complaint.department || 'Not assigned'}</span>
+              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+                <span class="label" style="font-weight: bold;">Assigned Offices:</span>
+                <span class="value" style="text-align: right; max-width: 60%;">${assignedOffices}</span>
               </div>
-
-              <div class="info-row">
-                <span class="label">Submitted:</span>
-                <span class="value">${submittedDate} at ${submittedTime}</span>
+              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+                <span class="label" style="font-weight: bold;">Submitted:</span>
+                <span class="value">${submittedDate}</span>
               </div>
-
-              <div class="info-row">
-                <span class="label">Days Open:</span>
+              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+                <span class="label" style="font-weight: bold;">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
               </div>
             </div>
-
-            <div class="popup-actions">
-              <div class="access-denied">
-                <p>🔒 Access restricted to assigned department</p>
+            <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd;">
+              <div class="access-denied" style="font-size: 10px; color: #dc3545; text-align: center; padding: 4px;">
+                <p style="margin: 0;">🔒 Access restricted to assigned office</p>
               </div>
             </div>
           </div>
@@ -500,49 +1015,43 @@ class HeatmapVisualization {
     }
 
     return `
-      <div class="complaint-detail-popup">
-        <div class="popup-header">
-          <h3>${complaint.title}</h3>
-          <div class="complaint-badges">
-            <span class="badge priority-${priorityClass}">${complaint.priority.toUpperCase()}</span>
-            <span class="badge status-${statusClass}">${complaint.status.toUpperCase()}</span>
+      <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
+        <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
+          <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${complaint.title}</h3>
+          <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
+            <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
+            <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
           </div>
         </div>
-
-        <div class="popup-content">
-          <div class="complaint-info">
-            <div class="info-row">
-              <span class="label">Type:</span>
+        <div class="popup-content" style="margin: 0; padding: 0;">
+          <div class="complaint-info" style="margin: 0; padding: 0;">
+            <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+              <span class="label" style="font-weight: bold;">Type:</span>
               <span class="value">${complaint.type}</span>
             </div>
-
-            <div class="info-row">
-              <span class="label">Location:</span>
-              <span class="value">${complaint.location}</span>
+            <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+              <span class="label" style="font-weight: bold;">Location:</span>
+              <span class="value" style="text-align: right; max-width: 60%;">${complaint.location}</span>
             </div>
-
-            <div class="info-row">
-              <span class="label">Department:</span>
-              <span class="value">${complaint.department || 'Not assigned'}</span>
+            <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+              <span class="label" style="font-weight: bold;">Assigned Offices:</span>
+              <span class="value" style="text-align: right; max-width: 60%;">${assignedOffices}</span>
             </div>
-
-            <div class="info-row">
-              <span class="label">Submitted:</span>
-              <span class="value">${submittedDate} at ${submittedTime}</span>
+            <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+              <span class="label" style="font-weight: bold;">Submitted:</span>
+              <span class="value">${submittedDate}</span>
             </div>
-
-            <div class="info-row">
-              <span class="label">Days Open:</span>
+            <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
+              <span class="label" style="font-weight: bold;">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? 's' : ''}</span>
             </div>
           </div>
-
-          <div class="popup-actions">
-            <button class="btn-details" onclick="viewComplaintDetails('${complaint.id}')">
-              📋 View Full Details
+          <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
+            <button class="btn-details" onclick="viewComplaintDetails('${complaint.id}')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+              📋 Details
             </button>
-            <button class="btn-location" onclick="centerOnComplaint(${complaint.lat}, ${complaint.lng})">
-              📍 Center on Map
+            <button class="btn-location" onclick="centerOnComplaint(${complaint.lat}, ${complaint.lng})" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+              📍 Center
             </button>
           </div>
         </div>
@@ -896,16 +1405,41 @@ class HeatmapVisualization {
   }
 
   /**
-   * Hide markers from map
+   * Hide markers from map (but keep them in the layer for later use)
    */
   hideMarkers() {
-    if (this.markerLayer && this.map.hasLayer(this.markerLayer)) {
+    if (this.markerLayer && this.markerLayer.getLayers) {
+      try {
+        // Remove each marker individually from map (but keep in layer)
+        const layers = this.markerLayer.getLayers();
+        layers.forEach((layer) => {
+          if (layer && this.map && this.map.hasLayer && this.map.hasLayer(layer)) {
+            this.map.removeLayer(layer);
+          }
+        });
+        // Remove the layer group from map if attached
+        if (this.map && this.map.hasLayer && this.map.hasLayer(this.markerLayer)) {
       this.map.removeLayer(this.markerLayer);
+        }
+        // DO NOT clear markers from the layer - we want to keep them for when zoom > 11
+        // this.markerLayer.clearLayers(); // REMOVED - this was causing markers to disappear
+      } catch (error) {
+        console.warn('[HEATMAP] Error hiding markers:', error);
+        // Fallback: just remove the layer from map
+        if (this.map && this.map.removeLayer) {
+          try {
+            this.map.removeLayer(this.markerLayer);
+          } catch (e) {
+            // Ignore if already removed
+          }
+        }
+      }
     }
   }
 
   /**
-   * Update marker sizes based on current zoom level
+   * Update marker sizes and colors based on current zoom level and complaint data
+   * This ensures markers reflect current status and priority
    */
   updateMarkerSizes() {
     if (!this.markerLayer || !this.map) return;
@@ -920,11 +1454,48 @@ class HeatmapVisualization {
       );
       
       if (complaint) {
-        // Create new icon with updated size based on current zoom
+        // Create new icon with updated size and color based on current zoom and complaint status
         const newIcon = this.getComplaintIcon(complaint, index);
         marker.setIcon(newIcon);
       }
     });
+  }
+  
+  /**
+   * Update a specific marker's appearance when complaint data changes
+   * @param {string} complaintId - ID of the complaint to update
+   */
+  updateMarker(complaintId) {
+    if (!this.markerLayer || !this.map) return;
+    
+    const complaint = this.complaintData.find(c => c.id === complaintId);
+    if (!complaint) return;
+    
+    const markers = this.markerLayer.getLayers();
+    const marker = markers.find(m => {
+      const latLng = m.getLatLng();
+      return Math.abs(complaint.lat - latLng.lat) < 0.0001 && 
+             Math.abs(complaint.lng - latLng.lng) < 0.0001;
+    });
+    
+    if (marker) {
+      const index = markers.indexOf(marker);
+      const newIcon = this.getComplaintIcon(complaint, index);
+      marker.setIcon(newIcon);
+    }
+  }
+  
+  /**
+   * Refresh all markers to reflect current complaint data (status, priority, etc.)
+   * Useful when complaint data is updated externally
+   */
+  refreshMarkers() {
+    if (!this.markerLayer || !this.map) return;
+    
+    // Hide and recreate marker layer to ensure all markers reflect current data
+    this.hideMarkers();
+    this.createMarkerLayer();
+    this.showMarkers();
   }
 
   /**

@@ -36,7 +36,6 @@ module.exports = {
     'no-dupe-class-members': 'error',
     'no-dupe-else-if': 'error',
     'no-constant-condition': ['error', { 'checkLoops': false }],
-
     // Enhanced code quality rules
     'no-debugger': 'error',
     'no-alert': 'error',
@@ -99,7 +98,6 @@ module.exports = {
     'no-this-before-super': 'error',
     'no-undef': 'error',
     'no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
-
     // Security rules - comprehensive security scanning
     'security/detect-buffer-noassert': 'error',
     'security/detect-child-process': 'error',
@@ -115,11 +113,9 @@ module.exports = {
     'security/detect-unsafe-regex': 'error', // Unsafe regular expressions (ReDoS)
     'security/detect-pseudoRandomBytes': 'error', // Weak random number generation
     'security/detect-no-csrf-before-method-override': 'error', // CSRF protection
-
     // XSS protection rules - comprehensive sanitization checks
     'no-unsanitized/method': 'error', // Unsafe method calls
     'no-unsanitized/property': 'error', // Unsafe property access
-
     // Additional security rules
     'no-eval': 'error',
     'no-implied-eval': 'error',
@@ -137,8 +133,8 @@ module.exports = {
     'public/examples/',
     'public/components/',
     'public/styles/',
+    'src/server/synthetic-security.js', // Synthetic test file with intentional vulnerabilities
   ],
-
   // Environment-specific overrides
   overrides: [
     // Client-side JavaScript files (browser environment)
@@ -155,16 +151,13 @@ module.exports = {
       rules: {
         // Allow browser globals in client files
         'no-undef': 'off', // Disable undefined globals check for browser APIs
-
         // Relax some Node.js specific rules for browser code
         'security/detect-non-literal-fs-filename': 'off',
         'security/detect-child-process': 'off',
         'no-console': 'off', // Allow console in browser code
-
         // Browser-specific security rules - warn instead of error for gradual migration
         'no-unsanitized/method': 'warn',
         'no-unsanitized/property': 'warn',
-
         // Allow common browser patterns
         'no-inner-declarations': 'off',
         'no-case-declarations': 'off',
@@ -183,7 +176,6 @@ module.exports = {
         'alert': 'readonly',
         'confirm': 'readonly',
         'prompt': 'readonly',
-
         // Common libraries/globals that might be used
         '$': 'readonly',
         'jQuery': 'readonly',
@@ -193,7 +185,6 @@ module.exports = {
         'google': 'readonly',
         'Map': 'readonly',
         'Marker': 'readonly',
-
         // Development globals
         'process': 'readonly',
         'require': 'readonly',
@@ -201,7 +192,6 @@ module.exports = {
         'exports': 'readonly',
       },
     },
-
     // Server-side JavaScript files (Node.js environment)
     {
       files: [
@@ -221,15 +211,12 @@ module.exports = {
       rules: {
         // Strict rules for server code
         'no-console': 'off', // Allow console.log in server code for debugging
-
         // Node.js specific security rules
         'security/detect-non-literal-fs-filename': 'warn',
         'security/detect-child-process': 'warn',
-
         // Disable browser-specific rules for server code
         'no-unsanitized/method': 'off',
         'no-unsanitized/property': 'off',
-
         // Strict rules for server
         'no-undef': 'error', // Strict undefined checks for server
       },
@@ -243,7 +230,6 @@ module.exports = {
         '__filename': 'readonly',
         'process': 'readonly',
         'Buffer': 'readonly',
-
         // Common Node.js libraries
         'supabase': 'readonly',
         'express': 'readonly',
@@ -252,7 +238,6 @@ module.exports = {
         'multer': 'readonly',
       },
     },
-
     // Test files
     {
       files: [
@@ -285,7 +270,6 @@ module.exports = {
         'afterAll': 'readonly',
       },
     },
-
     // Utility and shared files
     {
       files: [

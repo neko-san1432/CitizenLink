@@ -2,8 +2,8 @@
  * Complaint Map Component
  * Displays an interactive map showing the complaint location
  */
-
 class ComplaintMap {
+
   constructor(containerId, options = {}) {
     this.containerId = containerId;
     this.container = document.getElementById(containerId);
@@ -14,18 +14,15 @@ class ComplaintMap {
       center: [14.5995, 120.9842], // Default to Manila
       ...options
     };
-    
     if (this.container) {
       this.init();
     }
   }
-
   init() {
     this.loadLeaflet().then(() => {
       this.createMap();
     });
   }
-
   async loadLeaflet() {
     return new Promise((resolve, reject) => {
       // Check if Leaflet is already loaded
@@ -33,7 +30,6 @@ class ComplaintMap {
         resolve();
         return;
       }
-
       // Load Leaflet CSS
       const css = document.createElement('link');
       css.rel = 'stylesheet';
@@ -50,59 +46,43 @@ class ComplaintMap {
       document.head.appendChild(css);
     });
   }
-
   createMap() {
+
     if (!window.L) {
       console.error('[COMPLAINT_MAP] Leaflet not loaded');
       return;
     }
-
-    console.log('[COMPLAINT_MAP] Creating map in container:', this.containerId);
-
     // Create map
     this.map = L.map(this.containerId).setView(this.options.center, this.options.zoom);
-
     // Add tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19
     }).addTo(this.map);
-
     // Add container styling
     this.container.style.height = '300px';
     this.container.style.borderRadius = '8px';
     this.container.style.overflow = 'hidden';
-
-    console.log('[COMPLAINT_MAP] Map created successfully');
   }
-
   setLocation(latitude, longitude, title = 'Complaint Location', description = '') {
+
     if (!this.map) {
       console.warn('[COMPLAINT_MAP] Map not initialized');
       return;
     }
-
-    console.log('[COMPLAINT_MAP] Setting location:', { latitude, longitude, title, description });
-
     // Remove existing marker
     if (this.marker) {
       this.map.removeLayer(this.marker);
     }
-
     // Validate coordinates
     if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
       console.warn('[COMPLAINT_MAP] Invalid coordinates provided:', { latitude, longitude });
       return;
     }
-
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
-
-    console.log('[COMPLAINT_MAP] Creating marker at:', { lat, lng });
-
     // Create marker
     this.marker = L.marker([lat, lng]).addTo(this.map);
-
     // Create popup content
     const popupContent = `
       <div class="complaint-map-popup">
@@ -120,7 +100,7 @@ class ComplaintMap {
     // Open popup
     this.marker.openPopup();
 
-    console.log('[COMPLAINT_MAP] Marker created and added to map');
+    
   }
 
   setMultipleLocations(locations) {
@@ -250,7 +230,6 @@ if (document.readyState === 'loading') {
     document.querySelectorAll('[data-complaint-map]').forEach(element => {
       const complaintData = JSON.parse(element.dataset.complaintMap || '{}');
       ComplaintMap.createComplaintMap(element.id, complaintData);
-      console.log('[COMPLAINT_MAP] Auto-initialized for:', element.id);
     });
   });
 } else {
@@ -258,6 +237,6 @@ if (document.readyState === 'loading') {
   document.querySelectorAll('[data-complaint-map]').forEach(element => {
     const complaintData = JSON.parse(element.dataset.complaintMap || '{}');
     ComplaintMap.createComplaintMap(element.id, complaintData);
-    console.log('[COMPLAINT_MAP] Auto-initialized for:', element.id);
+    
   });
 }

@@ -1,6 +1,6 @@
 // Office Selection Modal for Coordinator Approval
-
 class DepartmentSelectionModal {
+
   constructor() {
     this.modal = null;
     this.selectedDepartments = [];
@@ -8,27 +8,22 @@ class DepartmentSelectionModal {
     this.complaintId = null;
     this.callback = null;
   }
-
   async show(complaintId, preferredDepartments = [], callback) {
     this.complaintId = complaintId;
     this.preferredDepartments = preferredDepartments || [];
     this.callback = callback;
     this.selectedDepartments = [...this.preferredDepartments]; // Pre-select preferred
-
     await this.createModal();
     this.attachEventListeners();
     this.modal.style.display = 'flex';
   }
-
   async createModal() {
     // Remove existing modal if any
     if (this.modal) {
       this.modal.remove();
     }
-
     // Get departments from API
     const departments = await this.fetchDepartments();
-
     this.modal = document.createElement('div');
     this.modal.className = 'modal-overlay';
     this.modal.innerHTML = `
@@ -80,11 +75,9 @@ class DepartmentSelectionModal {
         },
         credentials: 'include'
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
       return data.data || data.departments || [];
     } catch (error) {
@@ -92,19 +85,16 @@ class DepartmentSelectionModal {
       return [];
     }
   }
-
   attachEventListeners() {
     // Close modal
     this.modal.querySelector('.modal-close').addEventListener('click', () => this.hide());
     this.modal.querySelector('#cancel-approval').addEventListener('click', () => this.hide());
-    
     // Close on overlay click
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
         this.hide();
       }
     });
-
     // Department checkboxes
     this.modal.querySelectorAll('.department-checkbox').forEach(checkbox => {
       checkbox.addEventListener('change', (e) => {
@@ -120,38 +110,32 @@ class DepartmentSelectionModal {
         this.updateConfirmButton();
       });
     });
-
     // Confirm approval
     this.modal.querySelector('#confirm-approval').addEventListener('click', () => {
       this.confirmApproval();
     });
   }
-
   updateSelectedCount() {
     const countElement = this.modal.querySelector('#selected-count');
     if (countElement) {
       countElement.textContent = this.selectedDepartments.length;
     }
   }
-
   updateConfirmButton() {
     const confirmBtn = this.modal.querySelector('#confirm-approval');
     if (confirmBtn) {
       confirmBtn.disabled = this.selectedDepartments.length === 0;
     }
   }
-
   async confirmApproval() {
     if (this.selectedDepartments.length === 0) {
       alert('Please select at least one office');
       return;
     }
-
     try {
       const confirmBtn = this.modal.querySelector('#confirm-approval');
       confirmBtn.disabled = true;
       confirmBtn.textContent = 'Processing...';
-
       const response = await fetch(`/api/coordinator/review-queue/${this.complaintId}/decide`, {
         method: 'POST',
         headers: {
@@ -168,46 +152,39 @@ class DepartmentSelectionModal {
           }
         })
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const result = await response.json();
-      
       if (result.success) {
         // Show success message
         if (typeof showToast === 'function') {
           showToast('success', result.message || 'Complaint approved successfully');
         }
-        
         // Call callback to refresh the queue
         if (this.callback) {
           this.callback();
         }
-        
         this.hide();
       } else {
         throw new Error(result.error || 'Failed to approve complaint');
       }
     } catch (error) {
       console.error('Error approving complaint:', error);
-      alert('Failed to approve complaint: ' + error.message);
-      
+      alert(`Failed to approve complaint: ${  error.message}`);
       // Re-enable button
       const confirmBtn = this.modal.querySelector('#confirm-approval');
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Approve & Assign';
     }
   }
-
   hide() {
+
     if (this.modal) {
       this.modal.remove();
       this.modal = null;
     }
   }
 }
-
 // Export for use in other files
 window.DepartmentSelectionModal = DepartmentSelectionModal;

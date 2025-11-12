@@ -1,31 +1,26 @@
 // Signup page specific functionality
 import { supabase } from '../config/config.js';
+import { renderPrivacyNotice } from '../utils/privacyContent.js';
 
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
   try {
     // console.log removed for security
-
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
-
     if (session && !error) {
       // console.log removed for security
-
       // Get user metadata
       const {user} = session;
       const role = user?.user_metadata?.role || '';
       const name = user?.user_metadata?.name || '';
-
       // Check if user has completed registration
       if (role && name) {
         // console.log removed for security
         window.location.href = '/dashboard';
-
       } else {
         // console.log removed for security
         window.location.href = '/oauth-continuation';
-
       }
     } else {
       // console.log removed for security
@@ -51,31 +46,26 @@ const initializeSignupPage = () => {
       checkAuthentication();
     }
   });
-
   // Terms & Privacy Modals are now handled by the SimpleModal component
   // Listen for acceptance events to update the checkbox
   document.addEventListener('termsAccepted', () => {
     const termsCheckbox = document.getElementById('terms-checkbox');
     if (termsCheckbox) termsCheckbox.checked = true;
   });
-
   document.addEventListener('privacyAccepted', () => {
     const termsCheckbox = document.getElementById('terms-checkbox');
     if (termsCheckbox) termsCheckbox.checked = true;
   });
+  renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
 };
-
 // --- Live password strength meter wiring ---
 function attachPasswordStrengthMeter() {
   try {
     const passwordInput = document.getElementById('regPassword');
     const strengthFill = document.getElementById('strength-fill');
     const strengthText = document.getElementById('strength-text');
-
     if (!passwordInput || !strengthFill || !strengthText) return;
-
     const classList = ['weak', 'fair', 'good', 'strong'];
-
     const calcScore = (pwd) => {
       let score = 0;
       if (!pwd) return 0;
@@ -99,14 +89,12 @@ function attachPasswordStrengthMeter() {
         default: return 'Strong';
       }
     };
-
     const classFor = (score) => {
       if (score <= 1) return 'weak';
       if (score === 2) return 'fair';
       if (score === 3) return 'good';
       return 'strong';
     };
-
     const update = () => {
       const pwd = passwordInput.value || '';
       // Do not evaluate if empty or less than 8 chars
@@ -132,13 +120,10 @@ function attachPasswordStrengthMeter() {
       strengthFill.style.width = widthMap[cls];
       strengthText.textContent = `Password strength: ${labelFor(score)}`;
     };
-
     passwordInput.addEventListener('input', update);
     update();
   } catch (_) {}
 }
-
-
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeSignupPage);

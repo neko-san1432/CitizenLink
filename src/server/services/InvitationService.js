@@ -2,20 +2,18 @@ const crypto = require('crypto');
 const InvitationTokenRepository = require('../repositories/InvitationTokenRepository');
 
 class InvitationService {
+
   constructor() {
     this.invites = new InvitationTokenRepository();
   }
-
   generateTokenString() {
     return crypto.randomBytes(32).toString('hex');
   }
-
   async createInvitation({ createdBy, role, departmentId = null, employeeIdRequired = true, maxUses = 1, expiresInHours = 1 }) {
     if (!createdBy) throw new Error('createdBy is required');
     if (!role) throw new Error('role is required');
     const token = this.generateTokenString();
     const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString();
-
     const tokenData = {
       token,
       created_by: createdBy,
@@ -28,11 +26,9 @@ class InvitationService {
       active: true,
       created_at: new Date().toISOString()
     };
-
     const created = await this.invites.createToken(tokenData);
     return created;
   }
-
   async validateInvitation(token) {
     if (!token) throw new Error('token is required');
     const invite = await this.invites.getToken(token);
@@ -43,7 +39,6 @@ class InvitationService {
     if (new Date(invite.expires_at).getTime() < now) throw new Error('Invitation expired');
     return invite;
   }
-
   async consumeInvitation(token) {
     const invite = await this.validateInvitation(token);
     const updatedUses = (invite.uses || 0) + 1;
@@ -60,4 +55,3 @@ class InvitationService {
 }
 
 module.exports = InvitationService;
-

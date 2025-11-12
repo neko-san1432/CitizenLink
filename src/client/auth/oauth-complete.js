@@ -1,18 +1,19 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
+import { validateAndSanitizeForm } from '../utils/validation.js';
+import { renderPrivacyNotice } from '../utils/privacyContent.js';
 
 // reCAPTCHA setup - using auto-rendered captcha from HTML
 const oauthCompleteCaptchaWidgetId = 0; // Default ID for auto-rendered captchas
-
 // Wait for captcha to be ready
 const waitForCaptcha = () => {
+
   if (window.grecaptcha && window.grecaptcha.getResponse) {
     // console.log removed for security
     return true;
   }
   return false;
 };
-
 // Check if captcha is ready, retry if not
 const checkCaptchaReady = () => {
   if (waitForCaptcha()) {
@@ -22,28 +23,22 @@ const checkCaptchaReady = () => {
     setTimeout(checkCaptchaReady, 500);
   }
 };
-
 // Start checking for captcha readiness
 checkCaptchaReady();
-
 async function verifyCaptchaOrFail(widgetId) {
   // console.log removed for security
-
   if (widgetId === null || widgetId === undefined) {
     // console.log removed for security
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };
   }
-
   if (!window.grecaptcha) {
     // console.log removed for security
     showMessage('error', 'reCAPTCHA not loaded. Please refresh the page.');
     return { ok: false };
   }
-
   const token = window.grecaptcha.getResponse(widgetId);
   // console.log removed for security
-
   if (!token) {
     showMessage('error', 'Please complete the captcha.');
     return { ok: false };
@@ -69,13 +64,11 @@ async function verifyCaptchaOrFail(widgetId) {
     }
   }
 }
-
 // Prefill OAuth data from provider
 const prefillOAuthData = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
-
     if (user) {
       // Extract name from various OAuth provider sources
       const name = user.user_metadata?.name ||
@@ -83,10 +76,21 @@ const prefillOAuthData = async () => {
                      `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : '') ||
                    '';
 
-      // Prefill name (read-only)
-      const nameInput = document.getElementById('name');
-      if (nameInput && name) {
-        nameInput.value = name.trim();
+      // Split name into firstName and lastName
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Prefill firstName
+      const firstNameInput = document.getElementById('firstName');
+      if (firstNameInput && firstName) {
+        firstNameInput.value = firstName;
+      }
+
+      // Prefill lastName
+      const lastNameInput = document.getElementById('lastName');
+      if (lastNameInput && lastName) {
+        lastNameInput.value = lastName;
       }
 
       // Prefill email (read-only)
@@ -102,14 +106,11 @@ const prefillOAuthData = async () => {
                         user.user_metadata?.phone ||
                         user.user_metadata?.mobile ||
                         null;
-
       const mobileInput = document.getElementById('mobile');
       if (mobileInput) {
         if (oauthPhone) {
-
           // Extract digits only (handle various formats: +63XXX, +1XXX, etc.)
           let digits = oauthPhone.replace(/\D/g, '');
-
           // If it starts with country code, try to extract Philippines mobile
           if (digits.startsWith('63') && digits.length >= 12) {
             // Remove country code 63 and keep 10 digits
@@ -120,49 +121,64 @@ const prefillOAuthData = async () => {
             // Take last 10 digits
             digits = digits.substring(digits.length - 10);
           }
-
           mobileInput.value = digits;
-          mobileInput.readOnly = true;
-          mobileInput.style.background = '#f5f5f5';
-          mobileInput.style.cursor = 'not-allowed';
-          // console.log removed for security
-        } else {
-          // No phone from OAuth - keep field editable
-          // console.log removed for security
-          mobileInput.readOnly = false;
-          mobileInput.style.background = '';
-          mobileInput.style.cursor = '';
-          mobileInput.required = true;
         }
+        // Mobile is always editable for OAuth continuation
+        mobileInput.required = true;
       }
     }
   } catch (error) {
     console.error('Error prefilling OAuth data:', error);
   }
 };
-
 // Handle form submission
 const oauthCompleteForm = document.getElementById('oauthCompleteForm');
 if (oauthCompleteForm) {
   oauthCompleteForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const name = document.getElementById('name').value.trim();
+    const firstName = document.getElementById('firstName')?.value.trim() || '';
+    const lastName = document.getElementById('lastName')?.value.trim() || '';
     const email = document.getElementById('email').value.trim();
     const mobile = document.getElementById('mobile').value.trim();
+    const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+    const gender = document.getElementById('gender')?.value || '';
+    const passwordInput = document.getElementById('regPassword');
+    const confirmPasswordInput = document.getElementById('reRegPassword');
+    const regPass = passwordInput ? passwordInput.value : '';
+    const reRegPass = confirmPasswordInput ? confirmPasswordInput.value : '';
+    const passwordProvided = Boolean(passwordInput && regPass);
 
-    if (!name) {
-      showMessage('error', 'Name is required');
+    // Early password length checks (only if password field exists)
+    if (passwordProvided && regPass.length < 8) {
+      showMessage('error', 'Password must be at least 8 characters long');
       return;
     }
 
-    if (!email) {
-      showMessage('error', 'Email is required');
+    // Validate form data
+    const validationRules = {
+      firstName: { required: true, minLength: 1, maxLength: 100 },
+      lastName: { required: true, minLength: 1, maxLength: 100 },
+      email: { required: true, type: 'email' },
+      mobile: { required: true, type: 'mobile' },
+      addressLine1: { required: false, minLength: 0, maxLength: 255 },
+      gender: { required: false }
+    };
+    if (passwordProvided) {
+      validationRules.regPassword = { required: true, type: 'password' };
+    }
+    const formData = { firstName, lastName, email, mobile, addressLine1, gender };
+    if (passwordProvided) {
+      formData.regPassword = regPass;
+    }
+    const validation = validateAndSanitizeForm(formData, validationRules);
+    if (!validation.isValid) {
+      showMessage('error', validation.errors.join(', '));
       return;
     }
 
-    if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
-      showMessage('error', 'Please enter a valid 10-digit mobile number');
+    // Additional password confirmation check (only if password provided)
+    if (passwordProvided && reRegPass !== regPass) {
+      showMessage('error', 'Passwords don\'t match');
       return;
     }
 
@@ -174,26 +190,41 @@ if (oauthCompleteForm) {
       // console.log removed for security
     }
 
-    // Update user metadata with mobile number and complete profile via backend
+    // Build JSON payload matching signup structure
+    const payload = {
+      email: validation.sanitizedData.email,
+      firstName: validation.sanitizedData.firstName,
+      lastName: validation.sanitizedData.lastName,
+      mobileNumber: `+63${validation.sanitizedData.mobile}`,
+      gender: validation.sanitizedData.gender || '',
+      address: { line1: validation.sanitizedData.addressLine1 || '' },
+      agreedToTerms: true,
+      isOAuth: true // OAuth continuation
+    };
+    if (passwordProvided) {
+      payload.password = regPass;
+      payload.confirmPassword = reRegPass;
+    }
+
+    // Update user metadata and complete profile via backend
     try {
       const response = await fetch('/api/auth/complete-oauth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          name,
-          mobile
-        })
+        body: JSON.stringify(payload)
       });
-
       const result = await response.json();
-
       if (!result.success) {
-        showMessage('error', result.error || 'Failed to complete registration');
+        const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
+        if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
+          showMessage('error', 'Email is used');
+        } else {
+          showMessage('error', result.error || 'Failed to complete registration');
+        }
         return;
       }
-
       showMessage('success', 'Profile completed successfully! Redirecting to dashboard...');
       setTimeout(() => {
         // Redirect directly to dashboard (user is already authenticated)
@@ -205,15 +236,14 @@ if (oauthCompleteForm) {
     }
   });
 }
-
 // Terms and Privacy handlers
-document.getElementById('toc').addEventListener('click', () => {
+document.getElementById('toc').addEventListener('click', (event) => {
+  event.preventDefault();
   document.getElementById('terms').innerHTML = '<h3>Terms and Conditions</h3><p>Your terms content here...</p>';
 });
-
-document.getElementById('pc').addEventListener('click', () => {
-  document.getElementById('privacy').innerHTML = '<h3>Privacy Policy</h3><p>Your privacy policy content here...</p>';
+document.getElementById('pc').addEventListener('click', (event) => {
+  event.preventDefault();
+  renderPrivacyNotice('#privacy', { headingTag: 'h3' });
 });
-
 // Prefill data on page load
 prefillOAuthData();

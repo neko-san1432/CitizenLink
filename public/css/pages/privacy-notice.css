@@ -1,0 +1,221 @@
+.privacy-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  font-family: 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--color-text, #1f2933);
+}
+
+.privacy-hero {
+  margin-bottom: 2.5rem;
+}
+
+.privacy-hero h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  margin-bottom: 1rem;
+  color: var(--color-primary, #1f6feb);
+}
+
+.privacy-hero p {
+  font-size: 1.1rem;
+  line-height: 1.75;
+  color: #4b5563;
+}
+
+.privacy-content {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  line-height: 1.75;
+}
+
+.privacy-content h2,
+.privacy-content h3 {
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: #1f2933;
+}
+
+.privacy-content h2:first-child,
+.privacy-content h3:first-child {
+  margin-top: 0;
+}
+
+.privacy-content ul {
+  margin: 0 0 1.25rem 1.5rem;
+  padding: 0;
+}
+
+.privacy-content li {
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.privacy-note {
+  background: rgba(37, 99, 235, 0.06);
+  border-left: 4px solid #2563eb;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #1d4ed8;
+}
+
+.privacy-updated {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.privacy-actions {
+  margin-top: 3rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.12));
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.privacy-actions h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+  color: #1f2933;
+}
+
+.privacy-actions p {
+  color: #334155;
+  margin-bottom: 1rem;
+}
+
+.privacy-actions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.privacy-actions li {
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.privacy-actions a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.privacy-actions a:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  background: var(--gray-100);
+  padding: var(--space-8) 0;
+  text-align: center;
+  color: var(--gray-600);
+  border-top: 1px solid var(--gray-200);
+}
+
+.footer small {
+  font-size: 0.875rem;
+}
+
+.footer-links {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.footer-links a {
+  color: var(--primary-600);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .privacy-content {
+    padding: 1.5rem;
+  }
+}
+
+/* Dark Mode Styles */
+html.dark .privacy-page {
+  color: #e2e8f0;
+  background-color: #0f172a;
+}
+
+html.dark .privacy-hero h1 {
+  color: #60a5fa;
+}
+
+html.dark .privacy-hero p {
+  color: #94a3b8;
+}
+
+html.dark .privacy-content {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .privacy-content h2,
+html.dark .privacy-content h3 {
+  color: #f1f5f9;
+}
+
+html.dark .privacy-content li {
+  color: #cbd5e1;
+}
+
+html.dark .privacy-note {
+  background: rgba(59, 130, 246, 0.15);
+  border-left-color: #60a5fa;
+  color: #93c5fd;
+}
+
+html.dark .privacy-updated {
+  color: #94a3b8;
+}
+
+html.dark .privacy-actions {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(14, 165, 233, 0.2));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark .privacy-actions h2 {
+  color: #f1f5f9;
+}
+
+html.dark .privacy-actions p {
+  color: #cbd5e1;
+}
+
+html.dark .privacy-actions li {
+  color: #e2e8f0;
+}
+
+html.dark .privacy-actions a {
+  color: #60a5fa;
+}
+
+html.dark .privacy-actions a:hover {
+  color: #93c5fd;
+}
+
+html.dark .footer {
+  background: #1e293b;
+  color: #94a3b8;
+  border-top-color: #334155;
+}
+
+html.dark .footer-links a {
+  color: #60a5fa;
+}
+
+html.dark .footer-links a:hover {
+  color: #93c5fd;
+}

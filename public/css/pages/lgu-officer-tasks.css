@@ -526,3 +526,191 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Dark Mode Styles */
+html.dark .main-content {
+    background-color: #0f172a;
+}
+
+html.dark .page-header h1 {
+    color: #f1f5f9;
+}
+
+html.dark .page-header p {
+    color: #94a3b8;
+}
+
+html.dark .filters-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .filter-group label {
+    color: #cbd5e1;
+}
+
+html.dark .filter-select,
+html.dark .filter-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+html.dark .filter-select:focus,
+html.dark .filter-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .stat-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .stat-number {
+    color: #60a5fa;
+}
+
+html.dark .stat-label {
+    color: #94a3b8;
+}
+
+html.dark .task-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .task-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .task-title {
+    color: #f1f5f9;
+}
+
+html.dark .task-id {
+    color: #94a3b8;
+}
+
+html.dark .task-description {
+    color: #cbd5e1;
+}
+
+html.dark .task-details {
+    color: #94a3b8;
+}
+
+html.dark .assignment-info {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+html.dark .assignment-info.assigned {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+}
+
+html.dark .assignment-info.in_progress {
+    background: #78350f;
+    border-color: #f59e0b;
+}
+
+html.dark .assignment-info.completed {
+    background: #064e3b;
+    border-color: #10b981;
+}
+
+html.dark .deadline-warning {
+    background: #7f1d1d;
+    border-color: #dc2626;
+    color: #fca5a5;
+}
+
+html.dark .deadline-warning.overdue {
+    background: #991b1b;
+    border-color: #ef4444;
+}
+
+html.dark .loading {
+    color: #94a3b8;
+}
+
+html.dark .loading .spinner {
+    border-color: #334155;
+    border-top-color: #60a5fa;
+}
+
+html.dark .empty-state {
+    color: #94a3b8;
+}
+
+html.dark .empty-state h2 {
+    color: #cbd5e1;
+}
+
+html.dark .empty-state p {
+    color: #94a3b8;
+}
+
+html.dark .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+html.dark .modal-content {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .modal-header h3 {
+    color: #f1f5f9;
+}
+
+html.dark .modal-close {
+    color: #94a3b8;
+}
+
+html.dark .modal-close:hover {
+    color: #cbd5e1;
+}
+
+html.dark .form-group label {
+    color: #cbd5e1;
+}
+
+html.dark .form-textarea,
+html.dark .form-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+html.dark .form-textarea:focus,
+html.dark .form-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .form-help {
+    color: #94a3b8;
+}
+
+html.dark .pagination button {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+html.dark .pagination button:hover:not(:disabled) {
+    background: #334155;
+    border-color: #475569;
+}
+
+html.dark .pagination button.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}

@@ -2,6 +2,7 @@ import { brandConfig } from '../config/index.js';
 import { initializeNotificationButton, closeNotificationPanel } from './notification.js';
 
 // Header component for easy modification
+
 export function createHeader() {
   return `
     <div class="header-content">
@@ -102,34 +103,27 @@ export function createHeader() {
     </div>
   `;
 }
-
 // Initialize global click handler to close dropdowns
 function initializeGlobalClickHandler() {
-  
-  document.addEventListener('click', function(e) {
+
+  document.addEventListener('click', (e) => {
     const notificationPanel = document.getElementById('notification-panel');
     const profilePanel = document.getElementById('profile-panel');
     const notificationBtn = document.getElementById('notification-btn');
     const profileBtn = document.getElementById('profile-btn');
-    
     // Close notification panel if clicking outside
     if (notificationPanel && notificationPanel.classList.contains('show')) {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
         notificationPanel.classList.remove('show');
-        notificationPanel.style.opacity = '0';
-        notificationPanel.style.transform = 'translateY(-10px)';
         setTimeout(() => {
           notificationPanel.style.display = 'none';
         }, 300);
       }
     }
-    
     // Close profile panel if clicking outside
     if (profilePanel && profilePanel.classList.contains('show')) {
       if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
         profilePanel.classList.remove('show');
-        profilePanel.style.opacity = '0';
-        profilePanel.style.transform = 'translateY(-10px)';
         setTimeout(() => {
           profilePanel.style.display = 'none';
         }, 300);
@@ -137,9 +131,7 @@ function initializeGlobalClickHandler() {
     }
   });
 }
-
 // Initialize notification button - using imported function from notification.js
-
 // Initialize profile button
 function initializeProfileButton() {
   const profileBtn = document.getElementById('profile-btn');
@@ -147,49 +139,80 @@ function initializeProfileButton() {
     console.warn('[HEADER] Profile button not found');
     return;
   }
-
-  profileBtn.addEventListener('click', function(e) {
+  
+  const updateProfilePanelPosition = () => {
+    const profilePanel = document.getElementById('profile-panel');
+    if (!profilePanel) return;
+    
+    const profileBtnRect = profileBtn.getBoundingClientRect();
+    const headerHeight = 64; // Approximate header height
+    
+    // Position panel below the profile button, aligned to the right
+    profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;
+    profilePanel.style.right = `${window.innerWidth - profileBtnRect.right}px`;
+    profilePanel.style.left = 'auto';
+  };
+  
+  profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
     if (notificationPanel && notificationPanel.classList.contains('show')) {
       notificationPanel.classList.remove('show');
-      notificationPanel.style.opacity = '0';
-      notificationPanel.style.transform = 'translateY(-10px)';
       setTimeout(() => { notificationPanel.style.display = 'none'; }, 300);
     }
-    
     const profilePanel = document.getElementById('profile-panel');
     if (profilePanel.classList.contains('show')) {
       profilePanel.classList.remove('show');
-      profilePanel.style.opacity = '0';
-      profilePanel.style.transform = 'translateY(-10px)';
       setTimeout(() => { profilePanel.style.display = 'none'; }, 300);
     } else {
-      profilePanel.classList.add('show');
+      // Update position before showing
+      updateProfilePanelPosition();
       profilePanel.style.display = 'block';
+      // Force reflow to ensure display is set before adding show class
+      profilePanel.offsetHeight;
       setTimeout(() => {
-        profilePanel.style.opacity = '1';
-        profilePanel.style.transform = 'translateY(0)';
+        profilePanel.classList.add('show');
       }, 10);
     }
   });
+  
+  // Update position on window resize
+  window.addEventListener('resize', updateProfilePanelPosition);
 }
-
 // Initialize menu toggle
 function initializeMenuToggle() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
-
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', function() {
-      sidebar.classList.toggle('open');
-      menuToggle.classList.toggle('active');
+    menuToggle.addEventListener('click', async () => {
+      // Import sidebar functions dynamically
+      try {
+        const { openSidebar, closeSidebar } = await import('./sidebar.js');
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+        menuToggle.classList.toggle('active');
+        // Update aria-expanded on menu toggle after a brief delay to ensure state is updated
+        setTimeout(() => {
+          menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+        }, 50);
+      } catch (error) {
+        // Fallback to direct class toggle if import fails
+        console.warn('Failed to import sidebar functions, using fallback:', error);
+        sidebar.classList.toggle('open');
+        menuToggle.classList.toggle('active');
+        menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+      }
     });
+    // Set initial aria-expanded state
+    menuToggle.setAttribute('aria-expanded', 'false');
   } else {
-    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: !!menuToggle, sidebar: !!sidebar });
+    console.warn('⚠️ Menu toggle or sidebar not found:', { menuToggle: Boolean(menuToggle), sidebar: Boolean(sidebar) });
   }
 }
-
 // Initialize theme toggle
 function initializeThemeToggle() {
   const themeToggleBtn = document.getElementById('theme-toggle');
@@ -197,24 +220,33 @@ function initializeThemeToggle() {
     console.warn('[HEADER] Theme toggle button not found');
     return;
   }
-
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
-
-  themeToggleBtn.addEventListener('click', function() {
+  
+  // Update sidebar toggle if it exists
+  const sidebarToggleSwitch = document.getElementById('sidebar-toggle-switch');
+  if (sidebarToggleSwitch) {
+    sidebarToggleSwitch.classList.toggle('active', savedTheme === 'dark');
+  }
+  
+  themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
-    
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     
     // Update button appearance
     themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
+    
+    // Sync sidebar toggle switch
+    if (sidebarToggleSwitch) {
+      sidebarToggleSwitch.classList.toggle('active', newTheme === 'dark');
+    }
   });
-
+  
   function applyTheme(theme) {
     const rootElement = document.documentElement;
     if (theme === 'dark') {
@@ -224,55 +256,58 @@ function initializeThemeToggle() {
     }
   }
 }
-
 // Initialize header scroll behavior
+// DISABLED: Header should always remain visible
 function initializeHeaderScroll() {
-  let lastScrollY = window.scrollY;
-
-  window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-    const header = document.querySelector('.header-content');
-    
-    if (header) {
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
-        header.style.transform = 'translateY(-100%)';
-    } else {
-        // Scrolling up
-        header.style.transform = 'translateY(0)';
-      }
-    }
-
-    lastScrollY = currentScrollY;
-  });
+  // Scroll behavior disabled - header should always be visible
+  // This prevents the header from hiding when scrolling down
+  
+  // Reset any existing transform styles that might have been applied
+  const header = document.querySelector('.header-content');
+  if (header) {
+    header.style.transform = 'translateY(0)';
+    header.style.transition = 'transform 0.3s ease';
+  }
+  
+  // Old code (disabled):
+  // let lastScrollY = window.scrollY;
+  // window.addEventListener('scroll', () => {
+  //   const currentScrollY = window.scrollY;
+  //   const header = document.querySelector('.header-content');
+  //   if (header) {
+  //     if (currentScrollY > lastScrollY && currentScrollY > 100) {
+  //       // Scrolling down
+  //       header.style.transform = 'translateY(-100%)';
+  //     } else {
+  //       // Scrolling up
+  //       header.style.transform = 'translateY(0)';
+  //     }
+  //   }
+  //   lastScrollY = currentScrollY;
+  // });
 }
-
 // Initialize dropdowns
 function initializeDropdowns() {
   // Move dropdowns to body to avoid container issues
   const notificationPanel = document.getElementById('notification-panel');
   const profilePanel = document.getElementById('profile-panel');
-  
   if (notificationPanel) {
     notificationPanel.remove();
     document.body.appendChild(notificationPanel);
     // CSS classes will handle the styling now
   }
-  
   if (profilePanel) {
     profilePanel.remove();
     document.body.appendChild(profilePanel);
     // CSS classes will handle the styling now
   }
 }
-
 // Initialize header when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // Add a small delay to ensure all elements are ready
   setTimeout(() => {
-    let headerContainer = document.querySelector('.header-container');
-    let headerElement = document.querySelector('#header');
-    
+    const headerContainer = document.querySelector('.header-container');
+    const headerElement = document.querySelector('#header');
     // Try .header-container first, then fall back to #header
     if (headerContainer) {
       const headerHTML = createHeader();
@@ -283,13 +318,12 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       console.warn('[HEADER] No header container or header element found!');
       // Try to create a header container as a fallback
-      const body = document.body;
+      const {body} = document;
       if (body) {
         const fallbackHeader = document.createElement('div');
         fallbackHeader.className = 'header-container';
         fallbackHeader.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000;';
         body.insertBefore(fallbackHeader, body.firstChild);
-        
         const headerHTML = createHeader();
         fallbackHeader.innerHTML = headerHTML;
       } else {
@@ -297,22 +331,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
     }
-    
     // Test if buttons were created
     const testNotificationBtn = document.getElementById('notification-btn');
     // Initialize header components
-    
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector('.notification-container');
     const profileContainer = document.querySelector('.profile-container');
-    
     if (notificationContainer) {
       notificationContainer.style.position = 'relative';
     }
     if (profileContainer) {
       profileContainer.style.position = 'relative';
     }
-    
     // Move dashboard clock into header-right to align with buttons (put it first)
     try {
       const headerRight = document.querySelector('.header-right');
@@ -323,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) {
       console.warn('[HEADER] Clock positioning failed:', e);
     }
-    
     // Add a small delay to ensure DOM is fully updated
     setTimeout(() => {
       initializeNotificationButton();

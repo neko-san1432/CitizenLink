@@ -1,10 +1,10 @@
 const DepartmentService = require('../services/DepartmentService');
 
 class DepartmentController {
+
   constructor() {
     this.departmentService = new DepartmentService();
   }
-
   async getAllDepartments(req, res) {
     try {
       const departments = await this.departmentService.getAllDepartments();
@@ -20,7 +20,6 @@ class DepartmentController {
       });
     }
   }
-
   async getActiveDepartments(req, res) {
     try {
       const departments = await this.departmentService.getActiveDepartments();
@@ -36,7 +35,6 @@ class DepartmentController {
       });
     }
   }
-
   async getDepartmentById(req, res) {
     try {
       const { id } = req.params;
@@ -54,7 +52,6 @@ class DepartmentController {
       });
     }
   }
-
   async createDepartment(req, res) {
     try {
       const department = await this.departmentService.createDepartment(req.body);
@@ -73,7 +70,6 @@ class DepartmentController {
       });
     }
   }
-
   async updateDepartment(req, res) {
     try {
       const { id } = req.params;
@@ -94,7 +90,6 @@ class DepartmentController {
       });
     }
   }
-
   async deleteDepartment(req, res) {
     try {
       const { id } = req.params;
@@ -112,7 +107,6 @@ class DepartmentController {
       });
     }
   }
-
   async getDepartmentsByType(req, res) {
     try {
       const { type } = req.params;
@@ -129,7 +123,6 @@ class DepartmentController {
       });
     }
   }
-
   async getDepartmentOfficers(req, res) {
     try {
       const { id } = req.params;
@@ -146,7 +139,6 @@ class DepartmentController {
       });
     }
   }
-
   /**
    * Get all departments with their subcategory mappings
    */
@@ -165,7 +157,6 @@ class DepartmentController {
       });
     }
   }
-
   /**
    * Get departments by subcategory
    */
@@ -173,7 +164,6 @@ class DepartmentController {
     try {
       const { subcategoryId } = req.params;
       const departments = await this.departmentService.getDepartmentsBySubcategory(subcategoryId);
-
       res.json({
         success: true,
         data: departments

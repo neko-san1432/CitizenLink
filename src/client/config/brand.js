@@ -1,4 +1,5 @@
 // Brand configuration for easy modification
+
 export const brandConfig = {
   name: 'CitizenLink',
   dashboardUrl: '/dashboard',

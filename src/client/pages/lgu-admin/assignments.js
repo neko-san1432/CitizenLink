@@ -2,7 +2,6 @@
  * LGU Admin - Department Assignments Page
  * View and assign complaints to officers
  */
-
 import apiClient from '../../config/apiClient.js';
 import showMessage from '../../components/toast.js';
 
@@ -16,14 +15,12 @@ const currentFilters = {
   sub_type: 'all',
   priority: 'all'
 };
-
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
   await loadAssignments();
   await loadOfficers();
   initializeEventListeners();
 });
-
 /**
  * Initialize event listeners
  */
@@ -37,27 +34,21 @@ function initializeEventListeners() {
       renderAssignments();
     });
   });
-
   // Filter selects (complaint status, type, priority)
   document.getElementById('status-filter')?.addEventListener('change', (e) => {
     currentFilters.status = e.target.value;
     loadAssignments();
   });
-
   // subtype filter removed - not needed in current schema
-
   document.getElementById('priority-filter')?.addEventListener('change', (e) => {
     currentFilters.priority = e.target.value;
     loadAssignments();
   });
-
   // Modal close buttons
   document.getElementById('close-assignment-modal')?.addEventListener('click', closeAssignmentModal);
   document.getElementById('cancel-assignment')?.addEventListener('click', closeAssignmentModal);
-
   // Assignment form
   document.getElementById('assignment-form')?.addEventListener('submit', handleAssignmentSubmit);
-
   // Close modal on outside click
   document.getElementById('assignment-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'assignment-modal') {
@@ -65,25 +56,20 @@ function initializeEventListeners() {
     }
   });
 }
-
 /**
  * Load department assignments
  */
 async function loadAssignments() {
   try {
     showLoadingState();
-
     // Build query parameters
     const params = new URLSearchParams();
     if (currentFilters.status !== 'all') params.append('status', currentFilters.status);
     if (currentFilters.sub_type !== 'all') params.append('sub_type', currentFilters.sub_type);
     if (currentFilters.priority !== 'all') params.append('priority', currentFilters.priority);
-
     const queryString = params.toString();
     const url = queryString ? `/api/lgu-admin/department-assignments?${queryString}` : '/api/lgu-admin/department-assignments';
-
     const response = await apiClient.get(url);
-
     if (response.success) {
       assignments = response.data;
       // console.log removed for security
@@ -98,7 +84,6 @@ async function loadAssignments() {
     showEmptyState();
   }
 }
-
 /**
  * Load department officers
  */
@@ -106,9 +91,7 @@ async function loadOfficers() {
   try {
     // console.log removed for security
     const response = await apiClient.get('/api/lgu-admin/department-officers');
-
     // console.log removed for security
-
     if (response.success) {
       officers = response.data;
       // console.log removed for security
@@ -121,7 +104,6 @@ async function loadOfficers() {
     showMessage('Failed to load officers', 'error');
   }
 }
-
 /**
  * Update statistics
  */
@@ -129,28 +111,22 @@ function updateStats() {
   const unassigned = assignments.filter(a => !a.assigned_to).length;
   const urgent = assignments.filter(a => a.priority === 'urgent').length;
   const high = assignments.filter(a => a.priority === 'high').length;
-
   document.getElementById('stat-unassigned').textContent = unassigned;
   document.getElementById('stat-urgent').textContent = urgent;
   document.getElementById('stat-high').textContent = high;
 }
-
 /**
  * Render assignments list
  */
 function renderAssignments() {
   const filteredAssignments = filterAssignments();
-
   if (filteredAssignments.length === 0) {
     showEmptyState();
     return;
   }
-
   showAssignmentsList();
-
   const listEl = document.getElementById('assignments-list');
   listEl.innerHTML = filteredAssignments.map(assignment => createAssignmentHTML(assignment)).join('');
-
   // Attach event listeners to assign buttons
   filteredAssignments.forEach(assignment => {
     const btn = document.querySelector(`[data-complaint-id="${assignment.complaint_id}"]`);
@@ -166,11 +142,11 @@ function renderAssignments() {
     }
   });
 }
-
 /**
  * Filter assignments based on current filter
  */
 function filterAssignments() {
+
   switch (currentFilter) {
     case 'unassigned':
       return assignments.filter(a => !a.assigned_to);
@@ -180,7 +156,6 @@ function filterAssignments() {
       return assignments;
   }
 }
-
 /**
  * Create HTML for assignment item
  */
@@ -189,7 +164,6 @@ function createAssignmentHTML(assignment) {
   const priorityClass = `priority-${assignment.priority || 'medium'}`;
   const statusClass = isAssigned ? 'status-assigned' : 'status-unassigned';
   const statusText = isAssigned ? 'Assigned' : 'Unassigned';
-
   const assignedInfo = isAssigned ? `
     <div class="assigned-officer">
       <div class="officer-avatar">${getInitials(assignment.officer_name || 'Unknown')}</div>
@@ -221,11 +195,9 @@ function createAssignmentHTML(assignment) {
           <span class="status-badge ${statusClass}">${statusText}</span>
         </div>
       </div>
-
       <div class="assignment-details">
         ${escapeHtml(assignment.description || 'No description provided').substring(0, 200)}${assignment.description?.length > 200 ? '...' : ''}
       </div>
-
       <div class="assignment-footer">
         ${assignedInfo}
       </div>
@@ -357,10 +329,8 @@ function populateOfficerSelect() {
     officers.map(officer => `
       <option value="${officer.id}">${escapeHtml(officer.name)} ${officer.employee_id ? `(${officer.employee_id})` : ''}</option>
     `).join('')}`;
-
   // console.log removed for security
 }
-
 /**
  * UI State Management
  */
@@ -369,19 +339,16 @@ function showLoadingState() {
   document.getElementById('assignments-list').style.display = 'none';
   document.getElementById('empty-state').style.display = 'none';
 }
-
 function showAssignmentsList() {
   document.getElementById('loading-state').style.display = 'none';
   document.getElementById('assignments-list').style.display = 'block';
   document.getElementById('empty-state').style.display = 'none';
 }
-
 function showEmptyState() {
   document.getElementById('loading-state').style.display = 'none';
   document.getElementById('assignments-list').style.display = 'none';
   document.getElementById('empty-state').style.display = 'block';
 }
-
 /**
  * Helper Functions
  */
@@ -390,7 +357,6 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-
 function getInitials(name) {
   return name
     .split(' ')
@@ -399,7 +365,6 @@ function getInitials(name) {
     .toUpperCase()
     .substring(0, 2);
 }
-
 function formatRelativeTime(timestamp) {
   const now = new Date();
   const time = new Date(timestamp);
@@ -407,15 +372,12 @@ function formatRelativeTime(timestamp) {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-
   if (diffMins < 1) return 'just now';
   if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
   return time.toLocaleDateString();
 }
-
 function formatDateTimeLocal(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

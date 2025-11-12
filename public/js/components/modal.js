@@ -3,17 +3,16 @@
  * Handles modal display, content loading, and user interactions
  */
 class ModalManager {
+
   constructor() {
     this.activeModal = null;
     this.modalOverlay = null;
     this.init();
   }
-
   init() {
     this.createModalOverlay();
     this.setupEventListeners();
   }
-
   createModalOverlay() {
     // Create modal overlay if it doesn't exist
     if (!document.getElementById('modal-overlay')) {
@@ -25,7 +24,6 @@ class ModalManager {
       this.modalOverlay = document.getElementById('modal-overlay');
     }
   }
-
   setupEventListeners() {
     // Close modal when clicking overlay
     this.modalOverlay.addEventListener('click', (e) => {
@@ -33,7 +31,6 @@ class ModalManager {
         this.closeModal();
       }
     });
-
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.activeModal) {
@@ -41,7 +38,6 @@ class ModalManager {
       }
     });
   }
-
   /**
    * Open a modal by ID
    * @param {string} modalId - ID of the modal to open
@@ -53,19 +49,15 @@ class ModalManager {
       console.error(`Modal with ID '${modalId}' not found`);
       return;
     }
-
     // Close any active modal first
     if (this.activeModal) {
       this.closeModal();
     }
-
     this.activeModal = modal;
-    
     // Show modal and overlay
     modal.classList.add('active');
     this.modalOverlay.classList.add('active');
     document.body.classList.add('modal-open');
-
     // Focus management
     const focusableElements = modal.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -73,35 +65,28 @@ class ModalManager {
     if (focusableElements.length > 0) {
       focusableElements[0].focus();
     }
-
     // Call onOpen callback if provided
     if (options.onOpen && typeof options.onOpen === 'function') {
       options.onOpen(modal);
     }
   }
-
   /**
    * Close the currently active modal
    */
   closeModal() {
     if (!this.activeModal) return;
-
     const modal = this.activeModal;
-    
     // Hide modal and overlay
     modal.classList.remove('active');
     this.modalOverlay.classList.remove('active');
     document.body.classList.remove('modal-open');
-
     // Call onClose callback if provided
-    const onClose = modal.dataset.onClose;
+    const {onClose} = modal.dataset;
     if (onClose && typeof window[onClose] === 'function') {
       window[onClose]();
     }
-
     this.activeModal = null;
   }
-
   /**
    * Create a modal dynamically
    * @param {Object} config - Modal configuration
@@ -115,16 +100,13 @@ class ModalManager {
       className = '',
       size = 'medium' // small, medium, large, fullscreen
     } = config;
-
     const modal = document.createElement('div');
     modal.id = id;
     modal.className = `modal ${className}`;
     modal.setAttribute('aria-hidden', 'true');
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-
     const sizeClass = `modal-${size}`;
-    
     modal.innerHTML = `
       <div class="modal-dialog ${sizeClass}">
         <div class="modal-content">

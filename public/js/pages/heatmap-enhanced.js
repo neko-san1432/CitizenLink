@@ -2,8 +2,8 @@
  * Enhanced Heatmap Controller
  * Advanced heatmap functionality with modern UI and additional features
  */
-
 class EnhancedHeatmapController {
+
   constructor() {
     this.map = null;
     this.heatmapViz = null;
@@ -15,7 +15,6 @@ class EnhancedHeatmapController {
     this.isControlsVisible = true;
     this.autoRefreshInterval = null;
     this.exportFormats = ['PNG', 'SVG', 'PDF', 'CSV'];
-    
     // Enhanced statistics
     this.statistics = {
       totalComplaints: 0,
@@ -26,26 +25,20 @@ class EnhancedHeatmapController {
       resolutionRate: 0
     };
   }
-
   /**
    * Initialize the enhanced heatmap controller
    */
   async initialize() {
     try {
-      console.log('[ENHANCED-HEATMAP] Initializing enhanced heatmap...');
-      
       // Show loading indicator
       this.showLoading(true);
-      
       // Initialize map
       this.map = await this.initializeMap();
       if (!this.map) {
         throw new Error('Failed to initialize map');
       }
-
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
-      
       // Initialize enhanced controls (optional)
       try {
         if (typeof window.EnhancedHeatmapControls === 'function') {
@@ -59,28 +52,20 @@ class EnhancedHeatmapController {
       } catch (e) {
         console.warn('[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls', e);
       }
-      
       // Load initial data
       await this.loadData();
-      
       // Setup event listeners
       this.setupEventListeners();
-      
       // Setup auto-refresh
       this.setupAutoRefresh();
-      
       this.isInitialized = true;
       this.showLoading(false);
-      
-      console.log('[ENHANCED-HEATMAP] Initialization complete');
-      
     } catch (error) {
       console.error('[ENHANCED-HEATMAP] Initialization failed:', error);
       this.showError('Failed to initialize heatmap');
       this.showLoading(false);
     }
   }
-
   /**
    * Initialize the map with enhanced configuration
    */
@@ -98,20 +83,16 @@ class EnhancedHeatmapController {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
       }).addTo(map);
-
       // Add custom zoom controls
       this.addCustomZoomControls(map);
-      
       // Add map event listeners
       this.addMapEventListeners(map);
-      
       return map;
     } catch (error) {
       console.error('[ENHANCED-HEATMAP] Map initialization failed:', error);
       throw error;
     }
   }
-
   /**
    * Add custom zoom controls
    */
@@ -120,23 +101,19 @@ class EnhancedHeatmapController {
     document.getElementById('zoom-in')?.addEventListener('click', () => {
       map.zoomIn();
     });
-
     // Zoom out
     document.getElementById('zoom-out')?.addEventListener('click', () => {
       map.zoomOut();
     });
-
     // Fit to bounds
     document.getElementById('fit-bounds')?.addEventListener('click', () => {
       this.fitToComplaints();
     });
-
     // Reset view to Digos City
     document.getElementById('reset-view')?.addEventListener('click', () => {
       this.resetToDigosCity();
     });
   }
-
   /**
    * Add map event listeners
    */
@@ -151,21 +128,17 @@ class EnhancedHeatmapController {
           if (!map.hasLayer(this.heatmapViz.markerLayer)) {
             this.heatmapViz.showMarkers();
           }
-        } else {
-          if (map.hasLayer(this.heatmapViz.markerLayer)) {
-            this.heatmapViz.hideMarkers();
-          }
+        } else if (map.hasLayer(this.heatmapViz.markerLayer)) {
+          this.heatmapViz.hideMarkers();
         }
       }
       this.refreshVisualization();
     });
-
     // Update statistics on move
     map.on('moveend', () => {
       this.updateStatistics();
     });
   }
-
   /**
    * Setup event listeners for enhanced features
    */
@@ -174,58 +147,47 @@ class EnhancedHeatmapController {
     document.getElementById('toggle-controls')?.addEventListener('click', () => {
       this.toggleControls();
     });
-
     // Close controls
     document.getElementById('close-controls')?.addEventListener('click', () => {
       this.toggleControls();
     });
-
     // Fullscreen toggle
     document.getElementById('fullscreen-toggle')?.addEventListener('click', () => {
       this.toggleFullscreen();
     });
-
     // Export heatmap
     document.getElementById('export-heatmap')?.addEventListener('click', () => {
       this.showExportModal();
     });
-
     // Recreate/rebuild map and layers (if a button exists in the UI)
     document.getElementById('recreate-map')?.addEventListener('click', async () => {
       await this.rebuildMap();
     });
-
     // Reset view button in controls
     document.getElementById('reset-view-btn')?.addEventListener('click', () => {
       this.resetToDigosCity();
     });
-
     // Layer toggles
     document.getElementById('toggle-heatmap')?.addEventListener('click', () => {
       this.toggleHeatmap();
     });
-
     document.getElementById('toggle-markers')?.addEventListener('click', () => {
       this.toggleMarkers();
     });
-
     document.getElementById('toggle-clusters')?.addEventListener('click', () => {
       this.toggleClusters();
     });
-
     // Quick filter chips
     document.querySelectorAll('.filter-chip').forEach(chip => {
       chip.addEventListener('click', (e) => {
         this.handleQuickFilter(e.target.dataset.filter);
       });
     });
-
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       this.handleKeyboardShortcuts(e);
     });
   }
-
   /**
    * Fully rebuild the map and all visualization layers
    * - Clears layers
@@ -236,29 +198,23 @@ class EnhancedHeatmapController {
   async rebuildMap() {
     try {
       this.showLoading(true);
-
       // Clear layers if visualization exists
       try {
         this.heatmapViz?.clearAllLayers();
       } catch (_) {}
-
       // Destroy existing map instance safely
       if (this.map) {
         try { this.map.off(); } catch (_) {}
         try { this.map.remove(); } catch (_) {}
         this.map = null;
       }
-
       // Recreate map
       this.map = await this.initializeMap();
-
       // Recreate visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
-
       // Reload data and refresh layers
       await this.loadData();
       this.refreshVisualization();
-
       this.showMessage('success', 'Map and layers recreated');
     } catch (error) {
       console.error('[ENHANCED-HEATMAP] Rebuild failed:', error);
@@ -267,7 +223,6 @@ class EnhancedHeatmapController {
       this.showLoading(false);
     }
   }
-
   /**
    * Setup auto-refresh functionality
    */
@@ -279,7 +234,6 @@ class EnhancedHeatmapController {
       }
     }, 5 * 60 * 1000);
   }
-
   /**
    * Load complaint data with enhanced error handling
    */
@@ -298,52 +252,40 @@ class EnhancedHeatmapController {
       this.showError('Failed to load complaint data');
     }
   }
-
   /**
    * Refresh visualization with enhanced features
    */
   refreshVisualization() {
     if (!this.heatmapViz) return;
-
     // Clear all layers first
     this.heatmapViz.clearAllLayers();
-
     // Only create layers if we have data
     if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
       console.warn('[ENHANCED-HEATMAP] No complaint data available for visualization');
       this.updateLayerButtonStates();
       return;
     }
-
     // Show heatmap always
     this.heatmapViz.createHeatmapLayer();
     this.heatmapViz.showHeatmap();
-
     // Create markers layer (always create when data exists, show conditionally)
     this.heatmapViz.createMarkerLayer();
-    
     // Show markers based on visibility preference and zoom level
     const zoom = this.map ? this.map.getZoom() : 0;
     const shouldShowMarkers = this.markersAlwaysVisible || zoom >= this.zoomThreshold;
-    
     if (shouldShowMarkers && this.heatmapViz.markerLayer) {
       this.heatmapViz.showMarkers();
-      console.log(`[ENHANCED-HEATMAP] Markers shown: ${this.heatmapViz.complaintData.length} markers, zoom: ${zoom}`);
     } else {
-      console.log(`[ENHANCED-HEATMAP] Markers hidden: zoom ${zoom} < threshold ${this.zoomThreshold}, alwaysVisible: ${this.markersAlwaysVisible}`);
     }
-
     // Show clusters if enabled
     if (this.heatmapViz.isClusteringEnabled) {
       this.heatmapViz.performClustering();
       this.heatmapViz.createClusterLayer();
       this.heatmapViz.showClusters();
     }
-
     // Update layer button states
     this.updateLayerButtonStates();
   }
-
   /**
    * Update layer button states
    */
@@ -351,20 +293,16 @@ class EnhancedHeatmapController {
     const heatmapBtn = document.getElementById('toggle-heatmap');
     const markersBtn = document.getElementById('toggle-markers');
     const clustersBtn = document.getElementById('toggle-clusters');
-
     if (heatmapBtn) {
       heatmapBtn.classList.toggle('active', this.heatmapViz.heatmapLayer !== null);
     }
-
     if (markersBtn) {
       markersBtn.classList.toggle('active', this.heatmapViz.markerLayer !== null);
     }
-
     if (clustersBtn) {
       clustersBtn.classList.toggle('active', this.heatmapViz.clusterLayer !== null);
     }
   }
-
   /**
    * Toggle controls visibility
    */
@@ -375,11 +313,11 @@ class EnhancedHeatmapController {
       controls.classList.toggle('collapsed', !this.isControlsVisible);
     }
   }
-
   /**
    * Toggle fullscreen mode
    */
   toggleFullscreen() {
+
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
       this.isFullscreen = true;
@@ -388,11 +326,11 @@ class EnhancedHeatmapController {
       this.isFullscreen = false;
     }
   }
-
   /**
    * Toggle heatmap layer
    */
   toggleHeatmap() {
+
     if (this.heatmapViz.heatmapLayer) {
       this.heatmapViz.hideHeatmap();
     } else {
@@ -401,7 +339,6 @@ class EnhancedHeatmapController {
     }
     this.updateLayerButtonStates();
   }
-
   /**
    * Toggle markers layer
    */
@@ -420,11 +357,11 @@ class EnhancedHeatmapController {
     }
     this.updateLayerButtonStates();
   }
-
   /**
    * Toggle clusters layer
    */
   toggleClusters() {
+
     if (this.heatmapViz.clusterLayer) {
       this.heatmapViz.hideClusters();
     } else {
@@ -434,7 +371,6 @@ class EnhancedHeatmapController {
     }
     this.updateLayerButtonStates();
   }
-
   /**
    * Handle quick filter selection
    */
@@ -444,17 +380,14 @@ class EnhancedHeatmapController {
       chip.classList.remove('active');
     });
     document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
-
     // Apply filter
     this.applyQuickFilter(filter);
   }
-
   /**
    * Apply quick filter
    */
   applyQuickFilter(filter) {
     const filters = this.controls ? this.controls.getCurrentFilters() : {};
-    
     switch (filter) {
       case 'urgent':
         filters.status = 'urgent';
@@ -479,16 +412,16 @@ class EnhancedHeatmapController {
         });
         break;
     }
-
     this.controls?.setFilters(filters);
     this.loadData();
   }
-
   /**
    * Handle keyboard shortcuts
    */
   handleKeyboardShortcuts(e) {
+
     if (e.ctrlKey || e.metaKey) {
+
       switch (e.key) {
         case 'h':
           e.preventDefault();
@@ -513,7 +446,6 @@ class EnhancedHeatmapController {
       }
     }
   }
-
   /**
    * Show export modal
    */
@@ -571,16 +503,13 @@ class EnhancedHeatmapController {
     modal.querySelector('.modal-close').addEventListener('click', () => {
       document.body.removeChild(modal);
     });
-
     modal.querySelector('.modal-cancel').addEventListener('click', () => {
       document.body.removeChild(modal);
     });
-
     modal.querySelector('.modal-export').addEventListener('click', () => {
       this.performExport(modal);
       document.body.removeChild(modal);
     });
-
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -588,7 +517,6 @@ class EnhancedHeatmapController {
       }
     });
   }
-
   /**
    * Perform export
    */
@@ -597,9 +525,6 @@ class EnhancedHeatmapController {
     const includeLegend = modal.querySelector('#include-legend').checked;
     const includeStats = modal.querySelector('#include-stats').checked;
     const highQuality = modal.querySelector('#high-quality').checked;
-
-    console.log(`[ENHANCED-HEATMAP] Exporting as ${format}...`);
-    
     // Implement export functionality based on format
     switch (format) {
       case 'png':
@@ -616,34 +541,27 @@ class EnhancedHeatmapController {
         break;
     }
   }
-
   /**
    * Export as PNG
    */
   exportAsPNG(includeLegend, includeStats, highQuality) {
     // Implementation for PNG export
-    console.log('[ENHANCED-HEATMAP] PNG export not yet implemented');
     this.showMessage('info', 'PNG export feature coming soon');
   }
-
   /**
    * Export as SVG
    */
   exportAsSVG(includeLegend, includeStats) {
     // Implementation for SVG export
-    console.log('[ENHANCED-HEATMAP] SVG export not yet implemented');
     this.showMessage('info', 'SVG export feature coming soon');
   }
-
   /**
    * Export as PDF
    */
   exportAsPDF(includeLegend, includeStats) {
     // Implementation for PDF export
-    console.log('[ENHANCED-HEATMAP] PDF export not yet implemented');
     this.showMessage('info', 'PDF export feature coming soon');
   }
-
   /**
    * Export as CSV
    */
@@ -653,7 +571,6 @@ class EnhancedHeatmapController {
         this.showMessage('warning', 'No data to export');
         return;
       }
-
       const csvData = this.heatmapViz.complaintData.map(complaint => ({
         id: complaint.id,
         title: complaint.title,
@@ -665,7 +582,6 @@ class EnhancedHeatmapController {
         submitted_at: complaint.submitted_at,
         priority: complaint.priority
       }));
-
       const csv = this.convertToCSV(csvData);
       this.downloadFile(csv, 'complaints-export.csv', 'text/csv');
       this.showMessage('success', 'CSV exported successfully');
@@ -674,16 +590,13 @@ class EnhancedHeatmapController {
       this.showMessage('error', 'Failed to export CSV');
     }
   }
-
   /**
    * Convert data to CSV format
    */
   convertToCSV(data) {
     if (!data || data.length === 0) return '';
-    
     const headers = Object.keys(data[0]);
     const csvRows = [headers.join(',')];
-    
     data.forEach(row => {
       const values = headers.map(header => {
         const value = row[header];
@@ -691,10 +604,8 @@ class EnhancedHeatmapController {
       });
       csvRows.push(values.join(','));
     });
-    
     return csvRows.join('\n');
   }
-
   /**
    * Download file
    */
@@ -709,53 +620,44 @@ class EnhancedHeatmapController {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
-
   /**
    * Fit map to complaints bounds
    */
   fitToComplaints() {
+
     if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
       this.showMessage('warning', 'No complaint data to fit to');
       return;
     }
-
     const bounds = L.latLngBounds();
     this.heatmapViz.complaintData.forEach(complaint => {
       bounds.extend([complaint.lat, complaint.lng]);
     });
-
     this.map.fitBounds(bounds, { padding: [20, 20] });
   }
-
   /**
    * Reset map view to Digos City center
    */
   resetToDigosCity() {
     if (!this.map) return;
-
     // Digos City coordinates and optimal zoom level
     const digosCityCenter = [6.7492, 125.3571];
     const optimalZoom = 12;
-
     // Add a temporary marker to show the center point
     this.addTemporaryCenterMarker(digosCityCenter);
-
     // Smooth transition to Digos City
     this.map.setView(digosCityCenter, optimalZoom, {
       animate: true,
       duration: 1.0, // 1 second animation
       easeLinearity: 0.25
     });
-
     // Show confirmation message
     this.showMessage('success', 'Map reset to Digos City center');
-    
     // Update statistics after reset
     setTimeout(() => {
       this.updateStatistics();
     }, 1000);
   }
-
   /**
    * Add temporary center marker for visual feedback
    */
@@ -764,7 +666,6 @@ class EnhancedHeatmapController {
     if (this.tempCenterMarker) {
       this.map.removeLayer(this.tempCenterMarker);
     }
-
     // Create a pulsing marker at the center
     const centerIcon = L.divIcon({
       className: 'temp-center-marker',
@@ -772,9 +673,7 @@ class EnhancedHeatmapController {
       iconSize: [20, 20],
       iconAnchor: [10, 10]
     });
-
     this.tempCenterMarker = L.marker(center, { icon: centerIcon }).addTo(this.map);
-
     // Remove the temporary marker after 3 seconds
     setTimeout(() => {
       if (this.tempCenterMarker) {
@@ -783,16 +682,13 @@ class EnhancedHeatmapController {
       }
     }, 3000);
   }
-
   /**
    * Update statistics
    */
   updateStatistics() {
     if (!this.heatmapViz) return;
-
     const data = this.heatmapViz.complaintData || [];
     const clusters = this.heatmapViz.clusters || [];
-
     this.statistics = {
       totalComplaints: data.length,
       clusters: clusters.length,
@@ -801,42 +697,35 @@ class EnhancedHeatmapController {
       avgResponseTime: this.calculateAvgResponseTime(data),
       resolutionRate: this.calculateResolutionRate(data)
     };
-
     // Update controls statistics
     if (this.controls) {
       this.controls.updateStatistics(this.statistics);
     }
   }
-
   /**
    * Calculate density score
    */
   calculateDensityScore(data) {
     if (data.length === 0) return 0;
-    
     // Simple density calculation based on area and point count
     const bounds = this.map.getBounds();
-    const area = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) * 
+    const area = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) *
                  bounds.getNorthEast().distanceTo(bounds.getNorthWest());
     return Math.round((data.length / area) * 1000) / 1000;
   }
-
   /**
    * Calculate average response time
    */
   calculateAvgResponseTime(data) {
     const resolvedComplaints = data.filter(c => c.status === 'resolved' && c.resolved_at);
     if (resolvedComplaints.length === 0) return 0;
-
     const totalTime = resolvedComplaints.reduce((sum, complaint) => {
       const submitted = new Date(complaint.submitted_at);
       const resolved = new Date(complaint.resolved_at);
       return sum + (resolved - submitted);
     }, 0);
-
     return Math.round(totalTime / resolvedComplaints.length / (1000 * 60 * 60 * 24) * 10) / 10; // Days
   }
-
   /**
    * Calculate resolution rate
    */
@@ -845,7 +734,6 @@ class EnhancedHeatmapController {
     const resolved = data.filter(c => c.status === 'resolved').length;
     return Math.round((resolved / data.length) * 100);
   }
-
   /**
    * Update header statistics
    */
@@ -854,7 +742,6 @@ class EnhancedHeatmapController {
     document.getElementById('header-clusters').textContent = this.statistics.clusters;
     document.getElementById('header-density').textContent = this.statistics.densityScore;
   }
-
   /**
    * Show/hide loading indicator
    */
@@ -864,14 +751,12 @@ class EnhancedHeatmapController {
       loading.style.display = show ? 'block' : 'none';
     }
   }
-
   /**
    * Show error message
    */
   showError(message) {
     this.showMessage('error', message);
   }
-
   /**
    * Show message
    */
@@ -880,30 +765,26 @@ class EnhancedHeatmapController {
     if (window.showMessage) {
       window.showMessage(type, message);
     } else {
-      console.log(`[ENHANCED-HEATMAP] ${type.toUpperCase()}: ${message}`);
     }
   }
-
   /**
    * Cleanup resources
    */
   destroy() {
+
     if (this.autoRefreshInterval) {
       clearInterval(this.autoRefreshInterval);
     }
-    
     if (this.map) {
       this.map.remove();
     }
   }
 }
-
 // Initialize enhanced heatmap when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const enhancedController = new EnhancedHeatmapController();
     await enhancedController.initialize();
-    
     // Make controller globally available
     window.enhancedHeatmapController = enhancedController;
     // Expose a simple global command to rebuild
@@ -912,8 +793,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await window.enhancedHeatmapController.rebuildMap();
       }
     };
-    
-    console.log('[ENHANCED-HEATMAP] Enhanced heatmap controller ready');
   } catch (error) {
     console.error('[ENHANCED-HEATMAP] Failed to initialize:', error);
   }

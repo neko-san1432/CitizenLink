@@ -43,9 +43,28 @@
         gap: 0.625rem;
         width: 280px;
         flex-shrink: 0;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         height: 100%;
         align-content: flex-start;
+        max-height: calc(100vh - 120px);
+      }
+      
+      .profile-sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .profile-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .profile-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+      
+      .profile-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
       }
 
       /* Profile card */
@@ -339,10 +358,16 @@
         color: #6b7280;
         opacity: 0.6;
         transition: opacity 0.2s;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-user-select: none;
+        display: inline-block;
+        margin-left: 0.5rem;
       }
 
       .edit-icon:hover {
         opacity: 1;
+        color: #3b82f6;
       }
 
       /* Password form */
@@ -373,6 +398,267 @@
         font-size: 0.875rem;
         margin-top: 0.5rem;
       }
+
+      /* Dark Mode Styles */
+      html.dark .profile-page {
+        background-color: #0f172a;
+      }
+
+      html.dark .profile-card,
+      html.dark .password-card {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      html.dark .profile-name {
+        color: #f1f5f9;
+      }
+
+      html.dark .profile-username {
+        color: #94a3b8;
+      }
+
+      html.dark .profile-info-label {
+        color: #94a3b8;
+      }
+
+      html.dark .profile-info-value {
+        color: #f1f5f9;
+      }
+
+      html.dark .profile-info-item {
+        border-top-color: #334155;
+      }
+      
+      html.dark .profile-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      html.dark .profile-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      html.dark .password-card-title {
+        color: #f1f5f9;
+      }
+
+      html.dark .password-card-description {
+        color: #94a3b8;
+      }
+
+      html.dark .complaints-title {
+        color: #f1f5f9;
+        border-bottom-color: #10b981;
+      }
+
+      html.dark .complaint-card {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      html.dark .complaint-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        border-color: #10b981;
+      }
+
+      html.dark .complaint-title {
+        color: #f1f5f9;
+      }
+
+      html.dark .complaint-date {
+        color: #94a3b8;
+      }
+
+      html.dark .complaints-empty {
+        color: #94a3b8;
+      }
+
+      html.dark .complaints-empty h3 {
+        color: #cbd5e1;
+      }
+
+      html.dark .edit-icon {
+        color: #94a3b8;
+      }
+
+      html.dark .edit-icon:hover {
+        color: #cbd5e1;
+      }
+
+      html.dark .email-confirmation-message {
+        background: #1e3a8a;
+        border-color: #3b82f6;
+        color: #93c5fd;
+      }
+
+      html.dark .complaints-scroll::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+
+      html.dark .complaints-scroll::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+
+      html.dark .complaints-scroll::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      html.dark #address-section {
+        border-top-color: #334155;
+      }
+
+      html.dark #address-section span {
+        color: #cbd5e1;
+      }
+
+      html.dark #address-section button {
+        background: #334155;
+        color: #cbd5e1;
+        border-color: #475569;
+      }
+
+      html.dark #address-section button:hover {
+        background: #475569;
+        border-color: #64748b;
+      }
+
+      html.dark #address-section div[style*="color: #374151"] {
+        color: #cbd5e1 !important;
+      }
+
+      html.dark #address-section div[style*="color: #1f2937"] {
+        color: #f1f5f9 !important;
+      }
+
+      html.dark #address-edit .input,
+      html.dark #profile-name-edit .input,
+      html.dark #profile-mobile-edit .input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+      }
+
+      html.dark #address-edit .input::placeholder,
+      html.dark #profile-name-edit .input::placeholder,
+      html.dark #profile-mobile-edit .input::placeholder {
+        color: #64748b;
+      }
+
+      html.dark #address-edit .input:focus,
+      html.dark #profile-name-edit .input:focus,
+      html.dark #profile-mobile-edit .input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+      }
+
+      html.dark #change-password-form .input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+      }
+
+      html.dark #change-password-form .input::placeholder {
+        color: #64748b;
+      }
+
+      html.dark #change-password-form .input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+      }
+
+      html.dark #change-password-form button {
+        background: #3b82f6;
+        color: white;
+      }
+
+      html.dark #change-password-form button:hover {
+        background: #2563eb;
+      }
+
+      html.dark #edit-address-btn,
+      html.dark #save-name-btn,
+      html.dark #cancel-name-btn,
+      html.dark #save-mobile-btn,
+      html.dark #cancel-mobile-btn,
+      html.dark #save-address-btn,
+      html.dark #cancel-address-btn {
+        background: #334155;
+        color: #cbd5e1;
+        border-color: #475569;
+      }
+
+      html.dark #edit-address-btn:hover,
+      html.dark #save-name-btn:hover,
+      html.dark #cancel-name-btn:hover,
+      html.dark #save-mobile-btn:hover,
+      html.dark #cancel-mobile-btn:hover,
+      html.dark #save-address-btn:hover,
+      html.dark #cancel-address-btn:hover {
+        background: #475569;
+        border-color: #64748b;
+      }
+
+      html.dark #action-button {
+        background: #334155;
+        color: #cbd5e1;
+        border-color: #475569;
+      }
+
+      html.dark #action-button:hover {
+        background: #475569;
+        border-color: #64748b;
+      }
+
+      html.dark #current-email-display {
+        color: #f1f5f9;
+      }
+
+      html.dark .input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+      }
+
+      html.dark .input::placeholder {
+        color: #64748b;
+      }
+
+      html.dark .input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+      }
+
+      html.dark .btn-primary {
+        background: #3b82f6;
+        color: white;
+      }
+
+      html.dark .btn-primary:hover {
+        background: #2563eb;
+      }
+
+      html.dark .btn-secondary {
+        background: #334155;
+        color: #cbd5e1;
+        border-color: #475569;
+      }
+
+      html.dark .btn-secondary:hover {
+        background: #475569;
+        border-color: #64748b;
+      }
+
+      /* Status badges dark mode */
+      html.dark .status-new { background: #1e3a8a; color: #93c5fd; }
+      html.dark .status-assigned { background: #78350f; color: #fbbf24; }
+      html.dark .status-in_progress { background: #581c87; color: #c4b5fd; }
+      html.dark .status-pending_approval { background: #78350f; color: #fde047; }
+      html.dark .status-completed { background: #064e3b; color: #34d399; }
+      html.dark .status-resolved { background: #064e3b; color: #34d399; }
+      html.dark .status-cancelled { background: #7f1d1d; color: #fca5a5; }
+      html.dark .status-unknown { background: #334155; color: #94a3b8; }
     </style>
   </head>
   <body>
@@ -393,36 +679,88 @@
                   </div>
                   <div class="profile-name-section">
                     <div class="profile-name">
-                      <span id="profile-name">Loading...</span>
-                      <span class="edit-icon" title="Edit profile">✏️</span>
+                      <span id="profile-name-display">Loading...</span>
+                      <span class="edit-icon" id="edit-name-icon" title="Edit name">✏️</span>
+                      <div id="profile-name-edit" style="display: none; width: 100%; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input id="edit-first-name-input" class="input" type="text" placeholder="First Name" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
+                        <input id="edit-middle-name-input" class="input" type="text" placeholder="Middle Name (optional)" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
+                        <input id="edit-last-name-input" class="input" type="text" placeholder="Last Name" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
+                        <div style="display: flex; gap: 0.25rem; margin-top: 0.25rem;">
+                          <button class="btn-secondary" id="save-name-btn" style="padding: 0.375rem 0.5rem; font-size: 0.75rem; flex: 1;">Save</button>
+                          <button class="btn-secondary" id="cancel-name-btn" style="padding: 0.375rem 0.5rem; font-size: 0.75rem; flex: 1;">Cancel</button>
+                        </div>
+                      </div>
                     </div>
                     <div class="profile-username">
-                      <span id="profile-email">Loading...</span>
-                      <span class="edit-icon" title="Edit username">✏️</span>
+                      <span id="profile-email-display">Loading...</span>
+                      <span class="edit-icon" id="edit-email-icon" title="Edit email">✏️</span>
                     </div>
                   </div>
-                  <!-- Profile Edit Form -->
-                  <form id="profile-edit-form" style="width: 100%; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.375rem;">
-                    <input id="edit-name" class="input" type="text" placeholder="Full name" style="padding: 0.5rem; font-size: 0.8125rem;">
-                    <input id="edit-mobile" class="input" type="tel" placeholder="Mobile number" style="padding: 0.5rem; font-size: 0.8125rem;">
-                    <button class="btn-secondary" type="submit" style="padding: 0.5rem; font-size: 0.8125rem;">Save</button>
-                  </form>
                   <div style="width: 100%;">
-                    <div class="profile-info-item">
-                      <span class="profile-info-label">📍 From</span>
-                      <span class="profile-info-value">Philippines</span>
-                    </div>
                     <div class="profile-info-item">
                       <span class="profile-info-label">👤 Member since</span>
                       <span class="profile-info-value" id="member-since">—</span>
                     </div>
                     <div class="profile-info-item">
                       <span class="profile-info-label">📱 Mobile</span>
-                      <span class="profile-info-value" id="profile-mobile">—</span>
+                      <span class="profile-info-value">
+                        <span id="profile-mobile-display">—</span>
+                        <span class="edit-icon" id="edit-mobile-icon" title="Edit mobile" style="margin-left: 0.5rem;">✏️</span>
+                        <div id="profile-mobile-edit" style="display: none; margin-top: 0.25rem;">
+                          <input id="edit-mobile-input" class="input" type="tel" style="padding: 0.25rem; font-size: 0.75rem; width: calc(100% - 4rem);">
+                          <button class="btn-secondary" id="save-mobile-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">Save</button>
+                          <button class="btn-secondary" id="cancel-mobile-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">Cancel</button>
+                        </div>
+                      </span>
+                    </div>
+                    <div class="profile-info-item">
+                      <span class="profile-info-label">👤 Role</span>
+                      <span class="profile-info-value" id="profile-role">—</span>
+                    </div>
+                    <div class="profile-info-item" id="profile-office-item" style="display: none;">
+                      <span class="profile-info-label">🏢 Office</span>
+                      <span class="profile-info-value" id="profile-office">—</span>
+                    </div>
+                    <div class="profile-info-item" id="profile-position-id-item" style="display: none;">
+                      <span class="profile-info-label">🆔 Position ID</span>
+                      <span class="profile-info-value" id="profile-position-id">—</span>
                     </div>
                     <div class="profile-info-item">
                       <span class="profile-info-label">📅 Available</span>
                       <span class="profile-info-value">Yes</span>
+                    </div>
+                  </div>
+                  <!-- Address Section -->
+                  <div id="address-section" style="width: 100%; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                      <span style="font-size: 0.875rem; font-weight: 600; color: #1f2937;">Address</span>
+                      <button id="edit-address-btn" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Edit Address</button>
+                    </div>
+                    <div id="address-display">
+                      <div style="font-size: 0.75rem; color: #374151; margin-bottom: 0.25rem;">
+                        <span id="address-line-1-display">—</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: #374151; margin-bottom: 0.25rem;">
+                        <span id="address-line-2-display" style="display: none;">—</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: #374151;">
+                        <span id="address-city-display">—</span>, <span id="address-province-display">—</span> <span id="address-postal-display">—</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: #374151; margin-top: 0.25rem;">
+                        <span id="address-barangay-display">—</span>
+                      </div>
+                    </div>
+                    <div id="address-edit" style="display: none; flex-direction: column; gap: 0.375rem;">
+                      <input id="edit-address-line-1" class="input" type="text" placeholder="Address Line 1" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <input id="edit-address-line-2" class="input" type="text" placeholder="Address Line 2 (optional)" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <input id="edit-address-city" class="input" type="text" placeholder="City *" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <input id="edit-address-province" class="input" type="text" placeholder="Province *" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <input id="edit-address-postal" class="input" type="text" placeholder="Postal Code (4 digits)" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <input id="edit-address-barangay" class="input" type="text" placeholder="Barangay" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <div style="display: flex; gap: 0.25rem;">
+                        <button class="btn-secondary" id="save-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Save</button>
+                        <button class="btn-secondary" id="cancel-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Cancel</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -441,18 +779,18 @@
                 </div>
               </div>
 
-              <!-- Right Side - Complaints Container -->
+              <!-- Right Side - Complaints/Assignments Container -->
               <div class="complaints-container">
                 <div class="complaints-header">
-                  <h2 class="complaints-title">Active Complaints</h2>
-                  <a href="/citizen/fileComplaint" class="btn-secondary">File a complaint</a>
+                  <h2 class="complaints-title" id="content-title">Active Complaints</h2>
+                  <a href="/citizen/fileComplaint" class="btn-secondary" id="action-button" style="display: none;">File a complaint</a>
                 </div>
                 <div class="complaints-scroll" id="complaints-scroll">
                   <div id="my-complaints"></div>
                   <div id="complaints-empty" class="complaints-empty hidden">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;">No complaints yet</h3>
-                    <p style="margin-bottom: 1rem;">You haven't filed any complaints yet. Click "File a complaint" to get started!</p>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;" id="empty-title">No complaints yet</h3>
+                    <p style="margin-bottom: 1rem;" id="empty-message">You haven't filed any complaints yet. Click "File a complaint" to get started!</p>
                   </div>
                 </div>
               </div>
@@ -461,6 +799,165 @@
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Email Change Modal -->
+    <div id="email-change-modal" class="modal-overlay" style="display: none; visibility: hidden;">
+      <div class="modal-content" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">Change Email Address</h2>
+          <button id="close-email-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #6b7280;">Current email:</p>
+          <p style="margin: 0; font-size: 0.9375rem; color: #1f2937; font-weight: 500;" id="current-email-display">—</p>
+        </div>
+        <form id="email-change-form">
+          <div style="margin-bottom: 1rem;">
+            <label for="new-email-input" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #374151; font-weight: 500;">New email address:</label>
+            <input id="new-email-input" class="input" type="email" placeholder="Enter new email" required style="width: 100%; padding: 0.5rem; font-size: 0.875rem;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label for="current-password-email" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #374151; font-weight: 500;">Current password:</label>
+            <input id="current-password-email" class="input" type="password" placeholder="Enter your current password" required autocomplete="current-password" style="width: 100%; padding: 0.5rem; font-size: 0.875rem;">
+          </div>
+          <div style="padding: 0.75rem; background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 1rem;">
+            <p style="margin: 0; font-size: 0.8125rem; color: #92400e; line-height: 1.5;">
+              <strong>Note:</strong> A verification email will be sent to your new email address to confirm this change. You must click the confirmation link in that email to complete the email change.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">Request Email Change</button>
+            <button type="button" id="cancel-email-modal" class="btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <style>
+      .modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        z-index: 10002 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      .modal-overlay[style*="display: none"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      .modal-content {
+        background: white !important;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        z-index: 10003;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: scale(1);
+        animation: modalFadeIn 0.2s ease-out;
+      }
+      
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      .modal-content .input {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        color: #1f2937;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .modal-content .input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      
+      .modal-content button {
+        cursor: pointer;
+      }
+      .inline-edit-loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      /* Dark Mode for Modal */
+      html.dark .modal-overlay {
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+
+      html.dark .modal-content {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      }
+
+      html.dark .modal-content h2 {
+        color: #f1f5f9;
+      }
+
+      html.dark .modal-content p {
+        color: #cbd5e1;
+      }
+
+      html.dark .modal-content label {
+        color: #cbd5e1;
+      }
+
+      html.dark .modal-content .input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+      }
+
+      html.dark .modal-content .input::placeholder {
+        color: #64748b;
+      }
+
+      html.dark .modal-content .input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+      }
+
+      html.dark .modal-content div[style*="background-color: #fffbeb"] {
+        background-color: #78350f !important;
+        border-left-color: #f59e0b !important;
+      }
+
+      html.dark .modal-content div[style*="background-color: #fffbeb"] p {
+        color: #fde047 !important;
+      }
+    </style>
+
     <script type="module" src="../js/components/header.js"></script>
     <script type="module" src="../js/components/sidebar.js"></script>
     <script type="module" src="../js/auth/authChecker.js"></script>

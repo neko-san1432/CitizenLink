@@ -3,23 +3,20 @@ import { showToast } from '../../components/toast.js';
 
 // Enhanced URL validation function
 function validateAndSanitizeURL(urlString) {
+
   if (!urlString || typeof urlString !== 'string') {
     return '';
   }
-
   const trimmedUrl = urlString.trim();
-
   // Basic URL format validation
   try {
     const url = new URL(trimmedUrl);
-
     // Whitelist of allowed protocols
     const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
     if (!allowedProtocols.includes(url.protocol)) {
       console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
       return '';
     }
-
     // Check for suspicious patterns
     const suspiciousPatterns = [
       /javascript:/i,
@@ -36,23 +33,19 @@ function validateAndSanitizeURL(urlString) {
       /ws:/i,
       /wss:/i
     ];
-
     if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
       console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
       return '';
     }
-
     // Check for protocol confusion attacks
     if (url.protocol !== `${trimmedUrl.split(':')[0]  }:`) {
       console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
       return '';
     }
-
     // Validate hostname
     if (!url.hostname || url.hostname.length === 0) {
       return '';
     }
-
     // Check for private IP ranges
     const privateRanges = [
       /^127\./,
@@ -64,26 +57,21 @@ function validateAndSanitizeURL(urlString) {
       /^::1$/,
       /^fe80:/i
     ];
-
     if (privateRanges.some(range => range.test(url.hostname))) {
       console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
       return '';
     }
-
     // Return the validated URL
     return trimmedUrl;
-
   } catch (error) {
     // If URL constructor fails, the URL is invalid
     console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
     return '';
   }
 }
-
 // Enhanced HTML sanitization function
 function sanitizeHtml(html) {
   if (!html || typeof html !== 'string') return '';
-
   // Use DOMPurify for comprehensive sanitization
   if (typeof DOMPurify !== 'undefined') {
     return DOMPurify.sanitize(html, {
@@ -95,7 +83,6 @@ function sanitizeHtml(html) {
       KEEP_CONTENT: true
     });
   }
-
   // Fallback sanitization if DOMPurify is not available
   // Fallback sanitization: repeatedly remove dangerous tags to prevent incomplete replacement
   let sanitized = html;
@@ -135,23 +122,19 @@ function sanitizeHtml(html) {
     // Remove src with javascript
     .replace(/src\s*=\s*["']javascript[^"']*["']/gi, '');
 }
-
 // Task state
 let allTasks = [];
 let filteredTasks = [];
 let selectedTask = null;
-
 /**
 * Initialize the task assigned page
 */
 async function initTaskAssignedPage() {
   // console.log removed for security
-
   setupEventListeners();
   await loadTasks();
   updateStats();
 }
-
 /**
 * Setup event listeners
 */
@@ -161,16 +144,13 @@ function setupEventListeners() {
   document.getElementById('filter-pending')?.addEventListener('click', () => filterTasks('pending'));
   document.getElementById('filter-in-progress')?.addEventListener('click', () => filterTasks('in_progress'));
   document.getElementById('filter-completed')?.addEventListener('click', () => filterTasks('completed'));
-
   // Sort dropdown
   document.getElementById('sort-by')?.addEventListener('change', (e) => {
     sortTasks(e.target.value);
   });
-
   // Modal close
   document.querySelector('.modal-close')?.addEventListener('click', closeTaskModal);
   document.querySelector('.modal-overlay')?.addEventListener('click', closeTaskModal);
-
   // Task actions
   document.getElementById('btn-accept-task')?.addEventListener('click', () => updateTaskStatus('active'));
   document.getElementById('btn-start-task')?.addEventListener('click', () => updateTaskStatus('in_progress'));
@@ -178,14 +158,12 @@ function setupEventListeners() {
   document.getElementById('btn-add-update')?.addEventListener('click', showAddUpdateForm);
   document.getElementById('submit-update')?.addEventListener('click', submitProgressUpdate);
 }
-
 /**
 * Load all tasks from API
 */
 async function loadTasks() {
   try {
     const response = await apiClient.get('/lgu/my-tasks');
-
     if (response.success) {
       allTasks = response.data || [];
       filteredTasks = [...allTasks];
@@ -200,7 +178,6 @@ async function loadTasks() {
     showToast('Error loading tasks', 'error');
   }
 }
-
 /**
 * Filter tasks by status
 */
@@ -208,20 +185,18 @@ function filterTasks(status) {
   // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
   document.getElementById(`filter-${status}`)?.classList.add('active');
-
   if (status === 'all') {
     filteredTasks = [...allTasks];
   } else {
     filteredTasks = allTasks.filter(task => task.assignment_status === status);
   }
-
   renderTasks();
 }
-
 /**
 * Sort tasks
 */
 function sortTasks(sortBy) {
+
   switch (sortBy) {
     case 'deadline':
       filteredTasks.sort((a, b) => {
@@ -243,17 +218,14 @@ function sortTasks(sortBy) {
       filteredTasks.sort((a, b) => new Date(a.assigned_at) - new Date(b.assigned_at));
       break;
   }
-
   renderTasks();
 }
-
 /**
 * Render tasks to the DOM
 */
 function renderTasks() {
   const container = document.getElementById('tasks-container');
   if (!container) return;
-
   if (filteredTasks.length === 0) {
     container.innerHTML = `
       <div class="no-tasks">
@@ -263,7 +235,6 @@ function renderTasks() {
     `;
     return;
   }
-
   // Use safer DOM manipulation instead of innerHTML
   container.innerHTML = '';
   const safeHtml = filteredTasks.map(task => createTaskCard(task)).join('');
@@ -272,7 +243,6 @@ function renderTasks() {
   while (tempDiv.firstChild) {
     container.appendChild(tempDiv.firstChild);
   }
-
   // Add click listeners to task cards
   document.querySelectorAll('.task-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -282,7 +252,6 @@ function renderTasks() {
     });
   });
 }
-
 /**
 * Create HTML for a task card
 */
@@ -290,7 +259,6 @@ function createTaskCard(task) {
   const priorityClass = `priority-${task.priority || 'medium'}`;
   const statusClass = `status-${task.assignment_status}`;
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.assignment_status !== 'completed';
-
   return `
     <div class="task-card ${statusClass} ${isOverdue ? 'overdue' : ''}" data-task-id="${task.id}">
       <div class="task-header">
@@ -339,7 +307,6 @@ function openTaskModal(task) {
 
   const modal = document.getElementById('task-modal');
   if (!modal) return;
-
   // Populate modal content
   document.getElementById('modal-task-title').textContent = task.complaint_title;
   document.getElementById('modal-task-description').textContent = task.complaint_description || 'No description provided';
@@ -351,27 +318,22 @@ function openTaskModal(task) {
   document.getElementById('modal-task-status').className = `badge status-${task.assignment_status}`;
   document.getElementById('modal-assigned-by').textContent = task.assigned_by_name;
   document.getElementById('modal-assigned-date').textContent = formatDate(task.assigned_at);
-
   if (task.deadline) {
     document.getElementById('modal-deadline').textContent = formatDate(task.deadline);
     document.getElementById('modal-deadline-row').style.display = 'flex';
   } else {
     document.getElementById('modal-deadline-row').style.display = 'none';
   }
-
   if (task.notes) {
     document.getElementById('modal-notes').textContent = task.notes;
     document.getElementById('modal-notes-row').style.display = 'flex';
   } else {
     document.getElementById('modal-notes-row').style.display = 'none';
   }
-
   // Show/hide action buttons based on status
   updateModalActions(task.assignment_status);
-
   modal.classList.add('show');
 }
-
 /**
 * Close task modal
 */
@@ -381,7 +343,6 @@ function closeTaskModal() {
   selectedTask = null;
   hideAddUpdateForm();
 }
-
 /**
 * Update modal action buttons based on task status
 */
@@ -389,12 +350,10 @@ function updateModalActions(status) {
   const acceptBtn = document.getElementById('btn-accept-task');
   const startBtn = document.getElementById('btn-start-task');
   const completeBtn = document.getElementById('btn-complete-task');
-
   // Hide all by default
   acceptBtn.style.display = 'none';
   startBtn.style.display = 'none';
   completeBtn.style.display = 'none';
-
   switch (status) {
     case 'pending':
       acceptBtn.style.display = 'inline-block';
@@ -407,18 +366,15 @@ function updateModalActions(status) {
       break;
   }
 }
-
 /**
 * Update task status
 */
 async function updateTaskStatus(newStatus) {
   if (!selectedTask) return;
-
   try {
     const response = await apiClient.put(`/lgu/tasks/${selectedTask.id}/status`, {
       status: newStatus
     });
-
     if (response.success) {
       showToast('Task status updated successfully', 'success');
       closeTaskModal();
@@ -431,14 +387,12 @@ async function updateTaskStatus(newStatus) {
     showToast('Error updating task status', 'error');
   }
 }
-
 /**
 * Show add update form
 */
 function showAddUpdateForm() {
   document.getElementById('update-form').style.display = 'block';
 }
-
 /**
 * Hide add update form
 */
@@ -447,27 +401,22 @@ function hideAddUpdateForm() {
   document.getElementById('update-message').value = '';
   document.getElementById('update-public').checked = false;
 }
-
 /**
 * Submit progress update
 */
 async function submitProgressUpdate() {
   if (!selectedTask) return;
-
   const message = document.getElementById('update-message').value.trim();
   const isPublic = document.getElementById('update-public').checked;
-
   if (!message) {
     showToast('Please enter an update message', 'error');
     return;
   }
-
   try {
     const response = await apiClient.post(`/lgu/tasks/${selectedTask.id}/update`, {
       message,
       isPublic
     });
-
     if (response.success) {
       showToast('Progress update added successfully', 'success');
       hideAddUpdateForm();
@@ -479,7 +428,6 @@ async function submitProgressUpdate() {
     showToast('Error adding progress update', 'error');
   }
 }
-
 /**
 * Update stats dashboard
 */
@@ -491,14 +439,12 @@ function updateStats() {
   const overdue = allTasks.filter(t =>
     t.deadline && new Date(t.deadline) < new Date() && t.assignment_status !== 'completed'
   ).length;
-
   document.getElementById('stat-total').textContent = total;
   document.getElementById('stat-pending').textContent = pending;
   document.getElementById('stat-in-progress').textContent = inProgress;
   document.getElementById('stat-completed').textContent = completed;
   document.getElementById('stat-overdue').textContent = overdue;
 }
-
 /**
 * Helper functions
 */
@@ -512,7 +458,6 @@ function getPriorityIcon(priority) {
   const safePriority = String(priority || '').toLowerCase();
   return icons[safePriority] || icons.medium;
 }
-
 function getStatusIcon(status) {
   const icons = {
     pending: '⏳',
@@ -524,7 +469,6 @@ function getStatusIcon(status) {
   const safeStatus = String(status || '').toLowerCase();
   return icons[safeStatus] || '📋';
 }
-
 function formatStatus(status) {
   const labels = {
     pending: 'Pending',
@@ -536,37 +480,30 @@ function formatStatus(status) {
   const safeStatus = String(status || '').toLowerCase();
   return labels[safeStatus] || status;
 }
-
 function formatType(type) {
   return type ? type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'General';
 }
-
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
-
 function formatRelativeDate(dateString) {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
   const now = new Date();
   const diffTime = Math.abs(now - date);
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
   return formatDate(dateString);
 }
-
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initTaskAssignedPage);
-

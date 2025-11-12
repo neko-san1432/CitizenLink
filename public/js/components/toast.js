@@ -7,7 +7,6 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
   let durationMs = 4000;
   let title = 'Notice';
   let options = {};
-
   if (typeof arg1 === 'object' && arg1 !== null) {
     ({ type = 'info', message = '', durationMs = 4000, title = 'Notice', options = {} } = arg1);
   } else {
@@ -16,7 +15,6 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
     durationMs = typeof arg3 === 'number' ? arg3 : 4000;
     options = typeof arg4 === 'object' ? arg4 : {};
   }
-
   let container = document.querySelector('.toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -24,27 +22,24 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
     container.id = 'toast-container';
     document.body.appendChild(container);
   }
-
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  
   // Add clickable class if link is provided
   if (options.link) {
     toast.classList.add('toast-clickable');
   }
-
   // Get appropriate icon for type
   const getIcon = (type) => {
+
     switch (type) {
       case 'success': return '✓';
       case 'error': return '✕';
       case 'warning': return '⚠';
       case 'urgent': return '🚨';
-      case 'info': 
+      case 'info':
       default: return 'ℹ';
     }
   };
-
   toast.innerHTML = `
     <div class="toast-content">
       <div class="toast-icon">${getIcon(type)}</div>
@@ -71,7 +66,7 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
 
   // Close button
   toast.querySelector('.toast-close')?.addEventListener('click', close);
-  
+
   // Click to navigate (if link provided)
   if (options.link) {
     toast.addEventListener('click', (e) => {
@@ -91,16 +86,15 @@ export default function showMessage(arg1 = 'info', arg2 = '', arg3 = 4000, arg4 
     progressBar.style.animationDuration = `${durationMs}ms`;
   }
 }
-
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-
 // Format metadata for display
 function formatMetadata(metadata) {
+
   if (typeof metadata === 'object') {
     return Object.entries(metadata)
       .map(([key, value]) => `${key}: ${value}`)
@@ -108,14 +102,19 @@ function formatMetadata(metadata) {
   }
   return String(metadata);
 }
-
 // Export additional methods
+
 export const Toast = {
   success: (message, options = {}) => showMessage('success', message, options.durationMs || 4000, options),
+
   error: (message, options = {}) => showMessage('error', message, options.durationMs || 4000, options),
+
   warning: (message, options = {}) => showMessage('warning', message, options.durationMs || 4000, options),
+
   info: (message, options = {}) => showMessage('info', message, options.durationMs || 4000, options),
+
   message: (message, options = {}) => showMessage('message', message, options.durationMs || 4000, options),
+
   clear: () => {
     const container = document.querySelector('.toast-container');
     if (container) {
@@ -123,5 +122,3 @@ export const Toast = {
     }
   }
 };
-
-

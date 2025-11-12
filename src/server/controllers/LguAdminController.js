@@ -2,8 +2,8 @@
  * LGU Admin Controller
  * Handles department-specific admin operations
  */
-
 const Database = require('../config/database');
+
 const db = new Database();
 const supabase = db.getClient();
 const NotificationService = require('../services/NotificationService');
@@ -11,17 +11,14 @@ const crypto = require('crypto');
 
 // Create notification service instance
 const notificationService = new NotificationService();
-
 // Notification constants
 const NOTIFICATION_TYPES = {
   ASSIGNMENT_COMPLETED: 'assignment_completed'
 };
-
 const NOTIFICATION_PRIORITY = {
   INFO: 'info',
   URGENT: 'urgent'
 };
-
 class LguAdminController {
   /**
    * Get department queue
@@ -58,14 +55,12 @@ class LguAdminController {
           }
         });
       }
-
       // Get the department ID
       const { data: department, error: deptError } = await supabase
         .from('departments')
         .select('id, name, code')
         .eq('code', departmentCode)
         .single();
-
       if (deptError || !department) {
         console.error('[LGU_ADMIN] Department not found:', { departmentCode, error: deptError });
         return res.status(404).json({
@@ -73,7 +68,6 @@ class LguAdminController {
           error: 'Department not found'
         });
       }
-
       // Build query for complaints assigned to this department
       let query = supabase
         .from('complaints')
@@ -85,7 +79,6 @@ class LguAdminController {
         `)
         .contains('department_r', [departmentCode])
         .order('submitted_at', { ascending: false });
-
       // Apply filters
       if (status) {
         query = query.eq('workflow_status', status);
@@ -96,9 +89,7 @@ class LguAdminController {
       if (limit) {
         query = query.limit(parseInt(limit));
       }
-
       const { data: complaints, error } = await query;
-
       if (error) {
         console.error('[LGU_ADMIN] Error fetching department queue:', error);
         return res.status(500).json({
@@ -106,22 +97,27 @@ class LguAdminController {
           error: 'Failed to fetch department queue'
         });
       }
-
       // Get assignment details for each complaint
       const complaintsWithAssignments = await Promise.all(
         complaints.map(async (complaint) => {
+          // Get all assignments for this complaint
           const { data: assignments } = await supabase
             .from('complaint_assignments')
-            .select('assigned_to, status, assigned_at, assigned_by')
+            .select('assigned_to, status, assigned_at, assigned_by, department_id')
             .eq('complaint_id', complaint.id);
+
+          // Check if complaint is assigned to this admin's department
+          const isAssignedToDepartment = assignments?.some(
+            assignment => assignment.department_id === department.id
+          ) || false;
 
           return {
             ...complaint,
-            assignments: assignments || []
+            assignments: assignments || [],
+            is_assigned_to_department: isAssignedToDepartment
           };
         })
       );
-
       res.json({
         success: true,
         data: complaintsWithAssignments,
@@ -132,7 +128,6 @@ class LguAdminController {
           code: department.code
         }
       });
-
     } catch (error) {
       console.error('[LGU_ADMIN] Get department queue error:', error);
       res.status(500).json({
@@ -141,19 +136,16 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Assign complaint to officer
    */
   async assignToOfficer(req, res) {
     try {
       // console.log removed for security
-
       const { complaintId } = req.params;
       const { officerIds, officerId, priority, deadline, notes } = req.body;
       const userId = req.user?.id;
       const userRole = req.user?.role;
-
       // Validate required parameters
       if (!complaintId) {
         console.error('[LGU_ADMIN] Missing complaintId in params');
@@ -163,7 +155,6 @@ class LguAdminController {
           error: 'Complaint ID is required'
         });
       }
-
       if (!userId) {
         console.error('[LGU_ADMIN] Missing user ID');
         return res.status(401).json({
@@ -171,61 +162,51 @@ class LguAdminController {
           error: 'User not authenticated'
         });
       }
-
       // Support both single officer (officerId) and multiple officers (officerIds)
       const officersToAssign = officerIds && Array.isArray(officerIds) ? officerIds :
         (officerId ? [officerId] : []);
-
       if (officersToAssign.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'No officers specified for assignment'
         });
       }
-
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department ||
                            req.user.metadata?.department ||
                            req.user.raw_user_meta_data?.department ||
                            req.user.raw_user_meta_data?.dpt;
-
       // console.log removed for security
-
       if (!departmentCode) {
         return res.status(400).json({
           success: false,
           error: 'Department not specified in user metadata. Please contact administrator to set your department.'
         });
       }
-
       // Get department info
       const { data: department, error: deptError } = await supabase
         .from('departments')
         .select('id, name, code')
         .eq('code', departmentCode)
         .single();
-
       if (deptError || !department) {
         return res.status(404).json({
           success: false,
           error: 'Department not found'
         });
       }
-
       // Verify complaint exists and is assigned to this department
       const { data: complaint, error: complaintError } = await supabase
         .from('complaints')
         .select('*')
         .eq('id', complaintId)
         .single();
-
       if (complaintError || !complaint) {
         return res.status(404).json({
           success: false,
           error: 'Complaint not found'
         });
       }
-
       // Check if complaint is assigned to this department
       if (!complaint.department_r || !complaint.department_r.includes(departmentCode)) {
         return res.status(403).json({
@@ -233,20 +214,16 @@ class LguAdminController {
           error: 'Complaint is not assigned to your department'
         });
       }
-
       // Generate a unique assignment group ID for this multi-officer assignment
       const assignmentGroupId = crypto.randomUUID();
       const assignmentType = officersToAssign.length > 1 ? 'multi' : 'single';
-
       // Create assignment records for each officer
       const assignments = [];
       const rejectedOfficers = [];
-      
       // Fetch all users once to avoid multiple API calls
       let allUsers = [];
       try {
         const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        
         if (authError) {
           console.error('[LGU_ADMIN] Error fetching auth users for officer verification:', authError);
           return res.status(500).json({
@@ -254,7 +231,6 @@ class LguAdminController {
             error: 'Failed to fetch officer data'
           });
         }
-        
         allUsers = authUsers.users || [];
         // console.log removed for security
       } catch (authErr) {
@@ -264,61 +240,49 @@ class LguAdminController {
           error: 'Failed to fetch officer data'
         });
       }
-      
       for (let i = 0; i < officersToAssign.length; i++) {
         const officerId = officersToAssign[i];
-
         // Find officer in the already fetched users
         const officerData = allUsers.find(u => u.id === officerId);
-
         if (!officerData) {
           console.error('[LGU_ADMIN] Officer not found:', { officerId });
           rejectedOfficers.push({ id: officerId, reason: 'Officer not found in database' });
           continue; // Skip this officer but continue with others
         }
-
         const officer = officerData;
-
         // Debug: Log officer metadata structure
-      
-
         // Check if officer belongs to this department
         const metadata = officer.user_metadata || {};
         const rawMetadata = officer.raw_user_meta_data || {};
         const role = metadata.role || rawMetadata.role || '';
-        
         // Use the same logic as getDepartmentOfficers
         const isLguOfficer = role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin';
         const hasCorrectDepartment = (metadata.dpt === departmentCode) ||
                                     (rawMetadata.dpt === departmentCode) ||
                                     (metadata.department === departmentCode) ||
                                     (rawMetadata.department === departmentCode);
-
         // Check for legacy role system: lgu-{departmentCode} including lgu-admin-{departmentCode}
         const isLegacyOfficer = /^lgu-(?!hr)/.test(role);
         const roleContainsDepartment = role.includes(`-${departmentCode}`);
         const hasLegacyDepartment = metadata.department === departmentCode || rawMetadata.department === departmentCode;
-
         const belongsToDepartment = (isLguOfficer && hasCorrectDepartment) ||
                                    (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
-
         // console.log removed for security
-
         // TEMPORARY: Allow any LGU user for testing (excluding HR)
         // TODO: Fix department matching logic
         const isAnyLguUser = (role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin' || /^lgu-(?!hr)/.test(role));
-        
+
         if (!isAnyLguUser) {
-          console.error('[LGU_ADMIN] Officer is not an LGU user:', { 
-            officerId, 
+          console.error('[LGU_ADMIN] Officer is not an LGU user:', {
+            officerId,
             officerEmail: officer.email,
             role,
             departmentCode,
             metadata,
             rawMetadata
           });
-          rejectedOfficers.push({ 
-            id: officerId, 
+          rejectedOfficers.push({
+            id: officerId,
             email: officer.email,
             reason: 'Officer is not an LGU user',
             role,
@@ -326,9 +290,7 @@ class LguAdminController {
           });
           continue; // Skip this officer but continue with others
         }
-
         // console.log removed for security
-
         assignments.push({
           complaint_id: complaintId,
           assigned_to: officerId,
@@ -343,7 +305,6 @@ class LguAdminController {
           updated_at: new Date().toISOString()
         });
       }
-
       if (assignments.length === 0) {
         console.error('[LGU_ADMIN] No valid officers found for assignment. Rejected officers:', rejectedOfficers);
         return res.status(400).json({
@@ -351,18 +312,16 @@ class LguAdminController {
           error: 'No valid officers found for assignment',
           details: {
             totalOfficers: officersToAssign.length,
-            rejectedOfficers: rejectedOfficers,
+            rejectedOfficers,
             adminDepartment: departmentCode
           }
         });
       }
-      
       // Log if some officers were rejected
       if (rejectedOfficers.length > 0) {
         console.warn('[LGU_ADMIN] Some officers were rejected:', rejectedOfficers);
         // console.log removed for security
       }
-
       // Update complaint status
       const { data: updatedComplaint, error: updateError } = await supabase
         .from('complaints')
@@ -375,7 +334,6 @@ class LguAdminController {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (updateError) {
         console.error('[LGU_ADMIN] Error updating complaint:', updateError);
         return res.status(500).json({
@@ -383,13 +341,11 @@ class LguAdminController {
           error: 'Failed to update complaint status'
         });
       }
-
       // Create assignment records for all officers
       const { data: createdAssignments, error: assignError } = await supabase
         .from('complaint_assignments')
         .insert(assignments)
         .select();
-
       if (assignError) {
         console.error('[LGU_ADMIN] Error creating assignments:', assignError);
         return res.status(500).json({
@@ -397,7 +353,6 @@ class LguAdminController {
           error: 'Failed to create assignments'
         });
       }
-
       // Notify all assigned officers
       const notificationPromises = [];
       for (const assignment of createdAssignments) {
@@ -413,7 +368,6 @@ class LguAdminController {
           })
         );
       }
-
       // Notify citizen that their complaint was assigned
       if (complaint.submitted_by) {
         notificationPromises.push(
@@ -427,7 +381,6 @@ class LguAdminController {
           })
         );
       }
-
       // Send confirmation notification to the admin who made the assignment
       notificationPromises.push(
         notificationService.createNotification(
@@ -449,7 +402,6 @@ class LguAdminController {
           console.warn('[LGU_ADMIN] Failed to send admin confirmation:', notifError.message);
         })
       );
-
       // Wait for all notifications to be sent (but don't fail if some fail)
       await Promise.allSettled(notificationPromises);
 
@@ -471,7 +423,6 @@ class LguAdminController {
         userId: req.user?.id,
         userRole: req.user?.role
       });
-      
       res.status(500).json({
         success: false,
         error: 'Failed to assign complaint to officer',
@@ -479,7 +430,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Get department assignments
    * Returns complaints assigned to the admin's department that need officer assignment
@@ -492,7 +442,7 @@ class LguAdminController {
       const { status, sub_type, priority } = req.query; // Get filters from query params
 
       // Enhanced debug logging
-   
+
 
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department ||
@@ -513,7 +463,6 @@ class LguAdminController {
           metadata: req.user.metadata,
           rawMetadata: req.user.raw_user_meta_data
         });
-
         // For debugging, let's try to find any department and use it temporarily
         // console.log removed for security
         const { data: defaultDept } = await supabase
@@ -523,7 +472,6 @@ class LguAdminController {
           .eq('level', 'LGU')
           .limit(1)
           .single();
-
         if (defaultDept) {
           // console.log removed for security
           // Continue with the default department for testing
@@ -541,14 +489,12 @@ class LguAdminController {
           });
         }
       }
-
       // Get the department ID
       const { data: department, error: deptError } = await supabase
         .from('departments')
         .select('id, name')
         .eq('code', departmentCode)
         .single();
-
       if (deptError || !department) {
         console.error('[LGU_ADMIN] Department not found:', { departmentCode, error: deptError });
         return res.status(404).json({
@@ -556,14 +502,12 @@ class LguAdminController {
           error: 'Department not found'
         });
       }
-
       // Step 1: Get all complaints for this department with filters
       let query = supabase
         .from('complaints')
         .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority')
         .contains('department_r', [departmentCode])
         .order('submitted_at', { ascending: false });
-
       // Apply status filter
       if (status && status !== 'all') {
         query = query.eq('workflow_status', status);
@@ -571,7 +515,6 @@ class LguAdminController {
         // Default: show new, in progress, and assigned complaints
         query = query.in('workflow_status', ['new', 'in_progress', 'assigned']);
       }
-
       // Apply other filters
       // Note: subtype filter removed as column doesn't exist
       // if (sub_type && sub_type !== 'all') {
@@ -580,9 +523,7 @@ class LguAdminController {
       if (priority && priority !== 'all') {
         query = query.eq('priority', priority);
       }
-
       const { data: departmentComplaints, error: complaintsError } = await query;
-
       if (complaintsError) {
         console.error('[LGU_ADMIN] Error fetching complaints:', complaintsError);
         return res.status(500).json({
@@ -591,17 +532,13 @@ class LguAdminController {
           details: complaintsError.message
         });
       }
-
       // Ensure departmentComplaints is an array
       const complaints = departmentComplaints || [];
-
       // Step 2: Get assignments for this department (two approaches):
       // a) Assignments linked through complaints with this department in department_r
       // b) Assignments directly linked by department_id (newly assigned ones)
       const complaintIds = complaints.map(c => c.id);
-      
       // console.log removed for security
-      
       // First, get assignments by department_id (PRIMARY QUERY)
       // For recent assignments, include all statuses except 'cancelled'
       let deptAssignmentsQuery = supabase
@@ -610,20 +547,15 @@ class LguAdminController {
         .eq('department_id', department.id)
         .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
         .order('created_at', { ascending: false });
-      
       const { limit } = req.query;
       if (limit) {
         deptAssignmentsQuery = deptAssignmentsQuery.limit(parseInt(limit));
       }
-      
       const { data: deptAssignments, error: deptAssignError } = await deptAssignmentsQuery;
-
       // console.log removed for security
-
       if (deptAssignError) {
         console.error('[LGU_ADMIN] Error fetching assignments by department_id:', deptAssignError);
       }
-
       // Then, get assignments by complaint_id (if any complaints found) - SECONDARY QUERY
       let assignmentsByComplaint = [];
       if (complaintIds.length > 0) {
@@ -633,22 +565,16 @@ class LguAdminController {
           .in('complaint_id', complaintIds)
           .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
           .order('created_at', { ascending: false });
-        
         if (limit) {
           complaintAssignmentsQuery = complaintAssignmentsQuery.limit(parseInt(limit));
         }
-        
         const { data: complaintAssignments, error: complaintAssignError } = await complaintAssignmentsQuery;
-        
         // console.log removed for security
-        
         assignmentsByComplaint = complaintAssignments || [];
       }
-
       // Merge and deduplicate assignments (keep most recent if duplicate complaint_id)
       const allAssignments = [...assignmentsByComplaint, ...(deptAssignments || [])];
       // console.log removed for security
-      
       const assignmentsMap = {};
       allAssignments.forEach(assignment => {
         const existing = assignmentsMap[assignment.complaint_id];
@@ -656,29 +582,24 @@ class LguAdminController {
           assignmentsMap[assignment.complaint_id] = assignment;
         }
       });
-
       const existingAssignments = Object.values(assignmentsMap);
       // console.log removed for security
-
       // Get all unique complaint IDs from assignments
       const assignmentComplaintIds = [...new Set(existingAssignments.map(a => a.complaint_id).filter(Boolean))];
-      
       // Fetch complaint details for assignments that weren't in the initial complaints list
       const existingComplaintIds = new Set(complaints.map(c => c.id));
       const missingComplaintIds = assignmentComplaintIds.filter(id => !existingComplaintIds.has(id));
-      
+
       let allComplaints = [...complaints];
       if (missingComplaintIds.length > 0) {
         const { data: missingComplaints, error: missingError } = await supabase
           .from('complaints')
           .select('id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority')
           .in('id', missingComplaintIds);
-        
         if (!missingError && missingComplaints) {
           allComplaints = [...complaints, ...missingComplaints];
         }
       }
-
       // Combine complaints with their assignments
       // IMPORTANT: Include ALL assignments found, even if complaint not in department_r
       const departmentAssignments = allComplaints
@@ -719,63 +640,83 @@ class LguAdminController {
           return null;
         })
         .filter(Boolean); // Remove null entries
-      
       // console.log removed for security
       // console.log removed for security
-
       // Get officer information for assigned complaints
-      const assignedOfficerIds = departmentAssignments
+      const assignedOfficerIds = [...new Set(departmentAssignments
         .filter(a => a.assigned_to)
-        .map(a => a.assigned_to);
-
+        .map(a => a.assigned_to))];
       let officersMap = {};
       if (assignedOfficerIds && assignedOfficerIds.length > 0) {
         try {
-          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-          if (authError) {
-            console.error('[LGU_ADMIN] Error fetching auth users for officers:', authError);
-          } else if (authUsers?.users) {
-            officersMap = authUsers.users
-              .filter(u => assignedOfficerIds.includes(u.id))
-              .reduce((acc, user) => {
-                acc[user.id] = {
+          // Fetch users by ID individually to avoid pagination issues with listUsers()
+          // This is more efficient and reliable than fetching all users
+          const userPromises = assignedOfficerIds.map(async (officerId) => {
+            try {
+              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(officerId);
+              if (!userError && userData?.user) {
+                const {user} = userData;
+                return {
                   id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email,
                   email: user.email
                 };
-                return acc;
-              }, {});
-          }
+              }
+              return null;
+            } catch (err) {
+              console.warn(`[LGU_ADMIN] Error fetching officer ${officerId}:`, err.message);
+              return null;
+            }
+          });
+
+          const userResults = await Promise.allSettled(userPromises);
+          officersMap = userResults
+            .filter(result => result.status === 'fulfilled' && result.value !== null)
+            .reduce((acc, result) => {
+              const user = result.value;
+              acc[user.id] = { id: user.id, name: user.name, email: user.email };
+              return acc;
+            }, {});
         } catch (authErr) {
           console.error('[LGU_ADMIN] Auth API error for officers:', authErr);
         }
       }
-
       // Get citizen information
       const citizenIds = [...new Set(departmentAssignments.map(a => a.complaints?.submitted_by).filter(Boolean))];
       let citizensMap = {};
       if (citizenIds && citizenIds.length > 0) {
         try {
-          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-          if (authError) {
-            console.error('[LGU_ADMIN] Error fetching auth users for citizens:', authError);
-          } else if (authUsers?.users) {
-            citizensMap = authUsers.users
-              .filter(u => citizenIds.includes(u.id))
-              .reduce((acc, user) => {
-                acc[user.id] = {
+          // Fetch users by ID individually to avoid pagination issues with listUsers()
+          // This is more efficient and reliable than fetching all users
+          const userPromises = citizenIds.map(async (citizenId) => {
+            try {
+              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(citizenId);
+              if (!userError && userData?.user) {
+                const {user} = userData;
+                return {
+                  id: user.id,
                   name: user.user_metadata?.name || user.raw_user_meta_data?.name || user.email
                 };
-                return acc;
-              }, {});
-          }
+              }
+              return null;
+            } catch (err) {
+              console.warn(`[LGU_ADMIN] Error fetching citizen ${citizenId}:`, err.message);
+              return null;
+            }
+          });
+
+          const userResults = await Promise.allSettled(userPromises);
+          citizensMap = userResults
+            .filter(result => result.status === 'fulfilled' && result.value !== null)
+            .reduce((acc, result) => {
+              const user = result.value;
+              acc[user.id] = { name: user.name };
+              return acc;
+            }, {});
         } catch (authErr) {
           console.error('[LGU_ADMIN] Auth API error for citizens:', authErr);
         }
       }
-
       // Format response
       const formattedAssignments = departmentAssignments.map(assignment => ({
         id: assignment.id,
@@ -794,14 +735,11 @@ class LguAdminController {
         status: assignment.status,
         notes: assignment.notes
       }));
-
       // console.log removed for security
-
       return res.json({
         success: true,
         data: formattedAssignments
       });
-
     } catch (error) {
       console.error('[LGU_ADMIN] Get assignments error:', error);
       return res.status(500).json({
@@ -810,7 +748,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Get department officers
    * Returns list of LGU officers in the admin's department
@@ -843,14 +780,12 @@ class LguAdminController {
           }
         });
       }
-
       // Get the department ID
       const { data: department, error: deptError } = await supabase
         .from('departments')
         .select('id')
         .eq('code', departmentCode)
         .single();
-
       if (deptError || !department) {
         console.error('[LGU_ADMIN] Department not found:', { departmentCode, error: deptError });
         return res.status(404).json({
@@ -858,13 +793,11 @@ class LguAdminController {
           error: 'Department not found'
         });
       }
-
       // Get all users and filter for LGU officers in this department
       // Use admin auth API to get users instead of direct table query
       let users = [];
       try {
         const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
         if (authError) {
           console.error('[LGU_ADMIN] Error fetching auth users:', authError);
           return res.status(500).json({
@@ -873,7 +806,6 @@ class LguAdminController {
             details: authError.message
           });
         }
-
         users = authUsers.users || [];
         // console.log removed for security
       } catch (authErr) {
@@ -884,42 +816,33 @@ class LguAdminController {
           details: authErr.message
         });
       }
-
       // console.log removed for security
       // console.log removed for security
-
       const officers = users
         .filter(user => {
           const metadata = user.user_metadata || {};
           const rawMetadata = user.raw_user_meta_data || {};
           const role = metadata.role || rawMetadata.role || '';
-
           // Debug logging for each user
           // console.log removed for security
-
           // Check for simplified role system: lgu with department in metadata, or lgu-admin
           const isLguOfficer = role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin';
           const hasCorrectDepartment = (metadata.dpt === departmentCode) ||
                                       (rawMetadata.dpt === departmentCode) ||
                                       (metadata.department === departmentCode) ||
                                       (rawMetadata.department === departmentCode);
-
           // Check for legacy role system: lgu-{departmentCode} including lgu-admin-{departmentCode}
           const isLegacyOfficer = /^lgu-(?!hr)/.test(role);
           const roleContainsDepartment = role.includes(`-${departmentCode}`);
           const hasLegacyDepartment = metadata.department === departmentCode || rawMetadata.department === departmentCode;
-
           const isMatch = (isLguOfficer && hasCorrectDepartment) ||
                          (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
-
           // TEMPORARY: Allow any LGU user for testing (excluding HR)
           const isAnyLguUser = (role === 'lgu' || role === 'lgu-officer' || role === 'lgu-admin' || /^lgu-(?!hr)/.test(role));
           const finalMatch = isMatch || isAnyLguUser;
-
           if (finalMatch) {
             // console.log removed for security
           }
-
           return finalMatch;
         })
         .map(user => ({
@@ -929,14 +852,11 @@ class LguAdminController {
           employee_id: user.user_metadata?.employee_id || user.raw_user_meta_data?.employee_id,
           mobile: user.user_metadata?.mobile || user.raw_user_meta_data?.mobile
         }));
-
       // console.log removed for security
-
       return res.json({
         success: true,
         data: officers
       });
-
     } catch (error) {
       console.error('[LGU_ADMIN] Get officers error:', error);
       return res.status(500).json({
@@ -945,7 +865,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Assign complaint to officer
    */
@@ -954,20 +873,17 @@ class LguAdminController {
       const userId = req.user.id;
       const userRole = req.user.role;
       const { complaintId, officerId, priority, deadline, notes } = req.body;
-
       if (!complaintId || !officerId) {
         return res.status(400).json({
           success: false,
           error: 'Complaint ID and Officer ID are required'
         });
       }
-
       // Extract department from user metadata (check multiple possible field names)
       const departmentCode = req.user.department ||
                            req.user.metadata?.department ||
                            req.user.raw_user_meta_data?.department ||
                            req.user.raw_user_meta_data?.dpt;
-
       if (!departmentCode) {
         console.error('[LGU_ADMIN] No department found in user metadata:', {
           userRole,
@@ -986,21 +902,18 @@ class LguAdminController {
           }
         });
       }
-
       // Get the department ID
       const { data: department, error: deptError } = await supabase
         .from('departments')
         .select('id')
         .eq('code', departmentCode)
         .single();
-
       if (deptError || !department) {
         return res.status(404).json({
           success: false,
           error: 'Department not found'
         });
       }
-
       // Check if assignment already exists
       const { data: existingAssignment } = await supabase
         .from('complaint_assignments')
@@ -1027,7 +940,6 @@ class LguAdminController {
           .eq('id', existingAssignment.id)
           .select()
           .single();
-
         if (updateError) {
           console.error('[LGU_ADMIN] Error updating assignment:', updateError);
           return res.status(500).json({
@@ -1035,7 +947,6 @@ class LguAdminController {
             error: 'Failed to update assignment'
           });
         }
-
         assignment = updatedAssignment;
       } else {
         // Create new assignment
@@ -1053,7 +964,6 @@ class LguAdminController {
           })
           .select()
           .single();
-
         if (insertError) {
           console.error('[LGU_ADMIN] Error creating assignment:', insertError);
           return res.status(500).json({
@@ -1061,22 +971,18 @@ class LguAdminController {
             error: 'Failed to create assignment'
           });
         }
-
         assignment = newAssignment;
       }
-
       // Get complaint details
       const { data: complaint } = await supabase
         .from('complaints')
         .select('title, descriptive_su, id')
         .eq('id', complaintId)
         .single();
-
       // Send notification to the officer
       // Map complaint priority to notification priority
       const notificationPriority = priority === 'urgent' ? 'urgent' :
         priority === 'high' ? 'warning' : 'info';
-
       await notificationService.notifyTaskAssigned(
         officerId,
         complaintId,
@@ -1084,7 +990,6 @@ class LguAdminController {
         notificationPriority,
         deadline
       );
-
       // Notify citizen that their complaint was assigned
       if (complaint?.submitted_by) {
         await notificationService.notifyComplaintAssignedToOfficer(
@@ -1096,7 +1001,6 @@ class LguAdminController {
           console.warn('[LGU_ADMIN] Failed to notify citizen:', notifError.message);
         });
       }
-
       // Send confirmation notification to the admin who made the assignment
       await notificationService.createNotification(
         userId,
@@ -1113,12 +1017,10 @@ class LguAdminController {
           }
         }
       );
-
       return res.json({
         success: true,
         data: assignment
       });
-
     } catch (error) {
       console.error('[LGU_ADMIN] Assign complaint error:', error);
       return res.status(500).json({
@@ -1127,7 +1029,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Send reminder to officer
    */
@@ -1135,18 +1036,16 @@ class LguAdminController {
     try {
       const adminId = req.user.id;
       const { officerId, complaintId, reminderType, customMessage } = req.body;
-
       if (!officerId || !complaintId || !reminderType) {
         return res.status(400).json({
           success: false,
           error: 'Officer ID, complaint ID, and reminder type are required'
         });
       }
-
       // Use CoordinatorService to send the reminder
       const CoordinatorService = require('../services/CoordinatorService');
-      const coordinatorService = new CoordinatorService();
 
+      const coordinatorService = new CoordinatorService();
       const result = await coordinatorService.sendOfficerReminder(
         adminId,
         officerId,
@@ -1154,7 +1053,6 @@ class LguAdminController {
         reminderType,
         customMessage
       );
-
       res.json(result);
     } catch (error) {
       console.error('[LGU_ADMIN] Send officer reminder error:', error);
@@ -1164,7 +1062,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Get pending assignments summary
    */
@@ -1172,10 +1069,9 @@ class LguAdminController {
     try {
       // Use CoordinatorService to get summary
       const CoordinatorService = require('../services/CoordinatorService');
+
       const coordinatorService = new CoordinatorService();
-
       const result = await coordinatorService.getPendingAssignmentsSummary();
-
       res.json({
         success: true,
         data: result.data
@@ -1188,7 +1084,6 @@ class LguAdminController {
       });
     }
   }
-
   /**
    * Get officers needing attention
    */
@@ -1203,17 +1098,13 @@ class LguAdminController {
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       // Group by officer and identify overdue items
       const officerGroups = {};
       const officersNeedingAttention = [];
-
       for (const assignment of assignments) {
         const officerId = assignment.assigned_to;
         if (!officerId) continue;
-
         if (!officerGroups[officerId]) {
           officerGroups[officerId] = {
             officer_id: officerId,
@@ -1222,18 +1113,14 @@ class LguAdminController {
             complaints: []
           };
         }
-
         officerGroups[officerId].assignments_count++;
-
         // Check if overdue (7+ days)
         const daysSinceAssignment = Math.floor(
           (Date.now() - new Date(assignment.created_at).getTime()) / (1000 * 60 * 60 * 24)
         );
-
         if (daysSinceAssignment > 7) {
           officerGroups[officerId].overdue_count++;
         }
-
         officerGroups[officerId].complaints.push({
           id: assignment.complaints.id,
           title: assignment.complaints.title,
@@ -1242,7 +1129,6 @@ class LguAdminController {
           is_overdue: daysSinceAssignment > 7
         });
       }
-
       // Filter officers who need attention (have overdue items or many pending items)
       for (const officerId in officerGroups) {
         const officer = officerGroups[officerId];
@@ -1250,14 +1136,11 @@ class LguAdminController {
           // Get officer details using admin auth API
           try {
             const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
             if (authError) {
               console.error('[LGU_ADMIN] Error fetching auth users for officer details:', authError);
               continue;
             }
-
             const officerData = authUsers?.users?.find(u => u.id === officerId);
-
             if (officerData) {
               officersNeedingAttention.push({
                 ...officer,
@@ -1279,7 +1162,6 @@ class LguAdminController {
           }
         }
       }
-
       res.json({
         success: true,
         data: {
@@ -1296,4 +1178,5 @@ class LguAdminController {
     }
   }
 }
+
 module.exports = LguAdminController;

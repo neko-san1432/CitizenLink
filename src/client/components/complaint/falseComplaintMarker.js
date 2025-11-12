@@ -2,20 +2,18 @@
  * False Complaint Marker Component
  * Modal for coordinators to mark complaints as false
  */
-
 class FalseComplaintMarker {
+
   constructor() {
     this.modal = null;
     this.complaintId = null;
     this.onSuccess = null;
     this.init();
   }
-
   init() {
     this.createModal();
     this.attachEventListeners();
   }
-
   createModal() {
     const modalHTML = `
       <div id="falseComplaintModal" class="modal" style="display: none;">
@@ -73,35 +71,28 @@ class FalseComplaintMarker {
         </div>
       </div>
     `;
-
     // Append modal to body
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = modalHTML;
     document.body.appendChild(modalContainer.firstElementChild);
-
     this.modal = document.getElementById('falseComplaintModal');
   }
-
   attachEventListeners() {
     // Close modal
     const closeBtn = document.getElementById('closeFalseComplaintModal');
     const cancelBtn = document.getElementById('cancelFalseComplaint');
     const overlay = this.modal.querySelector('.modal-overlay');
-
     closeBtn?.addEventListener('click', () => this.close());
     cancelBtn?.addEventListener('click', () => this.close());
     overlay?.addEventListener('click', () => this.close());
-
     // Character count
     const textarea = document.getElementById('falseComplaintDetails');
     const charCount = this.modal.querySelector('.char-count');
-
     textarea?.addEventListener('input', (e) => {
       const {length} = e.target.value;
       charCount.textContent = `${length} / 20 minimum characters`;
       charCount.classList.toggle('valid', length >= 20);
     });
-
     // Form submission
     const form = document.getElementById('falseComplaintForm');
     form?.addEventListener('submit', (e) => {
@@ -109,49 +100,39 @@ class FalseComplaintMarker {
       this.handleSubmit();
     });
   }
-
   open(complaintId, onSuccess) {
     this.complaintId = complaintId;
     this.onSuccess = onSuccess;
-
     // Reset form
     document.getElementById('falseComplaintForm')?.reset();
     const charCount = this.modal.querySelector('.char-count');
     charCount.textContent = '0 / 20 minimum characters';
     charCount.classList.remove('valid');
-
     // Show modal
     this.modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
-
   close() {
     this.modal.style.display = 'none';
     document.body.style.overflow = '';
     this.complaintId = null;
     this.onSuccess = null;
   }
-
   async handleSubmit() {
     const reasonType = document.getElementById('falseComplaintReason').value;
     const details = document.getElementById('falseComplaintDetails').value;
-
     if (!reasonType || !details || details.length < 20) {
       this.showError('Please provide a reason and detailed explanation (minimum 20 characters)');
       return;
     }
-
     // Confirmation dialog
     const confirmed = confirm(
       'Are you sure you want to mark this complaint as false? This action will change the complaint status to "rejected_false".'
     );
-
     if (!confirmed) return;
-
     const submitBtn = document.getElementById('submitFalseComplaint');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
-
     try {
       const response = await fetch(`/api/complaints/${this.complaintId}/mark-false`, {
         method: 'POST',
@@ -162,24 +143,18 @@ class FalseComplaintMarker {
           reason: `${this.getReasonLabel(reasonType)}: ${details}`
         })
       });
-
       const result = await response.json();
-
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to mark complaint as false');
       }
-
       // Success
       this.showSuccess('Complaint marked as false successfully');
-
       if (this.onSuccess) {
         this.onSuccess(result.data);
       }
-
       setTimeout(() => {
         this.close();
       }, 1500);
-
     } catch (error) {
       console.error('Error marking complaint as false:', error);
       this.showError(error.message || 'Failed to mark complaint as false');
@@ -187,7 +162,6 @@ class FalseComplaintMarker {
       submitBtn.textContent = 'Mark as False Complaint';
     }
   }
-
   getReasonLabel(reasonType) {
     const labels = {
       duplicate: 'Duplicate submission',
@@ -198,19 +172,16 @@ class FalseComplaintMarker {
     };
     return labels[reasonType] || reasonType;
   }
-
   showSuccess(message) {
     const notification = this.createNotification(message, 'success');
     document.body.appendChild(notification);
     setTimeout(() => notification.remove(), 3000);
   }
-
   showError(message) {
     const notification = this.createNotification(message, 'error');
     document.body.appendChild(notification);
     setTimeout(() => notification.remove(), 5000);
   }
-
   createNotification(message, type) {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -230,14 +201,12 @@ class FalseComplaintMarker {
     return notification;
   }
 }
-
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+
   module.exports = FalseComplaintMarker;
 }
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   window.falseComplaintMarker = new FalseComplaintMarker();
 });
-

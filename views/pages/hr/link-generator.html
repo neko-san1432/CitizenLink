@@ -11,10 +11,12 @@
     <link rel="stylesheet" href="../../../css/toast.css">
     <link rel="stylesheet" href="../../../css/components/sidebar.css">
     <link rel="stylesheet" href="../../../css/app.css">
+    <link rel="stylesheet" href="../../../css/components/clock.css">
     <link rel="stylesheet" href="../../../css/header-redesign.css">
     <link rel="stylesheet" href="../../../css/pages/hr-link-generator.css">
 </head>
 <body>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
@@ -22,7 +24,8 @@
             <div class="link-generator-container">
                 <div class="page-header">
                     <div>
-                        <h1>Link Generator</h1>
+                        <h1>🔗 Link Generator</h1>
+                        <p style="color: #6c757d; margin: 0; font-size: 0.95rem;">Create secure signup links for staff registration</p>
                         <div id="role-info" class="role-info" style="display: none;">
                             <div class="info-box">
                                 <h3>Your Permissions</h3>
@@ -30,7 +33,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="linkGenerator.generateLink()">
+                    <button class="btn btn-primary" id="generateNewLinkBtn">
                         Generate New Link
                     </button>
                 </div>
@@ -82,7 +85,7 @@
                                 <label>&nbsp;</label>
                                 <div style="display: flex; gap: 0.5rem;">
                                     <button type="submit" class="btn btn-primary">Generate Link</button>
-                                    <button type="button" class="btn btn-secondary" onclick="linkGenerator.cancelGenerate()">Cancel</button>
+                                    <button type="button" class="btn btn-secondary" id="cancelGenerateBtn">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +95,7 @@
                         <h3>Generated Link</h3>
                         <div class="link-display">
                             <input type="text" class="link-input" id="linkInput" readonly>
-                            <button class="copy-btn" onclick="linkGenerator.copyLink()">Copy</button>
+                            <button class="copy-btn" id="copyLinkBtn">Copy</button>
                         </div>
                         <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">
                             ⏰ This link will expire in <span id="expiryTime"></span>
@@ -107,13 +110,13 @@
                     <div class="links-header">
                         <h2>Generated Links</h2>
                         <div class="filters">
-                            <select class="filter-select" id="roleFilter" onchange="linkGenerator.filterLinks()">
+                            <select class="filter-select" id="roleFilter">
                                 <option value="">All Roles</option>
                                 <option value="lgu-officer">LGU Officer</option>
                                 <option value="lgu-admin">LGU Admin</option>
                                 <option value="lgu-hr">LGU HR</option>
                             </select>
-                            <select class="filter-select" id="statusFilter" onchange="linkGenerator.filterLinks()">
+                            <select class="filter-select" id="statusFilter">
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
                                 <option value="expired">Expired</option>
@@ -136,6 +139,7 @@
     <script type="module" src="../../../js/components/sidebar.js"></script>
     <script type="module" src="../../../js/auth/authChecker.js"></script>
     <script type="module" src="../../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../../js/components/clock.js"></script>
     <script type="module" src="../../../js/hr/linkGenerator.js"></script>
 </body>
 </html>

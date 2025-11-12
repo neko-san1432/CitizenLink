@@ -1,6 +1,5 @@
 // security-violations.js - 300 violations for comprehensive testing
 // Generated to reach target of 1603 total errors
-
 // console.log removed for security // Console statement
 const magic_2 = 2000; // Magic number
 const very_long_variable_name_that_exceeds_120_characters_3 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
@@ -51,7 +50,6 @@ element.innerHTML = '<div>Security violation 47</div>'; // XSS risk
 const unused_variable_48 = 'This variable is intentionally unused'; // Unused variable
 const violation_49 = 49; // Var instead of let/const
 // console.log removed for security // Console statement
-
 // Batch 1
 const magic_51 = 51000; // Magic number
 const very_long_variable_name_that_exceeds_120_characters_52 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
@@ -103,7 +101,6 @@ const unused_variable_97 = 'This variable is intentionally unused'; // Unused va
 const violation_98 = 98; // Var instead of let/const
 // console.log removed for security // Console statement
 const magic_100 = 100000; // Magic number
-
 // Batch 2
 const very_long_variable_name_that_exceeds_120_characters_101 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
 // TODO: Fix violation 102 - this is a todo comment
@@ -155,7 +152,6 @@ const violation_147 = 147; // Var instead of let/const
 // console.log removed for security // Console statement
 const magic_149 = 149000; // Magic number
 const very_long_variable_name_that_exceeds_120_characters_150 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
-
 // Batch 3
 // TODO: Fix violation 151 - this is a todo comment
 element.innerHTML = '<div>Security violation 152</div>'; // XSS risk
@@ -207,7 +203,6 @@ const violation_196 = 196; // Var instead of let/const
 const magic_198 = 198000; // Magic number
 const very_long_variable_name_that_exceeds_120_characters_199 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
 // TODO: Fix violation 200 - this is a todo comment
-
 // Batch 4
 element.innerHTML = '<div>Security violation 201</div>'; // XSS risk
 const unused_variable_202 = 'This variable is intentionally unused'; // Unused variable
@@ -259,7 +254,6 @@ const magic_247 = 247000; // Magic number
 const very_long_variable_name_that_exceeds_120_characters_248 = 'This is a very long string that exceeds the 120 character limit and should trigger a linting warning for line length in most configurations';
 // TODO: Fix violation 249 - this is a todo comment
 element.innerHTML = '<div>Security violation 250</div>'; // XSS risk
-
 // Batch 5
 const unused_variable_251 = 'This variable is intentionally unused'; // Unused variable
 const violation_252 = 252; // Var instead of let/const
@@ -311,5 +305,4 @@ const very_long_variable_name_that_exceeds_120_characters_297 = 'This is a very 
 // TODO: Fix violation 298 - this is a todo comment
 element.innerHTML = '<div>Security violation 299</div>'; // XSS risk
 const unused_variable_300 = 'This variable is intentionally unused'; // Unused variable
-
 // Batch 6

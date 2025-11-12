@@ -4,7 +4,6 @@ const NotificationService = require('../services/NotificationService');
 const db = new Database();
 const supabase = db.getClient();
 const notificationService = new NotificationService();
-
 class LguOfficerController {
   /**
    * Get assigned tasks for officer
@@ -13,14 +12,12 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { status, priority, limit } = req.query;
-
       // Get assignments for this officer (using separate queries to avoid relationship issues)
       let assignmentQuery = supabase
         .from('complaint_assignments')
         .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
-
       // Apply filters
       if (status) {
         assignmentQuery = assignmentQuery.eq('status', status);
@@ -31,11 +28,8 @@ class LguOfficerController {
       if (limit) {
         assignmentQuery = assignmentQuery.limit(parseInt(limit));
       }
-
       const { data: assignments, error: assignmentError } = await assignmentQuery;
-
       // console.log removed for security
-
       if (assignmentError) {
         console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
         return res.status(500).json({
@@ -43,7 +37,6 @@ class LguOfficerController {
           error: 'Failed to fetch assignments'
         });
       }
-
       if (!assignments || assignments.length === 0) {
         // console.log removed for security
         return res.json({
@@ -51,18 +44,14 @@ class LguOfficerController {
           data: []
         });
       }
-
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
       // console.log removed for security
-      
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
-
       // console.log removed for security
-
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
         return res.status(500).json({
@@ -70,7 +59,6 @@ class LguOfficerController {
           error: 'Failed to fetch complaint details'
         });
       }
-
       // Deduplicate assignments by complaint_id (keep the most recent one)
       const uniqueAssignments = assignments.reduce((acc, assignment) => {
         const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
@@ -81,9 +69,7 @@ class LguOfficerController {
         }
         return acc;
       }, []);
-
       // console.log removed for security
-
       // Combine assignments with complaint data
       const combinedData = uniqueAssignments.map(assignment => {
         const complaint = complaints?.find(c => c.id === assignment.complaint_id);
@@ -124,12 +110,10 @@ class LguOfficerController {
           }
         };
       });
-
       return res.json({
         success: true,
         data: combinedData
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Get assigned tasks error:', error);
       res.status(500).json({
@@ -138,7 +122,6 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Mark complaint as resolved
    */
@@ -147,14 +130,12 @@ class LguOfficerController {
       const { complaintId } = req.params;
       const { resolution_notes } = req.body; // evidence field removed
       const userId = req.user.id;
-
       if (!resolution_notes) {
         return res.status(400).json({
           success: false,
           error: 'Resolution notes are required'
         });
       }
-
       // Update complaint status
       const { data: updatedComplaint, error: updateError } = await supabase
         .from('complaints')
@@ -170,7 +151,6 @@ class LguOfficerController {
         .eq('id', complaintId)
         .select()
         .single();
-
       if (updateError) {
         console.error('[LGU_OFFICER] Error updating complaint:', updateError);
         return res.status(500).json({
@@ -178,7 +158,6 @@ class LguOfficerController {
           error: 'Failed to update complaint status'
         });
       }
-
       // Update assignment status
       const { error: assignmentError } = await supabase
         .from('complaint_assignments')
@@ -189,7 +168,6 @@ class LguOfficerController {
         })
         .eq('complaint_id', complaintId)
         .eq('assigned_to', userId);
-
       if (assignmentError) {
         console.error('[LGU_OFFICER] Error updating assignment:', assignmentError);
         // Don't fail the request, just log the error
@@ -215,13 +193,11 @@ class LguOfficerController {
       } catch (notifError) {
         console.warn('[LGU_OFFICER] Failed to notify citizen:', notifError.message);
       }
-
       res.json({
         success: true,
         message: 'Complaint marked as resolved successfully',
         complaint: updatedComplaint
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Mark as resolved error:', error);
       res.status(500).json({
@@ -230,21 +206,18 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Get all tasks assigned to the current officer
    */
   async getMyTasks(req, res) {
     try {
       const userId = req.user.id;
-
       // Get all assignments for this officer (using separate queries to avoid relationship issues)
       const { data: assignments, error: assignmentError } = await supabase
         .from('complaint_assignments')
         .select('id, complaint_id, assigned_by, status, notes, priority, deadline, created_at, updated_at, completed_at')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
-
       if (assignmentError) {
         console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
         return res.status(500).json({
@@ -252,7 +225,6 @@ class LguOfficerController {
           error: 'Failed to fetch assignments'
         });
       }
-
       if (!assignments || assignments.length === 0) {
         // console.log removed for security
         return res.json({
@@ -260,20 +232,15 @@ class LguOfficerController {
           data: []
         });
       }
-
       // console.log removed for security
-
       // Get complaint details for each assignment
       const complaintIds = assignments.map(a => a.complaint_id);
       // console.log removed for security
-      
       const { data: complaints, error: complaintError } = await supabase
         .from('complaints')
         .select('id, title, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at')
         .in('id', complaintIds);
-
       // console.log removed for security
-
       if (complaintError) {
         console.error('[LGU_OFFICER] Error fetching complaints:', complaintError);
         return res.status(500).json({
@@ -281,7 +248,6 @@ class LguOfficerController {
           error: 'Failed to fetch complaint details'
         });
       }
-
       // Deduplicate assignments by complaint_id (keep the most recent one)
       const uniqueAssignments = assignments.reduce((acc, assignment) => {
         const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
@@ -292,24 +258,19 @@ class LguOfficerController {
         }
         return acc;
       }, []);
-
       // console.log removed for security
-
       // Get assigned_by user info for each assignment
       const assignmentsWithUsers = await Promise.all(
         uniqueAssignments.map(async (assignment) => {
           let assignedByName = 'Unknown';
-
           if (assignment.assigned_by) {
             const { data: assignedByUser } = await supabase.auth.admin.getUserById(assignment.assigned_by);
             if (assignedByUser?.user) {
               assignedByName = assignedByUser.user.user_metadata?.name || assignedByUser.user.email;
             }
           }
-
           // Find the corresponding complaint
           const complaint = complaints?.find(c => c.id === assignment.complaint_id);
-
           return {
             id: assignment.id,
             complaint_id: assignment.complaint_id,
@@ -347,12 +308,10 @@ class LguOfficerController {
           };
         })
       );
-
       return res.json({
         success: true,
         data: assignmentsWithUsers
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Get tasks error:', error);
       return res.status(500).json({
@@ -361,7 +320,6 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Update task status (accept, start, complete, etc.)
    */
@@ -370,9 +328,7 @@ class LguOfficerController {
       const { assignmentId } = req.params;
       const { status, notes } = req.body;
       const userId = req.user.id;
-
       // console.log removed for security
-
       // Verify this assignment belongs to the officer
       const { data: assignment, error: fetchError } = await supabase
         .from('complaint_assignments')
@@ -380,35 +336,29 @@ class LguOfficerController {
         .eq('id', assignmentId)
         .eq('assigned_to', userId)
         .single();
-
       if (fetchError || !assignment) {
         return res.status(404).json({
           success: false,
           error: 'Assignment not found'
         });
       }
-
       // Prepare update data
       const updateData = {
         status,
         updated_at: new Date().toISOString()
       };
-
       if (notes) {
         updateData.notes = notes;
       }
-
       // If completing, set completed_at
       if (status === 'completed') {
         updateData.completed_at = new Date().toISOString();
       }
-
       // Update the assignment
       const { error: updateError } = await supabase
         .from('complaint_assignments')
         .update(updateData)
         .eq('id', assignmentId);
-
       if (updateError) {
         console.error('[LGU_OFFICER] Error updating assignment:', updateError);
         return res.status(500).json({
@@ -416,12 +366,10 @@ class LguOfficerController {
           error: 'Failed to update assignment'
         });
       }
-
       // Update complaint confirmation status using the database function (instead of manual workflow_status update)
       await supabase.rpc('update_complaint_confirmation_status', {
         complaint_uuid: assignment.complaint_id
       });
-
       // Send notification to admin about status change
       if (assignment.assigned_by) {
         await notificationService.createNotification(
@@ -440,14 +388,11 @@ class LguOfficerController {
           }
         );
       }
-
       // console.log removed for security
-
       return res.json({
         success: true,
         message: 'Task status updated successfully'
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Update task status error:', error);
       return res.status(500).json({
@@ -456,7 +401,6 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Add progress update/note to a task
    */
@@ -465,9 +409,7 @@ class LguOfficerController {
       const { assignmentId } = req.params;
       const { message, isPublic } = req.body;
       const userId = req.user.id;
-
       // console.log removed for security
-
       // Verify assignment belongs to officer
       const { data: assignment, error: fetchError } = await supabase
         .from('complaint_assignments')
@@ -475,14 +417,12 @@ class LguOfficerController {
         .eq('id', assignmentId)
         .eq('assigned_to', userId)
         .single();
-
       if (fetchError || !assignment) {
         return res.status(404).json({
           success: false,
           error: 'Assignment not found'
         });
       }
-
       // Add to complaint history
       const { error: historyError } = await supabase
         .from('complaint_history')
@@ -496,11 +436,9 @@ class LguOfficerController {
             assignment_id: assignmentId
           }
         });
-
       if (historyError) {
         console.error('[LGU_OFFICER] Error adding history:', historyError);
       }
-
       // If public, notify the citizen
       if (isPublic) {
         // Get complaint details to find the submitted_by user
@@ -509,7 +447,6 @@ class LguOfficerController {
           .select('submitted_by')
           .eq('id', assignment.complaint_id)
           .single();
-
         if (!complaintError && complaint?.submitted_by) {
           await notificationService.createNotification(
             complaint.submitted_by,
@@ -527,14 +464,11 @@ class LguOfficerController {
           );
         }
       }
-
       // console.log removed for security
-
       return res.json({
         success: true,
         message: 'Progress update added successfully'
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Add progress update error:', error);
       return res.status(500).json({
@@ -543,23 +477,19 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Get officer statistics
    */
   async getStatistics(req, res) {
     try {
       const userId = req.user.id;
-
       // Get all assignments for this officer
       const { data: assignments, error: assignmentError } = await supabase
         .from('complaint_assignments')
         .select('*')
         .eq('assigned_to', userId)
         .order('created_at', { ascending: false });
-
       if (assignmentError) throw assignmentError;
-
       // Deduplicate assignments by complaint_id (keep the most recent one)
       const uniqueAssignments = assignments.reduce((acc, assignment) => {
         const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
@@ -569,18 +499,14 @@ class LguOfficerController {
         }
         return acc;
       }, []);
-
       // console.log removed for security
-
       // Calculate statistics from deduplicated assignments
       const totalTasks = uniqueAssignments.length;
       const pendingTasks = uniqueAssignments.filter(a => ['assigned', 'in_progress'].includes(a.status)).length;
       const completedTasks = uniqueAssignments.filter(a => a.status === 'completed').length;
       const inProgressTasks = uniqueAssignments.filter(a => a.status === 'in_progress').length;
-
       // Calculate efficiency rate
       const efficiencyRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
       return res.json({
         success: true,
         data: {
@@ -591,7 +517,6 @@ class LguOfficerController {
           efficiency_rate: `${efficiencyRate}%`
         }
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Get statistics error:', error);
       return res.status(500).json({
@@ -600,7 +525,6 @@ class LguOfficerController {
       });
     }
   }
-
   /**
    * Get officer activities
    */
@@ -608,7 +532,6 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { limit = 10 } = req.query;
-
       // Get recent activities from assignments with complaint details
       const { data: activities, error } = await supabase
         .from('complaint_assignments')
@@ -629,7 +552,6 @@ class LguOfficerController {
         .eq('assigned_to', userId)
         .order('updated_at', { ascending: false })
         .limit(parseInt(limit));
-
       if (error) {
         console.warn('[LGU_OFFICER] Activities query failed, using fallback:', error.message);
         // Fallback: get activities without joins
@@ -639,9 +561,7 @@ class LguOfficerController {
           .eq('assigned_to', userId)
           .order('updated_at', { ascending: false })
           .limit(parseInt(limit));
-
         if (fallbackError) throw fallbackError;
-
         // Deduplicate fallback data by complaint_id (keep the most recent one)
         const uniqueFallbackData = fallbackData.reduce((acc, activity) => {
           const existing = acc.find(a => a.complaint_id === activity.complaint_id);
@@ -651,9 +571,7 @@ class LguOfficerController {
           }
           return acc;
         }, []);
-
         // console.log removed for security
-
         // Transform fallback data
         const transformedActivities = uniqueFallbackData.map(activity => ({
           id: activity.id,
@@ -661,13 +579,11 @@ class LguOfficerController {
           description: this.getActivityDescription(activity),
           created_at: activity.updated_at || activity.created_at
         }));
-
         return res.json({
           success: true,
           data: transformedActivities
         });
       }
-
       // Deduplicate activities by complaint_id (keep the most recent one)
       const uniqueActivities = activities.reduce((acc, activity) => {
         const existing = acc.find(a => a.complaint_id === activity.complaint_id);
@@ -677,9 +593,7 @@ class LguOfficerController {
         }
         return acc;
       }, []);
-
       // console.log removed for security
-
       // Transform to activity format with complaint details
       const transformedActivities = uniqueActivities.map(activity => ({
         id: activity.id,
@@ -687,12 +601,10 @@ class LguOfficerController {
         description: this.getActivityDescription(activity, activity.complaints),
         created_at: activity.updated_at || activity.created_at
       }));
-
       return res.json({
         success: true,
         data: transformedActivities
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Get activities error:', error);
       return res.status(500).json({
@@ -701,7 +613,6 @@ class LguOfficerController {
       });
     }
   }
-
   // Helper function to determine activity type
   getActivityType(activity) {
     if (activity.completed_at) return 'task_completed';
@@ -710,12 +621,10 @@ class LguOfficerController {
     if (activity.notes) return 'note_added';
     return 'task_update';
   }
-
   // Helper function to generate activity description
   getActivityDescription(activity, complaint = null) {
     const complaintTitle = complaint?.title || `Complaint #${activity.complaint_id?.substring(0, 8)}`;
     const complaintCategory = complaint?.category || 'General';
-    
     switch (this.getActivityType(activity)) {
       case 'task_completed':
         return `Completed task: "${complaintTitle}" (${complaintCategory})`;
@@ -729,7 +638,6 @@ class LguOfficerController {
         return `Updated task: "${complaintTitle}" - Status: ${activity.status}`;
     }
   }
-
   /**
    * Get department updates
    */
@@ -737,20 +645,16 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { limit = 10 } = req.query;
-
       // Get user's department from metadata
       const userRole = req.user.role;
       const departmentCode = userRole.split('-')[1]; // Extract department from lgu-{dept}
-
       // For now, return empty array - department updates will be implemented later
       // This removes the mock data and provides a clean foundation for future implementation
       const updates = [];
-
       return res.json({
         success: true,
         data: updates.slice(0, parseInt(limit))
       });
-
     } catch (error) {
       console.error('[LGU_OFFICER] Get updates error:', error);
       return res.status(500).json({

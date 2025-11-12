@@ -1,11 +1,9 @@
 // legacy block removed
-
 /* global L */
 (function() {
   const MAP_ID = 'digos-map';
   const DEFAULT_CENTER = [6.7497, 125.3570]; // Approx Digos City
   const DEFAULT_ZOOM = 12;
-
   function ensureLeafletLoaded() {
     return new Promise((resolve, reject) => {
       if (window.L) return resolve();
@@ -21,13 +19,11 @@
       }, 5000);
     });
   }
-
   async function fetchBoundaries() {
     const res = await fetch('/api/boundaries', { credentials: 'include' });
     if (!res.ok) throw new Error('Failed to load boundaries');
     return res.json();
   }
-
   function styleForBarangay(index) {
     // Generate pleasant distinct colors
     const hue = (index * 47) % 360;
@@ -38,7 +34,6 @@
       fillOpacity: 0.25
     };
   }
-
   function addBarangayPolygons(map, boundaries) {
     const group = L.featureGroup();
     boundaries.forEach((item, idx) => {
@@ -48,7 +43,7 @@
         // Coordinates are [lng, lat]; Leaflet expects [lat, lng]
         const layer = L.geoJSON(gj, {
           style: styleForBarangay(idx),
-          coordsToLatLng: function(coords) {
+          coordsToLatLng(coords) {
             return new L.LatLng(coords[1], coords[0]);
           }
         }).bindPopup(`<strong>${item.name || 'Barangay'}</strong>`);
@@ -65,7 +60,6 @@
       }
     } catch {}
   }
-
   async function init() {
     const container = document.getElementById(MAP_ID);
     if (!container) return;
@@ -76,7 +70,6 @@
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
       }).addTo(map);
-
       const data = await fetchBoundaries();
       if (Array.isArray(data)) {
         addBarangayPolygons(map, data);
@@ -86,13 +79,9 @@
       container.innerHTML = '<div style="padding:1rem;color:#e74c3c;">Failed to load map. Please try again later.</div>';
     }
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 })();
-
-
-

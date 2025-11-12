@@ -2,8 +2,10 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { saveUserMeta, getOAuthContext } from './authChecker.js';
+import { setButtonLoading, temporarilyMark } from '../utils/buttonState.js';
 import { addCsrfTokenToForm } from '../utils/csrf.js';
 import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword, isValidEmail } from '../utils/validation.js';
+
 // Show toast on login page if redirected due to missing auth
 try {
   const isLoginPage = /\/login(?:$|\?)/.test(window.location.pathname + window.location.search);
@@ -22,7 +24,6 @@ export const retrieveUserRole = async () => {};
 let loginCaptchaWidgetId = null;
 let registerCaptchaWidgetId = null;
 let siteKey = '';
-
 // Fetch CAPTCHA key securely from server
 async function getCaptchaKey() {
   try {
@@ -34,23 +35,18 @@ async function getCaptchaKey() {
     return '';
   }
 }
-
 async function renderCaptchaWidgetsIfAny() {
   // Skip reCAPTCHA in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     // console.log removed for security
     return;
   }
-
   if (!window.grecaptcha) return;
-
   // Fetch CAPTCHA key if not already loaded
   if (!siteKey) {
     siteKey = await getCaptchaKey();
   }
-
   if (!siteKey) return;
-
   window.grecaptcha.ready(() => {
     const loginEl = document.getElementById('login-captcha');
     if (loginEl && loginCaptchaWidgetId === null) {
@@ -62,18 +58,15 @@ async function renderCaptchaWidgetsIfAny() {
     }
   });
 }
-
 // Try render on load and after a short delay to cover async script load
 renderCaptchaWidgetsIfAny();
 setTimeout(renderCaptchaWidgetsIfAny, 500);
-
 async function verifyCaptchaOrFail(widgetId) {
   // Skip reCAPTCHA verification in development mode
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     // console.log removed for security
     return { ok: true };
   }
-
   if (!widgetId && widgetId !== 0) {
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };
@@ -104,39 +97,59 @@ async function verifyCaptchaOrFail(widgetId) {
     }
   }
 }
-
 const regFormEl = document.getElementById('regForm');
 if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   e.preventDefault(); // prevent page refresh
-
-  const name = document.getElementById('name').value.trim();
+  const firstName = document.getElementById('firstName')?.value.trim() || '';
+  const lastName = document.getElementById('lastName')?.value.trim() || '';
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
+  const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+  const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
+  const city = document.getElementById('city')?.value.trim() || '';
+  const province = document.getElementById('province')?.value.trim() || '';
+  const postalCode = document.getElementById('postalCode')?.value.trim() || '';
+  const barangay = document.getElementById('barangay')?.value.trim() || '';
+  const gender = document.getElementById('gender')?.value || '';
   const regPass = document.getElementById('regPassword').value;
   const reRegPass = document.getElementById('reRegPassword').value;
-
   // Early password length checks
   if (!regPass || regPass.length < 8) {
     showMessage('error', 'Password must be at least 8 characters long');
     return;
   }
-
+  // Validate address fields - if any address field is provided, city and province are required
+  const hasAddressFields = addressLine1 || addressLine2 || city || province || postalCode || barangay;
+  if (hasAddressFields && (!city || !province)) {
+    showMessage('error', 'City and province are required when providing address information');
+    return;
+  }
+  // Validate postal code format if provided
+  if (postalCode && !/^\d{4}$/.test(postalCode)) {
+    showMessage('error', 'Postal code must be 4 digits');
+    return;
+  }
   // Validate form data
   const validationRules = {
-    name: { required: true, minLength: 2, maxLength: 100 },
+    firstName: { required: true, minLength: 1, maxLength: 100 },
+    lastName: { required: true, minLength: 1, maxLength: 100 },
     email: { required: true, type: 'email' },
     mobile: { required: true, type: 'mobile' },
-    regPassword: { required: true, type: 'password' }
+    regPassword: { required: true, type: 'password' },
+    addressLine1: { required: false, minLength: 0, maxLength: 255 },
+    addressLine2: { required: false, minLength: 0, maxLength: 255 },
+    city: { required: false, minLength: 0, maxLength: 100 },
+    province: { required: false, minLength: 0, maxLength: 100 },
+    postalCode: { required: false, minLength: 0, maxLength: 4 },
+    barangay: { required: false, minLength: 0, maxLength: 100 },
+    gender: { required: false }
   };
-
-  const formData = { name, email, mobile, regPassword };
+  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, city, province, postalCode, barangay, gender };
   const validation = validateAndSanitizeForm(formData, validationRules);
-
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
     return;
   }
-
   // Additional password confirmation check
   if (reRegPass !== regPass) {
     showMessage('error', 'Passwords don\'t match');
@@ -148,85 +161,95 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   if (!captchaResult.ok) return;
 
   try {
+    const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn');
+    const resetBtn = setButtonLoading(submitBtn, 'Creating account...');
     // Build JSON payload (role defaults to 'citizen' on backend)
     const payload = {
       email: validation.sanitizedData.email,
       password: regPass,
       confirmPassword: reRegPass,
-      name: validation.sanitizedData.name, // Single name field
+      firstName: validation.sanitizedData.firstName,
+      lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
-      // role: 'citizen', // ❌ Removed - Backend defaults to citizen
+      gender: validation.sanitizedData.gender || '',
+      address: {
+        line1: validation.sanitizedData.addressLine1 || '',
+        line2: validation.sanitizedData.addressLine2 || '',
+        city: validation.sanitizedData.city || '',
+        province: validation.sanitizedData.province || '',
+        postalCode: validation.sanitizedData.postalCode || '',
+        barangay: validation.sanitizedData.barangay || ''
+      },
+      // role: 'citizen', // backend defaults to citizen
       agreedToTerms: true,
       isOAuth: false // Regular signup
     };
-
     // Submit via API instead of direct Supabase call
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const result = await response.json();
-
-    if (result.success) {
-      // Ensure browser Supabase client has the session to prevent auto-logout
-      try {
-        const accessToken = result.data?.session?.accessToken || null;
-        const refreshToken = result.data?.session?.refreshToken || null;
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        }
-      } catch (e) {
-        console.warn('Failed to set Supabase client session:', e);
-      }
+    // Be tolerant of API variations: treat 2xx with clear success message as success
+    const successMessage = (result && result.message) ? String(result.message) : '';
+    const isHttpSuccess = response.ok; // includes 201
+    const isApiSuccess = result && result.success === true;
+    const looksLikeSuccess = /account created|verify your email|verification email/i.test(successMessage);
+    if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
+      // SECURITY: Tokens are no longer in response, Supabase session is managed server-side
+      // Server sets HttpOnly cookie, client relies on that for authentication
+      // No need to manually set session here as server handles it
       showMessage('success', 'Successfully registered. Please confirm via the email we sent.');
+      temporarilyMark(submitBtn, 'Success', 'btn-success');
+      resetBtn();
       setTimeout(()=>{window.location.href = '/login';},3000);
     } else {
-      showMessage('error', result.error || 'Registration failed');
+      const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
+      if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
+        showMessage('error', 'Email is used');
+      } else {
+        showMessage('error', result.error || successMessage || 'Registration failed');
+      }
+      temporarilyMark(submitBtn, 'Failed', 'btn-danger');
+      resetBtn();
     }
   } catch (error) {
     console.error('Registration error:', error);
     showMessage('error', 'Registration failed. Please try again.');
+    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); temporarilyMark(submitBtn, 'Failed', 'btn-danger'); } catch {}
+    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); } catch {}
   }
 });
-
 const loginFormEl = document.getElementById('login');
 if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
   const remember = document.getElementById('remember-me')?.checked || false;
-
   // Get login button elements
   const loginBtn = document.getElementById('login-submit-btn');
   const loginBtnIcon = document.getElementById('login-btn-icon');
   const loginBtnText = document.getElementById('login-btn-text');
-
   // Function to show loading state
   const showLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    
     // Store original icon HTML
     const originalIcon = loginBtnIcon.outerHTML;
     loginBtn.dataset.originalIcon = originalIcon;
-    
     // Replace icon with loading spinner (CSS animation will handle rotation)
     loginBtnIcon.innerHTML = `
       <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
       <path d="M12 2 A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="15 10"/>
     `;
     loginBtnIcon.classList.add('spinning');
-    
     // Disable button
     loginBtn.disabled = true;
     loginBtnText.textContent = 'Signing in...';
   };
-
   // Function to hide loading state
   const hideLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    
     // Restore original icon if stored
     if (loginBtn.dataset.originalIcon) {
       const originalIconHtml = loginBtn.dataset.originalIcon;
@@ -235,33 +258,27 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const restoredIcon = tempDiv.firstElementChild;
       loginBtnIcon.parentNode.replaceChild(restoredIcon, loginBtnIcon);
     }
-    
     // Re-enable button
     loginBtn.disabled = false;
     loginBtnText.textContent = 'Sign in';
   };
-
   // Basic validation
   if (!email || !pass) {
     showMessage('error', 'Email and password are required');
     return;
   }
-
   if (!isValidEmail(email)) {
     showMessage('error', 'Please enter a valid email address');
     return;
   }
-
   // Show loading state
   showLoading();
-
   // verify captcha
   const captchaResult = await verifyCaptchaOrFail(loginCaptchaWidgetId);
   if (!captchaResult.ok) {
     hideLoading();
     return;
   }
-
   try {
     // Submit via API with JSON body
     const response = await fetch('/api/auth/login', {
@@ -269,130 +286,100 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass, remember })
     });
-
     const result = await response.json();
-
     if (result.success) {
-      // Persist access token to HttpOnly cookie for server-protected pages
+      // SECURITY: Server handles all authentication and sets HttpOnly cookie
+      // Client syncs Supabase session state using refresh token from server response
       try {
-        const accessToken = result.data?.session?.accessToken || null;
-        // console.log removed for security
-        // console.log removed for security
-
-        if (accessToken) {
-          // console.log removed for security
-          // console.log removed for security
-
-          const ok = await setServerSessionCookie(accessToken, remember);
-          // console.log removed for security
-          if (!ok) {
-            console.error('[CLIENT AUTH] ❌ Failed to establish session');
-            showMessage('error', 'Failed to establish session. Please try again.');
-            return;
+        // Server already authenticated and set cookie, now sync client-side Supabase session
+        const refreshToken = result.data?.refresh_token;
+        const expiresAt = result.data?.expires_at;
+        
+        if (refreshToken) {
+          // Use refresh token to get full Supabase session without re-authenticating
+          const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession({
+            refresh_token: refreshToken
+          });
+          
+          if (refreshError || !sessionData?.session) {
+            console.warn('[CLIENT AUTH] ⚠️ Failed to sync Supabase session:', refreshError?.message);
+            // Server cookie is still valid, continue with server-side auth only
+            // Some client-side Supabase features may not work, but core functionality will
+          } else {
+            // Successfully synced Supabase session
+            // Server cookie is already set, client session is now synced
           }
-
-          // console.log removed for security
-          // Wait a moment for cookie to be set
-          await new Promise(r => setTimeout(r, 100));
-
-          // console.log removed for security
-          // console.log removed for security
-
-          // Verify cookie by hitting a protected endpoint before redirecting
-          // console.log removed for security
-          const resp = await fetch('/api/user/role', {
+        } else {
+          console.warn('[CLIENT AUTH] ⚠️ No refresh token in response, client-side Supabase features may be limited');
+        }
+        
+        // Verify session by hitting a protected endpoint
+        await new Promise(r => setTimeout(r, 100)); // Brief wait for cookie to be set
+        const resp = await fetch('/api/user/role', {
+          method: 'GET',
+          credentials: 'include', // Ensure cookies are sent
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!resp.ok) {
+          // Try one more time with a longer wait
+          await new Promise(r => setTimeout(r, 1000));
+          const retryResp = await fetch('/api/user/role', {
             method: 'GET',
-            credentials: 'include', // Ensure cookies are sent
+            credentials: 'include',
             headers: {
-              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json'
             }
           });
-
-          // console.log removed for security
-
-          if (!resp.ok) {
-            // console.log removed for security
-            const errorData = await resp.json().catch(() => ({}));
-            // console.log removed for security
-
-            // Try one more time with a longer wait
-            // console.log removed for security
-            await new Promise(r => setTimeout(r, 1000));
-
-            const retryResp = await fetch('/api/user/role', {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            // console.log removed for security
-
-            if (retryResp.ok) {
-              // console.log removed for security
+          
+          if (!retryResp.ok) {
+            const retryErrorData = await retryResp.json().catch(() => ({}));
+            console.error('[CLIENT AUTH] ❌ Session verification failed:', retryErrorData);
+            let errorMessage = 'Session verification failed. ';
+            if (retryResp.status === 401) {
+              errorMessage += 'Your session has expired. Please log in again.';
+            } else if (retryResp.status === 403) {
+              errorMessage += 'Access denied. Please contact support.';
+            } else if (retryResp.status >= 500) {
+              errorMessage += 'Server error. Please try again later.';
             } else {
-              const retryErrorData = await retryResp.json().catch(() => ({}));
-              console.error('[CLIENT AUTH] ❌ Retry also failed:', retryErrorData);
-
-              // Enhanced error message based on specific error
-              let errorMessage = 'Session verification failed. ';
-              if (retryResp.status === 401) {
-                errorMessage += 'Your session has expired. Please log in again.';
-              } else if (retryResp.status === 403) {
-                errorMessage += 'Access denied. Please contact support.';
-              } else if (retryResp.status >= 500) {
-                errorMessage += 'Server error. Please try again later.';
-              } else {
-                errorMessage += 'Please try logging in again.';
-              }
-
-              showMessage('error', errorMessage);
-              hideLoading();
-              return;
+              errorMessage += 'Please try logging in again.';
             }
+            showMessage('error', errorMessage);
+            hideLoading();
+            return;
           }
-
-          // console.log removed for security
         }
       } catch (error) {
-        console.error('[CLIENT AUTH] Error in session setup:', error);
-        hideLoading();
-        throw error; // Re-throw to be caught by outer catch
+        console.error('[CLIENT AUTH] Error in session sync:', error);
+        // Don't fail login if session sync fails - server cookie is still valid
+        // Log error but continue with server-side authentication
       }
-
       showMessage('success', 'Logged in successfully');
-      // Get role from multiple sources
-      const sessionUserMetadata = result.data?.session?.user?.user_metadata || {};
-      const sessionRawUserMetadata = result.data?.session?.user?.raw_user_meta_data || {};
-
-      // console.log removed for security
-
-      const combinedSessionMetadata = { ...sessionRawUserMetadata, ...sessionUserMetadata };
-
-      const role = result.data?.user?.role
-        || combinedSessionMetadata.role
-        || combinedSessionMetadata.normalized_role
-        || sessionUserMetadata.role
-        || sessionRawUserMetadata.role
-        || null;
-
-      const name = result.data?.user?.fullName
-        || (result.data?.user?.firstName && result.data?.user?.lastName ? `${result.data.user.firstName} ${result.data.user.lastName}` : null)
-        || combinedSessionMetadata.name
-        || sessionUserMetadata.name
-        || sessionRawUserMetadata.name
-        || null;
-
-      // console.log removed for security
-
+      // SECURITY: Use user data from server response (server is source of truth)
+      // Fall back to Supabase session only if server data is incomplete
+      const serverUser = result.data?.user;
+      let role = serverUser?.role || serverUser?.normalizedRole || null;
+      let name = serverUser?.name || serverUser?.fullName || null;
+      
+      // If server data is incomplete, try to get from Supabase session
+      if (!role || !name) {
+        const { data: { session: clientSession } } = await supabase.auth.getSession();
+        if (clientSession?.user) {
+          const userMetadata = clientSession.user.user_metadata || {};
+          const rawUserMetaData = clientSession.user.raw_user_meta_data || {};
+          const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+          role = role || combinedMetadata.role || combinedMetadata.normalized_role || null;
+          name = name || combinedMetadata.name || null;
+        }
+      }
+      
+      // Save user metadata for client-side use
       if (role || name) {
         saveUserMeta({ role, name });
-        // console.log removed for security
       }
-
       // Check if user has completed registration
       if (!role || !name) {
         // console.log removed for security
@@ -403,7 +390,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         }, 2000);
         return;
       }
-
       // Redirect to dashboard based on role
       // console.log removed for security
       setTimeout(() => {
@@ -416,7 +402,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const ctx = getOAuthContext();
       if (ctx && ctx.provider) {
         window.location.href = '/signup';
-
       }
     }
   } catch (error) {
@@ -424,7 +409,6 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     showMessage('error', 'Login failed. Please try again.');
   }
 });
-
 // OAuth sign-in buttons
 const googleBtn = document.getElementById('login-google');
 if (googleBtn) {
@@ -443,7 +427,6 @@ if (googleBtn) {
     }
   });
 }
-
 const fbBtn = document.getElementById('login-facebook');
 if (fbBtn) {
   fbBtn.addEventListener('click', async () => {
@@ -461,39 +444,8 @@ if (fbBtn) {
     }
   });
 }
-
 // Email field remains empty and editable for both login and register
-
-// Utility to post session cookie with remember flag
-async function setServerSessionCookie(accessToken, remember) {
-  try {
-    // console.log removed for security
-    // console.log removed for security
-
-    const resp = await fetch('/auth/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ access_token: accessToken, remember: Boolean(remember) })
-    });
-
-    // console.log removed for security
-
-    const responseData = await resp.json();
-    // console.log removed for security
-
-    if (!resp.ok) {
-      console.error('[CLIENT AUTH] ❌ Failed to set session cookie:', responseData);
-      return false;
-    }
-
-    return responseData.success === true;
-  } catch (error) {
-    console.error('[CLIENT AUTH] 💥 Server session cookie error:', error);
-    return false;
-  }
-}
-
+// Note: Session cookie is now set by server during login - no client-side cookie setting needed
 // If not remembered, clear cookie on unload (best-effort for session cleanup)
 (function setupEphemeralSessionCleanup(){
   try {

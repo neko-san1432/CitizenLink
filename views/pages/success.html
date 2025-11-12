@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -5,22 +6,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <title>Success</title>
-    <link rel="stylesheet" href="./css/toast.css">
-    <link rel="stylesheet" href="./css/app.css">
-    <link rel="stylesheet" href="./css/pages/success.css">
+    <title>Success - CitizenLink</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/pages/success.css">
 </head>
-<body>
-    <div class="card">
-      <h1 class="success-title">Success</h1>
-      <p class="success-message">Your request completed successfully.</p>
-      <div class="success-actions">
-        <a href="/" class="btn">Go Home</a>
-        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
-      </div>
+<body class="success-page">
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M8 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 class="success-title">Success!</h1>
+            <p class="success-message">Your request completed successfully.</p>
+            <div class="success-actions">
+                <a href="/" class="btn btn-secondary">Go Home</a>
+                <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
-    <script type="module" src="./js/components/toast.js"></script>
-    <script type="module" src="./js/components/success.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/success.js"></script>
 </body>
 </html>
