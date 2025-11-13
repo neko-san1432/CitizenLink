@@ -1,5 +1,5 @@
 const ComplianceService = require('../services/ComplianceService');
-const ErrorHandler = require('../middleware/errorHandler');
+const { ErrorHandler } = require('../middleware/errorHandler');
 
 class ComplianceController {
   constructor() {
@@ -57,7 +57,7 @@ class ComplianceController {
       });
     } catch (error) {
       console.error('[COMPLIANCE] Export error:', error);
-      ErrorHandler.handleError(error, req, res);
+      return ErrorHandler.handleApiError(error, req, res);
     }
   }
 
@@ -115,7 +115,7 @@ class ComplianceController {
       });
     } catch (error) {
       console.error('[COMPLIANCE] Delete error:', error);
-      ErrorHandler.handleError(error, req, res);
+      return ErrorHandler.handleApiError(error, req, res);
     }
   }
 
@@ -135,7 +135,7 @@ class ComplianceController {
       });
     } catch (error) {
       console.error('[COMPLIANCE] Get requests error:', error);
-      ErrorHandler.handleError(error, req, res);
+      return ErrorHandler.handleApiError(error, req, res);
     }
   }
 }
