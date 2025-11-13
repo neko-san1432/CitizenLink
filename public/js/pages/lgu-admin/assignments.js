@@ -17,6 +17,7 @@ class LguAdminAssignments {
     this.complaints = [];
     this.currentComplaintId = null;
     this.selectedComplaint = null;
+    this.currentAssignmentFilter = 'all'; // For client-side filtering (all, unassigned, assigned)
     this.filters = {
       status: 'all',
       priority: 'all',
@@ -34,11 +35,90 @@ class LguAdminAssignments {
       await this.loadOfficers();
       await this.loadAssignments();
       this.renderAssignments();
+      this.setupCompletedSection();
     } catch (error) {
       console.error('[LGU_ADMIN_ASSIGNMENTS] Initialization error:', error);
       this.hideLoadingState();
       showMessage('error', 'Failed to initialize assignments page');
     }
+  }
+
+  setupCompletedSection() {
+    const toggleBtn = document.getElementById('toggle-completed-btn');
+    const completedContainer = document.getElementById('completed-container');
+    let isExpanded = false;
+    let completedAssignments = [];
+
+    if (toggleBtn && completedContainer) {
+      toggleBtn.addEventListener('click', async () => {
+        if (!isExpanded) {
+          // Load completed assignments
+          const loading = document.getElementById('completed-loading');
+          const completedList = document.getElementById('completed-list');
+          
+          if (loading) loading.style.display = 'block';
+          if (completedList) completedList.innerHTML = '';
+
+          try {
+            const queryParams = new URLSearchParams();
+            queryParams.append('status', 'completed');
+            if (this.filters.priority !== 'all') queryParams.append('priority', this.filters.priority);
+            const url = `/api/lgu-admin/department-assignments?${queryParams}`;
+            const response = await apiClient.get(url);
+            
+            if (response && response.success) {
+              completedAssignments = response.data || [];
+
+              if (completedList) {
+                if (completedAssignments.length === 0) {
+                  completedList.innerHTML = '<div class="empty-state"><p>No completed assignments</p></div>';
+                } else {
+                  completedList.innerHTML = completedAssignments.map(assignment => this.renderAssignmentCard(assignment)).join('');
+                  this.attachCompletedEventListeners();
+                }
+              }
+
+              toggleBtn.textContent = 'Hide Completed';
+              completedContainer.style.display = 'block';
+              isExpanded = true;
+            } else {
+              throw new Error(response?.error || 'Failed to load completed assignments');
+            }
+          } catch (error) {
+            console.error('Error loading completed assignments:', error);
+            showMessage('error', 'Failed to load completed assignments');
+            if (completedList) {
+              completedList.innerHTML = '<div class="empty-state"><p>Error loading completed assignments</p></div>';
+            }
+          } finally {
+            if (loading) loading.style.display = 'none';
+          }
+        } else {
+          toggleBtn.textContent = 'Show Completed';
+          completedContainer.style.display = 'none';
+          isExpanded = false;
+        }
+      });
+    }
+  }
+
+  attachCompletedEventListeners() {
+    // View Details buttons
+    document.querySelectorAll('#completed-list .view-details-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const complaintId = e.target.dataset.complaintId;
+        window.location.href = `/complaint-details/${complaintId}`;
+      });
+    });
+    // View Assignment buttons
+    document.querySelectorAll('#completed-list .view-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const complaintId = e.target.dataset.complaintId;
+        window.location.href = `/complaint-details/${complaintId}`;
+      });
+    });
   }
   async loadComplaints() {
     try {
@@ -103,22 +183,46 @@ class LguAdminAssignments {
     if (loadingState) loadingState.style.display = 'none';
   }
   setupEventListeners() {
-    // Event delegation for complaint items
-    document.getElementById('assignments-list').addEventListener('click', (event) => {
-      const item = event.target.closest('.assignment-card');
-      if (item) {
-        const {complaintId} = item.dataset;
-        const complaint = this.assignments.find(a => a.complaint_id === complaintId);
-        if (complaint) {
-          this.selectComplaint(complaint);
+    // Event delegation for complaint items - Navigate to complaint details (like coordinator review queue)
+    const assignmentsList = document.getElementById('assignments-list');
+    if (assignmentsList) {
+      assignmentsList.addEventListener('click', (event) => {
+        // Don't navigate if clicking on buttons
+        if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+          return;
         }
-      }
+        const item = event.target.closest('.assignment-card');
+        if (item) {
+          const {complaintId} = item.dataset;
+          if (complaintId) {
+            // Navigate to complaint details page, similar to coordinator review queue
+            window.location.href = `/complaint-details/${complaintId}`;
+          }
+        }
+      });
+    }
+    
+    // Filter button toggles (All, Unassigned, Assigned)
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Remove active class from all filter buttons
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        e.target.classList.add('active');
+        // Get filter value
+        const filterValue = e.target.dataset.filter;
+        // Apply client-side filter for assignment status
+        this.currentAssignmentFilter = filterValue;
+        this.renderAssignments();
+      });
     });
+    
     // Filter controls
     const statusFilter = document.getElementById('status-filter');
     const priorityFilter = document.getElementById('priority-filter');
-    const subTypeFilter = document.getElementById('sub-type-filter');
+    const subTypeFilter = document.getElementById('subtype-filter') || document.getElementById('sub-type-filter');
     const refreshBtn = document.getElementById('refresh-btn');
+    
     if (statusFilter) {
       statusFilter.addEventListener('change', (e) => {
         this.filters.status = e.target.value;
@@ -232,10 +336,17 @@ class LguAdminAssignments {
     this.setupEventListeners();
   }
   getPaginatedAssignments() {
-
+    // Apply client-side assignment filter (all, unassigned, assigned)
+    let filtered = this.assignments;
+    if (this.currentAssignmentFilter === 'unassigned') {
+      filtered = this.assignments.filter(a => !a.assigned_to || a.status === 'unassigned');
+    } else if (this.currentAssignmentFilter === 'assigned') {
+      filtered = this.assignments.filter(a => a.assigned_to && a.status !== 'unassigned');
+    }
+    
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    return this.assignments.slice(startIndex, endIndex);
+    return filtered.slice(startIndex, endIndex);
   }
   updateStats() {
     // Calculate stats
@@ -300,17 +411,14 @@ class LguAdminAssignments {
           </div>
         </div>
         <div class="assignment-actions">
-          <button class="btn btn-outline view-details-btn" data-complaint-id="${assignment.complaint_id}">
+          <button class="btn btn-primary view-details-btn" data-complaint-id="${assignment.complaint_id}">
             View Details
           </button>
           ${assignment.status === 'unassigned' ? `
-            <button class="btn btn-primary assign-btn" data-complaint-id="${assignment.complaint_id}">
+            <button class="btn btn-secondary assign-btn" data-complaint-id="${assignment.complaint_id}">
               Assign to Officer
             </button>
           ` : `
-            <button class="btn btn-secondary view-btn" data-complaint-id="${assignment.complaint_id}">
-              View Assignment
-            </button>
             <button class="btn btn-outline reassign-btn" data-complaint-id="${assignment.complaint_id}">
               Reassign
             </button>
@@ -321,11 +429,13 @@ class LguAdminAssignments {
   }
 
   setupAssignmentCardListeners() {
-    // View Details buttons (for all complaints)
+    // View Details buttons (for all complaints) - Navigate to complaint details page like coordinator
     document.querySelectorAll('.view-details-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const {complaintId} = e.target.dataset;
-        this.openComplaintDetailsPanel(complaintId);
+        // Navigate to complaint details page, similar to coordinator review queue
+        window.location.href = `/complaint-details/${complaintId}`;
       });
     });
     // Assign buttons
@@ -342,22 +452,26 @@ class LguAdminAssignments {
         this.openAssignmentModal(complaintId, true);
       });
     });
-    // View Assignment buttons (for assigned complaints)
+    // View Assignment buttons (for assigned complaints) - Navigate to complaint details page like coordinator
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const {complaintId} = e.target.dataset;
-        this.viewComplaintDetails(complaintId);
+        // Navigate to complaint details page, similar to coordinator review queue
+        window.location.href = `/complaint-details/${complaintId}`;
       });
     });
-    // Select complaint buttons
+    // Click on assignment card - Navigate to complaint details (like coordinator review queue)
     document.querySelectorAll('.assignment-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.classList.contains('assignment-card')) {
-          const {complaintId} = e.target.dataset;
-          const complaint = this.assignments.find(a => a.complaint_id === complaintId);
-          if (complaint) {
-            this.selectComplaint(complaint);
-          }
+        // Don't navigate if clicking on buttons or interactive elements
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+          return;
+        }
+        const {complaintId} = card.dataset;
+        if (complaintId) {
+          // Navigate to complaint details page, similar to coordinator review queue
+          window.location.href = `/complaint-details/${complaintId}`;
         }
       });
     });

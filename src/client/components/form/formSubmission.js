@@ -44,6 +44,15 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
       throw new Error(validation.errors.join('. '));
     }
 
+    // Validate coordinates against Digos boundary (if coordinates are provided)
+    if (formData.latitude !== null && formData.longitude !== null) {
+      const { validateComplaintCoordinates } = await import('../../utils/validation.js');
+      const coordValidation = await validateComplaintCoordinates(formData.latitude, formData.longitude);
+      if (!coordValidation.valid) {
+        throw new Error(coordValidation.error || 'Invalid complaint location');
+      }
+    }
+
     // Create FormData for API submission
     const apiFormData = new FormData();
     

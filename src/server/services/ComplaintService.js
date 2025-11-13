@@ -659,42 +659,45 @@ class ComplaintService {
       if (endDate) {
         query = query.lte('submitted_at', endDate);
       }
-      // IMPORTANT: Supabase PostgREST has a default limit of 1000 rows, but can be less
+      // IMPORTANT: Supabase PostgREST has a default limit that may be very low (sometimes as low as 7-10 rows)
       // For the heatmap, we want ALL complaints with coordinates
-      // Remove any implicit limits and explicitly fetch all records
-      // Note: We need to use limit() to override default pagination
-      // DEBUG: Before executing, let's try a simple test query first using DIRECT service role
-      // console.log removed for security
-      // console.log removed for security
-      const { data: testData, error: testError } = await supabase
-        .from('complaints')
-        .select('id, workflow_status, latitude, longitude')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        .limit(100);
-      // console.log removed for security
-      if (testData && testData.length > 0) {
-        // console.log removed for security
-        const statusBreakdown = {};
-        testData.forEach(c => {
-          statusBreakdown[c.workflow_status] = (statusBreakdown[c.workflow_status] || 0) + 1;
-        });
-        // console.log removed for security
+      // Use pagination to fetch all records in batches
+      const batchSize = 1000; // Fetch in batches of 1000
+      let allData = [];
+      let hasMore = true;
+      let offset = 0;
+      
+      // Fetch all complaints using pagination
+      while (hasMore) {
+        const paginatedQuery = query
+          .range(offset, offset + batchSize - 1)
+          .limit(batchSize);
+        
+        const { data: batchData, error, count } = await paginatedQuery;
+        
+        if (error) {
+          console.error('[COMPLAINT-SERVICE] Database error:', error);
+          console.error('[COMPLAINT-SERVICE] Error details:', JSON.stringify(error, null, 2));
+          throw error;
+        }
+        
+        if (batchData && batchData.length > 0) {
+          allData = allData.concat(batchData);
+          offset += batchSize;
+          // If we got fewer results than batchSize, we've reached the end
+          hasMore = batchData.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+        
+        // Safety check: if count is available and we've fetched all records
+        if (count !== null && allData.length >= count) {
+          hasMore = false;
+        }
       }
-      // console.log removed for security
-      // CRITICAL FIX: Make sure we explicitly set a high limit
-      // Supabase PostgREST may have a very low default limit
-      // console.log removed for security
-      // console.log removed for security
-      // Ensure limit is applied to the query
-      const queryWithLimit = query.limit(10000);
-      // console.log removed for security
-      const { data, error, count } = await queryWithLimit;
-      if (error) {
-        console.error('[COMPLAINT-SERVICE] Database error:', error);
-        console.error('[COMPLAINT-SERVICE] Error details:', JSON.stringify(error, null, 2));
-        throw error;
-      }
+      
+      const data = allData;
+      console.log(`[COMPLAINT-SERVICE] Fetched ${data.length} complaint(s) for heatmap using pagination`);
       // console.log removed for security
       // console.log removed for security
       // console.log removed for security
@@ -874,7 +877,11 @@ class ComplaintService {
         .select()
         .single();
       if (updateError) {
-        throw new Error('Failed to cancel complaint');
+        console.error('[COMPLAINT-SERVICE] Cancel complaint update error:', updateError);
+        throw new Error(`Failed to cancel complaint: ${updateError.message || 'Database error'}`);
+      }
+      if (!updatedComplaint) {
+        throw new Error('Complaint not found or could not be updated');
       }
       // Notify relevant parties
       try {
@@ -957,13 +964,19 @@ class ComplaintService {
         throw new Error('Cannot send reminder for complaint in current status');
       }
       // Check cooldown period (24 hours)
-      const { data: lastReminder } = await this.complaintRepo.supabase
+      const { data: lastReminderData, error: reminderQueryError } = await this.complaintRepo.supabase
         .from('complaint_reminders')
         .select('reminded_at')
         .eq('complaint_id', complaintId)
         .order('reminded_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
+      
+      // Handle case where no reminders exist (not an error)
+      if (reminderQueryError && reminderQueryError.code !== 'PGRST116') {
+        throw new Error('Failed to check reminder cooldown');
+      }
+      
+      const lastReminder = lastReminderData && lastReminderData.length > 0 ? lastReminderData[0] : null;
       if (lastReminder) {
         const lastReminderTime = new Date(lastReminder.reminded_at);
         const now = new Date();

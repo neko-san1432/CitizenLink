@@ -38,6 +38,15 @@ class ComplaintRepository {
     complaint.assignments = assignments || [];
     return complaint;
   }
+  async findByIds(ids, fields = '*') {
+    if (!ids || ids.length === 0) return [];
+    const { data, error } = await this.supabase
+      .from('complaints')
+      .select(fields)
+      .in('id', ids);
+    if (error) throw error;
+    return data || [];
+  }
   async findByUserId(userId, options = {}) {
     try {
       const { page = 1, limit = 10, status, type } = options;

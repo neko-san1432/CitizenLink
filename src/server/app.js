@@ -888,9 +888,33 @@ class CitizenLinkApp {
       }
       // Initialize reminder service
       const ReminderService = require('./services/ReminderService');
-
       const reminderService = new ReminderService();
       reminderService.startScheduler();
+      
+      // Initialize clustering scheduler
+      const ClusteringScheduler = require('./services/ClusteringScheduler');
+      const clusteringScheduler = new ClusteringScheduler();
+      
+      // Load clustering configuration from environment or use defaults
+      const clusteringConfig = {
+        intervalHours: process.env.CLUSTERING_INTERVAL_HOURS ? 
+          parseInt(process.env.CLUSTERING_INTERVAL_HOURS) : 6,
+        radiusKm: process.env.CLUSTERING_RADIUS_KM ? 
+          parseFloat(process.env.CLUSTERING_RADIUS_KM) : 0.5,
+        minComplaintsPerCluster: process.env.CLUSTERING_MIN_COMPLAINTS ? 
+          parseInt(process.env.CLUSTERING_MIN_COMPLAINTS) : 3,
+        onlyIfNewComplaints: process.env.CLUSTERING_SMART_TRIGGER !== 'false',
+        enabled: process.env.CLUSTERING_ENABLED !== 'false'
+      };
+      
+      clusteringScheduler.start(clusteringConfig);
+      
+      // Store scheduler instance for potential admin access
+      this.clusteringScheduler = clusteringScheduler;
+      
+      // Make scheduler accessible globally through manager
+      const clusteringManager = require('./utils/clusteringManager');
+      clusteringManager.setScheduler(clusteringScheduler);
       
       this.app.listen(port, () => {
         console.log(`Server running on port ${port}`);

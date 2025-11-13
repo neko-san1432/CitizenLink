@@ -157,11 +157,25 @@ class AuthController {
         try {
           const { data: userData, error: getUserError } = await supabase.auth.admin.getUserByEmail(email.toLowerCase());
           // If getUserByEmail fails or returns no user, user doesn't exist
-          if (getUserError || !userData?.user) {
+          // Supabase returns error when user doesn't exist, so check both error and data
+          if (getUserError) {
+            // Check if error indicates user not found
+            const errorMsg = getUserError.message?.toLowerCase() || '';
+            const errorCode = getUserError.status || getUserError.code || '';
+            // Supabase typically returns 404 or specific error codes for non-existent users
+            if (errorCode === 404 || 
+                errorMsg.includes('user not found') || 
+                errorMsg.includes('no user found') ||
+                errorMsg.includes('does not exist')) {
+              isUserNotFound = true;
+            }
+          } else if (!userData?.user) {
+            // No error but also no user data means user doesn't exist
             isUserNotFound = true;
           }
         } catch (checkError) {
-          // If admin API check fails, fall back to error message pattern matching
+          // If admin API check fails (network error, etc.), fall back to error message pattern matching
+          console.warn('[LOGIN] Admin API check failed, using fallback:', checkError.message);
           const errorMessage = authError.message?.toLowerCase() || '';
           const errorCode = authError.code?.toLowerCase() || '';
           

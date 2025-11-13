@@ -237,7 +237,6 @@ function getMenuItemsForRole(role) {
     'complaint-coordinator': [
       { url: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
       { url: '/review-queue', icon: 'review-queue', label: 'Review Queue' },
-      { url: '/assignments', icon: 'assignments', label: 'Assignments' },
       { url: '/heatmap', icon: 'heatmap', label: 'Heatmap' },
       { url: '/myProfile', icon: 'myProfile', label: 'My Profile' }
     ],

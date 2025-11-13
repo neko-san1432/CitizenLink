@@ -30,6 +30,7 @@ class Complaint {
     this.updated_at = data.updated_at;
   }
   static validate(data) {
+    const { isWithinDigosBoundary } = require('../../shared/boundaryValidator');
     const errors = [];
     if (!data.title || data.title.trim().length < 5) {
       errors.push('Title must be at least 5 characters');
@@ -45,6 +46,12 @@ class Complaint {
     }
     if (data.longitude && (data.longitude < -180 || data.longitude > 180)) {
       errors.push('Invalid longitude value');
+    }
+    // Validate coordinates are within Digos City boundary
+    if (data.latitude && data.longitude) {
+      if (!isWithinDigosBoundary(data.latitude, data.longitude)) {
+        errors.push('Complaint location must be within Digos City boundaries');
+      }
     }
     const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
     if (data.status && !validStatuses.includes(data.status)) {

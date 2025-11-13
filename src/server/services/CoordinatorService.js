@@ -658,6 +658,18 @@ class CoordinatorService {
     }
   }
   /**
+   * Get rejected complaints
+   */
+  async getRejectedComplaints(coordinatorId, filters = {}) {
+    try {
+      return await this.coordinatorRepo.getRejectedComplaints(coordinatorId, filters);
+    } catch (error) {
+      console.error('[COORDINATOR_SERVICE] Get rejected complaints error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get coordinator dashboard data
    */
   async getDashboardData(coordinatorId) {

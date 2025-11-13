@@ -1,0 +1,19 @@
+{
+  "id": "f682f243-433e-42af-8121-ea8358bd49ff",
+  "cluster_name": "Digos City Cluster - 2025-11-12",
+  "center_lat": 6.7343052762062126,
+  "center_lng": 125.33185016854247,
+  "radius_meters": 384,
+  "complaint_ids": [
+    "123c5de5-c67e-46be-9e19-b258b6717774",
+    "fb660d56-cbfe-4512-adbd-33b7602e65fe",
+    "a2a21676-fdba-4095-95b9-5e66cc94b319",
+    "f41cf5f9-4b81-4a8c-8da1-9dcf98176972",
+    "ff5301c3-0d34-45e8-b0e8-9373dc4f659d"
+  ],
+  "pattern_type": "recurring",
+  "status": "active",
+  "identified_at": "2025-11-12T20:21:13.102Z",
+  "created_at": "2025-11-12T20:21:13.102Z",
+  "updated_at": "2025-11-12T20:21:13.102Z"
+}

@@ -176,6 +176,18 @@ class HeatmapVisualization {
     this.isClusteringEnabled = false;
     this.currentFilters = {};
     this.filterByBoundary = true; // Enable boundary filtering by default
+    this.userRole = null; // Will be set when role is determined
+    this.userDepartment = null; // Will be set for LGU admins
+    // Dynamic heatmap scaling configuration
+    this.dynamicScaling = {
+      enabled: true, // Enable dynamic scaling by default
+      maxDensity: 1.0, // Current maximum density value
+      smoothedMaxDensity: 1.0, // Smoothed maximum for preventing flickering
+      smoothingFactor: 0.3, // Smoothing factor (0-1): lower = more smoothing, higher = more responsive
+      minMaxDensity: 0.1, // Minimum max density to prevent division by zero
+      densityHistory: [], // History for rolling average (optional)
+      historySize: 5 // Number of previous max densities to keep for smoothing
+    };
     // Heatmap configuration
     this.heatmapConfig = {
       radius: 30,
@@ -209,6 +221,70 @@ class HeatmapVisualization {
       });
     }
   }
+  /**
+   * Initialize user role and department for role-based filtering
+   */
+  async initializeUserRole() {
+    try {
+      const { getUserRole } = await import('../../auth/authChecker.js');
+      this.userRole = await getUserRole();
+      
+      // Get department for LGU admins
+      if (this.userRole && ['lgu', 'lgu-admin', 'lgu-hr'].includes(this.userRole)) {
+        try {
+          const { supabase } = await import('../../config/config.js');
+          const { data: { session } } = await supabase.auth.getSession();
+          const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+          this.userDepartment = metadata.dpt || metadata.department;
+        } catch (error) {
+          console.warn('[HEATMAP] Failed to get department from metadata:', error);
+        }
+      }
+      
+      console.log('[HEATMAP] User role initialized:', { role: this.userRole, department: this.userDepartment });
+    } catch (error) {
+      console.error('[HEATMAP] Failed to initialize user role:', error);
+      this.userRole = 'citizen'; // Default fallback
+    }
+  }
+
+  /**
+   * Filter complaints based on user role
+   * @param {Array} complaints - Array of complaints to filter
+   * @returns {Array} Filtered complaints based on role
+   */
+  filterComplaintsByRole(complaints) {
+    if (!this.userRole) {
+      // If role not initialized, return all (will be filtered later)
+      return complaints;
+    }
+
+    // Citizens: Only see complaints within Digos City boundaries (already filtered)
+    // Heatmap shows all, but markers are hidden for citizens
+    if (this.userRole === 'citizen') {
+      return complaints; // All complaints for heatmap, but markers won't be shown
+    }
+
+    // Complaint coordinators: See all complaints
+    if (this.userRole === 'complaint-coordinator' || this.userRole === 'super-admin') {
+      return complaints; // All complaints
+    }
+
+    // LGU Admins: See only complaints assigned to their department
+    if (this.userRole === 'lgu-admin' && this.userDepartment) {
+      return complaints.filter(complaint => {
+        const complaintDepartments = Array.isArray(complaint.departments) ? complaint.departments :
+          (Array.isArray(complaint.department_r) ? complaint.department_r : []);
+        return complaintDepartments.some(dept => 
+          String(dept || '').toUpperCase().trim() === String(this.userDepartment || '').toUpperCase().trim()
+        );
+      });
+    }
+
+    // Default: return all (fallback)
+    return complaints;
+  }
+
   /**
    * Load complaint data from API
    * @param {Object} filters - Filter options
@@ -318,6 +394,11 @@ class HeatmapVisualization {
           };
         });
       
+      // Initialize user role if not already done
+      if (!this.userRole) {
+        await this.initializeUserRole();
+      }
+      
       // Apply client-side filters to determine visible complaints
       this.applyClientSideFilters(filters);
       
@@ -330,6 +411,7 @@ class HeatmapVisualization {
         console.log(`  - Remaining within boundaries: ${this.allComplaintData.length} complaint(s)`);
       }
       console.log(`  - After client-side filters: ${this.complaintData.length} complaint(s) visible`);
+      console.log(`  - User role: ${this.userRole}, Department: ${this.userDepartment || 'N/A'}`);
       
       // Debug: Check if we're missing complaints
       if (raw.length > this.allComplaintData.length) {
@@ -347,7 +429,154 @@ class HeatmapVisualization {
     }
   }
   /**
+   * Calculate maximum density value from current complaint data
+   * @returns {number} Maximum intensity value
+   */
+  calculateMaxDensity() {
+    if (!this.complaintData || this.complaintData.length === 0) {
+      return this.dynamicScaling.minMaxDensity;
+    }
+
+    // Calculate raw intensity values for all complaints
+    const intensities = this.complaintData.map(complaint => 
+      this.getIntensityValue(complaint)
+    );
+
+    // Find the maximum intensity
+    const maxIntensity = Math.max(...intensities);
+    
+    // Ensure minimum value to prevent division by zero
+    return Math.max(maxIntensity, this.dynamicScaling.minMaxDensity);
+  }
+
+  /**
+   * Apply smoothing to maximum density to prevent flickering
+   * Uses exponential moving average (EMA) for smooth transitions
+   * Only applies smoothing when max increases (to prevent sudden jumps to red)
+   * When max decreases, use the new value immediately to ensure red appears
+   * @param {number} newMaxDensity - New maximum density value
+   * @returns {number} Smoothed maximum density
+   */
+  smoothMaxDensity(newMaxDensity) {
+    const { smoothedMaxDensity, smoothingFactor } = this.dynamicScaling;
+    
+    // If new max is higher, apply smoothing to prevent sudden jumps to red
+    if (newMaxDensity > smoothedMaxDensity) {
+      // Exponential moving average: smoothed = α * new + (1 - α) * old
+      // Lower smoothingFactor = more smoothing (slower to change)
+      // Higher smoothingFactor = more responsive (faster to change)
+      const smoothed = smoothingFactor * newMaxDensity + (1 - smoothingFactor) * smoothedMaxDensity;
+      return Math.max(smoothed, this.dynamicScaling.minMaxDensity);
+    } else {
+      // If new max is lower or equal, use it immediately
+      // This ensures that when data changes, the highest point can still reach red
+      return Math.max(newMaxDensity, this.dynamicScaling.minMaxDensity);
+    }
+  }
+
+  /**
+   * Update dynamic scaling based on current data
+   * This should be called whenever complaint data changes
+   */
+  updateDynamicScaling() {
+    if (!this.dynamicScaling.enabled) {
+      return;
+    }
+
+    // Calculate new maximum density
+    const newMaxDensity = this.calculateMaxDensity();
+    
+    // If this is the first calculation (maxDensity is still at initial value of 1.0)
+    // or if we have no history, reset to use the actual max immediately
+    const isFirstRun = this.dynamicScaling.maxDensity === 1.0 && 
+                       this.dynamicScaling.densityHistory.length === 0;
+    
+    if (isFirstRun) {
+      // First run: use actual max immediately (no smoothing)
+      this.dynamicScaling.maxDensity = newMaxDensity;
+      this.dynamicScaling.smoothedMaxDensity = newMaxDensity;
+      console.log(`[HEATMAP] Dynamic scaling initialized: max=${newMaxDensity.toFixed(3)}`);
+    } else {
+      // Subsequent runs: store current max FIRST (this is what we use for normalization)
+      this.dynamicScaling.maxDensity = newMaxDensity;
+      
+      // Update smoothed maximum density (only used for preventing flickering on increases)
+      this.dynamicScaling.smoothedMaxDensity = this.smoothMaxDensity(newMaxDensity);
+    }
+    
+    // Optional: Store in history for rolling average (alternative smoothing method)
+    this.dynamicScaling.densityHistory.push(newMaxDensity);
+    if (this.dynamicScaling.densityHistory.length > this.dynamicScaling.historySize) {
+      this.dynamicScaling.densityHistory.shift();
+    }
+
+    console.log(`[HEATMAP] Dynamic scaling updated: max=${newMaxDensity.toFixed(3)}, smoothed=${this.dynamicScaling.smoothedMaxDensity.toFixed(3)}, usingMaxForNormalization=${this.dynamicScaling.maxDensity.toFixed(3)}`);
+  }
+
+  /**
+   * Normalize intensity value relative to current maximum density
+   * Uses the actual maxDensity (not smoothed) to ensure highest point = red (1.0)
+   * @param {number} intensity - Raw intensity value
+   * @returns {number} Normalized intensity (0-1)
+   */
+  normalizeIntensity(intensity) {
+    if (!this.dynamicScaling.enabled) {
+      return Math.min(1.0, Math.max(0.0, intensity));
+    }
+
+    // Use actual maxDensity (not smoothed) for normalization
+    // This ensures the highest point always maps to red (1.0)
+    // Smoothing is only used to prevent flickering when max increases
+    const maxDensity = this.dynamicScaling.maxDensity;
+    
+    // Prevent division by zero
+    if (maxDensity <= 0) {
+      return 0.0;
+    }
+
+    // Normalize: value / maxValue
+    // The highest intensity will always be maxDensity / maxDensity = 1.0 (red)
+    const normalized = intensity / maxDensity;
+    
+    // Clamp to [0, 1] range
+    return Math.min(1.0, Math.max(0.0, normalized));
+  }
+
+  /**
+   * Reset dynamic scaling smoothing (useful when data changes dramatically)
+   * This will immediately use the new maximum density without smoothing
+   */
+  resetDynamicScaling() {
+    const newMaxDensity = this.calculateMaxDensity();
+    this.dynamicScaling.maxDensity = newMaxDensity;
+    // Reset smoothed to match actual max so normalization works correctly
+    this.dynamicScaling.smoothedMaxDensity = Math.max(newMaxDensity, this.dynamicScaling.minMaxDensity);
+    this.dynamicScaling.densityHistory = [];
+    console.log(`[HEATMAP] Dynamic scaling reset: max=${newMaxDensity.toFixed(3)}, smoothed=${this.dynamicScaling.smoothedMaxDensity.toFixed(3)}`);
+  }
+
+  /**
+   * Enable or disable dynamic scaling
+   * @param {boolean} enabled - Whether to enable dynamic scaling
+   */
+  setDynamicScalingEnabled(enabled) {
+    this.dynamicScaling.enabled = enabled;
+    console.log(`[HEATMAP] Dynamic scaling ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Set smoothing factor for dynamic scaling
+   * @param {number} factor - Smoothing factor (0-1): lower = more smoothing, higher = more responsive
+   */
+  setSmoothingFactor(factor) {
+    this.dynamicScaling.smoothingFactor = Math.max(0, Math.min(1, factor));
+    console.log(`[HEATMAP] Smoothing factor set to ${this.dynamicScaling.smoothingFactor}`);
+  }
+
+  /**
    * Create heatmap layer from complaint data
+   * For heatmap: Citizens see all Digos City complaints, Coordinators see all, Admins see all (for visualization)
+   * For markers: Role-based filtering applies
    */
   createHeatmapLayer() {
     // Clear old heatmap layer before creating new one
@@ -360,21 +589,65 @@ class HeatmapVisualization {
       this.heatmapLayer = null;
     }
 
-    if (!this.complaintData || this.complaintData.length === 0) {
+    // For heatmap visualization, use allComplaintData (all complaints within boundaries)
+    // This ensures heatmap shows all complaints regardless of role
+    // Markers will be filtered by role separately
+    const heatmapData = this.allComplaintData || this.complaintData || [];
+    
+    if (heatmapData.length === 0) {
       console.warn('[HEATMAP] No complaint data available for heatmap');
       this.heatmapLayer = null;
       return null;
     }
-    // Convert complaint data to heatmap format
-    const heatmapData = this.complaintData.map(complaint => [
-      complaint.lat,
-      complaint.lng,
-      this.getIntensityValue(complaint)
-    ]);
+
+    // Update dynamic scaling based on current data
+    this.updateDynamicScaling();
+
+    // Convert complaint data to heatmap format with normalized intensities
+    const heatmapPoints = heatmapData.map(complaint => {
+      const rawIntensity = this.getIntensityValue(complaint);
+      const normalizedIntensity = this.normalizeIntensity(rawIntensity);
+      
+      return [
+        complaint.lat,
+        complaint.lng,
+        normalizedIntensity
+      ];
+    });
+
+    // Debug: Log intensity statistics
+    const intensities = heatmapPoints.map(d => d[2]);
+    const maxIntensity = Math.max(...intensities);
+    const minIntensity = Math.min(...intensities);
+    const intensitiesAt1 = intensities.filter(i => i >= 0.99).length;
+    
+    // Ensure at least one point reaches 1.0 (red) by finding all max points and setting them to 1.0
+    if (maxIntensity < 0.99 && intensities.length > 0) {
+      console.warn(`[HEATMAP] ⚠️ Max intensity (${maxIntensity.toFixed(3)}) is less than 1.0. Forcing highest point(s) to 1.0.`);
+      // Find all indices with maximum intensity and set them to 1.0
+      let fixedCount = 0;
+      heatmapPoints.forEach((point, index) => {
+        if (Math.abs(point[2] - maxIntensity) < 0.001) {
+          point[2] = 1.0;
+          fixedCount++;
+        }
+      });
+      console.log(`[HEATMAP] ✓ Set ${fixedCount} point(s) with max intensity to 1.0 (red)`);
+    }
+    
+    console.log(`[HEATMAP] Intensity stats: min=${minIntensity.toFixed(3)}, max=${Math.max(...heatmapPoints.map(d => d[2])).toFixed(3)}, count at 1.0=${intensities.filter(i => i >= 0.99).length}, maxDensity=${this.dynamicScaling.maxDensity.toFixed(3)}`);
+
+    // Update heatmap config max value to ensure proper scaling
+    // Leaflet.heat uses the 'max' config to scale the gradient
+    const config = {
+      ...this.heatmapConfig,
+      max: 1.0 // Always use 1.0 since we're normalizing to [0, 1]
+    };
+
     // console.log removed for security
     // Create heatmap layer using Leaflet.heat
     try {
-      this.heatmapLayer = L.heatLayer(heatmapData, this.heatmapConfig);
+      this.heatmapLayer = L.heatLayer(heatmapPoints, config);
       // console.log removed for security
       return this.heatmapLayer;
     } catch (error) {
@@ -592,6 +865,7 @@ class HeatmapVisualization {
 
   /**
    * Create individual complaint markers (only called once on initial load)
+   * Role-based filtering: Citizens don't see markers, Coordinators see all, Admins see assigned only
    */
   createMarkerLayer() {
     // Only create markers if they don't exist yet
@@ -607,12 +881,48 @@ class HeatmapVisualization {
       return null;
     }
     
+    // Initialize user role if not already done
+    if (!this.userRole) {
+      // Synchronous fallback - role should be initialized in loadComplaintData
+      console.warn('[HEATMAP] User role not initialized, defaulting to citizen');
+      this.userRole = 'citizen';
+    }
+    
+    // Filter complaints for markers based on role
+    let complaintsForMarkers = this.allComplaintData;
+    
+    // Citizens: No markers (only heatmap)
+    if (this.userRole === 'citizen') {
+      console.log('[HEATMAP] Citizen role: Markers disabled, only heatmap shown');
+      this.markerLayer = L.layerGroup(); // Empty layer group
+      this.markerMap.clear();
+      return this.markerLayer;
+    }
+    
+    // Complaint coordinators and super-admin: All markers
+    if (this.userRole === 'complaint-coordinator' || this.userRole === 'super-admin') {
+      complaintsForMarkers = this.allComplaintData;
+      console.log('[HEATMAP] Coordinator/Super-admin: Showing all markers');
+    }
+    // LGU Admins: Only assigned complaints
+    else if (this.userRole === 'lgu-admin' && this.userDepartment) {
+      complaintsForMarkers = this.filterComplaintsByRole(this.allComplaintData);
+      console.log(`[HEATMAP] LGU Admin: Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`);
+    }
+    // Default: No markers
+    else {
+      console.log(`[HEATMAP] Role ${this.userRole}: Markers disabled`);
+      this.markerLayer = L.layerGroup(); // Empty layer group
+      this.markerMap.clear();
+      return this.markerLayer;
+    }
+    
     // Create marker layer and store all markers
     // IMPORTANT: Do NOT add layer to map during creation - caller will handle visibility
     this.markerLayer = L.layerGroup();
     this.markerMap.clear();
     
-    this.allComplaintData.forEach((complaint, index) => {
+    complaintsForMarkers.forEach((complaint, index) => {
       try {
         const marker = this.createComplaintMarker(complaint, index);
         // Add marker to layer group (but NOT to map)
@@ -1152,29 +1462,49 @@ class HeatmapVisualization {
    * Perform DBSCAN clustering on complaint data
    */
   performClustering() {
-    if (!this.complaintData || this.complaintData.length === 0) {
-      console.warn('[HEATMAP] No complaint data available for clustering');
+    try {
+      if (!this.complaintData || this.complaintData.length === 0) {
+        console.warn('[HEATMAP] No complaint data available for clustering');
+        return { clusters: [], noise: [] };
+      }
+
+      // Ensure DBSCAN is initialized
+      if (!this.dbscan) {
+        console.error('[HEATMAP] DBSCAN not initialized');
+        return { clusters: [], noise: [] };
+      }
+
+      // Update DBSCAN parameters
+      this.dbscan.eps = this.clusterConfig.eps;
+      this.dbscan.minPts = this.clusterConfig.minPts;
+
+      // Prepare points for clustering - filter out invalid coordinates
+      const points = this.complaintData
+        .filter(complaint => {
+          const lat = parseFloat(complaint.lat);
+          const lng = parseFloat(complaint.lng);
+          return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+        })
+        .map(complaint => ({
+          lat: parseFloat(complaint.lat),
+          lng: parseFloat(complaint.lng),
+          data: complaint
+        }));
+
+      if (points.length === 0) {
+        console.warn('[HEATMAP] No valid coordinates for clustering');
+        return { clusters: [], noise: [] };
+      }
+
+      // Perform clustering
+      const clusteringResult = this.dbscan.cluster(points);
+      this.clusters = clusteringResult.clusters || [];
+
+      return clusteringResult;
+    } catch (error) {
+      console.error('[HEATMAP] Clustering failed:', error);
       return { clusters: [], noise: [] };
     }
-
-    // Update DBSCAN parameters
-    this.dbscan.eps = this.clusterConfig.eps;
-    this.dbscan.minPts = this.clusterConfig.minPts;
-
-    // Prepare points for clustering
-    const points = this.complaintData.map(complaint => ({
-      lat: complaint.lat,
-      lng: complaint.lng,
-      data: complaint
-    }));
-
-    // Perform clustering
-    const clusteringResult = this.dbscan.cluster(points);
-    this.clusters = clusteringResult.clusters;
-
-    // console.log removed for security
-
-    return clusteringResult;
   }
 
   /**

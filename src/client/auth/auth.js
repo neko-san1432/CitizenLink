@@ -434,8 +434,8 @@ if (fbBtn) {
       provider: 'facebook',
       options: {
         redirectTo: `${window.location.origin}/success`,
-        // Request phone number permission from Facebook
-        scopes: 'email public_profile user_mobile_phone'
+        // Valid Facebook scopes: email and public_profile
+        scopes: 'email public_profile'
       }
     });
     if (error) {

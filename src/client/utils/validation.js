@@ -300,60 +300,32 @@ export const extractComplaintFormData = (formElement) => {
     departments
   };
 };
+
 /**
  * Check if coordinates are within Digos City boundaries
+ * Uses the actual Digos city boundary polygon from digos-city-boundary.json
  * @param {number} latitude - Latitude coordinate
  * @param {number} longitude - Longitude coordinate
- * @returns {boolean} True if coordinates are within city boundaries
+ * @returns {Promise<boolean>} True if coordinates are within city boundaries
  */
-
-export const isWithinCityBoundary = (latitude, longitude) => {
-
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-    return false;
+export const isWithinCityBoundary = async (latitude, longitude) => {
+  try {
+    return await isWithinDigosBoundary(latitude, longitude);
+  } catch (error) {
+    console.warn('[VALIDATION] Boundary check failed:', error);
+    // Fallback: Simple bounding box check for Digos City
+    // Based on actual bounds from boundary file
+    const minLat = 6.723539;
+    const maxLat = 6.985025;
+    const minLng = 125.245633;
+    const maxLng = 125.391290;
+    return (
+      latitude >= minLat &&
+      latitude <= maxLat &&
+      longitude >= minLng &&
+      longitude <= maxLng
+    );
   }
-  // Use Leaflet's polygon contains check if available (more accurate)
-  if (typeof window !== 'undefined' && window.L && window.cityBoundaries) {
-    try {
-      const point = window.L.latLng(latitude, longitude);
-      // Check if point is within any barangay boundary
-      for (const boundary of window.cityBoundaries) {
-
-        if (window.L.GeometryUtil && window.L.GeometryUtil.locateOnLine) {
-          // If GeometryUtil is available, use more accurate check
-          const layer = window.L.geoJSON(boundary.geojson);
-          const bounds = layer.getBounds();
-          if (bounds.contains(point)) {
-            return true;
-          }
-        } else {
-          // Simple bounds check
-          const layer = window.L.geoJSON(boundary.geojson);
-          const bounds = layer.getBounds();
-          if (bounds.contains(point)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    } catch (e) {
-      console.warn('Boundary check failed, using bounding box:', e);
-    }
-  }
-  // Fallback: Simple bounding box check for Digos City
-  // Based on viewbox: ['125.0,7.0','125.7,6.0'] (lon,lat pairs)
-  // Digos City approximate bounds:
-  // North: ~7.0, South: ~6.6, East: ~125.7, West: ~125.0
-  const minLat = 6.6;
-  const maxLat = 7.0;
-  const minLng = 125.0;
-  const maxLng = 125.7;
-  return (
-    latitude >= minLat &&
-    latitude <= maxLat &&
-    longitude >= minLng &&
-    longitude <= maxLng
-  );
 };
 /**
  * Validate complaint form data
@@ -393,12 +365,32 @@ export const validateComplaintForm = (data) => {
 
     if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
       errors.push('Coordinates must be numeric');
-    } else {
-      // Check if coordinates are within city boundary
-      if (!isWithinCityBoundary(data.latitude, data.longitude)) {
-        errors.push('Outside the jurisdiction of the city');
-      }
     }
+    // Note: Boundary check is async, so it should be done separately before form submission
+    // This validation function is synchronous, so boundary check happens in the form handler
   }
   return { valid: errors.length === 0, errors };
+};
+
+/**
+ * Validate complaint coordinates against Digos boundary (async)
+ * @param {number} latitude - Latitude coordinate
+ * @param {number} longitude - Longitude coordinate
+ * @returns {Promise<{valid: boolean, error?: string}>}
+ */
+export const validateComplaintCoordinates = async (latitude, longitude) => {
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return { valid: false, error: 'Coordinates must be numeric' };
+  }
+
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return { valid: false, error: 'Invalid coordinate values' };
+  }
+
+  const withinBoundary = await isWithinCityBoundary(latitude, longitude);
+  if (!withinBoundary) {
+    return { valid: false, error: 'Complaint location must be within Digos City boundaries' };
+  }
+
+  return { valid: true };
 };

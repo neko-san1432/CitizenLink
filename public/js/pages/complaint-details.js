@@ -20,6 +20,12 @@ class ComplaintDetails {
   }
   async init() {
     try {
+      // Hide complaint details container initially to prevent showing dummy content
+      const detailsContainer = document.getElementById('complaint-details');
+      if (detailsContainer) {
+        detailsContainer.style.display = 'none';
+      }
+      
       // Get complaint ID from URL - try both path parameter and query parameter
       const pathParts = window.location.pathname.split('/');
       let complaintId = pathParts[pathParts.length - 1];
@@ -56,7 +62,6 @@ class ComplaintDetails {
         throw new Error('Failed to get user role');
       }
       const data = await response.json();
-      console.log('getUserRole API response:', data);
       return data.data.role;
     } catch (error) {
       console.error('Error getting user role:', error);
@@ -114,7 +119,6 @@ class ComplaintDetails {
         const data = await response.json();
         if (data.success) {
           this.complaint.attachments = data.data || [];
-          console.log('Evidence loaded successfully:', this.complaint.attachments.length, 'files');
         } else {
           console.log('Evidence API returned error:', data.message);
           this.complaint.attachments = [];
@@ -444,78 +448,224 @@ class ComplaintDetails {
     const locationContainer = document.getElementById('complaint-location');
     if (!locationContainer) return;
     if (this.complaint.location_text) {
+      const hasCoordinates = this.complaint.latitude && this.complaint.longitude;
       locationContainer.innerHTML = `
                 <div class="location-address">${this.complaint.location_text}</div>
-                ${this.complaint.latitude && this.complaint.longitude ?
+                ${hasCoordinates ?
     `<div class="location-coordinates">${this.complaint.latitude}, ${this.complaint.longitude}</div>
+                     <button id="show-map-modal-btn" class="btn btn-secondary" style="margin-top: 10px;">
+                         📍 View on Map
+                     </button>
                      <div id="complaint-map" class="complaint-map"></div>` :
     ''
 }
             `;
 
       // Initialize map if coordinates are available
-      if (this.complaint.latitude && this.complaint.longitude) {
+      if (hasCoordinates) {
         this.initializeMap();
+        // Setup map modal button
+        const mapModalBtn = document.getElementById('show-map-modal-btn');
+        if (mapModalBtn) {
+          mapModalBtn.addEventListener('click', () => {
+            this.showMapModal();
+          });
+        }
       }
     } else {
       locationContainer.innerHTML = '<p>No location information provided</p>';
     }
   }
 
-  initializeMap() {
-    // Wait a bit for the DOM to be ready
-    setTimeout(() => {
-      const mapContainer = document.getElementById('complaint-map');
-      if (!mapContainer) return;
+  showMapModal() {
+    if (!this.complaint.latitude || !this.complaint.longitude) {
+      alert('No coordinates available for this complaint');
+      return;
+    }
 
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'map-modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 800px;">
+        <div class="modal-header">
+          <h2>📍 Complaint Location</h2>
+          <button class="modal-close" id="close-map-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-map" style="width: 100%; height: 500px; border-radius: 8px;"></div>
+          <div style="margin-top: 10px;">
+            <strong>Address:</strong> ${this.complaint.location_text || 'N/A'}<br>
+            <strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close button handler
+    const closeBtn = document.getElementById('close-map-modal');
+    closeBtn.addEventListener('click', () => {
+      modal.remove();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+
+    // Initialize map in modal
+    setTimeout(async () => {
       try {
-        // Initialize the map
-        const map = L.map('complaint-map').setView(
-          [this.complaint.latitude, this.complaint.longitude],
-          15
-        );
+        if (typeof L === 'undefined') {
+          await this.loadLeaflet();
+        }
+        const mapContainer = document.getElementById('modal-map');
+        if (!mapContainer) return;
 
-        // Add OpenStreetMap tiles
+        const lat = parseFloat(this.complaint.latitude);
+        const lng = parseFloat(this.complaint.longitude);
+        
+        if (isNaN(lat) || isNaN(lng)) {
+          mapContainer.innerHTML = '<p>Invalid coordinates</p>';
+          return;
+        }
+
+        const map = L.map('modal-map').setView([lat, lng], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution: '© OpenStreetMap contributors',
           maxZoom: 19
         }).addTo(map);
-        // Add a marker for the complaint location
-        const complaintMarker = L.marker([this.complaint.latitude, this.complaint.longitude]).addTo(map);
-        // Add popup with complaint information
-        complaintMarker.bindPopup(`
-                    <div class="map-popup">
-                        <h4>${this.complaint.title || 'Complaint Location'}</h4>
-                        <p><strong>Address:</strong> ${this.complaint.location_text}</p>
-                        <p><strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude}</p>
-                    </div>
-                `).openPopup();
-        // Store map reference for potential cleanup
-        this.map = map;
-        // Add route controls for LGU users
-        // this.addRouteControls(map);
-        // Try to get user location and show route (non-blocking)
-        // If geolocation fails, the map will still show the complaint location
-        // setTimeout(() => {
-        //     this.getUserLocationAndShowRoute(map);
-        // }, 1000);
-        // Show a helpful message about geolocation after a delay
-        // setTimeout(() => {
-        //     if (!this.userLocation) {
-        //         console.log('Geolocation not available - map will show complaint location only');
-        //         // Show a subtle notification that geolocation is not available
-        //         const routeBtn = document.getElementById('get-route-btn');
-        //         if (routeBtn && routeBtn.textContent === 'Get Route') {
-        //             routeBtn.title = 'Click to try getting your location for route calculation';
-        //         }
-        //     }
-        // }, 3000);
+
+        // Add marker
+        L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(`<strong>${this.complaint.title || 'Complaint'}</strong><br>${this.complaint.location_text || ''}`)
+          .openPopup();
       } catch (error) {
-        console.error('Error initializing map:', error);
-        mapContainer.innerHTML = `<p>Unable to load map. Coordinates: ${
-          this.complaint.latitude  }, ${  this.complaint.longitude  }</p>`;
+        console.error('[COMPLAINT_DETAILS] Error initializing modal map:', error);
+        const mapContainer = document.getElementById('modal-map');
+        if (mapContainer) {
+          mapContainer.innerHTML = '<p>Error loading map</p>';
+        }
       }
     }, 100);
+  }
+
+  async initializeMap() {
+    // Wait a bit for the DOM to be ready
+    const mapContainer = document.getElementById('complaint-map');
+    if (!mapContainer) {
+      console.warn('[COMPLAINT_DETAILS] Map container not found');
+      return;
+    }
+
+    try {
+      // Ensure Leaflet is loaded
+      if (typeof L === 'undefined') {
+        await this.loadLeaflet();
+      }
+
+      // Wait for container to have dimensions
+      let attempts = 0;
+      while ((mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
+        console.warn('[COMPLAINT_DETAILS] Map container has no dimensions');
+        return;
+      }
+
+      // Validate coordinates
+      const lat = parseFloat(this.complaint.latitude);
+      const lng = parseFloat(this.complaint.longitude);
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn('[COMPLAINT_DETAILS] Invalid coordinates:', { lat, lng });
+        mapContainer.innerHTML = '<p>Invalid coordinates provided</p>';
+        return;
+      }
+
+      // Initialize the map
+      const map = L.map('complaint-map', {
+        zoomControl: true,
+        preferCanvas: false
+      }).setView([lat, lng], 15);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Add a marker for the complaint location
+      const complaintMarker = L.marker([lat, lng]).addTo(map);
+      
+      // Add popup with complaint information
+      complaintMarker.bindPopup(`
+        <div class="map-popup">
+          <h4>${this.escapeHtml(this.complaint.title || 'Complaint Location')}</h4>
+          <p><strong>Address:</strong> ${this.escapeHtml(this.complaint.location_text || 'N/A')}</p>
+          <p><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+        </div>
+      `).openPopup();
+
+      // Store map reference for potential cleanup
+      this.map = map;
+
+      // Invalidate size after a short delay to ensure proper rendering
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+        }
+      }, 200);
+    } catch (error) {
+      console.error('[COMPLAINT_DETAILS] Error initializing map:', error);
+      const mapContainer = document.getElementById('complaint-map');
+      if (mapContainer) {
+        mapContainer.innerHTML = `<p>Unable to load map. Error: ${error.message}</p>`;
+      }
+    }
+  }
+
+  async loadLeaflet() {
+    return new Promise((resolve, reject) => {
+      if (typeof L !== 'undefined') {
+        resolve();
+        return;
+      }
+
+      // Check if Leaflet CSS is loaded
+      if (!document.querySelector('link[href*="leaflet"]')) {
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        cssLink.crossOrigin = '';
+        document.head.appendChild(cssLink);
+      }
+
+      // Load Leaflet JS
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+      script.crossOrigin = '';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Leaflet'));
+      document.head.appendChild(script);
+    });
+  }
+
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   addRouteControls(map) {
     // Only show route controls for LGU users
@@ -922,14 +1072,30 @@ class ComplaintDetails {
     const returnLink = document.getElementById('return-link');
     const returnText = document.getElementById('return-text');
     if (!returnLink || !returnText) return;
+    
+    // Check referrer to determine where user came from
+    const referrer = document.referrer;
+    const isFromDashboard = referrer.includes('/dashboard') || referrer.includes('/citizen/dashboard');
+    const isFromProfile = referrer.includes('/myProfile');
+    const isFromReviewQueue = referrer.includes('/coordinator/review-queue') || referrer.includes('/review-queue');
+    const isFromAssignments = referrer.includes('/assignments');
+    
+    // For citizens coming from dashboard or profile previews, always go to profile
+    if (this.userRole === 'citizen' && (isFromDashboard || isFromProfile || !referrer)) {
+      returnLink.href = '/myProfile';
+      returnText.textContent = 'Return to Your Profile';
+      return;
+    }
+    
+    // Otherwise use role-based navigation
     switch (this.userRole) {
       case 'complaint-coordinator':
-        returnLink.href = '/coordinator/review-queue';
-        returnText.textContent = 'Return to Review Queue';
+        returnLink.href = isFromReviewQueue ? '/coordinator/review-queue' : '/dashboard';
+        returnText.textContent = isFromReviewQueue ? 'Return to Review Queue' : 'Return to Dashboard';
         break;
       case 'lgu-admin':
-        returnLink.href = '/lgu-admin/assignments';
-        returnText.textContent = 'Return to Assigned Complaints';
+        returnLink.href = isFromAssignments ? '/lgu-admin/assignments' : '/dashboard';
+        returnText.textContent = isFromAssignments ? 'Return to Assigned Complaints' : 'Return to Dashboard';
         break;
       case 'lgu':
       case 'lgu-officer':

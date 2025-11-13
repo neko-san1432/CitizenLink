@@ -597,9 +597,11 @@
           <div class="filter-group">
             <label class="filter-label">Status:</label>
             <select id="status-filter" class="filter-select">
-              <option value="all">All Status</option>
-              <option value="pending review">Pending Review</option>
-              <option value="in progress">In Progress</option>
+              <option value="all">All Active</option>
+              <option value="new">New</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
           
@@ -665,6 +667,21 @@
         <div class="empty-state-icon">📋</div>
         <div class="empty-state-text">No assignments found</div>
         <p>Complaints assigned to your department will appear here</p>
+      </div>
+
+      <!-- Completed Assignments Section -->
+      <div class="completed-section" style="margin-top: 40px;">
+        <div class="assignments-header">
+          <h2 class="assignments-title">✅ Completed Assignments</h2>
+          <button class="btn btn-secondary btn-sm" id="toggle-completed-btn">Show Completed</button>
+        </div>
+        <div id="completed-container" style="display: none;">
+          <div id="completed-loading" class="loading-container" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Loading completed assignments...</p>
+          </div>
+          <div class="assignments-list" id="completed-list"></div>
+        </div>
       </div>
     </div>
     </main>

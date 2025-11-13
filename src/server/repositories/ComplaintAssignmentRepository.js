@@ -43,6 +43,80 @@ class ComplaintAssignmentRepository {
     if (error) throw error;
     return data || [];
   }
+  async findByOfficer(officerId, filters = {}) {
+    const { status, priority, limit } = filters;
+    let query = this.supabase
+      .from(this.table)
+      .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, completed_at, notes, deadline')
+      .eq('assigned_to', officerId)
+      .order('created_at', { ascending: false });
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (priority) {
+      query = query.eq('priority', priority);
+    }
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+  async findByIdAndOfficer(assignmentId, officerId) {
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select('id, complaint_id, assigned_by, status')
+      .eq('id', assignmentId)
+      .eq('assigned_to', officerId)
+      .single();
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data;
+  }
+  async update(assignmentId, updateData) {
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .update({ ...updateData, updated_at: new Date().toISOString() })
+      .eq('id', assignmentId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  async findByComplaintIds(complaintIds) {
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select('assigned_to, status, assigned_at, assigned_by, department_id')
+      .in('complaint_id', complaintIds);
+    if (error) throw error;
+    return data || [];
+  }
+  async getActivitiesByOfficer(officerId, limit = 10) {
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select(`
+        id,
+        status,
+        notes,
+        created_at,
+        updated_at,
+        completed_at,
+        complaint_id,
+        complaints!inner(
+          id,
+          title,
+          category
+        )
+      `)
+      .eq('assigned_to', officerId)
+      .order('updated_at', { ascending: false })
+      .limit(parseInt(limit));
+    if (error) throw error;
+    return data || [];
+  }
 }
 
 module.exports = ComplaintAssignmentRepository;

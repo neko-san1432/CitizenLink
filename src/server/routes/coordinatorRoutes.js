@@ -61,5 +61,13 @@ router.post('/detect-clusters',
   requireCoordinator,
   (req, res) => coordinatorController.detectClusters(req, res)
 );
+/**
+ * Rejected Complaints
+ */
+router.get('/rejected',
+  authenticateUser,
+  requireCoordinator,
+  (req, res) => coordinatorController.getRejectedComplaints(req, res)
+);
 
 module.exports = router;

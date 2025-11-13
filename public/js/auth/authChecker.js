@@ -454,6 +454,24 @@ try {
       // Resolve role and set dashboard target + toggle buttons
       (async () => {
         try {
+          // Skip API call on auth pages to avoid 401 errors
+          if (onAuthPage) {
+            // On auth pages, keep unauth buttons hidden, auth buttons hidden
+            if (unauthEl) unauthEl.classList.add('hidden');
+            if (authEl) authEl.classList.add('hidden');
+            return;
+          }
+          
+          // Check if user has a session before making API call
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            // No session, show unauthenticated buttons
+            if (unauthEl) unauthEl.classList.remove('hidden');
+            if (authEl) authEl.classList.add('hidden');
+            return;
+          }
+          
+          // User has session, check role via API
           const res = await fetch('/api/user/role', { credentials: 'include' });
           const authed = res.ok ? (await res.clone().json())?.success : false;
           if (authed) {
@@ -467,13 +485,22 @@ try {
               if (dashboardBtn) dashboardBtn.setAttribute('href', href);
             } catch {}
           } else {
-            // On auth pages, keep unauth buttons hidden
-            if (!onAuthPage) {
-              if (unauthEl) unauthEl.classList.remove('hidden');
-            }
+            // Not authenticated, show unauthenticated buttons
+            if (unauthEl) unauthEl.classList.remove('hidden');
             if (authEl) authEl.classList.add('hidden');
           }
-        } catch {}
+        } catch (error) {
+          // Silently handle errors - don't show 401 errors in console
+          if (onAuthPage) {
+            // On auth pages, ensure buttons are hidden
+            if (unauthEl) unauthEl.classList.add('hidden');
+            if (authEl) authEl.classList.add('hidden');
+          } else {
+            // On other pages, show unauthenticated buttons on error
+            if (unauthEl) unauthEl.classList.remove('hidden');
+            if (authEl) authEl.classList.add('hidden');
+          }
+        }
         // Bind logout
         if (logoutBtn) {
           try {

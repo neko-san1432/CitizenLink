@@ -198,6 +198,34 @@ class CoordinatorController {
     }
   }
   /**
+   * GET /api/coordinator/rejected
+   * Get rejected complaints
+   */
+  async getRejectedComplaints(req, res) {
+    try {
+      const { user } = req;
+      const filters = {
+        priority: req.query.priority,
+        type: req.query.type,
+        limit: req.query.limit ? parseInt(req.query.limit) : 50
+      };
+      const rejected = await this.coordinatorService.getRejectedComplaints(user.id, filters);
+      res.json({
+        success: true,
+        data: rejected,
+        count: rejected.length
+      });
+    } catch (error) {
+      console.error('[COORDINATOR_CONTROLLER] Get rejected complaints error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch rejected complaints',
+        details: error.message
+      });
+    }
+  }
+
+  /**
    * GET /api/coordinator/status
    * Check if current user is a coordinator
    */

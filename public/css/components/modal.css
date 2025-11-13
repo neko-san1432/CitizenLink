@@ -293,57 +293,150 @@ body.modal-open {
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .modal-dialog {
-    background: var(--gray-800);
-    color: var(--gray-100);
-  }
+/* Dark mode support - Improved with better contrast */
+html.dark .modal-overlay,
+html.dark .modal {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
 
-  .modal-header {
-    background: var(--gray-700);
-    border-bottom-color: var(--gray-600);
-  }
+html.dark .modal-dialog {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  box-shadow: var(--shadow-2xl);
+  color: var(--gray-800);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
 
-  .modal-footer {
-    background: var(--gray-700);
-    border-top-color: var(--gray-600);
-  }
+html.dark .modal-header {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-300);
+}
 
-  .modal-title {
-    color: var(--gray-100);
-  }
+html.dark .modal-footer {
+  background: var(--gray-100);
+  border-top-color: var(--gray-300);
+}
 
-  .modal-close {
-    color: var(--gray-400);
-  }
+html.dark .modal-title {
+  color: var(--gray-100);
+}
 
-  .modal-close:hover {
-    background: var(--gray-600);
-    color: var(--gray-200);
-  }
+html.dark .modal-body {
+  color: var(--gray-400);
+  background: var(--gray-100);
+}
 
-  .terms-content h2,
-  .privacy-content h2 {
-    color: var(--gray-100);
-  }
+html.dark .modal-close {
+  color: var(--gray-500);
+}
 
-  .terms-content h3,
-  .privacy-content h3 {
-    color: var(--gray-200);
-  }
+html.dark .modal-close:hover {
+  background: var(--gray-200);
+  color: var(--gray-300);
+}
 
-  .terms-content p,
-  .privacy-content p,
-  .terms-content li,
-  .privacy-content li {
-    color: var(--gray-300);
-  }
+html.dark .terms-content h2,
+html.dark .privacy-content h2 {
+  color: var(--gray-100);
+}
 
-  .terms-content strong,
-  .privacy-content strong {
-    color: var(--gray-100);
-  }
+html.dark .terms-content h3,
+html.dark .privacy-content h3 {
+  color: var(--gray-200);
+}
+
+html.dark .terms-content p,
+html.dark .privacy-content p,
+html.dark .terms-content li,
+html.dark .privacy-content li {
+  color: var(--gray-400);
+}
+
+html.dark .terms-content strong,
+html.dark .privacy-content strong {
+  color: var(--gray-100);
+}
+
+html.dark .error-message {
+  color: var(--error-500);
+}
+
+html.dark .loading-spinner {
+  border-color: var(--gray-300);
+  border-top-color: var(--primary-500);
+}
+
+/* Assign Modal Dark Mode */
+html.dark #assign-modal .modal-content {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
+html.dark #assign-modal .modal-header {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-300);
+}
+
+html.dark #assign-modal .modal-body {
+  background: var(--gray-100);
+}
+
+html.dark #assign-modal .form-group label {
+  color: var(--gray-300);
+}
+
+html.dark #assign-modal #departments-list {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+html.dark #assign-modal #departments-list label {
+  color: var(--gray-800);
+}
+
+html.dark #assign-modal #departments-list label:hover {
+  background: var(--gray-300);
+}
+
+html.dark #assign-modal select,
+html.dark #assign-modal input,
+html.dark #assign-modal textarea {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+}
+
+html.dark #assign-modal select:focus,
+html.dark #assign-modal input:focus,
+html.dark #assign-modal textarea:focus {
+  background: var(--gray-100);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  color: var(--gray-900);
+}
+
+html.dark #assign-modal .decision-buttons {
+  border-top-color: var(--gray-300);
+}
+
+/* Scrollbar Dark Mode */
+html.dark .modal-body::-webkit-scrollbar-track,
+html.dark .terms-content::-webkit-scrollbar-track,
+html.dark .privacy-content::-webkit-scrollbar-track {
+  background: var(--gray-200);
+}
+
+html.dark .modal-body::-webkit-scrollbar-thumb,
+html.dark .terms-content::-webkit-scrollbar-thumb,
+html.dark .privacy-content::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+}
+
+html.dark .modal-body::-webkit-scrollbar-thumb:hover,
+html.dark .terms-content::-webkit-scrollbar-thumb:hover,
+html.dark .privacy-content::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
 }
 
 

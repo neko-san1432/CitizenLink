@@ -151,5 +151,69 @@ router.get('/role-distribution',
   requireSuperAdmin,
   (req, res) => superAdminController.getRoleDistribution(req, res)
 );
+/**
+ * Clustering Status and Management
+ */
+router.get('/clustering/status',
+  authenticateUser,
+  requireSuperAdmin,
+  async (req, res) => {
+    try {
+      const clusteringManager = require('../utils/clusteringManager');
+      const scheduler = clusteringManager.getScheduler();
+      
+      if (!scheduler) {
+        return res.json({
+          success: false,
+          error: 'Clustering scheduler not initialized'
+        });
+      }
+      
+      const status = scheduler.getStatus();
+      return res.json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      console.error('[SUPERADMIN_ROUTES] Clustering status error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to get clustering status'
+      });
+    }
+  }
+);
+router.post('/clustering/trigger',
+  authenticateUser,
+  requireSuperAdmin,
+  async (req, res) => {
+    try {
+      const clusteringManager = require('../utils/clusteringManager');
+      const scheduler = clusteringManager.getScheduler();
+      
+      if (!scheduler) {
+        return res.status(500).json({
+          success: false,
+          error: 'Clustering scheduler not initialized'
+        });
+      }
+      
+      const result = await scheduler.triggerManual();
+      return res.json({
+        success: result.success,
+        data: result,
+        message: result.success ? 
+          `Clustering completed: ${result.clustersFound} clusters found` :
+          `Clustering failed: ${result.error}`
+      });
+    } catch (error) {
+      console.error('[SUPERADMIN_ROUTES] Manual clustering trigger error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to trigger clustering'
+      });
+    }
+  }
+);
 
 module.exports = router;

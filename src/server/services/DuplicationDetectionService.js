@@ -1,3 +1,4 @@
+const ComplaintRepository = require('../repositories/ComplaintRepository');
 const Database = require('../config/database');
 
 /**
@@ -7,8 +8,8 @@ const Database = require('../config/database');
 class DuplicationDetectionService {
 
   constructor() {
-    this.db = new Database();
-    this.supabase = this.db.getClient();
+    this.complaintRepo = new ComplaintRepository();
+    this.supabase = Database.getClient();
   }
   /**
   * Main method to detect potential duplicates for a complaint
@@ -17,19 +18,22 @@ class DuplicationDetectionService {
   */
   async detectDuplicates(complaintId) {
     try {
-      const complaint = await this.getComplaint(complaintId);
+      const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error('Complaint not found');
       }
+      // Convert Complaint model to plain object for similarity algorithms
+      const complaintData = complaint.toJSON ? complaint.toJSON() : complaint;
+      
       // Run multiple detection algorithms
       const [
         textMatches,
         locationMatches,
         temporalMatches
       ] = await Promise.all([
-        this.findTextSimilarity(complaint),
-        this.findLocationSimilarity(complaint),
-        this.findTemporalSimilarity(complaint)
+        this.findTextSimilarity(complaintData),
+        this.findLocationSimilarity(complaintData),
+        this.findTemporalSimilarity(complaintData)
       ]);
       // Merge and score results
       const merged = this.mergeAndScore(textMatches, locationMatches, temporalMatches);
@@ -40,18 +44,6 @@ class DuplicationDetectionService {
       console.error('[DUPLICATION] Detection error:', error);
       throw error;
     }
-  }
-  /**
-  * Get complaint by ID
-  */
-  async getComplaint(complaintId) {
-    const { data, error } = await this.supabase
-      .from('complaints')
-      .select('*')
-      .eq('id', complaintId)
-      .single();
-    if (error) throw error;
-    return data;
   }
   /**
   * Find complaints with similar text content

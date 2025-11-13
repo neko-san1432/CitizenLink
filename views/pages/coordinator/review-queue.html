@@ -101,6 +101,21 @@
                 <!-- Complaint List -->
                 <div id="complaint-list" class="complaint-list" style="display: none;"></div>
 
+                <!-- Rejected Complaints Section -->
+                <div class="rejected-section" style="margin-top: 40px;">
+                    <div class="queue-header">
+                        <h2>❌ Rejected Complaints</h2>
+                        <button class="btn btn-secondary btn-sm" id="toggle-rejected-btn">Show Rejected</button>
+                    </div>
+                    <div id="rejected-container" style="display: none;">
+                        <div id="rejected-loading" class="loading" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Loading rejected complaints...</p>
+                        </div>
+                        <div id="rejected-list" class="complaint-list"></div>
+                    </div>
+                </div>
+
                 <!-- Pagination -->
                 <div id="pagination-container" class="pagination-container" style="display: none;">
                     <div class="pagination-info">

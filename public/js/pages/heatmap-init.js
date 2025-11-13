@@ -80,6 +80,9 @@ let currentFilters = {
     // Initialize heatmap visualization
     heatmapViz = new HeatmapVisualization(map);
     
+    // Initialize user role for role-based filtering
+    await heatmapViz.initializeUserRole();
+    
     // Store globally for boundaryGenerator to access
     window.heatmapViz = heatmapViz;
 
@@ -303,41 +306,62 @@ function updateZoomBasedVisibility(zoom) {
     }
   } else {
     // Zoom > 11: Show markers that pass filters, hide heatmap unless forced
-    // Create markers lazily if they don't exist yet (first time user zooms in)
-    if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
-      console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
-      heatmapViz.createMarkerLayer();
-    }
+    // Role-based: Citizens don't see markers (only heatmap), others see markers based on role
+    const userRole = heatmapViz.userRole || 'citizen';
     
-    if (heatmapViz.markerLayer) {
-      // First ensure the marker layer is on the map
-      if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
-        heatmapViz.markerLayer.addTo(heatmapViz.map);
+    // Citizens: Always show only heatmap, never markers
+    if (userRole === 'citizen') {
+      if (heatmapViz.heatmapLayer) {
+        heatmapViz.showHeatmap();
+      }
+      if (heatmapViz.markerLayer) {
+        heatmapViz.hideMarkers();
+      }
+      // Hide toggle markers button for citizens
+      const toggleMarkersBtn = document.getElementById('toggle-markers-btn');
+      if (toggleMarkersBtn) {
+        toggleMarkersBtn.style.display = 'none';
+      }
+    } else {
+      // Non-citizens: Show markers based on zoom and filters
+      // Create markers lazily if they don't exist yet (first time user zooms in)
+      if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
+        console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
+        heatmapViz.createMarkerLayer();
       }
       
+      if (heatmapViz.markerLayer && heatmapViz.markerLayer.getLayers().length > 0) {
+        // First ensure the marker layer is on the map
+        if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
+          heatmapViz.markerLayer.addTo(heatmapViz.map);
+        }
+        
         // Trigger marker visibility update based on current filters
         // This ensures markers respect filter settings when zooming in
-      if (heatmapViz.updateMarkerVisibility) {
-        heatmapViz.updateMarkerVisibility();
+        if (heatmapViz.updateMarkerVisibility) {
+          heatmapViz.updateMarkerVisibility();
           console.log('[HEATMAP] Marker visibility triggered by zoom change');
-      } else {
-        // Fallback: show all markers if updateMarkerVisibility doesn't exist
-        heatmapViz.showMarkers();
-      }
-        
+        } else {
+          // Fallback: show all markers if updateMarkerVisibility doesn't exist
+          heatmapViz.showMarkers();
+        }
+          
         // Update toggle button state
         const toggleMarkersBtn = document.getElementById('toggle-markers-btn');
         if (toggleMarkersBtn) {
           toggleMarkersBtn.textContent = 'Hide Markers';
           toggleMarkersBtn.classList.add('active');
+          toggleMarkersBtn.style.display = 'block';
         }
-    }
-    // Hide heatmap unless forced on
-    if (heatmapViz.heatmapLayer) {
-      if (isHeatmapForced) {
-        heatmapViz.showHeatmap();
-      } else {
-        heatmapViz.hideHeatmap();
+      }
+      
+      // Hide heatmap unless forced on
+      if (heatmapViz.heatmapLayer) {
+        if (isHeatmapForced) {
+          heatmapViz.showHeatmap();
+        } else {
+          heatmapViz.hideHeatmap();
+        }
       }
     }
   }
@@ -634,11 +658,22 @@ function setupControlPanel() {
       });
     }
 
-    // Toggle markers button
+    // Toggle markers button (hidden for citizens)
     const toggleMarkersBtn = document.getElementById('toggle-markers-btn');
     if (toggleMarkersBtn) {
+      // Hide toggle button for citizens (they only see heatmap)
+      const userRole = heatmapViz?.userRole || 'citizen';
+      if (userRole === 'citizen') {
+        toggleMarkersBtn.style.display = 'none';
+      }
+      
       toggleMarkersBtn.addEventListener('click', () => {
         if (!heatmapViz) return;
+        
+        // Citizens shouldn't be able to toggle markers
+        if (heatmapViz.userRole === 'citizen') {
+          return;
+        }
         
         // Check if markers are currently visible
         const markersVisible = heatmapViz.markerLayer && 

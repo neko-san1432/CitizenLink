@@ -510,9 +510,14 @@ class LguAdminController {
         .order('submitted_at', { ascending: false });
       // Apply status filter
       if (status && status !== 'all') {
-        query = query.eq('workflow_status', status);
+        if (status === 'completed') {
+          // For completed, show both completed workflow_status and completed assignments
+          query = query.in('workflow_status', ['completed']);
+        } else {
+          query = query.eq('workflow_status', status);
+        }
       } else {
-        // Default: show new, in progress, and assigned complaints
+        // Default: show new, in progress, and assigned complaints (exclude completed)
         query = query.in('workflow_status', ['new', 'in_progress', 'assigned']);
       }
       // Apply other filters
@@ -540,13 +545,23 @@ class LguAdminController {
       const complaintIds = complaints.map(c => c.id);
       // console.log removed for security
       // First, get assignments by department_id (PRIMARY QUERY)
-      // For recent assignments, include all statuses except 'cancelled'
+      // Include completed assignments if status filter is 'completed'
       let deptAssignmentsQuery = supabase
         .from('complaint_assignments')
         .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
-        .eq('department_id', department.id)
-        .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
-        .order('created_at', { ascending: false });
+        .eq('department_id', department.id);
+      
+      // Apply status filter for assignments
+      if (status === 'completed') {
+        deptAssignmentsQuery = deptAssignmentsQuery.eq('status', 'completed');
+      } else if (status && status !== 'all') {
+        deptAssignmentsQuery = deptAssignmentsQuery.eq('status', status);
+      } else {
+        // Default: exclude cancelled and completed (show active assignments)
+        deptAssignmentsQuery = deptAssignmentsQuery.neq('status', 'cancelled').neq('status', 'completed');
+      }
+      
+      deptAssignmentsQuery = deptAssignmentsQuery.order('created_at', { ascending: false });
       const { limit } = req.query;
       if (limit) {
         deptAssignmentsQuery = deptAssignmentsQuery.limit(parseInt(limit));
@@ -562,9 +577,19 @@ class LguAdminController {
         let complaintAssignmentsQuery = supabase
           .from('complaint_assignments')
           .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
-          .in('complaint_id', complaintIds)
-          .neq('status', 'cancelled') // Exclude cancelled, but include completed for recent view
-          .order('created_at', { ascending: false });
+          .in('complaint_id', complaintIds);
+        
+        // Apply same status filter for complaint assignments
+        if (status === 'completed') {
+          complaintAssignmentsQuery = complaintAssignmentsQuery.eq('status', 'completed');
+        } else if (status && status !== 'all') {
+          complaintAssignmentsQuery = complaintAssignmentsQuery.eq('status', status);
+        } else {
+          // Default: exclude cancelled and completed
+          complaintAssignmentsQuery = complaintAssignmentsQuery.neq('status', 'cancelled').neq('status', 'completed');
+        }
+        
+        complaintAssignmentsQuery = complaintAssignmentsQuery.order('created_at', { ascending: false });
         if (limit) {
           complaintAssignmentsQuery = complaintAssignmentsQuery.limit(parseInt(limit));
         }

@@ -196,9 +196,7 @@ function getMenuItemsForRole(role) {
   // Normalize role using general normalization function
   const originalRole = role;
   role = normalizeRoleForClient(role);
-  if (originalRole !== role) {
-    console.log('[SIDEBAR] Normalizing role from', originalRole, 'to', role, 'for menu items');
-  }
+  // Role normalization happens silently
 
   const menuItems = {
     'citizen': [
@@ -252,7 +250,6 @@ function getMenuItemsForRole(role) {
   }
   // Return menu items for exact role match
   const items = menuItems[role] || [];
-  console.log('[SIDEBAR] Menu items for role:', role, 'found', items.length, 'items');
   return items;
 }
 

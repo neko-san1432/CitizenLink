@@ -18,6 +18,74 @@ class ReviewQueue {
   init() {
     this.setupEventListeners();
     this.loadComplaints();
+    this.setupRejectedSection();
+  }
+
+  setupRejectedSection() {
+    const toggleBtn = document.getElementById('toggle-rejected-btn');
+    const rejectedContainer = document.getElementById('rejected-container');
+    let isExpanded = false;
+    let rejectedComplaints = [];
+
+    if (toggleBtn && rejectedContainer) {
+      toggleBtn.addEventListener('click', async () => {
+        if (!isExpanded) {
+          // Load rejected complaints
+          const loading = document.getElementById('rejected-loading');
+          const rejectedList = document.getElementById('rejected-list');
+          
+          if (loading) loading.style.display = 'block';
+          if (rejectedList) rejectedList.innerHTML = '';
+
+          try {
+            const response = await fetch('/api/coordinator/rejected', {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            rejectedComplaints = data.data || [];
+
+            if (rejectedList) {
+              if (rejectedComplaints.length === 0) {
+                rejectedList.innerHTML = '<div class="empty-state"><p>No rejected complaints</p></div>';
+              } else {
+                rejectedList.innerHTML = rejectedComplaints.map(complaint => this.createComplaintCard(complaint, true)).join('');
+                this.attachRejectedEventListeners();
+              }
+            }
+
+            toggleBtn.textContent = 'Hide Rejected';
+            rejectedContainer.style.display = 'block';
+            isExpanded = true;
+          } catch (error) {
+            console.error('Error loading rejected complaints:', error);
+            showToast('Failed to load rejected complaints', 'error');
+            if (rejectedList) {
+              rejectedList.innerHTML = '<div class="empty-state"><p>Error loading rejected complaints</p></div>';
+            }
+          } finally {
+            if (loading) loading.style.display = 'none';
+          }
+        } else {
+          toggleBtn.textContent = 'Show Rejected';
+          rejectedContainer.style.display = 'none';
+          isExpanded = false;
+        }
+      });
+    }
+  }
+
+  attachRejectedEventListeners() {
+    document.querySelectorAll('#rejected-list .view-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const complaintId = e.target.getAttribute('data-complaint-id');
+        this.viewComplaint(complaintId);
+      });
+    });
   }
   setupEventListeners() {
     // Filter controls
@@ -136,7 +204,7 @@ class ReviewQueue {
       });
     });
   }
-  createComplaintCard(complaint) {
+  createComplaintCard(complaint, isRejected = false) {
     const priorityBadge = this.getPriorityBadgeClass(complaint.priority);
     const algorithmFlags = complaint.algorithm_flags || {};
     let flagHTML = '';
@@ -177,9 +245,12 @@ class ReviewQueue {
                     <button class="btn btn-primary view-btn" data-complaint-id="${complaint.id}">
                         View Details
                     </button>
-                    <button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
+                    ${!isRejected ? `<button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
                         Reject
-                    </button>
+                    </button>` : `<span class="badge badge-danger" style="padding: 8px 12px;">Rejected</span>`}
+                    ${isRejected && complaint.coordinator_notes ? `<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong>Rejection Reason:</strong> ${complaint.coordinator_notes}
+                    </div>` : ''}
                 </div>
             </div>
         `;
