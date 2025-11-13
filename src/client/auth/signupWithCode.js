@@ -26,15 +26,22 @@ async function signupWithOAuth(provider) {
   try {
     const { supabase } = await import('../config/config.js');
     // Get OAuth URL with signup code in state parameter
+    const options = {
+      redirectTo: `${window.location.origin}/complete-position-signup?code=${signupCode}`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
+    };
+    
+    // Set valid scopes for Facebook (avoid invalid user_mobile_phone scope)
+    if (provider === 'facebook') {
+      options.scopes = 'email public_profile';
+    }
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${window.location.origin}/complete-position-signup?code=${signupCode}`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        }
-      }
+      options
     });
     if (error) {
       console.error('OAuth error:', error);
