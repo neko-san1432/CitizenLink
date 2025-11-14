@@ -194,7 +194,7 @@ async function setSidebarRole() {
 }
 function getMenuItemsForRole(role) {
   // Normalize role using general normalization function
-  const originalRole = role;
+  const _originalRole = role;
   role = normalizeRoleForClient(role);
   // Role normalization happens silently
 

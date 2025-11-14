@@ -1,7 +1,8 @@
 // Notification component with lazy loading functionality
-import { brandConfig } from '../config/index.js';
+import { brandConfig as _brandConfig } from '../config/index.js';
 import apiClient from '../config/apiClient.js';
 import { getNotificationIcon } from '../utils/icons.js';
+import showMessage from './toast.js';
 
 // Notification state management
 const notificationState = {
@@ -57,7 +58,7 @@ export function initializeNotificationButton() {
       }
       // Debug positioning
       if (notificationPanel.classList.contains('show')) {
-        const rect = notificationPanel.getBoundingClientRect();
+        const _rect = notificationPanel.getBoundingClientRect();
       }
     });
     // Close panel when close button is clicked
@@ -312,8 +313,12 @@ function renderNotifications() {
     return;
   }
   const html = notificationState.notifications.map((notification, index) => {
-    const priorityClass = notification.priority === 'urgent' ? 'notification-urgent' :
-      notification.priority === 'warning' ? 'notification-warning' : '';
+    let priorityClass = '';
+    if (notification.priority === 'urgent') {
+      priorityClass = 'notification-urgent';
+    } else if (notification.priority === 'warning') {
+      priorityClass = 'notification-warning';
+    }
     const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
     // Add "new" indicator for recent notifications (first 3 items)
     const isNew = index < 3 && !notification.read;
@@ -405,15 +410,13 @@ function renderNotifications() {
           }
         } catch (error) {
           console.error('[NOTIFICATION] Failed to mark as read:', error);
-          alert('Failed to mark notification as read. Please try again.');
-
+          showMessage('error', 'Failed to mark notification as read. Please try again.');
         }
-      } else {
+      } else if (link) {
         // Already read - only navigate if there's a link
-        if (link) {
-          closeNotificationPanel();
-          window.location.href = link;
-        }
+        closeNotificationPanel();
+        window.location.href = link;
+      }
       }
     });
   });

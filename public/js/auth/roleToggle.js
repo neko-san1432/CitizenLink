@@ -2,9 +2,11 @@
  * Simple Role Toggle for Staff Members
  * Allows staff members to switch between their staff role and citizen view
  */
+import showMessage from '../components/toast.js';
+
 // Role toggle script loaded
 // Simple role detection - all roles except citizen
-const STAFF_ROLES = ['lgu', 'lgu-admin', 'lgu-hr', 'coordinator', 'hr', 'super-admin', 'admin'];
+const _STAFF_ROLES = ['lgu', 'lgu-admin', 'lgu-hr', 'coordinator', 'hr', 'super-admin', 'admin'];
 // Cache for role info
 let roleInfoCache = null;
 let roleInfoCacheTime = 0;
@@ -13,7 +15,7 @@ let isInitialized = false;
 /**
  * Check if current user is a staff member
  */
-async function isStaffMember() {
+async function _isStaffMember() {
   try {
     // Check if user is staff member
     const response = await fetch('/api/user/role-info', {
@@ -114,11 +116,11 @@ async function switchRole(targetRole) {
     if (result.success) {
       window.location.reload();
     } else {
-      alert(`Failed to switch role: ${  result.message || 'Unknown error'}`);
+      showMessage('error', result.message || 'Unknown error');
     }
   } catch (error) {
     console.error('[ROLE_TOGGLE] Error switching role:', error);
-    alert(`Error switching role: ${  error.message}`);
+    showMessage('error', error.message || 'Error switching role');
   }
 }
 /**
@@ -188,8 +190,8 @@ export async function initializeRoleToggle() {
     }
     const userRole = result.data.role;
     const baseRole = result.data.base_role || result.data.actual_role;
-    const isInCitizenMode = userRole === 'citizen';
-    const isStaff = userRole !== 'citizen'; // Any role that is not citizen is considered staff
+    const _isInCitizenMode = userRole === 'citizen';
+    const _isStaff = userRole !== 'citizen'; // Any role that is not citizen is considered staff
     // Hide role switcher for pure citizens (base_role is 'citizen')
     if (userRole === 'citizen' && (!baseRole || baseRole === 'citizen')) {
       return;
