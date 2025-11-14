@@ -7,7 +7,7 @@ class Setting {
     this.type = data.type || 'text';
     this.category = data.category || 'general';
     this.description = data.description;
-    this.is_public = data.is_public !== undefined ? data.is_public : false;
+    this.is_public = data.is_public !== void 0 ? data.is_public : false;
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
   }

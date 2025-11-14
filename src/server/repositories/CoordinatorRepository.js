@@ -36,7 +36,7 @@ class CoordinatorRepository {
       if (filters.type) {
         query = query.eq('type', filters.type);
       }
-      if (filters.hasAlgorithmResults !== undefined) {
+      if (filters.hasAlgorithmResults !== void 0) {
         // Filter complaints with/without similarity results
         // This would need a custom function or post-processing
       }

@@ -431,7 +431,7 @@ class ComplaintController {
       };
       // Remove undefined values
       Object.keys(serviceFilters).forEach(key => {
-        if (serviceFilters[key] === undefined) {
+        if (serviceFilters[key] === void 0) {
           delete serviceFilters[key];
         }
       });

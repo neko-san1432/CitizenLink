@@ -230,8 +230,8 @@ async function renderComplaint() {
   // Map preview using ComplaintMap component
   try {
     const mapEl = document.getElementById('location-map');
-    const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
-    const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
+    const hasLat = complaint.latitude !== null && complaint.latitude !== void 0;
+    const hasLng = complaint.longitude !== null && complaint.longitude !== void 0;
     console.log('[REVIEW] Map setup:', {
       mapEl: Boolean(mapEl),
       hasLat,

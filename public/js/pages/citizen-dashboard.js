@@ -672,7 +672,7 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
   };
   // For cancelled complaints, don't show any active steps - gray everything out
   // Otherwise, show progress up to the current step
-  let currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+  let currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== void 0 ? statusStepMap[workflowStatus] : 0);
 
   // If citizen has confirmed, show step 4 (all circles completed) even if status is still 'completed'
   if (!isCancelled && confirmedByCitizen && (workflowStatus === 'completed' || workflowStatus === 'resolved')) {
