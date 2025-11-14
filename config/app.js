@@ -34,8 +34,7 @@ class AppConfig {
       maxLimit: 100
     };
     this.security = {
-      bcryptRounds: 12,
-      tokenExpiry: '4h'
+      bcryptRounds: 12
     };
   }
   get isDevelopment() {

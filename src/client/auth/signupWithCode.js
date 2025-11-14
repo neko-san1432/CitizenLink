@@ -126,9 +126,6 @@ if (signupForm) {
       name: formData.get('name'),
       addressLine1: formData.get('addressLine1') || '',
       addressLine2: formData.get('addressLine2') || '',
-      city: formData.get('city') || '',
-      province: formData.get('province') || '',
-      postalCode: formData.get('postalCode') || '',
       barangay: formData.get('barangay') || '',
       gender: formData.get('gender'),
       email: formData.get('email'),
@@ -138,19 +135,6 @@ if (signupForm) {
       signupCode: formData.get('signupCode'),
       agreedToTerms: formData.get('agreedToTerms') === 'on'
     };
-    
-    // Validate address fields - if any address field is provided, city and province are required
-    const hasAddressFields = data.addressLine1 || data.addressLine2 || data.city || data.province || data.postalCode || data.barangay;
-    if (hasAddressFields && (!data.city || !data.province)) {
-      showMessage('error', 'City and province are required when providing address information');
-      return;
-    }
-    
-    // Validate postal code format if provided
-    if (data.postalCode && !/^\d{4}$/.test(data.postalCode)) {
-      showMessage('error', 'Postal code must be 4 digits');
-      return;
-    }
     
     // Validation rules
     const validationRules = {
@@ -179,9 +163,6 @@ if (signupForm) {
           address: {
             line1: data.addressLine1 || '',
             line2: data.addressLine2 || '',
-            city: data.city || '',
-            province: data.province || '',
-            postalCode: data.postalCode || '',
             barangay: data.barangay || ''
           },
           gender: data.gender || '',

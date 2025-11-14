@@ -12,9 +12,27 @@
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1800px;
     margin: 0 auto;
     padding: 0 20px;
+}
+
+.tasks-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.tasks-sidebar {
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.tasks-main {
+    min-width: 0; /* Prevents grid overflow */
 }
 
 .page-header {
@@ -469,6 +487,17 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .tasks-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
 @media (max-width: 768px) {
     .main-content {
         padding: 15px !important;

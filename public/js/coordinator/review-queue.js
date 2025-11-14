@@ -1,5 +1,6 @@
 // Coordinator Review Queue JavaScript
 import showToast from '../components/toast.js';
+import BarangayPrioritization from '../components/barangay-prioritization.js';
 
 class ReviewQueue {
 
@@ -11,14 +12,38 @@ class ReviewQueue {
       priority: '',
       category: '',
       duplicates: '',
-      search: ''
+      search: '',
+      prioritization: ''
     };
+    this.barangayPrioritization = null;
+    this.barangayPrioritizationComponent = null;
     this.init();
   }
-  init() {
+  async init() {
     this.setupEventListeners();
-    this.loadComplaints();
     this.setupRejectedSection();
+    // Load prioritization first, then complaints
+    await this.initBarangayPrioritization();
+    await this.loadComplaints();
+  }
+
+  async initBarangayPrioritization() {
+    try {
+      this.barangayPrioritizationComponent = new BarangayPrioritization('barangay-prioritization-container');
+      await this.barangayPrioritizationComponent.loadInsights();
+      // Update prioritization map for filtering
+      if (this.barangayPrioritizationComponent.insightsData) {
+        this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
+        console.log('[REVIEW_QUEUE] Barangay prioritization loaded:', this.barangayPrioritization.size, 'barangays');
+        // Enhance complaints if they're already loaded
+        if (this.complaints.length > 0) {
+          this.enhanceComplaintsWithPrioritization();
+          this.renderComplaints();
+        }
+      }
+    } catch (error) {
+      console.error('[REVIEW_QUEUE] Error initializing prioritization:', error);
+    }
   }
 
   setupRejectedSection() {
@@ -111,6 +136,14 @@ class ReviewQueue {
         this.applyFilters();
       });
     }
+
+    const prioritizationFilter = document.getElementById('filter-prioritization');
+    if (prioritizationFilter) {
+      prioritizationFilter.addEventListener('change', (e) => {
+        this.filters.prioritization = e.target.value;
+        this.applyFilters();
+      });
+    }
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.filters.search = e.target.value;
@@ -134,26 +167,87 @@ class ReviewQueue {
   async loadComplaints() {
     try {
       this.showLoading();
-      const response = await fetch('/api/coordinator/review-queue', {
+      
+      const complaintsResponse = await fetch('/api/coordinator/review-queue', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      if (!complaintsResponse.ok) {
+        throw new Error(`HTTP error! status: ${complaintsResponse.status}`);
       }
-      const data = await response.json();
-      console.log('Review queue API response:', data);
-      this.complaints = data.data || data.complaints || [];
-      console.log('Complaints array:', this.complaints);
+
+      const complaintsData = await complaintsResponse.json();
+      this.complaints = complaintsData.data || complaintsData.complaints || [];
+      
+      console.log(`[REVIEW_QUEUE] Loaded ${this.complaints.length} complaints`);
+      if (this.complaints.length > 0) {
+        const sample = this.complaints[0];
+        console.log('[REVIEW_QUEUE] Sample complaint:', {
+          id: sample.id,
+          barangay: sample.barangay,
+          hasBarangay: !!sample.barangay,
+          latitude: sample.latitude,
+          longitude: sample.longitude
+        });
+      }
+
+      // Enhance complaints with prioritization if available
+      if (this.barangayPrioritization) {
+        this.enhanceComplaintsWithPrioritization();
+      } else if (this.barangayPrioritizationComponent && this.barangayPrioritizationComponent.insightsData) {
+        // Build map if not already built
+        this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
+        this.enhanceComplaintsWithPrioritization();
+      } else {
+        console.warn('[REVIEW_QUEUE] Prioritization not available yet, complaints will be enhanced when prioritization loads');
+      }
+
       this.renderComplaints();
-      this.updateStats();
     } catch (error) {
       console.error('Error loading complaints:', error);
       this.showError('Failed to load complaints. Please try again.');
     }
+  }
+
+  buildBarangayMap(barangays) {
+    const map = new Map();
+    barangays.forEach(barangay => {
+      map.set(barangay.barangay, barangay.prioritizationScore);
+    });
+    return map;
+  }
+
+  enhanceComplaintsWithPrioritization() {
+    if (!this.barangayPrioritization) {
+      console.warn('[REVIEW_QUEUE] Cannot enhance complaints: prioritization map not available');
+      return;
+    }
+    
+    let enhancedCount = 0;
+    // Enhance each complaint with its barangay prioritization score
+    this.complaints.forEach(complaint => {
+      if (complaint.barangay && this.barangayPrioritization.has(complaint.barangay)) {
+        complaint.prioritizationScore = this.barangayPrioritization.get(complaint.barangay);
+        complaint.priorityLevel = this.getPriorityLevelFromScore(complaint.prioritizationScore);
+        enhancedCount++;
+      } else {
+        complaint.prioritizationScore = 0;
+        complaint.priorityLevel = 'low';
+        if (complaint.barangay) {
+          console.warn(`[REVIEW_QUEUE] Barangay "${complaint.barangay}" not found in prioritization map`);
+        }
+      }
+    });
+    console.log(`[REVIEW_QUEUE] Enhanced ${enhancedCount} out of ${this.complaints.length} complaints with prioritization scores`);
+  }
+
+  getPriorityLevelFromScore(score) {
+    if (score >= 50) return 'critical';
+    if (score >= 30) return 'high';
+    if (score >= 15) return 'medium';
+    return 'low';
   }
   renderComplaints() {
     const complaintList = document.getElementById('complaint-list');
@@ -184,6 +278,8 @@ class ReviewQueue {
     // Show complaint list and hide empty state
     complaintList.style.display = 'block';
     if (emptyState) emptyState.style.display = 'none';
+    // Reset debug flag for this render
+    this._lastLoggedCardId = null;
     complaintList.innerHTML = paginatedComplaints.map(complaint => this.createComplaintCard(complaint)).join('');
     this.updatePagination(filteredComplaints.length);
     this.attachEventListeners();
@@ -207,6 +303,23 @@ class ReviewQueue {
   createComplaintCard(complaint, isRejected = false) {
     const priorityBadge = this.getPriorityBadgeClass(complaint.priority);
     const algorithmFlags = complaint.algorithm_flags || {};
+    const prioritizationScore = complaint.prioritizationScore || 0;
+    const priorityLevel = complaint.priorityLevel || 'low';
+    const barangay = complaint.barangay || null;
+    
+    // Debug: Log first complaint being rendered
+    const isFirstCard = !this._lastLoggedCardId;
+    if (isFirstCard) {
+      this._lastLoggedCardId = complaint.id;
+      console.log('[REVIEW_QUEUE] Creating card for complaint:', {
+        id: complaint.id.substring(0, 8),
+        barangay: barangay,
+        prioritizationScore: prioritizationScore,
+        priorityLevel: priorityLevel,
+        hasBarangay: !!barangay
+      });
+    }
+    
     let flagHTML = '';
     if (algorithmFlags.high_confidence_duplicate) {
       flagHTML = `
@@ -221,8 +334,59 @@ class ReviewQueue {
                 </div>
             `;
     }
+
+    // Add prioritization suggestion badge
+    let prioritizationSuggestionHTML = '';
+    
+    // Show suggestion for any complaint with a barangay
+    if (barangay) {
+      const suggestionClass = `prioritization-suggestion ${priorityLevel}`;
+      let suggestionText = '';
+      
+      // Determine suggestion text based on priority level
+      if (priorityLevel === 'critical') {
+        suggestionText = '🚨 Critical Priority Barangay - Assign First!';
+      } else if (priorityLevel === 'high') {
+        suggestionText = '⚡ High Priority Barangay - Recommended';
+      } else if (priorityLevel === 'medium') {
+        suggestionText = '📊 Medium Priority Barangay';
+      } else {
+        // Show for all barangays, even low priority
+        suggestionText = '📍 Barangay Prioritization';
+      }
+      
+      // Always show suggestion if barangay exists
+      prioritizationSuggestionHTML = `
+                <div class="${suggestionClass}">
+                    ${suggestionText}
+                    <span class="barangay-name">${this.escapeHtml(barangay)}</span>
+                    ${prioritizationScore > 0 ? `<span class="priority-score">Score: ${prioritizationScore}</span>` : ''}
+                </div>
+            `;
+      
+      // Debug: Log when suggestion is added (for first card only)
+      if (isFirstCard) {
+        console.log('[REVIEW_QUEUE] ✓ Added suggestion badge:', {
+          barangay: barangay,
+          priorityLevel: priorityLevel,
+          score: prioritizationScore,
+          htmlLength: prioritizationSuggestionHTML.length,
+          htmlPreview: prioritizationSuggestionHTML.substring(0, 100)
+        });
+      }
+    } else {
+      // Debug: Log when no suggestion (for first card only)
+      if (isFirstCard) {
+        console.log('[REVIEW_QUEUE] ✗ No suggestion - no barangay:', {
+          id: complaint.id.substring(0, 8),
+          hasBarangay: !!complaint.barangay
+        });
+      }
+    }
+
     return `
-            <div class="complaint-card ${complaint.priority?.toLowerCase() || 'medium'}" data-complaint-id="${complaint.id}">
+            <div class="complaint-card ${complaint.priority?.toLowerCase() || 'medium'} ${priorityLevel === 'critical' || priorityLevel === 'high' ? 'high-priority-barangay' : ''}" data-complaint-id="${complaint.id}" data-priority-score="${prioritizationScore}">
+                ${prioritizationSuggestionHTML}
                 <div class="complaint-header">
                     <div>
                         <div class="complaint-id">#${complaint.id}</div>
@@ -237,6 +401,7 @@ class ReviewQueue {
                     <div class="complaint-meta">
                         <span class="badge ${priorityBadge}">${complaint.priority || 'Medium'}</span>
                         <span class="badge badge-medium">${complaint.category || 'General'}</span>
+                        ${barangay ? `<span class="badge badge-info">📍 ${barangay}</span>` : ''}
                         <span class="complaint-date">${this.formatTimeAgo(complaint.submitted_at || complaint.created_at)}</span>
                     </div>
                     ${flagHTML}
@@ -256,7 +421,7 @@ class ReviewQueue {
         `;
   }
   getFilteredComplaints() {
-    return this.complaints.filter(complaint => {
+    let filtered = this.complaints.filter(complaint => {
       // Priority filter
       const matchesPriority = !this.filters.priority || this.filters.priority === '' ||
                                   complaint.priority?.toLowerCase() === this.filters.priority.toLowerCase();
@@ -273,28 +438,30 @@ class ReviewQueue {
                                 (complaint.descriptive_su || complaint.description)?.toLowerCase().includes(this.filters.search.toLowerCase());
       return matchesPriority && matchesCategory && matchesDuplicates && matchesSearch;
     });
+
+    // Sort by prioritization if filter is set, otherwise default to highest priority first
+    if (this.barangayPrioritization) {
+      filtered = filtered.sort((a, b) => {
+        const scoreA = a.prioritizationScore || this.barangayPrioritization.get(a.barangay || '') || 0;
+        const scoreB = b.prioritizationScore || this.barangayPrioritization.get(b.barangay || '') || 0;
+        
+        if (this.filters.prioritization) {
+          // Use filter setting
+          return this.filters.prioritization === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+        } else {
+          // Default: highest priority first
+          return scoreB - scoreA;
+        }
+      });
+    }
+
+    return filtered;
   }
   getPaginatedComplaints(complaints) {
 
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return complaints.slice(startIndex, endIndex);
-  }
-  updateStats() {
-    const totalComplaints = this.complaints.length;
-    const urgentComplaints = this.complaints.filter(c => c.priority?.toLowerCase() === 'urgent').length;
-    const highPriorityComplaints = this.complaints.filter(c => c.priority?.toLowerCase() === 'high').length;
-    const duplicateComplaints = this.complaints.filter(c => c.algorithm_flags?.has_duplicates).length;
-    this.updateStatCard('stat-total', totalComplaints);
-    this.updateStatCard('stat-urgent', urgentComplaints);
-    this.updateStatCard('stat-high', highPriorityComplaints);
-    this.updateStatCard('stat-similar', duplicateComplaints);
-  }
-  updateStatCard(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.textContent = value;
-    }
   }
   updatePagination(totalItems) {
     const totalPages = Math.ceil(totalItems / this.itemsPerPage);
@@ -494,6 +661,12 @@ class ReviewQueue {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 // Initialize when DOM is loaded

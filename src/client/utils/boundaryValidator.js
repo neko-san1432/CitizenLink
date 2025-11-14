@@ -22,13 +22,60 @@ async function loadDigosBoundary() {
 
   boundaryLoadPromise = (async () => {
     try {
-      const response = await fetch('/src/client/assets/digos-city-boundary.json');
-      if (!response.ok) {
-        throw new Error(`Failed to load boundary: ${response.statusText}`);
+      // Try to fetch from API endpoint first (if it exists)
+      let response;
+      try {
+        response = await fetch('/api/digos-boundary');
+        if (response.ok) {
+          const boundary = await response.json();
+          boundaryCache = boundary;
+          return boundary;
+        }
+        // If 404, silently fall back (don't log - this is expected if server not restarted)
+      } catch (err) {
+        // Network error - continue to fallback
       }
-      const boundary = await response.json();
-      boundaryCache = boundary;
-      return boundary;
+      
+      // Fallback: try to use barangay boundaries from /api/boundaries
+      // and construct city boundary from them
+      try {
+        response = await fetch('/api/boundaries');
+        if (response.ok) {
+          const brgyData = await response.json();
+          if (Array.isArray(brgyData) && brgyData.length > 0) {
+            // Store barangay data for point-in-polygon checks
+            boundaryCache = { 
+              type: 'barangay_boundaries',
+              barangays: brgyData,
+              // Create a simple bounding box from all barangays
+              bounds: calculateBoundsFromBarangays(brgyData)
+            };
+            // Log that we're using barangay boundaries fallback (only once)
+            if (!boundaryCache._logged) {
+              console.log('[BOUNDARY_VALIDATOR] Using barangay boundaries for validation');
+              boundaryCache._logged = true;
+            }
+            return boundaryCache;
+          }
+        }
+      } catch (err) {
+        // Barangay boundaries API failed, continue to final fallback
+      }
+      
+      // Final fallback: try direct file path (may not work in production)
+      try {
+        response = await fetch('/src/client/assets/digos-city-boundary.json');
+        if (response.ok) {
+          const boundary = await response.json();
+          boundaryCache = boundary;
+          return boundary;
+        }
+      } catch (err) {
+        // Direct file path also failed
+      }
+      
+      // If all methods failed, return null (will use bounding box fallback in validation)
+      return null;
     } catch (error) {
       console.error('[BOUNDARY_VALIDATOR] Failed to load Digos boundary:', error.message);
       // Return null to indicate boundary not available
@@ -39,6 +86,41 @@ async function loadDigosBoundary() {
   })();
 
   return boundaryLoadPromise;
+}
+
+/**
+ * Calculate bounding box from barangay boundaries
+ * @param {Array} brgyData - Array of barangay data with geojson
+ * @returns {Object} {minLng, maxLng, minLat, maxLat}
+ */
+function calculateBoundsFromBarangays(brgyData) {
+  let minLng = Infinity, maxLng = -Infinity;
+  let minLat = Infinity, maxLat = -Infinity;
+  
+  brgyData.forEach(barangay => {
+    if (barangay.geojson && barangay.geojson.geometry) {
+      const coords = barangay.geojson.geometry.coordinates;
+      if (barangay.geojson.geometry.type === 'Polygon') {
+        coords[0].forEach(([lng, lat]) => {
+          minLng = Math.min(minLng, lng);
+          maxLng = Math.max(maxLng, lng);
+          minLat = Math.min(minLat, lat);
+          maxLat = Math.max(maxLat, lat);
+        });
+      } else if (barangay.geojson.geometry.type === 'MultiPolygon') {
+        coords.forEach(polygon => {
+          polygon[0].forEach(([lng, lat]) => {
+            minLng = Math.min(minLng, lng);
+            maxLng = Math.max(maxLng, lng);
+            minLat = Math.min(minLat, lat);
+            maxLat = Math.max(maxLat, lat);
+          });
+        });
+      }
+    }
+  });
+  
+  return { minLng, maxLng, minLat, maxLat };
 }
 
 /**
@@ -113,32 +195,79 @@ async function isWithinDigosBoundary(latitude, longitude) {
 
   // Load boundary
   const boundary = await loadDigosBoundary();
-  if (!boundary || !boundary.geometry || !boundary.geometry.coordinates) {
-    console.warn('[BOUNDARY_VALIDATOR] Digos boundary not available, skipping validation');
-    return true; // Allow if boundary not available (fail open)
+  if (!boundary) {
+    // Use bounding box fallback if boundary not available
+    const minLat = 6.723539;
+    const maxLat = 6.985025;
+    const minLng = 125.245633;
+    const maxLng = 125.391290;
+    return (
+      latitude >= minLat &&
+      latitude <= maxLat &&
+      longitude >= minLng &&
+      longitude <= maxLng
+    );
   }
 
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
-  const coordinates = boundary.geometry.coordinates;
 
-  // Handle Polygon geometry type
-  if (boundary.geometry.type === 'Polygon') {
-    return isPointInPolygon(point, coordinates);
-  }
-
-  // Handle MultiPolygon geometry type
-  if (boundary.geometry.type === 'MultiPolygon') {
-    // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
-    for (const polygon of coordinates) {
-      if (isPointInPolygon(point, polygon)) {
-        return true;
+  // Handle barangay boundaries format (from /api/boundaries)
+  if (boundary.type === 'barangay_boundaries' && boundary.barangays) {
+    // Check if point is within any barangay boundary
+    for (const barangay of boundary.barangays) {
+      if (barangay.geojson && barangay.geojson.geometry) {
+        const coords = barangay.geojson.geometry.coordinates;
+        if (barangay.geojson.geometry.type === 'Polygon') {
+          if (isPointInPolygon(point, coords)) {
+            return true;
+          }
+        } else if (barangay.geojson.geometry.type === 'MultiPolygon') {
+          for (const polygon of coords) {
+            if (isPointInPolygon(point, polygon)) {
+              return true;
+            }
+          }
+        }
       }
+    }
+    // If not in any barangay, check bounding box as fallback
+    if (boundary.bounds) {
+      return (
+        latitude >= boundary.bounds.minLat &&
+        latitude <= boundary.bounds.maxLat &&
+        longitude >= boundary.bounds.minLng &&
+        longitude <= boundary.bounds.maxLng
+      );
     }
     return false;
   }
 
-  console.warn('[BOUNDARY_VALIDATOR] Unsupported geometry type:', boundary.geometry.type);
-  return true; // Fail open if geometry type not supported
+  // Handle standard GeoJSON boundary format
+  if (boundary.geometry && boundary.geometry.coordinates) {
+    const coordinates = boundary.geometry.coordinates;
+
+    // Handle Polygon geometry type
+    if (boundary.geometry.type === 'Polygon') {
+      return isPointInPolygon(point, coordinates);
+    }
+
+    // Handle MultiPolygon geometry type
+    if (boundary.geometry.type === 'MultiPolygon') {
+      // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
+      for (const polygon of coordinates) {
+        if (isPointInPolygon(point, polygon)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    console.warn('[BOUNDARY_VALIDATOR] Unsupported geometry type:', boundary.geometry.type);
+    return true; // Fail open if geometry type not supported
+  }
+
+  console.warn('[BOUNDARY_VALIDATOR] Invalid boundary format');
+  return true; // Fail open if boundary format invalid
 }
 
 /**

@@ -69,5 +69,13 @@ router.get('/rejected',
   requireCoordinator,
   (req, res) => coordinatorController.getRejectedComplaints(req, res)
 );
+/**
+ * Barangay Insights
+ */
+router.get('/insights',
+  authenticateUser,
+  requireCoordinator,
+  (req, res) => coordinatorController.getBarangayInsights(req, res)
+);
 
 module.exports = router;

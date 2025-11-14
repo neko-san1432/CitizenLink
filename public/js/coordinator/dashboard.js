@@ -6,6 +6,7 @@ class CoordinatorDashboard {
 
   constructor() {
     this.statsInterval = null;
+    this.queueInterval = null;
     this.activityInterval = null;
     this.init();
   }
@@ -41,10 +42,10 @@ class CoordinatorDashboard {
     try {
       // Load dashboard statistics
       await this.loadStats();
-      // Load recent review queue
+      // Load recent review queue (only 5 complaints)
       await this.loadRecentQueue();
-      // Load active clusters
-      await this.loadClusters();
+      // Load recent activity
+      await this.loadActivity();
       // Fallback: Update stats with default values if API fails
       setTimeout(() => {
         this.updateStatCard('stat-pending', 0);
@@ -73,19 +74,12 @@ class CoordinatorDashboard {
       const result = await response.json();
       if (result.success) {
         const {data} = result;
-        // Update statistics cards
+        // Update statistics cards only - don't update queue or clusters here
+        // Queue and clusters are handled by separate methods to avoid conflicts
         this.updateStatCard('stat-pending', data.pending_reviews || 0);
         this.updateStatCard('stat-reviews', data.stats?.total_reviews || 0);
         this.updateStatCard('stat-duplicates', data.stats?.duplicates_merged || 0);
         this.updateStatCard('stat-assignments', data.stats?.assignments_made || 0);
-        // Update recent queue preview
-        if (data.recent_queue && data.recent_queue.length > 0) {
-          this.updateRecentQueuePreview(data.recent_queue);
-        }
-        // Update clusters preview
-        if (data.active_clusters && data.active_clusters.length > 0) {
-          this.updateClustersPreview(data.active_clusters);
-        }
       } else {
         this.setDefaultStats();
       }
@@ -115,18 +109,114 @@ class CoordinatorDashboard {
     }
   }
 
-  async loadClusters() {
+
+  async loadActivity() {
     try {
       const response = await fetch('/api/coordinator/dashboard');
       const result = await response.json();
-      if (result.success && result.data.active_clusters) {
-        this.updateClustersPreview(result.data.active_clusters);
+      if (result.success) {
+        // Get recent activity from dashboard data or generate from stats
+        const activities = this.generateActivityFromStats(result.data);
+        this.updateActivityPreview(activities);
       } else {
-        this.updateClustersPreview([]);
+        this.updateActivityPreview([]);
       }
     } catch (error) {
-      this.updateClustersPreview([]);
+      console.error('[COORDINATOR DASHBOARD] Failed to load activity:', error);
+      this.updateActivityPreview([]);
     }
+  }
+
+  generateActivityFromStats(data) {
+    const activities = [];
+    const now = new Date();
+    
+    // Add activity for pending reviews
+    if (data.pending_reviews > 0) {
+      activities.push({
+        icon: '⏰',
+        text: `${data.pending_reviews} complaint${data.pending_reviews !== 1 ? 's' : ''} pending review`,
+        time: 'Just now',
+        type: 'pending'
+      });
+    }
+    
+    // Add activity for recent reviews
+    if (data.stats?.total_reviews > 0) {
+      activities.push({
+        icon: '📊',
+        text: `${data.stats.total_reviews} review${data.stats.total_reviews !== 1 ? 's' : ''} completed in last 7 days`,
+        time: 'This week',
+        type: 'review'
+      });
+    }
+    
+    // Add activity for assignments
+    if (data.stats?.assignments_made > 0) {
+      activities.push({
+        icon: '📤',
+        text: `${data.stats.assignments_made} assignment${data.stats.assignments_made !== 1 ? 's' : ''} made this week`,
+        time: 'This week',
+        type: 'assignment'
+      });
+    }
+    
+    // Add activity for duplicates merged
+    if (data.stats?.duplicates_merged > 0) {
+      activities.push({
+        icon: '🔗',
+        text: `${data.stats.duplicates_merged} duplicate${data.stats.duplicates_merged !== 1 ? 's' : ''} merged this week`,
+        time: 'This week',
+        type: 'duplicate'
+      });
+    }
+    
+    
+    // If no activities, add a default message
+    if (activities.length === 0) {
+      activities.push({
+        icon: '📋',
+        text: 'No recent activity',
+        time: '—',
+        type: 'empty'
+      });
+    }
+    
+    return activities.slice(0, 5); // Limit to 5 most recent
+  }
+
+  updateActivityPreview(activities) {
+    const container = document.getElementById('activity-container');
+    if (!container) return;
+    
+    if (!activities || activities.length === 0) {
+      container.innerHTML = `
+        <div class="activity-list">
+          <div class="no-data">
+            <div class="no-data-icon">🕒</div>
+            <div class="no-data-text">No recent activity</div>
+            <div class="no-data-subtext">Activity will appear here</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    const activitiesList = activities.map(activity => `
+      <div class="activity-item" data-type="${activity.type}">
+        <div class="activity-icon">${activity.icon}</div>
+        <div class="activity-content">
+          <div class="activity-text">${activity.text}</div>
+          <div class="activity-time">${activity.time}</div>
+        </div>
+      </div>
+    `).join('');
+    
+    container.innerHTML = `
+      <div class="activity-list">
+        ${activitiesList}
+      </div>
+    `;
   }
 
   updateStatCard(elementId, value) {
@@ -155,7 +245,9 @@ class CoordinatorDashboard {
             `;
       return;
     }
-    const complaintsList = complaints.slice(0, 5).map(complaint => `
+    // Always limit to 5 complaints for preview
+    const displayedComplaints = complaints.slice(0, 5);
+    const complaintsList = displayedComplaints.map(complaint => `
             <div class="queue-item">
                 <div class="queue-item-icon">
                     ${complaint.priority === 'urgent' ? '🚨' :
@@ -183,7 +275,7 @@ class CoordinatorDashboard {
 
     container.innerHTML = `
             <div class="queue-header">
-                <h3>Recent Complaints (${complaints.length})</h3>
+                <h3>Recent Complaints (${displayedComplaints.length})</h3>
                 <button class="btn btn-secondary btn-sm" id="js-view-all-queue">
                     View All
                 </button>
@@ -210,49 +302,6 @@ class CoordinatorDashboard {
     }
   }
 
-  updateClustersPreview(clusters) {
-    const container = document.getElementById('clusters-container');
-    if (!container) return;
-    if (!clusters || clusters.length === 0) {
-      container.innerHTML = `
-                <div class="no-data">
-                    <div class="no-data-icon">🔍</div>
-                    <div class="no-data-text">No active clusters detected</div>
-                    <div class="no-data-subtext">Clusters will appear when patterns are identified</div>
-                </div>
-            `;
-      return;
-    }
-    const clustersList = clusters.slice(0, 3).map(cluster => `
-            <div class="cluster-item">
-                <div class="cluster-icon">📍</div>
-                <div class="cluster-content">
-                    <div class="cluster-name">${cluster.cluster_name || 'Unnamed Cluster'}</div>
-                    <div class="cluster-details">
-                        <span>${cluster.complaint_count || 0} complaints</span>
-                        <span class="separator">•</span>
-                        <span>${cluster.pattern_type || 'general'}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    container.innerHTML = `
-            <div class="clusters-header">
-                <h3>Active Clusters</h3>
-                <button class="btn btn-secondary btn-sm" id="js-refresh-clusters">
-                    Refresh
-                </button>
-            </div>
-            <div class="clusters-list">
-                ${clustersList}
-            </div>
-        `;
-    // Attach event listener for refresh
-    const refreshBtn = container.querySelector('#js-refresh-clusters');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => this.detectNewClusters());
-    }
-  }
 
   setupEventListeners() {
     // Quick action buttons
@@ -268,15 +317,6 @@ class CoordinatorDashboard {
       bulkAssignBtn.addEventListener('click', () => this.bulkAssignComplaints());
     }
 
-    const detectClustersBtn = document.getElementById('detect-clusters-btn');
-    if (detectClustersBtn) {
-      detectClustersBtn.addEventListener('click', () => this.detectNewClusters());
-    }
-
-    const detectClustersSectionBtn = document.getElementById('detect-clusters-section-btn');
-    if (detectClustersSectionBtn) {
-      detectClustersSectionBtn.addEventListener('click', () => this.detectNewClusters());
-    }
 
     const generateReportBtn = document.getElementById('generate-report-btn');
     if (generateReportBtn) {
@@ -288,10 +328,6 @@ class CoordinatorDashboard {
       manageDepartmentsBtn.addEventListener('click', () => this.manageDepartments());
     }
 
-    const helpBtn = document.getElementById('help-btn');
-    if (helpBtn) {
-      helpBtn.addEventListener('click', () => this.getHelp());
-    }
 
     const viewFullQueueBtn = document.getElementById('view-full-queue-btn');
     if (viewFullQueueBtn) {
@@ -302,7 +338,7 @@ class CoordinatorDashboard {
 
     const refreshActivityBtn = document.getElementById('refresh-activity-btn');
     if (refreshActivityBtn) {
-      refreshActivityBtn.addEventListener('click', () => this.loadRecentQueue());
+      refreshActivityBtn.addEventListener('click', () => this.loadActivity());
     }
 
     // Queue filter selector
@@ -318,26 +354,6 @@ class CoordinatorDashboard {
     // Implementation for bulk assignment
     // This would open a modal or redirect to bulk assign page
     window.location.href = '/coordinator/review-queue?bulk=true';
-  }
-
-  async detectNewClusters() {
-    try {
-      const response = await fetch('/api/coordinator/detect-clusters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          radius_km: 0.5,
-          min_complaints: 3
-        })
-      });
-      const result = await response.json();
-      if (result.success) {
-        await this.loadClusters();
-      }
-    } catch (error) {
-    }
   }
 
   async generateReport() {
@@ -365,16 +381,22 @@ class CoordinatorDashboard {
     this.statsInterval = setInterval(() => {
       this.loadStats();
     }, 30000);
+    // Refresh queue every 60 seconds
+    this.queueInterval = setInterval(() => {
+      this.loadRecentQueue();
+    }, 60000);
     // Refresh activity every 60 seconds
     this.activityInterval = setInterval(() => {
-      this.loadRecentQueue();
+      this.loadActivity();
     }, 60000);
   }
 
   destroy() {
-
     if (this.statsInterval) {
       clearInterval(this.statsInterval);
+    }
+    if (this.queueInterval) {
+      clearInterval(this.queueInterval);
     }
     if (this.activityInterval) {
       clearInterval(this.activityInterval);
@@ -386,9 +408,6 @@ async function bulkAssignComplaints() {
   window.coordinatorDashboard?.bulkAssignComplaints();
 }
 
-async function detectNewClusters() {
-  window.coordinatorDashboard?.detectNewClusters();
-}
 
 async function refreshActivity() {
   window.coordinatorDashboard?.loadRecentQueue();
@@ -427,7 +446,7 @@ window.testCoordinatorStats = testCoordinatorStats;
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   // Check if required elements exist
-  const requiredElements = ['stat-pending', 'stat-reviews', 'review-queue-container', 'clusters-container'];
+  const requiredElements = ['stat-pending', 'stat-reviews', 'review-queue-container'];
   requiredElements.forEach(id => {
     const element = document.getElementById(id);
   });

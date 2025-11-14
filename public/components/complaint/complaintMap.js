@@ -52,17 +52,77 @@ class ComplaintMap {
       console.error('[COMPLAINT_MAP] Leaflet not loaded');
       return;
     }
-    // Create map
-    this.map = L.map(this.containerId).setView(this.options.center, this.options.zoom);
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(this.map);
-    // Add container styling
-    this.container.style.height = '300px';
-    this.container.style.borderRadius = '8px';
-    this.container.style.overflow = 'hidden';
+
+    // Ensure container has dimensions
+    if (!this.container) {
+      console.error('[COMPLAINT_MAP] Container not found');
+      return;
+    }
+
+    // Wait for container to have dimensions
+    const ensureDimensions = () => {
+      return new Promise((resolve) => {
+        if (this.container.offsetWidth > 0 && this.container.offsetHeight > 0) {
+          resolve();
+        } else {
+          // Try setting explicit height if not set
+          if (!this.container.style.height) {
+            this.container.style.height = '300px';
+          }
+          if (!this.container.style.width) {
+            this.container.style.width = '100%';
+          }
+          // Wait a bit and check again
+          setTimeout(() => {
+            if (this.container.offsetWidth > 0 && this.container.offsetHeight > 0) {
+              resolve();
+            } else {
+              // Force dimensions
+              this.container.style.height = '300px';
+              this.container.style.width = '100%';
+              setTimeout(resolve, 100);
+            }
+          }, 100);
+        }
+      });
+    };
+
+    ensureDimensions().then(() => {
+      // Add container styling
+      this.container.style.height = '300px';
+      this.container.style.width = '100%';
+      this.container.style.borderRadius = '8px';
+      this.container.style.overflow = 'hidden';
+      this.container.style.position = 'relative';
+
+      // Create map
+      this.map = L.map(this.containerId, {
+        zoomControl: true,
+        preferCanvas: false
+      }).setView(this.options.center, this.options.zoom);
+
+      // Add tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(this.map);
+
+      // Invalidate size after a short delay to ensure proper rendering
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      }, 200);
+
+      // Also invalidate on window resize
+      const resizeHandler = () => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      };
+      window.addEventListener('resize', resizeHandler);
+      this.resizeHandler = resizeHandler;
+    });
   }
   setLocation(latitude, longitude, title = 'Complaint Location', description = '') {
 
@@ -81,6 +141,10 @@ class ComplaintMap {
     }
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
+    
+    // Invalidate size before adding marker
+    this.map.invalidateSize();
+    
     // Create marker
     this.marker = L.marker([lat, lng]).addTo(this.map);
     // Create popup content
@@ -97,10 +161,15 @@ class ComplaintMap {
     // Center map on location
     this.map.setView([lat, lng], this.options.zoom);
 
+    // Invalidate size again after setting view
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+      }
+    }, 100);
+
     // Open popup
     this.marker.openPopup();
-
-    
   }
 
   setMultipleLocations(locations) {
@@ -201,6 +270,11 @@ class ComplaintMap {
       this.map = null;
     }
     this.marker = null;
+    // Remove resize handler if it exists
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+      this.resizeHandler = null;
+    }
   }
 
   // Static method to create map with complaint data

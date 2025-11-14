@@ -1,5 +1,6 @@
 // LGU Officer Assigned Tasks JavaScript
 import showToast from '../components/toast.js';
+import BarangayPrioritization from '../components/barangay-prioritization.js';
 
 class AssignedTasks {
 
@@ -10,35 +11,110 @@ class AssignedTasks {
     this.filters = {
       status: '',
       priority: '',
+      urgency: '',
+      prioritization: '',
       search: ''
     };
+    this.barangayPrioritization = null;
+    this.barangayPrioritizationComponent = null;
     this.init();
   }
   init() {
     this.setupEventListeners();
     this.loadTasks();
+    this.initBarangayPrioritization();
+  }
+
+  async initBarangayPrioritization() {
+    this.barangayPrioritizationComponent = new BarangayPrioritization('barangay-prioritization-container');
+    await this.barangayPrioritizationComponent.loadInsights();
+    // Build barangay prioritization map for sorting
+    if (this.barangayPrioritizationComponent.insightsData) {
+      this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
+      this.enhanceTasksWithPrioritization();
+    }
+  }
+
+  buildBarangayMap(barangays) {
+    const map = new Map();
+    barangays.forEach(barangay => {
+      map.set(barangay.barangay, barangay.prioritizationScore);
+    });
+    return map;
+  }
+
+  enhanceTasksWithPrioritization() {
+    if (!this.barangayPrioritization) return;
+    
+    // Enhance each task with its barangay prioritization score
+    this.tasks.forEach(task => {
+      // Get barangay from complaint location or use a default
+      const barangay = task.complaint?.barangay || this.getBarangayFromLocation(task.complaint?.location_text);
+      if (barangay && this.barangayPrioritization.has(barangay)) {
+        task.prioritizationScore = this.barangayPrioritization.get(barangay);
+      } else {
+        task.prioritizationScore = 0;
+      }
+    });
+  }
+
+  getBarangayFromLocation(locationText) {
+    // Try to extract barangay from location text
+    if (!locationText) return null;
+    const barangays = [
+      'Aplaya', 'Balabag', 'Binaton', 'Cogon', 'Colorado', 'Dawis', 'Dulangan',
+      'Goma', 'Igpit', 'Kiagot', 'Lungag', 'Mahayahay', 'Matti', 'Kapatagan (Rizal)',
+      'Ruparan', 'San Agustin', 'San Jose (Balutakay)', 'San Miguel (Odaca)',
+      'San Roque', 'Sinawilan', 'Soong', 'Tiguman', 'Tres de Mayo',
+      'Zone 1 (Pob.)', 'Zone 2 (Pob.)', 'Zone 3 (Pob.)'
+    ];
+    for (const barangay of barangays) {
+      if (locationText.toLowerCase().includes(barangay.toLowerCase())) {
+        return barangay;
+      }
+    }
+    return null;
   }
   setupEventListeners() {
     // Filter controls
     const statusFilter = document.getElementById('status-filter');
     const priorityFilter = document.getElementById('priority-filter');
+    const urgencyFilter = document.getElementById('urgency-filter');
+    const prioritizationFilter = document.getElementById('prioritization-filter');
     const searchInput = document.getElementById('search-input');
     if (statusFilter) {
       statusFilter.addEventListener('change', (e) => {
         this.filters.status = e.target.value;
-        this.loadTasks();
+        this.currentPage = 1;
+        this.renderTasks();
       });
     }
     if (priorityFilter) {
       priorityFilter.addEventListener('change', (e) => {
         this.filters.priority = e.target.value;
-        this.loadTasks();
+        this.currentPage = 1;
+        this.renderTasks();
+      });
+    }
+    if (urgencyFilter) {
+      urgencyFilter.addEventListener('change', (e) => {
+        this.filters.urgency = e.target.value;
+        this.currentPage = 1;
+        this.renderTasks();
+      });
+    }
+    if (prioritizationFilter) {
+      prioritizationFilter.addEventListener('change', (e) => {
+        this.filters.prioritization = e.target.value;
+        this.currentPage = 1;
+        this.renderTasks();
       });
     }
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.filters.search = e.target.value;
-        this.debounce(() => this.loadTasks(), 300)();
+        this.currentPage = 1;
+        this.debounce(() => this.renderTasks(), 300)();
       });
     }
     // Modal controls
@@ -90,6 +166,12 @@ class AssignedTasks {
         throw new Error(data.error || 'Failed to load tasks');
       }
       this.tasks = data.data || [];
+      
+      // Enhance tasks with prioritization if available
+      if (this.barangayPrioritization) {
+        this.enhanceTasksWithPrioritization();
+      }
+      
       this.renderTasks();
       await this.loadStatistics();
     } catch (error) {
@@ -349,6 +431,27 @@ class AssignedTasks {
   }
   getFilteredTasks() {
     let filtered = [...this.tasks];
+    
+    // Status filter
+    if (this.filters.status) {
+      filtered = filtered.filter(task => task.status === this.filters.status);
+    }
+    
+    // Priority filter
+    if (this.filters.priority) {
+      filtered = filtered.filter(task => task.priority === this.filters.priority);
+    }
+    
+    // Urgency filter (urgent and high priority)
+    if (this.filters.urgency) {
+      if (this.filters.urgency === 'urgent') {
+        filtered = filtered.filter(task => task.priority === 'urgent');
+      } else if (this.filters.urgency === 'high') {
+        filtered = filtered.filter(task => task.priority === 'urgent' || task.priority === 'high');
+      }
+    }
+    
+    // Search filter
     if (this.filters.search) {
       const searchTerm = this.filters.search.toLowerCase();
       filtered = filtered.filter(task =>
@@ -357,6 +460,16 @@ class AssignedTasks {
                 task.complaint_id?.toString().includes(searchTerm)
       );
     }
+    
+    // Sort by prioritization if filter is set
+    if (this.filters.prioritization && this.barangayPrioritization) {
+      filtered = filtered.sort((a, b) => {
+        const scoreA = a.prioritizationScore || 0;
+        const scoreB = b.prioritizationScore || 0;
+        return this.filters.prioritization === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+      });
+    }
+    
     return filtered;
   }
   getPaginatedTasks(tasks) {

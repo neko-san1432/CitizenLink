@@ -1,4 +1,5 @@
 const CoordinatorService = require('../services/CoordinatorService');
+const InsightsService = require('../services/InsightsService');
 
 /**
  * CoordinatorController
@@ -8,6 +9,7 @@ class CoordinatorController {
 
   constructor() {
     this.coordinatorService = new CoordinatorService();
+    this.insightsService = new InsightsService();
   }
   /**
    * GET /api/coordinator/review-queue
@@ -242,6 +244,25 @@ class CoordinatorController {
       res.status(500).json({
         success: false,
         error: 'Failed to check coordinator status'
+      });
+    }
+  }
+  /**
+   * Get barangay prioritization insights
+   */
+  async getBarangayInsights(req, res) {
+    try {
+      const { period = 'weekly' } = req.query;
+      const data = await this.insightsService.getBarangayPrioritization(period);
+      res.json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      console.error('[COORDINATOR] Get barangay insights error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to get barangay insights'
       });
     }
   }

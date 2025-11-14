@@ -241,9 +241,7 @@ document.getElementById('toc').addEventListener('click', (event) => {
   event.preventDefault();
   document.getElementById('terms').innerHTML = '<h3>Terms and Conditions</h3><p>Your terms content here...</p>';
 });
-document.getElementById('pc').addEventListener('click', (event) => {
-  event.preventDefault();
-  renderPrivacyNotice('#privacy', { headingTag: 'h3' });
-});
+// Privacy Notice link now opens in new tab - no modal needed
+// Privacy content is available at /privacy-notice
 // Prefill data on page load
 prefillOAuthData();

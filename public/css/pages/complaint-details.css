@@ -38,7 +38,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    display: grid !important;
+    display: none; /* Hidden by default, shown via JavaScript */
     grid-template-columns: 1fr 1fr; /* Title | Progress */
     grid-template-rows: auto 1fr;   /* Row 1 (header+progress), Row 2 (content fills) */
     grid-template-areas:
@@ -47,6 +47,11 @@
     gap: 12px; /* match dashboard card spacing */
     height: 100%;
     min-height: 0;
+}
+
+.complaint-details[style*="display: grid"],
+.complaint-details[style*="display:grid"] {
+    display: grid !important; /* Only show when explicitly set to grid via JavaScript */
 }
 
 /* Breadcrumb */

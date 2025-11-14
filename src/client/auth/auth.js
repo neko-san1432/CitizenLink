@@ -106,9 +106,6 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   const mobile = document.getElementById('mobile').value.trim();
   const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
   const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
-  const city = document.getElementById('city')?.value.trim() || '';
-  const province = document.getElementById('province')?.value.trim() || '';
-  const postalCode = document.getElementById('postalCode')?.value.trim() || '';
   const barangay = document.getElementById('barangay')?.value.trim() || '';
   const gender = document.getElementById('gender')?.value || '';
   const regPass = document.getElementById('regPassword').value;
@@ -116,17 +113,6 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   // Early password length checks
   if (!regPass || regPass.length < 8) {
     showMessage('error', 'Password must be at least 8 characters long');
-    return;
-  }
-  // Validate address fields - if any address field is provided, city and province are required
-  const hasAddressFields = addressLine1 || addressLine2 || city || province || postalCode || barangay;
-  if (hasAddressFields && (!city || !province)) {
-    showMessage('error', 'City and province are required when providing address information');
-    return;
-  }
-  // Validate postal code format if provided
-  if (postalCode && !/^\d{4}$/.test(postalCode)) {
-    showMessage('error', 'Postal code must be 4 digits');
     return;
   }
   // Validate form data
@@ -138,13 +124,10 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     regPassword: { required: true, type: 'password' },
     addressLine1: { required: false, minLength: 0, maxLength: 255 },
     addressLine2: { required: false, minLength: 0, maxLength: 255 },
-    city: { required: false, minLength: 0, maxLength: 100 },
-    province: { required: false, minLength: 0, maxLength: 100 },
-    postalCode: { required: false, minLength: 0, maxLength: 4 },
     barangay: { required: false, minLength: 0, maxLength: 100 },
     gender: { required: false }
   };
-  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, city, province, postalCode, barangay, gender };
+  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, barangay, gender };
   const validation = validateAndSanitizeForm(formData, validationRules);
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
@@ -175,9 +158,6 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       address: {
         line1: validation.sanitizedData.addressLine1 || '',
         line2: validation.sanitizedData.addressLine2 || '',
-        city: validation.sanitizedData.city || '',
-        province: validation.sanitizedData.province || '',
-        postalCode: validation.sanitizedData.postalCode || '',
         barangay: validation.sanitizedData.barangay || ''
       },
       // role: 'citizen', // backend defaults to citizen

@@ -268,10 +268,9 @@ class ReminderService {
     await this.notifyCoordinator(complaint, reminder);
     // Notify department admins
     await this.notifyDepartmentAdmins(complaint, departments, reminder);
-    // Notify citizen if complaint is very overdue
-    if (reminderLevel === 'third' || reminderLevel === 'final') {
-      await this.notifyCitizen(complaint, reminder);
-    }
+    // Note: Citizens should NOT receive reminder notifications
+    // Reminders are internal notifications for officers/admins to take action
+    // Citizens are already aware of their complaint status through other notifications
   }
   /**
    * Notify complaint coordinator

@@ -324,28 +324,28 @@ function updateZoomBasedVisibility(zoom) {
       }
     } else {
       // Non-citizens: Show markers based on zoom and filters
-      // Create markers lazily if they don't exist yet (first time user zooms in)
-      if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
-        console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
-        heatmapViz.createMarkerLayer();
+    // Create markers lazily if they don't exist yet (first time user zooms in)
+    if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
+      console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
+      heatmapViz.createMarkerLayer();
+    }
+    
+      if (heatmapViz.markerLayer && heatmapViz.markerLayer.getLayers().length > 0) {
+      // First ensure the marker layer is on the map
+      if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
+        heatmapViz.markerLayer.addTo(heatmapViz.map);
       }
       
-      if (heatmapViz.markerLayer && heatmapViz.markerLayer.getLayers().length > 0) {
-        // First ensure the marker layer is on the map
-        if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
-          heatmapViz.markerLayer.addTo(heatmapViz.map);
-        }
-        
         // Trigger marker visibility update based on current filters
         // This ensures markers respect filter settings when zooming in
-        if (heatmapViz.updateMarkerVisibility) {
-          heatmapViz.updateMarkerVisibility();
+      if (heatmapViz.updateMarkerVisibility) {
+        heatmapViz.updateMarkerVisibility();
           console.log('[HEATMAP] Marker visibility triggered by zoom change');
-        } else {
-          // Fallback: show all markers if updateMarkerVisibility doesn't exist
-          heatmapViz.showMarkers();
-        }
-          
+      } else {
+        // Fallback: show all markers if updateMarkerVisibility doesn't exist
+        heatmapViz.showMarkers();
+      }
+        
         // Update toggle button state
         const toggleMarkersBtn = document.getElementById('toggle-markers-btn');
         if (toggleMarkersBtn) {
@@ -353,14 +353,14 @@ function updateZoomBasedVisibility(zoom) {
           toggleMarkersBtn.classList.add('active');
           toggleMarkersBtn.style.display = 'block';
         }
-      }
+    }
       
-      // Hide heatmap unless forced on
-      if (heatmapViz.heatmapLayer) {
-        if (isHeatmapForced) {
-          heatmapViz.showHeatmap();
-        } else {
-          heatmapViz.hideHeatmap();
+    // Hide heatmap unless forced on
+    if (heatmapViz.heatmapLayer) {
+      if (isHeatmapForced) {
+        heatmapViz.showHeatmap();
+      } else {
+        heatmapViz.hideHeatmap();
         }
       }
     }

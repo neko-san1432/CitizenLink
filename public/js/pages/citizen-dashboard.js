@@ -435,12 +435,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   
-  const getHelpBtn = document.getElementById('get-help-btn');
-  if (getHelpBtn) {
-    getHelpBtn.addEventListener('click', () => {
-      window.getHelp();
-    });
-  }
   
   const viewAllComplaintsBtn = document.getElementById('view-all-complaints-btn');
   if (viewAllComplaintsBtn) {
@@ -464,6 +458,27 @@ async function loadMyComplaints() {
     console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
     return;
   }
+  
+  // Check if user has a session before making API call
+  try {
+    const { supabase } = await import('../config/config.js');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // No session, show message and stop
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔒</div>
+          <h3>Please Log In</h3>
+          <p>You need to be logged in to view your complaints.</p>
+          <a href="/login" class="btn btn-primary">Go to Login</a>
+        </div>
+      `;
+      return;
+    }
+  } catch (error) {
+    // If we can't check session, continue but handle 401 gracefully
+  }
+  
   // Show loading state
   container.innerHTML = `
     <div class="loading">
@@ -472,8 +487,22 @@ async function loadMyComplaints() {
     </div>
   `;
   try {
-    const response = await fetch('/api/complaints/my?limit=20');
+    const response = await fetch('/api/complaints/my?limit=20', {
+      credentials: 'include'
+    });
     if (!response.ok) {
+      // Handle 401 gracefully - redirect to login page (not HTTPS)
+      if (response.status === 401) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔒</div>
+            <h3>Session Expired</h3>
+            <p>Your session has expired. Please log in again.</p>
+            <a href="/login" class="btn btn-primary">Go to Login</a>
+          </div>
+        `;
+        return;
+      }
       throw new Error(`Failed to load complaints: ${response.status}`);
     }
     const result = await response.json();
@@ -499,9 +528,20 @@ async function loadMyComplaints() {
       renderMyComplaints([], 0);
     }
   } catch (error) {
-    console.error('[CITIZEN_DASHBOARD] Load complaints error:', error);
-    showMessage('error', 'Failed to load complaints. Please try again.');
-    renderMyComplaints([], 0);
+    // Handle network errors gracefully
+    if (error.message && error.message.includes('Failed to fetch')) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <h3>Connection Error</h3>
+          <p>Unable to connect to the server. Please check your internet connection and try again.</p>
+        </div>
+      `;
+    } else {
+      console.error('[CITIZEN_DASHBOARD] Load complaints error:', error);
+      showMessage('error', 'Failed to load complaints. Please try again.');
+      renderMyComplaints([], 0);
+    }
   }
 }
 /**
@@ -763,12 +803,9 @@ window.viewMyComplaints = function() {
 window.viewMap = function() {
   window.location.href = '/heatmap';
 };
-window.getHelp = function() {
-  showMessage('info', 'Help section coming soon');
-};
 window.viewAllComplaints = function() {
   window.location.href = '/myProfile#complaints';
 };
 window.viewComplaintDetail = function(complaintId) {
-  window.location.href = `/complaint-details/${complaintId}`;
+  window.location.href = `/complaint-details/${complaintId}?from=dashboard`;
 };

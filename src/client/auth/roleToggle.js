@@ -229,6 +229,17 @@ export async function initializeRoleToggle() {
   // Show button immediately with loading state
   createRoleToggleButton('lgu', false, true);
   try {
+    // Check if user has a session before making API call
+    const { supabase } = await import('../config/config.js');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // No session, remove button and reset
+      const btn = document.getElementById('role-toggle-btn');
+      if (btn) btn.remove();
+      isInitialized = false;
+      return;
+    }
+    
     // Check if user has a base role (meaning they're staff who can switch)
     const response = await fetch('/api/user/role-info', {
       credentials: 'include',
@@ -236,6 +247,18 @@ export async function initializeRoleToggle() {
         'Content-Type': 'application/json'
       }
     });
+    
+    if (!response.ok) {
+      // Handle 401 gracefully - user not authenticated
+      if (response.status === 401) {
+        const btn = document.getElementById('role-toggle-btn');
+        if (btn) btn.remove();
+        isInitialized = false;
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const result = await response.json();
     const baseRole = result?.data?.base_role;
     const currentRole = result?.data?.role || 'citizen';

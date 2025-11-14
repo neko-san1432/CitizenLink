@@ -829,6 +829,18 @@ class CitizenLinkApp {
         res.status(500).json({ error: 'Failed to load boundaries data' });
       }
     });
+    // Digos city boundary endpoint (for validation)
+    this.app.get('/api/digos-boundary', apiLimiter, async (req, res) => {
+      try {
+        const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'digos-city-boundary.json');
+        const fs = require('fs').promises;
+
+        const jsonData = await fs.readFile(filePath, 'utf8');
+        res.json(JSON.parse(jsonData));
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to load Digos city boundary data' });
+      }
+    });
     this.app.get('/api/reverse-geocode', apiLimiter, async (req, res) => {
       try {
         const { lat, lng } = req.query;

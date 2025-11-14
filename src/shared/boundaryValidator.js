@@ -104,8 +104,19 @@ function isWithinDigosBoundary(latitude, longitude) {
   // Load boundary
   const boundary = loadDigosBoundary();
   if (!boundary || !boundary.geometry || !boundary.geometry.coordinates) {
-    console.warn('[BOUNDARY_VALIDATOR] Digos boundary not available, skipping validation');
-    return true; // Allow if boundary not available (fail open)
+    console.warn('[BOUNDARY_VALIDATOR] Digos boundary not available, using bounding box fallback');
+    // Fallback to bounding box check if boundary file not available
+    // Updated to match actual bounds from digos-city-boundary.json
+    const minLat = 6.723538983841018;
+    const maxLat = 6.965492445653091;
+    const minLng = 125.26411236448983;
+    const maxLng = 125.3873999021893;
+    return (
+      latitude >= minLat &&
+      latitude <= maxLat &&
+      longitude >= minLng &&
+      longitude <= maxLng
+    );
   }
 
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
@@ -113,7 +124,26 @@ function isWithinDigosBoundary(latitude, longitude) {
 
   // Handle Polygon geometry type
   if (boundary.geometry.type === 'Polygon') {
-    return isPointInPolygon(point, coordinates);
+    const result = isPointInPolygon(point, coordinates);
+    // If polygon check fails, fallback to bounding box check
+    if (!result) {
+      const bounds = getDigosBounds();
+      if (bounds) {
+        const inBounds = (
+          latitude >= bounds.minLat &&
+          latitude <= bounds.maxLat &&
+          longitude >= bounds.minLng &&
+          longitude <= bounds.maxLng
+        );
+        if (inBounds) {
+          console.log('[BOUNDARY_VALIDATOR] Polygon check failed but coordinates within bounding box, allowing:', { lat: latitude, lng: longitude });
+        } else {
+          console.log('[BOUNDARY_VALIDATOR] Coordinates outside boundary:', { lat: latitude, lng: longitude, bounds });
+        }
+        return inBounds;
+      }
+    }
+    return result;
   }
 
   // Handle MultiPolygon geometry type
@@ -124,11 +154,31 @@ function isWithinDigosBoundary(latitude, longitude) {
         return true;
       }
     }
+    // If no polygon matches, fallback to bounding box check
+    const bounds = getDigosBounds();
+    if (bounds) {
+      return (
+        latitude >= bounds.minLat &&
+        latitude <= bounds.maxLat &&
+        longitude >= bounds.minLng &&
+        longitude <= bounds.maxLng
+      );
+    }
     return false;
   }
 
   console.warn('[BOUNDARY_VALIDATOR] Unsupported geometry type:', boundary.geometry.type);
-  return true; // Fail open if geometry type not supported
+  // Fallback to bounding box check
+  const bounds = getDigosBounds();
+  if (bounds) {
+    return (
+      latitude >= bounds.minLat &&
+      latitude <= bounds.maxLat &&
+      longitude >= bounds.minLng &&
+      longitude <= bounds.maxLng
+    );
+  }
+  return true; // Fail open if geometry type not supported and no bounds available
 }
 
 /**

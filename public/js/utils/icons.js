@@ -167,6 +167,11 @@ export function getIcon(iconName, options = {}) {
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
     </svg>`,
+    analytics: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <line x1="18" y1="20" x2="18" y2="10"></line>
+      <line x1="12" y1="20" x2="12" y2="4"></line>
+      <line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>`,
     chart: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
       <line x1="18" y1="20" x2="18" y2="10"></line>
       <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -265,7 +270,8 @@ export function getMenuIcon(iconName, options = {}) {
     'coordinator-dashboard': 'coordinatorDashboard',
     'lgu-admin-dashboard': 'lguAdminDashboard',
     'lgu-officer-dashboard': 'lguOfficerDashboard',
-    'super-admin-dashboard': 'superAdminDashboard'
+    'super-admin-dashboard': 'superAdminDashboard',
+    'analytics': 'analytics'
   };
 
   const mappedName = iconMap[iconName] || 'file';

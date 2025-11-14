@@ -191,15 +191,15 @@ class LguAdminAssignments {
         if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
           return;
         }
-        const item = event.target.closest('.assignment-card');
-        if (item) {
-          const {complaintId} = item.dataset;
+      const item = event.target.closest('.assignment-card');
+      if (item) {
+        const {complaintId} = item.dataset;
           if (complaintId) {
             // Navigate to complaint details page, similar to coordinator review queue
             window.location.href = `/complaint-details/${complaintId}`;
-          }
         }
-      });
+      }
+    });
     }
     
     // Filter button toggles (All, Unassigned, Assigned)
@@ -343,7 +343,7 @@ class LguAdminAssignments {
     } else if (this.currentAssignmentFilter === 'assigned') {
       filtered = this.assignments.filter(a => a.assigned_to && a.status !== 'unassigned');
     }
-    
+
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return filtered.slice(startIndex, endIndex);

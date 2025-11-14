@@ -209,6 +209,14 @@ export const startTokenExpiryMonitoring = () => {
         return;
       }
 
+      // Check if user has a Supabase session first before making API call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // No session, stop monitoring silently
+        tokenExpiryTimer = null;
+        return;
+      }
+
       // Check if user is authenticated via API instead of Supabase session
       const response = await fetch('/api/user/role', {
         method: 'GET',
@@ -218,6 +226,15 @@ export const startTokenExpiryMonitoring = () => {
         }
       });
       if (!response.ok) {
+        // If 401, check if session still exists
+        if (response.status === 401) {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (!currentSession) {
+            // Session expired, stop monitoring silently
+            tokenExpiryTimer = null;
+            return;
+          }
+        }
         noSessionAttempts++;
         if (noSessionAttempts < MAX_NO_SESSION_ATTEMPTS) {
           tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000);
@@ -233,9 +250,20 @@ export const startTokenExpiryMonitoring = () => {
       // Schedule next check in 5 minutes
       tokenExpiryTimer = setTimeout(checkTokenExpiry, 5 * 60 * 1000);
     } catch (error) {
-      console.error('Token monitoring error:', error);
-      if (error.name !== 'TypeError') {
-        handleSessionExpired();
+      // Silently handle errors - don't spam console with expected errors
+      if (error.name !== 'TypeError' && error.name !== 'AbortError') {
+        // Only handle unexpected errors
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Only handle as session expired if we had a session
+          handleSessionExpired();
+        } else {
+          // No session, just stop monitoring
+          tokenExpiryTimer = null;
+        }
+      } else {
+        // Network errors or aborted requests - just stop monitoring
+        tokenExpiryTimer = null;
       }
     }
   };
@@ -249,15 +277,42 @@ export const stopTokenExpiryMonitoring = () => {
   }
 };
 // Handle session expired - show toast and logout
-const handleSessionExpired = () => {
+const handleSessionExpired = async () => {
   if (isAuthPage()) return;
   if (window.location.pathname === '/login') return;
   stopTokenExpiryMonitoring();
   showSessionExpiredToast();
+  
+  // Clear Supabase session to prevent auto-login
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error('[AUTH] Error signing out from Supabase:', error);
+  }
+  
+  // Clear server session cookie
+  try {
+    await fetch('/auth/session', { method: 'DELETE' });
+  } catch (error) {
+    console.error('[AUTH] Error clearing server session:', error);
+  }
+  
+  // Clear local storage
   localStorage.removeItem(storageKey);
   localStorage.removeItem(oauthKey);
+  
+  // Clear any stored credentials (prevent browser autofill)
+  const loginForm = document.querySelector('#loginForm, form[action*="login"]');
+  if (loginForm) {
+    const emailInput = loginForm.querySelector('input[type="email"], input[name="email"]');
+    const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+  }
+  
   setTimeout(() => {
-    window.location.href = '/login';
+    // Redirect with a parameter to prevent auto-login
+    window.location.href = '/login?session_expired=true';
   }, 3000);
 };
 // Show session expired toast

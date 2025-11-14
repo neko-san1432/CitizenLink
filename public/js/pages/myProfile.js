@@ -190,16 +190,10 @@ function renderProfile(profile) {
   const address = profile?.address || {};
   const addressLine1 = address?.line1 || address?.address_line_1 || null;
   const addressLine2 = address?.line2 || address?.address_line_2 || null;
-  const city = address?.city || null;
-  const province = address?.province || null;
-  const postalCode = address?.postalCode || address?.postal_code || null;
   const barangay = address?.barangay || null;
 
   const addressLine1Display = document.getElementById('address-line-1-display');
   const addressLine2Display = document.getElementById('address-line-2-display');
-  const cityDisplay = document.getElementById('address-city-display');
-  const provinceDisplay = document.getElementById('address-province-display');
-  const postalDisplay = document.getElementById('address-postal-display');
   const barangayDisplay = document.getElementById('address-barangay-display');
 
   if (addressLine1Display) addressLine1Display.textContent = addressLine1 || '—';
@@ -211,9 +205,6 @@ function renderProfile(profile) {
       addressLine2Display.style.display = 'none';
     }
   }
-  if (cityDisplay) cityDisplay.textContent = city || '—';
-  if (provinceDisplay) provinceDisplay.textContent = province || '—';
-  if (postalDisplay) postalDisplay.textContent = postalCode ? `(${postalCode})` : '';
   if (barangayDisplay) barangayDisplay.textContent = barangay || '—';
 }
 function renderComplaints(list, role) {
@@ -261,7 +252,7 @@ function renderComplaints(list, role) {
     item.innerHTML = `
       <div class="complaint-card-header">
         <div class="complaint-title">${title}</div>
-        <a class="btn-secondary" href="/complaint-details/${complaintId}" style="text-decoration: none; flex-shrink: 0;">View</a>
+        <a class="btn-secondary" href="/complaint-details/${complaintId}?from=profile" style="text-decoration: none; flex-shrink: 0;">View</a>
       </div>
       <div class="complaint-meta">
         <span class="status-badge status-${status}">${statusLabel}</span>
@@ -704,26 +695,14 @@ function wireAddressEdit() {
     // Prefill inputs
     const line1El = document.getElementById('edit-address-line-1');
     const line2El = document.getElementById('edit-address-line-2');
-    const cityEl = document.getElementById('edit-address-city');
-    const provinceEl = document.getElementById('edit-address-province');
-    const postalEl = document.getElementById('edit-address-postal');
     const barangayEl = document.getElementById('edit-address-barangay');
 
     const line1Display = document.getElementById('address-line-1-display');
     const line2Display = document.getElementById('address-line-2-display');
-    const cityDisplay = document.getElementById('address-city-display');
-    const provinceDisplay = document.getElementById('address-province-display');
-    const postalDisplay = document.getElementById('address-postal-display');
     const barangayDisplay = document.getElementById('address-barangay-display');
 
     if (line1El && line1Display) line1El.value = line1Display.textContent === '—' ? '' : line1Display.textContent;
     if (line2El && line2Display) line2El.value = line2Display.textContent === '—' ? '' : line2Display.textContent;
-    if (cityEl && cityDisplay) cityEl.value = cityDisplay.textContent === '—' ? '' : cityDisplay.textContent;
-    if (provinceEl && provinceDisplay) provinceEl.value = provinceDisplay.textContent === '—' ? '' : provinceDisplay.textContent;
-    if (postalEl && postalDisplay) {
-      const postalText = postalDisplay.textContent.replace(/[()]/g, '').trim();
-      postalEl.value = postalText === '—' ? '' : postalText;
-    }
     if (barangayEl && barangayDisplay) barangayEl.value = barangayDisplay.textContent === '—' ? '' : barangayDisplay.textContent;
 
     line1El?.focus();
@@ -738,22 +717,7 @@ function wireAddressEdit() {
   saveBtn?.addEventListener('click', async () => {
     const line1 = document.getElementById('edit-address-line-1')?.value.trim() || '';
     const line2 = document.getElementById('edit-address-line-2')?.value.trim() || '';
-    const city = document.getElementById('edit-address-city')?.value.trim() || '';
-    const province = document.getElementById('edit-address-province')?.value.trim() || '';
-    const postal = document.getElementById('edit-address-postal')?.value.trim() || '';
     const barangay = document.getElementById('edit-address-barangay')?.value.trim() || '';
-
-    // Validate required fields
-    if (!city || !province) {
-      showMessage('error', 'City and province are required', 3000);
-      return;
-    }
-
-    // Validate postal code format if provided
-    if (postal && !/^\d{4}$/.test(postal)) {
-      showMessage('error', 'Postal code must be 4 digits', 3000);
-      return;
-    }
 
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
@@ -763,9 +727,6 @@ function wireAddressEdit() {
       const updateData = {
         address_line_1: line1,
         address_line_2: line2,
-        city,
-        province,
-        postal_code: postal,
         barangay
       };
 

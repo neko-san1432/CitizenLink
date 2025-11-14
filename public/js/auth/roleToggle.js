@@ -157,13 +157,33 @@ export async function initializeRoleToggle() {
   }
   isInitialized = true;
   try {
+    // Check if user has a session before making API call
+    const { supabase } = await import('../config/config.js');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // No session, stop silently
+      isInitialized = false;
+      return;
+    }
+    
     // Get user role info
     const response = await fetch('/api/user/role-info', {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
+    
+    if (!response.ok) {
+      // Handle 401 gracefully - user not authenticated
+      if (response.status === 401) {
+        isInitialized = false;
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const result = await response.json();
     if (!result.success) {
+      isInitialized = false;
       return;
     }
     const userRole = result.data.role;
@@ -177,7 +197,11 @@ export async function initializeRoleToggle() {
     // Add button to header with current role and base role
     addButtonToHeader(userRole, baseRole);
   } catch (error) {
-    console.error('[ROLE_TOGGLE] Error initializing role toggle:', error);
+    // Silently handle errors - don't spam console with expected 401 errors
+    if (error.message && !error.message.includes('401')) {
+      console.error('[ROLE_TOGGLE] Error initializing role toggle:', error);
+    }
+    isInitialized = false;
   }
 }
 /**

@@ -743,9 +743,6 @@
                       <div style="font-size: 0.75rem; color: #374151; margin-bottom: 0.25rem;">
                         <span id="address-line-2-display" style="display: none;">—</span>
                       </div>
-                      <div style="font-size: 0.75rem; color: #374151;">
-                        <span id="address-city-display">—</span>, <span id="address-province-display">—</span> <span id="address-postal-display">—</span>
-                      </div>
                       <div style="font-size: 0.75rem; color: #374151; margin-top: 0.25rem;">
                         <span id="address-barangay-display">—</span>
                       </div>
@@ -753,10 +750,35 @@
                     <div id="address-edit" style="display: none; flex-direction: column; gap: 0.375rem;">
                       <input id="edit-address-line-1" class="input" type="text" placeholder="Address Line 1" style="padding: 0.5rem; font-size: 0.8125rem;">
                       <input id="edit-address-line-2" class="input" type="text" placeholder="Address Line 2 (optional)" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-city" class="input" type="text" placeholder="City *" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-province" class="input" type="text" placeholder="Province *" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-postal" class="input" type="text" placeholder="Postal Code (4 digits)" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-barangay" class="input" type="text" placeholder="Barangay" style="padding: 0.5rem; font-size: 0.8125rem;">
+                      <select id="edit-address-barangay" class="input" style="padding: 0.5rem; font-size: 0.8125rem;">
+                        <option value="">Select barangay</option>
+                        <option value="Aplaya">Aplaya</option>
+                        <option value="Balabag">Balabag</option>
+                        <option value="Binaton">Binaton</option>
+                        <option value="Cogon">Cogon</option>
+                        <option value="Colorado">Colorado</option>
+                        <option value="Dawis">Dawis</option>
+                        <option value="Dulangan">Dulangan</option>
+                        <option value="Goma">Goma</option>
+                        <option value="Igpit">Igpit</option>
+                        <option value="Kiagot">Kiagot</option>
+                        <option value="Lungag">Lungag</option>
+                        <option value="Mahayahay">Mahayahay</option>
+                        <option value="Matti">Matti</option>
+                        <option value="Kapatagan (Rizal)">Kapatagan (Rizal)</option>
+                        <option value="Ruparan">Ruparan</option>
+                        <option value="San Agustin">San Agustin</option>
+                        <option value="San Jose (Balutakay)">San Jose (Balutakay)</option>
+                        <option value="San Miguel (Odaca)">San Miguel (Odaca)</option>
+                        <option value="San Roque">San Roque</option>
+                        <option value="Sinawilan">Sinawilan</option>
+                        <option value="Soong">Soong</option>
+                        <option value="Tiguman">Tiguman</option>
+                        <option value="Tres de Mayo">Tres de Mayo</option>
+                        <option value="Zone 1 (Pob.)">Zone 1 (Pob.)</option>
+                        <option value="Zone 2 (Pob.)">Zone 2 (Pob.)</option>
+                        <option value="Zone 3 (Pob.)">Zone 3 (Pob.)</option>
+                      </select>
                       <div style="display: flex; gap: 0.25rem;">
                         <button class="btn-secondary" id="save-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Save</button>
                         <button class="btn-secondary" id="cancel-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Cancel</button>

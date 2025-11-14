@@ -30,11 +30,11 @@ class LguOfficerService {
       return [];
     }
 
-    // Get complaint details
+    // Get complaint details (include coordinates for barangay classification)
     const complaintIds = assignments.map(a => a.complaint_id);
     const complaints = await this.complaintRepo.findByIds(
       complaintIds,
-      'id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, last_activity_at'
+      'id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, latitude, longitude, last_activity_at'
     );
 
     // Deduplicate assignments by complaint_id (keep the most recent one)
@@ -72,6 +72,8 @@ class LguOfficerService {
           priority: complaint.priority,
           submitted_at: complaint.submitted_at,
           location_text: complaint.location_text,
+          latitude: complaint.latitude,
+          longitude: complaint.longitude,
           last_activity_at: complaint.last_activity_at
         } : {
           id: assignment.complaint_id,

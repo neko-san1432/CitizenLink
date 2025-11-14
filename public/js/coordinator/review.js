@@ -246,15 +246,29 @@ async function renderComplaint() {
       if (window.ComplaintMap) {
         const complaintMap = new window.ComplaintMap('location-map');
         if (hasLat && hasLng) {
-          // Add a small delay to ensure map is fully initialized
-          setTimeout(() => {
-            complaintMap.setLocation(
-              complaint.latitude,
-              complaint.longitude,
-              complaint.title || 'Complaint Location',
-              complaint.location_text || ''
-            );
-          }, 500);
+          // Wait for map to be fully initialized and container to be visible
+          const initMap = () => {
+            const mapEl = document.getElementById('location-map');
+            if (mapEl && mapEl.offsetWidth > 0 && mapEl.offsetHeight > 0) {
+              complaintMap.setLocation(
+                complaint.latitude,
+                complaint.longitude,
+                complaint.title || 'Complaint Location',
+                complaint.location_text || ''
+              );
+              // Invalidate size after setting location
+              setTimeout(() => {
+                if (complaintMap.map) {
+                  complaintMap.map.invalidateSize();
+                }
+              }, 300);
+            } else {
+              // Retry if container not ready
+              setTimeout(initMap, 100);
+            }
+          };
+          // Start initialization after a short delay
+          setTimeout(initMap, 300);
         }
       } else {
         console.warn('[REVIEW] ComplaintMap component not loaded, trying fallback...');
@@ -449,6 +463,13 @@ window.openAssignModal = function() {
   // Pre-fill priority from complaint
   const {complaint} = currentComplaint;
   document.getElementById('assign-priority').value = complaint.priority || 'medium';
+  // Reset search input
+  const searchInput = document.getElementById('department-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+  // Reset filtered departments
+  filteredDepartments = allDepartments.length > 0 ? [...allDepartments] : [];
   // Load departments dynamically
   loadDepartmentsForAssignment();
 };
@@ -636,29 +657,104 @@ window.markAsUnique = async function() {
 /**
  * Load departments for assignment modal
  */
+let allDepartments = [];
+let filteredDepartments = [];
+
 async function loadDepartmentsForAssignment() {
   try {
-    const departments = await getActiveDepartments();
-    if (departments && departments.length > 0) {
-      const departmentsList = document.getElementById('departments-list');
-      departmentsList.innerHTML = departments.map(dept => `
-        <label>
-          <input type="checkbox" class="dept-check" value="${dept.code || dept.id}">
-          ${dept.name}${dept.code ? ` (${dept.code})` : ''}
-        </label>
-      `).join('');
+    allDepartments = await getActiveDepartments();
+    filteredDepartments = [...allDepartments];
+    
+    if (allDepartments && allDepartments.length > 0) {
+      renderDepartmentsList();
+      setupDepartmentSearch();
+      updateSelectedCount();
     } else {
       throw new Error('No departments available');
     }
   } catch (error) {
     console.error('Error loading departments:', error);
-    // Show error message instead of hardcoded fallback
     const departmentsList = document.getElementById('departments-list');
     if (departmentsList) {
       departmentsList.innerHTML = '<p style="color: #e74c3c; padding: 10px;">Failed to load departments. Please refresh the page or contact support.</p>';
     }
   }
 }
+
+function renderDepartmentsList() {
+  const departmentsList = document.getElementById('departments-list');
+  if (!departmentsList) return;
+
+  if (filteredDepartments.length === 0) {
+    departmentsList.innerHTML = '<div class="no-results">No departments match your search</div>';
+    return;
+  }
+
+  // Get currently selected departments before re-rendering
+  const selectedDepts = new Set(
+    Array.from(document.querySelectorAll('.dept-check:checked')).map(cb => cb.value)
+  );
+
+  departmentsList.innerHTML = filteredDepartments.map(dept => {
+    const deptId = dept.code || dept.id;
+    const isChecked = selectedDepts.has(deptId);
+    return `
+      <label class="department-checkbox-label">
+        <input type="checkbox" class="dept-check" value="${deptId}" data-dept-name="${escapeHtml(dept.name)}" ${isChecked ? 'checked' : ''}>
+        <span class="department-checkbox-text">
+          <span class="dept-name">${escapeHtml(dept.name)}</span>
+          ${dept.code ? `<span class="dept-code">${escapeHtml(dept.code)}</span>` : ''}
+        </span>
+      </label>
+    `;
+  }).join('');
+
+  // Attach change listeners
+  document.querySelectorAll('.dept-check').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      updateSelectedCount();
+    });
+  });
+}
+
+function setupDepartmentSearch() {
+  const searchInput = document.getElementById('department-search-input');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+      filteredDepartments = [...allDepartments];
+    } else {
+      filteredDepartments = allDepartments.filter(dept => {
+        const name = (dept.name || '').toLowerCase();
+        const code = (dept.code || '').toLowerCase();
+        return name.includes(searchTerm) || code.includes(searchTerm);
+      });
+    }
+    
+    renderDepartmentsList();
+    updateSelectedCount();
+  });
+}
+
+function updateSelectedCount() {
+  const selectedCheckboxes = document.querySelectorAll('.dept-check:checked');
+  const count = selectedCheckboxes.length;
+  const countEl = document.getElementById('selected-departments-count');
+  const countTextEl = document.getElementById('selected-count-text');
+  
+  if (countEl && countTextEl) {
+    if (count > 0) {
+      countEl.style.display = 'block';
+      countTextEl.textContent = count;
+    } else {
+      countEl.style.display = 'none';
+    }
+  }
+}
+
 /**
  * Show error message
  */

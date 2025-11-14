@@ -126,7 +126,8 @@ function validatePasswordMatch(password, confirmPassword) {
 }
 
 /**
- * Validate address fields (city and province required together)
+ * Validate address fields
+ * Note: City and province are no longer required since all users are from Digos City
  * @param {Object} address - Address object
  * @returns {Object} { isValid: boolean, error: string|null }
  */
@@ -138,17 +139,8 @@ function validateAddress(address) {
     };
   }
 
-  const hasAddressFields = address.city || address.province || address.line1;
-  
-  if (hasAddressFields) {
-    if (!address.city || !address.province) {
-      return {
-        isValid: false,
-        error: 'City and province are required when providing address information'
-      };
-    }
-  }
-
+  // Address validation removed - city and province are no longer required
+  // Only barangay is needed for Digos City citizens
   return {
     isValid: true,
     error: null

@@ -2,7 +2,7 @@ const UserService = require('../services/UserService');
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 const Database = require('../config/database');
 const { extractUserMetadata, getCookieOptions, createErrorResponse } = require('../utils/authUtils');
-const { validateEmail, validatePasswordMatch, validateAddress, validateRequiredFields } = require('../utils/inputValidation');
+const { validateEmail, validatePasswordMatch, validateRequiredFields } = require('../utils/inputValidation');
 
 const supabase = Database.getClient();
 const { validatePasswordStrength } = require('../../shared/passwordValidation');
@@ -382,18 +382,8 @@ class AuthController {
         }
       }
 
-      // Validate required address components if any address field is provided
-      const addressValidation = validateAddress({
-        line1: updateData.address_line_1,
-        city: updateData.city,
-        province: updateData.province
-      });
-      if (!addressValidation.isValid) {
-        return res.status(400).json({
-          success: false,
-          error: addressValidation.error
-        });
-      }
+      // Note: City and province are no longer required since all users are from Digos City
+      // Address validation removed - only barangay is needed for Digos City citizens
 
       const user = await UserService.updateUser(userId, updateData, userId);
 
@@ -948,14 +938,8 @@ class AuthController {
           details: passwordValidation.errors
         });
       }
-      // Validate address fields if provided
-      const addressValidation = validateAddress(address);
-      if (!addressValidation.isValid) {
-        return res.status(400).json({
-          success: false,
-          error: addressValidation.error
-        });
-      }
+      // Note: City and province are no longer required since all users are from Digos City
+      // Address validation removed - only barangay is needed for Digos City citizens
 
       // Create user as citizen first with pending approval metadata
       const pendingUser = await UserService.createUser({

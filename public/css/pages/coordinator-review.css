@@ -139,6 +139,16 @@
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid #e5e7eb;
+    height: 300px;
+    width: 100%;
+    min-height: 300px;
+    position: relative;
+}
+
+.location-map .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    border-radius: 8px;
 }
 
 #map {
@@ -415,42 +425,188 @@
     cursor: pointer;
 }
 
-/* Department Selection */
-.departments-selection {
+/* Department Selection - Compact */
+.department-search-wrapper {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.department-search-input {
+    width: 100%;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.department-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.department-search-wrapper .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.departments-selection-compact {
     max-height: 200px;
     overflow-y: auto;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    padding: 8px;
-}
-
-.department-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.department-option:hover {
+    padding: 6px;
     background: #f9fafb;
 }
 
-.department-option input[type="checkbox"] {
+.department-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 2px;
+    font-size: 0.8125rem;
+}
+
+.department-checkbox-label:hover {
+    background: #ffffff;
+}
+
+.department-checkbox-label input[type="checkbox"] {
     margin: 0;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
-.department-name {
-    font-size: 0.875rem;
+.department-checkbox-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.dept-name {
+    font-size: 0.8125rem;
     color: #374151;
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.department-code {
+.dept-code {
     font-size: 0.75rem;
     color: #6b7280;
-    margin-left: auto;
+    flex-shrink: 0;
+    background: #e5e7eb;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.selected-count {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #3b82f6;
+    font-weight: 600;
+    text-align: right;
+}
+
+.no-results {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Compact form layout */
+.compact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.form-group-half {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group-half label {
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+.compact-preference {
+    margin-bottom: 12px;
+}
+
+.compact-preference label {
+    font-size: 0.8125rem;
+    margin-bottom: 6px;
+}
+
+.preference-display {
+    color: #666;
+    font-size: 0.8125rem;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Modal compact adjustments */
+.modal-dialog {
+    max-width: 500px;
+}
+
+.modal-body {
+    padding: 20px 24px 24px 24px;
+}
+
+.modal-body .form-group {
+    margin-bottom: 16px;
+}
+
+.modal-body .form-group:last-of-type {
+    margin-bottom: 20px;
+}
+
+.modal-body label {
+    font-size: 0.8125rem;
+    margin-bottom: 6px;
+}
+
+.modal-body .form-select,
+.modal-body .form-input,
+.modal-body .form-textarea {
+    font-size: 0.8125rem;
+    padding: 6px 10px;
+}
+
+.modal-header {
+    padding: 20px 24px 0 24px;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
+    font-size: 1.125rem;
 }
 
 /* Priority Badges */
@@ -595,6 +751,18 @@
 
     .form-checkbox-group {
         grid-template-columns: 1fr;
+    }
+
+    .compact-row {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-dialog {
+        max-width: 95%;
+    }
+
+    .departments-selection-compact {
+        max-height: 180px;
     }
 }
 
@@ -773,6 +941,49 @@ html.dark .department-name {
 }
 
 html.dark .department-code {
+    color: #94a3b8;
+}
+
+html.dark .departments-selection-compact {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+html.dark .department-checkbox-label {
+    color: #cbd5e1;
+}
+
+html.dark .department-checkbox-label:hover {
+    background: #1e293b;
+}
+
+html.dark .dept-name {
+    color: #cbd5e1;
+}
+
+html.dark .dept-code {
+    background: #334155;
+    color: #94a3b8;
+}
+
+html.dark .department-search-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+html.dark .department-search-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .preference-display {
+    background: #0f172a;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+html.dark .no-results {
     color: #94a3b8;
 }
 

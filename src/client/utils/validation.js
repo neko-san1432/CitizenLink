@@ -310,6 +310,7 @@ export const extractComplaintFormData = (formElement) => {
  */
 export const isWithinCityBoundary = async (latitude, longitude) => {
   try {
+    const { isWithinDigosBoundary } = await import('./boundaryValidator.js');
     return await isWithinDigosBoundary(latitude, longitude);
   } catch (error) {
     console.warn('[VALIDATION] Boundary check failed:', error);
@@ -343,9 +344,9 @@ export const validateComplaintForm = (data) => {
   const locationText = sanitizeString(data.location_text || '');
   const category = sanitizeString(data.category || '');
   const subcategory = sanitizeString(data.subcategory || '');
-  if (!title) errors.push('Title is required');
+  if (!title || title.trim().length === 0) errors.push('Title is required');
   if (title && title.length < 3) errors.push('Title must be at least 3 characters');
-  if (!description) errors.push('Description is required');
+  if (!description || description.trim().length === 0) errors.push('Description is required');
   if (description && description.length < 10) errors.push('Description must be at least 10 characters');
   if (!locationText) errors.push('Location is required');
   // Validate hierarchical form fields

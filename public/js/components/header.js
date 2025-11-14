@@ -46,12 +46,20 @@ export function createHeader() {
           <div id="notification-panel" class="header-dropdown notification-panel">
             <div class="dropdown-header">
               <h3 class="dropdown-title">Notifications</h3>
-              <button id="close-notifications" class="dropdown-close" aria-label="Close notifications">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="mark-all-read" class="mark-all-read-btn" aria-label="Mark all as read" title="Mark all as read">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span style="font-size: 0.75rem; margin-left: 4px;">Mark All</span>
+                </button>
+                <button id="close-notifications" class="dropdown-close" aria-label="Close notifications">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div id="notification-content" class="dropdown-content">
               <div class="no-notifications">No notifications yet</div>

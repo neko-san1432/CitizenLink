@@ -327,6 +327,33 @@
   color: var(--gray-800);
 }
 
+.mark-all-read-btn {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.mark-all-read-btn:hover {
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+
+.mark-all-read-btn:active {
+  background: var(--gray-300);
+}
+
+.mark-all-read-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .dropdown-content {
   max-height: 400px;
   overflow-y: auto;
@@ -373,6 +400,36 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
+.notification-item.clickable {
+  cursor: pointer;
+}
+
+.notification-mark-read {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.notification-item:hover .notification-mark-read {
+  opacity: 1;
+}
+
+.notification-item.read .notification-mark-read {
+  display: none;
+}
+
 .notification-item:last-child {
   border-bottom: none;
 }
@@ -392,6 +449,47 @@
   width: 4px;
   background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 0 2px 2px 0;
+}
+
+/* Read notification styling - clear visual difference */
+.notification-item.read {
+  background: #ffffff;
+  border-left: none;
+  opacity: 0.7;
+}
+
+.notification-item.read::before {
+  display: none;
+}
+
+.notification-item.read .notification-title {
+  font-weight: 500;
+  color: #64748b;
+}
+
+.notification-item.read .notification-message {
+  color: #94a3b8;
+}
+
+.notification-item.read .notification-icon {
+  opacity: 0.6;
+}
+
+/* Read indicator - shows checkmark for read notifications */
+.read-indicator {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .notification-icon {

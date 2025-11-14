@@ -206,30 +206,49 @@ async function loadNotifications(reset = false, showLoading = true) {
   try {
     // Simulate API call - replace with actual API endpoint
     const response = await fetchNotifications(notificationState.page, notificationState.limit);
-    if (response.success) {
-      const newNotifications = response.data.notifications;
-      const {hasMore} = response.data;
-      // Add new notifications to the top of the list
-      if (reset) {
-        notificationState.notifications = newNotifications;
+      if (response.success) {
+        const newNotifications = response.data.notifications;
+        const {hasMore} = response.data;
+        // Add new notifications to the top of the list
+        if (reset) {
+          // When resetting, replace all notifications with fresh data from server
+          notificationState.notifications = newNotifications;
+        } else {
+          // Merge new notifications, keeping existing ones and adding new ones to the top
+          // But preserve the read status of existing notifications
+          const existingNotificationsMap = new Map(notificationState.notifications.map(n => [n.id, n]));
+          const mergedNotifications = [];
+          
+          // Add new notifications first (most recent)
+          for (const newNotif of newNotifications) {
+            const existing = existingNotificationsMap.get(newNotif.id);
+            if (existing) {
+              // Keep existing notification with its current read status
+              mergedNotifications.push(existing);
+              existingNotificationsMap.delete(newNotif.id);
+            } else {
+              // New notification
+              mergedNotifications.push(newNotif);
+            }
+          }
+          
+          // Add remaining existing notifications that weren't in the new batch
+          mergedNotifications.push(...Array.from(existingNotificationsMap.values()));
+          
+          notificationState.notifications = mergedNotifications;
+        }
+        notificationState.hasMore = hasMore;
+        notificationState.page++;
+        // Update last notification ID for future checks
+        if (newNotifications.length > 0) {
+          notificationState.lastNotificationId = newNotifications[0].id;
+        }
+        renderNotifications();
+        updateShowMoreButton();
+        updateNotificationCount(notificationState.notifications.filter(n => !n.read).length);
+        // Mark first load as complete
+        notificationState.isFirstLoad = false;
       } else {
-        // Merge new notifications, keeping existing ones and adding new ones to the top
-        const existingIds = new Set(notificationState.notifications.map(n => n.id));
-        const trulyNewNotifications = newNotifications.filter(n => !existingIds.has(n.id));
-        notificationState.notifications = [...trulyNewNotifications, ...notificationState.notifications];
-      }
-      notificationState.hasMore = hasMore;
-      notificationState.page++;
-      // Update last notification ID for future checks
-      if (newNotifications.length > 0) {
-        notificationState.lastNotificationId = newNotifications[0].id;
-      }
-      renderNotifications();
-      updateShowMoreButton();
-      updateNotificationCount(notificationState.notifications.filter(n => !n.read).length);
-      // Mark first load as complete
-      notificationState.isFirstLoad = false;
-    } else {
       showErrorState();
     }
   } catch (error) {
@@ -242,18 +261,19 @@ async function loadNotifications(reset = false, showLoading = true) {
     }
   }
 }
-// Fetch notifications from API
+// Fetch notifications from API - fetch ALL notifications (read and unread)
 async function fetchNotifications(page, limit) {
   try {
-    const response = await apiClient.get(`/api/notifications/unread?limit=${limit}&offset=${page * limit}`);
+    // Use /api/notifications endpoint to get all notifications (read and unread)
+    const response = await apiClient.get(`/api/notifications?limit=${limit}&offset=${page * limit}`);
     if (!response.success) {
       throw new Error('Failed to fetch notifications');
     }
     // Format created_at to relative time
-    const formattedNotifications = response.notifications.map(notif => ({
+    const formattedNotifications = (response.notifications || []).map(notif => ({
       ...notif,
       time: formatRelativeTime(notif.created_at),
-      read: notif.read
+      read: notif.read || false
     }));
     return {
       success: true,
@@ -298,41 +318,107 @@ function renderNotifications() {
     // Add "new" indicator for recent notifications (first 3 items)
     const isNew = index < 3 && !notification.read;
     const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : '';
+    const readClass = notification.read ? 'read' : 'unread';
+    const clickableClass = !notification.read ? 'clickable' : '';
+    const readIndicator = notification.read ? '<div class="read-indicator" title="Read">✓</div>' : '';
     return `
-      <div class="notification-item ${notification.read ? 'read' : ''} ${priorityClass} ${isNew ? 'new-notification' : ''}" 
+      <div class="notification-item ${readClass} ${priorityClass} ${isNew ? 'new-notification' : ''} ${clickableClass}" 
            data-id="${notification.id}" 
            ${linkAttr}
-           style="cursor: ${notification.link ? 'pointer' : 'default'}">
+           style="cursor: pointer;" 
+           title="${notification.read ? 'Read notification' : 'Click to mark as read'}">
         <div class="notification-icon">${getNotificationIcon(notification.type, { size: 20 })}</div>
         <div class="notification-text">
           <div class="notification-title">${escapeHtml(notification.title)} ${newIndicator}</div>
           <div class="notification-message">${escapeHtml(notification.message)}</div>
           <div class="notification-time">${notification.time}</div>
         </div>
+        ${!notification.read ? '<div class="notification-mark-read" title="Mark as read">✓</div>' : readIndicator}
       </div>
     `;
   }).join('');
   content.innerHTML = html;
-  // Add click handlers for notifications with links
-  content.querySelectorAll('.notification-item[data-link]').forEach(item => {
-    item.addEventListener('click', async function() {
+  // Add click handlers for all notifications (with or without links)
+  content.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', async function(e) {
+      e.preventDefault(); // Prevent default behavior (form submission, link navigation, etc.)
+      e.stopPropagation(); // Prevent event bubbling
+      
       const notifId = this.dataset.id;
-      const {link} = this.dataset;
-      // Mark as read
-      try {
-        await apiClient.post(`/api/notifications/${notifId}/mark-read`);
-        this.classList.add('read');
-        loadUnreadCount();
-      } catch (error) {
-        console.warn('[NOTIFICATION] Failed to mark as read:', error);
+      if (!notifId) {
+        console.error('[NOTIFICATION] No notification ID found');
+        return;
       }
-      // Navigate to link
-      if (link) {
-        closeNotificationPanel();
-        window.location.href = link;
+      
+      const {link} = this.dataset;
+      const isRead = this.classList.contains('read');
+      
+      console.log('[NOTIFICATION] Clicked notification:', { notifId, isRead, link });
+      
+      // Mark as read if not already read
+      if (!isRead) {
+        try {
+          console.log('[NOTIFICATION] Marking as read:', notifId);
+          const response = await apiClient.post(`/api/notifications/${notifId}/mark-read`, {});
+          console.log('[NOTIFICATION] Mark as read response:', response);
+          
+          if (response && response.success) {
+            // Remove unread class and add read class
+            this.classList.remove('unread', 'clickable');
+            this.classList.add('read');
+            
+            // Remove the mark-read indicator and add read indicator
+            const markReadIndicator = this.querySelector('.notification-mark-read');
+            if (markReadIndicator) {
+              markReadIndicator.remove();
+            }
+            
+            // Add read indicator
+            const readIndicator = document.createElement('div');
+            readIndicator.className = 'read-indicator';
+            readIndicator.title = 'Read';
+            readIndicator.textContent = '✓';
+            this.appendChild(readIndicator);
+            
+            // Update notification state
+            const notification = notificationState.notifications.find(n => n.id === notifId);
+            if (notification) {
+              notification.read = true;
+            }
+            
+            // Update unread count
+            await loadUnreadCount();
+            
+            console.log('[NOTIFICATION] Successfully marked as read');
+            
+            // Only navigate if there's a link - don't refresh the page
+            if (link) {
+              closeNotificationPanel();
+              // Use setTimeout to ensure state is updated before navigation
+              setTimeout(() => {
+                window.location.href = link;
+              }, 100);
+            }
+            // If no link, just mark as read and stay on the page (no refresh)
+          } else {
+            console.error('[NOTIFICATION] Failed to mark as read - invalid response:', response);
+          }
+        } catch (error) {
+          console.error('[NOTIFICATION] Failed to mark as read:', error);
+          alert('Failed to mark notification as read. Please try again.');
+          return;
+        }
+      } else {
+        // Already read - only navigate if there's a link
+        if (link) {
+          closeNotificationPanel();
+          window.location.href = link;
+        }
       }
     });
   });
+  
+  console.log('[NOTIFICATION] Added click handlers to', content.querySelectorAll('.notification-item').length, 'notifications');
 }
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
@@ -374,23 +460,42 @@ function hideErrorState() {
 }
 // Mark all notifications as read
 async function markAllNotificationsAsRead() {
+  const markAllReadBtn = document.getElementById('mark-all-read');
+  if (markAllReadBtn) {
+    markAllReadBtn.disabled = true;
+    markAllReadBtn.style.opacity = '0.5';
+  }
+  
   try {
-    const response = await apiClient.post('/api/notifications/mark-all-read');
-    if (response.success) {
+    const response = await apiClient.post('/api/notifications/mark-all-read', {});
+    if (response && response.success) {
       // Update local state
       notificationState.notifications.forEach(notification => {
         notification.read = true;
       });
       renderNotifications();
       updateNotificationCount(0);
-      // Close panel
-      const notificationPanel = document.getElementById('notification-panel');
-      if (notificationPanel) {
-        notificationPanel.classList.remove('show');
+      
+      // Show success feedback
+      if (markAllReadBtn) {
+        const originalText = markAllReadBtn.innerHTML;
+        markAllReadBtn.innerHTML = '<span style="color: #10b981;">✓ All Read</span>';
+        setTimeout(() => {
+          markAllReadBtn.innerHTML = originalText;
+          markAllReadBtn.disabled = false;
+          markAllReadBtn.style.opacity = '1';
+        }, 2000);
       }
+    } else {
+      throw new Error('Failed to mark all as read');
     }
   } catch (error) {
     console.error('[NOTIFICATION] Failed to mark all as read:', error);
+    alert('Failed to mark all notifications as read. Please try again.');
+    if (markAllReadBtn) {
+      markAllReadBtn.disabled = false;
+      markAllReadBtn.style.opacity = '1';
+    }
   }
 }
 // Function to update notification count

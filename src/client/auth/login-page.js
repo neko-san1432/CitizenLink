@@ -4,6 +4,20 @@ import { supabase } from '../config/config.js';
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
   try {
+    // Check if redirected due to session expiration - don't auto-login
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('session_expired') === 'true') {
+      // Session expired - clear any stale session and don't auto-login
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('[LOGIN] Error clearing expired session:', error);
+      }
+      // Remove the parameter from URL
+      window.history.replaceState({}, document.title, '/login');
+      return; // Don't proceed with auto-login check
+    }
+    
     // console.log removed for security
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();

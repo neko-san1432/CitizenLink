@@ -29,9 +29,9 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
       setTimeout(() => initializeComplaintLocationPicker(containerId, options), 100);
       return null;
     }
-    // Default map options - much more permissive than map-generator
+    // Default map options - restricted to Digos City boundaries
     const defaultOptions = {
-      center: [7.1975, 125.3481], // Digos City, Philippines
+      center: [6.7497, 125.3570], // Digos City, Philippines (more accurate center)
       zoom: 13,
       zoomControl: true,
       preferCanvas: true,
@@ -41,9 +41,14 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
       keyboard: true,
       dragging: true,
       worldCopyJump: false,
-      minZoom: 3, // Much lower minimum zoom - allows global view
-      maxZoom: 18, // Same maximum zoom
-      // No maxBounds restriction - users can navigate anywhere
+      minZoom: 11, // Restrict minimum zoom to keep focus on Digos City
+      maxZoom: 18,
+      // Restrict map bounds to Digos City area
+      maxBounds: [
+        [6.723539, 125.245633], // Southwest corner
+        [6.985025, 125.391290]  // Northeast corner
+      ],
+      maxBoundsViscosity: 1.0 // Prevent panning outside bounds
     };
     // Merge with provided options
     const mapOptions = { ...defaultOptions, ...options };
@@ -59,6 +64,8 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
       worldCopyJump: mapOptions.worldCopyJump,
       minZoom: mapOptions.minZoom,
       maxZoom: mapOptions.maxZoom,
+      maxBounds: mapOptions.maxBounds,
+      maxBoundsViscosity: mapOptions.maxBoundsViscosity || 1.0
     });
     // Set initial view
     map.setView(mapOptions.center, mapOptions.zoom);
@@ -81,6 +88,47 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
     const layerControl = L.control.layers(baseLayers, {}, {
       position: 'topright'
     }).addTo(map);
+    
+    // Load and display Digos City boundaries
+    try {
+      const boundaryResponse = await fetch('/api/boundaries');
+      if (boundaryResponse.ok) {
+        const brgyData = await boundaryResponse.json();
+        if (Array.isArray(brgyData)) {
+          // Store boundaries globally for validation
+          window.complaintFormBoundaries = brgyData;
+          
+          // Add each barangay boundary to the map
+          brgyData.forEach((barangay) => {
+            if (barangay.geojson) {
+              const geojsonLayer = L.geoJSON(barangay.geojson, {
+                style: {
+                  color: '#3388ff',
+                  weight: 2,
+                  opacity: 0.8,
+                  fillOpacity: 0.1,
+                  fillColor: '#3388ff'
+                }
+              });
+              geojsonLayer.addTo(map);
+            }
+          });
+          
+          // Fit map to boundaries
+          if (brgyData.length > 0) {
+            const allFeatures = brgyData
+              .filter(b => b.geojson)
+              .map(b => b.geojson);
+            const bounds = L.geoJSON(allFeatures).getBounds();
+            if (bounds.isValid()) {
+              map.fitBounds(bounds, { padding: [20, 20] });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[COMPLAINT_MAP] Failed to load boundaries:', error);
+    }
     // console.log removed for security
     // console.log removed for security
     // console.log removed for security
@@ -117,16 +165,157 @@ function setupLocationPicker(map) {
   }
   let marker = null;
   let isUserInteracting = false;
-  // Create initial marker at map center
+  // Create initial marker at map center (using divIcon for CSP compliance)
   const initialCenter = map.getCenter();
   marker = L.marker([initialCenter.lat, initialCenter.lng], {
-    draggable: true
+    draggable: true,
+    icon: L.divIcon({
+      html: `<div style="
+        background-color: #3388ff;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        font-size: 18px;
+        font-weight: bold;
+      ">📍</div>`,
+      className: 'valid-location-marker',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
+    })
   }).addTo(map);
-  // Update coordinates function
-  function updateCoordinates(lat, lng) {
+  
+  // Boundary validation function
+  async function validateCoordinates(lat, lng) {
+    try {
+      // Import boundary validator directly
+      const boundaryValidator = await import('../../utils/boundaryValidator.js');
+      if (boundaryValidator && boundaryValidator.isWithinDigosBoundary) {
+        return await boundaryValidator.isWithinDigosBoundary(lat, lng);
+      }
+      // Fallback: use validation utility
+      const { isWithinCityBoundary } = await import('../../utils/validation.js');
+      return await isWithinCityBoundary(lat, lng);
+    } catch (error) {
+      console.warn('[COMPLAINT_MAP] Boundary validation failed:', error);
+      // Fallback to bounding box check
+      const minLat = 6.723539;
+      const maxLat = 6.985025;
+      const minLng = 125.245633;
+      const maxLng = 125.391290;
+      return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+    }
+  }
+  
+  // Show boundary warning
+  function showBoundaryWarning() {
+    const existingWarning = document.getElementById('boundary-warning');
+    if (existingWarning) return;
+    
+    const warning = document.createElement('div');
+    warning.id = 'boundary-warning';
+    warning.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff6b6b;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 90%;
+      text-align: center;
+    `;
+    warning.textContent = '⚠️ Location must be within Digos City boundaries';
+    const mapContainer = map.getContainer();
+    mapContainer.style.position = 'relative';
+    mapContainer.appendChild(warning);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      if (warning.parentNode) {
+        warning.style.transition = 'opacity 0.3s';
+        warning.style.opacity = '0';
+        setTimeout(() => warning.remove(), 300);
+      }
+    }, 5000);
+  }
+  
+  // Hide boundary warning
+  function hideBoundaryWarning() {
+    const warning = document.getElementById('boundary-warning');
+    if (warning) {
+      warning.style.transition = 'opacity 0.3s';
+      warning.style.opacity = '0';
+      setTimeout(() => warning.remove(), 300);
+    }
+  }
+  
+  // Update coordinates function with boundary validation
+  async function updateCoordinates(lat, lng, showWarning = true) {
     latInput.value = lat.toFixed(6);
     lngInput.value = lng.toFixed(6);
-    // console.log removed for security
+    
+    // Validate coordinates against boundary
+    const isValid = await validateCoordinates(lat, lng);
+    if (!isValid && showWarning) {
+      showBoundaryWarning();
+      // Change marker color to red to indicate invalid location (using divIcon for CSP compliance)
+      if (marker) {
+        marker.setIcon(L.divIcon({
+          html: `<div style="
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            font-size: 18px;
+            font-weight: bold;
+          ">⚠️</div>`,
+          className: 'invalid-location-marker',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        }));
+      }
+    } else {
+      hideBoundaryWarning();
+      // Reset marker to default blue (using divIcon for CSP compliance)
+      if (marker) {
+        marker.setIcon(L.divIcon({
+          html: `<div style="
+            background-color: #3388ff;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            font-size: 18px;
+            font-weight: bold;
+          ">📍</div>`,
+          className: 'valid-location-marker',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        }));
+      }
+    }
   }
   // Update location text function
   async function updateLocationText(lat, lng) {
@@ -159,41 +348,36 @@ function setupLocationPicker(map) {
       }
     }
   }
-  // Set initial coordinates
-  updateCoordinates(initialCenter.lat, initialCenter.lng);
+  // Set initial coordinates with validation (don't show warning on initial load)
+  updateCoordinates(initialCenter.lat, initialCenter.lng, false);
   updateLocationText(initialCenter.lat, initialCenter.lng);
-  // Marker drag events
-  marker.on('drag', (e) => {
+  // Marker drag events with boundary validation
+  marker.on('drag', async (e) => {
     const latlng = e.target.getLatLng();
-    // console.log removed for security
-    updateCoordinates(latlng.lat, latlng.lng);
+    await updateCoordinates(latlng.lat, latlng.lng, false); // Don't show warning during drag
   });
-  marker.on('dragend', (e) => {
+  marker.on('dragend', async (e) => {
     const latlng = e.target.getLatLng();
-    // console.log removed for security
-    updateCoordinates(latlng.lat, latlng.lng);
+    await updateCoordinates(latlng.lat, latlng.lng, true); // Show warning on drag end
     updateLocationText(latlng.lat, latlng.lng);
   });
-  // Map click events
-  map.on('click', (e) => {
+  // Map click events with boundary validation
+  map.on('click', async (e) => {
     if (isUserInteracting) return;
     const { lat, lng } = e.latlng;
-    // console.log removed for security
     marker.setLatLng([lat, lng]);
-    updateCoordinates(lat, lng);
+    await updateCoordinates(lat, lng, true);
     updateLocationText(lat, lng);
   });
-  // Map move events (when user drags the map)
+  // Map move events (when user drags the map) with boundary validation
   map.on('movestart', () => {
     isUserInteracting = true;
-    // console.log removed for security
   });
-  map.on('moveend', () => {
+  map.on('moveend', async () => {
     if (!isUserInteracting) return;
     const center = map.getCenter();
-    // console.log removed for security
     marker.setLatLng([center.lat, center.lng]);
-    updateCoordinates(center.lat, center.lng);
+    await updateCoordinates(center.lat, center.lng, true);
     updateLocationText(center.lat, center.lng);
     isUserInteracting = false;
   });
@@ -220,7 +404,7 @@ function setupLocationPicker(map) {
           maximumAge: 300000 // 5 minutes
         };
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             // console.log removed for security
             // console.log removed for security
             const lat = position.coords.latitude;
@@ -244,10 +428,15 @@ function setupLocationPicker(map) {
             } else {
               // console.log removed for security
             }
-            // console.log removed for security
+            // Validate geolocation coordinates against boundary
+            const isValid = await validateCoordinates(lat, lng);
+            if (!isValid) {
+              alert('Your current location is outside Digos City boundaries. Please select a location within the city on the map.');
+              return;
+            }
             map.setView([lat, lng], 16);
             marker.setLatLng([lat, lng]);
-            updateCoordinates(lat, lng);
+            await updateCoordinates(lat, lng, true);
             updateLocationText(lat, lng);
             // console.log removed for security
           },

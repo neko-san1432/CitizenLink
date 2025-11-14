@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css">
+    <link rel="stylesheet" href="/css/components/barangay-prioritization.css">
 </head>
 <body>
     <div class="app-container">
@@ -29,27 +30,11 @@
                     <h1>📋 Review Queue</h1>
                 </div>
 
-                <!-- Stats -->
-                <div class="stats-bar">
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-total">0</div>
-                        <div class="stat-label">Total Pending</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-urgent">0</div>
-                        <div class="stat-label">Urgent</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-high">0</div>
-                        <div class="stat-label">High Priority</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-similar">0</div>
-                        <div class="stat-label">With Duplicates</div>
-                    </div>
-                </div>
-
-                <!-- Enhanced Filters -->
+                <!-- Side-by-side Layout -->
+                <div class="queue-layout">
+                    <!-- Left Column: Review Queue Content -->
+                    <div class="queue-main">
+                        <!-- Enhanced Filters -->
                 <div class="filters">
                     <div class="filter-group">
                         <label for="filter-priority">Priority</label>
@@ -78,6 +63,14 @@
                             <option value="">All Complaints</option>
                             <option value="yes">With Similar Complaints</option>
                             <option value="no">No Duplicates</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-prioritization">Prioritization</label>
+                        <select id="filter-prioritization">
+                            <option value="">Default Order</option>
+                            <option value="desc">Highest Priority First</option>
+                            <option value="asc">Lowest Priority First</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -116,21 +109,30 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
-                <div id="pagination-container" class="pagination-container" style="display: none;">
-                    <div class="pagination-info">
-                        <span id="page-info">Page 1 of 1</span>
-                        <span class="pagination-separator">•</span>
-                        <span id="items-info">Showing 0 of 0 complaints</span>
+                        <!-- Pagination -->
+                        <div id="pagination-container" class="pagination-container" style="display: none;">
+                            <div class="pagination-info">
+                                <span id="page-info">Page 1 of 1</span>
+                                <span class="pagination-separator">•</span>
+                                <span id="items-info">Showing 0 of 0 complaints</span>
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="prev-page" class="pagination-btn" disabled>
+                                    <span>←</span> Previous
+                                </button>
+                                <div id="page-numbers" class="page-numbers"></div>
+                                <button id="next-page" class="pagination-btn">
+                                    Next <span>→</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="pagination-controls">
-                        <button id="prev-page" class="pagination-btn" disabled>
-                            <span>←</span> Previous
-                        </button>
-                        <div id="page-numbers" class="page-numbers"></div>
-                        <button id="next-page" class="pagination-btn">
-                            Next <span>→</span>
-                        </button>
+
+                    <!-- Right Column: Barangay Prioritization -->
+                    <div class="queue-sidebar">
+                        <div class="barangay-prioritization-section">
+                            <div id="barangay-prioritization-container"></div>
+                        </div>
                     </div>
                 </div>
             </div>

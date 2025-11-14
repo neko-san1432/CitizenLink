@@ -156,9 +156,20 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
             }, 2000);
           }
           try {
+            let errorMsg = `Submission failed: ${xhr.statusText}`;
+            if (xhr.responseText) {
+              try {
             const errorResponse = JSON.parse(xhr.responseText);
-            reject(new Error(errorResponse.error || `Submission failed: ${xhr.statusText}`));
-          } catch {
+                errorMsg = errorResponse.error || errorResponse.message || errorMsg;
+              } catch (parseError) {
+                // If JSON parsing fails, use response text as-is (might be HTML error page)
+                errorMsg = xhr.responseText.length > 200 
+                  ? `Server error: ${xhr.statusText}` 
+                  : xhr.responseText;
+              }
+            }
+            reject(new Error(errorMsg));
+          } catch (err) {
             reject(new Error(`Submission failed: ${xhr.statusText}`));
           }
         }

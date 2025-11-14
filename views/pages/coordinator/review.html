@@ -177,32 +177,42 @@
                 <form id="assign-form">
                 <div class="form-group">
                     <label>Departments *</label>
-                    <div id="departments-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="department-search-wrapper">
+                        <input type="text" id="department-search-input" class="department-search-input" 
+                               placeholder="Search departments..." autocomplete="off">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="departments-selection-compact" id="departments-list">
                         <div class="loading-text">Loading departments...</div>
                     </div>
+                    <div class="selected-count" id="selected-departments-count" style="display: none;">
+                        <span id="selected-count-text">0</span> selected
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="assign-priority">Priority</label>
-                    <select id="assign-priority">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                    </select>
+                <div class="form-group compact-row">
+                    <div class="form-group-half">
+                        <label for="assign-priority">Priority</label>
+                        <select id="assign-priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group-half">
+                        <label for="deadline">Deadline (Optional)</label>
+                        <input type="datetime-local" id="deadline">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="deadline">Deadline (Optional)</label>
-                    <input type="datetime-local" id="deadline">
-                </div>
-                <div class="form-group">
-                    <label>Complainant responder preference</label>
-                    <div id="complainant-preference" style="color:#666;font-size:0.95rem;padding:0.5rem;background:#f8f9fa;border-radius:4px;">
+                <div class="form-group compact-preference">
+                    <label>Complainant Preference</label>
+                    <div id="complainant-preference" class="preference-display">
                         No preference specified
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="notes">Notes (Optional)</label>
-                    <textarea id="notes" placeholder="Add any notes for the department..."></textarea>
+                    <textarea id="notes" placeholder="Add any notes for the department..." rows="3"></textarea>
                 </div>
                 <div class="decision-buttons">
                     <button type="submit" class="btn btn-success">Assign</button>

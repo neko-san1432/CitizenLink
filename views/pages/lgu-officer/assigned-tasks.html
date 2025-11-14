@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/lgu-officer-tasks.css">
+    <link rel="stylesheet" href="/css/components/barangay-prioritization.css">
 </head>
 <body>
     <div id="app">
@@ -31,7 +32,11 @@
                     <p>Manage and resolve complaints assigned to you</p>
                 </div>
 
-                <!-- Filters -->
+                <!-- Side-by-side Layout -->
+                <div class="tasks-layout">
+                    <!-- Left Column: Tasks Content -->
+                    <div class="tasks-main">
+                        <!-- Filters -->
                 <div class="filters-section">
                     <div class="filter-group">
                         <label for="status-filter">Status:</label>
@@ -50,6 +55,22 @@
                             <option value="high">High</option>
                             <option value="medium">Medium</option>
                             <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="urgency-filter">Urgency:</label>
+                        <select id="urgency-filter" class="filter-select">
+                            <option value="">All Urgency</option>
+                            <option value="urgent">Urgent Only</option>
+                            <option value="high">Urgent & High</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="prioritization-filter">Prioritization:</label>
+                        <select id="prioritization-filter" class="filter-select">
+                            <option value="">Default Order</option>
+                            <option value="desc">Highest Priority First</option>
+                            <option value="asc">Lowest Priority First</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -95,9 +116,18 @@
                     <!-- Tasks will be populated here -->
                 </div>
 
-                <!-- Pagination -->
-                <div id="pagination" class="pagination" style="display: none;">
-                    <!-- Pagination will be populated here -->
+                        <!-- Pagination -->
+                        <div id="pagination" class="pagination" style="display: none;">
+                            <!-- Pagination will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Barangay Prioritization -->
+                    <div class="tasks-sidebar">
+                        <div class="barangay-prioritization-section">
+                            <div id="barangay-prioritization-container"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

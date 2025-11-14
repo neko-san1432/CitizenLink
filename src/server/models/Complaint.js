@@ -49,8 +49,25 @@ class Complaint {
     }
     // Validate coordinates are within Digos City boundary
     if (data.latitude && data.longitude) {
-      if (!isWithinDigosBoundary(data.latitude, data.longitude)) {
-        errors.push('Complaint location must be within Digos City boundaries');
+      // Ensure coordinates are numbers (they might come as strings from form data)
+      const lat = typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude;
+      const lng = typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude;
+      
+      // Check if parsing was successful
+      if (isNaN(lat) || isNaN(lng)) {
+        errors.push('Invalid coordinate values');
+      } else {
+        const isValid = isWithinDigosBoundary(lat, lng);
+        if (!isValid) {
+          console.log('[COMPLAINT VALIDATION] Coordinates outside boundary:', {
+            lat: lat,
+            lng: lng,
+            location_text: data.location_text,
+            original_lat: data.latitude,
+            original_lng: data.longitude
+          });
+          errors.push('Complaint location must be within Digos City boundaries');
+        }
       }
     }
     const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];

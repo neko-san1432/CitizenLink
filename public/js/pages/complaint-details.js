@@ -20,10 +20,47 @@ class ComplaintDetails {
   }
   async init() {
     try {
+      // Show loading spinner immediately
+      this.showLoading();
+      
       // Hide complaint details container initially to prevent showing dummy content
       const detailsContainer = document.getElementById('complaint-details');
       if (detailsContainer) {
         detailsContainer.style.display = 'none';
+      }
+      
+      // Clear placeholder text immediately to prevent showing dummy content
+      const descriptionEl = document.getElementById('complaint-description');
+      if (descriptionEl) {
+        descriptionEl.textContent = '';
+      }
+      const titleEl = document.getElementById('complaint-title');
+      if (titleEl) {
+        titleEl.textContent = '';
+      }
+      const idEl = document.getElementById('complaint-id');
+      if (idEl) {
+        idEl.textContent = '';
+      }
+      const statusEl = document.getElementById('complaint-status');
+      if (statusEl) {
+        statusEl.textContent = '';
+      }
+      const priorityEl = document.getElementById('complaint-priority');
+      if (priorityEl) {
+        priorityEl.textContent = '';
+      }
+      const locationEl = document.getElementById('complaint-location');
+      if (locationEl) {
+        locationEl.innerHTML = '';
+      }
+      const attachmentsEl = document.getElementById('complaint-attachments');
+      if (attachmentsEl) {
+        attachmentsEl.innerHTML = '';
+      }
+      const timelineEl = document.getElementById('timeline-items');
+      if (timelineEl) {
+        timelineEl.innerHTML = '';
       }
       
       // Get complaint ID from URL - try both path parameter and query parameter
@@ -483,22 +520,28 @@ class ComplaintDetails {
       return;
     }
 
-    // Create modal
+    // Remove existing modal if present
+    const existingModal = document.getElementById('map-modal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // Create modal overlay
     const modal = document.createElement('div');
-    modal.className = 'modal';
+    modal.className = 'modal active';
     modal.id = 'map-modal';
-    modal.style.display = 'flex';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 800px;">
-        <div class="modal-header">
-          <h2>📍 Complaint Location</h2>
-          <button class="modal-close" id="close-map-modal">&times;</button>
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 800px; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden;">
+        <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+          <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">📍 Complaint Location</h2>
+          <button class="modal-close" id="close-map-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.25rem; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 4px;">&times;</button>
         </div>
-        <div class="modal-body">
-          <div id="modal-map" style="width: 100%; height: 500px; border-radius: 8px;"></div>
-          <div style="margin-top: 10px;">
-            <strong>Address:</strong> ${this.complaint.location_text || 'N/A'}<br>
-            <strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude}
+        <div class="modal-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
+          <div id="modal-map" style="width: 100%; height: 500px; border-radius: 8px; margin-bottom: 1rem;"></div>
+          <div style="margin-top: 10px; padding: 1rem; background: #f9fafb; border-radius: 8px;">
+            <div style="margin-bottom: 0.5rem;"><strong>Address:</strong> ${this.complaint.location_text || 'N/A'}</div>
+            <div><strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude}</div>
           </div>
         </div>
       </div>
@@ -507,9 +550,21 @@ class ComplaintDetails {
 
     // Close button handler
     const closeBtn = document.getElementById('close-map-modal');
-    closeBtn.addEventListener('click', () => {
-      modal.remove();
-    });
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modal.remove();
+      });
+      // Add hover effect
+      closeBtn.addEventListener('mouseenter', () => {
+        closeBtn.style.background = '#f3f4f6';
+        closeBtn.style.color = '#374151';
+      });
+      closeBtn.addEventListener('mouseleave', () => {
+        closeBtn.style.background = 'none';
+        closeBtn.style.color = '#6b7280';
+      });
+    }
 
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
@@ -517,6 +572,15 @@ class ComplaintDetails {
         modal.remove();
       }
     });
+
+    // Close on Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && document.getElementById('map-modal')) {
+        modal.remove();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
 
     // Initialize map in modal
     setTimeout(async () => {
@@ -558,7 +622,7 @@ class ComplaintDetails {
 
   async initializeMap() {
     // Wait a bit for the DOM to be ready
-    const mapContainer = document.getElementById('complaint-map');
+      const mapContainer = document.getElementById('complaint-map');
     if (!mapContainer) {
       console.warn('[COMPLAINT_DETAILS] Map container not found');
       return;
@@ -591,32 +655,32 @@ class ComplaintDetails {
         return;
       }
 
-      // Initialize the map
+        // Initialize the map
       const map = L.map('complaint-map', {
         zoomControl: true,
         preferCanvas: false
       }).setView([lat, lng], 15);
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
 
-      // Add a marker for the complaint location
+        // Add a marker for the complaint location
       const complaintMarker = L.marker([lat, lng]).addTo(map);
       
-      // Add popup with complaint information
-      complaintMarker.bindPopup(`
-        <div class="map-popup">
+        // Add popup with complaint information
+        complaintMarker.bindPopup(`
+                    <div class="map-popup">
           <h4>${this.escapeHtml(this.complaint.title || 'Complaint Location')}</h4>
           <p><strong>Address:</strong> ${this.escapeHtml(this.complaint.location_text || 'N/A')}</p>
           <p><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-        </div>
-      `).openPopup();
+                    </div>
+                `).openPopup();
 
-      // Store map reference for potential cleanup
-      this.map = map;
+        // Store map reference for potential cleanup
+        this.map = map;
 
       // Invalidate size after a short delay to ensure proper rendering
       setTimeout(() => {
@@ -624,7 +688,7 @@ class ComplaintDetails {
           map.invalidateSize();
         }
       }, 200);
-    } catch (error) {
+      } catch (error) {
       console.error('[COMPLAINT_DETAILS] Error initializing map:', error);
       const mapContainer = document.getElementById('complaint-map');
       if (mapContainer) {
@@ -1073,17 +1137,29 @@ class ComplaintDetails {
     const returnText = document.getElementById('return-text');
     if (!returnLink || !returnText) return;
     
-    // Check referrer to determine where user came from
+    // Check URL parameter first (explicit flag)
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from'); // e.g., ?from=dashboard or ?from=profile
+    
+    // Check referrer to determine where user came from (fallback)
     const referrer = document.referrer;
-    const isFromDashboard = referrer.includes('/dashboard') || referrer.includes('/citizen/dashboard');
-    const isFromProfile = referrer.includes('/myProfile');
+    const isFromDashboard = fromParam === 'dashboard' || referrer.includes('/dashboard') || referrer.includes('/citizen/dashboard');
+    const isFromProfile = fromParam === 'profile' || referrer.includes('/myProfile');
     const isFromReviewQueue = referrer.includes('/coordinator/review-queue') || referrer.includes('/review-queue');
     const isFromAssignments = referrer.includes('/assignments');
     
     // For citizens coming from dashboard or profile previews, always go to profile
-    if (this.userRole === 'citizen' && (isFromDashboard || isFromProfile || !referrer)) {
-      returnLink.href = '/myProfile';
-      returnText.textContent = 'Return to Your Profile';
+    if (this.userRole === 'citizen') {
+      if (isFromDashboard) {
+        returnLink.href = '/dashboard';
+        returnText.textContent = 'Return to Dashboard';
+      } else if (isFromProfile || !referrer) {
+        returnLink.href = '/myProfile';
+        returnText.textContent = 'Return to Your Profile';
+      } else {
+        returnLink.href = '/myProfile';
+        returnText.textContent = 'Return to Your Profile';
+      }
       return;
     }
     
