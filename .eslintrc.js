@@ -93,7 +93,6 @@ module.exports = {
     'no-constructor-return': 'error',
     'no-class-assign': 'error',
     'no-const-assign': 'error',
-    'no-dupe-class-members': 'error',
     'no-new-symbol': 'error',
     'no-this-before-super': 'error',
     'no-undef': 'error',

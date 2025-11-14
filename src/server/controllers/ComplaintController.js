@@ -96,36 +96,6 @@ class ComplaintController {
       });
     }
   }
-  /**
-   * Confirm resolution
-   */
-  async confirmResolution(req, res) {
-    try {
-      const { complaintId } = req.params;
-      const { confirmed, feedback } = req.body;
-      const userId = req.user.id;
-      if (typeof confirmed !== 'boolean') {
-        return res.status(400).json({
-          success: false,
-          error: 'Confirmation status is required'
-        });
-      }
-      const result = await this.complaintService.confirmResolution(complaintId, userId, confirmed, feedback);
-      res.json({
-        success: true,
-        message: confirmed ? 'Resolution confirmed successfully' : 'Resolution rejected',
-        data: result
-      });
-    } catch (error) {
-      console.error('[COMPLAINT] Confirm resolution error:', error);
-      const status = error.message.includes('not found') ? 404 :
-        error.message.includes('not authorized') ? 403 : 500;
-      res.status(status).json({
-        success: false,
-        error: error.message
-      });
-    }
-  }
   async getMyComplaints(req, res) {
     try {
       const { user } = req;

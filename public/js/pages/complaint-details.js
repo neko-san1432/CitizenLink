@@ -725,12 +725,6 @@ class ComplaintDetails {
     });
   }
 
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
   addRouteControls(map) {
     // Only show route controls for LGU users
     if (this.userRole !== 'lgu' && this.userRole !== 'lgu-admin') {
