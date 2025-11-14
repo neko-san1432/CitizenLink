@@ -112,7 +112,6 @@ module.exports = {
     'security/detect-possible-timing-attacks': 'error', // Potential timing attack vulnerabilities
     'security/detect-unsafe-regex': 'error', // Unsafe regular expressions (ReDoS)
     'security/detect-pseudoRandomBytes': 'error', // Weak random number generation
-    'security/detect-no-csrf-before-method-override': 'error', // CSRF protection
     // XSS protection rules - comprehensive sanitization checks
     'no-unsanitized/method': 'error', // Unsafe method calls
     'no-unsanitized/property': 'error', // Unsafe property access

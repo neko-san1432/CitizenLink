@@ -31,7 +31,10 @@ async function initializeSupabase() {
 // Create a proxy object that initializes Supabase on first use
 const supabaseProxy = new Proxy({}, {
   get(target, prop) {
-
+    // Validate property access to prevent prototype pollution
+    if (typeof prop === 'symbol' || prop === '__proto__' || prop === 'constructor' || prop === 'prototype') {
+      return undefined;
+    }
     if (supabase) {
       return supabase[prop];
     }
@@ -41,6 +44,10 @@ const supabaseProxy = new Proxy({}, {
     if (prop === 'auth') {
       return new Proxy({}, {
         get(authTarget, authProp) {
+          // Validate auth property access
+          if (typeof authProp === 'symbol' || authProp === '__proto__' || authProp === 'constructor' || authProp === 'prototype') {
+            return undefined;
+          }
           return (...args) => {
             if (supabase) {
               return supabase.auth[authProp](...args);

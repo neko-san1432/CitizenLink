@@ -103,6 +103,9 @@ class ContentBannerManager {
   // Add item to queue with priority-based insertion
   addToQueue(newItem) {
     const contentType = newItem.content_type;
+    // Validate content type to prevent object injection
+    const validContentTypes = ['notice', 'news', 'event'];
+    if (!validContentTypes.includes(contentType)) return;
     if (!this.queues[contentType]) return;
 
     const queue = this.queues[contentType];
