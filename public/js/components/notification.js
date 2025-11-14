@@ -417,7 +417,6 @@ function renderNotifications() {
         closeNotificationPanel();
         window.location.href = link;
       }
-      }
     });
   });
 

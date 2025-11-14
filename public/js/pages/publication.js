@@ -2,16 +2,16 @@
 const USE_MOCK_PUBLICATION = false;
 const MOCK_PUBLICATION = {
   news: [
-    { id: 'n1', title: 'City launches new waste program', excerpt: 'Segregation and recycling drive...', content: 'Full article: The city introduced...', created_at: new Date(Date.now()-2*86400000).toISOString(), office: 'SWM' },
-    { id: 'n2', title: 'Road repairs scheduled', excerpt: 'Repairs along Main Ave...', content: 'Full article: DPWH will...', created_at: new Date(Date.now()-5*86400000).toISOString(), office: 'ENG' }
+    { id: 'n1', title: 'City launches new waste program', excerpt: 'Segregation and recycling drive...', content: 'Full article: The city introduced...', created_at: new Date(Date.now()-(2*86400000)).toISOString(), office: 'SWM' },
+    { id: 'n2', title: 'Road repairs scheduled', excerpt: 'Repairs along Main Ave...', content: 'Full article: DPWH will...', created_at: new Date(Date.now()-(5*86400000)).toISOString(), office: 'ENG' }
   ],
   notices: [
     { id: 't1', title: 'Water Service Interruption', content: 'Maintenance from 9AM-5PM', created_at: new Date().toISOString(), priority: 'urgent', office: 'ENG' },
     { id: 't2', title: 'Public Consultation', content: 'Join us this Friday at the hall', created_at: new Date(Date.now()-86400000).toISOString(), priority: 'normal', office: 'HR' }
   ],
   events: [
-    { id: 'e1', title: 'Health Fair at Plaza', description: 'Free checkups', event_date: new Date(Date.now()+10*86400000).toISOString(), organizer: 'HEALTH' },
-    { id: 'e2', title: 'Job Fair', description: 'Opportunities at city hall', event_date: new Date(Date.now()+18*86400000).toISOString(), organizer: 'HR' }
+    { id: 'e1', title: 'Health Fair at Plaza', description: 'Free checkups', event_date: new Date(Date.now()+(10*86400000)).toISOString(), organizer: 'HEALTH' },
+    { id: 'e2', title: 'Job Fair', description: 'Opportunities at city hall', event_date: new Date(Date.now()+(18*86400000)).toISOString(), organizer: 'HR' }
   ]
 };
 import showMessage from '../components/toast.js';
