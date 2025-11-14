@@ -1,5 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
+  rootDir: '../../',
   testMatch: ['**/tests/**/*.test.js', '**/tests/**/*.spec.js'],
   collectCoverageFrom: [
     'src/server/**/*.js',
@@ -16,5 +17,4 @@ module.exports = {
   resetMocks: true,
   restoreMocks: true,
 };
-
 

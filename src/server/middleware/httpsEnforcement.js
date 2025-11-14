@@ -11,7 +11,7 @@ function enforceHTTPS(req, res, next) {
   }
 
   // Check if request is already secure (HTTPS)
-  const isSecure = req.secure || 
+  const isSecure = req.secure ||
                    req.headers['x-forwarded-proto'] === 'https' ||
                    req.headers['x-forwarded-ssl'] === 'on';
 
@@ -23,7 +23,7 @@ function enforceHTTPS(req, res, next) {
 
   // Set security headers
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  
+
   next();
 }
 
@@ -43,5 +43,4 @@ module.exports = {
   enforceHTTPS,
   trustProxy
 };
-
 

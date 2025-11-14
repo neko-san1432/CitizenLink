@@ -274,13 +274,13 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         // Server already authenticated and set cookie, now sync client-side Supabase session
         const refreshToken = result.data?.refresh_token;
         const expiresAt = result.data?.expires_at;
-        
+
         if (refreshToken) {
           // Use refresh token to get full Supabase session without re-authenticating
           const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession({
             refresh_token: refreshToken
           });
-          
+
           if (refreshError || !sessionData?.session) {
             console.warn('[CLIENT AUTH] ⚠️ Failed to sync Supabase session:', refreshError?.message);
             // Server cookie is still valid, continue with server-side auth only
@@ -292,7 +292,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
         } else {
           console.warn('[CLIENT AUTH] ⚠️ No refresh token in response, client-side Supabase features may be limited');
         }
-        
+
         // Verify session by hitting a protected endpoint
         await new Promise(r => setTimeout(r, 100)); // Brief wait for cookie to be set
         const resp = await fetch('/api/user/role', {
@@ -302,7 +302,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (!resp.ok) {
           // Try one more time with a longer wait
           await new Promise(r => setTimeout(r, 1000));
@@ -313,7 +313,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
               'Content-Type': 'application/json'
             }
           });
-          
+
           if (!retryResp.ok) {
             const retryErrorData = await retryResp.json().catch(() => ({}));
             console.error('[CLIENT AUTH] ❌ Session verification failed:', retryErrorData);
@@ -343,7 +343,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       const serverUser = result.data?.user;
       let role = serverUser?.role || serverUser?.normalizedRole || null;
       let name = serverUser?.name || serverUser?.fullName || null;
-      
+
       // If server data is incomplete, try to get from Supabase session
       if (!role || !name) {
         const { data: { session: clientSession } } = await supabase.auth.getSession();
@@ -355,7 +355,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
           name = name || combinedMetadata.name || null;
         }
       }
-      
+
       // Save user metadata for client-side use
       if (role || name) {
         saveUserMeta({ role, name });

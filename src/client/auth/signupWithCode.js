@@ -33,12 +33,12 @@ async function signupWithOAuth(provider) {
         prompt: 'consent',
       }
     };
-    
+
     // Set valid scopes for Facebook (avoid invalid user_mobile_phone scope)
     if (provider === 'facebook') {
       options.scopes = 'email public_profile';
     }
-    
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options
@@ -135,7 +135,7 @@ if (signupForm) {
       signupCode: formData.get('signupCode'),
       agreedToTerms: formData.get('agreedToTerms') === 'on'
     };
-    
+
     // Validation rules
     const validationRules = {
       name: { required: true, minLength: 2, maxLength: 100 },

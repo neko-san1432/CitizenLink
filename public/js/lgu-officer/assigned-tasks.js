@@ -45,7 +45,7 @@ class AssignedTasks {
 
   enhanceTasksWithPrioritization() {
     if (!this.barangayPrioritization) return;
-    
+
     // Enhance each task with its barangay prioritization score
     this.tasks.forEach(task => {
       // Get barangay from complaint location or use a default
@@ -166,12 +166,12 @@ class AssignedTasks {
         throw new Error(data.error || 'Failed to load tasks');
       }
       this.tasks = data.data || [];
-      
+
       // Enhance tasks with prioritization if available
       if (this.barangayPrioritization) {
         this.enhanceTasksWithPrioritization();
       }
-      
+
       this.renderTasks();
       await this.loadStatistics();
     } catch (error) {
@@ -431,17 +431,17 @@ class AssignedTasks {
   }
   getFilteredTasks() {
     let filtered = [...this.tasks];
-    
+
     // Status filter
     if (this.filters.status) {
       filtered = filtered.filter(task => task.status === this.filters.status);
     }
-    
+
     // Priority filter
     if (this.filters.priority) {
       filtered = filtered.filter(task => task.priority === this.filters.priority);
     }
-    
+
     // Urgency filter (urgent and high priority)
     if (this.filters.urgency) {
       if (this.filters.urgency === 'urgent') {
@@ -450,7 +450,7 @@ class AssignedTasks {
         filtered = filtered.filter(task => task.priority === 'urgent' || task.priority === 'high');
       }
     }
-    
+
     // Search filter
     if (this.filters.search) {
       const searchTerm = this.filters.search.toLowerCase();
@@ -460,7 +460,7 @@ class AssignedTasks {
                 task.complaint_id?.toString().includes(searchTerm)
       );
     }
-    
+
     // Sort by prioritization if filter is set
     if (this.filters.prioritization && this.barangayPrioritization) {
       filtered = filtered.sort((a, b) => {
@@ -469,7 +469,7 @@ class AssignedTasks {
         return this.filters.prioritization === 'desc' ? scoreB - scoreA : scoreA - scoreB;
       });
     }
-    
+
     return filtered;
   }
   getPaginatedTasks(tasks) {

@@ -130,7 +130,7 @@ class CoordinatorDashboard {
   generateActivityFromStats(data) {
     const activities = [];
     const now = new Date();
-    
+
     // Add activity for pending reviews
     if (data.pending_reviews > 0) {
       activities.push({
@@ -140,7 +140,7 @@ class CoordinatorDashboard {
         type: 'pending'
       });
     }
-    
+
     // Add activity for recent reviews
     if (data.stats?.total_reviews > 0) {
       activities.push({
@@ -150,7 +150,7 @@ class CoordinatorDashboard {
         type: 'review'
       });
     }
-    
+
     // Add activity for assignments
     if (data.stats?.assignments_made > 0) {
       activities.push({
@@ -160,7 +160,7 @@ class CoordinatorDashboard {
         type: 'assignment'
       });
     }
-    
+
     // Add activity for duplicates merged
     if (data.stats?.duplicates_merged > 0) {
       activities.push({
@@ -170,8 +170,8 @@ class CoordinatorDashboard {
         type: 'duplicate'
       });
     }
-    
-    
+
+
     // If no activities, add a default message
     if (activities.length === 0) {
       activities.push({
@@ -181,14 +181,14 @@ class CoordinatorDashboard {
         type: 'empty'
       });
     }
-    
+
     return activities.slice(0, 5); // Limit to 5 most recent
   }
 
   updateActivityPreview(activities) {
     const container = document.getElementById('activity-container');
     if (!container) return;
-    
+
     if (!activities || activities.length === 0) {
       container.innerHTML = `
         <div class="activity-list">
@@ -201,7 +201,7 @@ class CoordinatorDashboard {
       `;
       return;
     }
-    
+
     const activitiesList = activities.map(activity => `
       <div class="activity-item" data-type="${activity.type}">
         <div class="activity-icon">${activity.icon}</div>
@@ -211,7 +211,7 @@ class CoordinatorDashboard {
         </div>
       </div>
     `).join('');
-    
+
     container.innerHTML = `
       <div class="activity-list">
         ${activitiesList}

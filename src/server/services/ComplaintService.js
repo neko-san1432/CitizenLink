@@ -666,21 +666,21 @@ class ComplaintService {
       let allData = [];
       let hasMore = true;
       let offset = 0;
-      
+
       // Fetch all complaints using pagination
       while (hasMore) {
         const paginatedQuery = query
           .range(offset, offset + batchSize - 1)
           .limit(batchSize);
-        
+
         const { data: batchData, error, count } = await paginatedQuery;
-        
+
         if (error) {
           console.error('[COMPLAINT-SERVICE] Database error:', error);
           console.error('[COMPLAINT-SERVICE] Error details:', JSON.stringify(error, null, 2));
           throw error;
         }
-        
+
         if (batchData && batchData.length > 0) {
           allData = allData.concat(batchData);
           offset += batchSize;
@@ -689,13 +689,13 @@ class ComplaintService {
         } else {
           hasMore = false;
         }
-        
+
         // Safety check: if count is available and we've fetched all records
         if (count !== null && allData.length >= count) {
           hasMore = false;
         }
       }
-      
+
       const data = allData;
       console.log(`[COMPLAINT-SERVICE] Fetched ${data.length} complaint(s) for heatmap using pagination`);
       // console.log removed for security
@@ -970,12 +970,12 @@ class ComplaintService {
         .eq('complaint_id', complaintId)
         .order('reminded_at', { ascending: false })
         .limit(1);
-      
+
       // Handle case where no reminders exist (not an error)
       if (reminderQueryError && reminderQueryError.code !== 'PGRST116') {
         throw new Error('Failed to check reminder cooldown');
       }
-      
+
       const lastReminder = lastReminderData && lastReminderData.length > 0 ? lastReminderData[0] : null;
       if (lastReminder) {
         const lastReminderTime = new Date(lastReminder.reminded_at);

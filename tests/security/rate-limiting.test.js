@@ -1,6 +1,6 @@
 /**
  * Security Tests: Rate Limiting
- * 
+ *
  * Tests rate limiting effectiveness and bypass attempts
  */
 
@@ -123,7 +123,7 @@ describe('Rate Limiting Security', () => {
       });
 
       // At least some should be blocked
-      const blocked = requests.filter(({ res }) => 
+      const blocked = requests.filter(({ res }) =>
         res.status.mock.calls.some(call => call[0] === 429)
       );
       expect(blocked.length).toBeGreaterThan(0);
@@ -204,5 +204,4 @@ describe('Rate Limiting Security', () => {
     });
   });
 });
-
 

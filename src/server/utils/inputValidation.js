@@ -22,7 +22,7 @@ function isValidEmail(email) {
 function isValidPhoneNumber(phoneNumber) {
   if (!phoneNumber || typeof phoneNumber !== 'string') return false;
   // Remove spaces, dashes, and parentheses
-  const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+  const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
   // Check for Philippines format: +63XXXXXXXXXX or 09XXXXXXXXX or 9XXXXXXXXX
   const phRegex = /^(\+63|0)?9\d{9}$/;
   return phRegex.test(cleaned);
@@ -47,8 +47,12 @@ function isValidPostalCode(postalCode) {
  */
 function validateRequiredFields(body, requiredFields) {
   const missingFields = requiredFields.filter(field => {
+    // Validate field is a safe property name
+    if (typeof field !== 'string' || field === '__proto__' || field === 'constructor' || field === 'prototype') {
+      return true; // Treat invalid field names as missing
+    }
     const value = body[field];
-    return value === undefined || value === null || value === '';
+    return value === void 0 || value === null || value === '';
   });
 
   return {
@@ -74,7 +78,7 @@ function sanitizeString(input) {
  */
 function validateEmail(email) {
   const sanitized = sanitizeString(email);
-  
+
   if (!sanitized) {
     return {
       isValid: false,
@@ -112,6 +116,9 @@ function validatePasswordMatch(password, confirmPassword) {
     };
   }
 
+  // Note: This comparison is safe from timing attacks because both values
+  // are user-provided inputs, not server secrets. The actual password
+  // verification against stored hashes happens elsewhere using secure methods.
   if (password !== confirmPassword) {
     return {
       isValid: false,
@@ -157,7 +164,4 @@ module.exports = {
   validatePasswordMatch,
   validateAddress
 };
-
-
-
 

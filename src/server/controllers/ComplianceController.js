@@ -28,7 +28,7 @@ class ComplianceController {
       // Log export request
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.get('user-agent');
-      
+
       await this.complianceService.auditLog.log('data_export_requested', userId, {
         targetType: 'user',
         targetId: requestedUserId,

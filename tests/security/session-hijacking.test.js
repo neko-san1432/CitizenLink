@@ -1,6 +1,6 @@
 /**
  * Security Tests: Session Hijacking Prevention
- * 
+ *
  * Tests session security and hijacking prevention mechanisms
  */
 
@@ -32,7 +32,7 @@ describe('Session Hijacking Prevention', () => {
       // We test that the cookie options include httpOnly: true
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.httpOnly).toBe(true);
     });
 
@@ -41,7 +41,7 @@ describe('Session Hijacking Prevention', () => {
       // This is a browser security feature, tested here conceptually
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.httpOnly).toBe(true);
       // In a real browser, document.cookie would not include HttpOnly cookies
     });
@@ -54,7 +54,7 @@ describe('Session Hijacking Prevention', () => {
 
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.secure).toBe(true);
 
       process.env.NODE_ENV = originalEnv;
@@ -66,7 +66,7 @@ describe('Session Hijacking Prevention', () => {
 
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       // In development, secure might be false to allow HTTP
       // This depends on implementation
       expect(options).toHaveProperty('secure');
@@ -79,7 +79,7 @@ describe('Session Hijacking Prevention', () => {
     it('should set SameSite attribute', () => {
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.sameSite).toBeDefined();
       expect(['strict', 'lax', 'none']).toContain(options.sameSite);
     });
@@ -87,7 +87,7 @@ describe('Session Hijacking Prevention', () => {
     it('should use lax SameSite by default', () => {
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.sameSite).toBe('lax');
     });
   });
@@ -164,7 +164,7 @@ describe('Session Hijacking Prevention', () => {
       // This prevents session fixation attacks
       const token1 = generateMockToken('user_123');
       const token2 = generateMockToken('user_123');
-      
+
       expect(token1).not.toBe(token2);
     });
 
@@ -172,7 +172,7 @@ describe('Session Hijacking Prevention', () => {
       // When user logs out, old tokens should be invalidated
       // This is tested by checking logout functionality
       const { logout } = require('../../src/server/controllers/AuthController');
-      
+
       // Mock logout to verify session cleanup
       expect(logout).toBeDefined();
     });
@@ -221,7 +221,7 @@ describe('Session Hijacking Prevention', () => {
       // Note: IP-based session validation is not implemented
       // This test documents current behavior
       const token = generateMockToken('user_123');
-      
+
       const req1 = createMockRequest({
         ip: '192.168.1.1',
         cookies: { sb_access_token: token },
@@ -260,7 +260,7 @@ describe('Session Hijacking Prevention', () => {
     it('should set cookie path to root', () => {
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
-      
+
       expect(options.path).toBe('/');
     });
   });
@@ -299,5 +299,4 @@ describe('Session Hijacking Prevention', () => {
     });
   });
 });
-
 

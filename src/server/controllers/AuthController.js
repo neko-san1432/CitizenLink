@@ -30,7 +30,7 @@ class AuthController {
         agreedToTerms,
         isOAuth = false
       } = req.body;
-      
+
       // Validation
       if (!agreedToTerms) {
         return res.status(400).json({
@@ -38,7 +38,7 @@ class AuthController {
           error: 'You must agree to the terms and conditions'
         });
       }
-      
+
       // Validate password match
       const passwordMatch = validatePasswordMatch(password, confirmPassword);
       if (!passwordMatch.isValid) {
@@ -119,7 +119,7 @@ class AuthController {
   async login(req, res) {
     try {
       const { email, password, remember = false, skipCaptcha = false } = req.body;
-      
+
       // Validate required fields
       const requiredFields = validateRequiredFields(req.body, ['email', 'password']);
       if (!requiredFields.isValid) {
@@ -128,7 +128,7 @@ class AuthController {
           error: `${requiredFields.missingFields.join(', ')} ${requiredFields.missingFields.length === 1 ? 'is' : 'are'} required`
         });
       }
-      
+
       // Validate email format
       const emailValidation = validateEmail(email);
       if (!emailValidation.isValid) {
@@ -150,7 +150,7 @@ class AuthController {
           code: authError.code,
           timestamp: new Date().toISOString()
         });
-        
+
         // Check if user exists to determine if it's "user not found" vs "wrong password"
         // Note: This exposes user enumeration, but provides better UX with specific error messages
         let isUserNotFound = false;
@@ -163,8 +163,8 @@ class AuthController {
             const errorMsg = getUserError.message?.toLowerCase() || '';
             const errorCode = getUserError.status || getUserError.code || '';
             // Supabase typically returns 404 or specific error codes for non-existent users
-            if (errorCode === 404 || 
-                errorMsg.includes('user not found') || 
+            if (errorCode === 404 ||
+                errorMsg.includes('user not found') ||
                 errorMsg.includes('no user found') ||
                 errorMsg.includes('does not exist')) {
               isUserNotFound = true;
@@ -178,25 +178,25 @@ class AuthController {
           console.warn('[LOGIN] Admin API check failed, using fallback:', checkError.message);
           const errorMessage = authError.message?.toLowerCase() || '';
           const errorCode = authError.code?.toLowerCase() || '';
-          
-          isUserNotFound = 
+
+          isUserNotFound =
             errorMessage.includes('user not found') ||
             errorMessage.includes('no user found') ||
             errorMessage.includes('user does not exist') ||
             errorCode === 'user_not_found';
         }
-        
-        const errorResponse = isUserNotFound 
+
+        const errorResponse = isUserNotFound
           ? 'User not found'
           : 'Invalid email or password';
-        
+
         return res.status(401).json({
           success: false,
           error: errorResponse
         });
       }
       const userId = authData.user.id;
-      
+
       // Extract and combine user metadata
       const combinedMetadata = extractUserMetadata(authData.user);
 
@@ -230,7 +230,7 @@ class AuthController {
                       `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
                       authData.user.email?.split('@')[0] ||
                       'Unknown User';
-      
+
       const user = {
         id: authData.user.id,
         email: authData.user.email,
@@ -296,7 +296,7 @@ class AuthController {
       };
       const ipAddress = resolveClientIp(req);
       const userAgent = req.get('User-Agent');
-      
+
       try {
         await UserService.trackLogin(userId, ipAddress, userAgent);
       } catch (trackError) {
@@ -305,7 +305,7 @@ class AuthController {
       // Set session cookie with proper expiration
       const cookieOptions = getCookieOptions(remember);
       res.cookie('sb_access_token', authData.session.access_token, cookieOptions);
-      
+
       // SECURITY: Access token is set in HttpOnly cookie for server-side use
       // Return refresh token in response for client-side Supabase session sync (less sensitive than access token)
       res.json({
@@ -555,7 +555,7 @@ class AuthController {
       // Store original email for rollback
       const originalEmail = currentEmail;
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      
+
       // Use Supabase's updateUser to change email (this will send a confirmation email)
       const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         email: newEmail,
@@ -571,7 +571,7 @@ class AuthController {
           error: updateError.message,
           code: updateError.code
         });
-        
+
         // Check if email is already in use
         const errorMsg = String(updateError.message || '').toLowerCase();
         if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate')) {
@@ -580,7 +580,7 @@ class AuthController {
             error: 'This email address is already registered'
           });
         }
-        
+
         // Generic error message for client
         return res.status(400).json({
           success: false,
@@ -595,7 +595,7 @@ class AuthController {
           expectedEmail: newEmail,
           actualEmail: updateData?.user?.email
         });
-        
+
         // Attempt rollback
         try {
           await supabase.auth.admin.updateUserById(userId, {
@@ -606,7 +606,7 @@ class AuthController {
           console.error('[EMAIL CHANGE] Rollback failed:', rollbackError);
           // Critical: email change partially completed but rollback failed
         }
-        
+
         return res.status(500).json({
           success: false,
           error: 'Email change verification failed. Please contact support.'
@@ -628,7 +628,7 @@ class AuthController {
           newEmail,
           error: emailError.message
         });
-        
+
         // Email change was initiated but confirmation email failed
         // Don't rollback - user can request resend
         return res.status(200).json({
@@ -1091,9 +1091,9 @@ class AuthController {
 
       // Verify metadata was actually updated
       const updatedMetadata = updatedUser.user.user_metadata || updatedUser.user.raw_user_meta_data || {};
-      const metadataMatches = updatedMetadata.role === completeMetadata.role && 
+      const metadataMatches = updatedMetadata.role === completeMetadata.role &&
                               updatedMetadata.department === completeMetadata.department;
-      
+
       if (!metadataMatches) {
         console.error('[OAUTH HR] Metadata update verification failed:', {
           userId,

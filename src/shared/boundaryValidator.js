@@ -40,16 +40,16 @@ function loadDigosBoundary() {
 function isPointInRing(point, ring) {
   const [x, y] = point;
   let inside = false;
-  
+
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i];
     const [xj, yj] = ring[j];
-    
-    const intersect = ((yi > y) !== (yj > y)) && 
+
+    const intersect = ((yi > y) !== (yj > y)) &&
                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
     if (intersect) inside = !inside;
   }
-  
+
   return inside;
 }
 
@@ -71,7 +71,7 @@ function isPointInPolygon(point, coordinates) {
   }
 
   let inside = isPointInRing(point, outerRing);
-  
+
   // Check holes (inner rings) - if point is in a hole, it's outside
   if (inside && coordinates.length > 1) {
     for (let i = 1; i < coordinates.length; i++) {
@@ -81,7 +81,7 @@ function isPointInPolygon(point, coordinates) {
       }
     }
   }
-  
+
   return inside;
 }
 
@@ -120,7 +120,7 @@ function isWithinDigosBoundary(latitude, longitude) {
   }
 
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
-  const coordinates = boundary.geometry.coordinates;
+  const {coordinates} = boundary.geometry;
 
   // Handle Polygon geometry type
   if (boundary.geometry.type === 'Polygon') {
@@ -194,7 +194,7 @@ function getDigosBounds() {
   let minLng = Infinity, maxLng = -Infinity;
   let minLat = Infinity, maxLat = -Infinity;
 
-  const coordinates = boundary.geometry.coordinates;
+  const {coordinates} = boundary.geometry;
 
   function processRing(ring) {
     for (const [lng, lat] of ring) {

@@ -21,7 +21,7 @@ class InsightsService {
     try {
       // Calculate date range based on period
       const { startDate, endDate } = this.getDateRange(period);
-      
+
       // Get all complaints within the time period
       const { data: complaints, error: complaintsError } = await this.supabase
         .from('complaints')
@@ -45,7 +45,7 @@ class InsightsService {
 
       // Classify complaints by barangay based on coordinates
       const complaintBarangayMap = classifyComplaints(complaints);
-      
+
       console.log(`[INSIGHTS] Classified ${complaintBarangayMap.size} out of ${complaints.length} complaints into barangays`);
 
       // Calculate clusters on-demand for the current period instead of using stale database clusters
@@ -59,12 +59,12 @@ class InsightsService {
             0.5, // 500m radius
             3    // minimum 3 complaints per cluster
           );
-          
+
           // clusterComplaints returns array with complaint_ids property
           clusters = clusterResults.map(cluster => ({
             complaint_ids: cluster.complaint_ids || []
           })).filter(cluster => cluster.complaint_ids && cluster.complaint_ids.length > 0);
-          
+
           console.log(`[INSIGHTS] Calculated ${clusters.length} clusters on-demand for period ${period}`);
         } catch (error) {
           console.warn('[INSIGHTS] Error calculating clusters on-demand:', error.message);
@@ -119,22 +119,22 @@ class InsightsService {
       // AND the cluster contains at least one complaint from the current period
       if (clusters && clusters.length > 0) {
         const periodComplaintIds = new Set(complaints.map(c => c.id));
-        
+
         clusters.forEach(cluster => {
           if (!cluster.complaint_ids || cluster.complaint_ids.length === 0) return;
-          
+
           // Check if this cluster contains any complaints from the current period
           const hasPeriodComplaints = cluster.complaint_ids.some(id => periodComplaintIds.has(id));
           if (!hasPeriodComplaints) {
             // Skip clusters that don't contain any complaints from the current period
             return;
           }
-          
+
           const clusterBarangays = new Set();
           cluster.complaint_ids.forEach(complaintId => {
             // Only count complaints from the current period
             if (!periodComplaintIds.has(complaintId)) return;
-            
+
             // Find which barangay this complaint belongs to
             for (const [barangay, data] of barangayData.entries()) {
               if (data.complaintIds.includes(complaintId)) {
@@ -156,20 +156,20 @@ class InsightsService {
 
       // Calculate statistics for frequency thresholds
       const allComplaintCounts = Array.from(barangayData.values()).map(d => d.complaintCount);
-      const avgComplaints = allComplaintCounts.length > 0 
-        ? allComplaintCounts.reduce((a, b) => a + b, 0) / allComplaintCounts.length 
+      const avgComplaints = allComplaintCounts.length > 0
+        ? allComplaintCounts.reduce((a, b) => a + b, 0) / allComplaintCounts.length
         : 0;
-      
+
       // Calculate frequency thresholds (low, medium, high)
       const sortedCounts = [...allComplaintCounts].sort((a, b) => a - b);
-      const lowThreshold = sortedCounts.length > 0 
-        ? sortedCounts[Math.floor(sortedCounts.length * 0.33)] || 0 
+      const lowThreshold = sortedCounts.length > 0
+        ? sortedCounts[Math.floor(sortedCounts.length * 0.33)] || 0
         : 0;
-      const mediumThreshold = sortedCounts.length > 0 
-        ? sortedCounts[Math.floor(sortedCounts.length * 0.66)] || 0 
+      const mediumThreshold = sortedCounts.length > 0
+        ? sortedCounts[Math.floor(sortedCounts.length * 0.66)] || 0
         : 0;
-      const highThreshold = sortedCounts.length > 0 
-        ? sortedCounts[sortedCounts.length - 1] || 0 
+      const highThreshold = sortedCounts.length > 0
+        ? sortedCounts[sortedCounts.length - 1] || 0
         : 0;
 
       // Get ALL complaints (not just current period) for calculating averages
@@ -233,13 +233,13 @@ class InsightsService {
         // Calculate averages (complaints per period)
         // Daily: average complaints per day (based on last 7 days)
         averages.daily = weeklyCount > 0 ? Math.round((weeklyCount / 7) * 100) / 100 : 0;
-        
+
         // Weekly: average complaints per week (based on last 30 days)
         averages.weekly = monthlyCount > 0 ? Math.round((monthlyCount / 30) * 7 * 100) / 100 : 0;
-        
+
         // Monthly: average complaints per month (based on last 365 days)
         averages.monthly = yearlyCount > 0 ? Math.round((yearlyCount / 365) * 30 * 100) / 100 : 0;
-        
+
         // Yearly: total complaints in last year
         averages.yearly = yearlyCount;
 
@@ -249,8 +249,8 @@ class InsightsService {
       // Calculate prioritization score for each barangay
       // Score = (complaintCount * 1) + (clusterCount * 5) + (urgentCount * 3) + (highPriorityCount * 2)
       const prioritizationData = Array.from(barangayData.entries()).map(([barangayName, data]) => {
-        const prioritizationScore = 
-          (data.complaintCount * 1) +
+        const prioritizationScore =
+          (Number(data.complaintCount)) +
           (data.clusterCount * 5) +
           (data.urgentCount * 3) +
           (data.highPriorityCount * 2);
@@ -309,9 +309,9 @@ class InsightsService {
   getDateRange(period) {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999); // End of today
-    
+
     const startDate = new Date();
-    
+
     switch (period) {
       case 'daily':
         startDate.setHours(0, 0, 0, 0); // Start of today
@@ -332,7 +332,7 @@ class InsightsService {
         startDate.setDate(startDate.getDate() - 7);
         startDate.setHours(0, 0, 0, 0);
     }
-    
+
     return { startDate, endDate };
   }
 }

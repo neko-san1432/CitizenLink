@@ -27,23 +27,23 @@ setInterval(() => {
 // Database-backed rate limit operations
 async function getRateLimitFromDB(key, windowMs) {
   if (!supabase) return null;
-  
+
   try {
     const now = Date.now();
     const windowStart = now - windowMs;
-    
+
     // Get or create rate limit record
     const { data: existing, error: fetchError } = await supabase
       .from('rate_limits')
       .select('*')
       .eq('key', key)
       .single();
-    
+
     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
       console.warn('[RATE LIMIT] Database fetch error:', fetchError.message);
       return null;
     }
-    
+
     if (existing) {
       // Clean old requests outside the window
       const requests = JSON.parse(existing.requests || '[]').filter(ts => ts > windowStart);
@@ -52,7 +52,7 @@ async function getRateLimitFromDB(key, windowMs) {
         resetTime: existing.reset_time ? new Date(existing.reset_time).getTime() : now + windowMs
       };
     }
-    
+
     return null;
   } catch (error) {
     console.warn('[RATE LIMIT] Database operation failed:', error.message);
@@ -62,11 +62,11 @@ async function getRateLimitFromDB(key, windowMs) {
 
 async function saveRateLimitToDB(key, data, windowMs) {
   if (!supabase) return false;
-  
+
   try {
     const now = Date.now();
     const resetTime = new Date(data.resetTime).toISOString();
-    
+
     const { error } = await supabase
       .from('rate_limits')
       .upsert({
@@ -78,12 +78,12 @@ async function saveRateLimitToDB(key, data, windowMs) {
       }, {
         onConflict: 'key'
       });
-    
+
     if (error) {
       console.warn('[RATE LIMIT] Database save error:', error.message);
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.warn('[RATE LIMIT] Database save failed:', error.message);
@@ -98,17 +98,17 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
     const hostname = req.hostname || req.get('host')?.split(':')[0] || '';
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0';
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     // In development/localhost, use more permissive limits (5x) but still enforce rate limiting
     const effectiveMaxRequests = (isDevelopment || isLocalhost) ? maxRequests * 5 : maxRequests;
-    
+
     const key = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
     const windowStart = now - windowMs;
-    
+
     // Try to get from database first, fallback to in-memory
     let rateLimitData = await getRateLimitFromDB(key, windowMs);
-    
+
     if (!rateLimitData) {
       // Fallback to in-memory store
       rateLimitData = rateLimitStore.get(key);
@@ -120,10 +120,10 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
         rateLimitStore.set(key, rateLimitData);
       }
     }
-    
+
     // Clean old requests outside the window
     rateLimitData.requests = rateLimitData.requests.filter(timestamp => timestamp > windowStart);
-    
+
     // Check if limit exceeded
     if (rateLimitData.requests.length >= effectiveMaxRequests) {
       return res.status(429).json({
@@ -131,21 +131,21 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
         error: 'Too many requests from this IP, please try again later.'
       });
     }
-    
+
     // Add current request timestamp
     rateLimitData.requests.push(now);
-    
+
     // Update reset time if needed
     if (rateLimitData.requests.length === 1) {
       rateLimitData.resetTime = now + windowMs;
     }
-    
+
     // Save to database (async, don't wait)
     saveRateLimitToDB(key, rateLimitData, windowMs).catch(() => {
       // If DB save fails, keep in-memory copy
       rateLimitStore.set(key, rateLimitData);
     });
-    
+
     // Add headers for rate limit info
     res.set({
       'X-RateLimit-Limit': effectiveMaxRequests,

@@ -58,7 +58,7 @@ class ReviewQueue {
           // Load rejected complaints
           const loading = document.getElementById('rejected-loading');
           const rejectedList = document.getElementById('rejected-list');
-          
+
           if (loading) loading.style.display = 'block';
           if (rejectedList) rejectedList.innerHTML = '';
 
@@ -70,7 +70,7 @@ class ReviewQueue {
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
+
             const data = await response.json();
             rejectedComplaints = data.data || [];
 
@@ -167,7 +167,7 @@ class ReviewQueue {
   async loadComplaints() {
     try {
       this.showLoading();
-      
+
       const complaintsResponse = await fetch('/api/coordinator/review-queue', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -180,14 +180,14 @@ class ReviewQueue {
 
       const complaintsData = await complaintsResponse.json();
       this.complaints = complaintsData.data || complaintsData.complaints || [];
-      
+
       console.log(`[REVIEW_QUEUE] Loaded ${this.complaints.length} complaints`);
       if (this.complaints.length > 0) {
         const sample = this.complaints[0];
         console.log('[REVIEW_QUEUE] Sample complaint:', {
           id: sample.id,
           barangay: sample.barangay,
-          hasBarangay: !!sample.barangay,
+          hasBarangay: Boolean(sample.barangay),
           latitude: sample.latitude,
           longitude: sample.longitude
         });
@@ -224,7 +224,7 @@ class ReviewQueue {
       console.warn('[REVIEW_QUEUE] Cannot enhance complaints: prioritization map not available');
       return;
     }
-    
+
     let enhancedCount = 0;
     // Enhance each complaint with its barangay prioritization score
     this.complaints.forEach(complaint => {
@@ -306,20 +306,20 @@ class ReviewQueue {
     const prioritizationScore = complaint.prioritizationScore || 0;
     const priorityLevel = complaint.priorityLevel || 'low';
     const barangay = complaint.barangay || null;
-    
+
     // Debug: Log first complaint being rendered
     const isFirstCard = !this._lastLoggedCardId;
     if (isFirstCard) {
       this._lastLoggedCardId = complaint.id;
       console.log('[REVIEW_QUEUE] Creating card for complaint:', {
         id: complaint.id.substring(0, 8),
-        barangay: barangay,
-        prioritizationScore: prioritizationScore,
-        priorityLevel: priorityLevel,
-        hasBarangay: !!barangay
+        barangay,
+        prioritizationScore,
+        priorityLevel,
+        hasBarangay: Boolean(barangay)
       });
     }
-    
+
     let flagHTML = '';
     if (algorithmFlags.high_confidence_duplicate) {
       flagHTML = `
@@ -337,12 +337,12 @@ class ReviewQueue {
 
     // Add prioritization suggestion badge
     let prioritizationSuggestionHTML = '';
-    
+
     // Show suggestion for any complaint with a barangay
     if (barangay) {
       const suggestionClass = `prioritization-suggestion ${priorityLevel}`;
       let suggestionText = '';
-      
+
       // Determine suggestion text based on priority level
       if (priorityLevel === 'critical') {
         suggestionText = '🚨 Critical Priority Barangay - Assign First!';
@@ -354,7 +354,7 @@ class ReviewQueue {
         // Show for all barangays, even low priority
         suggestionText = '📍 Barangay Prioritization';
       }
-      
+
       // Always show suggestion if barangay exists
       prioritizationSuggestionHTML = `
                 <div class="${suggestionClass}">
@@ -363,12 +363,12 @@ class ReviewQueue {
                     ${prioritizationScore > 0 ? `<span class="priority-score">Score: ${prioritizationScore}</span>` : ''}
                 </div>
             `;
-      
+
       // Debug: Log when suggestion is added (for first card only)
       if (isFirstCard) {
         console.log('[REVIEW_QUEUE] ✓ Added suggestion badge:', {
-          barangay: barangay,
-          priorityLevel: priorityLevel,
+          barangay,
+          priorityLevel,
           score: prioritizationScore,
           htmlLength: prioritizationSuggestionHTML.length,
           htmlPreview: prioritizationSuggestionHTML.substring(0, 100)
@@ -379,7 +379,7 @@ class ReviewQueue {
       if (isFirstCard) {
         console.log('[REVIEW_QUEUE] ✗ No suggestion - no barangay:', {
           id: complaint.id.substring(0, 8),
-          hasBarangay: !!complaint.barangay
+          hasBarangay: Boolean(complaint.barangay)
         });
       }
     }
@@ -444,14 +444,14 @@ class ReviewQueue {
       filtered = filtered.sort((a, b) => {
         const scoreA = a.prioritizationScore || this.barangayPrioritization.get(a.barangay || '') || 0;
         const scoreB = b.prioritizationScore || this.barangayPrioritization.get(b.barangay || '') || 0;
-        
+
         if (this.filters.prioritization) {
           // Use filter setting
           return this.filters.prioritization === 'desc' ? scoreB - scoreA : scoreA - scoreB;
-        } else {
-          // Default: highest priority first
-          return scoreB - scoreA;
         }
+        // Default: highest priority first
+        return scoreB - scoreA;
+
       });
     }
 
@@ -505,7 +505,7 @@ class ReviewQueue {
       pageNumbers.innerHTML = '';
       const maxVisiblePages = 7;
       let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
       // Adjust start page if we're near the end
       if (endPage - startPage < maxVisiblePages - 1) {

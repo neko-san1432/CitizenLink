@@ -457,8 +457,8 @@ class UserService {
     const rawMeta = authUser.raw_user_meta_data || {};
     const combined = { ...rawMeta, ...meta };
     // Use name as primary, generate from first_name + middle_name + last_name as fallback
-    const displayName = combined.name || 
-      (combined.first_name || combined.last_name 
+    const displayName = combined.name ||
+      (combined.first_name || combined.last_name
         ? [combined.first_name, combined.middle_name, combined.last_name].filter(Boolean).join(' ').trim()
         : 'Unknown User');
     return {

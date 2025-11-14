@@ -1,6 +1,6 @@
 /**
  * Functional Tests: Login Flow
- * 
+ *
  * Tests all login scenarios including edge cases
  */
 
@@ -319,7 +319,7 @@ describe('Login Flow', () => {
 
       const cookieCall = res.cookie.mock.calls.find(call => call[0] === 'sb_access_token');
       const cookieOptions = cookieCall[2];
-      
+
       expect(cookieOptions.httpOnly).toBe(true);
       expect(cookieOptions.secure).toBeDefined();
       expect(cookieOptions.sameSite).toBeDefined();
@@ -365,5 +365,4 @@ describe('Login Flow', () => {
     });
   });
 });
-
 

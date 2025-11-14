@@ -550,7 +550,7 @@ class LguAdminController {
         .from('complaint_assignments')
         .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
         .eq('department_id', department.id);
-      
+
       // Apply status filter for assignments
       if (status === 'completed') {
         deptAssignmentsQuery = deptAssignmentsQuery.eq('status', 'completed');
@@ -560,7 +560,7 @@ class LguAdminController {
         // Default: exclude cancelled and completed (show active assignments)
         deptAssignmentsQuery = deptAssignmentsQuery.neq('status', 'cancelled').neq('status', 'completed');
       }
-      
+
       deptAssignmentsQuery = deptAssignmentsQuery.order('created_at', { ascending: false });
       const { limit } = req.query;
       if (limit) {
@@ -578,7 +578,7 @@ class LguAdminController {
           .from('complaint_assignments')
           .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id')
           .in('complaint_id', complaintIds);
-        
+
         // Apply same status filter for complaint assignments
         if (status === 'completed') {
           complaintAssignmentsQuery = complaintAssignmentsQuery.eq('status', 'completed');
@@ -588,7 +588,7 @@ class LguAdminController {
           // Default: exclude cancelled and completed
           complaintAssignmentsQuery = complaintAssignmentsQuery.neq('status', 'cancelled').neq('status', 'completed');
         }
-        
+
         complaintAssignmentsQuery = complaintAssignmentsQuery.order('created_at', { ascending: false });
         if (limit) {
           complaintAssignmentsQuery = complaintAssignmentsQuery.limit(parseInt(limit));

@@ -1,6 +1,6 @@
 /**
  * Functional Tests: Session Management
- * 
+ *
  * Tests session creation, refresh, and invalidation
  */
 
@@ -395,5 +395,4 @@ describe('Session Management', () => {
     });
   });
 });
-
 
