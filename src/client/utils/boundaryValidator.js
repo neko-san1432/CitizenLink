@@ -76,10 +76,6 @@ async function loadDigosBoundary() {
 
       // If all methods failed, return null (will use bounding box fallback in validation)
       return null;
-    } catch (error) {
-      console.error('[BOUNDARY_VALIDATOR] Failed to load Digos boundary:', error.message);
-      // Return null to indicate boundary not available
-      return null;
     } finally {
       boundaryLoadPromise = null;
     }

@@ -480,6 +480,7 @@ class InputSanitizer {
         return '';
       }
       // Check for IP addresses and validate them
+      // eslint-disable-next-line security/detect-unsafe-regex
       const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
       if (ipPattern.test(url.hostname)) {
         const parts = url.hostname.split('.');

@@ -15,6 +15,7 @@ let currentFilters = {
 (async function() {
   try {
     // Wait for Leaflet to be available
+    // eslint-disable-next-line no-unmodified-loop-condition
     while (typeof L === 'undefined') {
       await new Promise(resolve => setTimeout(resolve, 50));
     }

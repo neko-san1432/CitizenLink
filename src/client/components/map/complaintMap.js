@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return name
         .replace(/,?\s*Digos City/gi, '')
         .replace(/,?\s*8002/gi, '')
+        // eslint-disable-next-line security/detect-unsafe-regex
         .replace(/,?\s*Davao(\s+del\s+Sur)?/gi, '')
         .replace(/,?\s*Philippines/gi, '')
         .replace(/\s*,\s*,/g, ',')

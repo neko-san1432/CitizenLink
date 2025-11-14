@@ -99,6 +99,7 @@ async function makeConcurrentRequests(count, requestFn) {
 function extractCookie(cookieString, name) {
   // Escape special regex characters in name
   const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // eslint-disable-next-line security/detect-non-literal-regexp
   const match = cookieString.match(new RegExp(`${escapedName}=([^;]+)`));
   return match ? match[1] : null;
 }

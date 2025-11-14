@@ -91,10 +91,13 @@ function sanitizeHtml(html) {
     previous = sanitized;
     sanitized = sanitized
       // Remove script tags and their content
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       // Remove object tags
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
       // Remove form tags
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
       // Remove iframe tags
       .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '');

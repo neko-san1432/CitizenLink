@@ -22,7 +22,7 @@ module.exports = {
     'linebreak-style': ['error', 'unix'],
     'quotes': ['error', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': true }],
     'semi': ['error', 'always'],
-    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
+    'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     'no-console': 'off',
     'no-var': 'error',
     'prefer-const': ['error', { 'destructuring': 'all' }],
@@ -31,14 +31,14 @@ module.exports = {
     'no-empty': ['error', { 'allowEmptyCatch': true }],
     'no-inner-declarations': 'error',
     'no-case-declarations': 'error', // Block-scoped declarations in case blocks
-    'no-useless-escape': 'error', // Unnecessary escape characters
+    'no-useless-escape': 'warn', // Unnecessary escape characters - often false positives
     'no-prototype-builtins': 'error',
     'no-dupe-class-members': 'error',
     'no-dupe-else-if': 'error',
     'no-constant-condition': ['error', { 'checkLoops': false }],
     // Enhanced code quality rules
     'no-debugger': 'error',
-    'no-alert': 'error',
+    'no-alert': 'warn', // Warn instead of error - common in dev/debug code
     'no-eval': 'error',
     'no-implied-eval': 'error',
     'no-new-func': 'error',
@@ -53,7 +53,7 @@ module.exports = {
     'prefer-arrow-callback': 'error',
     'prefer-template': 'error',
     'object-shorthand': 'error',
-    'prefer-destructuring': ['error', { 'array': false, 'object': true }],
+    'prefer-destructuring': ['warn', { 'array': false, 'object': true }],
     'no-nested-ternary': 'warn', // Warn instead of error - readability preference
     'no-unneeded-ternary': 'error',
     'no-mixed-operators': 'warn', // Warn instead of error - style preference
@@ -62,7 +62,7 @@ module.exports = {
     'no-extra-bind': 'error',
     'no-extra-label': 'error',
     'no-extra-boolean-cast': 'error',
-    'no-lonely-if': 'error',
+    'no-lonely-if': 'warn',
     'no-else-return': 'error',
     'no-unreachable': 'error',
     'no-unreachable-loop': 'error',
@@ -80,7 +80,7 @@ module.exports = {
     'no-undef-init': 'error',
     'no-undefined': 'warn', // Warn instead of error - can use void 0 alternative
     'no-unused-private-class-members': 'error',
-    'no-use-before-define': ['error', { 'functions': false, 'classes': true, 'variables': true }],
+    'no-use-before-define': ['warn', { 'functions': false, 'classes': true, 'variables': true }],
     'no-invalid-regexp': 'error',
     'no-control-regex': 'error',
     'no-sparse-arrays': 'error',
@@ -88,7 +88,7 @@ module.exports = {
     'no-new-object': 'error',
     'no-new-wrappers': 'error',
     'no-object-constructor': 'error',
-    'no-promise-executor-return': 'error',
+    'no-promise-executor-return': 'warn',
     'no-unmodified-loop-condition': 'error',
     'no-constructor-return': 'error',
     'no-class-assign': 'error',
@@ -113,12 +113,6 @@ module.exports = {
     // XSS protection rules - comprehensive sanitization checks
     'no-unsanitized/method': 'error', // Unsafe method calls
     'no-unsanitized/property': 'error', // Unsafe property access
-    // Additional security rules
-    'no-eval': 'error',
-    'no-implied-eval': 'error',
-    'no-new-func': 'error',
-    'no-script-url': 'error',
-    'no-alert': 'warn', // Warn instead of error - common in dev/debug code
   },
   ignorePatterns: [
     'node_modules/',

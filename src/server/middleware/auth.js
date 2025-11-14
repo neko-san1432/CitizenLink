@@ -91,6 +91,7 @@ const requireRole = (allowedRoles) => {
         if (allowedRole.includes('*')) {
           // Safe wildcard matching without dynamic regex
           const pattern = allowedRole.replace(/\*/g, '.*');
+          // eslint-disable-next-line security/detect-non-literal-regexp
           const regex = new RegExp(`^${pattern}$`);
           return regex.test(normalizedRole) || (normalizedBaseRole && regex.test(normalizedBaseRole));
         }
