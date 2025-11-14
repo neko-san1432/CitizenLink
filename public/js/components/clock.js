@@ -7,7 +7,7 @@ function renderClock() {
   const h = formatTwo(now.getHours());
   const m = formatTwo(now.getMinutes());
   const s = formatTwo(now.getSeconds());
-  const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const dateStr = now.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   el.innerHTML = `<span class="time">${  h  }:${  m  }:${  s  }</span><span class="date">${  dateStr  }</span>`;
 }
 

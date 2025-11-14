@@ -119,7 +119,7 @@ const requireRole = (allowedRoles) => {
             userRole,
             allowedRoles,
             path: req.path
-          } : undefined
+          } : null
         });
       }
       return res.redirect(`/login?message=${encodeURIComponent('Access denied. You do not have permission to access this resource.')}&type=error`);
