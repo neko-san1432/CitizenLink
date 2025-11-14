@@ -65,7 +65,7 @@ class InputSanitizer {
   }
   // Sanitize individual values based on their expected type
   static sanitizeValue(value, fieldName = '') {
-    if (value === null || value === undefined) {
+    if (value === null || value === void 0) {
       return value;
     }
     // Convert to string for processing
@@ -250,10 +250,10 @@ class InputSanitizer {
   }
   static validateNumber(number, options = {}) {
     const { min = -Infinity, max = Infinity, integer = false, required = false } = options;
-    if (required && (number === null || number === undefined)) {
+    if (required && (number === null || number === void 0)) {
       return { valid: false, error: 'Number is required' };
     }
-    if (number !== null && number !== undefined) {
+    if (number !== null && number !== void 0) {
       const num = Number(number);
       if (isNaN(num)) {
         return { valid: false, error: 'Invalid number format' };
@@ -272,10 +272,10 @@ class InputSanitizer {
     return { valid: true, sanitized: number };
   }
   static validateBoolean(bool, required = false) {
-    if (required && bool === null || bool === undefined) {
+    if (required && bool === null || bool === void 0) {
       return { valid: false, error: 'Boolean value is required' };
     }
-    if (bool !== null && bool !== undefined) {
+    if (bool !== null && bool !== void 0) {
 
       if (typeof bool === 'boolean') {
         return { valid: true, sanitized: bool };
@@ -480,6 +480,7 @@ class InputSanitizer {
         return '';
       }
       // Check for IP addresses and validate them
+      // eslint-disable-next-line security/detect-unsafe-regex
       const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
       if (ipPattern.test(url.hostname)) {
         const parts = url.hostname.split('.');

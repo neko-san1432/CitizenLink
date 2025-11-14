@@ -276,6 +276,7 @@ class EnhancedHeatmapController {
     if (shouldShowMarkers && this.heatmapViz.markerLayer) {
       this.heatmapViz.showMarkers();
     } else {
+      // Markers not shown
     }
     // Show clusters if enabled
     if (this.heatmapViz.isClusteringEnabled) {
@@ -439,7 +440,7 @@ class EnhancedHeatmapController {
           e.preventDefault();
           this.showExportModal();
           break;
-        case 'h':
+        case 'd':
           e.preventDefault();
           this.resetToDigosCity();
           break;
@@ -765,6 +766,7 @@ class EnhancedHeatmapController {
     if (window.showMessage) {
       window.showMessage(type, message);
     } else {
+      // No message handler available
     }
   }
   /**

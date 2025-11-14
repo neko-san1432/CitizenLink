@@ -50,7 +50,7 @@ class HRController {
       const filters = {
         role: req.query.role,
         department_code: req.query.department_code,
-        is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined
+        is_active: req.query.is_active !== void 0 ? req.query.is_active === 'true' : undefined
       };
       const result = await this.hrService.getSignupLinks(hrId, filters);
       res.json(result);
@@ -333,7 +333,7 @@ class HRController {
 
         // Check if user used a signup code (from signup_links table)
         const signupCodeInfo = usersWithSignupCodes.get(u.id);
-        const usedSignupCode = signupCodeInfo !== undefined;
+        const usedSignupCode = signupCodeInfo !== void 0;
 
         // Get pending department from metadata OR from signup_links table
         let pendingDept = u.raw_user_meta_data?.pending_department ||

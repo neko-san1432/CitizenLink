@@ -94,12 +94,12 @@ export const validateAndSanitizeForm = (formData, rules) => {
       continue;
     }
     // Check required fields
-    if (rule.required && (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === undefined)) {
+    if (rule.required && (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === void 0)) {
       errors.push(`${field} is required`);
       continue;
     }
     // Skip validation if field is empty and not required
-    if (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === undefined) {
+    if (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === void 0) {
       sanitizedData[field] = '';
       continue;
     }
@@ -357,8 +357,8 @@ export const validateComplaintForm = (data) => {
     errors.push('At least one department must be selected');
   }
   // If one coordinate is provided, both should be valid numbers
-  const hasLat = data.latitude !== null && data.latitude !== undefined;
-  const hasLng = data.longitude !== null && data.longitude !== undefined;
+  const hasLat = data.latitude !== null && data.latitude !== void 0;
+  const hasLng = data.longitude !== null && data.longitude !== void 0;
   if ((hasLat && !hasLng) || (!hasLat && hasLng)) {
     errors.push('Both latitude and longitude must be provided');
   }

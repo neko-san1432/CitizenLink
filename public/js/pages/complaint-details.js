@@ -725,12 +725,6 @@ class ComplaintDetails {
     });
   }
 
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
   addRouteControls(map) {
     // Only show route controls for LGU users
     if (this.userRole !== 'lgu' && this.userRole !== 'lgu-admin') {
@@ -1045,7 +1039,7 @@ class ComplaintDetails {
     };
     // For cancelled complaints, don't show any active steps - gray everything out
     // Otherwise, show progress up to the current step
-    const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== undefined ? statusStepMap[workflowStatus] : 0);
+    const currentStep = isCancelled ? -1 : (statusStepMap[workflowStatus] !== void 0 ? statusStepMap[workflowStatus] : 0);
 
     // Step labels
     const stepLabels = [

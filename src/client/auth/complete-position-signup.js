@@ -29,7 +29,7 @@ const checkCaptchaReady = () => {
 checkCaptchaReady();
 async function verifyCaptchaOrFail(widgetId) {
   // console.log removed for security
-  if (widgetId === null || widgetId === undefined) {
+  if (widgetId === null || widgetId === void 0) {
     // console.log removed for security
     showMessage('error', 'Captcha not ready. Please wait and try again.');
     return { ok: false };

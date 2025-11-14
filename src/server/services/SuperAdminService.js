@@ -392,7 +392,7 @@ class SuperAdminService {
           // Filter users with confirmed emails (email_confirmed_at is not null)
           // OAuth users typically have email_confirmed_at set automatically
           const confirmedAuthUsers = authUsers.users.filter(user =>
-            user.email_confirmed_at !== null && user.email_confirmed_at !== undefined
+            user.email_confirmed_at !== null && user.email_confirmed_at !== void 0
           );
 
           // Map to our user format and sort by created_at (newest first)

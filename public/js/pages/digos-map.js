@@ -1,5 +1,4 @@
 // legacy block removed
-/* global L */
 (function() {
   const MAP_ID = 'digos-map';
   const DEFAULT_CENTER = [6.7497, 125.3570]; // Approx Digos City

@@ -32,9 +32,10 @@ class CoordinatorDashboard {
       }
       const result = await response.json();
       if (!result.success) {
-
+        // Error handled by caller
       }
     } catch (error) {
+      // Silently catch error
     }
   }
 

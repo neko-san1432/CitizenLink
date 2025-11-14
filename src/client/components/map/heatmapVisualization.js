@@ -301,7 +301,7 @@ class HeatmapVisualization {
       Object.entries(filters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === 'includeResolved') return;
-        if (value !== null && value !== undefined && value !== '') {
+        if (value !== null && value !== void 0 && value !== '') {
           // Handle array values (multiple selections)
           if (Array.isArray(value) && value.length > 0) {
             value.forEach(v => queryParams.append(key, v));

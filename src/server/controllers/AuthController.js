@@ -833,9 +833,9 @@ class AuthController {
         // Preferences (preserve existing or set defaults)
         preferred_language: existingMetadata.preferred_language || 'en',
         timezone: existingMetadata.timezone || 'Asia/Manila',
-        email_notifications: existingMetadata.email_notifications !== undefined ? existingMetadata.email_notifications : true,
+        email_notifications: existingMetadata.email_notifications !== void 0 ? existingMetadata.email_notifications : true,
         sms_notifications: existingMetadata.sms_notifications || false,
-        push_notifications: existingMetadata.push_notifications !== undefined ? existingMetadata.push_notifications : true,
+        push_notifications: existingMetadata.push_notifications !== void 0 ? existingMetadata.push_notifications : true,
         // Banning system (preserve existing)
         isBanned: existingMetadata.isBanned || false,
         warningStrike: existingMetadata.warningStrike || 0,

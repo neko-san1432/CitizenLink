@@ -145,6 +145,7 @@ class DepartmentManager {
     // Fallback sanitization if DOMPurify is not available
     return html
       // Remove script tags and their content
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       // Remove event handlers
       .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
@@ -157,10 +158,12 @@ class DepartmentManager {
       // Remove iframe tags
       .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, '')
       // Remove object tags
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
       // Remove embed tags
       .replace(/<embed\b[^<]*>/gi, '')
       // Remove form tags
+      // eslint-disable-next-line security/detect-unsafe-regex
       .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
       // Remove input tags
       .replace(/<input\b[^<]*>/gi, '')

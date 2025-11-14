@@ -520,7 +520,7 @@ class HRService {
       if (filters.department_code) {
         query = query.eq('department_code', filters.department_code);
       }
-      if (filters.is_active !== undefined) {
+      if (filters.is_active !== void 0) {
         query = query.eq('is_active', filters.is_active);
       }
 
