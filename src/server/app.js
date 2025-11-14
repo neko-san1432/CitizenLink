@@ -823,6 +823,7 @@ class CitizenLinkApp {
         const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'brgy_boundaries_location.json');
         const fs = require('fs').promises;
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
       } catch (error) {
@@ -835,6 +836,7 @@ class CitizenLinkApp {
         const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'digos-city-boundary.json');
         const fs = require('fs').promises;
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
       } catch (error) {
