@@ -29,7 +29,7 @@ const verifyToken = (signedToken) => {
   const expectedSignature = crypto.createHmac('sha256', CSRF_SECRET)
     .update(token)
     .digest('hex');
-  
+
   // Use timing-safe comparison to prevent timing attacks
   if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
     return token;
@@ -43,7 +43,7 @@ const csrfProtection = (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return next();
   }
-  
+
   let token = null;
   // Check for token in headers first
   if (req.headers['x-csrf-token']) {
@@ -57,14 +57,14 @@ const csrfProtection = (req, res, next) => {
   else if (req.cookies && req.cookies['csrf-token']) {
     token = req.cookies['csrf-token'];
   }
-  
+
   if (!token) {
     return res.status(403).json({
       success: false,
       error: 'CSRF token missing'
     });
   }
-  
+
   // Verify the signed token
   const verifiedToken = verifyToken(token);
   if (!verifiedToken) {
@@ -73,7 +73,7 @@ const csrfProtection = (req, res, next) => {
       error: 'Invalid CSRF token'
     });
   }
-  
+
   // Verify token matches the one in the session cookie
   const sessionToken = req.cookies['csrf-token'];
   if (sessionToken && verifyToken(sessionToken) !== verifiedToken) {
@@ -82,7 +82,7 @@ const csrfProtection = (req, res, next) => {
       error: 'CSRF token mismatch'
     });
   }
-  
+
   next();
 };
 
@@ -90,7 +90,7 @@ const csrfProtection = (req, res, next) => {
 const generateCsrfToken = (req, res, next) => {
   const token = generateToken();
   const signedToken = signToken(token);
-  
+
   // Set signed cookie (httpOnly: false so client can read it for headers)
   res.cookie('csrf-token', signedToken, {
     httpOnly: false, // Must be readable by JavaScript for X-CSRF-Token header
@@ -99,7 +99,7 @@ const generateCsrfToken = (req, res, next) => {
     path: '/',
     maxAge: 30 * 60 * 1000 // 30 minutes
   });
-  
+
   // Add token to response locals for templates
   res.locals.csrfToken = signedToken;
   // Also add to response headers for API clients
@@ -111,7 +111,7 @@ const generateCsrfToken = (req, res, next) => {
 const addCsrfToken = (req, res, next) => {
   const token = generateToken();
   const signedToken = signToken(token);
-  
+
   // Set signed cookie
   res.cookie('csrf-token', signedToken, {
     httpOnly: false,
@@ -120,7 +120,7 @@ const addCsrfToken = (req, res, next) => {
     path: '/',
     maxAge: 30 * 60 * 1000
   });
-  
+
   // Add to response headers for API clients
   res.setHeader('X-CSRF-Token', signedToken);
   next();

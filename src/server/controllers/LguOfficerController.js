@@ -13,9 +13,9 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { status, priority, limit } = req.query;
-      
+
       const tasks = await this.officerService.getAssignedTasks(userId, { status, priority, limit });
-      
+
       return res.json({
         success: true,
         data: tasks
@@ -53,7 +53,7 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const tasks = await this.officerService.getMyTasks(userId);
-      
+
       return res.json({
         success: true,
         data: tasks
@@ -110,7 +110,7 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const statistics = await this.officerService.getStatistics(userId);
-      
+
       return res.json({
         success: true,
         data: statistics
@@ -127,9 +127,9 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { limit = 10 } = req.query;
-      
+
       const activities = await this.officerService.getActivities(userId, limit);
-      
+
       return res.json({
         success: true,
         data: activities
@@ -146,9 +146,9 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { limit = 10 } = req.query;
-      
+
       const updates = await this.officerService.getUpdates(userId, limit);
-      
+
       return res.json({
         success: true,
         data: updates

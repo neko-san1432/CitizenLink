@@ -24,7 +24,7 @@ class DuplicationDetectionService {
       }
       // Convert Complaint model to plain object for similarity algorithms
       const complaintData = complaint.toJSON ? complaint.toJSON() : complaint;
-      
+
       // Run multiple detection algorithms
       const [
         textMatches,

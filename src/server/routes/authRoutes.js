@@ -213,7 +213,7 @@ router.post('/reset-password', csrfProtection, ErrorHandler.asyncWrapper(async (
         error: 'Invalid or expired reset token'
       });
     }
-    
+
     // Validate password strength
     const { validatePasswordStrength } = require('../../shared/passwordValidation');
     const passwordValidation = validatePasswordStrength(password);
@@ -224,14 +224,14 @@ router.post('/reset-password', csrfProtection, ErrorHandler.asyncWrapper(async (
         details: passwordValidation.errors
       });
     }
-    
+
     // Update password using Supabase's updateUser (requires session)
     // Since we verified the OTP, we need to create a session first
     // Use admin API to update password directly
     const { error: updateError } = await supabase.auth.admin.updateUserById(verifyData.user.id, {
-      password: password
+      password
     });
-    
+
     if (updateError) {
       console.error('[PASSWORD RESET] Failed to update password:', updateError);
       return res.status(500).json({
@@ -239,7 +239,7 @@ router.post('/reset-password', csrfProtection, ErrorHandler.asyncWrapper(async (
         error: 'Failed to reset password. Please try again.'
       });
     }
-    
+
     res.json({
       success: true,
       message: 'Password reset successfully'

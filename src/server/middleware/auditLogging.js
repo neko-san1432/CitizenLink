@@ -69,8 +69,8 @@ function auditDataAccess(req, res, next) {
       return {
         id: req.params.id,
         type: req.path.includes('/complaints') ? 'complaint' :
-              req.path.includes('/users') ? 'user' :
-              req.path.includes('/departments') ? 'department' : null
+          req.path.includes('/users') ? 'user' :
+            req.path.includes('/departments') ? 'department' : null
       };
     }
     return null;
@@ -86,8 +86,8 @@ function auditDataModification(req, res, next) {
       return {
         id: req.params.id,
         type: req.path.includes('/complaints') ? 'complaint' :
-              req.path.includes('/users') ? 'user' :
-              req.path.includes('/departments') ? 'department' : null
+          req.path.includes('/users') ? 'user' :
+            req.path.includes('/departments') ? 'department' : null
       };
     }
     return null;
@@ -103,8 +103,8 @@ function auditDataDeletion(req, res, next) {
       return {
         id: req.params.id,
         type: req.path.includes('/complaints') ? 'complaint' :
-              req.path.includes('/users') ? 'user' :
-              req.path.includes('/departments') ? 'department' : null
+          req.path.includes('/users') ? 'user' :
+            req.path.includes('/departments') ? 'department' : null
       };
     }
     return null;
@@ -145,5 +145,4 @@ module.exports = {
   auditDataDeletion,
   auditAuthEvent
 };
-
 

@@ -1,6 +1,6 @@
 /**
  * Functional Tests: Password Reset Flow
- * 
+ *
  * Tests password reset scenarios including edge cases
  */
 
@@ -406,5 +406,4 @@ describe('Password Reset Flow', () => {
     });
   });
 });
-
 

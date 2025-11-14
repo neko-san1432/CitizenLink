@@ -15,6 +15,7 @@ let currentFilters = {
 (async function() {
   try {
     // Wait for Leaflet to be available
+    // eslint-disable-next-line no-unmodified-loop-condition
     while (typeof L === 'undefined') {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
@@ -37,7 +38,7 @@ let currentFilters = {
 
     // Store map globally for boundaryGenerator
     window.simpleMap = map;
-    
+
     // Ensure layer control (tile changer) stays below zoom controls
     // It should remain in its default Leaflet position (.leaflet-top.leaflet-left)
     // No need to move it - it's already positioned correctly below zoom controls
@@ -46,43 +47,43 @@ let currentFilters = {
     map.on('zoomend', () => {
       const currentZoom = map.getZoom();
       const minZoom = map.getMinZoom();
-      
+
       // When zoomed out to minimum level, reset to origin
       if (currentZoom <= minZoom) {
         map.setView(originCenter, originZoom, { animate: true });
       }
-      
+
       // Mark initial load as complete only when user zooms IN (zoom > 11)
       // This ensures markers stay hidden until user manually zooms in
       if (isInitialLoad && currentZoom > 11) {
         isInitialLoad = false;
         window.isInitialLoad = false;
       }
-      
+
       // Zoom-based visibility: heatmap at zoom <= 11, markers at zoom > 11
       updateZoomBasedVisibility(currentZoom);
     });
-    
+
     // Also listen to zoom to update immediately
     map.on('zoom', () => {
       const currentZoom = map.getZoom();
-      
+
       // Mark initial load as complete only when user zooms IN (zoom > 11)
       // This ensures markers stay hidden until user manually zooms in
       if (isInitialLoad && currentZoom > 11) {
         isInitialLoad = false;
         window.isInitialLoad = false;
       }
-      
+
       updateZoomBasedVisibility(currentZoom);
     });
 
     // Initialize heatmap visualization
     heatmapViz = new HeatmapVisualization(map);
-    
+
     // Initialize user role for role-based filtering
     await heatmapViz.initializeUserRole();
-    
+
     // Store globally for boundaryGenerator to access
     window.heatmapViz = heatmapViz;
 
@@ -100,7 +101,7 @@ let currentFilters = {
       await new Promise(resolve => setTimeout(resolve, 200));
       boundaryWaitAttempts++;
     }
-    
+
     if (window.cityBoundaries) {
       console.log('[HEATMAP] Boundaries loaded, filtering complaints by boundary');
     } else {
@@ -112,7 +113,7 @@ let currentFilters = {
 
     // Keep default Digos City view on initial load instead of auto-fitting
     // Users can click "Fit to All Markers" button if they want to see all complaints
-    
+
   } catch (error) {
     console.error('[HEATMAP] Initialization failed:', error);
   }
@@ -148,13 +149,13 @@ function calculateDateRange(complaintData) {
 function setupDatePickerConstraints() {
   const dateStart = document.getElementById('date-range-start');
   const dateEnd = document.getElementById('date-range-end');
-  
+
   if (!dateStart || !dateEnd || !heatmapViz || !heatmapViz.allComplaintData) {
     return;
   }
 
   const { oldest, latest } = calculateDateRange(heatmapViz.allComplaintData);
-  
+
   if (!oldest || !latest) {
     console.warn('[HEATMAP] No valid complaint dates found for date range restriction');
     return;
@@ -182,7 +183,7 @@ function setupDatePickerConstraints() {
 function updateDatePickerConstraints(selectedStartDate, selectedEndDate) {
   const dateStart = document.getElementById('date-range-start');
   const dateEnd = document.getElementById('date-range-end');
-  
+
   if (!dateStart || !dateEnd || !heatmapViz || !heatmapViz.allComplaintData) {
     return;
   }
@@ -215,12 +216,12 @@ function updateDatePickerConstraints(selectedStartDate, selectedEndDate) {
   if (selectedStartDate && selectedEndDate) {
     const startDate = new Date(selectedStartDate);
     const endDate = new Date(selectedEndDate);
-    
+
     if (startDate > endDate) {
       // Start date is after end date - clear the one that violates constraint
       const startMax = new Date(dateStart.getAttribute('max'));
       const endMin = new Date(dateEnd.getAttribute('min'));
-      
+
       if (startDate > startMax) {
         dateStart.value = '';
       }
@@ -254,10 +255,10 @@ async function loadComplaintData() {
     // Markers will be created lazily when user zooms in for the first time
     // This prevents any flash of markers on page load
     // Markers will be created in updateZoomBasedVisibility() when zoom > 11 and isInitialLoad becomes false
-    
+
     // Apply initial filters (markers don't exist yet, so this only affects heatmap)
     applyFiltersAndUpdate();
-    
+
     // Apply initial zoom-based visibility (only heatmap will show)
     const initialZoom = map ? map.getZoom() : 11;
     updateZoomBasedVisibility(initialZoom);
@@ -277,11 +278,11 @@ window.isInitialLoad = true;
 // Function to update visibility based on zoom level (must be global for zoom events)
 function updateZoomBasedVisibility(zoom) {
   if (!heatmapViz) return;
-  
+
   const zoomThreshold = 11;
   const heatmapToggle = document.getElementById('toggle-heatmap-btn');
   const isHeatmapForced = heatmapToggle && heatmapToggle.classList.contains('forced-on');
-  
+
   // On initial load, show only heatmap regardless of zoom
   // Markers will remain hidden until user manually zooms in (zoom > 11)
   if (isInitialLoad) {
@@ -294,7 +295,7 @@ function updateZoomBasedVisibility(zoom) {
     }
     return; // Exit early - don't process zoom-based visibility during initial load
   }
-  
+
   if (zoom <= zoomThreshold) {
     // Show heatmap, hide markers (zoom <= 11)
     if (heatmapViz.heatmapLayer) {
@@ -308,7 +309,7 @@ function updateZoomBasedVisibility(zoom) {
     // Zoom > 11: Show markers that pass filters, hide heatmap unless forced
     // Role-based: Citizens don't see markers (only heatmap), others see markers based on role
     const userRole = heatmapViz.userRole || 'citizen';
-    
+
     // Citizens: Always show only heatmap, never markers
     if (userRole === 'citizen') {
       if (heatmapViz.heatmapLayer) {
@@ -325,27 +326,27 @@ function updateZoomBasedVisibility(zoom) {
     } else {
       // Non-citizens: Show markers based on zoom and filters
     // Create markers lazily if they don't exist yet (first time user zooms in)
-    if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
-      console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
-      heatmapViz.createMarkerLayer();
-    }
-    
+      if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
+        console.log('[HEATMAP] Creating markers for first time (user zoomed in)');
+        heatmapViz.createMarkerLayer();
+      }
+
       if (heatmapViz.markerLayer && heatmapViz.markerLayer.getLayers().length > 0) {
       // First ensure the marker layer is on the map
-      if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
-        heatmapViz.markerLayer.addTo(heatmapViz.map);
-      }
-      
+        if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
+          heatmapViz.markerLayer.addTo(heatmapViz.map);
+        }
+
         // Trigger marker visibility update based on current filters
         // This ensures markers respect filter settings when zooming in
-      if (heatmapViz.updateMarkerVisibility) {
-        heatmapViz.updateMarkerVisibility();
+        if (heatmapViz.updateMarkerVisibility) {
+          heatmapViz.updateMarkerVisibility();
           console.log('[HEATMAP] Marker visibility triggered by zoom change');
-      } else {
+        } else {
         // Fallback: show all markers if updateMarkerVisibility doesn't exist
-        heatmapViz.showMarkers();
-      }
-        
+          heatmapViz.showMarkers();
+        }
+
         // Update toggle button state
         const toggleMarkersBtn = document.getElementById('toggle-markers-btn');
         if (toggleMarkersBtn) {
@@ -353,14 +354,14 @@ function updateZoomBasedVisibility(zoom) {
           toggleMarkersBtn.classList.add('active');
           toggleMarkersBtn.style.display = 'block';
         }
-    }
-      
-    // Hide heatmap unless forced on
-    if (heatmapViz.heatmapLayer) {
-      if (isHeatmapForced) {
-        heatmapViz.showHeatmap();
-      } else {
-        heatmapViz.hideHeatmap();
+      }
+
+      // Hide heatmap unless forced on
+      if (heatmapViz.heatmapLayer) {
+        if (isHeatmapForced) {
+          heatmapViz.showHeatmap();
+        } else {
+          heatmapViz.hideHeatmap();
         }
       }
     }
@@ -372,14 +373,14 @@ function positionResetViewButton() {
   const customControlsRow = document.querySelector('.map-custom-controls-row');
   const resetViewButton = document.getElementById('reset-view-btn');
   const menuToggle = document.getElementById('menu-toggle');
-  
+
   if (!customControlsRow) return;
-  
+
   // Ensure menu toggle is in the row
   if (menuToggle && menuToggle.parentElement !== customControlsRow) {
     customControlsRow.insertBefore(menuToggle, customControlsRow.firstChild);
   }
-  
+
   // Ensure reset view button is in the row (not positioned elsewhere)
   if (resetViewButton) {
     // Remove any absolute/fixed positioning that might have been set
@@ -387,13 +388,13 @@ function positionResetViewButton() {
     resetViewButton.style.top = 'auto';
     resetViewButton.style.left = 'auto';
     resetViewButton.style.bottom = 'auto';
-    
+
     // Ensure it's in the row container
     if (resetViewButton.parentElement !== customControlsRow) {
       customControlsRow.appendChild(resetViewButton);
     }
   }
-  
+
   // Layer control (tile changer) should stay in its default Leaflet position
   // below the zoom controls - don't move it to the row
 }
@@ -402,9 +403,9 @@ function positionResetViewButton() {
 function positionGearButton(disableTransition = false) {
   const panel = document.getElementById('map-controls-panel');
   const gearButton = document.getElementById('toggle-controls-btn');
-  
+
   if (!panel || !gearButton) return;
-  
+
   // Use position absolute and calculate based on panel position
   // Ensure parent container has position relative
   const mapContainer = document.getElementById('map');
@@ -414,15 +415,15 @@ function positionGearButton(disableTransition = false) {
       parent.style.position = 'relative';
     }
   }
-  
+
   gearButton.style.position = 'absolute';
   gearButton.style.right = '20px';
-  
+
   // Temporarily disable transition if requested (e.g., when panel is closing)
   if (disableTransition) {
     gearButton.style.transition = 'none';
   }
-  
+
   if (panel.classList.contains('hidden')) {
     // Panel is hidden, show gear button at default position
     gearButton.style.top = '20px';
@@ -435,14 +436,14 @@ function positionGearButton(disableTransition = false) {
     // Calculate position relative to viewport (panel top + height + spacing)
     gearButton.style.top = `${panelTop + panelHeight + spacing}px`;
   }
-  
+
   // Re-enable transition after a brief delay if it was disabled
   if (disableTransition) {
     setTimeout(() => {
       gearButton.style.transition = 'top 0.3s ease';
     }, 50);
   }
-  
+
   // Also position reset view button
   positionResetViewButton();
 }
@@ -454,7 +455,7 @@ function setupControlPanel() {
     const panel = document.getElementById('map-controls-panel');
     const isClosing = !panel.classList.contains('hidden');
     panel.classList.toggle('hidden');
-    
+
     // Reposition gear button after toggling
     // Disable transition when closing to prevent animation
     setTimeout(() => {
@@ -467,12 +468,12 @@ function setupControlPanel() {
     // Disable transition when closing to prevent animation
     positionGearButton(true);
   });
-  
+
   // Reposition gear button when panel content changes (e.g., filters loaded)
   const observer = new MutationObserver(() => {
     positionGearButton();
   });
-  
+
   const panel = document.getElementById('map-controls-panel');
   if (panel) {
     observer.observe(panel, {
@@ -482,20 +483,20 @@ function setupControlPanel() {
       attributeFilter: ['class']
     });
   }
-  
+
   // Initial positioning
   positionGearButton();
-  
+
   // Also reposition on window resize
   window.addEventListener('resize', positionGearButton);
-  
+
   // Initialize reset view button positioning
   // Make sure it's positioned correctly on initial load
   setTimeout(() => {
     positionGearButton();
     positionResetViewButton();
   }, 100);
-  
+
   // Ensure layer control is in row after everything loads
   setTimeout(() => {
     positionResetViewButton();
@@ -525,7 +526,7 @@ function setupControlPanel() {
   // Debounce function to limit API calls
   let filterDebounceTimer = null;
   let isUpdating = false; // Prevent concurrent updates
-  
+
   function debounceFilterUpdate(callback, delay = 500) {
     clearTimeout(filterDebounceTimer);
     filterDebounceTimer = setTimeout(async () => {
@@ -573,22 +574,22 @@ function setupControlPanel() {
     // Update marker visibility without reloading data
     if (heatmapViz) {
       heatmapViz.currentFilters = currentFilters;
-      
+
       // Update heatmap layer with filtered data
       if (heatmapViz.heatmapLayer) {
         heatmapViz.hideHeatmap();
       }
       heatmapViz.createHeatmapLayer();
-      
-        // Trigger marker visibility update if markers exist and are visible
-        if (heatmapViz.markerLayer && map && map.hasLayer(heatmapViz.markerLayer)) {
-          // Markers are visible - update their visibility based on filters
-          if (heatmapViz.updateMarkerVisibility) {
-            heatmapViz.updateMarkerVisibility();
-            console.log('[FILTER] Marker visibility updated via filter trigger');
-          }
+
+      // Trigger marker visibility update if markers exist and are visible
+      if (heatmapViz.markerLayer && map && map.hasLayer(heatmapViz.markerLayer)) {
+        // Markers are visible - update their visibility based on filters
+        if (heatmapViz.updateMarkerVisibility) {
+          heatmapViz.updateMarkerVisibility();
+          console.log('[FILTER] Marker visibility updated via filter trigger');
         }
-      
+      }
+
       // Apply zoom-based visibility (this will handle both markers and heatmap)
       // Don't call updateMarkerVisibility() directly - let updateZoomBasedVisibility handle it
       const currentZoom = map ? map.getZoom() : 11;
@@ -612,7 +613,7 @@ function setupControlPanel() {
       });
     });
 
-    // Category and Department checkboxes are loaded dynamically, 
+    // Category and Department checkboxes are loaded dynamically,
     // so listeners are attached in loadCategories() and loadDepartments()
 
     // Include resolved checkbox
@@ -627,7 +628,7 @@ function setupControlPanel() {
     const dateStart = document.getElementById('date-range-start');
     const dateEnd = document.getElementById('date-range-end');
     const clearDateRange = document.getElementById('clear-date-range');
-    
+
     if (dateStart) {
       dateStart.addEventListener('change', () => {
         // Update constraints when start date changes
@@ -637,7 +638,7 @@ function setupControlPanel() {
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
     }
-    
+
     if (dateEnd) {
       dateEnd.addEventListener('change', () => {
         // Update constraints when end date changes
@@ -647,7 +648,7 @@ function setupControlPanel() {
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
     }
-    
+
     if (clearDateRange) {
       clearDateRange.addEventListener('click', () => {
         if (dateStart) dateStart.value = '';
@@ -666,20 +667,20 @@ function setupControlPanel() {
       if (userRole === 'citizen') {
         toggleMarkersBtn.style.display = 'none';
       }
-      
+
       toggleMarkersBtn.addEventListener('click', () => {
         if (!heatmapViz) return;
-        
+
         // Citizens shouldn't be able to toggle markers
         if (heatmapViz.userRole === 'citizen') {
           return;
         }
-        
+
         // Check if markers are currently visible
-        const markersVisible = heatmapViz.markerLayer && 
-                              map && 
+        const markersVisible = heatmapViz.markerLayer &&
+                              map &&
                               map.hasLayer(heatmapViz.markerLayer);
-        
+
         if (markersVisible) {
           // Hide markers
           heatmapViz.hideMarkers();
@@ -691,14 +692,14 @@ function setupControlPanel() {
           if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
             heatmapViz.createMarkerLayer();
           }
-          
+
           // Apply current filters to determine which markers should be visible
           if (heatmapViz.updateMarkerVisibility) {
             heatmapViz.updateMarkerVisibility();
           } else {
             heatmapViz.showMarkers();
           }
-          
+
           toggleMarkersBtn.textContent = 'Hide Markers';
           toggleMarkersBtn.classList.add('active');
           console.log('[HEATMAP] Markers shown via toggle');
@@ -711,10 +712,10 @@ function setupControlPanel() {
     if (toggleHeatmapBtn) {
       toggleHeatmapBtn.addEventListener('click', () => {
         if (!heatmapViz) return;
-        
+
         const isForced = toggleHeatmapBtn.classList.contains('forced-on');
         const currentZoom = map ? map.getZoom() : 11;
-        
+
         if (isForced) {
           // Turn off forced mode - return to zoom-based visibility
           toggleHeatmapBtn.classList.remove('forced-on');
@@ -737,36 +738,36 @@ function setupControlPanel() {
   const resetFiltersBtn = document.getElementById('reset-filters-btn');
   if (resetFiltersBtn) {
     resetFiltersBtn.addEventListener('click', async () => {
-    resetCheckboxes('status-checkbox');
-    resetCheckboxes('category-checkbox');
-    resetCheckboxes('department-checkbox');
-    document.getElementById('include-resolved').checked = true;
-    
-    // Clear date range
-    const dateStart = document.getElementById('date-range-start');
-    const dateEnd = document.getElementById('date-range-end');
-    if (dateStart) dateStart.value = '';
-    if (dateEnd) dateEnd.value = '';
-    
-    // Reset heatmap toggle
-    const toggleHeatmapBtn = document.getElementById('toggle-heatmap-btn');
-    if (toggleHeatmapBtn) {
-      toggleHeatmapBtn.classList.remove('forced-on');
-      toggleHeatmapBtn.textContent = 'Toggle Heatmap';
-    }
+      resetCheckboxes('status-checkbox');
+      resetCheckboxes('category-checkbox');
+      resetCheckboxes('department-checkbox');
+      document.getElementById('include-resolved').checked = true;
 
-    currentFilters = {
-      status: '',
-      category: '',
-      department: '',
-      includeResolved: true,
-      startDate: '',
-      endDate: ''
-    };
+      // Clear date range
+      const dateStart = document.getElementById('date-range-start');
+      const dateEnd = document.getElementById('date-range-end');
+      if (dateStart) dateStart.value = '';
+      if (dateEnd) dateEnd.value = '';
 
-    await loadComplaintData();
-    fitToAllMarkers();
-  });
+      // Reset heatmap toggle
+      const toggleHeatmapBtn = document.getElementById('toggle-heatmap-btn');
+      if (toggleHeatmapBtn) {
+        toggleHeatmapBtn.classList.remove('forced-on');
+        toggleHeatmapBtn.textContent = 'Toggle Heatmap';
+      }
+
+      currentFilters = {
+        status: '',
+        category: '',
+        department: '',
+        includeResolved: true,
+        startDate: '',
+        endDate: ''
+      };
+
+      await loadComplaintData();
+      fitToAllMarkers();
+    });
   }
 
   // Fit to bounds
@@ -808,12 +809,12 @@ function setupControlPanel() {
     // This can be used to control when markers appear
   });
 
-    // Load categories and departments
-    loadCategories();
-    loadDepartments();
-    
-    // Setup auto-filtering immediately (checkboxes are already in HTML for status)
-    setupAutoFiltering();
+  // Load categories and departments
+  loadCategories();
+  loadDepartments();
+
+  // Setup auto-filtering immediately (checkboxes are already in HTML for status)
+  setupAutoFiltering();
 }
 
 // Load categories
@@ -822,7 +823,7 @@ async function loadCategories() {
     const apiClientModule = await import('../../js/config/apiClient.js');
     const apiClient = apiClientModule.default;
     const { data } = await apiClient.get('/api/department-structure/categories');
-    
+
     const group = document.getElementById('category-filter-group');
     const loading = document.getElementById('category-loading');
     if (loading) loading.remove();
@@ -831,19 +832,19 @@ async function loadCategories() {
       data.forEach(category => {
         const label = document.createElement('label');
         label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0;';
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'category-checkbox';
         checkbox.value = category.id;
-        
+
         // Add change listener for auto-filtering
         checkbox.addEventListener('change', () => {
           if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
             window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
           }
         });
-        
+
         const text = document.createTextNode(`${category.icon || ''} ${category.name}`);
         label.appendChild(checkbox);
         label.appendChild(text);
@@ -946,19 +947,19 @@ async function loadDepartments() {
       departments.forEach(dept => {
         const label = document.createElement('label');
         label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0;';
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'department-checkbox';
         checkbox.value = dept.code || dept.id;
-        
+
         // Add change listener for auto-filtering
         checkbox.addEventListener('change', () => {
           if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
             window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
           }
         });
-        
+
         const deptName = dept.name || `Department ${dept.code || dept.id}`;
         const deptCode = dept.code ? `(${dept.code})` : '';
         // Highlight user's department with bold text
@@ -1001,7 +1002,7 @@ function updateStatistics() {
 
   document.getElementById('total-complaints-stat').textContent = total;
   document.getElementById('visible-markers-stat').textContent = visible;
-  
+
   // Reposition gear button after stats update (panel height might change)
   positionGearButton();
 }
@@ -1009,10 +1010,10 @@ function updateStatistics() {
 // Reset map view to original center and zoom
 function resetMapView() {
   if (!map) return;
-  
+
   const originCenter = [6.854282, 125.318462]; // Digos City center
   const originZoom = 11;
-  
+
   map.setView(originCenter, originZoom, { animate: true });
 }
 
@@ -1041,7 +1042,7 @@ function fitToAllMarkers() {
     const southWest = bounds.getSouthWest();
     const latDiff = Math.abs(northEast.lat - southWest.lat);
     const lngDiff = Math.abs(northEast.lng - southWest.lng);
-    
+
     // If bounds are too small (all complaints very close together), use minimum zoom
     if (latDiff < 0.01 && lngDiff < 0.01) {
       // All complaints are very close - center on them but don't zoom in too much
@@ -1049,7 +1050,7 @@ function fitToAllMarkers() {
       map.setView([center.lat, center.lng], Math.min(map.getZoom(), 14), { animate: false });
     } else {
       // Multiple complaints spread out - fit to bounds with padding
-      map.fitBounds(bounds, { 
+      map.fitBounds(bounds, {
         padding: [50, 50],
         maxZoom: 16 // Prevent zooming in too close even if complaints are clustered
       });
@@ -1061,12 +1062,12 @@ function fitToAllMarkers() {
 function setupSidebarToggle() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
-  
+
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
     });
-    
+
     // Ensure button is visible
     menuToggle.style.display = 'flex';
     menuToggle.style.visibility = 'visible';

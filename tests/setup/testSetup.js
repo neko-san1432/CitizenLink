@@ -18,6 +18,7 @@ if (!process.env.DEBUG) {
 }
 
 // Global test utilities
-global.sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
+global.sleep = (ms) => new Promise(resolve => {
+  setTimeout(resolve, ms);
+});
 

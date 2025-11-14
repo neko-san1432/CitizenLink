@@ -23,7 +23,10 @@ module.exports = {
   }
 };
 
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 55de51f3fa3db603cdb3e11f736f1c90f3a780b3

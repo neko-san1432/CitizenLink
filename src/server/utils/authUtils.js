@@ -11,7 +11,7 @@
 function extractUserMetadata(tokenUser) {
   const userMetadata = tokenUser.user_metadata || {};
   const rawUserMetaData = tokenUser.raw_user_meta_data || {};
-  
+
   // Merge both sources (raw_user_meta_data takes priority)
   return { ...userMetadata, ...rawUserMetaData };
 }
@@ -62,10 +62,10 @@ function buildUserObject(tokenUser, combinedMetadata, roleValidation, department
     id: tokenUser.id,
     email: tokenUser.email,
     email_confirmed_at: tokenUser.email_confirmed_at,
-    
+
     // Metadata (checks both raw_user_meta_data and user_metadata)
     raw_user_meta_data: combinedMetadata,
-    
+
     // Easy access fields from combined metadata
     role: userRole,
     normalized_role: combinedMetadata.normalized_role || combinedMetadata.role || 'citizen',
@@ -77,15 +77,15 @@ function buildUserObject(tokenUser, combinedMetadata, roleValidation, department
     status: combinedMetadata.status || 'active',
     department: userDepartment,
     employeeId: combinedMetadata.employee_id || null,
-    
+
     // Role validation info
     roleType: roleValidation.roleType,
     departmentCode,
-    
+
     // Verification
     emailVerified: Boolean(tokenUser.email_confirmed_at),
     phoneVerified: combinedMetadata.phone_verified || false,
-    
+
     // Security
     isBanned: combinedMetadata.isBanned === true,
     warningStrike: combinedMetadata.warningStrike || 0,
@@ -141,7 +141,7 @@ function createErrorResponse(message, statusCode = 500, details = null) {
  * @param {string} defaultMessage - Default error message
  */
 function handleAuthError(error, req, res, defaultMessage = 'Authentication failed') {
-  const isApiRequest = req.path?.startsWith('/api/') || 
+  const isApiRequest = req.path?.startsWith('/api/') ||
                        req.originalUrl?.startsWith('/api/') ||
                        req.url?.startsWith('/api/');
 
@@ -167,8 +167,11 @@ module.exports = {
   handleAuthError
 };
 
+<<<<<<< HEAD
 
 
 
 
 
+=======
+>>>>>>> 55de51f3fa3db603cdb3e11f736f1c90f3a780b3

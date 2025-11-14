@@ -66,15 +66,15 @@ class CitizenLinkApp {
       try {
         const token = req.body?.access_token;
         const remember = Boolean(req.body?.remember);
-        
+
         if (!token) {
           return res.status(400).json({ success: false, error: 'access_token is required' });
         }
-        
+
         const { getCookieOptions } = require('./utils/authUtils');
         const cookieOptions = getCookieOptions(remember);
         res.cookie('sb_access_token', token, cookieOptions);
-        
+
         return res.json({ success: true });
       } catch (e) {
         console.error('[SERVER SESSION] 💥 Error setting session cookie:', e);
@@ -515,7 +515,7 @@ class CitizenLinkApp {
       const baseRole = metaBase || (role !== 'citizen' ? role : null);
       // Extract department from user object (set by auth middleware)
       const department = user.department || null;
-      
+
       res.json({
         success: true,
         data: {
@@ -823,6 +823,7 @@ class CitizenLinkApp {
         const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'brgy_boundaries_location.json');
         const fs = require('fs').promises;
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
       } catch (error) {
@@ -835,6 +836,7 @@ class CitizenLinkApp {
         const filePath = path.join(config.rootDir, 'src', 'client', 'assets', 'digos-city-boundary.json');
         const fs = require('fs').promises;
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path
         const jsonData = await fs.readFile(filePath, 'utf8');
         res.json(JSON.parse(jsonData));
       } catch (error) {
@@ -902,32 +904,32 @@ class CitizenLinkApp {
       const ReminderService = require('./services/ReminderService');
       const reminderService = new ReminderService();
       reminderService.startScheduler();
-      
+
       // Initialize clustering scheduler
       const ClusteringScheduler = require('./services/ClusteringScheduler');
       const clusteringScheduler = new ClusteringScheduler();
-      
+
       // Load clustering configuration from environment or use defaults
       const clusteringConfig = {
-        intervalHours: process.env.CLUSTERING_INTERVAL_HOURS ? 
+        intervalHours: process.env.CLUSTERING_INTERVAL_HOURS ?
           parseInt(process.env.CLUSTERING_INTERVAL_HOURS) : 6,
-        radiusKm: process.env.CLUSTERING_RADIUS_KM ? 
+        radiusKm: process.env.CLUSTERING_RADIUS_KM ?
           parseFloat(process.env.CLUSTERING_RADIUS_KM) : 0.5,
-        minComplaintsPerCluster: process.env.CLUSTERING_MIN_COMPLAINTS ? 
+        minComplaintsPerCluster: process.env.CLUSTERING_MIN_COMPLAINTS ?
           parseInt(process.env.CLUSTERING_MIN_COMPLAINTS) : 3,
         onlyIfNewComplaints: process.env.CLUSTERING_SMART_TRIGGER !== 'false',
         enabled: process.env.CLUSTERING_ENABLED !== 'false'
       };
-      
+
       clusteringScheduler.start(clusteringConfig);
-      
+
       // Store scheduler instance for potential admin access
       this.clusteringScheduler = clusteringScheduler;
-      
+
       // Make scheduler accessible globally through manager
       const clusteringManager = require('./utils/clusteringManager');
       clusteringManager.setScheduler(clusteringScheduler);
-      
+
       this.app.listen(port, () => {
         console.log(`Server running on port ${port}`);
       });

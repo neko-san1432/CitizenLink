@@ -18,6 +18,10 @@ export function safeSetItem(key, value) {
 
 export function storageAvailable(type) {
   try {
+    // Validate storage type to prevent object injection
+    if (type !== 'localStorage' && type !== 'sessionStorage') {
+      return false;
+    }
     const storage = window[type];
     const x = '__storage_test__';
     storage.setItem(x, x);

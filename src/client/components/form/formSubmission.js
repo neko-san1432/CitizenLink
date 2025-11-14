@@ -26,7 +26,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
   const submitBtn = formElement.querySelector('.submit-btn');
   const cancelBtn = formElement.querySelector('.cancel-btn') || document.querySelector('.cancel-btn');
   const originalSubmitText = submitBtn?.textContent || 'Submit Complaint';
-  
+
   try {
     // Disable buttons
     if (submitBtn) {
@@ -55,10 +55,10 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
 
     // Create FormData for API submission
     const apiFormData = new FormData();
-    
+
     // Add basic fields
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
+      if (value !== null && value !== void 0 && value !== '') {
         if (key === 'departments' && Array.isArray(value)) {
           value.forEach(deptId => {
             apiFormData.append('preferred_departments', deptId);
@@ -101,23 +101,23 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
         if (e.lengthComputable && fileHandler && selectedFiles.length > 0) {
           uploadedBytes = e.loaded;
           const totalSize = e.total;
-          
+
           // Calculate progress for each file based on its position
           selectedFiles.forEach((file, index) => {
             const fileStart = fileStartPositions[index];
             const fileEnd = fileStartPositions[index + 1];
             const fileSize = file.size;
-            
+
             let fileProgress = 0;
             if (uploadedBytes >= fileEnd) {
               fileProgress = 100;
             } else if (uploadedBytes > fileStart) {
               fileProgress = Math.round(((uploadedBytes - fileStart) / fileSize) * 100);
             }
-            
+
             fileHandler.setUploadStatus(file, 'uploading', fileProgress);
           });
-          
+
           // Update button text
           if (submitBtn) {
             const overallProgress = Math.round((e.loaded / e.total) * 100);
@@ -159,12 +159,12 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
             let errorMsg = `Submission failed: ${xhr.statusText}`;
             if (xhr.responseText) {
               try {
-            const errorResponse = JSON.parse(xhr.responseText);
+                const errorResponse = JSON.parse(xhr.responseText);
                 errorMsg = errorResponse.error || errorResponse.message || errorMsg;
               } catch (parseError) {
                 // If JSON parsing fails, use response text as-is (might be HTML error page)
-                errorMsg = xhr.responseText.length > 200 
-                  ? `Server error: ${xhr.statusText}` 
+                errorMsg = xhr.responseText.length > 200
+                  ? `Server error: ${xhr.statusText}`
                   : xhr.responseText;
               }
             }
@@ -235,9 +235,9 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
           reject(new Error('Failed to get CSRF token'));
           return;
         }
-        
+
         apiFormData.append('_csrf', csrfData.csrfToken);
-        
+
         xhr.open('POST', '/api/complaints', true);
         if (headers.Authorization) {
           xhr.setRequestHeader('Authorization', headers.Authorization);
@@ -255,7 +255,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     return result.data;
   } catch (error) {
     console.error('[COMPLAINT] Submission error:', error);
-    
+
     // Remove failed uploads if fileHandler is available
     if (fileHandler && selectedFiles.length > 0) {
       // Mark all files as error first
@@ -270,7 +270,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
         }
       }, 2000);
     }
-    
+
     // Determine error message
     let errorMessage = error.message || 'Failed to submit complaint';
     if (errorMessage.includes('Connection') || errorMessage.includes('timeout') || errorMessage.includes('network')) {
@@ -278,7 +278,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     } else if (errorMessage.includes('Failed to upload')) {
       errorMessage = 'File upload failed. Please check your connection and try again.';
     }
-    
+
     showMessage('error', errorMessage);
     throw error;
   } finally {

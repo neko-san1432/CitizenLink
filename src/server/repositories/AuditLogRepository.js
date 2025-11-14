@@ -37,7 +37,7 @@ class AuditLogRepository {
           performed_by: performedBy,
           target_type: targetType,
           target_id: targetId,
-          details: details,
+          details,
           ip_address: ipAddress,
           user_agent: userAgent,
           created_at: new Date().toISOString()

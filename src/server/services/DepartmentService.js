@@ -33,7 +33,7 @@ class DepartmentService {
       name: departmentData.name.trim(),
       code: departmentData.code.trim().toUpperCase(),
       description: departmentData.description?.trim() || null,
-      is_active: departmentData.is_active !== undefined ? departmentData.is_active : true
+      is_active: departmentData.is_active !== void 0 ? departmentData.is_active : true
     };
     return this.departmentRepo.create(sanitizedData);
   }

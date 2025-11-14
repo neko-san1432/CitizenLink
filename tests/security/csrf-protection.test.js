@@ -1,6 +1,6 @@
 /**
  * Security Tests: CSRF Protection
- * 
+ *
  * Tests CSRF token validation and bypass attempts
  */
 
@@ -136,7 +136,7 @@ describe('CSRF Protection', () => {
     it('should reject tampered CSRF token', () => {
       const token = crypto.randomBytes(32).toString('hex');
       const signedToken = signToken(token);
-      const tamperedToken = signedToken.slice(0, -5) + 'xxxxx';
+      const tamperedToken = `${signedToken.slice(0, -5)  }xxxxx`;
 
       req.method = 'POST';
       req.headers['x-csrf-token'] = tamperedToken;
@@ -249,5 +249,4 @@ function signToken(token) {
   hmac.update(token);
   return `${token}.${hmac.digest('hex')}`;
 }
-
 

@@ -45,7 +45,7 @@ class SettingService {
       type: settingData.type || 'text',
       category: settingData.category || 'general',
       description: settingData.description?.trim() || null,
-      is_public: settingData.is_public !== undefined ? settingData.is_public : false
+      is_public: settingData.is_public !== void 0 ? settingData.is_public : false
     };
     return this.settingRepo.create(sanitizedData);
   }
@@ -62,8 +62,8 @@ class SettingService {
       value: settingData.value,
       type: settingData.type || existingSetting.type,
       category: settingData.category || existingSetting.category,
-      description: settingData.description !== undefined ? settingData.description?.trim() : existingSetting.description,
-      is_public: settingData.is_public !== undefined ? settingData.is_public : existingSetting.is_public
+      description: settingData.description !== void 0 ? settingData.description?.trim() : existingSetting.description,
+      is_public: settingData.is_public !== void 0 ? settingData.is_public : existingSetting.is_public
     };
     return this.settingRepo.update(key, sanitizedData);
   }
@@ -78,7 +78,7 @@ class SettingService {
       type: settingData.type || 'text',
       category: settingData.category || 'general',
       description: settingData.description?.trim() || null,
-      is_public: settingData.is_public !== undefined ? settingData.is_public : false
+      is_public: settingData.is_public !== void 0 ? settingData.is_public : false
     };
     return this.settingRepo.upsert(sanitizedData);
   }

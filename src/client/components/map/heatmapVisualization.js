@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                /**
+/**
  * Heatmap Visualization Component for Complaint Locations
  * Integrates with Leaflet maps and DBSCAN clustering
  */
@@ -6,15 +6,15 @@
 // Helper function to check if a point is inside a GeoJSON polygon
 function isPointInPolygon(lat, lng, geojson) {
   if (!geojson) return false;
-  
+
   // Handle case where geojson is already a geometry object
   let geometry = geojson;
   if (geojson.geometry) {
     geometry = geojson.geometry;
   }
-  
+
   if (!geometry || !geometry.coordinates) return false;
-  
+
   if (geometry.type === 'Polygon') {
     return isPointInPolygonCoords(lat, lng, geometry.coordinates);
   } else if (geometry.type === 'MultiPolygon') {
@@ -31,25 +31,25 @@ function isPointInPolygon(lat, lng, geojson) {
 // - MultiPolygon polygon: [[ring1], [ring2], ...] where each ring is [[lng, lat], [lng, lat], ...]
 function isPointInPolygonCoords(lat, lng, coordinates) {
   if (!coordinates || coordinates.length === 0) return false;
-  
+
   // Check if this is a MultiPolygon structure (nested deeper)
   // MultiPolygon coordinates structure: [[[ring1], [ring2]], ...]
   // If coordinates[0][0] is an array of arrays (not just numbers), it's a MultiPolygon polygon
-  if (Array.isArray(coordinates[0]) && 
-      Array.isArray(coordinates[0][0]) && 
+  if (Array.isArray(coordinates[0]) &&
+      Array.isArray(coordinates[0][0]) &&
       Array.isArray(coordinates[0][0][0])) {
     // This is a MultiPolygon polygon: [[[ring1]], [[ring2]], ...]
     // Each element is a polygon with rings
     return coordinates.some(polygon => isPointInPolygonCoords(lat, lng, polygon));
   }
-  
+
   // Single polygon: coordinates is [outerRing, innerRing1, innerRing2, ...]
   // Each ring is [[lng, lat], [lng, lat], ...]
   const outerRing = coordinates[0];
   if (!outerRing || !Array.isArray(outerRing) || outerRing.length === 0) return false;
-  
+
   let inside = false;
-  
+
   // Ray casting algorithm: cast a horizontal ray from (lat, lng) going right (increasing longitude)
   // GeoJSON coordinates are [longitude, latitude]
   for (let i = 0, j = outerRing.length - 1; i < outerRing.length; j = i++) {
@@ -57,10 +57,10 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
     const lat1 = outerRing[i][1]; // latitude of point i
     const lng2 = outerRing[j][0]; // longitude of point j
     const lat2 = outerRing[j][1]; // latitude of point j
-    
+
     // Skip horizontal edges (they don't contribute to the intersection count)
     if (Math.abs(lat2 - lat1) < 1e-10) continue;
-    
+
     // Check if the horizontal ray from (lat, lng) intersects the edge from (lat1, lng1) to (lat2, lng2)
     // The ray intersects if:
     // 1. The point's latitude is between the edge's latitudes (or the edge crosses the point's latitude)
@@ -75,21 +75,21 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
       }
     }
   }
-  
+
   // Check if point is in any inner rings (holes)
   for (let ringIndex = 1; ringIndex < coordinates.length; ringIndex++) {
     const innerRing = coordinates[ringIndex];
     let inHole = false;
-    
+
     for (let i = 0, j = innerRing.length - 1; i < innerRing.length; j = i++) {
       const lng1 = innerRing[i][0]; // longitude of point i
       const lat1 = innerRing[i][1]; // latitude of point i
       const lng2 = innerRing[j][0]; // longitude of point j
       const lat2 = innerRing[j][1]; // latitude of point j
-      
+
       // Skip horizontal edges
       if (Math.abs(lat2 - lat1) < 1e-10) continue;
-      
+
       const latBetween = (lat1 > lat) !== (lat2 > lat);
       if (latBetween) {
         const intersectLng = (lat - lat1) * (lng2 - lng1) / (lat2 - lat1) + lng1;
@@ -98,20 +98,20 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
         }
       }
     }
-    
+
     if (inHole) {
       inside = false; // Point is in a hole, so it's outside
       break;
     }
   }
-  
+
   return inside;
 }
 
 // Check if coordinates are within any barangay boundary
 function isWithinCityBoundary(lat, lng) {
   if (typeof lat !== 'number' || typeof lng !== 'number') return false;
-  
+
   // Check if boundaries are loaded
   if (!window.cityBoundaries || !Array.isArray(window.cityBoundaries)) {
     // Fallback to bounding box if boundaries not loaded
@@ -121,7 +121,7 @@ function isWithinCityBoundary(lat, lng) {
     const maxLng = 125.7;
     return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
   }
-  
+
   // Debug: Log boundary structure once
   if (!window._boundaryDebugged && window.cityBoundaries.length > 0) {
     window._boundaryDebugged = true;
@@ -135,7 +135,7 @@ function isWithinCityBoundary(lat, lng) {
       hasGeometryCoordinates: Boolean(firstBoundary.geojson?.geometry?.coordinates),
       boundaryCount: window.cityBoundaries.length
     });
-    
+
     // Test with a known point inside Digos City (approximate center)
     const testLat = 6.85;
     const testLng = 125.35;
@@ -148,16 +148,16 @@ function isWithinCityBoundary(lat, lng) {
     }
     console.log(`[BOUNDARY] Test point (${testLat}, ${testLng}) - within boundary: ${testResult}`);
   }
-  
+
   // Check if point is within any barangay boundary
   for (const boundary of window.cityBoundaries) {
     if (boundary && boundary.geojson) {
       if (isPointInPolygon(lat, lng, boundary.geojson)) {
-      return true;
+        return true;
       }
     }
   }
-  
+
   return false;
 }
 
@@ -228,7 +228,7 @@ class HeatmapVisualization {
     try {
       const { getUserRole } = await import('../../auth/authChecker.js');
       this.userRole = await getUserRole();
-      
+
       // Get department for LGU admins
       if (this.userRole && ['lgu', 'lgu-admin', 'lgu-hr'].includes(this.userRole)) {
         try {
@@ -240,7 +240,7 @@ class HeatmapVisualization {
           console.warn('[HEATMAP] Failed to get department from metadata:', error);
         }
       }
-      
+
       console.log('[HEATMAP] User role initialized:', { role: this.userRole, department: this.userDepartment });
     } catch (error) {
       console.error('[HEATMAP] Failed to initialize user role:', error);
@@ -275,7 +275,7 @@ class HeatmapVisualization {
       return complaints.filter(complaint => {
         const complaintDepartments = Array.isArray(complaint.departments) ? complaint.departments :
           (Array.isArray(complaint.department_r) ? complaint.department_r : []);
-        return complaintDepartments.some(dept => 
+        return complaintDepartments.some(dept =>
           String(dept || '').toUpperCase().trim() === String(this.userDepartment || '').toUpperCase().trim()
         );
       });
@@ -301,12 +301,12 @@ class HeatmapVisualization {
       Object.entries(filters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === 'includeResolved') return;
-        if (value !== null && value !== undefined && value !== '') {
+        if (value !== null && value !== void 0 && value !== '') {
           // Handle array values (multiple selections)
           if (Array.isArray(value) && value.length > 0) {
             value.forEach(v => queryParams.append(key, v));
           } else if (!Array.isArray(value)) {
-          queryParams.append(key, value);
+            queryParams.append(key, value);
           }
         }
       });
@@ -356,7 +356,7 @@ class HeatmapVisualization {
             console.warn('[HEATMAP] Skipping complaint with invalid coordinates:', item.id, { lat: item.lat, lng: item.lng });
             return false;
           }
-          
+
           // Filter by boundary if enabled (this is the only server-side filter we keep)
           if (this.filterByBoundary) {
             const withinBoundary = isWithinCityBoundary(lat, lng);
@@ -364,13 +364,13 @@ class HeatmapVisualization {
               // Only log first few filtered complaints to avoid console spam
               if (!this._filteredCount) this._filteredCount = 0;
               if (this._filteredCount < 3) {
-              console.log('[HEATMAP] Filtering out complaint outside city boundaries:', item.id, { lat, lng });
+                console.log('[HEATMAP] Filtering out complaint outside city boundaries:', item.id, { lat, lng });
               }
               this._filteredCount++;
               return false;
             }
           }
-          
+
           return true;
         })
         .map((item) => {
@@ -393,15 +393,15 @@ class HeatmapVisualization {
             submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
           };
         });
-      
+
       // Initialize user role if not already done
       if (!this.userRole) {
         await this.initializeUserRole();
       }
-      
+
       // Apply client-side filters to determine visible complaints
       this.applyClientSideFilters(filters);
-      
+
       // Log summary of filtering
       console.log(`[HEATMAP] Data loading summary:`);
       console.log(`  - Raw data from API: ${raw.length} complaints`);
@@ -412,13 +412,13 @@ class HeatmapVisualization {
       }
       console.log(`  - After client-side filters: ${this.complaintData.length} complaint(s) visible`);
       console.log(`  - User role: ${this.userRole}, Department: ${this.userDepartment || 'N/A'}`);
-      
+
       // Debug: Check if we're missing complaints
       if (raw.length > this.allComplaintData.length) {
         const missing = raw.length - this.allComplaintData.length;
         console.warn(`[HEATMAP] ⚠️ WARNING: ${missing} complaint(s) were filtered out (invalid coordinates or outside boundaries)`);
       }
-      
+
       // console.log removed for security
       // console.log removed for security
       // console.log removed for security
@@ -438,13 +438,13 @@ class HeatmapVisualization {
     }
 
     // Calculate raw intensity values for all complaints
-    const intensities = this.complaintData.map(complaint => 
+    const intensities = this.complaintData.map(complaint =>
       this.getIntensityValue(complaint)
     );
 
     // Find the maximum intensity
     const maxIntensity = Math.max(...intensities);
-    
+
     // Ensure minimum value to prevent division by zero
     return Math.max(maxIntensity, this.dynamicScaling.minMaxDensity);
   }
@@ -459,7 +459,7 @@ class HeatmapVisualization {
    */
   smoothMaxDensity(newMaxDensity) {
     const { smoothedMaxDensity, smoothingFactor } = this.dynamicScaling;
-    
+
     // If new max is higher, apply smoothing to prevent sudden jumps to red
     if (newMaxDensity > smoothedMaxDensity) {
       // Exponential moving average: smoothed = α * new + (1 - α) * old
@@ -467,11 +467,11 @@ class HeatmapVisualization {
       // Higher smoothingFactor = more responsive (faster to change)
       const smoothed = smoothingFactor * newMaxDensity + (1 - smoothingFactor) * smoothedMaxDensity;
       return Math.max(smoothed, this.dynamicScaling.minMaxDensity);
-    } else {
-      // If new max is lower or equal, use it immediately
-      // This ensures that when data changes, the highest point can still reach red
-      return Math.max(newMaxDensity, this.dynamicScaling.minMaxDensity);
     }
+    // If new max is lower or equal, use it immediately
+    // This ensures that when data changes, the highest point can still reach red
+    return Math.max(newMaxDensity, this.dynamicScaling.minMaxDensity);
+
   }
 
   /**
@@ -485,12 +485,12 @@ class HeatmapVisualization {
 
     // Calculate new maximum density
     const newMaxDensity = this.calculateMaxDensity();
-    
+
     // If this is the first calculation (maxDensity is still at initial value of 1.0)
     // or if we have no history, reset to use the actual max immediately
-    const isFirstRun = this.dynamicScaling.maxDensity === 1.0 && 
+    const isFirstRun = this.dynamicScaling.maxDensity === 1.0 &&
                        this.dynamicScaling.densityHistory.length === 0;
-    
+
     if (isFirstRun) {
       // First run: use actual max immediately (no smoothing)
       this.dynamicScaling.maxDensity = newMaxDensity;
@@ -499,11 +499,11 @@ class HeatmapVisualization {
     } else {
       // Subsequent runs: store current max FIRST (this is what we use for normalization)
       this.dynamicScaling.maxDensity = newMaxDensity;
-      
+
       // Update smoothed maximum density (only used for preventing flickering on increases)
       this.dynamicScaling.smoothedMaxDensity = this.smoothMaxDensity(newMaxDensity);
     }
-    
+
     // Optional: Store in history for rolling average (alternative smoothing method)
     this.dynamicScaling.densityHistory.push(newMaxDensity);
     if (this.dynamicScaling.densityHistory.length > this.dynamicScaling.historySize) {
@@ -527,8 +527,8 @@ class HeatmapVisualization {
     // Use actual maxDensity (not smoothed) for normalization
     // This ensures the highest point always maps to red (1.0)
     // Smoothing is only used to prevent flickering when max increases
-    const maxDensity = this.dynamicScaling.maxDensity;
-    
+    const {maxDensity} = this.dynamicScaling;
+
     // Prevent division by zero
     if (maxDensity <= 0) {
       return 0.0;
@@ -537,7 +537,7 @@ class HeatmapVisualization {
     // Normalize: value / maxValue
     // The highest intensity will always be maxDensity / maxDensity = 1.0 (red)
     const normalized = intensity / maxDensity;
-    
+
     // Clamp to [0, 1] range
     return Math.min(1.0, Math.max(0.0, normalized));
   }
@@ -593,7 +593,7 @@ class HeatmapVisualization {
     // This ensures heatmap shows all complaints regardless of role
     // Markers will be filtered by role separately
     const heatmapData = this.allComplaintData || this.complaintData || [];
-    
+
     if (heatmapData.length === 0) {
       console.warn('[HEATMAP] No complaint data available for heatmap');
       this.heatmapLayer = null;
@@ -607,7 +607,7 @@ class HeatmapVisualization {
     const heatmapPoints = heatmapData.map(complaint => {
       const rawIntensity = this.getIntensityValue(complaint);
       const normalizedIntensity = this.normalizeIntensity(rawIntensity);
-      
+
       return [
         complaint.lat,
         complaint.lng,
@@ -620,7 +620,7 @@ class HeatmapVisualization {
     const maxIntensity = Math.max(...intensities);
     const minIntensity = Math.min(...intensities);
     const intensitiesAt1 = intensities.filter(i => i >= 0.99).length;
-    
+
     // Ensure at least one point reaches 1.0 (red) by finding all max points and setting them to 1.0
     if (maxIntensity < 0.99 && intensities.length > 0) {
       console.warn(`[HEATMAP] ⚠️ Max intensity (${maxIntensity.toFixed(3)}) is less than 1.0. Forcing highest point(s) to 1.0.`);
@@ -634,7 +634,7 @@ class HeatmapVisualization {
       });
       console.log(`[HEATMAP] ✓ Set ${fixedCount} point(s) with max intensity to 1.0 (red)`);
     }
-    
+
     console.log(`[HEATMAP] Intensity stats: min=${minIntensity.toFixed(3)}, max=${Math.max(...heatmapPoints.map(d => d[2])).toFixed(3)}, count at 1.0=${intensities.filter(i => i >= 0.99).length}, maxDensity=${this.dynamicScaling.maxDensity.toFixed(3)}`);
 
     // Update heatmap config max value to ensure proper scaling
@@ -718,7 +718,7 @@ class HeatmapVisualization {
         const complaintStatus = (complaint.status || complaint.workflow_status || 'new').toLowerCase();
         const complaintWorkflowStatus = (complaint.workflow_status || 'new').toLowerCase();
         const complaintConfirmationStatus = (complaint.confirmation_status || 'pending').toLowerCase();
-        
+
         // Check if complaint matches any selected status
         const matchesStatus = statusArray.some(filterStatus => {
           const filterLower = filterStatus.toLowerCase();
@@ -733,19 +733,19 @@ class HeatmapVisualization {
             'rejected': 'cancelled',
             'cancelled': 'cancelled'
           };
-          
+
           const mappedStatus = statusMap[filterLower] || filterLower;
-          
+
           // Check workflow_status
           if (mappedStatus === complaintWorkflowStatus) return true;
           // Check confirmation_status
           if (filterLower === complaintConfirmationStatus) return true;
           // Check legacy status field
           if (filterLower === complaintStatus) return true;
-          
+
           return false;
         });
-        
+
         if (!matchesStatus) return false;
       }
 
@@ -827,7 +827,7 @@ class HeatmapVisualization {
         if (isNaN(complaintDate.getTime())) {
           return false; // Invalid date, exclude
         }
-        
+
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           startDate.setHours(0, 0, 0, 0);
@@ -835,7 +835,7 @@ class HeatmapVisualization {
             return false;
           }
         }
-        
+
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
           endDate.setHours(23, 59, 59, 999);
@@ -880,17 +880,17 @@ class HeatmapVisualization {
       this.markerLayer = null;
       return null;
     }
-    
+
     // Initialize user role if not already done
     if (!this.userRole) {
       // Synchronous fallback - role should be initialized in loadComplaintData
       console.warn('[HEATMAP] User role not initialized, defaulting to citizen');
       this.userRole = 'citizen';
     }
-    
+
     // Filter complaints for markers based on role
     let complaintsForMarkers = this.allComplaintData;
-    
+
     // Citizens: No markers (only heatmap)
     if (this.userRole === 'citizen') {
       console.log('[HEATMAP] Citizen role: Markers disabled, only heatmap shown');
@@ -898,7 +898,7 @@ class HeatmapVisualization {
       this.markerMap.clear();
       return this.markerLayer;
     }
-    
+
     // Complaint coordinators and super-admin: All markers
     if (this.userRole === 'complaint-coordinator' || this.userRole === 'super-admin') {
       complaintsForMarkers = this.allComplaintData;
@@ -916,12 +916,12 @@ class HeatmapVisualization {
       this.markerMap.clear();
       return this.markerLayer;
     }
-    
+
     // Create marker layer and store all markers
     // IMPORTANT: Do NOT add layer to map during creation - caller will handle visibility
     this.markerLayer = L.layerGroup();
     this.markerMap.clear();
-    
+
     complaintsForMarkers.forEach((complaint, index) => {
       try {
         const marker = this.createComplaintMarker(complaint, index);
@@ -939,18 +939,18 @@ class HeatmapVisualization {
         console.error(`[HEATMAP] Failed to create marker ${index + 1}:`, error, complaint);
       }
     });
-    
+
     console.log(`[HEATMAP] Created ${this.markerLayer.getLayers().length} marker(s) for all complaints`);
-    
+
     // CRITICAL: Ensure marker layer is NOT on the map during creation
     // The caller will handle adding/removing based on zoom level and initial load state
     if (this.map && this.map.hasLayer(this.markerLayer)) {
       this.map.removeLayer(this.markerLayer);
     }
-    
+
     // Don't apply visibility here - let the caller handle it based on zoom level
     // Markers will be shown/hidden by updateZoomBasedVisibility() in heatmap-init.js
-    
+
     return this.markerLayer;
   }
 
@@ -990,10 +990,10 @@ class HeatmapVisualization {
     // Update visibility of each marker
     this.markerLayer.eachLayer((marker) => {
       // Get complaint ID from marker (try multiple ways)
-      const complaintId = marker._complaintId || 
+      const complaintId = marker._complaintId ||
                          marker.options?.complaintId ||
                          (this.markerMap && Array.from(this.markerMap.entries()).find(([id, m]) => m === marker)?.[0]);
-      
+
       // Determine if marker should be visible
       let shouldBeVisible = false;
       if (complaintId) {
@@ -1001,8 +1001,8 @@ class HeatmapVisualization {
       } else {
         // Fallback: check by coordinates (less reliable but works if ID is missing)
         const latLng = marker.getLatLng();
-        shouldBeVisible = this.complaintData.some(c => 
-          Math.abs(c.lat - latLng.lat) < 0.0001 && 
+        shouldBeVisible = this.complaintData.some(c =>
+          Math.abs(c.lat - latLng.lat) < 0.0001 &&
           Math.abs(c.lng - latLng.lng) < 0.0001
         );
       }
@@ -1029,7 +1029,7 @@ class HeatmapVisualization {
     });
 
     console.log(`[HEATMAP] Marker visibility triggered: ${visibleCount} visible, ${hiddenCount} hidden (total: ${this.markerLayer.getLayers().length})`);
-    
+
     // Dispatch custom event for marker visibility update
     if (typeof window !== 'undefined' && window.dispatchEvent) {
       const event = new CustomEvent('markerVisibilityUpdated', {
@@ -1068,7 +1068,7 @@ class HeatmapVisualization {
    */
   createComplaintMarker(complaint, index = 0) {
     const icon = this.getComplaintIcon(complaint, index);
-    const marker = L.marker([complaint.lat, complaint.lng], { 
+    const marker = L.marker([complaint.lat, complaint.lng], {
       icon,
       // Add z-index offset to prevent stacking
       zIndexOffset: 1000 + index * 10,
@@ -1184,24 +1184,24 @@ class HeatmapVisualization {
       'confirmed': '#28a745',                  // Green
       'disputed': '#dc3545'                    // Red
     };
-    
+
     // Check both status and workflow_status fields
     let status = (complaint.status || complaint.workflow_status || 'pending review').toLowerCase();
-    
+
     // If status is not found, try confirmation_status
     if (!statusColors[status] && complaint.confirmation_status) {
       status = complaint.confirmation_status.toLowerCase();
     }
-    
+
     const color = statusColors[status] || '#6c757d'; // Default to gray if status unknown
-    
+
     // Dynamic sizing based on zoom level
     const currentZoom = this.map ? this.map.getZoom() : 12;
     const baseSize = 12; // Base size in pixels
     const zoomFactor = Math.max(0.7, Math.min(1.5, currentZoom / 12)); // Scale between 0.7x and 1.5x
     const size = Math.round(baseSize * zoomFactor);
     const borderWidth = Math.max(2, Math.round(2 * zoomFactor));
-    
+
     // Add a small border color based on priority for additional visual distinction
     const priorityBorderColors = {
       'low': '#28a745',      // Green border
@@ -1211,7 +1211,7 @@ class HeatmapVisualization {
     };
     const priority = (complaint.priority || 'medium').toLowerCase();
     const borderColor = priorityBorderColors[priority] || '#ffffff';
-    
+
     return L.divIcon({
       html: `<div style="
         background-color: ${color};
@@ -1663,7 +1663,7 @@ class HeatmapVisualization {
       this.map.invalidateSize();
       this.heatmapLayer.addTo(this.map);
       // console.log removed for security
-      
+
       // Verify it's actually on the map
       setTimeout(() => {
         const hasLayer = this.map.hasLayer(this.heatmapLayer);
@@ -1701,21 +1701,21 @@ class HeatmapVisualization {
       console.warn('[HEATMAP] Cannot show markers: markerLayer is null');
       return;
     }
-    
+
     if (!this.map) {
       console.warn('[HEATMAP] Cannot show markers: map is null');
       return;
     }
-    
+
     // console.log removed for security
     this.markerLayer.addTo(this.map);
-    
+
     // Verify markers are actually on the map
     setTimeout(() => {
       const hasLayer = this.map.hasLayer(this.markerLayer);
       const layerCount = this.markerLayer.getLayers().length;
       // console.log removed for security
-      
+
       if (hasLayer && layerCount > 0) {
         // Get bounds of all markers to verify they're valid
         try {
@@ -1749,7 +1749,7 @@ class HeatmapVisualization {
         });
         // Remove the layer group from map if attached
         if (this.map && this.map.hasLayer && this.map.hasLayer(this.markerLayer)) {
-      this.map.removeLayer(this.markerLayer);
+          this.map.removeLayer(this.markerLayer);
         }
         // DO NOT clear markers from the layer - we want to keep them for when zoom > 11
         // this.markerLayer.clearLayers(); // REMOVED - this was causing markers to disappear
@@ -1773,16 +1773,16 @@ class HeatmapVisualization {
    */
   updateMarkerSizes() {
     if (!this.markerLayer || !this.map) return;
-    
+
     const markers = this.markerLayer.getLayers();
     markers.forEach((marker, index) => {
       // Get the original complaint data from marker's lat/lng
       const latLng = marker.getLatLng();
-      const complaint = this.complaintData.find(c => 
-        Math.abs(c.lat - latLng.lat) < 0.0001 && 
+      const complaint = this.complaintData.find(c =>
+        Math.abs(c.lat - latLng.lat) < 0.0001 &&
         Math.abs(c.lng - latLng.lng) < 0.0001
       );
-      
+
       if (complaint) {
         // Create new icon with updated size and color based on current zoom and complaint status
         const newIcon = this.getComplaintIcon(complaint, index);
@@ -1790,38 +1790,38 @@ class HeatmapVisualization {
       }
     });
   }
-  
+
   /**
    * Update a specific marker's appearance when complaint data changes
    * @param {string} complaintId - ID of the complaint to update
    */
   updateMarker(complaintId) {
     if (!this.markerLayer || !this.map) return;
-    
+
     const complaint = this.complaintData.find(c => c.id === complaintId);
     if (!complaint) return;
-    
+
     const markers = this.markerLayer.getLayers();
     const marker = markers.find(m => {
       const latLng = m.getLatLng();
-      return Math.abs(complaint.lat - latLng.lat) < 0.0001 && 
+      return Math.abs(complaint.lat - latLng.lat) < 0.0001 &&
              Math.abs(complaint.lng - latLng.lng) < 0.0001;
     });
-    
+
     if (marker) {
       const index = markers.indexOf(marker);
       const newIcon = this.getComplaintIcon(complaint, index);
       marker.setIcon(newIcon);
     }
   }
-  
+
   /**
    * Refresh all markers to reflect current complaint data (status, priority, etc.)
    * Useful when complaint data is updated externally
    */
   refreshMarkers() {
     if (!this.markerLayer || !this.map) return;
-    
+
     // Hide and recreate marker layer to ensure all markers reflect current data
     this.hideMarkers();
     this.createMarkerLayer();

@@ -230,8 +230,8 @@ async function renderComplaint() {
   // Map preview using ComplaintMap component
   try {
     const mapEl = document.getElementById('location-map');
-    const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
-    const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
+    const hasLat = complaint.latitude !== null && complaint.latitude !== void 0;
+    const hasLng = complaint.longitude !== null && complaint.longitude !== void 0;
     console.log('[REVIEW] Map setup:', {
       mapEl: Boolean(mapEl),
       hasLat,
@@ -664,7 +664,7 @@ async function loadDepartmentsForAssignment() {
   try {
     allDepartments = await getActiveDepartments();
     filteredDepartments = [...allDepartments];
-    
+
     if (allDepartments && allDepartments.length > 0) {
       renderDepartmentsList();
       setupDepartmentSearch();
@@ -723,7 +723,7 @@ function setupDepartmentSearch() {
 
   searchInput.addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase().trim();
-    
+
     if (searchTerm === '') {
       filteredDepartments = [...allDepartments];
     } else {
@@ -733,7 +733,7 @@ function setupDepartmentSearch() {
         return name.includes(searchTerm) || code.includes(searchTerm);
       });
     }
-    
+
     renderDepartmentsList();
     updateSelectedCount();
   });
@@ -744,7 +744,7 @@ function updateSelectedCount() {
   const count = selectedCheckboxes.length;
   const countEl = document.getElementById('selected-departments-count');
   const countTextEl = document.getElementById('selected-count-text');
-  
+
   if (countEl && countTextEl) {
     if (count > 0) {
       countEl.style.display = 'block';
@@ -779,29 +779,29 @@ function renderComplainantInfo(profile) {
   const email = profile.email || 'Not provided';
   const firstName = profile.firstName || '';
   const lastName = profile.lastName || '';
-  
+
   // Get phone number from multiple possible fields
   const rawMeta = profile.raw_user_meta_data || {};
-  const phoneNumber = profile.mobileNumber || 
-                     profile.mobile || 
-                     rawMeta.mobile_number || 
-                     rawMeta.mobile || 
-                     rawMeta.phone_number || 
-                     rawMeta.phone || 
+  const phoneNumber = profile.mobileNumber ||
+                     profile.mobile ||
+                     rawMeta.mobile_number ||
+                     rawMeta.mobile ||
+                     rawMeta.phone_number ||
+                     rawMeta.phone ||
                      null;
-  
+
   // Get address from metadata - check multiple formats
   const address = rawMeta.address || {};
   const addressParts = [];
-  
+
   // Check for address_line_1, address_line_2 format
   if (rawMeta.address_line_1) addressParts.push(rawMeta.address_line_1);
   if (rawMeta.address_line_2) addressParts.push(rawMeta.address_line_2);
-  
+
   // Check for nested address object
   if (address.line1) addressParts.push(address.line1);
   if (address.line2) addressParts.push(address.line2);
-  
+
   // Check for old format
   if (rawMeta.addressLine1 && !addressParts.includes(rawMeta.addressLine1)) {
     addressParts.push(rawMeta.addressLine1);
@@ -809,13 +809,13 @@ function renderComplainantInfo(profile) {
   if (rawMeta.addressLine2 && !addressParts.includes(rawMeta.addressLine2)) {
     addressParts.push(rawMeta.addressLine2);
   }
-  
+
   // Add city, province, barangay, postal code if available
   if (rawMeta.city || address.city) addressParts.push(rawMeta.city || address.city);
   if (rawMeta.barangay || address.barangay) addressParts.push(rawMeta.barangay || address.barangay);
   if (rawMeta.province || address.province) addressParts.push(rawMeta.province || address.province);
   if (rawMeta.postal_code || address.postalCode) addressParts.push(rawMeta.postal_code || address.postalCode);
-  
+
   const fullAddress = addressParts.filter(Boolean).join(', ') || null;
 
   contentEl.innerHTML = `

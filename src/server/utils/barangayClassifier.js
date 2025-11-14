@@ -37,16 +37,16 @@ function loadBarangayBoundaries() {
 function isPointInRing(point, ring) {
   const [x, y] = point;
   let inside = false;
-  
+
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i];
     const [xj, yj] = ring[j];
-    
-    const intersect = ((yi > y) !== (yj > y)) && 
+
+    const intersect = ((yi > y) !== (yj > y)) &&
                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
     if (intersect) inside = !inside;
   }
-  
+
   return inside;
 }
 
@@ -68,7 +68,7 @@ function isPointInPolygon(point, coordinates) {
   }
 
   let inside = isPointInRing(point, outerRing);
-  
+
   // Check holes (inner rings) - if point is in a hole, it's outside
   if (inside && coordinates.length > 1) {
     for (let i = 1; i < coordinates.length; i++) {
@@ -78,7 +78,7 @@ function isPointInPolygon(point, coordinates) {
       }
     }
   }
-  
+
   return inside;
 }
 
@@ -89,7 +89,7 @@ function isPointInPolygon(point, coordinates) {
  */
 function normalizeBarangayName(name) {
   if (!name) return name;
-  
+
   // Map variations to standard names used in the system
   const nameMap = {
     'Kapatagan': 'Kapatagan (Rizal)',
@@ -106,7 +106,7 @@ function normalizeBarangayName(name) {
     'San Jose': 'San Jose (Balutakay)',
     'San Miguel': 'San Miguel (Odaca)'
   };
-  
+
   return nameMap[name] || name;
 }
 
@@ -140,8 +140,8 @@ function classifyBarangay(latitude, longitude) {
       continue;
     }
 
-    const geojson = barangay.geojson;
-    
+    const {geojson} = barangay;
+
     // Handle Polygon geometry type
     if (geojson.type === 'Polygon' && geojson.coordinates) {
       if (isPointInPolygon(point, geojson.coordinates)) {
@@ -149,7 +149,7 @@ function classifyBarangay(latitude, longitude) {
         return normalizeBarangayName(barangay.name);
       }
     }
-    
+
     // Handle MultiPolygon geometry type
     if (geojson.type === 'MultiPolygon' && geojson.coordinates) {
       // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
@@ -173,21 +173,21 @@ function classifyBarangay(latitude, longitude) {
  */
 function classifyComplaints(complaints) {
   const classificationMap = new Map();
-  
+
   for (const complaint of complaints) {
     const lat = parseFloat(complaint.latitude);
     const lng = parseFloat(complaint.longitude);
-    
+
     if (isNaN(lat) || isNaN(lng)) {
       continue;
     }
-    
+
     const barangay = classifyBarangay(lat, lng);
     if (barangay) {
       classificationMap.set(complaint.id, barangay);
     }
   }
-  
+
   return classificationMap;
 }
 

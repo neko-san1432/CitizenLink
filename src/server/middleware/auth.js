@@ -11,7 +11,7 @@ const authenticateUser = async (req, res, next) => {
       req.cookies?.sb_access_token ||
       req.cookies?.sb_access_token_debug ||
       req.headers.authorization?.replace('Bearer ', '');
-    
+
     if (!token) {
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -27,7 +27,7 @@ const authenticateUser = async (req, res, next) => {
       data: { user: tokenUser },
       error,
     } = await supabase.auth.getUser(token);
-    
+
     if (error || !tokenUser) {
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({
@@ -40,18 +40,18 @@ const authenticateUser = async (req, res, next) => {
 
     // Extract and combine user metadata
     const combinedMetadata = extractUserMetadata(tokenUser);
-    
+
     // Validate user role and department code
     const userRole = combinedMetadata.role || 'citizen';
     const roleValidation = await validateUserRole(userRole);
-    
+
     if (!roleValidation.isValid) {
       console.error('[AUTH] ❌ Invalid role:', {
         role: userRole,
         error: roleValidation.error,
         userId: tokenUser.id
       });
-      
+
       if (req.path.startsWith('/api/')) {
         return res.status(403).json({
           success: false,
@@ -63,10 +63,10 @@ const authenticateUser = async (req, res, next) => {
 
     // Extract department code for LGU roles
     const departmentCode = extractDepartmentCode(userRole);
-    
+
     // Build standardized user object
     req.user = buildUserObject(tokenUser, combinedMetadata, roleValidation, departmentCode);
-    
+
     next();
   } catch (error) {
     return handleAuthError(error, req, res, 'Authentication failed. Please try again');
@@ -77,20 +77,21 @@ const requireRole = (allowedRoles) => {
     // SINGLE SOURCE: req.user.role (already processed in authenticateUser)
     const userRole = req.user?.role;
     const baseRole = req.user?.raw_user_meta_data?.base_role;
-    
+
     if (!userRole) {
       return res.redirect(`/login?message=${encodeURIComponent('Authentication incomplete: missing role. Please contact support.')}&type=error`);
     }
-    
+
     const normalizedRole = String(userRole).trim().toLowerCase();
     const normalizedBaseRole = baseRole ? String(baseRole).trim().toLowerCase() : null;
-    
+
     const hasPermission = allowedRoles.some((allowedRole) => {
       if (typeof allowedRole === 'string') {
         // Support wildcard matching (e.g., "lgu-admin*" matches "lgu-admin-{dept}")
         if (allowedRole.includes('*')) {
           // Safe wildcard matching without dynamic regex
           const pattern = allowedRole.replace(/\*/g, '.*');
+          // eslint-disable-next-line security/detect-non-literal-regexp
           const regex = new RegExp(`^${pattern}$`);
           return regex.test(normalizedRole) || (normalizedBaseRole && regex.test(normalizedBaseRole));
         }
@@ -104,12 +105,12 @@ const requireRole = (allowedRoles) => {
       }
       return false;
     });
-    
+
     if (!hasPermission) {
       const isApiRequest = req.path.startsWith('/api/') ||
                            req.originalUrl.startsWith('/api/') ||
                            req.url.startsWith('/api/');
-      
+
       if (isApiRequest) {
         return res.status(403).json({
           success: false,
@@ -123,7 +124,7 @@ const requireRole = (allowedRoles) => {
       }
       return res.redirect(`/login?message=${encodeURIComponent('Access denied. You do not have permission to access this resource.')}&type=error`);
     }
-    
+
     next();
   };
 };

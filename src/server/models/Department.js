@@ -5,7 +5,7 @@ class Department {
     this.name = data.name;
     this.code = data.code;
     this.description = data.description;
-    this.is_active = data.is_active !== undefined ? data.is_active : true;
+    this.is_active = data.is_active !== void 0 ? data.is_active : true;
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
   }

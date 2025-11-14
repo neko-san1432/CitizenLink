@@ -307,25 +307,25 @@ const handleSessionExpired = async () => {
   stopTokenExpiryMonitoring();
   // Show session expired toast
   showSessionExpiredToast();
-  
+
   // Clear Supabase session to prevent auto-login
   try {
     await supabase.auth.signOut();
   } catch (error) {
     console.error('[AUTH] Error signing out from Supabase:', error);
   }
-  
+
   // Clear server session cookie
   try {
     await fetch('/auth/session', { method: 'DELETE' });
   } catch (error) {
     console.error('[AUTH] Error clearing server session:', error);
   }
-  
+
   // Clear local data
   localStorage.removeItem(storageKey);
   localStorage.removeItem(oauthKey);
-  
+
   // Clear any stored credentials (prevent browser autofill)
   const loginForm = document.querySelector('#loginForm, form[action*="login"]');
   if (loginForm) {
@@ -334,7 +334,7 @@ const handleSessionExpired = async () => {
     if (emailInput) emailInput.value = '';
     if (passwordInput) passwordInput.value = '';
   }
-  
+
   // Redirect with a parameter to prevent auto-login
   setTimeout(() => {
     window.location.href = '/login?session_expired=true';
@@ -384,44 +384,44 @@ const checkAndUpdateRoleChange = async () => {
   if (isCheckingRoleChange) {
     return;
   }
-  
+
   // Don't check on auth pages
   if (isAuthPage()) {
     return;
   }
-  
+
   isCheckingRoleChange = true;
-  
+
   try {
     // Get current cached role
     const cachedMeta = getUserMeta();
     const oldRole = cachedMeta?.role;
-    
+
     // If no cached role, this might be first load - skip check
     if (!oldRole) {
       isCheckingRoleChange = false;
       return;
     }
-    
+
     // Fetch fresh role from API (bypasses cache)
     const newRole = await getUserRole({ refresh: true });
-    
+
     // Check if role changed
     if (newRole && oldRole !== newRole) {
       console.log(`[ROLE_CHANGE] Role changed from ${oldRole} to ${newRole}`);
-      
+
       // Refresh metadata from session
       await refreshMetaFromSession();
-      
+
       // Clear API cache to force fresh data
       roleApiCache = null;
       roleApiCacheTime = 0;
-      
+
       // Dispatch custom event to notify components
       window.dispatchEvent(new CustomEvent('userRoleChanged', {
         detail: { oldRole, newRole }
       }));
-      
+
       // Show notification to user
       try {
         const { default: showMessage } = await import('../components/toast.js');
@@ -430,7 +430,7 @@ const checkAndUpdateRoleChange = async () => {
       } catch (toastError) {
         console.error('[ROLE_CHANGE] Failed to show toast:', toastError);
       }
-      
+
       // Reload page to ensure all components update with new role
       // This ensures sidebar, header, permissions, etc. all reflect the new role
       setTimeout(() => {
@@ -449,7 +449,7 @@ const checkAndUpdateRoleChange = async () => {
  */
 const formatRoleNameForDisplay = (role) => {
   if (!role) return 'Unknown';
-  
+
   const roleNames = {
     'citizen': 'Citizen',
     'lgu': 'LGU Officer',
@@ -459,25 +459,25 @@ const formatRoleNameForDisplay = (role) => {
     'hr': 'HR',
     'lgu-hr': 'LGU HR'
   };
-  
+
   // Handle LGU officer roles with department codes
   if (/^lgu-(?!admin|hr)/.test(role)) {
     const dept = role.replace(/^lgu-/, '').toUpperCase();
     return `LGU Officer (${dept})`;
   }
-  
+
   // Handle LGU admin roles with department codes
   if (/^lgu-admin-/.test(role)) {
     const dept = role.replace(/^lgu-admin-/, '').toUpperCase();
     return `LGU Admin (${dept})`;
   }
-  
+
   // Handle LGU HR roles with department codes
   if (/^lgu-hr-/.test(role)) {
     const dept = role.replace(/^lgu-hr-/, '').toUpperCase();
     return `HR (${dept})`;
   }
-  
+
   return roleNames[role] || role;
 };
 try {
@@ -511,7 +511,7 @@ try {
             if (authEl) authEl.classList.add('hidden');
             return;
           }
-          
+
           // Check if user has a session before making API call
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
@@ -520,7 +520,7 @@ try {
             if (authEl) authEl.classList.add('hidden');
             return;
           }
-          
+
           // User has session, check role via API
           const res = await fetch('/api/user/role', { credentials: 'include' });
           const authed = res.ok ? (await res.clone().json())?.success : false;

@@ -88,7 +88,7 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
     const layerControl = L.control.layers(baseLayers, {}, {
       position: 'topright'
     }).addTo(map);
-    
+
     // Load and display Digos City boundaries
     try {
       const boundaryResponse = await fetch('/api/boundaries');
@@ -97,7 +97,7 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
         if (Array.isArray(brgyData)) {
           // Store boundaries globally for validation
           window.complaintFormBoundaries = brgyData;
-          
+
           // Add each barangay boundary to the map
           brgyData.forEach((barangay) => {
             if (barangay.geojson) {
@@ -113,7 +113,7 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
               geojsonLayer.addTo(map);
             }
           });
-          
+
           // Fit map to boundaries
           if (brgyData.length > 0) {
             const allFeatures = brgyData
@@ -189,7 +189,7 @@ function setupLocationPicker(map) {
       iconAnchor: [15, 15]
     })
   }).addTo(map);
-  
+
   // Boundary validation function
   async function validateCoordinates(lat, lng) {
     try {
@@ -211,12 +211,12 @@ function setupLocationPicker(map) {
       return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
     }
   }
-  
+
   // Show boundary warning
   function showBoundaryWarning() {
     const existingWarning = document.getElementById('boundary-warning');
     if (existingWarning) return;
-    
+
     const warning = document.createElement('div');
     warning.id = 'boundary-warning';
     warning.style.cssText = `
@@ -239,7 +239,7 @@ function setupLocationPicker(map) {
     const mapContainer = map.getContainer();
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(warning);
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
       if (warning.parentNode) {
@@ -249,7 +249,7 @@ function setupLocationPicker(map) {
       }
     }, 5000);
   }
-  
+
   // Hide boundary warning
   function hideBoundaryWarning() {
     const warning = document.getElementById('boundary-warning');
@@ -259,6 +259,7 @@ function setupLocationPicker(map) {
       setTimeout(() => warning.remove(), 300);
     }
   }
+<<<<<<< HEAD
   
   // Track coordinate validity state
   let coordinatesValid = false;
@@ -270,6 +271,14 @@ function setupLocationPicker(map) {
     latInput.value = parseFloat(lat.toFixed(8)).toString();
     lngInput.value = parseFloat(lng.toFixed(8)).toString();
     
+=======
+
+  // Update coordinates function with boundary validation
+  async function updateCoordinates(lat, lng, showWarning = true) {
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+
+>>>>>>> 55de51f3fa3db603cdb3e11f736f1c90f3a780b3
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
     coordinatesValid = isValid;

@@ -145,7 +145,7 @@ router.get('/departments/all', async (req, res) => {
 // Get ALL departments (alias for /departments/all)
 router.get('/departments', async (req, res) => {
   try {
-    const supabase = Database.getClient();j;
+    const supabase = Database.getClient();
     // Get ALL active departments
     const { data: allDepartments, error: deptError } = await supabase
       .from('departments')

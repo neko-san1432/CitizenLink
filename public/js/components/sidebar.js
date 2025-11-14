@@ -314,25 +314,25 @@ function initializeSidebarThemeToggle() {
   if (!sidebarThemeToggle) {
     return;
   }
-  
+
   // Load saved theme and update toggle state
   const savedTheme = localStorage.getItem('theme') || 'light';
   const isDark = savedTheme === 'dark';
   updateToggleSwitch(isDark);
-  
+
   // Add click handler
   sidebarThemeToggle.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const currentIsDark = rootElement.classList.contains('dark');
     const newTheme = currentIsDark ? 'light' : 'dark';
-    
+
     // Apply theme
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    
+
     // Update toggle switch
     updateToggleSwitch(!currentIsDark);
-    
+
     // Also update header toggle if it exists
     const headerThemeToggle = document.getElementById('theme-toggle');
     if (headerThemeToggle) {
@@ -343,13 +343,13 @@ function initializeSidebarThemeToggle() {
       }
     }
   });
-  
+
   // Listen for theme changes from header toggle (sync both ways)
   const observer = new MutationObserver(() => {
     const isDark = document.documentElement.classList.contains('dark');
     updateToggleSwitch(isDark);
   });
-  
+
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class']

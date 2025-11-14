@@ -100,8 +100,8 @@ async function renderComplaint() {
   // Map preview (read-only)
   try {
     const mapEl = document.getElementById('location-map');
-    const hasLat = complaint.latitude !== null && complaint.latitude !== undefined;
-    const hasLng = complaint.longitude !== null && complaint.longitude !== undefined;
+    const hasLat = complaint.latitude !== null && complaint.latitude !== void 0;
+    const hasLng = complaint.longitude !== null && complaint.longitude !== void 0;
     if (mapEl && (hasLat || hasLng)) {
       const ensureLeaflet = () => typeof L !== 'undefined' ? Promise.resolve() : new Promise((resolve, reject) => {
         const s = document.createElement('script');

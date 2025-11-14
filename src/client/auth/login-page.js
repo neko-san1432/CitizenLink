@@ -17,7 +17,7 @@ const checkAuthentication = async () => {
       window.history.replaceState({}, document.title, '/login');
       return; // Don't proceed with auto-login check
     }
-    
+
     // console.log removed for security
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
