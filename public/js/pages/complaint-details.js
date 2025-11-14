@@ -74,13 +74,20 @@ class ComplaintDetails {
       if (!complaintId || complaintId === 'complaint-details') {
         throw new Error('Invalid complaint ID');
       }
+      // Validate UUID format (basic check)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(complaintId)) {
+        throw new Error('Invalid complaint ID format');
+      }
       this.complaintId = complaintId;
       // Get user role
       this.userRole = await this.getUserRole();
       // Load complaint details
       await this.loadComplaintDetails();
-      // Setup role-specific UI
-      this.setupRoleSpecificUI();
+      // Setup role-specific UI only if complaint was successfully loaded
+      if (this.complaint) {
+        this.setupRoleSpecificUI();
+      }
     } catch (error) {
       console.error('Error initializing complaint details:', error);
       this.showError(`Failed to load complaint details: ${  error.message}`);
@@ -116,6 +123,16 @@ class ComplaintDetails {
         credentials: 'include'
       });
       if (!response.ok) {
+        // Handle 404 specifically with a user-friendly message
+        if (response.status === 404) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMsg = errorData.error || 'Complaint not found';
+          // Provide more context for 404 errors
+          if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('does not exist')) {
+            throw new Error('The complaint you are looking for does not exist or may have been deleted. Please check the complaint ID and try again.');
+          }
+          throw new Error(errorMsg);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
@@ -128,12 +145,19 @@ class ComplaintDetails {
       this.renderComplaintDetails();
     } catch (error) {
       console.error('Error loading complaint details:', error);
-      this.showError(`Failed to load complaint details: ${  error.message}`);
+      // Ensure complaint is null when load fails
+      this.complaint = null;
+      this.showError(`Failed to load complaint details: ${error.message}`);
     } finally {
       this.hideLoading();
     }
   }
   async loadComplaintEvidence() {
+    // Return early if complaint is not loaded
+    if (!this.complaint) {
+      console.warn('Cannot load complaint evidence: complaint is null');
+      return;
+    }
     // Skip evidence loading if we're getting SSL errors to prevent infinite redirects
     if (window.location.protocol === 'https:' && window.location.hostname === 'localhost') {
       console.log('Skipping evidence loading due to HTTPS redirect issue');
@@ -201,6 +225,11 @@ class ComplaintDetails {
   async renderComplaintDetails() {
     const detailsContainer = document.getElementById('complaint-details');
     if (!detailsContainer) return;
+    // Return early if complaint is not loaded
+    if (!this.complaint) {
+      console.warn('Cannot render complaint details: complaint is null');
+      return;
+    }
     // Populate basic complaint info
     document.getElementById('complaint-title').textContent = this.complaint.title || 'Untitled Complaint';
     document.getElementById('complaint-id').textContent = `#${this.complaint.id}`;
@@ -605,6 +634,52 @@ class ComplaintDetails {
           maxZoom: 19
         }).addTo(map);
 
+        // Load and display Digos City boundaries in modal
+        try {
+          const boundaryResponse = await fetch('/api/boundaries');
+          if (boundaryResponse.ok) {
+            const brgyData = await boundaryResponse.json();
+            if (Array.isArray(brgyData)) {
+              // Add each barangay boundary to the map
+              brgyData.forEach((barangay) => {
+                if (barangay.geojson) {
+                  const geojsonLayer = L.geoJSON(barangay.geojson, {
+                    style: {
+                      color: '#3b82f6',
+                      weight: 1.5,
+                      opacity: 0.6,
+                      fillOpacity: 0,
+                      fillColor: 'transparent',
+                      dashArray: '5, 5',
+                      interactive: false
+                    },
+                    interactive: false,
+                    onEachFeature: function(feature, layer) {
+                      // Disable all interactions to prevent black box on click
+                      layer.options.interactive = false;
+                      layer.off('click');
+                      layer.off('mouseover');
+                      layer.off('mouseout');
+                      
+                      if (barangay.name) {
+                        layer.bindTooltip(barangay.name, {
+                          permanent: false,
+                          direction: 'center',
+                          className: 'boundary-tooltip',
+                          interactive: false
+                        });
+                      }
+                    }
+                  });
+                  geojsonLayer.addTo(map);
+                }
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('[COMPLAINT_DETAILS] Failed to load boundaries in modal:', error);
+        }
+
         // Add marker
         L.marker([lat, lng])
           .addTo(map)
@@ -666,6 +741,52 @@ class ComplaintDetails {
           attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19
         }).addTo(map);
+
+        // Load and display Digos City boundaries
+        try {
+          const boundaryResponse = await fetch('/api/boundaries');
+          if (boundaryResponse.ok) {
+            const brgyData = await boundaryResponse.json();
+            if (Array.isArray(brgyData)) {
+              // Add each barangay boundary to the map
+              brgyData.forEach((barangay) => {
+                if (barangay.geojson) {
+                  const geojsonLayer = L.geoJSON(barangay.geojson, {
+                    style: {
+                      color: '#3b82f6',
+                      weight: 1.5,
+                      opacity: 0.6,
+                      fillOpacity: 0,
+                      fillColor: 'transparent',
+                      dashArray: '5, 5',
+                      interactive: false
+                    },
+                    interactive: false,
+                    onEachFeature: function(feature, layer) {
+                      // Disable all interactions to prevent black box on click
+                      layer.options.interactive = false;
+                      layer.off('click');
+                      layer.off('mouseover');
+                      layer.off('mouseout');
+                      
+                      if (barangay.name) {
+                        layer.bindTooltip(barangay.name, {
+                          permanent: false,
+                          direction: 'center',
+                          className: 'boundary-tooltip',
+                          interactive: false
+                        });
+                      }
+                    }
+                  });
+                  geojsonLayer.addTo(map);
+                }
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('[COMPLAINT_DETAILS] Failed to load boundaries:', error);
+        }
 
         // Add a marker for the complaint location
       const complaintMarker = L.marker([lat, lng]).addTo(map);
@@ -1188,6 +1309,8 @@ class ComplaintDetails {
   setupRoleSpecificActions() {
     const actionsContainer = document.getElementById('complaint-actions');
     if (!actionsContainer) return;
+    // Return early if complaint is not loaded
+    if (!this.complaint) return;
     const actions = [];
     switch (this.userRole) {
       case 'complaint-coordinator':

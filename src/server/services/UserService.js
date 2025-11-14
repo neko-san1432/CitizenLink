@@ -137,7 +137,7 @@ class UserService {
           /email.*(in use|used|taken)/i.test(msg)
         );
         if (isDuplicateEmail) {
-          throw new ConflictError('Email already registered');
+          throw new ConflictError('Email already exist');
         }
         throw new Error(`Auth creation failed: ${authError.message}`);
       }

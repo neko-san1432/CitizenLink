@@ -14,7 +14,7 @@
   /* Z-index variables for proper stacking */
   --z-header: 1000;
   --z-backdrop: 1100;
-  --z-sidebar: 1200;
+  --z-sidebar: 1300; /* Increased to ensure sidebar is above backdrop */
 }
 
 html.dark {
@@ -33,7 +33,7 @@ html.dark {
   /* Z-index variables remain the same in dark mode */
   --z-header: 1000;
   --z-backdrop: 1100;
-  --z-sidebar: 1200;
+  --z-sidebar: 1300; /* Increased to ensure sidebar is above backdrop */
 }
 
 
@@ -45,7 +45,7 @@ html.dark {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: var(--z-backdrop, 1100);
+  z-index: var(--z-backdrop, 1100) !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -63,7 +63,7 @@ html.dark {
   top: 0;
   bottom: 0;
   width: 260px;
-  z-index: var(--z-sidebar, 1200);
+  z-index: var(--z-sidebar, 1300) !important; /* Increased to ensure sidebar is above backdrop */
   overflow-y: auto;
   overflow-x: hidden;
   display: flex !important;

@@ -218,8 +218,8 @@ if (oauthCompleteForm) {
       const result = await response.json();
       if (!result.success) {
         const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
-        if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken')) {
-          showMessage('error', 'Email is used');
+        if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken') || errMsg.includes('email already exist')) {
+          showMessage('error', 'Email already exist');
         } else {
           showMessage('error', result.error || 'Failed to complete registration');
         }

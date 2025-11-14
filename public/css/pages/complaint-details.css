@@ -608,6 +608,50 @@
     margin-bottom: 0;
 }
 
+/* Boundary tooltip styles */
+.boundary-tooltip {
+    background: rgba(59, 130, 246, 0.9) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    white-space: nowrap !important;
+}
+
+.boundary-tooltip::before {
+    border-top-color: rgba(59, 130, 246, 0.9) !important;
+}
+
+/* Prevent black box on boundary click - disable popup styling */
+.leaflet-popup-content-wrapper {
+    background: white !important;
+}
+
+.leaflet-popup-content {
+    background: white !important;
+    color: #1f2937 !important;
+}
+
+/* Ensure boundaries don't show black fill on interaction */
+.leaflet-interactive[fill-opacity] {
+    fill-opacity: 0 !important;
+}
+
+/* Prevent black fill on GeoJSON polygons */
+.leaflet-pane .leaflet-overlay-pane svg path[fill] {
+    fill-opacity: 0 !important;
+}
+
+/* Ensure boundaries remain transparent even when clicked */
+.leaflet-interactive:active,
+.leaflet-interactive:focus {
+    fill-opacity: 0 !important;
+    fill: transparent !important;
+}
+
 /* Route Controls */
 .route-controls {
     background: white;

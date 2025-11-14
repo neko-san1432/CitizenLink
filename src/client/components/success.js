@@ -76,13 +76,18 @@ const run = async () => {
                      user?.user_metadata?.phone ||
                      user?.user_metadata?.phone_number ||
                      user?.phone;
+    
+    // Check if user is already fully registered (has role, name, and mobile)
+    const isFullyRegistered = role && name && hasMobile;
+    
     // console.log removed for security
-    if (provider && !hasMobile) {
-      // OAuth user needs to complete registration (no phone number)
+    if (provider && !isFullyRegistered) {
+      // OAuth user needs to complete registration (missing role, name, or phone number)
       // console.log removed for security
       window.location.href = '/oauth-continuation';
     } else {
-      // Regular user or OAuth user with complete profile (has phone number)
+      // Regular user or OAuth user with complete profile
+      // If user already exists and is logging in via OAuth, go directly to dashboard
       // console.log removed for security
       window.location.href = '/dashboard';
     }

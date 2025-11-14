@@ -235,7 +235,7 @@ function setupLocationPicker(map) {
       max-width: 90%;
       text-align: center;
     `;
-    warning.textContent = '⚠️ Location must be within Digos City boundaries';
+    warning.textContent = '⚠️ Location must be within Digos City boundaries. Submission is disabled.';
     const mapContainer = map.getContainer();
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(warning);
@@ -260,13 +260,23 @@ function setupLocationPicker(map) {
     }
   }
   
+  // Track coordinate validity state
+  let coordinatesValid = false;
+  
   // Update coordinates function with boundary validation
   async function updateCoordinates(lat, lng, showWarning = true) {
-    latInput.value = lat.toFixed(6);
-    lngInput.value = lng.toFixed(6);
+    // Use higher precision (8 decimal places) for better accuracy
+    // This ensures the exact marker position is captured
+    latInput.value = parseFloat(lat.toFixed(8)).toString();
+    lngInput.value = parseFloat(lng.toFixed(8)).toString();
     
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
+    coordinatesValid = isValid;
+    
+    // Update submit button state based on coordinate validity
+    updateSubmitButtonState();
+    
     if (!isValid && showWarning) {
       showBoundaryWarning();
       // Change marker color to red to indicate invalid location (using divIcon for CSP compliance)
@@ -317,6 +327,24 @@ function setupLocationPicker(map) {
       }
     }
   }
+  
+  // Update submit button state based on coordinate validity
+  function updateSubmitButtonState() {
+    const submitBtn = document.querySelector('.submit-btn, button[type="submit"]');
+    if (submitBtn) {
+      if (!coordinatesValid) {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Please select a location within Digos City boundaries';
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.title = '';
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+      }
+    }
+  }
   // Update location text function
   async function updateLocationText(lat, lng) {
     if (!locationInput) return;
@@ -349,25 +377,47 @@ function setupLocationPicker(map) {
     }
   }
   // Set initial coordinates with validation (don't show warning on initial load)
-  updateCoordinates(initialCenter.lat, initialCenter.lng, false);
-  updateLocationText(initialCenter.lat, initialCenter.lng);
+  // Validate initial coordinates and update submit button state
+  updateCoordinates(initialCenter.lat, initialCenter.lng, false).then(() => {
+    updateLocationText(initialCenter.lat, initialCenter.lng);
+  });
   // Marker drag events with boundary validation
+  // Only update coordinates on dragend to ensure exact final position is captured
   marker.on('drag', async (e) => {
-    const latlng = e.target.getLatLng();
-    await updateCoordinates(latlng.lat, latlng.lng, false); // Don't show warning during drag
+    // Don't update coordinates during drag - wait for dragend to get exact final position
+    // This prevents intermediate positions from being saved
   });
   marker.on('dragend', async (e) => {
+    // Get the exact final position of the marker
     const latlng = e.target.getLatLng();
-    await updateCoordinates(latlng.lat, latlng.lng, true); // Show warning on drag end
-    updateLocationText(latlng.lat, latlng.lng);
+    const finalLat = latlng.lat;
+    const finalLng = latlng.lng;
+    
+    // Ensure marker position matches input values exactly
+    await updateCoordinates(finalLat, finalLng, true); // Show warning on drag end
+    updateLocationText(finalLat, finalLng);
+    
+    // Double-check: ensure marker position matches saved coordinates
+    const savedLat = parseFloat(latInput.value);
+    const savedLng = parseFloat(lngInput.value);
+    const markerLat = marker.getLatLng().lat;
+    const markerLng = marker.getLatLng().lng;
+    
+    // If there's a mismatch, update marker to match saved coordinates
+    if (Math.abs(savedLat - markerLat) > 0.000001 || Math.abs(savedLng - markerLng) > 0.000001) {
+      marker.setLatLng([savedLat, savedLng]);
+    }
   });
   // Map click events with boundary validation
   map.on('click', async (e) => {
     if (isUserInteracting) return;
     const { lat, lng } = e.latlng;
+    // Set marker position first, then get exact position from marker
     marker.setLatLng([lat, lng]);
-    await updateCoordinates(lat, lng, true);
-    updateLocationText(lat, lng);
+    // Get exact position from marker to ensure consistency
+    const markerPos = marker.getLatLng();
+    await updateCoordinates(markerPos.lat, markerPos.lng, true);
+    updateLocationText(markerPos.lat, markerPos.lng);
   });
   // Map move events (when user drags the map) with boundary validation
   map.on('movestart', () => {
@@ -376,9 +426,12 @@ function setupLocationPicker(map) {
   map.on('moveend', async () => {
     if (!isUserInteracting) return;
     const center = map.getCenter();
+    // Set marker position first, then get exact position from marker
     marker.setLatLng([center.lat, center.lng]);
-    await updateCoordinates(center.lat, center.lng, true);
-    updateLocationText(center.lat, center.lng);
+    // Get exact position from marker to ensure consistency
+    const markerPos = marker.getLatLng();
+    await updateCoordinates(markerPos.lat, markerPos.lng, true);
+    updateLocationText(markerPos.lat, markerPos.lng);
     isUserInteracting = false;
   });
   // Geolocation button
@@ -435,9 +488,14 @@ function setupLocationPicker(map) {
               return;
             }
             map.setView([lat, lng], 16);
+            // Set marker position first, then get exact position from marker
             marker.setLatLng([lat, lng]);
-            await updateCoordinates(lat, lng, true);
-            updateLocationText(lat, lng);
+            // Get exact position from marker to ensure consistency
+            const markerPos = marker.getLatLng();
+            const exactLat = markerPos.lat;
+            const exactLng = markerPos.lng;
+            await updateCoordinates(exactLat, exactLng, true);
+            updateLocationText(exactLat, exactLng);
             // console.log removed for security
           },
           (error) => {

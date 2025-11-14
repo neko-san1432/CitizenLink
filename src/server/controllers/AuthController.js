@@ -802,9 +802,29 @@ class AuthController {
         });
       }
 
+      const currentUserEmail = currentUser.user.email || email;
+      
+      // Check if email already exists for a different user (shouldn't happen with Supabase, but safety check)
+      if (email && email.toLowerCase() !== currentUserEmail.toLowerCase()) {
+        const { data: existingUserByEmail } = await supabase.auth.admin.getUserByEmail(email.toLowerCase());
+        if (existingUserByEmail && existingUserByEmail.user && existingUserByEmail.user.id !== userId) {
+          return res.status(409).json({
+            success: false,
+            error: 'Email already exist'
+          });
+        }
+      }
+
       const currentMetadata = currentUser.user.user_metadata || {};
       const currentRawMetadata = currentUser.user.raw_user_meta_data || {};
       const existingMetadata = { ...currentMetadata, ...currentRawMetadata };
+      
+      // Check if user is already fully registered (has role and name)
+      // If so, this might be an attempt to re-register with OAuth
+      if (existingMetadata.role && existingMetadata.name && existingMetadata.mobile_number) {
+        // User is already registered, just update metadata if needed
+        console.log('[OAUTH] User already registered, updating metadata only');
+      }
 
       // Prepare metadata update (merge with existing metadata)
       const metadataUpdate = {
