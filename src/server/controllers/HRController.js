@@ -50,7 +50,7 @@ class HRController {
       const filters = {
         role: req.query.role,
         department_code: req.query.department_code,
-        is_active: req.query.is_active !== void 0 ? req.query.is_active === 'true' : undefined
+        is_active: req.query.is_active !== void 0 ? req.query.is_active === 'true' : null
       };
       const result = await this.hrService.getSignupLinks(hrId, filters);
       res.json(result);

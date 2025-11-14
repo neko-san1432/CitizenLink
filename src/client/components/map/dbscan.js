@@ -19,9 +19,9 @@ class DBSCAN {
     const dLat = this.toRadians(point2.lat - point1.lat);
     const dLng = this.toRadians(point2.lng - point1.lng);
 
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(this.toRadians(point1.lat)) * Math.cos(this.toRadians(point2.lat)) *
-              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const a = (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
+              (Math.cos(this.toRadians(point1.lat)) * Math.cos(this.toRadians(point2.lat)) *
+               Math.sin(dLng / 2) * Math.sin(dLng / 2));
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;

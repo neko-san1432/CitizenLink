@@ -28,7 +28,7 @@ class InvitationTokenRepository {
   async incrementUse(token) {
     const { data, error } = await this.supabase
       .from(this.table)
-      .update({ uses: this.supabase.rpc ? undefined : undefined })
+      .update({ uses: this.supabase.rpc ? null : null })
       .eq('token', token)
       .select()
       .single();

@@ -71,7 +71,7 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
       return res.status(500).json({
         success: false,
         error: 'Server configuration error. Please contact support.',
-        details: process.env.NODE_ENV === 'development' ? 'Missing SUPABASE_ANON_KEY or SUPABASE_URL' : undefined
+        details: process.env.NODE_ENV === 'development' ? 'Missing SUPABASE_ANON_KEY or SUPABASE_URL' : null
       });
     }
     // Create a client with anon key for client-side operations
@@ -83,7 +83,7 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
       return res.status(500).json({
         success: false,
         error: 'Failed to initialize authentication service',
-        details: process.env.NODE_ENV === 'development' ? clientError.message : undefined
+        details: process.env.NODE_ENV === 'development' ? clientError.message : null
       });
     }
     const { data, error } = await anonClient.auth.resetPasswordForEmail(email, {
@@ -157,7 +157,7 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
           code: error.code,
           status: error.status,
           note: 'This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email'
-        } : undefined
+        } : null
       });
     }
     // Even if there's no error, Supabase might not send an email if email sending is disabled
@@ -171,7 +171,7 @@ router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(
     res.status(500).json({
       success: false,
       error: 'Failed to process password reset request',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? error.message : null
     });
   }
 }));
