@@ -83,12 +83,12 @@ class SimilarityCalculatorService {
       if (minComplaintsPerCluster < 2) {
         throw new Error('Minimum complaints per cluster must be at least 2');
       }
-      
+
       // Validate date range if both dates provided
       if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
         throw new Error('Start date cannot be after end date');
       }
-      
+
       let query = this.supabase
         .from('complaints')
         .select('*')
@@ -97,32 +97,32 @@ class SimilarityCalculatorService {
       if (type) query = query.eq('type', type);
       if (dateFrom) query = query.gte('submitted_at', dateFrom);
       if (dateTo) query = query.lte('submitted_at', dateTo);
-      
+
       const { data: complaints, error } = await query;
       if (error) {
         console.error('[SIMILARITY] Database query error:', error);
         throw new Error(`Database query failed: ${error.message}`);
       }
-      
+
       if (!complaints || complaints.length === 0) {
         console.log('[SIMILARITY] No complaints found for clustering');
         // Deactivate existing clusters if no complaints
         await this.saveClusters([]);
         return [];
       }
-      
+
       if (complaints.length < minComplaintsPerCluster) {
         console.log(`[SIMILARITY] Not enough complaints (${complaints.length}) for clustering (min: ${minComplaintsPerCluster})`);
         await this.saveClusters([]);
         return [];
       }
-      
+
       const clusters = this.clusterComplaints(
         complaints,
         radiusKm,
         minComplaintsPerCluster
       );
-      
+
       // Save clusters to database
       await this.saveClusters(clusters);
       return clusters;
@@ -195,10 +195,10 @@ class SimilarityCalculatorService {
         console.warn('[SIMILARITY] Skipping empty cluster');
         return null;
       }
-      
+
       // Get type from first complaint, default to 'unknown' if not available
       const clusterType = cluster.complaints[0]?.type || 'unknown';
-      
+
       return {
         cluster_name: `Cluster ${index + 1} - ${clusterType}`,
         center_lat: cluster.center.lat,
@@ -296,30 +296,30 @@ class SimilarityCalculatorService {
       console.log('[SIMILARITY] No clusters to save');
       return { success: true, saved: 0 };
     }
-    
+
     try {
       // First, deactivate existing clusters
       const { error: deactivateError } = await this.supabase
         .from('complaint_clusters')
         .update({ status: 'inactive' })
         .eq('status', 'active');
-      
+
       if (deactivateError) {
         console.warn('[SIMILARITY] Failed to deactivate old clusters:', deactivateError.message);
         // Continue anyway - might be first run
       }
-      
+
       // Insert new clusters
       const { data, error } = await this.supabase
         .from('complaint_clusters')
         .insert(clusters)
         .select();
-      
+
       if (error) {
         console.error('[SIMILARITY] Save clusters error:', error);
         throw new Error(`Failed to save clusters: ${error.message}`);
       }
-      
+
       console.log(`[SIMILARITY] Successfully saved ${clusters.length} clusters`);
       return { success: true, saved: clusters.length, data };
     } catch (error) {

@@ -22,10 +22,10 @@ class LguOfficerService {
    */
   async getAssignedTasks(officerId, filters = {}) {
     const { status, priority, limit } = filters;
-    
+
     // Get assignments
     const assignments = await this.assignmentRepo.findByOfficer(officerId, { status, priority, limit });
-    
+
     if (!assignments || assignments.length === 0) {
       return [];
     }
@@ -96,7 +96,7 @@ class LguOfficerService {
    */
   async getMyTasks(officerId) {
     const assignments = await this.assignmentRepo.findByOfficer(officerId);
-    
+
     if (!assignments || assignments.length === 0) {
       return [];
     }
@@ -131,7 +131,7 @@ class LguOfficerService {
             console.warn('[LGU_OFFICER_SERVICE] Failed to get assigned_by user:', err.message);
           }
         }
-        
+
         const complaint = complaints.find(c => c.id === assignment.complaint_id);
         return {
           id: assignment.id,
@@ -326,7 +326,7 @@ class LguOfficerService {
    */
   async getStatistics(officerId) {
     const assignments = await this.assignmentRepo.findByOfficer(officerId);
-    
+
     // Deduplicate assignments by complaint_id
     const uniqueAssignments = assignments.reduce((acc, assignment) => {
       const existing = acc.find(a => a.complaint_id === assignment.complaint_id);
@@ -358,7 +358,7 @@ class LguOfficerService {
   async getActivities(officerId, limit = 10) {
     try {
       const activities = await this.assignmentRepo.getActivitiesByOfficer(officerId, limit);
-      
+
       // Deduplicate activities by complaint_id
       const uniqueActivities = activities.reduce((acc, activity) => {
         const existing = acc.find(a => a.complaint_id === activity.complaint_id);

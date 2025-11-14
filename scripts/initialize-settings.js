@@ -1,6 +1,6 @@
 /**
  * Initialize Recommended Settings
- * 
+ *
  * This script creates/updates all recommended settings for the CitizenLink system.
  * Run with: node scripts/initialize-settings.js
  */
@@ -330,7 +330,7 @@ const recommendedSettings = [
 
 async function initializeSettings() {
   console.log('🚀 Starting settings initialization...\n');
-  
+
   const settingService = new SettingService();
   let success = 0;
   let failed = 0;
@@ -351,7 +351,7 @@ async function initializeSettings() {
   console.log(`\n📊 Summary:`);
   console.log(`   ✅ Succeeded: ${success}`);
   console.log(`   ❌ Failed: ${failed}`);
-  
+
   if (errors.length > 0) {
     console.log(`\n⚠️  Errors:`);
     errors.forEach(({ key, error }) => {
@@ -380,8 +380,4 @@ if (require.main === module) {
 }
 
 module.exports = { initializeSettings, recommendedSettings };
-
-
-
-
 

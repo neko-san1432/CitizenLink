@@ -239,7 +239,7 @@ export async function initializeRoleToggle() {
       isInitialized = false;
       return;
     }
-    
+
     // Check if user has a base role (meaning they're staff who can switch)
     const response = await fetch('/api/user/role-info', {
       credentials: 'include',
@@ -247,7 +247,7 @@ export async function initializeRoleToggle() {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!response.ok) {
       // Handle 401 gracefully - user not authenticated
       if (response.status === 401) {
@@ -258,7 +258,7 @@ export async function initializeRoleToggle() {
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result = await response.json();
     const baseRole = result?.data?.base_role;
     const currentRole = result?.data?.role || 'citizen';

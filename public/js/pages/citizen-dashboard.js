@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('[CITIZEN_DASHBOARD] Error initializing role toggle:', error);
   }
-  
+
   // Attach event listeners to buttons (replacing inline onclick handlers)
   const viewMapBtn = document.getElementById('view-map-btn');
   if (viewMapBtn) {
@@ -437,8 +437,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.viewMap();
     });
   }
-  
-  
+
+
   const viewAllComplaintsBtn = document.getElementById('view-all-complaints-btn');
   if (viewAllComplaintsBtn) {
     viewAllComplaintsBtn.addEventListener('click', () => {
@@ -461,7 +461,7 @@ async function loadMyComplaints() {
     console.error('[CITIZEN_DASHBOARD] Container not found: my-complaints-container');
     return;
   }
-  
+
   // Check if user has a session before making API call
   try {
     const { supabase } = await import('../config/config.js');
@@ -481,7 +481,7 @@ async function loadMyComplaints() {
   } catch (error) {
     // If we can't check session, continue but handle 401 gracefully
   }
-  
+
   // Show loading state
   container.innerHTML = `
     <div class="loading">
@@ -632,7 +632,7 @@ function renderMyComplaints(complaints, totalCount = null) {
   `;
   }).join('');
   container.innerHTML = countInfo + html;
-  
+
   // Attach event listeners to complaint items using event delegation
   container.querySelectorAll('.complaint-item').forEach(item => {
     item.addEventListener('click', () => {

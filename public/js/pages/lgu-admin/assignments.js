@@ -55,7 +55,7 @@ class LguAdminAssignments {
           // Load completed assignments
           const loading = document.getElementById('completed-loading');
           const completedList = document.getElementById('completed-list');
-          
+
           if (loading) loading.style.display = 'block';
           if (completedList) completedList.innerHTML = '';
 
@@ -65,7 +65,7 @@ class LguAdminAssignments {
             if (this.filters.priority !== 'all') queryParams.append('priority', this.filters.priority);
             const url = `/api/lgu-admin/department-assignments?${queryParams}`;
             const response = await apiClient.get(url);
-            
+
             if (response && response.success) {
               completedAssignments = response.data || [];
 
@@ -107,7 +107,7 @@ class LguAdminAssignments {
     document.querySelectorAll('#completed-list .view-details-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         window.location.href = `/complaint-details/${complaintId}`;
       });
     });
@@ -115,7 +115,7 @@ class LguAdminAssignments {
     document.querySelectorAll('#completed-list .view-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const complaintId = e.target.dataset.complaintId;
+        const {complaintId} = e.target.dataset;
         window.location.href = `/complaint-details/${complaintId}`;
       });
     });
@@ -191,17 +191,17 @@ class LguAdminAssignments {
         if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
           return;
         }
-      const item = event.target.closest('.assignment-card');
-      if (item) {
-        const {complaintId} = item.dataset;
+        const item = event.target.closest('.assignment-card');
+        if (item) {
+          const {complaintId} = item.dataset;
           if (complaintId) {
             // Navigate to complaint details page, similar to coordinator review queue
             window.location.href = `/complaint-details/${complaintId}`;
+          }
         }
-      }
-    });
+      });
     }
-    
+
     // Filter button toggles (All, Unassigned, Assigned)
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -216,13 +216,13 @@ class LguAdminAssignments {
         this.renderAssignments();
       });
     });
-    
+
     // Filter controls
     const statusFilter = document.getElementById('status-filter');
     const priorityFilter = document.getElementById('priority-filter');
     const subTypeFilter = document.getElementById('subtype-filter') || document.getElementById('sub-type-filter');
     const refreshBtn = document.getElementById('refresh-btn');
-    
+
     if (statusFilter) {
       statusFilter.addEventListener('change', (e) => {
         this.filters.status = e.target.value;

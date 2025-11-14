@@ -161,14 +161,14 @@ router.get('/clustering/status',
     try {
       const clusteringManager = require('../utils/clusteringManager');
       const scheduler = clusteringManager.getScheduler();
-      
+
       if (!scheduler) {
         return res.json({
           success: false,
           error: 'Clustering scheduler not initialized'
         });
       }
-      
+
       const status = scheduler.getStatus();
       return res.json({
         success: true,
@@ -190,19 +190,19 @@ router.post('/clustering/trigger',
     try {
       const clusteringManager = require('../utils/clusteringManager');
       const scheduler = clusteringManager.getScheduler();
-      
+
       if (!scheduler) {
         return res.status(500).json({
           success: false,
           error: 'Clustering scheduler not initialized'
         });
       }
-      
+
       const result = await scheduler.triggerManual();
       return res.json({
         success: result.success,
         data: result,
-        message: result.success ? 
+        message: result.success ?
           `Clustering completed: ${result.clustersFound} clusters found` :
           `Clustering failed: ${result.error}`
       });

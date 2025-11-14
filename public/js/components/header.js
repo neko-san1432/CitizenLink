@@ -147,20 +147,20 @@ function initializeProfileButton() {
     console.warn('[HEADER] Profile button not found');
     return;
   }
-  
+
   const updateProfilePanelPosition = () => {
     const profilePanel = document.getElementById('profile-panel');
     if (!profilePanel) return;
-    
+
     const profileBtnRect = profileBtn.getBoundingClientRect();
     const headerHeight = 64; // Approximate header height
-    
+
     // Position panel below the profile button, aligned to the right
     profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;
     profilePanel.style.right = `${window.innerWidth - profileBtnRect.right}px`;
     profilePanel.style.left = 'auto';
   };
-  
+
   profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
@@ -183,7 +183,7 @@ function initializeProfileButton() {
       }, 10);
     }
   });
-  
+
   // Update position on window resize
   window.addEventListener('resize', updateProfilePanelPosition);
 }
@@ -231,30 +231,30 @@ function initializeThemeToggle() {
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
-  
+
   // Update sidebar toggle if it exists
   const sidebarToggleSwitch = document.getElementById('sidebar-toggle-switch');
   if (sidebarToggleSwitch) {
     sidebarToggleSwitch.classList.toggle('active', savedTheme === 'dark');
   }
-  
+
   themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    
+
     // Update button appearance
     themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
-    
+
     // Sync sidebar toggle switch
     if (sidebarToggleSwitch) {
       sidebarToggleSwitch.classList.toggle('active', newTheme === 'dark');
     }
   });
-  
+
   function applyTheme(theme) {
     const rootElement = document.documentElement;
     if (theme === 'dark') {
@@ -269,14 +269,14 @@ function initializeThemeToggle() {
 function initializeHeaderScroll() {
   // Scroll behavior disabled - header should always be visible
   // This prevents the header from hiding when scrolling down
-  
+
   // Reset any existing transform styles that might have been applied
   const header = document.querySelector('.header-content');
   if (header) {
     header.style.transform = 'translateY(0)';
     header.style.transition = 'transform 0.3s ease';
   }
-  
+
   // Old code (disabled):
   // let lastScrollY = window.scrollY;
   // window.addEventListener('scroll', () => {

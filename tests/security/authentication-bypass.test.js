@@ -1,6 +1,6 @@
 /**
  * Security Tests: Authentication Bypass Attempts
- * 
+ *
  * Tests various methods attackers might use to bypass authentication
  */
 
@@ -224,5 +224,4 @@ describe('Authentication Bypass Protection', () => {
     });
   });
 });
-
 

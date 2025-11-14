@@ -653,7 +653,7 @@ class CoordinatorRepository {
         .eq('workflow_status', 'cancelled')
         .eq('status', 'rejected')
         .order('cancelled_at', { ascending: false });
-      
+
       // Apply filters
       if (filters.priority) {
         query = query.eq('priority', filters.priority);
@@ -661,15 +661,15 @@ class CoordinatorRepository {
       if (filters.type) {
         query = query.eq('type', filters.type);
       }
-      
+
       const { data, error } = await query.limit(filters.limit || 50);
       if (error) throw error;
-      
+
       // Fetch user information separately for each complaint
       const complaints = data || [];
       const userIds = [...new Set(complaints.map(c => c.submitted_by).filter(Boolean))];
       const usersMap = {};
-      
+
       if (userIds.length > 0) {
         try {
           const { data: authUsers, error: usersError } = await this.supabase.auth.admin.listUsers();
@@ -688,7 +688,7 @@ class CoordinatorRepository {
           console.warn('[COORDINATOR_REPO] Error fetching user profiles:', userFetchError.message);
         }
       }
-      
+
       return complaints.map(complaint => ({
         ...complaint,
         submitted_by_profile: usersMap[complaint.submitted_by] || null

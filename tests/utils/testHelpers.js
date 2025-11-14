@@ -23,7 +23,7 @@ function createTestUser(overrides = {}) {
 /**
  * Generate a test JWT token (mock)
  */
-function generateMockToken(userId, expiresIn = '1h') {
+function generateMockToken(userId, _expiresIn = '1h') {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const payload = Buffer.from(JSON.stringify({
     sub: userId,
@@ -80,7 +80,9 @@ function createMockNext() {
  * Wait for a specified amount of time
  */
 async function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
 
 /**
@@ -95,7 +97,9 @@ async function makeConcurrentRequests(count, requestFn) {
  * Extract cookie value from Set-Cookie header
  */
 function extractCookie(cookieString, name) {
-  const match = cookieString.match(new RegExp(`${name}=([^;]+)`));
+  // Escape special regex characters in name
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = cookieString.match(new RegExp(`${escapedName}=([^;]+)`));
   return match ? match[1] : null;
 }
 
@@ -109,5 +113,4 @@ module.exports = {
   makeConcurrentRequests,
   extractCookie,
 };
-
 

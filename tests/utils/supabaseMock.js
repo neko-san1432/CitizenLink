@@ -87,7 +87,7 @@ class SupabaseMock {
       return { data: {}, error: null };
     }),
 
-    verifyOtp: jest.fn(async ({ token_hash, type }) => {
+    verifyOtp: jest.fn(async ({ token_hash, type: _type }) => {
       // Mock token verification
       if (token_hash === 'valid_token') {
         return {
@@ -106,7 +106,7 @@ class SupabaseMock {
       };
     }),
 
-    updateUser: jest.fn(async ({ password }) => {
+    updateUser: jest.fn(async ({ password: _password }) => {
       return {
         data: { user: { id: 'user_123' } },
         error: null,
@@ -125,7 +125,7 @@ class SupabaseMock {
         };
       }),
 
-      generateLink: jest.fn(async ({ type, email }) => {
+      generateLink: jest.fn(async ({ type, email: _email }) => {
         return {
           data: {
             action_link: `https://example.com/reset?token=test_token&type=${type}`,
@@ -137,7 +137,7 @@ class SupabaseMock {
   };
 
   // Mock database methods
-  from(table) {
+  from(_table) {
     return {
       select: jest.fn().mockReturnThis(),
       insert: jest.fn().mockReturnThis(),
@@ -152,5 +152,4 @@ class SupabaseMock {
 }
 
 module.exports = SupabaseMock;
-
 

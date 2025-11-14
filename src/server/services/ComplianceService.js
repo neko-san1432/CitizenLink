@@ -17,7 +17,7 @@ class ComplianceService {
     try {
       const exportData = {
         exportDate: new Date().toISOString(),
-        userId: userId,
+        userId,
         personalInformation: {},
         complaints: [],
         assignments: [],
@@ -32,11 +32,11 @@ class ComplianceService {
       if (userError) throw userError;
 
       if (authUser && authUser.user) {
-        const user = authUser.user;
+        const {user} = authUser;
         exportData.personalInformation = {
           id: user.id,
           email: user.email,
-          emailConfirmed: user.email_confirmed_at ? true : false,
+          emailConfirmed: Boolean(user.email_confirmed_at),
           createdAt: user.created_at,
           lastSignIn: user.last_sign_in_at,
           metadata: user.user_metadata,
@@ -261,5 +261,4 @@ class ComplianceService {
 }
 
 module.exports = ComplianceService;
-
 

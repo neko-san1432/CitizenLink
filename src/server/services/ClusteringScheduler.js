@@ -13,7 +13,7 @@ class ClusteringScheduler {
     this.intervalId = null;
     this.isRunning = false;
     this.lastClusteringTime = null;
-    
+
     // Default configuration (can be overridden)
     this.config = {
       intervalHours: 6, // Run every 6 hours
@@ -31,7 +31,7 @@ class ClusteringScheduler {
   start(options = {}) {
     // Merge with provided options
     this.config = { ...this.config, ...options };
-    
+
     if (!this.config.enabled) {
       console.log('[CLUSTERING_SCHEDULER] Automatic clustering is disabled');
       return;
@@ -144,34 +144,34 @@ class ClusteringScheduler {
 
     try {
       console.log('[CLUSTERING_SCHEDULER] Starting automatic clustering...');
-      
+
       const options = {
         radiusKm: this.config.radiusKm,
         minComplaintsPerCluster: this.config.minComplaintsPerCluster
       };
 
       const clusters = await this.similarityService.detectClusters(options);
-      
+
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       this.lastClusteringTime = new Date().toISOString();
-      
+
       console.log(`[CLUSTERING_SCHEDULER] Clustering completed successfully`);
       console.log(`[CLUSTERING_SCHEDULER] Found ${clusters.length} cluster(s) in ${duration}s`);
-      
+
       return {
         success: true,
         clustersFound: clusters.length,
-        duration: duration,
+        duration,
         timestamp: this.lastClusteringTime
       };
     } catch (error) {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       console.error(`[CLUSTERING_SCHEDULER] Clustering failed after ${duration}s:`, error.message);
-      
+
       return {
         success: false,
         error: error.message,
-        duration: duration
+        duration
       };
     } finally {
       this.isRunning = false;
@@ -188,8 +188,8 @@ class ClusteringScheduler {
       intervalHours: this.config.intervalHours,
       isRunning: this.isRunning,
       lastClusteringTime: this.lastClusteringTime,
-      nextRunTime: this.intervalId ? 
-        new Date(Date.now() + (this.config.intervalHours * 60 * 60 * 1000)).toISOString() : 
+      nextRunTime: this.intervalId ?
+        new Date(Date.now() + (this.config.intervalHours * 60 * 60 * 1000)).toISOString() :
         null
     };
   }
@@ -205,7 +205,4 @@ class ClusteringScheduler {
 }
 
 module.exports = ClusteringScheduler;
-
-
-
 

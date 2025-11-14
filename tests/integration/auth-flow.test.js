@@ -1,6 +1,6 @@
 /**
  * Integration Tests: Complete Authentication Flow
- * 
+ *
  * Tests the complete authentication flow from signup to logout
  */
 
@@ -277,5 +277,4 @@ describe('Complete Authentication Flow', () => {
     });
   });
 });
-
 

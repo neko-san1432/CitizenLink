@@ -150,7 +150,7 @@ export function getPrivacyNoticeHtml(options = {}) {
     }
   });
 
-  parts.push('<p class="privacy-updated">Last updated: ' + new Date().toISOString().split('T')[0] + '</p>');
+  parts.push(`<p class="privacy-updated">Last updated: ${  new Date().toISOString().split('T')[0]  }</p>`);
 
   return parts.join('');
 }

@@ -35,7 +35,7 @@ async function loadDigosBoundary() {
       } catch (err) {
         // Network error - continue to fallback
       }
-      
+
       // Fallback: try to use barangay boundaries from /api/boundaries
       // and construct city boundary from them
       try {
@@ -44,7 +44,7 @@ async function loadDigosBoundary() {
           const brgyData = await response.json();
           if (Array.isArray(brgyData) && brgyData.length > 0) {
             // Store barangay data for point-in-polygon checks
-            boundaryCache = { 
+            boundaryCache = {
               type: 'barangay_boundaries',
               barangays: brgyData,
               // Create a simple bounding box from all barangays
@@ -61,7 +61,7 @@ async function loadDigosBoundary() {
       } catch (err) {
         // Barangay boundaries API failed, continue to final fallback
       }
-      
+
       // Final fallback: try direct file path (may not work in production)
       try {
         response = await fetch('/src/client/assets/digos-city-boundary.json');
@@ -73,7 +73,7 @@ async function loadDigosBoundary() {
       } catch (err) {
         // Direct file path also failed
       }
-      
+
       // If all methods failed, return null (will use bounding box fallback in validation)
       return null;
     } catch (error) {
@@ -96,7 +96,7 @@ async function loadDigosBoundary() {
 function calculateBoundsFromBarangays(brgyData) {
   let minLng = Infinity, maxLng = -Infinity;
   let minLat = Infinity, maxLat = -Infinity;
-  
+
   brgyData.forEach(barangay => {
     if (barangay.geojson && barangay.geojson.geometry) {
       const coords = barangay.geojson.geometry.coordinates;
@@ -119,7 +119,7 @@ function calculateBoundsFromBarangays(brgyData) {
       }
     }
   });
-  
+
   return { minLng, maxLng, minLat, maxLat };
 }
 
@@ -132,16 +132,16 @@ function calculateBoundsFromBarangays(brgyData) {
 function isPointInRing(point, ring) {
   const [x, y] = point;
   let inside = false;
-  
+
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i];
     const [xj, yj] = ring[j];
-    
-    const intersect = ((yi > y) !== (yj > y)) && 
+
+    const intersect = ((yi > y) !== (yj > y)) &&
                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
     if (intersect) inside = !inside;
   }
-  
+
   return inside;
 }
 
@@ -163,7 +163,7 @@ function isPointInPolygon(point, coordinates) {
   }
 
   let inside = isPointInRing(point, outerRing);
-  
+
   // Check holes (inner rings) - if point is in a hole, it's outside
   if (inside && coordinates.length > 1) {
     for (let i = 1; i < coordinates.length; i++) {
@@ -173,7 +173,7 @@ function isPointInPolygon(point, coordinates) {
       }
     }
   }
-  
+
   return inside;
 }
 
@@ -244,7 +244,7 @@ async function isWithinDigosBoundary(latitude, longitude) {
 
   // Handle standard GeoJSON boundary format
   if (boundary.geometry && boundary.geometry.coordinates) {
-    const coordinates = boundary.geometry.coordinates;
+    const {coordinates} = boundary.geometry;
 
     // Handle Polygon geometry type
     if (boundary.geometry.type === 'Polygon') {
@@ -283,7 +283,7 @@ async function getDigosBounds() {
   let minLng = Infinity, maxLng = -Infinity;
   let minLat = Infinity, maxLat = -Infinity;
 
-  const coordinates = boundary.geometry.coordinates;
+  const {coordinates} = boundary.geometry;
 
   function processRing(ring) {
     for (const [lng, lat] of ring) {

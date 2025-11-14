@@ -91,7 +91,7 @@ function renderProfile(profile) {
   const firstName = profile?.firstName || profile?.first_name || '';
   const lastName = profile?.lastName || profile?.last_name || '';
   const middleName = profile?.middleName || profile?.middle_name || '';
-  
+
   // Build display name
   let name = profile?.name || profile?.full_name || '';
   if (!name && (firstName || lastName)) {
@@ -99,7 +99,7 @@ function renderProfile(profile) {
     name = parts.join(' ') || 'User';
   }
   if (!name) name = 'User';
-  
+
   const email = profile?.email || '—';
   // Mobile number from raw_user_meta_data (already extracted in backend)
   const mobile = profile?.mobileNumber || profile?.mobile_number || profile?.mobile || '—';
@@ -462,7 +462,7 @@ function wireEmailEdit() {
     console.warn('[PROFILE] Email edit icon not found');
     return;
   }
-  
+
   if (!modal) {
     console.warn('[PROFILE] Email change modal not found');
     return;
@@ -519,7 +519,7 @@ function wireEmailEdit() {
       closeModal();
     });
   }
-  
+
   if (cancelBtn) {
     const newCancelBtn = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);

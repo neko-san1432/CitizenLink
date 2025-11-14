@@ -69,23 +69,23 @@ export class FileHandler {
     // Clean up upload tracking
     this.uploadStatus.delete(file);
     this.uploadProgress.delete(file);
-    
+
     // Clean up object URL cache
     const objectURL = this.objectURLs.get(file);
     if (objectURL) {
       URL.revokeObjectURL(objectURL);
       this.objectURLs.delete(file);
     }
-    
+
     // Remove from selected files
     const index = this.selectedFiles.indexOf(file);
     if (index > -1) {
       this.selectedFiles.splice(index, 1);
     }
-    
+
     // Update upload state
     this.updateUploadState();
-    
+
     // Notify and re-render
     this.onFilesChange(this.selectedFiles);
     this.renderPreviews();
@@ -95,14 +95,14 @@ export class FileHandler {
    * Remove all failed uploads
    */
   removeFailedUploads() {
-    const failedFiles = this.selectedFiles.filter(file => 
+    const failedFiles = this.selectedFiles.filter(file =>
       this.uploadStatus.get(file) === 'error'
     );
-    
+
     failedFiles.forEach(file => {
       this.removeFileAndCleanup(file);
     });
-    
+
     return failedFiles.length;
   }
   /**
@@ -114,7 +114,7 @@ export class FileHandler {
       URL.revokeObjectURL(objectURL);
     });
     this.objectURLs.clear();
-    
+
     this.selectedFiles = [];
     this.uploadStatus.clear();
     this.uploadProgress.clear();
@@ -232,7 +232,7 @@ export class FileHandler {
     previewItem.className = 'file-preview-item';
     const uploadStatus = this.getUploadStatus(file);
     const uploadProgress = this.getUploadProgress(file);
-    
+
     // Determine border color based on status
     let borderColor = '#dee2e6'; // default
     if (uploadStatus === 'uploading') {
@@ -242,7 +242,7 @@ export class FileHandler {
     } else if (uploadStatus === 'error') {
       borderColor = '#dc3545';
     }
-    
+
     previewItem.style.cssText = `
       display: inline-block;
       position: relative;
@@ -254,7 +254,7 @@ export class FileHandler {
       overflow: hidden;
       background-color: #f8f9fa;
     `;
-    
+
     // Create preview based on file type
     if (file.type.startsWith('image/')) {
       const img = document.createElement('img');
@@ -300,7 +300,7 @@ export class FileHandler {
       fileIcon.appendChild(fileName);
       previewItem.appendChild(fileIcon);
     }
-    
+
     // Add upload progress overlay
     if (uploadStatus === 'uploading' || uploadStatus === 'completed' || uploadStatus === 'error') {
       const overlay = document.createElement('div');
@@ -315,7 +315,7 @@ export class FileHandler {
         font-size: 10px;
         text-align: center;
       `;
-      
+
       if (uploadStatus === 'uploading') {
         overlay.innerHTML = `
           <div style="margin-bottom: 2px;">Uploading...</div>
@@ -331,10 +331,10 @@ export class FileHandler {
         overlay.innerHTML = '✗ Failed';
         overlay.style.background = 'rgba(220, 53, 69, 0.9)';
       }
-      
+
       previewItem.appendChild(overlay);
     }
-    
+
     // Add remove button (disabled during upload)
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';

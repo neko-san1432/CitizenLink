@@ -30,7 +30,7 @@ class CoordinatorService {
       console.log('[COORDINATOR_SERVICE] Getting review queue for coordinator:', coordinatorId);
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
       console.log(`[COORDINATOR_SERVICE] Retrieved ${complaints.length} complaints from repository`);
-      
+
       // Log sample complaint to check structure
       if (complaints.length > 0) {
         const sample = complaints[0];
@@ -44,25 +44,25 @@ class CoordinatorService {
           lngType: typeof sample.longitude
         });
       }
-      
+
       // Filter complaints with valid coordinates for barangay classification
       const complaintsWithCoords = complaints.filter(c => {
         const lat = parseFloat(c.latitude);
         const lng = parseFloat(c.longitude);
-        const hasCoords = c.latitude != null && c.longitude != null && 
+        const hasCoords = c.latitude != null && c.longitude != null &&
                          !isNaN(lat) && !isNaN(lng) &&
                          isFinite(lat) && isFinite(lng);
         return hasCoords;
       });
-      
+
       console.log(`[COORDINATOR_SERVICE] Found ${complaintsWithCoords.length} out of ${complaints.length} complaints with valid coordinates`);
-      
+
       // Classify complaints by barangay based on coordinates
       let complaintBarangayMap = new Map();
       try {
         complaintBarangayMap = classifyComplaints(complaintsWithCoords);
         console.log(`[COORDINATOR_SERVICE] Successfully classified ${complaintBarangayMap.size} complaints into barangays`);
-        
+
         // Log first few classifications
         let loggedCount = 0;
         complaintBarangayMap.forEach((barangay, complaintId) => {
@@ -75,19 +75,19 @@ class CoordinatorService {
         console.error('[COORDINATOR_SERVICE] Error classifying complaints:', classifyError);
         console.error('[COORDINATOR_SERVICE] Classification error stack:', classifyError.stack);
       }
-      
+
       // Enhance with algorithm confidence levels and barangay information
       const enhanced = complaints.map(complaint => {
         const hasSimilarities = complaint.similarities && complaint.similarities.length > 0;
         const highConfidence = hasSimilarities &&
           complaint.similarities.some(s => s.similarity_score >= 0.85);
-        
+
         // Get barangay from classification map
         const barangay = complaintBarangayMap.get(complaint.id) || null;
-        
+
         const enhancedComplaint = {
           ...complaint,
-          barangay: barangay, // Add barangay information
+          barangay, // Add barangay information
           algorithm_flags: {
             has_duplicates: hasSimilarities,
             high_confidence_duplicate: highConfidence,
@@ -95,13 +95,13 @@ class CoordinatorService {
             needs_review: !complaint.is_duplicate && hasSimilarities
           }
         };
-        
+
         return enhancedComplaint;
       });
-      
+
       const withBarangay = enhanced.filter(c => c.barangay != null).length;
       console.log(`[COORDINATOR_SERVICE] ✓ Returning ${withBarangay} out of ${enhanced.length} complaints with barangay info`);
-      
+
       return enhanced;
     } catch (error) {
       console.error('[COORDINATOR_SERVICE] Get review queue error:', error);

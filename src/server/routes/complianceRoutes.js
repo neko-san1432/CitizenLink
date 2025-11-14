@@ -40,4 +40,3 @@ router.get('/requests',
 
 module.exports = router;
 
-

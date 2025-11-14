@@ -98,10 +98,10 @@ class BarangayPrioritization {
         </div>
       </div>
       <div class="barangay-ranking-list">
-        ${barangays.length > 0 
-          ? barangays.map((barangay, index) => this.renderBarangayCard(barangay, index + 1)).join('')
-          : '<div class="no-results">No barangays match the current filters.</div>'
-        }
+        ${barangays.length > 0
+    ? barangays.map((barangay, index) => this.renderBarangayCard(barangay, index + 1)).join('')
+    : '<div class="no-results">No barangays match the current filters.</div>'
+}
       </div>
     `;
 
@@ -182,13 +182,13 @@ class BarangayPrioritization {
         const card = toggle.closest('.barangay-card');
         const details = card.querySelector('.barangay-card-details');
         const isExpanded = card.classList.contains('expanded');
-        
+
         if (isExpanded) {
           card.classList.remove('expanded');
           details.style.maxHeight = '0';
         } else {
           card.classList.add('expanded');
-          details.style.maxHeight = details.scrollHeight + 'px';
+          details.style.maxHeight = `${details.scrollHeight  }px`;
         }
       });
     });

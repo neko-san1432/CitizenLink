@@ -22,13 +22,13 @@ class ComplaintDetails {
     try {
       // Show loading spinner immediately
       this.showLoading();
-      
+
       // Hide complaint details container initially to prevent showing dummy content
       const detailsContainer = document.getElementById('complaint-details');
       if (detailsContainer) {
         detailsContainer.style.display = 'none';
       }
-      
+
       // Clear placeholder text immediately to prevent showing dummy content
       const descriptionEl = document.getElementById('complaint-description');
       if (descriptionEl) {
@@ -62,7 +62,7 @@ class ComplaintDetails {
       if (timelineEl) {
         timelineEl.innerHTML = '';
       }
-      
+
       // Get complaint ID from URL - try both path parameter and query parameter
       const pathParts = window.location.pathname.split('/');
       let complaintId = pathParts[pathParts.length - 1];
@@ -256,29 +256,29 @@ class ComplaintDetails {
       const email = profile.email || 'Not provided';
       const firstName = profile.firstName || '';
       const lastName = profile.lastName || '';
-      
+
       // Get phone number from multiple possible fields
       const rawMeta = profile.raw_user_meta_data || {};
-      const phoneNumber = profile.mobileNumber || 
-                         profile.mobile || 
-                         rawMeta.mobile_number || 
-                         rawMeta.mobile || 
-                         rawMeta.phone_number || 
-                         rawMeta.phone || 
+      const phoneNumber = profile.mobileNumber ||
+                         profile.mobile ||
+                         rawMeta.mobile_number ||
+                         rawMeta.mobile ||
+                         rawMeta.phone_number ||
+                         rawMeta.phone ||
                          null;
-      
+
       // Get address from metadata - check multiple formats
       const address = rawMeta.address || {};
       const addressParts = [];
-      
+
       // Check for address_line_1, address_line_2 format
       if (rawMeta.address_line_1) addressParts.push(rawMeta.address_line_1);
       if (rawMeta.address_line_2) addressParts.push(rawMeta.address_line_2);
-      
+
       // Check for nested address object
       if (address.line1) addressParts.push(address.line1);
       if (address.line2) addressParts.push(address.line2);
-      
+
       // Check for old format
       if (rawMeta.addressLine1 && !addressParts.includes(rawMeta.addressLine1)) {
         addressParts.push(rawMeta.addressLine1);
@@ -286,13 +286,13 @@ class ComplaintDetails {
       if (rawMeta.addressLine2 && !addressParts.includes(rawMeta.addressLine2)) {
         addressParts.push(rawMeta.addressLine2);
       }
-      
+
       // Add city, province, barangay, postal code if available
       if (rawMeta.city || address.city) addressParts.push(rawMeta.city || address.city);
       if (rawMeta.barangay || address.barangay) addressParts.push(rawMeta.barangay || address.barangay);
       if (rawMeta.province || address.province) addressParts.push(rawMeta.province || address.province);
       if (rawMeta.postal_code || address.postalCode) addressParts.push(rawMeta.postal_code || address.postalCode);
-      
+
       const fullAddress = addressParts.filter(Boolean).join(', ') || null;
 
       complainantInfo.innerHTML = `
@@ -593,7 +593,7 @@ class ComplaintDetails {
 
         const lat = parseFloat(this.complaint.latitude);
         const lng = parseFloat(this.complaint.longitude);
-        
+
         if (isNaN(lat) || isNaN(lng)) {
           mapContainer.innerHTML = '<p>Invalid coordinates</p>';
           return;
@@ -622,7 +622,7 @@ class ComplaintDetails {
 
   async initializeMap() {
     // Wait a bit for the DOM to be ready
-      const mapContainer = document.getElementById('complaint-map');
+    const mapContainer = document.getElementById('complaint-map');
     if (!mapContainer) {
       console.warn('[COMPLAINT_DETAILS] Map container not found');
       return;
@@ -655,23 +655,23 @@ class ComplaintDetails {
         return;
       }
 
-        // Initialize the map
+      // Initialize the map
       const map = L.map('complaint-map', {
         zoomControl: true,
         preferCanvas: false
       }).setView([lat, lng], 15);
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19
-        }).addTo(map);
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
 
-        // Add a marker for the complaint location
+      // Add a marker for the complaint location
       const complaintMarker = L.marker([lat, lng]).addTo(map);
-      
-        // Add popup with complaint information
-        complaintMarker.bindPopup(`
+
+      // Add popup with complaint information
+      complaintMarker.bindPopup(`
                     <div class="map-popup">
           <h4>${this.escapeHtml(this.complaint.title || 'Complaint Location')}</h4>
           <p><strong>Address:</strong> ${this.escapeHtml(this.complaint.location_text || 'N/A')}</p>
@@ -679,8 +679,8 @@ class ComplaintDetails {
                     </div>
                 `).openPopup();
 
-        // Store map reference for potential cleanup
-        this.map = map;
+      // Store map reference for potential cleanup
+      this.map = map;
 
       // Invalidate size after a short delay to ensure proper rendering
       setTimeout(() => {
@@ -688,7 +688,7 @@ class ComplaintDetails {
           map.invalidateSize();
         }
       }, 200);
-      } catch (error) {
+    } catch (error) {
       console.error('[COMPLAINT_DETAILS] Error initializing map:', error);
       const mapContainer = document.getElementById('complaint-map');
       if (mapContainer) {
@@ -1136,18 +1136,18 @@ class ComplaintDetails {
     const returnLink = document.getElementById('return-link');
     const returnText = document.getElementById('return-text');
     if (!returnLink || !returnText) return;
-    
+
     // Check URL parameter first (explicit flag)
     const urlParams = new URLSearchParams(window.location.search);
     const fromParam = urlParams.get('from'); // e.g., ?from=dashboard or ?from=profile
-    
+
     // Check referrer to determine where user came from (fallback)
-    const referrer = document.referrer;
+    const {referrer} = document;
     const isFromDashboard = fromParam === 'dashboard' || referrer.includes('/dashboard') || referrer.includes('/citizen/dashboard');
     const isFromProfile = fromParam === 'profile' || referrer.includes('/myProfile');
     const isFromReviewQueue = referrer.includes('/coordinator/review-queue') || referrer.includes('/review-queue');
     const isFromAssignments = referrer.includes('/assignments');
-    
+
     // For citizens coming from dashboard or profile previews, always go to profile
     if (this.userRole === 'citizen') {
       if (isFromDashboard) {
@@ -1162,7 +1162,7 @@ class ComplaintDetails {
       }
       return;
     }
-    
+
     // Otherwise use role-based navigation
     switch (this.userRole) {
       case 'complaint-coordinator':

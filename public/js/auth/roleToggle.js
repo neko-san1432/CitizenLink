@@ -165,13 +165,13 @@ export async function initializeRoleToggle() {
       isInitialized = false;
       return;
     }
-    
+
     // Get user role info
     const response = await fetch('/api/user/role-info', {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
-    
+
     if (!response.ok) {
       // Handle 401 gracefully - user not authenticated
       if (response.status === 401) {
@@ -180,7 +180,7 @@ export async function initializeRoleToggle() {
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result = await response.json();
     if (!result.success) {
       isInitialized = false;
