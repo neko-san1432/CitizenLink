@@ -1,5 +1,5 @@
 import { brandConfig } from '../config/index.js';
-import { initializeNotificationButton, closeNotificationPanel } from './notification.js';
+import { initializeNotificationButton, closeNotificationPanel as _closeNotificationPanel } from './notification.js';
 
 // Header component for easy modification
 
@@ -153,7 +153,7 @@ function initializeProfileButton() {
     if (!profilePanel) return;
 
     const profileBtnRect = profileBtn.getBoundingClientRect();
-    const headerHeight = 64; // Approximate header height
+    const _headerHeight = 64; // Approximate header height
 
     // Position panel below the profile button, aligned to the right
     profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     // Test if buttons were created
-    const testNotificationBtn = document.getElementById('notification-btn');
+    const _testNotificationBtn = document.getElementById('notification-btn');
     // Initialize header components
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector('.notification-container');

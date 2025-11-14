@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dLng = toRad(bLng - aLng);
       const lat1 = toRad(aLat);
       const lat2 = toRad(bLat);
-      const s = Math.sin(dLat/2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng/2) ** 2);
+      const s = (Math.sin(dLat/2) ** 2) + (Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng/2) ** 2));
       return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
     }
     function classWeight(cls = '', type = '') {
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const classScore = classWeight(item.class, item.type) / 3; // normalize ~0.33..1
           const nameLen = (item.display_name || '').length || 1;
           const brevity = Math.min(1, 20 / nameLen); // prefer shorter names
-          const score = 0.6 * proximityScore + 0.3 * classScore + 0.1 * brevity;
+          const score = (0.6 * proximityScore) + (0.3 * classScore) + (0.1 * brevity);
           return { item, score };
         })
           .sort((a, b) => b.score - a.score)
