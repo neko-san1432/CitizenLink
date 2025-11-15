@@ -259,7 +259,7 @@ function setupLocationPicker(map) {
       setTimeout(() => warning.remove(), 300);
     }
   }
-<<<<<<< HEAD
+
   
   // Track coordinate validity state
   let coordinatesValid = false;
@@ -271,14 +271,6 @@ function setupLocationPicker(map) {
     latInput.value = parseFloat(lat.toFixed(8)).toString();
     lngInput.value = parseFloat(lng.toFixed(8)).toString();
     
-=======
-
-  // Update coordinates function with boundary validation
-  async function updateCoordinates(lat, lng, showWarning = true) {
-    latInput.value = lat.toFixed(6);
-    lngInput.value = lng.toFixed(6);
-
->>>>>>> 55de51f3fa3db603cdb3e11f736f1c90f3a780b3
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
     coordinatesValid = isValid;

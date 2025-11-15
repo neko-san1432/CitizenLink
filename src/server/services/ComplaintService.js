@@ -661,6 +661,72 @@ class ComplaintService {
       }
       // IMPORTANT: Supabase PostgREST has a default limit that may be very low (sometimes as low as 7-10 rows)
       // For the heatmap, we want ALL complaints with coordinates
+      // First, get the total count to know how many records we need to fetch
+      // Clone the query for count to avoid modifying the original query
+      const countQuery = supabase
+        .from('complaints')
+        .select('id', { count: 'exact', head: true })
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
+      
+      // Apply same filters to count query
+      if (status) {
+        if (Array.isArray(status) && status.length > 0) {
+          countQuery.in('workflow_status', status);
+        } else if (!Array.isArray(status)) {
+          countQuery.eq('workflow_status', status);
+        }
+      } else if (!includeResolved) {
+        countQuery.neq('workflow_status', 'completed').neq('workflow_status', 'cancelled');
+      }
+      
+      if (confirmationStatus) {
+        if (Array.isArray(confirmationStatus) && confirmationStatus.length > 0) {
+          countQuery.in('confirmation_status', confirmationStatus);
+        } else if (!Array.isArray(confirmationStatus)) {
+          countQuery.eq('confirmation_status', confirmationStatus);
+        }
+      }
+      
+      if (department) {
+        if (Array.isArray(department) && department.length > 0) {
+          const deptConditions = department.map(dept => `department_r.cs.{${dept}}`).join(',');
+          if (deptConditions) {
+            countQuery.or(deptConditions);
+          }
+        } else if (!Array.isArray(department)) {
+          countQuery.contains('department_r', [department]);
+        }
+      }
+      
+      if (category) {
+        if (Array.isArray(category) && category.length > 0) {
+          countQuery.in('category', category);
+        } else if (!Array.isArray(category)) {
+          countQuery.eq('category', category);
+        }
+      }
+      
+      if (subcategory) {
+        countQuery.eq('subcategory', subcategory);
+      }
+      
+      if (startDate) {
+        countQuery.gte('submitted_at', startDate);
+      }
+      if (endDate) {
+        countQuery.lte('submitted_at', endDate);
+      }
+      
+      const { count: totalCount, error: countError } = await countQuery;
+      
+      if (countError) {
+        console.error('[COMPLAINT-SERVICE] Error getting total count:', countError);
+        // Continue anyway - pagination will handle it
+      }
+      
+      console.log(`[COMPLAINT-SERVICE] Total complaints matching filters: ${totalCount || 'unknown'}`);
+      
       // Use pagination to fetch all records in batches
       const batchSize = 1000; // Fetch in batches of 1000
       let allData = [];
@@ -673,7 +739,7 @@ class ComplaintService {
           .range(offset, offset + batchSize - 1)
           .limit(batchSize);
 
-        const { data: batchData, error, count } = await paginatedQuery;
+        const { data: batchData, error } = await paginatedQuery;
 
         if (error) {
           console.error('[COMPLAINT-SERVICE] Database error:', error);
@@ -683,6 +749,7 @@ class ComplaintService {
 
         if (batchData && batchData.length > 0) {
           allData = allData.concat(batchData);
+          console.log(`[COMPLAINT-SERVICE] Fetched batch: ${batchData.length} complaints (total so far: ${allData.length})`);
           offset += batchSize;
           // If we got fewer results than batchSize, we've reached the end
           hasMore = batchData.length === batchSize;
@@ -690,8 +757,15 @@ class ComplaintService {
           hasMore = false;
         }
 
-        // Safety check: if count is available and we've fetched all records
-        if (count !== null && allData.length >= count) {
+        // Safety check: if we have a total count and we've fetched all records
+        if (totalCount !== null && allData.length >= totalCount) {
+          console.log(`[COMPLAINT-SERVICE] Reached total count (${totalCount}), stopping pagination`);
+          hasMore = false;
+        }
+        
+        // Additional safety: prevent infinite loops
+        if (offset > 100000) {
+          console.warn('[COMPLAINT-SERVICE] Safety limit reached (100k records), stopping pagination');
           hasMore = false;
         }
       }
