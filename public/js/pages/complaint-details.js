@@ -742,57 +742,7 @@ class ComplaintDetails {
         maxZoom: 19
       }).addTo(map);
 
-<<<<<<< HEAD
-        // Load and display Digos City boundaries
-        try {
-          const boundaryResponse = await fetch('/api/boundaries');
-          if (boundaryResponse.ok) {
-            const brgyData = await boundaryResponse.json();
-            if (Array.isArray(brgyData)) {
-              // Add each barangay boundary to the map
-              brgyData.forEach((barangay) => {
-                if (barangay.geojson) {
-                  const geojsonLayer = L.geoJSON(barangay.geojson, {
-                    style: {
-                      color: '#3b82f6',
-                      weight: 1.5,
-                      opacity: 0.6,
-                      fillOpacity: 0,
-                      fillColor: 'transparent',
-                      dashArray: '5, 5',
-                      interactive: false
-                    },
-                    interactive: false,
-                    onEachFeature: function(feature, layer) {
-                      // Disable all interactions to prevent black box on click
-                      layer.options.interactive = false;
-                      layer.off('click');
-                      layer.off('mouseover');
-                      layer.off('mouseout');
-                      
-                      if (barangay.name) {
-                        layer.bindTooltip(barangay.name, {
-                          permanent: false,
-                          direction: 'center',
-                          className: 'boundary-tooltip',
-                          interactive: false
-                        });
-                      }
-                    }
-                  });
-                  geojsonLayer.addTo(map);
-                }
-              });
-            }
-          }
-        } catch (error) {
-          console.warn('[COMPLAINT_DETAILS] Failed to load boundaries:', error);
-        }
-
-        // Add a marker for the complaint location
-=======
       // Add a marker for the complaint location
->>>>>>> 55de51f3fa3db603cdb3e11f736f1c90f3a780b3
       const complaintMarker = L.marker([lat, lng]).addTo(map);
 
       // Add popup with complaint information
