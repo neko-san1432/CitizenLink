@@ -1,132 +1,120 @@
-  @import url('/css/app.css');
-@import url('/css/toast.css');
-@import url('/css/header-redesign.css');
-@import url('/css/pages/dashboard-redesign.css');
-@import url('/css/components/modal.css');
-@import url('/css/components/sidebar.css');
-@import url('/css/components/header-dropdowns.css');
+/**
+ * CitizenLink Government Theme
+ * Modern, authoritative government-style design system
+ * Following design principles from US Gov, Gov.UK, and Singapore GovTech
+ */
+
+/* ============================================
+   IMPORTS - Government Theme Components
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ============================================
+   GOVERNMENT COLOR PALETTE & CSS VARIABLES
+   ============================================ */
 :root {
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-  --primary-800: #1e40af;
-  --primary-900: #1e3a8a;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  --success-50: #ecfdf5;
-  --success-500: #10b981;
-  --success-600: #059669;
-  --warning-50: #fffbeb;
-  --warning-500: #f59e0b;
-  --warning-600: #d97706;
-  --error-50: #fef2f2;
-  --error-500: #ef4444;
-  --error-600: #dc2626;
-  --info-50: #eff6ff;
-  --info-500: #3b82f6;
-  --info-600: #2563eb;
-  --font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
-  --z-toast: 1080;
+  /* Government Primary Colors - Deep Navy for Trust & Authority */
+  --gov-navy-50: #f0f4f8;
+  --gov-navy-100: #d9e2ec;
+  --gov-navy-200: #bcccdc;
+  --gov-navy-300: #9fb3c8;
+  --gov-navy-400: #829ab1;
+  --gov-navy-500: #65819a;
+  --gov-navy-600: #4b6883;
+  --gov-navy-700: #3b556c;
+  --gov-navy-800: #2b4255;
+  --gov-navy-900: #1e3a8a;
+
+  /* Government Secondary Colors - Charcoal Gray for Structure */
+  --gov-gray-50: #f9fafb;
+  --gov-gray-100: #f3f4f6;
+  --gov-gray-200: #e5e7eb;
+  --gov-gray-300: #d1d5db;
+  --gov-gray-400: #9ca3af;
+  --gov-gray-500: #6b7280;
+  --gov-gray-600: #4b5563;
+  --gov-gray-700: #374151;
+  --gov-gray-800: #1f2937;
+  --gov-gray-900: #111827;
+
+  /* Government Accent Colors */
+  --gov-blue: #2563eb;
+  --gov-blue-dark: #1d4ed8;
+
+  /* Status Colors - Maintained for functionality */
+  --gov-success: #10b981;
+  --gov-success-dark: #059669;
+  --gov-warning: #f59e0b;
+  --gov-warning-dark: #d97706;
+  --gov-error: #ef4444;
+  --gov-error-dark: #dc2626;
+
+  /* Typography */
+  --gov-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --gov-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* Spacing - Generous for government clarity */
+  --gov-space-1: 0.25rem;
+  --gov-space-2: 0.5rem;
+  --gov-space-3: 0.75rem;
+  --gov-space-4: 1rem;
+  --gov-space-5: 1.25rem;
+  --gov-space-6: 1.5rem;
+  --gov-space-8: 2rem;
+  --gov-space-10: 2.5rem;
+  --gov-space-12: 3rem;
+  --gov-space-16: 4rem;
+  --gov-space-20: 5rem;
+  --gov-space-24: 6rem;
+
+  /* Typography Scale */
+  --gov-text-xs: 0.75rem;
+  --gov-text-sm: 0.875rem;
+  --gov-text-base: 1rem;
+  --gov-text-lg: 1.125rem;
+  --gov-text-xl: 1.25rem;
+  --gov-text-2xl: 1.5rem;
+  --gov-text-3xl: 1.875rem;
+  --gov-text-4xl: 2.25rem;
+  --gov-text-5xl: 3rem;
+
+  /* Border Radius */
+  --gov-radius-sm: 0.25rem;
+  --gov-radius-md: 0.375rem;
+  --gov-radius-lg: 0.5rem;
+  --gov-radius-xl: 0.75rem;
+  --gov-radius-2xl: 1rem;
+  --gov-radius-full: 9999px;
+
+  /* Shadows - Subtle for government professionalism */
+  --gov-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --gov-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --gov-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --gov-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Transitions - Professional and subtle */
+  --gov-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gov-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gov-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Scale */
+  --gov-z-dropdown: 1000;
+  --gov-z-sticky: 1020;
+  --gov-z-fixed: 1030;
+  --gov-z-modal-backdrop: 1040;
+  --gov-z-modal: 1050;
+  --gov-z-popover: 1060;
+  --gov-z-tooltip: 1070;
+  --gov-z-toast: 1080;
+
+  /* Borders */
+  --gov-border-color: #e5e7eb;
+  --gov-border-width: 1px;
+  --gov-border-width-thick: 2px;
 }
-/* Dark Mode CSS Variables - Comprehensive Color Palette */
-html.dark {
-  /* Gray scale - inverted for dark mode */
-  --gray-50: #0f172a;
-  --gray-100: #1e293b;
-  --gray-200: #334155;
-  --gray-300: #475569;
-  --gray-400: #64748b;
-  --gray-500: #94a3b8;
-  --gray-600: #cbd5e1;
-  --gray-700: #e2e8f0;
-  --gray-800: #f1f5f9;
-  --gray-900: #f8fafc;
-  
-  /* Primary colors - adjusted for dark mode */
-  --primary-50: #1e3a8a;
-  --primary-100: #1e40af;
-  --primary-200: #2563eb;
-  --primary-300: #3b82f6;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #60a5fa;
-  --primary-700: #93c5fd;
-  --primary-800: #bfdbfe;
-  --primary-900: #dbeafe;
-  
-  /* Success colors */
-  --success-50: #064e3b;
-  --success-500: #10b981;
-  --success-600: #34d399;
-  
-  /* Warning colors */
-  --warning-50: #78350f;
-  --warning-500: #f59e0b;
-  --warning-600: #fbbf24;
-  
-  /* Error colors */
-  --error-50: #7f1d1d;
-  --error-500: #ef4444;
-  --error-600: #f87171;
-  
-  /* Info colors */
-  --info-50: #1e3a8a;
-  --info-500: #3b82f6;
-  --info-600: #60a5fa;
-  
-  /* Shadows - darker and more prominent in dark mode */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-}
+/* ============================================
+   BASE STYLES - Government Foundation
+   ============================================ */
 
 * {
   box-sizing: border-box;
@@ -143,41 +131,56 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--font-family);
+  font-family: var(--gov-font-family);
   font-weight: 400;
+  font-size: var(--gov-text-base);
   line-height: 1.6;
-  color: var(--gray-900);
-  background-color: var(--gray-50);
+  color: var(--gov-gray-900);
+  background-color: var(--gov-gray-50);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
+/* ============================================
+   TYPOGRAPHY - Government Hierarchy
+   ============================================ */
+
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-weight: 700; /* Bold for headers */
   line-height: 1.25;
   letter-spacing: -0.025em;
+  color: var(--gov-gray-900);
+  margin: 0 0 var(--gov-space-4) 0;
 }
 
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.875rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+h1 { font-size: var(--gov-text-4xl); }
+h2 { font-size: var(--gov-text-3xl); }
+h3 { font-size: var(--gov-text-2xl); }
+h4 { font-size: var(--gov-text-xl); }
+h5 { font-size: var(--gov-text-lg); }
+h6 { font-size: var(--gov-text-base); }
 
 p {
-  color: var(--gray-700);
+  color: var(--gov-gray-700);
+  margin: 0 0 var(--gov-space-4) 0;
+  line-height: 1.6;
 }
 
 a {
-  color: var(--primary-600);
+  color: var(--gov-blue);
   text-decoration: none;
+  transition: color var(--gov-transition-fast);
 }
 
 a:hover {
-  color: var(--primary-700);
+  color: var(--gov-blue-dark);
   text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--gov-blue);
+  outline-offset: 2px;
 }
 
 .btn {
@@ -262,31 +265,56 @@ a:hover {
   min-height: 3rem;
 }
 
+/* ============================================
+   FORMS - Government Input Components
+   ============================================ */
+
 .form-group {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--gov-space-6);
 }
 
 .form-label {
   display: block;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--gov-space-2);
+  font-weight: 500;
+  color: var(--gov-gray-700);
+  font-size: var(--gov-text-sm);
 }
 
-.input, .select, .textarea {
+.input,
+.select,
+.textarea {
   width: 100%;
-  border: 1px solid var(--gray-300);
+  padding: var(--gov-space-3) var(--gov-space-4);
+  border: var(--gov-border-width-thick) solid var(--gov-border-color);
+  border-radius: var(--gov-radius-md);
+  font-family: var(--gov-font-family);
+  font-size: var(--gov-text-base);
+  background-color: white;
+  color: var(--gov-gray-900);
+  transition: border-color var(--gov-transition-fast), box-shadow var(--gov-transition-fast);
 }
 
-.input:focus, .select:focus, .textarea:focus {
+.input:focus,
+.select:focus,
+.textarea:focus {
   outline: none;
-  border-color: var(--primary-500);
+  border-color: var(--gov-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.input::placeholder, .textarea::placeholder {
-  color: var(--gray-400);
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--gov-gray-400);
 }
 
-.input:disabled, .select:disabled, .textarea:disabled {
-  color: var(--gray-500);
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  background-color: var(--gov-gray-50);
+  border-color: var(--gov-gray-200);
+  color: var(--gov-gray-500);
+  cursor: not-allowed;
 }
 
 .card {
@@ -314,23 +342,28 @@ a:hover {
   margin-bottom: var(--space-2);
 }
 
+/* ============================================
+   LAYOUT - Government Grid System
+   ============================================ */
+
 .container {
-  max-width: 1200px;
+  max-width: 1280px; /* Increased for government content */
   margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding: 0 var(--gov-space-6);
 }
 
 .container-fluid {
   width: 100%;
-  padding: 0 var(--space-4);
+  padding: 0 var(--gov-space-6);
 }
 
 .dashboard-container {
-  padding: 0 var(--space-4);
-  min-height: calc(100vh - 64px);
-  max-height: calc(100vh - 64px);
+  padding: 0 var(--gov-space-6);
+  min-height: calc(100vh - 80px); /* Adjusted for government header */
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
   box-sizing: border-box;
+  background-color: var(--gov-gray-50);
 }
 
 .hidden { display: none !important; }
