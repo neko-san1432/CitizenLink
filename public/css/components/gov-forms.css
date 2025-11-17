@@ -1,0 +1,348 @@
+/**
+ * Government Form Components
+ * Clean, accessible form elements with clear validation
+ */
+
+/* ============================================
+   FORM CONTAINERS
+   ============================================ */
+
+.gov-form {
+  width: 100%;
+}
+
+.gov-form-section {
+  margin-bottom: var(--gov-space-8);
+}
+
+.gov-form-section-title {
+  font-size: var(--gov-text-xl);
+  font-weight: var(--gov-font-semibold);
+  color: var(--gov-gray-900);
+  margin: 0 0 var(--gov-space-4) 0;
+  padding-bottom: var(--gov-space-3);
+  border-bottom: 2px solid var(--gov-border-color);
+}
+
+.gov-form-section-description {
+  font-size: var(--gov-text-base);
+  color: var(--gov-gray-600);
+  margin: 0 0 var(--gov-space-6) 0;
+  line-height: 1.6;
+}
+
+/* ============================================
+   FORM GROUPS & LAYOUTS
+   ============================================ */
+
+.gov-form-row {
+  display: grid;
+  gap: var(--gov-space-6);
+  grid-template-columns: 1fr;
+  margin-bottom: var(--gov-space-6);
+}
+
+.gov-form-row-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.gov-form-row-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ============================================
+   INPUT VARIANTS
+   ============================================ */
+
+/* Input with Icon */
+.gov-form-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gov-form-input-icon {
+  position: absolute;
+  left: var(--gov-space-3);
+  color: var(--gov-gray-400);
+  pointer-events: none;
+}
+
+.gov-form-input-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.gov-form-input-with-icon {
+  padding-left: calc(var(--gov-space-4) + 20px + var(--gov-space-3));
+}
+
+/* Input States */
+.gov-form-input:disabled,
+.gov-form-select:disabled,
+.gov-form-textarea:disabled {
+  background-color: var(--gov-gray-100);
+  color: var(--gov-gray-500);
+  cursor: not-allowed;
+}
+
+.gov-form-input.error,
+.gov-form-select.error,
+.gov-form-textarea.error {
+  border-color: var(--gov-error-600);
+}
+
+.gov-form-input.error:focus,
+.gov-form-select.error:focus,
+.gov-form-textarea.error:focus {
+  border-color: var(--gov-error-600);
+  box-shadow: 0 0 0 3px var(--gov-error-100);
+}
+
+.gov-form-input.success,
+.gov-form-select.success,
+.gov-form-textarea.success {
+  border-color: var(--gov-success-600);
+}
+
+.gov-form-input.success:focus,
+.gov-form-select.success:focus,
+.gov-form-textarea.success:focus {
+  border-color: var(--gov-success-600);
+  box-shadow: 0 0 0 3px var(--gov-success-100);
+}
+
+/* ============================================
+   CHECKBOX & RADIO
+   ============================================ */
+
+.gov-form-checkbox,
+.gov-form-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gov-space-3);
+  cursor: pointer;
+}
+
+.gov-form-checkbox input[type="checkbox"],
+.gov-form-radio input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid var(--gov-border-color);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gov-form-checkbox input[type="checkbox"]:focus,
+.gov-form-radio input[type="radio"]:focus {
+  outline: 2px solid var(--gov-blue-600);
+  outline-offset: 2px;
+}
+
+.gov-form-checkbox-label,
+.gov-form-radio-label {
+  font-size: var(--gov-text-base);
+  color: var(--gov-gray-700);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+/* ============================================
+   FILE UPLOAD
+   ============================================ */
+
+.gov-form-file-wrapper {
+  position: relative;
+}
+
+.gov-form-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gov-form-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gov-space-2);
+  padding: var(--gov-space-8);
+  border: 2px dashed var(--gov-border-color);
+  border-radius: var(--gov-radius-lg);
+  background-color: var(--gov-gray-50);
+  cursor: pointer;
+  transition: all var(--gov-transition-fast);
+}
+
+.gov-form-file-label:hover {
+  border-color: var(--gov-blue-600);
+  background-color: var(--gov-blue-50);
+}
+
+.gov-form-file-input:focus + .gov-form-file-label {
+  outline: 2px solid var(--gov-blue-600);
+  outline-offset: 2px;
+}
+
+.gov-form-file-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--gov-gray-400);
+}
+
+.gov-form-file-text {
+  font-size: var(--gov-text-base);
+  color: var(--gov-gray-600);
+}
+
+.gov-form-file-text strong {
+  color: var(--gov-blue-600);
+}
+
+/* ============================================
+   VALIDATION MESSAGES
+   ============================================ */
+
+.gov-form-validation {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gov-space-2);
+  margin-top: var(--gov-space-2);
+  padding: var(--gov-space-3);
+  border-radius: var(--gov-radius-md);
+  font-size: var(--gov-text-sm);
+  line-height: 1.5;
+}
+
+.gov-form-validation-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.gov-form-validation-error {
+  background-color: var(--gov-error-50);
+  color: var(--gov-error-700);
+  border: 1px solid var(--gov-error-200);
+}
+
+.gov-form-validation-success {
+  background-color: var(--gov-success-50);
+  color: var(--gov-success-700);
+  border: 1px solid var(--gov-success-200);
+}
+
+.gov-form-validation-warning {
+  background-color: var(--gov-warning-50);
+  color: var(--gov-warning-700);
+  border: 1px solid var(--gov-warning-200);
+}
+
+/* ============================================
+   FORM ACTIONS
+   ============================================ */
+
+.gov-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gov-space-4);
+  margin-top: var(--gov-space-8);
+  padding-top: var(--gov-space-6);
+  border-top: 1px solid var(--gov-border-color);
+}
+
+.gov-form-actions-right {
+  justify-content: flex-end;
+}
+
+.gov-form-actions-between {
+  justify-content: space-between;
+}
+
+/* ============================================
+   FIELDSET & LEGEND
+   ============================================ */
+
+.gov-fieldset {
+  border: 2px solid var(--gov-border-color);
+  border-radius: var(--gov-radius-lg);
+  padding: var(--gov-space-6);
+  margin-bottom: var(--gov-space-6);
+}
+
+.gov-legend {
+  font-size: var(--gov-text-lg);
+  font-weight: var(--gov-font-semibold);
+  color: var(--gov-gray-900);
+  padding: 0 var(--gov-space-2);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 640px) {
+  .gov-form-row-2,
+  .gov-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .gov-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gov-form-actions .gov-btn {
+    width: 100%;
+  }
+
+  .gov-form-section-title {
+    font-size: var(--gov-text-lg);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .gov-form-row-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================ */
+
+/* Required field indicator */
+.gov-form-label-required::after {
+  content: " *";
+  color: var(--gov-error-600);
+  font-weight: var(--gov-font-bold);
+}
+
+/* Screen reader only text */
+.gov-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus visible for better keyboard navigation */
+.gov-form-input:focus-visible,
+.gov-form-select:focus-visible,
+.gov-form-textarea:focus-visible {
+  outline: 3px solid var(--gov-blue-600);
+  outline-offset: 2px;
+}
