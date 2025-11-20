@@ -18,25 +18,43 @@ class ComplaintRepository {
     return new Complaint(data);
   }
   async findById(id) {
-    const { data, error } = await this.supabase
-      .from('complaints')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error) {
-      if (error.code === 'PGRST116') return null;
+    try {
+      const { data, error } = await this.supabase
+        .from('complaints')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle(); // Use maybeSingle() instead of single() to return null when no rows found
+      
+      if (error) {
+        // PGRST116 = no rows returned (expected when complaint doesn't exist)
+        if (error.code === 'PGRST116') {
+          console.log(`[COMPLAINT_REPO] Complaint ${id} not found (PGRST116)`);
+          return null;
+        }
+        // Log other errors for debugging
+        console.error(`[COMPLAINT_REPO] Error fetching complaint ${id}:`, error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.log(`[COMPLAINT_REPO] Complaint ${id} not found (no data)`);
+        return null;
+      }
+      
+      const complaint = new Complaint(data);
+      // Get assignment data for progress tracking (without accessing auth.users)
+      const { data: assignments } = await this.supabase
+        .from('complaint_assignments')
+        .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
+        .eq('complaint_id', id)
+        .order('officer_order', { ascending: true });
+      // Add assignments to complaint object
+      complaint.assignments = assignments || [];
+      return complaint;
+    } catch (error) {
+      console.error(`[COMPLAINT_REPO] Unexpected error in findById for ${id}:`, error);
       throw error;
     }
-    const complaint = new Complaint(data);
-    // Get assignment data for progress tracking (without accessing auth.users)
-    const { data: assignments } = await this.supabase
-      .from('complaint_assignments')
-      .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
-      .eq('complaint_id', id)
-      .order('officer_order', { ascending: true });
-    // Add assignments to complaint object
-    complaint.assignments = assignments || [];
-    return complaint;
   }
   async findByIds(ids, fields = '*') {
     if (!ids || ids.length === 0) return [];

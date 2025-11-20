@@ -369,8 +369,7 @@
     transform: scale(1.1);
 }
 
-.stepper-step.active:not(.cancelled) .stepper-node { }
-.stepper-step.cancelled .stepper-node { }
+/* Removed empty rules to reduce linter noise; visual states handled elsewhere */
 
 .stepper-number {
     color: white;

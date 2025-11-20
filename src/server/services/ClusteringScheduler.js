@@ -16,7 +16,7 @@ class ClusteringScheduler {
 
     // Default configuration (can be overridden)
     this.config = {
-      intervalHours: 6, // Run every 6 hours
+      intervalHours: 5 / 60, // Run every 5 minutes
       radiusKm: 0.5,
       minComplaintsPerCluster: 3,
       onlyIfNewComplaints: true, // Smart trigger: only cluster if new complaints exist
@@ -38,7 +38,8 @@ class ClusteringScheduler {
     }
 
     console.log(`[CLUSTERING_SCHEDULER] Starting automatic clustering scheduler`);
-    console.log(`[CLUSTERING_SCHEDULER] Interval: ${this.config.intervalHours} hours`);
+    const intervalMinutes = this.config.intervalHours * 60;
+    console.log(`[CLUSTERING_SCHEDULER] Interval: ${intervalMinutes} minutes`);
     console.log(`[CLUSTERING_SCHEDULER] Smart trigger: ${this.config.onlyIfNewComplaints ? 'enabled' : 'disabled'}`);
 
     // Run immediately on startup (after a short delay to let server initialize)
@@ -52,7 +53,7 @@ class ClusteringScheduler {
       this.runClustering();
     }, intervalMs);
 
-    console.log(`[CLUSTERING_SCHEDULER] Next clustering will run in ${this.config.intervalHours} hours`);
+    console.log(`[CLUSTERING_SCHEDULER] Next clustering will run in ${intervalMinutes} minutes`);
   }
 
   /**
@@ -72,6 +73,12 @@ class ClusteringScheduler {
    */
   async hasNewComplaints() {
     try {
+      if (!this.supabase) {
+        console.warn('[CLUSTERING_SCHEDULER] Supabase client not available');
+        // Assume there might be new complaints (safer to run)
+        return true;
+      }
+
       // Get the timestamp of the most recent active cluster
       const { data: latestCluster, error: clusterError } = await this.supabase
         .from('complaint_clusters')
@@ -103,7 +110,16 @@ class ClusteringScheduler {
       const { count, error } = await query;
 
       if (error) {
-        console.warn('[CLUSTERING_SCHEDULER] Error checking for new complaints:', error.message);
+        // Check if it's a network error
+        if (error.message && error.message.includes('fetch failed')) {
+          console.warn('[CLUSTERING_SCHEDULER] Network error checking for new complaints (database may be unreachable):', error.message);
+        } else {
+          console.warn('[CLUSTERING_SCHEDULER] Error checking for new complaints:', {
+            message: error.message || 'Unknown error',
+            code: error.code,
+            details: error.details || ''
+          });
+        }
         // If check fails, assume there might be new complaints (safer to run)
         return true;
       }
@@ -114,7 +130,15 @@ class ClusteringScheduler {
       }
       return hasNew;
     } catch (error) {
-      console.error('[CLUSTERING_SCHEDULER] Error in hasNewComplaints:', error);
+      // Handle network errors gracefully
+      if (error instanceof TypeError && error.message.includes('fetch failed')) {
+        console.warn('[CLUSTERING_SCHEDULER] Network error in hasNewComplaints (database may be unreachable):', error.message);
+      } else {
+        console.error('[CLUSTERING_SCHEDULER] Error in hasNewComplaints:', {
+          message: error.message || 'Unknown error',
+          stack: error.stack
+        });
+      }
       // On error, assume there might be new complaints (safer to run)
       return true;
     }
@@ -157,6 +181,21 @@ class ClusteringScheduler {
 
       console.log(`[CLUSTERING_SCHEDULER] Clustering completed successfully`);
       console.log(`[CLUSTERING_SCHEDULER] Found ${clusters.length} cluster(s) in ${duration}s`);
+      
+      // Log detailed information about each cluster
+      if (clusters.length > 0) {
+        console.log(`[CLUSTERING_SCHEDULER] Cluster details:`);
+        clusters.forEach((cluster, index) => {
+          const complaintCount = cluster.complaint_ids?.length || 0;
+          console.log(`  [CLUSTERING_SCHEDULER] Cluster ${index + 1}: "${cluster.cluster_name}"`);
+          console.log(`    - Complaints: ${complaintCount}`);
+          console.log(`    - Location: (${cluster.center_lat?.toFixed(6)}, ${cluster.center_lng?.toFixed(6)})`);
+          console.log(`    - Radius: ${cluster.radius_meters?.toFixed(0)}m`);
+          console.log(`    - Pattern: ${cluster.pattern_type || 'normal'}`);
+        });
+      } else {
+        console.log(`[CLUSTERING_SCHEDULER] No clusters detected (insufficient complaints or no geographic proximity)`);
+      }
 
       return {
         success: true,
@@ -166,11 +205,21 @@ class ClusteringScheduler {
       };
     } catch (error) {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      console.error(`[CLUSTERING_SCHEDULER] Clustering failed after ${duration}s:`, error.message);
+      
+      // Handle network errors gracefully
+      if (error instanceof TypeError && error.message.includes('fetch failed')) {
+        console.error(`[CLUSTERING_SCHEDULER] Clustering failed after ${duration}s: Database query failed: ${error.message}`);
+        console.warn('[CLUSTERING_SCHEDULER] This may indicate the database is unreachable. Check your Supabase configuration and network connectivity.');
+      } else {
+        console.error(`[CLUSTERING_SCHEDULER] Clustering failed after ${duration}s:`, {
+          message: error.message || 'Unknown error',
+          stack: error.stack
+        });
+      }
 
       return {
         success: false,
-        error: error.message,
+        error: error.message || 'Unknown error',
         duration
       };
     } finally {
@@ -205,3 +254,5 @@ class ClusteringScheduler {
 }
 
 module.exports = ClusteringScheduler;
+
+

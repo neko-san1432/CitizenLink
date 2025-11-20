@@ -114,10 +114,90 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (password !== confirm) return showMessage('error', 'Passwords do not match', 3000);
       const resetBtn = setButtonLoading(btn, 'Updating...');
       try {
+        // Check if logout all devices was requested (from URL or localStorage)
+        const urlParams = new URLSearchParams(window.location.search);
+        const logoutAllDevices = urlParams.get('logout_all_devices') === 'true';
+        const logoutOption = localStorage.getItem('password_reset_logout_option');
+        
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        msg.textContent = 'Password updated successfully. You can close this page and sign in with your new password.';
-        showMessage('success', 'Password updated successfully', 4000);
+        
+        // Clear logout option from localStorage
+        if (logoutOption) {
+          localStorage.removeItem('password_reset_logout_option');
+        }
+        
+        // Handle logout based on option
+        // Call server endpoint to invalidate all sessions immediately (including access tokens)
+        if (logoutAllDevices || logoutOption === 'all') {
+          // Invalidate all sessions server-side (including access tokens)
+          try {
+            const { addCsrfTokenToHeaders } = await import('../utils/csrf.js');
+            const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
+            const invalidateRes = await fetch('/api/auth/invalidate-all-sessions', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ scope: 'all' })
+            });
+            
+            if (invalidateRes.ok) {
+              // Also sign out locally
+              await supabase.auth.signOut();
+              msg.textContent = 'Password updated successfully. All sessions have been invalidated. Please sign in again with your new password.';
+              showMessage('success', 'Password updated and all sessions invalidated', 5000);
+            } else {
+              // Fallback to client-side signOut if server endpoint fails
+              await supabase.auth.signOut();
+              msg.textContent = 'Password updated successfully. All sessions have been logged out. Please sign in again with your new password.';
+              showMessage('success', 'Password updated and all sessions logged out', 5000);
+            }
+          } catch (invalidateErr) {
+            // Fallback to client-side signOut if request fails
+            console.warn('[PASSWORD RESET] Failed to invalidate sessions server-side:', invalidateErr);
+            await supabase.auth.signOut();
+            msg.textContent = 'Password updated successfully. All sessions have been logged out. Please sign in again with your new password.';
+            showMessage('success', 'Password updated and all sessions logged out', 5000);
+          }
+          
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 3000);
+        } else if (logoutOption === 'others') {
+          // Invalidate other sessions server-side
+          try {
+            const { addCsrfTokenToHeaders } = await import('../utils/csrf.js');
+            const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
+            const invalidateRes = await fetch('/api/auth/invalidate-all-sessions', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ scope: 'others' })
+            });
+            
+            if (invalidateRes.ok) {
+              // Also sign out other devices via client API
+              await supabase.auth.signOut({ scope: 'others' });
+              msg.textContent = 'Password updated successfully. All other sessions have been invalidated.';
+              showMessage('success', 'Password updated and other sessions invalidated', 5000);
+            } else {
+              // Fallback
+              await supabase.auth.signOut({ scope: 'others' });
+              msg.textContent = 'Password updated successfully. All other sessions have been logged out.';
+              showMessage('success', 'Password updated and other sessions logged out', 5000);
+            }
+          } catch (invalidateErr) {
+            console.warn('[PASSWORD RESET] Failed to invalidate other sessions server-side:', invalidateErr);
+            await supabase.auth.signOut({ scope: 'others' });
+            msg.textContent = 'Password updated successfully. All other sessions have been logged out.';
+            showMessage('success', 'Password updated and other sessions logged out', 5000);
+          }
+        } else {
+          // Password change automatically invalidates refresh tokens server-side
+          // Access tokens on other devices will expire naturally (~1 hour)
+          msg.textContent = 'Password updated successfully. You can close this page and sign in with your new password.';
+          showMessage('success', 'Password updated successfully', 4000);
+        }
+        
         newInput.value = '';
         confirmInput.value = '';
         temporarilyMark(btn, 'Updated', 'btn-success');
@@ -151,10 +231,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!email) throw new Error('Cannot retrieve user email');
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: current });
         if (signInError) throw new Error('Current password is incorrect');
+        // Check if logout all devices was requested (from user metadata)
+        const logoutAllDevices = userData?.user?.user_metadata?.logout_all_devices_on_password_change === true;
+        
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        showMessage('success', 'Password updated successfully', 4000);
-        msg.textContent = 'Password updated successfully.';
+        
+        // Clear the logout flag from metadata
+        // Invalidate sessions server-side if requested
+        if (logoutAllDevices) {
+          await supabase.auth.updateUser({
+            data: {
+              ...userData.user.user_metadata,
+              logout_all_devices_on_password_change: null
+            }
+          });
+          
+          // Invalidate other sessions server-side (including access tokens)
+          try {
+            const { addCsrfTokenToHeaders } = await import('../utils/csrf.js');
+            const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
+            const invalidateRes = await fetch('/api/auth/invalidate-all-sessions', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ scope: 'others' })
+            });
+            
+            if (invalidateRes.ok) {
+              // Also sign out other devices via client API
+              await supabase.auth.signOut({ scope: 'others' });
+              showMessage('success', 'Password updated successfully. All other sessions have been invalidated.', 5000);
+              msg.textContent = 'Password updated successfully. All other sessions have been invalidated.';
+            } else {
+              // Fallback
+              await supabase.auth.signOut({ scope: 'others' });
+              showMessage('success', 'Password updated successfully. All other sessions have been logged out.', 5000);
+              msg.textContent = 'Password updated successfully. All other sessions have been logged out.';
+            }
+          } catch (invalidateErr) {
+            console.warn('[PASSWORD CHANGE] Failed to invalidate other sessions server-side:', invalidateErr);
+            await supabase.auth.signOut({ scope: 'others' });
+            showMessage('success', 'Password updated successfully. All other sessions have been logged out.', 5000);
+            msg.textContent = 'Password updated successfully. All other sessions have been logged out.';
+          }
+        } else {
+          // Password change already invalidated refresh tokens server-side
+          // Access tokens on other devices will expire naturally
+          showMessage('success', 'Password updated successfully', 4000);
+          msg.textContent = 'Password updated successfully.';
+        }
+        
         currentInput.value = '';
         newInputLi.value = '';
         confirmInputLi.value = '';
@@ -167,27 +293,84 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-  // Mode C: request reset link via email
+  // Mode C: request reset link via email with confirmation modal
   const requestForm = document.getElementById('request-form');
+  const confirmModal = document.getElementById('forgot-password-confirm-modal');
+  const closeConfirmBtn = document.getElementById('close-forgot-confirm-modal');
+  const cancelConfirmBtn = document.getElementById('cancel-forgot-confirm');
+  const confirmBtn = document.getElementById('confirm-forgot-password');
+  let pendingEmail = '';
+
   if (requestForm) {
     const emailInput = document.getElementById('request-email');
     const requestBtn = document.getElementById('request-btn');
+    
+    // Open confirmation modal instead of submitting directly
     requestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = emailInput.value.trim();
       if (!email) return showMessage('error', 'Email is required', 3000);
+      pendingEmail = email;
+      // Show confirmation modal
+      if (confirmModal) {
+        confirmModal.style.display = 'flex';
+        confirmModal.style.visibility = 'visible';
+        confirmModal.style.opacity = '1';
+      }
+    });
+  }
+
+  // Close confirmation modal
+  const closeConfirmModal = () => {
+    if (confirmModal) {
+      confirmModal.style.display = 'none';
+      confirmModal.style.visibility = 'hidden';
+      confirmModal.style.opacity = '0';
+      pendingEmail = '';
+    }
+  };
+
+  if (closeConfirmBtn) closeConfirmBtn.addEventListener('click', closeConfirmModal);
+  if (cancelConfirmBtn) cancelConfirmBtn.addEventListener('click', closeConfirmModal);
+  if (confirmModal) {
+    confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) closeConfirmModal();
+    });
+  }
+
+  // Handle confirmation and send reset email
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', async () => {
+      if (!pendingEmail) return;
+      
+      const logoutOption = document.querySelector('input[name="logout-option"]:checked')?.value || 'none';
+      const emailInput = document.getElementById('request-email');
+      const requestBtn = document.getElementById('request-btn');
+      
+      closeConfirmModal();
+      
       const resetBtn = setButtonLoading(requestBtn, 'Sending...');
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ 
+            email: pendingEmail,
+            logoutOption: logoutOption // 'all', 'others', or 'none'
+          })
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to send reset email');
+        
+        // Store logout option in localStorage to check after password reset
+        if (logoutOption !== 'none') {
+          localStorage.setItem('password_reset_logout_option', logoutOption);
+        }
+        
         showMessage('success', 'Reset link sent. Check your inbox.', 4000);
         msg.textContent = 'Reset link sent. Please check your inbox and follow the instructions.';
         emailInput.value = '';
+        pendingEmail = '';
         temporarilyMark(requestBtn, 'Sent', 'btn-success');
       } catch (err) {
         showMessage('error', err.message || 'Failed to send reset email', 4000);

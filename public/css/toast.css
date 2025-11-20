@@ -7,13 +7,37 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: var(--z-toast, 9999);
+  z-index: var(--z-toast, 99999) !important; /* Ensure toasts are always on top */
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
   max-width: 420px;
   pointer-events: none;
-  isolation: isolate}
+  isolation: isolate;
+}
+
+.toast-container[data-position="top-left"] {
+  left: 20px;
+  right: auto;
+}
+
+.toast-container[data-position="bottom-right"] {
+  top: auto;
+  bottom: 20px;
+}
+
+.toast-container[data-position="bottom-left"] {
+  top: auto;
+  bottom: 20px;
+  left: 20px;
+  right: auto;
+}
+
+.toast-container[data-position="center"] {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
 
 /* Base Toast Styles */
 .toast {
@@ -23,24 +47,34 @@
   box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04));
   border: 1px solid var(--gray-200, #e5e7eb);
   overflow: hidden;
-  
   opacity: 0;
-  
+  transform: translate3d(0, -8px, 0);
+  transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: auto;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-;
   min-width: 300px;
-  max-width: 420px}
+  max-width: 420px;
+}
+
+.toast-container[data-position^="bottom"] .toast {
+  transform: translate3d(0, 8px, 0);
+}
 
 /* Toast States */
 .toast-show {
-  
-  opacity: 1}
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
 
 .toast-hide {
-  
-  opacity: 0}
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+}
+
+.toast-container[data-position^="bottom"] .toast-hide {
+  transform: translate3d(0, 8px, 0);
+}
 
 /* Toast Content */
 .toast-content {
@@ -121,10 +155,13 @@
   height: 3px;
   background: linear-gradient(90deg, var(--primary-500, #3b82f6), var(--primary-700, #1d4ed8));
   border-radius: 0 0 var(--radius-xl, 12px) var(--radius-xl, 12px);
-  
   z-index: 1;
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-  width: 100%}
+  width: 100%;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
 
 /* ============================================================================
    TOAST VARIANTS
@@ -210,18 +247,33 @@
    ANIMATIONS
    ============================================================================ */
 
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
   to {
-    width: 0%}
+    width: 0%;
+  }
 }
 
+@keyframes toast-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
   to {
-    
-    opacity: 1}
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+@keyframes toast-fade-out {
+  from {
+    opacity: 1;
+  }
   to {
-    
-    opacity: 0}
+    opacity: 0;
+  }
 }
 
 /* ============================================================================
@@ -360,49 +412,69 @@ html.dark .toast-action.primary:hover {
     top: 16px;
     right: 16px;
     left: 16px;
-    max-width: none}
+    max-width: none;
+    transform: none;
+  }
+
+  .toast-container[data-position^="bottom"] {
+    bottom: 16px;
+  }
   
   .toast {
     border-radius: var(--radius-lg, 8px);
     min-width: auto;
-    max-width: none}
+    max-width: none;
+  }
   
   .toast-content {
     padding: var(--space-4, 16px);
-    gap: var(--space-3, 12px)}
+    gap: var(--space-3, 12px);
+  }
   
   .toast-icon {
     width: 28px;
     height: 28px;
-    font-size: 14px}
+    font-size: 14px;
+  }
   
   .toast-title {
-    font-size: 0.8rem}
+    font-size: 0.8rem;
+  }
   
   .toast-message {
-    font-size: 0.75rem}
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
   .toast-container {
     top: 12px;
     right: 12px;
-    left: 12px}
+    left: 12px;
+  }
+
+  .toast-container[data-position^="bottom"] {
+    bottom: 12px;
+  }
   
   .toast-content {
     padding: var(--space-3, 12px);
-    gap: var(--space-2, 8px)}
+    gap: var(--space-2, 8px);
+  }
   
   .toast-icon {
     width: 24px;
     height: 24px;
-    font-size: 12px}
+    font-size: 12px;
+  }
   
   .toast-title {
-    font-size: 0.75rem}
+    font-size: 0.75rem;
+  }
   
   .toast-message {
-    font-size: 0.7rem}
+    font-size: 0.7rem;
+  }
 }
 
 /* ============================================================================
@@ -410,13 +482,21 @@ html.dark .toast-action.primary:hover {
    ============================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  .toast {}
+  .toast {
+    transition: none;
+  }
   
-  .toast-progress {}
+  .toast-progress {
+    animation: none;
+  }
   
-  .toast-show {}
+  .toast-show {
+    transition: none;
+  }
   
-  .toast-hide {}
+  .toast-hide {
+    transition: none;
+  }
 }
 
 @media (prefers-contrast: high) {

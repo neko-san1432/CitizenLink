@@ -141,15 +141,38 @@ export function stopPolling() {
     pollingInterval = null;
   }
 }
+// Track consecutive connection errors
+let connectionErrorCount = 0;
+
 // Load unread count
 async function loadUnreadCount() {
   try {
     const response = await apiClient.get('/api/notifications/count');
-    if (response.success) {
+    if (response?.success) {
       updateNotificationCount(response.count);
+      // Reset connection error state on success
+      connectionErrorCount = 0;
+    } else if (response?.connectionError) {
+      // Handle connection errors gracefully
+      connectionErrorCount++;
+      // If we've had multiple connection errors, stop polling temporarily
+      if (connectionErrorCount >= 3) {
+        console.warn('[NOTIFICATION] Multiple connection errors detected. Stopping polling.');
+        stopPolling();
+        // Try to restart polling after a longer delay (5 minutes)
+        setTimeout(() => {
+          console.log('[NOTIFICATION] Attempting to restart polling...');
+          connectionErrorCount = 0;
+          startPolling();
+        }, 5 * 60 * 1000);
+      }
     }
   } catch (error) {
-    console.error('[NOTIFICATION] Failed to load unread count:', error);
+    // Only log non-connection errors
+    if (!error.message?.includes('Failed to fetch') && 
+        !error.message?.includes('ERR_CONNECTION_REFUSED')) {
+      console.error('[NOTIFICATION] Failed to load unread count:', error);
+    }
   }
 }
 // Check for new notifications and add them to the top

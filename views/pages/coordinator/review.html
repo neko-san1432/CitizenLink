@@ -73,6 +73,17 @@
                         </div>
                     </div>
 
+                    <!-- High Confidence Duplicate Alert -->
+                    <div id="high-confidence-duplicate-alert" class="duplicate-alert high-confidence" style="display: none;">
+                        <div class="alert-content">
+                            <div class="alert-icon">⚠️</div>
+                            <div class="alert-text">
+                                <strong>High Confidence Duplicate Detected</strong>
+                                <p>This complaint has been automatically flagged as a potential duplicate with similarity score ≥85%. Please review the similar complaints below and mark as duplicate if confirmed.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Main Grid -->
                     <div class="review-grid">
                         <!-- Left Column: Complaint Details -->
@@ -96,6 +107,14 @@
                                     <div class="detail-row">
                                         <div class="detail-label">Location</div>
                                         <div class="detail-value" id="complaint-location"></div>
+                                        <div class="map-action-buttons" style="display:flex; gap:10px; flex-wrap:wrap; margin:0.75rem 0;">
+                                            <button id="toggle-boundary-btn" class="btn btn-secondary" type="button" style="display:none;">
+                                                Show Digos City Boundary
+                                            </button>
+                                            <button id="map-fullscreen-btn" class="btn btn-secondary" type="button" style="display:none;">
+                                                🔍 View Fullscreen
+                                            </button>
+                                        </div>
                                         <div class="location-map" id="location-map"></div>
                                     </div>
 

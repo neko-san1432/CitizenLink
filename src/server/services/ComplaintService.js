@@ -325,13 +325,16 @@ class ComplaintService {
     return evidenceFiles;
   }
   async getComplaintById(id, userId = null) {
-    const complaint = await this.complaintRepo.findById(id);
-    if (!complaint) {
-      throw new Error('Complaint not found');
-    }
-    if (userId && complaint.submitted_by !== userId) {
-      throw new Error('Access denied');
-    }
+    try {
+      const complaint = await this.complaintRepo.findById(id);
+      if (!complaint) {
+        console.log(`[COMPLAINT_SERVICE] Complaint ${id} not found in database`);
+        throw new Error('Complaint not found');
+      }
+      if (userId && complaint.submitted_by !== userId) {
+        console.log(`[COMPLAINT_SERVICE] Access denied: User ${userId} attempted to access complaint ${id} owned by ${complaint.submitted_by}`);
+        throw new Error('Access denied');
+      }
     // Get assignment data for progress tracking (without accessing auth.users)
     const { data: assignments } = await this.complaintRepo.supabase
       .from('complaint_assignments')
@@ -367,9 +370,49 @@ class ComplaintService {
       }
     }
     // Reconcile workflow (eventual consistency)
-    await this.reconcileWorkflowStatus(id);
+    try {
+      await this.reconcileWorkflowStatus(id);
+    } catch (error) {
+      // Silently fail if reconciliation is not available
+      console.warn('[COMPLAINT_SERVICE] Workflow reconciliation skipped:', error.message);
+    }
     // Return normalized complaint data for frontend compatibility
     return normalizeComplaintData(complaint);
+    } catch (error) {
+      // Re-throw known errors (Complaint not found, Access denied)
+      if (error.message === 'Complaint not found' || error.message === 'Access denied') {
+        throw error;
+      }
+      // Log and wrap unexpected errors
+      console.error(`[COMPLAINT_SERVICE] Unexpected error in getComplaintById for ${id}:`, error);
+      throw new Error(`Failed to fetch complaint: ${error.message}`);
+    }
+  }
+  /**
+   * Reconcile workflow status based on current assignments and confirmations
+   * This ensures eventual consistency between workflow_status and actual state
+   * @param {string} complaintId - Complaint ID
+   */
+  async reconcileWorkflowStatus(complaintId) {
+    try {
+      // Get current complaint state
+      const complaint = await this.complaintRepo.findById(complaintId);
+      if (!complaint) {
+        return; // Complaint not found, nothing to reconcile
+      }
+
+      // Update confirmation status using database function
+      // This ensures confirmation_status is consistent with assignments
+      await this.complaintRepo.supabase.rpc('update_complaint_confirmation_status', {
+        complaint_uuid: complaintId
+      });
+
+      // Additional workflow reconciliation logic can be added here if needed
+      // For now, the confirmation status update is sufficient
+    } catch (error) {
+      // Log but don't throw - reconciliation is best-effort
+      console.warn('[COMPLAINT_SERVICE] Workflow reconciliation error:', error.message);
+    }
   }
   async getUserComplaints(userId, options = {}) {
     try {
@@ -1356,6 +1399,78 @@ class ComplaintService {
     } catch (error) {
       console.error('[COMPLAINT-SERVICE] Error creating assignment:', error);
       throw error;
+    }
+  }
+  /**
+   * Get confirmation message for a complaint based on confirmation status and user role
+   * @param {string} complaintId - Complaint ID
+   * @param {string} userRole - User role (citizen, lgu-admin, lgu-officer, complaint-coordinator, etc.)
+   * @returns {Promise<string>} Confirmation message
+   */
+  async getConfirmationMessage(complaintId, userRole) {
+    try {
+      const complaint = await this.complaintRepo.findById(complaintId);
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      const confirmationStatus = (complaint.confirmation_status || 'pending').toLowerCase();
+      const workflowStatus = (complaint.workflow_status || 'new').toLowerCase();
+      const isCitizen = userRole === 'citizen';
+      const confirmedByCitizen = complaint.confirmed_by_citizen || false;
+      const allRespondersConfirmed = complaint.all_responders_confirmed || false;
+
+      // Determine message based on confirmation status and role
+      switch (confirmationStatus) {
+        case 'waiting_for_complainant':
+          if (isCitizen) {
+            return 'Please confirm if the resolution meets your expectations. Your confirmation is required to complete this complaint.';
+          } else {
+            return 'Waiting for complainant\'s confirmation. The citizen needs to review and confirm the resolution.';
+          }
+
+        case 'waiting_for_responders':
+          if (isCitizen) {
+            return 'Waiting for responders\' confirmation. Officers are reviewing the resolution.';
+          } else {
+            return 'Please confirm the resolution. Officers need to confirm that the complaint has been resolved.';
+          }
+
+        case 'confirmed':
+          if (isCitizen) {
+            return 'Resolution confirmed. This complaint has been successfully resolved and confirmed by all parties.';
+          } else {
+            return 'Resolution confirmed by all parties. This complaint is now complete.';
+          }
+
+        case 'disputed':
+          if (isCitizen) {
+            return 'Resolution disputed. The complaint resolution has been disputed and may require further review.';
+          } else {
+            return 'Resolution disputed by complainant. The complaint may require additional action or review.';
+          }
+
+        case 'pending':
+        default:
+          // For pending status, provide context based on workflow status
+          if (workflowStatus === 'completed' || workflowStatus === 'pending_approval') {
+            if (isCitizen && !confirmedByCitizen) {
+              return 'Waiting for your confirmation. Please review the resolution and confirm if it meets your expectations.';
+            } else if (!isCitizen && !allRespondersConfirmed) {
+              return 'Waiting for responders\' confirmation. Officers need to confirm the resolution.';
+            } else {
+              return 'Resolution pending confirmation from all parties.';
+            }
+          } else if (workflowStatus === 'in_progress' || workflowStatus === 'assigned') {
+            return 'Complaint is being processed. Confirmation will be required once the resolution is complete.';
+          } else {
+            return 'Complaint is pending review and assignment.';
+          }
+      }
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error getting confirmation message:', error);
+      // Return a default message instead of throwing
+      return 'Unable to load confirmation status.';
     }
   }
 }

@@ -153,18 +153,22 @@ class ComplaintController {
       const { user } = req;
       const { id } = req.params;
       const userRole = user.role || 'citizen';
+      
+      console.log(`[COMPLAINT_CONTROLLER] Fetching complaint ${id} for user ${user.id} (role: ${userRole})`);
+      
       let complaint;
       if (userRole === 'citizen') {
         complaint = await this.complaintService.getComplaintById(id, user.id);
       } else {
         complaint = await this.complaintService.getComplaintById(id);
       }
+      
       res.json({
         success: true,
         data: complaint
       });
     } catch (error) {
-      console.error('Error fetching complaint:', error);
+      console.error(`[COMPLAINT_CONTROLLER] Error fetching complaint ${req.params.id}:`, error.message);
       const status = error.message === 'Complaint not found' ||
                      error.message === 'Access denied' ? 404 : 500;
       res.status(status).json({

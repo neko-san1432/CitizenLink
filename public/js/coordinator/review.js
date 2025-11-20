@@ -7,10 +7,50 @@ import { getDepartmentNameByIdOrCode, getActiveDepartments } from '../utils/depa
 
 let currentComplaint = null;
 let complaintId = null;
+let complaintMapInstance = null;
+let boundaryToggleBtn = null;
+let boundaryVisible = false;
+let boundaryDataCache = null;
+let reviewBoundaryLayer = null;
+/**
+ * Clean up any stuck modal overlays
+ */
+function cleanupStuckModals() {
+  // Remove any stuck modal overlays
+  const stuckModals = document.querySelectorAll('.modal.active, .modal-overlay.active, [id^="modal-"]');
+  stuckModals.forEach(modal => {
+    if (modal.id !== 'modal-overlay' || modal.classList.contains('active')) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.visibility = 'hidden';
+      modal.style.opacity = '0';
+      // Only remove if it's not the main modal-overlay managed by ModalManager
+      if (modal.id !== 'modal-overlay') {
+        modal.remove();
+      }
+    }
+  });
+
+  // Remove body modal-open class
+  document.body.classList.remove('modal-open');
+
+  // Clean up ModalManager state if it exists
+  if (window.modalManager) {
+    window.modalManager.activeModal = null;
+    const overlay = window.modalManager.modalOverlay;
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  }
+}
+
 /**
  * Initialize the review page
  */
 document.addEventListener('DOMContentLoaded', async () => {
+  // Clean up any stuck modal overlays first
+  cleanupStuckModals();
+
   // Get complaint ID from URL
   const pathParts = window.location.pathname.split('/');
   complaintId = pathParts[pathParts.length - 1];
@@ -227,6 +267,13 @@ async function renderComplaint() {
       preferenceEl.textContent = 'No preference specified';
     }
   }
+  // Reset map helpers before rendering
+  complaintMapInstance = null;
+  reviewBoundaryLayer = null;
+  boundaryVisible = false;
+  updateBoundaryButtonText();
+  setupMapControlButtons(complaint);
+
   // Map preview using ComplaintMap component
   try {
     const mapEl = document.getElementById('location-map');
@@ -250,6 +297,10 @@ async function renderComplaint() {
           const initMap = () => {
             const mapEl = document.getElementById('location-map');
             if (mapEl && mapEl.offsetWidth > 0 && mapEl.offsetHeight > 0) {
+              complaintMapInstance = complaintMap;
+              reviewBoundaryLayer = null;
+              boundaryVisible = false;
+              updateBoundaryButtonText();
               complaintMap.setLocation(
                 complaint.latitude,
                 complaint.longitude,
@@ -284,6 +335,10 @@ async function renderComplaint() {
             }).addTo(map);
             const marker = L.marker(center).addTo(map);
             marker.bindPopup(`<b>${complaint.title || 'Complaint Location'}</b><br>${complaint.location_text || ''}`);
+            complaintMapInstance = { map };
+            reviewBoundaryLayer = null;
+            boundaryVisible = false;
+            updateBoundaryButtonText();
           } else {
             console.warn('[REVIEW] Leaflet not available for fallback');
           }
@@ -319,6 +374,21 @@ async function renderComplaint() {
     const grid = document.getElementById('evidence-grid');
     if (grid) grid.innerHTML = '';
   }
+  // Check for high confidence duplicates (similarity score >= 0.85)
+  const duplicateCandidates = currentComplaint.analysis?.duplicate_candidates || [];
+  const hasHighConfidenceDuplicate = duplicateCandidates.length > 0 || 
+    (similarities && similarities.some(s => (s.similarity_score || s.score || 0) >= 0.85));
+  
+  // Show/hide high confidence duplicate alert
+  const duplicateAlert = document.getElementById('high-confidence-duplicate-alert');
+  if (duplicateAlert) {
+    if (hasHighConfidenceDuplicate && !complaint.is_duplicate) {
+      duplicateAlert.style.display = 'block';
+    } else {
+      duplicateAlert.style.display = 'none';
+    }
+  }
+
   // Similar complaints
   if (similarities && similarities.length > 0) {
     document.getElementById('similar-section').style.display = 'block';
@@ -427,6 +497,251 @@ window.openEvidencePreview = function(index) {
     console.error('[REVIEW] Cannot open evidence preview - missing components or data');
   }
 };
+
+/**
+ * Map helper controls
+ */
+function setupMapControlButtons(complaint) {
+  const boundaryBtn = document.getElementById('toggle-boundary-btn');
+  const fullscreenBtn = document.getElementById('map-fullscreen-btn');
+  if (!boundaryBtn || !fullscreenBtn) return;
+
+  const hasLatitude = complaint.latitude !== null && complaint.latitude !== void 0;
+  const hasLongitude = complaint.longitude !== null && complaint.longitude !== void 0;
+  const hasCoordinates = hasLatitude && hasLongitude;
+
+  if (!hasCoordinates) {
+    boundaryBtn.style.display = 'none';
+    fullscreenBtn.style.display = 'none';
+    boundaryToggleBtn = null;
+    return;
+  }
+
+  boundaryBtn.style.display = 'inline-flex';
+  fullscreenBtn.style.display = 'inline-flex';
+  boundaryToggleBtn = boundaryBtn;
+  updateBoundaryButtonText();
+
+  boundaryBtn.removeEventListener('click', handleBoundaryToggle);
+  boundaryBtn.addEventListener('click', handleBoundaryToggle);
+  fullscreenBtn.onclick = () => openFullscreenMap(complaint);
+}
+
+function updateBoundaryButtonText() {
+  if (!boundaryToggleBtn) return;
+  boundaryToggleBtn.textContent = boundaryVisible ? 'Hide Digos City Boundary' : 'Show Digos City Boundary';
+  boundaryToggleBtn.setAttribute('aria-pressed', boundaryVisible ? 'true' : 'false');
+}
+
+async function handleBoundaryToggle() {
+  if (!boundaryToggleBtn) return;
+
+  if (!complaintMapInstance || !complaintMapInstance.map) {
+    Toast.info('Map is still initializing. Please try again shortly.');
+    return;
+  }
+
+  boundaryToggleBtn.disabled = true;
+  try {
+    if (!reviewBoundaryLayer) {
+      await ensureBoundaryData();
+      reviewBoundaryLayer = createBoundaryLayer(complaintMapInstance.map);
+    }
+
+    if (!reviewBoundaryLayer) {
+      throw new Error('Boundary data is unavailable.');
+    }
+
+    if (complaintMapInstance.map.hasLayer(reviewBoundaryLayer)) {
+      complaintMapInstance.map.removeLayer(reviewBoundaryLayer);
+      boundaryVisible = false;
+      Toast.info('Digos City boundary hidden.');
+    } else {
+      reviewBoundaryLayer.addTo(complaintMapInstance.map);
+      boundaryVisible = true;
+      Toast.success('Digos City boundary displayed.');
+    }
+    updateBoundaryButtonText();
+  } catch (error) {
+    console.error('[REVIEW] Boundary toggle error:', error);
+    Toast.error(error.message || 'Unable to toggle the boundary.');
+  } finally {
+    boundaryToggleBtn.disabled = false;
+  }
+}
+
+async function ensureBoundaryData() {
+  if (Array.isArray(boundaryDataCache) && boundaryDataCache.length > 0) {
+    return boundaryDataCache;
+  }
+
+  const response = await fetch('/api/boundaries');
+  if (!response.ok) {
+    throw new Error('Failed to load boundary data.');
+  }
+  const data = await response.json();
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('Boundary data is not available.');
+  }
+
+  boundaryDataCache = data.filter(item => item && item.geojson);
+  if (boundaryDataCache.length === 0) {
+    throw new Error('Boundary GeoJSON data is missing.');
+  }
+  return boundaryDataCache;
+}
+
+function createBoundaryLayer(map) {
+  if (!Array.isArray(boundaryDataCache) || boundaryDataCache.length === 0 || !map) {
+    return null;
+  }
+
+  const layerGroup = L.layerGroup();
+  boundaryDataCache.forEach(barangay => {
+    if (!barangay?.geojson) return;
+    const geoLayer = L.geoJSON(barangay.geojson, {
+      style: {
+        color: '#3b82f6',
+        weight: 1.5,
+        opacity: 0.8,
+        dashArray: '6,4',
+        fillOpacity: 0
+      },
+      interactive: false
+    });
+
+    if (barangay.name) {
+      geoLayer.bindTooltip(barangay.name, {
+        permanent: false,
+        direction: 'center',
+        className: 'boundary-tooltip',
+        interactive: false
+      });
+    }
+
+    geoLayer.addTo(layerGroup);
+  });
+
+  return layerGroup;
+}
+
+function openFullscreenMap(complaint) {
+  const hasLatitude = complaint.latitude !== null && complaint.latitude !== void 0;
+  const hasLongitude = complaint.longitude !== null && complaint.longitude !== void 0;
+  if (!hasLatitude || !hasLongitude) {
+    Toast.error('No coordinates available for this complaint.');
+    return;
+  }
+
+  const existingModal = document.getElementById('review-map-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'review-map-modal';
+  modal.className = 'modal active';
+  modal.style.cssText = 'position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 90vw; width: 960px; background: #fff; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem; border-bottom:1px solid #e5e7eb;">
+        <h2 style="margin:0; font-size:1.1rem;">📍 Complaint Location</h2>
+        <button id="close-review-map-modal" class="modal-close" style="font-size:1.5rem;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:1.25rem;">
+        <div id="review-fullscreen-map" style="width:100%; height:70vh; border-radius:10px; overflow:hidden; background:#f3f4f6;"></div>
+        <div style="margin-top:1rem; font-size:0.95rem;">
+          <strong>Address:</strong> ${complaint.location_text || 'N/A'}<br>
+          <strong>Coordinates:</strong> ${complaint.latitude}, ${complaint.longitude}
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const closeModal = () => {
+    modal.remove();
+    document.removeEventListener('keydown', handleEscape);
+  };
+
+  document.getElementById('close-review-map-modal').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeModal();
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+
+  setTimeout(() => initializeFullscreenMap(complaint), 100);
+}
+
+async function initializeFullscreenMap(complaint) {
+  const mapContainer = document.getElementById('review-fullscreen-map');
+  if (!mapContainer) return;
+
+  try {
+    await ensureLeafletLoaded();
+
+    const lat = Number(complaint.latitude);
+    const lng = Number(complaint.longitude);
+    const map = L.map('review-fullscreen-map').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    L.marker([lat, lng])
+      .addTo(map)
+      .bindPopup(`<strong>${complaint.title || 'Complaint Location'}</strong><br>${complaint.location_text || ''}`)
+      .openPopup();
+
+    if (Array.isArray(boundaryDataCache) && boundaryDataCache.length > 0) {
+      const layer = createBoundaryLayer(map);
+      if (layer) {
+        layer.addTo(map);
+      }
+    }
+
+    setTimeout(() => map.invalidateSize(), 200);
+  } catch (error) {
+    console.error('[REVIEW] Fullscreen map error:', error);
+    mapContainer.innerHTML = '<p style="padding: 1rem; color: #b91c1c;">Unable to load map preview.</p>';
+  }
+}
+
+async function ensureLeafletLoaded() {
+  if (typeof L !== 'undefined') {
+    return;
+  }
+
+  await new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[data-leaflet]');
+    if (existingScript) {
+      existingScript.addEventListener('load', resolve);
+      existingScript.addEventListener('error', () => reject(new Error('Failed to load Leaflet.')));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
+    script.dataset.leaflet = 'true';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Leaflet.'));
+    document.head.appendChild(script);
+  });
+}
 
 /**
  * Render similar complaints

@@ -74,17 +74,44 @@ class ModalManager {
    * Close the currently active modal
    */
   closeModal() {
-    if (!this.activeModal) return;
+    if (!this.activeModal) {
+      // If no active modal but overlay is active, clean it up
+      if (this.modalOverlay && this.modalOverlay.classList.contains('active')) {
+        this.modalOverlay.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      }
+      return;
+    }
     const modal = this.activeModal;
     // Hide modal and overlay
     modal.classList.remove('active');
-    this.modalOverlay.classList.remove('active');
+    if (this.modalOverlay) {
+      this.modalOverlay.classList.remove('active');
+    }
     document.body.classList.remove('modal-open');
     // Call onClose callback if provided
     const {onClose} = modal.dataset;
     if (onClose && typeof window[onClose] === 'function') {
       window[onClose]();
     }
+    this.activeModal = null;
+  }
+
+  /**
+   * Force cleanup of all modals (for stuck overlays)
+   */
+  cleanupAllModals() {
+    // Close active modal
+    if (this.activeModal) {
+      this.closeModal();
+    }
+    // Remove active class from overlay
+    if (this.modalOverlay) {
+      this.modalOverlay.classList.remove('active');
+    }
+    // Remove body class
+    document.body.classList.remove('modal-open');
+    // Reset state
     this.activeModal = null;
   }
   /**
@@ -178,6 +205,42 @@ class ModalManager {
 
 // Create global instance
 window.modalManager = new ModalManager();
+
+// Global cleanup function for stuck overlays
+window.cleanupStuckModals = function() {
+  // Use ModalManager cleanup if available
+  if (window.modalManager) {
+    window.modalManager.cleanupAllModals();
+  }
+  
+  // Fallback: manually clean up any stuck overlays
+  const stuckModals = document.querySelectorAll('.modal.active, .modal-overlay.active');
+  stuckModals.forEach(modal => {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
+  });
+  
+  // Remove body class
+  document.body.classList.remove('modal-open');
+  
+  // Remove any dynamically created modals that might be stuck
+  const dynamicModals = document.querySelectorAll('[id^="map-modal"], [id^="modal-"]:not(#modal-overlay)');
+  dynamicModals.forEach(modal => {
+    if (modal.style.position === 'fixed' && modal.style.zIndex >= 1000) {
+      modal.remove();
+    }
+  });
+};
+
+// Run cleanup on page load to catch any stuck overlays from previous navigation
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.cleanupStuckModals);
+} else {
+  // DOM already loaded, run immediately
+  window.cleanupStuckModals();
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {

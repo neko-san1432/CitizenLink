@@ -2,6 +2,7 @@ import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { validateAndSanitizeForm } from '../utils/validation.js';
 import { renderPrivacyNotice } from '../utils/privacyContent.js';
+import { getOAuthContext } from './authChecker.js';
 
 // reCAPTCHA setup - using auto-rendered captcha from HTML
 const oauthCompleteCaptchaWidgetId = 0; // Default ID for auto-rendered captchas
@@ -70,21 +71,25 @@ const prefillOAuthData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     if (user) {
-      // Extract name from various OAuth provider sources
-      const name = user.user_metadata?.name ||
-                   (user.user_metadata?.first_name && user.user_metadata?.last_name ?
-                     `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : '') ||
-                   '';
-
-      // Split name into firstName and lastName
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      const identityData = user.identities?.[0]?.identity_data || {};
+      const meta = user.user_metadata || {};
+      const rawMeta = user.raw_user_meta_data || {};
+      const combined = { ...identityData, ...meta, ...rawMeta };
+      const fullName = combined.full_name || combined.name || '';
+      const nameParts = fullName.trim() ? fullName.trim().split(' ') : [];
+      const firstName = combined.given_name || combined.first_name || nameParts[0] || '';
+      const middleName = combined.middle_name || nameParts.slice(1, -1).join(' ') || '';
+      const lastName = combined.family_name || combined.last_name || nameParts.slice(-1)[0] || '';
 
       // Prefill firstName
       const firstNameInput = document.getElementById('firstName');
       if (firstNameInput && firstName) {
         firstNameInput.value = firstName;
+      }
+
+      const middleNameInput = document.getElementById('middleName');
+      if (middleNameInput && middleName) {
+        middleNameInput.value = middleName;
       }
 
       // Prefill lastName
@@ -137,6 +142,7 @@ if (oauthCompleteForm) {
   oauthCompleteForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const firstName = document.getElementById('firstName')?.value.trim() || '';
+    const middleName = document.getElementById('middleName')?.value.trim() || '';
     const lastName = document.getElementById('lastName')?.value.trim() || '';
     const email = document.getElementById('email').value.trim();
     const mobile = document.getElementById('mobile').value.trim();
@@ -157,6 +163,7 @@ if (oauthCompleteForm) {
     // Validate form data
     const validationRules = {
       firstName: { required: true, minLength: 1, maxLength: 100 },
+      middleName: { required: false, minLength: 0, maxLength: 100 },
       lastName: { required: true, minLength: 1, maxLength: 100 },
       email: { required: true, type: 'email' },
       mobile: { required: true, type: 'mobile' },
@@ -166,7 +173,7 @@ if (oauthCompleteForm) {
     if (passwordProvided) {
       validationRules.regPassword = { required: true, type: 'password' };
     }
-    const formData = { firstName, lastName, email, mobile, addressLine1, gender };
+    const formData = { firstName, middleName, lastName, email, mobile, addressLine1, gender };
     if (passwordProvided) {
       formData.regPassword = regPass;
     }
@@ -194,6 +201,7 @@ if (oauthCompleteForm) {
     const payload = {
       email: validation.sanitizedData.email,
       firstName: validation.sanitizedData.firstName,
+      middleName: validation.sanitizedData.middleName || '',
       lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
       gender: validation.sanitizedData.gender || '',
@@ -208,11 +216,24 @@ if (oauthCompleteForm) {
 
     // Update user metadata and complete profile via backend
     try {
+      // Get access token from current session
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Add Authorization header if we have a token
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+        // Also include in body as fallback
+        payload.access_token = accessToken;
+      }
+      
       const response = await fetch('/api/auth/complete-oauth', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify(payload)
       });
       const result = await response.json();
@@ -225,6 +246,21 @@ if (oauthCompleteForm) {
         }
         return;
       }
+      // Mark OAuth signup as completed to prevent cleanup
+      try {
+        const { setOAuthContext, clearOAuthContext } = await import('./authChecker.js');
+        const ctx = getOAuthContext();
+        if (ctx) {
+          setOAuthContext({ ...ctx, status: 'completed' });
+        }
+        // Clear context after a short delay to allow redirect
+        setTimeout(() => {
+          clearOAuthContext();
+        }, 1000);
+      } catch (error) {
+        console.warn('[OAUTH_COMPLETE] Error updating OAuth context:', error);
+      }
+      
       showMessage('success', 'Profile completed successfully! Redirecting to dashboard...');
       setTimeout(() => {
         // Redirect directly to dashboard (user is already authenticated)

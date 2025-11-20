@@ -10,6 +10,10 @@ class ComplaintDetails {
     this.map = null;
     this.routingControl = null;
     this.userLocation = null;
+    this.boundaryData = null;
+    this.boundaryLayer = null;
+    this.boundaryVisible = false;
+    this.boundaryToggleButton = null;
     this.init();
     // Cleanup map when page is unloaded
     window.addEventListener('beforeunload', () => {
@@ -20,6 +24,9 @@ class ComplaintDetails {
   }
   async init() {
     try {
+      // Clean up any stuck modal overlays
+      this.cleanupStuckModals();
+
       // Show loading spinner immediately
       this.showLoading();
 
@@ -515,21 +522,31 @@ class ComplaintDetails {
     if (!locationContainer) return;
     if (this.complaint.location_text) {
       const hasCoordinates = this.complaint.latitude && this.complaint.longitude;
+      const canUseBoundaryToggle = this.canUseBoundaryToggle();
       locationContainer.innerHTML = `
-                <div class="location-address">${this.complaint.location_text}</div>
-                ${hasCoordinates ?
-    `<div class="location-coordinates">${this.complaint.latitude}, ${this.complaint.longitude}</div>
-                     <button id="show-map-modal-btn" class="btn btn-secondary" style="margin-top: 10px;">
-                         📍 View on Map
-                     </button>
-                     <div id="complaint-map" class="complaint-map"></div>` :
-    ''
-}
-            `;
+        <div class="location-address">${this.complaint.location_text}</div>
+        ${hasCoordinates ? `
+          <div class="location-coordinates">${this.complaint.latitude}, ${this.complaint.longitude}</div>
+          <div class="location-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            ${canUseBoundaryToggle ? `
+              <button id="toggle-boundary-btn" class="btn btn-secondary" type="button">
+                Show Digos City Boundary
+              </button>
+            ` : ''}
+            <button id="show-map-modal-btn" class="btn btn-secondary" type="button">
+              📍 View on Map
+            </button>
+          </div>
+          <div id="complaint-map" class="complaint-map"></div>
+        ` : ''}
+      `;
 
       // Initialize map if coordinates are available
       if (hasCoordinates) {
         this.initializeMap();
+        if (this.canUseBoundaryToggle()) {
+          this.setupBoundaryToggle();
+        }
         // Setup map modal button
         const mapModalBtn = document.getElementById('show-map-modal-btn');
         if (mapModalBtn) {
@@ -541,6 +558,134 @@ class ComplaintDetails {
     } else {
       locationContainer.innerHTML = '<p>No location information provided</p>';
     }
+  }
+
+  canUseBoundaryToggle() {
+    const allowedRoles = new Set([
+      'lgu',
+      'lgu-admin',
+      'lgu-officer',
+      'complaint-coordinator'
+    ]);
+    return allowedRoles.has(this.userRole);
+  }
+
+  setupBoundaryToggle() {
+    const toggleBtn = document.getElementById('toggle-boundary-btn');
+    this.boundaryToggleButton = toggleBtn;
+    if (!toggleBtn) return;
+
+    this.updateBoundaryToggleText();
+
+    toggleBtn.addEventListener('click', async () => {
+      if (toggleBtn.disabled) return;
+      toggleBtn.disabled = true;
+      try {
+        await this.handleBoundaryToggle();
+      } finally {
+        toggleBtn.disabled = false;
+      }
+    });
+  }
+
+  updateBoundaryToggleText() {
+    if (!this.boundaryToggleButton) return;
+    const label = this.boundaryVisible ? 'Hide Digos City Boundary' : 'Show Digos City Boundary';
+    this.boundaryToggleButton.textContent = label;
+    this.boundaryToggleButton.setAttribute('aria-pressed', this.boundaryVisible ? 'true' : 'false');
+  }
+
+  async handleBoundaryToggle() {
+    if (!this.map) {
+      showToast('Map is still loading. Please try again in a moment.', 'warning');
+      return;
+    }
+
+    if (!this.boundaryLayer) {
+      try {
+        await this.ensureBoundaryData();
+        this.boundaryLayer = this.createBoundaryLayer(this.map);
+      } catch (error) {
+        console.error('[COMPLAINT_DETAILS] Failed to prepare boundary layer:', error);
+        showToast(error.message || 'Unable to load city boundary.', 'error');
+        return;
+      }
+
+      if (!this.boundaryLayer) {
+        showToast('Boundary data is unavailable for this map.', 'error');
+        return;
+      }
+    }
+
+    if (this.boundaryVisible) {
+      if (this.map.hasLayer(this.boundaryLayer)) {
+        this.map.removeLayer(this.boundaryLayer);
+      }
+      this.boundaryVisible = false;
+      showToast('Digos City boundary hidden.', 'info');
+    } else {
+      this.boundaryLayer.addTo(this.map);
+      this.boundaryVisible = true;
+      showToast('Digos City boundary displayed.', 'success');
+    }
+
+    this.updateBoundaryToggleText();
+  }
+
+  async ensureBoundaryData() {
+    if (Array.isArray(this.boundaryData) && this.boundaryData.length > 0) {
+      return this.boundaryData;
+    }
+
+    const response = await fetch('/api/boundaries');
+    if (!response.ok) {
+      throw new Error('Failed to load Digos City boundary data.');
+    }
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error('Digos City boundary data is not available.');
+    }
+
+    this.boundaryData = data.filter(item => item && item.geojson);
+    if (this.boundaryData.length === 0) {
+      throw new Error('Boundary geo data is missing.');
+    }
+
+    return this.boundaryData;
+  }
+
+  createBoundaryLayer(map) {
+    if (!Array.isArray(this.boundaryData) || this.boundaryData.length === 0) {
+      return null;
+    }
+
+    const layerGroup = L.layerGroup();
+    this.boundaryData.forEach((barangay) => {
+      if (!barangay?.geojson) return;
+      const geoLayer = L.geoJSON(barangay.geojson, {
+        style: {
+          color: '#3b82f6',
+          weight: 1.5,
+          opacity: 0.8,
+          dashArray: '6, 4',
+          fillOpacity: 0
+        },
+        interactive: false
+      });
+
+      if (barangay.name) {
+        geoLayer.bindTooltip(barangay.name, {
+          permanent: false,
+          direction: 'center',
+          className: 'boundary-tooltip',
+          interactive: false
+        });
+      }
+
+      geoLayer.addTo(layerGroup);
+    });
+
+    return layerGroup;
   }
 
   showMapModal() {
@@ -731,6 +876,14 @@ class ComplaintDetails {
       }
 
       // Initialize the map
+
+      if (this.boundaryLayer && this.map && this.map.hasLayer(this.boundaryLayer)) {
+        this.map.removeLayer(this.boundaryLayer);
+      }
+      this.boundaryLayer = null;
+      this.boundaryVisible = false;
+      this.updateBoundaryToggleText();
+
       const map = L.map('complaint-map', {
         zoomControl: true,
         preferCanvas: false
@@ -756,6 +909,7 @@ class ComplaintDetails {
 
       // Store map reference for potential cleanup
       this.map = map;
+      this.updateBoundaryToggleText();
 
       // Invalidate size after a short delay to ensure proper rendering
       setTimeout(() => {
@@ -1522,6 +1676,35 @@ class ComplaintDetails {
     const loading = document.getElementById('loading');
     if (loading) loading.style.display = 'none';
   }
+  cleanupStuckModals() {
+    // Remove any stuck modal overlays
+    const stuckModals = document.querySelectorAll('.modal.active, .modal-overlay.active, #map-modal, [id^="modal-"]');
+    stuckModals.forEach(modal => {
+      if (modal.id !== 'modal-overlay' || modal.classList.contains('active')) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        // Only remove if it's not the main modal-overlay managed by ModalManager
+        if (modal.id !== 'modal-overlay' && modal.id !== 'map-modal') {
+          modal.remove();
+        }
+      }
+    });
+
+    // Remove body modal-open class
+    document.body.classList.remove('modal-open');
+
+    // Clean up ModalManager state if it exists
+    if (window.modalManager) {
+      window.modalManager.activeModal = null;
+      const overlay = window.modalManager.modalOverlay;
+      if (overlay) {
+        overlay.classList.remove('active');
+      }
+    }
+  }
+
   showError(message) {
     const error = document.getElementById('error-state');
     const errorMessage = document.getElementById('error-message');

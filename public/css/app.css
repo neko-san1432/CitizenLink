@@ -12,6 +12,54 @@ body {
   padding: 0;
 }
 
+/* Theme summary: defines a compact set of variables used across components.
+   Many pages already define a larger palette (see `style.css`). This block
+   provides sensible defaults so components importing only `app.css` still
+   have consistent colors and spacing. */
+:root {
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-300: #93c5fd;
+  --primary-500: #3b82f6;
+  --primary-700: #1d4ed8;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --success-500: #10b981;
+  --error-500: #ef4444;
+  --warning-500: #f59e0b;
+  --font-family: 'Source Sans 3', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem;
+}
+
+/* Accessibility helpers */
+.sr-only {
+  position: absolute !important;
+  height: 1px; width: 1px; overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; border: 0; padding: 0; margin: -1px;
+}
+
+/* Make images and embedded media responsive by default */
+img, picture, video, iframe, svg {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
+/* Improve keyboard focus visibility */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 3px solid rgba(59,130,246,0.18);
+  outline-offset: 2px;
+}
+
 /* Notification Styles */
 .new-indicator {
   display: inline-block;
@@ -38,7 +86,8 @@ body {
 
 /* Global content padding */
 .content-padding {
-  padding: 10px 10% 0}
+  padding: 10px 10% 0;
+}
 
 /* Apply to main content areas - exclude dashboards that have their own responsive padding */
 #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.hr-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.lgu-officer-dashboard),
@@ -47,7 +96,8 @@ body {
   padding: 10px 10% 0;
   margin-top: 60px;
   position: relative;
-  z-index: 10}
+  z-index: 10;
+}
 
 /* Responsive content padding */
 @media (max-width: 600px) {
@@ -55,7 +105,8 @@ body {
   #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.hr-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.lgu-officer-dashboard),
   .main-content,
   .content {
-    padding: 10px 5% 0}
+    padding: 10px 5% 0;
+  }
 }
 
 @media (min-width: 601px) and (max-width: 1024px) {
@@ -64,7 +115,8 @@ body {
   .main-content,
   .content {
     padding: 10px 8% 0;
-    margin-top: 70px}
+    margin-top: 70px;
+  }
 }
 
 @media (min-width: 1025px) {
@@ -73,7 +125,8 @@ body {
   .main-content,
   .content {
     padding: 10px 10% 0;
-    margin-top: 80px}
+    margin-top: 80px;
+  }
 }
 
 /* Flexbox utilities */
@@ -178,11 +231,11 @@ body {
 /* Width utilities */
 .w-full { width: 100%}
 .w-auto { width: auto}
-.w-1/2 { width: 50%}
-.w-1/3 { width: 33.333333%}
-.w-2/3 { width: 66.666667%}
-.w-1/4 { width: 25%}
-.w-3/4 { width: 75%}
+.w-1\/2 { width: 50%}
+.w-1\/3 { width: 33.333333%}
+.w-2\/3 { width: 66.666667%}
+.w-1\/4 { width: 25%}
+.w-3\/4 { width: 75%}
 .max-w-xs { max-width: 20rem}
 .max-w-sm { max-width: 24rem}
 .max-w-md { max-width: 28rem}
@@ -465,7 +518,7 @@ body {
   .xl\:grid { display: grid}
   .xl\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr))}
   .xl\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr))}
-  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)}
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr))}
   .xl\:text-sm { font-size: 0.875rem; line-height: 1.25rem}
   .xl\:text-base { font-size: 1rem; line-height: 1.5rem}
   .xl\:text-lg { font-size: 1.125rem; line-height: 1.75rem}

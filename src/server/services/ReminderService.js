@@ -372,18 +372,52 @@ class ReminderService {
    * Get last reminder for a complaint
    */
   async getLastReminder(complaintId) {
-    const supabase = getServiceClient();
-    const { data, error } = await supabase
-      .from('complaint_reminders')
-      .select('*')
-      .eq('complaint_id', complaintId)
-      .order('reminded_at', { ascending: false })
-      .limit(1)
-      .single();
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('[REMINDER_SERVICE] Error getting last reminder:', error);
+    try {
+      const supabase = getServiceClient();
+      if (!supabase) {
+        console.warn('[REMINDER_SERVICE] Supabase client not available');
+        return null;
+      }
+      
+      const { data, error } = await supabase
+        .from('complaint_reminders')
+        .select('*')
+        .eq('complaint_id', complaintId)
+        .order('reminded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle() instead of single() to return null when no rows found
+      
+      if (error) {
+        // Only log non-PGRST116 errors (PGRST116 = no rows returned, which is expected)
+        if (error.code !== 'PGRST116') {
+          // Check if it's a network error
+          if (error.message && error.message.includes('fetch failed')) {
+            console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', error.message);
+          } else {
+            console.error('[REMINDER_SERVICE] Error getting last reminder:', {
+              message: error.message || 'Unknown error',
+              code: error.code,
+              details: error.details || '',
+              hint: error.hint || ''
+            });
+          }
+        }
+        return null;
+      }
+      
+      return data || null;
+    } catch (error) {
+      // Handle network errors gracefully
+      if (error instanceof TypeError && error.message.includes('fetch failed')) {
+        console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', error.message);
+      } else {
+        console.error('[REMINDER_SERVICE] Unexpected error getting last reminder:', {
+          message: error.message || 'Unknown error',
+          stack: error.stack
+        });
+      }
+      return null;
     }
-    return data;
   }
   /**
    * Stop the reminder scheduler

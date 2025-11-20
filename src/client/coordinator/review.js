@@ -151,6 +151,21 @@ async function renderComplaint() {
     const grid = document.getElementById('evidence-grid');
     if (grid) grid.innerHTML = '';
   }
+  // Check for high confidence duplicates (similarity score >= 0.85)
+  const duplicateCandidates = currentComplaint.analysis?.duplicate_candidates || [];
+  const hasHighConfidenceDuplicate = duplicateCandidates.length > 0 || 
+    (similarities && similarities.some(s => (s.similarity_score || s.score || 0) >= 0.85));
+  
+  // Show/hide high confidence duplicate alert
+  const duplicateAlert = document.getElementById('high-confidence-duplicate-alert');
+  if (duplicateAlert) {
+    if (hasHighConfidenceDuplicate && !complaint.is_duplicate) {
+      duplicateAlert.style.display = 'block';
+    } else {
+      duplicateAlert.style.display = 'none';
+    }
+  }
+
   // Similar complaints
   if (similarities && similarities.length > 0) {
     document.getElementById('similar-section').style.display = 'block';

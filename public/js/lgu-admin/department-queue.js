@@ -13,6 +13,22 @@ class DepartmentQueue {
       priority: '',
       search: ''
     };
+    this.statusPalette = [
+      { key: 'approved', label: 'Approved', color: '#3b82f6' },
+      { key: 'assigned', label: 'Assigned', color: '#6366f1' },
+      { key: 'assigned to officer', label: 'With Officer', color: '#f97316' },
+      { key: 'in progress', label: 'In Progress', color: '#facc15' },
+      { key: 'resolved', label: 'Resolved', color: '#22c55e' },
+      { key: 'closed', label: 'Closed', color: '#0ea5e9' },
+      { key: 'other', label: 'Other', color: '#94a3b8' }
+    ];
+    this.priorityPalette = [
+      { key: 'urgent', label: 'Urgent', color: '#dc2626', track: '#fee2e2' },
+      { key: 'high', label: 'High', color: '#ea580c', track: '#ffedd5' },
+      { key: 'medium', label: 'Medium', color: '#d97706', track: '#fef3c7' },
+      { key: 'low', label: 'Low', color: '#059669', track: '#d1fae5' },
+      { key: 'other', label: 'Unlabeled', color: '#64748b', track: '#e5e7eb' }
+    ];
     this.init();
   }
   init() {
@@ -386,6 +402,134 @@ class DepartmentQueue {
     document.getElementById('pending-assignment').textContent = pendingAssignment;
     document.getElementById('in-progress').textContent = inProgress;
     document.getElementById('resolved').textContent = resolved;
+    this.updateVisualizations();
+  }
+  updateVisualizations() {
+    this.renderStatusVisualization();
+    this.renderPriorityBars();
+    this.updateInsightsTimestamp();
+  }
+  renderStatusVisualization() {
+    const svg = document.getElementById('complaint-status-chart');
+    const legend = document.getElementById('complaint-status-legend');
+    const donutTotal = document.getElementById('donut-total');
+    if (!svg || !legend || !donutTotal) return;
+    const total = this.complaints.length;
+    donutTotal.textContent = total;
+    svg.innerHTML = '';
+    const radius = 60;
+    const circumference = 2 * Math.PI * radius;
+    const statusCounts = this.getStatusCounts();
+    const visibleStatuses = this.statusPalette
+      .map(item => ({ ...item, count: statusCounts[item.key] || 0 }))
+      .filter(item => item.count > 0);
+    const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    track.setAttribute('cx', '80');
+    track.setAttribute('cy', '80');
+    track.setAttribute('r', radius);
+    track.classList.add('donut-track');
+    svg.appendChild(track);
+    if (total === 0 || visibleStatuses.length === 0) {
+      legend.innerHTML = '<p class="legend-empty">No complaints to visualize.</p>';
+      return;
+    }
+    let offset = 0;
+    visibleStatuses.forEach(item => {
+      const slice = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      slice.setAttribute('cx', '80');
+      slice.setAttribute('cy', '80');
+      slice.setAttribute('r', radius);
+      slice.classList.add('donut-slice');
+      slice.setAttribute('stroke', item.color);
+      const dash = (item.count / total) * circumference;
+      slice.setAttribute('stroke-dasharray', `${dash} ${circumference}`);
+      slice.setAttribute('stroke-dashoffset', `${-offset}`);
+      offset += dash;
+      svg.appendChild(slice);
+    });
+    legend.innerHTML = visibleStatuses.map(item => {
+      const percent = Math.round((item.count / total) * 100);
+      return `
+        <div class="legend-row">
+          <div class="legend-row-info">
+            <span class="legend-swatch" style="background:${item.color};"></span>
+            <div>
+              <div class="legend-label">${item.label}</div>
+              <div class="legend-percent">${percent}% of queue</div>
+            </div>
+          </div>
+          <div class="legend-count">${item.count}</div>
+        </div>
+      `;
+    }).join('');
+  }
+  renderPriorityBars() {
+    const container = document.getElementById('priority-bars');
+    const totalLabel = document.getElementById('priority-total-label');
+    if (!container || !totalLabel) return;
+    const total = this.complaints.length;
+    totalLabel.textContent = `${total} complaint${total === 1 ? '' : 's'}`;
+    const priorityCounts = this.getPriorityCounts();
+    if (total === 0) {
+      container.innerHTML = '<p class="legend-empty">No priority data available yet.</p>';
+      return;
+    }
+    container.innerHTML = this.priorityPalette.map(item => {
+      const count = priorityCounts[item.key] || 0;
+      const percent = total ? Math.round((count / total) * 100) : 0;
+      return `
+        <div class="priority-row">
+          <div class="priority-row-head">
+            <div class="priority-label">
+              <span class="priority-dot" style="background:${item.color};"></span>
+              ${item.label}
+            </div>
+            <div class="priority-value">
+              ${count} <span>${percent}%</span>
+            </div>
+          </div>
+          <div class="priority-progress">
+            <span style="width:${percent}%; background:${item.color};"></span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  updateInsightsTimestamp() {
+    const element = document.getElementById('insights-updated-text');
+    if (!element) return;
+    const now = new Date();
+    element.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  getStatusCounts() {
+    const counts = this.statusPalette.reduce((acc, item) => {
+      acc[item.key] = 0;
+      return acc;
+    }, {});
+    this.complaints.forEach(complaint => {
+      const status = (complaint.status || 'other').toLowerCase();
+      if (counts.hasOwnProperty(status)) {
+        counts[status] += 1;
+      } else {
+        counts.other += 1;
+      }
+    });
+    return counts;
+  }
+  getPriorityCounts() {
+    const counts = this.priorityPalette.reduce((acc, item) => {
+      acc[item.key] = 0;
+      return acc;
+    }, {});
+    this.complaints.forEach(complaint => {
+      const priority = (complaint.priority || 'other').toLowerCase();
+      if (counts.hasOwnProperty(priority)) {
+        counts[priority] += 1;
+      } else {
+        counts.other += 1;
+      }
+    });
+    return counts;
   }
   updateDepartmentName() {
     const departmentNameElement = document.getElementById('department-name');

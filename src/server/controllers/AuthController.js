@@ -1,7 +1,7 @@
 const UserService = require('../services/UserService');
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 const Database = require('../config/database');
-const { extractUserMetadata, getCookieOptions, createErrorResponse } = require('../utils/authUtils');
+const { extractUserMetadata, getCookieOptions, createErrorResponse, invalidateAllUserSessions } = require('../utils/authUtils');
 const { validateEmail, validatePasswordMatch, validateRequiredFields } = require('../utils/inputValidation');
 
 const supabase = Database.getClient();
@@ -19,6 +19,7 @@ class AuthController {
         password,
         confirmPassword,
         firstName,
+        middleName,
         lastName,
         name, // Single name field
         mobileNumber,
@@ -84,6 +85,7 @@ class AuthController {
         email,
         password,
         firstName,
+        middleName,
         lastName,
         name, // Pass single name field
         mobileNumber,
@@ -411,59 +413,61 @@ class AuthController {
    */
   async requestPasswordChange(req, res) {
     try {
-      const { currentPassword, newPassword, confirmNewPassword } = req.body;
+      const { currentPassword, logoutAllDevices } = req.body;
       const userId = req.user.id;
       const userEmail = req.user.email;
-      if (!currentPassword || !newPassword || !confirmNewPassword) {
+      
+      if (!currentPassword) {
         return res.status(400).json({
           success: false,
-          error: 'All password fields are required'
+          error: 'Current password is required'
         });
       }
-      if (newPassword !== confirmNewPassword) {
-        return res.status(400).json({
-          success: false,
-          error: 'New passwords do not match'
-        });
-      }
-      // Validate password strength
-      const passwordValidation = validatePasswordStrength(newPassword);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({
-          success: false,
-          error: 'Password does not meet security requirements',
-          details: passwordValidation.errors
-        });
-      }
+      
       // Verify current password by attempting to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: currentPassword
       });
+      
       if (signInError || !signInData) {
         return res.status(400).json({
           success: false,
           error: 'Current password is incorrect'
         });
       }
-      // Use Supabase's resetPasswordForEmail to send a confirmation email
-      // This will send a password reset email, which the user can use to confirm the password change
+      
+      // Store logout preference in user metadata temporarily
+      // This will be checked when password is actually changed
+      if (logoutAllDevices) {
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...(signInData.user?.user_metadata || {}),
+            logout_all_devices_on_password_change: true
+          }
+        });
+      }
+
+      // Send password reset email - user will enter new password on confirmation page
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const redirectUrl = logoutAllDevices 
+        ? `${frontendUrl}/confirm-password-change?logout_all_devices=true`
+        : `${frontendUrl}/confirm-password-change`;
+      
       const { error: emailError } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${frontendUrl}/reset-password`
+        redirectTo: redirectUrl
       });
+      
       if (emailError) {
         return res.status(400).json({
           success: false,
           error: 'Failed to send confirmation email. Please try again later.'
         });
       }
-      // Store the new password temporarily (in a real implementation, you'd use a secure storage)
-      // For now, we'll rely on Supabase's password reset flow
-      // The user will set the new password through the email link
+      
       res.json({
         success: true,
-        message: 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to complete the password change. You will be asked to set your new password through the link.'
+        message: 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to set your new password.'
       });
     } catch (error) {
       console.error('Request password change error:', error);
@@ -474,16 +478,15 @@ class AuthController {
     }
   }
   /**
-   * Confirm password change via email link (handled by Supabase's reset password flow)
-   * This endpoint is kept for compatibility but the actual confirmation is handled
-   * by Supabase's password reset email link flow
+   * Confirm password change via email link
+   * This endpoint redirects to the client-side confirmation page
    */
   async confirmPasswordChange(req, res) {
     try {
-      // This endpoint redirects to the password reset page
-      // The actual password change is handled through Supabase's password reset flow
+      // Redirect to client-side confirmation page
+      // The client will extract the token from URL hash and handle password entry
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      res.redirect(`${frontendUrl}/reset-password`);
+      res.redirect(`${frontendUrl}/confirm-password-change${req.url}`);
     } catch (error) {
       console.error('Confirm password change error:', error);
       res.status(500).json({
@@ -493,7 +496,8 @@ class AuthController {
     }
   }
   /**
-   * Request email change with email confirmation
+   * Verify password for email change (client will handle actual email update)
+   * This endpoint only verifies the password - the client will call updateUser() directly
    */
   async requestEmailChange(req, res) {
     try {
@@ -525,128 +529,36 @@ class AuthController {
         });
       }
 
+      // Note: We don't pre-check for duplicate emails here because:
+      // 1. Supabase's updateUser() automatically checks for duplicates
+      // 2. Pre-checking would require listing all users (inefficient)
+      // 3. Client-side will handle duplicate email errors gracefully
+
       // Verify current password by attempting to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: currentEmail,
         password: currentPassword
       });
-      if (signInError || !signInData) {
+      
+      if (signInError || !signInData || !signInData.session) {
         return res.status(400).json({
           success: false,
           error: 'Current password is incorrect'
         });
       }
 
-      // Check if email is already in use before attempting change
-      // This prevents partial updates if email is taken
-      try {
-        const { data: existingUser } = await supabase.auth.admin.getUserByEmail(newEmail);
-        if (existingUser?.user) {
-          return res.status(400).json({
-            success: false,
-            error: 'This email address is already registered'
-          });
-        }
-      } catch (checkError) {
-        // If check fails, continue - Supabase will catch duplicate on update
-        console.warn('[EMAIL CHANGE] Email availability check failed:', checkError.message);
-      }
-
-      // Store original email for rollback
-      const originalEmail = currentEmail;
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-
-      // Use Supabase's updateUser to change email (this will send a confirmation email)
-      const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-        email: newEmail,
-        email_confirm: false // This will trigger a confirmation email
-      });
-
-      if (updateError) {
-        // Log detailed error server-side only
-        console.error('[EMAIL CHANGE] Failed to update email:', {
-          userId,
-          originalEmail,
-          newEmail,
-          error: updateError.message,
-          code: updateError.code
-        });
-
-        // Check if email is already in use
-        const errorMsg = String(updateError.message || '').toLowerCase();
-        if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate')) {
-          return res.status(400).json({
-            success: false,
-            error: 'This email address is already registered'
-          });
-        }
-
-        // Generic error message for client
-        return res.status(400).json({
-          success: false,
-          error: 'Failed to initiate email change. Please try again later.'
-        });
-      }
-
-      // Verify the update was successful
-      if (!updateData?.user || updateData.user.email !== newEmail) {
-        console.error('[EMAIL CHANGE] Email update verification failed:', {
-          userId,
-          expectedEmail: newEmail,
-          actualEmail: updateData?.user?.email
-        });
-
-        // Attempt rollback
-        try {
-          await supabase.auth.admin.updateUserById(userId, {
-            email: originalEmail,
-            email_confirm: true // Keep original email confirmed
-          });
-        } catch (rollbackError) {
-          console.error('[EMAIL CHANGE] Rollback failed:', rollbackError);
-          // Critical: email change partially completed but rollback failed
-        }
-
-        return res.status(500).json({
-          success: false,
-          error: 'Email change verification failed. Please contact support.'
-        });
-      }
-
-      // Send confirmation email to the new email address
-      const { error: emailError } = await supabase.auth.resend({
-        type: 'email_change',
-        email: newEmail,
-        options: {
-          emailRedirectTo: `${frontendUrl}/email-change-confirmed`
-        }
-      });
-
-      if (emailError) {
-        console.error('[EMAIL CHANGE] Confirmation email failed:', {
-          userId,
-          newEmail,
-          error: emailError.message
-        });
-
-        // Email change was initiated but confirmation email failed
-        // Don't rollback - user can request resend
-        return res.status(200).json({
-          success: true,
-          message: 'Email change initiated, but confirmation email could not be sent. Please contact support or try again later.',
-          warning: true
-        });
-      }
-
+      // Password verified successfully
+      // Return success - client will handle the actual email update using updateUser()
       res.json({
         success: true,
-        message: 'A confirmation email has been sent to your new email address. Please check your inbox and click the confirmation link to complete the email change.'
+        message: 'Password verified. You can now update your email.',
+        verified: true
       });
     } catch (error) {
       console.error('Request email change error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to request email change'
+        error: 'Failed to verify password for email change'
       });
     }
   }
@@ -704,6 +616,40 @@ class AuthController {
     }
   }
   /**
+   * Invalidate all active sessions for the current user
+   * This immediately revokes all access tokens and refresh tokens
+   */
+  async invalidateAllSessions(req, res) {
+    try {
+      const userId = req.user.id;
+      const { scope } = req.body; // 'all' or 'others' - defaults to 'all'
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: 'User ID is required'
+        });
+      }
+
+      // Invalidate all sessions using admin client
+      const result = await invalidateAllUserSessions(userId, supabase);
+
+      res.json({
+        success: true,
+        message: scope === 'others' 
+          ? 'All other sessions have been invalidated'
+          : 'All sessions have been invalidated',
+        ...result
+      });
+    } catch (error) {
+      console.error('[AUTH] Invalidate all sessions error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to invalidate sessions'
+      });
+    }
+  }
+  /**
    * Logout user
    */
   async logout(req, res) {
@@ -739,13 +685,24 @@ class AuthController {
    * Complete OAuth registration
    */
   async completeOAuth(req, res) {
+    const startTime = Date.now();
     try {
       const userId = req.user.id; // From auth middleware
+      
+      console.log('[OAUTH_SIGNUP] Status: STARTED', {
+        userId,
+        email: req.user?.email,
+        timestamp: new Date().toISOString(),
+        ip: req.ip,
+        userAgent: req.get('user-agent')
+      });
+
       const {
         email,
         password,
         confirmPassword,
         firstName,
+        middleName,
         lastName,
         name, // Single name field
         mobileNumber,
@@ -757,6 +714,10 @@ class AuthController {
 
       // Validation
       if (!agreedToTerms) {
+        console.log('[OAUTH_SIGNUP] Status: VALIDATION_FAILED - Terms not agreed', {
+          userId,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({
           success: false,
           error: 'You must agree to the terms and conditions'
@@ -764,6 +725,10 @@ class AuthController {
       }
 
       if (password && password !== confirmPassword) {
+        console.log('[OAUTH_SIGNUP] Status: VALIDATION_FAILED - Passwords do not match', {
+          userId,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({
           success: false,
           error: 'Passwords do not match'
@@ -774,6 +739,11 @@ class AuthController {
       if (password) {
         const passwordValidation = validatePasswordStrength(password);
         if (!passwordValidation.isValid) {
+          console.log('[OAUTH_SIGNUP] Status: VALIDATION_FAILED - Weak password', {
+            userId,
+            errors: passwordValidation.errors,
+            timestamp: new Date().toISOString()
+          });
           return res.status(400).json({
             success: false,
             error: 'Password does not meet security requirements',
@@ -782,10 +752,12 @@ class AuthController {
         }
       }
 
-      // Handle name - use name if provided, otherwise combine firstName + lastName
-      const displayName = name || `${firstName || ''} ${lastName || ''}`.trim();
-      const firstNameFinal = firstName || displayName.split(' ')[0] || '';
-      const lastNameFinal = lastName || displayName.split(' ').slice(1).join(' ') || '';
+      // Handle name - use name if provided, otherwise combine first/middle/last
+      const displayName = name || [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
+      const nameParts = displayName ? displayName.split(' ') : [];
+      const firstNameFinal = firstName || nameParts[0] || '';
+      const middleNameFinal = middleName || nameParts.slice(1, -1).join(' ') || '';
+      const lastNameFinal = lastName || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
 
       // Normalize role (default to citizen for OAuth users)
       const role = 'citizen';
@@ -793,9 +765,18 @@ class AuthController {
       const normalizedRole = normalizeRole(role);
 
       // Get current user metadata to preserve existing fields
+      console.log('[OAUTH_SIGNUP] Status: FETCHING_USER_DATA', {
+        userId,
+        timestamp: new Date().toISOString()
+      });
       const { data: currentUser, error: getUserError } = await supabase.auth.admin.getUserById(userId);
       if (getUserError) {
-        console.error('Error fetching current user:', getUserError);
+        console.error('[OAUTH_SIGNUP] Status: ERROR - Failed to fetch user data', {
+          userId,
+          error: getUserError.message,
+          code: getUserError.code,
+          timestamp: new Date().toISOString()
+        });
         return res.status(500).json({
           success: false,
           error: 'Failed to fetch user data'
@@ -823,7 +804,11 @@ class AuthController {
       // If so, this might be an attempt to re-register with OAuth
       if (existingMetadata.role && existingMetadata.name && existingMetadata.mobile_number) {
         // User is already registered, just update metadata if needed
-        console.log('[OAUTH] User already registered, updating metadata only');
+        console.log('[OAUTH_SIGNUP] Status: USER_ALREADY_REGISTERED - Updating metadata only', {
+          userId,
+          existingRole: existingMetadata.role,
+          timestamp: new Date().toISOString()
+        });
       }
 
       // Prepare metadata update (merge with existing metadata)
@@ -831,6 +816,10 @@ class AuthController {
         ...existingMetadata,
         // Identity
         first_name: firstNameFinal,
+        middle_name: middleNameFinal || existingMetadata.middle_name || null,
+        last_name: lastNameFinal,
+        first_name: firstNameFinal,
+        middle_name: middleNameFinal || existingMetadata.middle_name || null,
         last_name: lastNameFinal,
         name: displayName,
         role,
@@ -874,18 +863,52 @@ class AuthController {
         updateData.password = password;
       }
 
+      console.log('[OAUTH_SIGNUP] Status: UPDATING_USER_METADATA', {
+        userId,
+        hasPassword: !!password,
+        role: metadataUpdate.role,
+        hasMobile: !!metadataUpdate.mobile_number,
+        timestamp: new Date().toISOString()
+      });
+
       const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(
         userId,
         updateData
       );
 
       if (updateError) {
-        console.error('OAuth completion update error:', updateError);
+        const duration = Date.now() - startTime;
+        console.error('[OAUTH_SIGNUP] Status: ERROR - Failed to update user metadata', {
+          userId,
+          error: updateError.message,
+          code: updateError.code,
+          duration: `${duration}ms`,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({
           success: false,
           error: updateError.message || 'Failed to update user profile'
         });
       }
+
+      // Set session cookie after successful registration completion
+      // Get access token from Authorization header or request body
+      const accessToken = req.headers.authorization?.replace('Bearer ', '') || req.body.access_token || req.user?.access_token;
+      if (accessToken) {
+        const cookieOptions = getCookieOptions(false); // OAuth users don't use "remember me"
+        res.cookie('sb_access_token', accessToken, cookieOptions);
+      }
+
+      const duration = Date.now() - startTime;
+      console.log('[OAUTH_SIGNUP] Status: SUCCESS', {
+        userId,
+        email: updatedUser.user.email,
+        name: displayName,
+        role: normalizedRole,
+        hasMobile: !!metadataUpdate.mobile_number,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
+      });
 
       res.json({
         success: true,
@@ -898,7 +921,14 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('Complete OAuth error:', error);
+      const duration = Date.now() - startTime;
+      console.error('[OAUTH_SIGNUP] Status: ERROR - Unexpected error', {
+        userId: req.user?.id,
+        error: error.message,
+        stack: error.stack,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({
         success: false,
         error: 'Failed to complete OAuth registration'
@@ -915,6 +945,7 @@ class AuthController {
         password,
         confirmPassword,
         firstName,
+        middleName,
         lastName,
         name,
         mobileNumber,
@@ -966,6 +997,7 @@ class AuthController {
         email,
         password,
         firstName,
+        middleName,
         lastName,
         name,
         mobileNumber,
@@ -1039,24 +1071,57 @@ class AuthController {
    * - Marks code as used
    */
   async completeOAuthHR(req, res) {
+    const startTime = Date.now();
     try {
       const userId = req.user?.id;
       if (!userId) {
+        console.log('[OAUTH_SIGNUP_HR] Status: UNAUTHORIZED - No user ID', {
+          timestamp: new Date().toISOString(),
+          ip: req.ip
+        });
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
+
+      console.log('[OAUTH_SIGNUP_HR] Status: STARTED', {
+        userId,
+        email: req.user?.email,
+        timestamp: new Date().toISOString(),
+        ip: req.ip
+      });
+
       const { name, mobile, signupCode } = req.body || {};
       if (!signupCode) {
+        console.log('[OAUTH_SIGNUP_HR] Status: VALIDATION_FAILED - No signup code', {
+          userId,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ success: false, error: 'Signup code is required' });
       }
       // Validate signup code and extract intended role/department
       const HRService = require('../services/HRService');
 
       const hrService = new HRService();
+      console.log('[OAUTH_SIGNUP_HR] Status: VALIDATING_SIGNUP_CODE', {
+        userId,
+        signupCode,
+        timestamp: new Date().toISOString()
+      });
       const codeValidation = await hrService.validateSignupCode(signupCode);
       if (!codeValidation.valid) {
+        console.log('[OAUTH_SIGNUP_HR] Status: VALIDATION_FAILED - Invalid signup code', {
+          userId,
+          error: codeValidation.error,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ success: false, error: codeValidation.error || 'Invalid signup code' });
       }
       const { role, department_code } = codeValidation.data;
+      console.log('[OAUTH_SIGNUP_HR] Status: SIGNUP_CODE_VALIDATED', {
+        userId,
+        role,
+        department_code,
+        timestamp: new Date().toISOString()
+      });
       // Validate the role and department code
       const roleValidation = await validateUserRole(role);
       if (!roleValidation.isValid) {
@@ -1083,16 +1148,26 @@ class AuthController {
         updated_at: new Date().toISOString()
       };
       // Update user metadata using admin API
+      console.log('[OAUTH_SIGNUP_HR] Status: UPDATING_USER_METADATA', {
+        userId,
+        role,
+        department_code,
+        hasMobile: !!mobile,
+        timestamp: new Date().toISOString()
+      });
       const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         user_metadata: completeMetadata,
         raw_user_meta_data: completeMetadata
       });
 
       if (updateError) {
-        console.error('[OAUTH HR] Failed to update user metadata:', {
+        const duration = Date.now() - startTime;
+        console.error('[OAUTH_SIGNUP_HR] Status: ERROR - Failed to update user metadata', {
           userId,
           error: updateError.message,
-          code: updateError.code
+          code: updateError.code,
+          duration: `${duration}ms`,
+          timestamp: new Date().toISOString()
         });
         return res.status(500).json({
           success: false,
@@ -1129,11 +1204,31 @@ class AuthController {
       // Mark signup code as used (only if update was successful)
       try {
         await hrService.markSignupCodeUsed(signupCode, userId);
+        console.log('[OAUTH_SIGNUP_HR] Status: SIGNUP_CODE_MARKED_USED', {
+          userId,
+          signupCode,
+          timestamp: new Date().toISOString()
+        });
       } catch (markError) {
-        console.error('[OAUTH HR] Failed to mark signup code as used:', markError);
+        console.error('[OAUTH_SIGNUP_HR] Status: WARNING - Failed to mark signup code as used', {
+          userId,
+          signupCode,
+          error: markError.message,
+          timestamp: new Date().toISOString()
+        });
         // Don't fail the request, but log the error
         // The code will remain unused, which is safer than marking it used incorrectly
       }
+
+      const duration = Date.now() - startTime;
+      console.log('[OAUTH_SIGNUP_HR] Status: SUCCESS', {
+        userId,
+        email: updatedUser.user.email,
+        role: completeMetadata.role,
+        department: completeMetadata.department,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
+      });
 
       return res.json({
         success: true,
@@ -1146,7 +1241,14 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('Complete OAuth HR error:', error);
+      const duration = Date.now() - startTime;
+      console.error('[OAUTH_SIGNUP_HR] Status: ERROR - Unexpected error', {
+        userId: req.user?.id,
+        error: error.message,
+        stack: error.stack,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
+      });
       return res.status(500).json({ success: false, error: 'Failed to complete OAuth registration' });
     }
   }

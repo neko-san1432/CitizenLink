@@ -1,0 +1,82 @@
+// Lightweight progressive signup step manager
+const stepsRoot = document.getElementById('signup-steps');
+if (stepsRoot) {
+    const steps = Array.from(stepsRoot.querySelectorAll('.signup-step'));
+    const nextBtn = document.getElementById('signup-next-btn');
+    const prevBtn = document.getElementById('signup-prev-btn');
+    const submitBtn = document.getElementById('signup-submit-btn');
+    const progressFill = document.getElementById('signup-progress-fill');
+    const progressLabel = document.getElementById('signup-progress-label');
+    const progressBar = progressFill ? progressFill.parentElement : null;
+    let current = 0;
+
+    function showStep(index) {
+        steps.forEach((s, i) => {
+            s.hidden = i !== index;
+        });
+        current = index;
+        // Controls
+        prevBtn.hidden = index === 0;
+        const isLast = index === steps.length - 1;
+        nextBtn.hidden = isLast;
+        submitBtn.hidden = !isLast;
+        updateProgress();
+        // focus first input in step
+        const first = steps[index].querySelector('input,select,textarea,button');
+        if (first) first.focus();
+    }
+
+    function updateProgress() {
+        const pct = steps.length > 1 ? Math.round((current / (steps.length - 1)) * 100) : 0;
+        if (progressFill) progressFill.style.width = pct + '%';
+        if (progressBar) {
+            progressBar.setAttribute('aria-valuenow', String(pct));
+        }
+        if (progressLabel) {
+            progressLabel.textContent = `Step ${current + 1} of ${steps.length} · ${pct}% complete`;
+        }
+    }
+
+    function validateCurrentStep() {
+        const inputs = Array.from(steps[current].querySelectorAll('input,select,textarea')).filter(i => i.closest('form'));
+        for (const el of inputs) {
+            // skip disabled or hidden fields
+            if (el.disabled || el.hidden) continue;
+            if (el.hasAttribute('required')) {
+                if (!el.checkValidity()) {
+                    el.reportValidity && el.reportValidity();
+                    el.focus();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    nextBtn && nextBtn.addEventListener('click', () => {
+        if (!validateCurrentStep()) return;
+        showStep(Math.min(current + 1, steps.length - 1));
+    });
+    prevBtn && prevBtn.addEventListener('click', () => {
+        showStep(Math.max(current - 1, 0));
+    });
+
+    // keyboard: Enter should move to next only when not on final step
+    stepsRoot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA')) {
+                // prevent form submit on Enter in steps (except final)
+                if (current < steps.length - 1) {
+                    e.preventDefault();
+                    nextBtn && nextBtn.click();
+                }
+            }
+        }
+    });
+
+    // initialize
+    showStep(0);
+}
+
+export {};

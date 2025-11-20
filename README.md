@@ -746,6 +746,32 @@ class ApiClient {
 }
 ```
 
+### Notification Panel Component
+
+```javascript
+// See public/js/components/notification.js
+class NotificationService {
+  async fetchNotifications(page, limit) {
+    return apiClient.get(`/api/notifications?limit=${limit}&offset=${page * limit}`);
+  }
+}
+
+class NotificationManager {
+  constructor(service) {
+    this.service = service;
+    this.state = { page: 0, notifications: [] };
+  }
+
+  initialize() {
+    this.cacheDom();
+    this.bindEvents();
+    this.loadUnreadCount();
+  }
+}
+```
+
+The notification refactor mirrors the backend’s layered approach: DOM orchestration now lives inside `NotificationManager`, while API/state handling is delegated to `NotificationService`, making the vanilla JS experience consistent with the controller → service → repository flow.
+
 ## 🧪 Testing
 
 ```bash

@@ -73,6 +73,44 @@
                     </div>
                 </div>
 
+                <!-- Complaint Insights -->
+                <section class="insights-section" aria-labelledby="insights-title">
+                    <div class="insights-card">
+                        <div class="insights-header">
+                            <div>
+                                <p class="insights-eyebrow">Complaint analytics</p>
+                                <h2 id="insights-title">Live coordinator insights</h2>
+                                <p class="insights-subtitle">Status distribution and priority mix for complaints currently in your queue.</p>
+                            </div>
+                            <div class="insights-updated">
+                                <span class="insights-dot"></span>
+                                <span id="insights-updated-text">Syncing…</span>
+                            </div>
+                        </div>
+                        <div class="insights-grid">
+                            <div class="donut-wrapper" role="img" aria-label="Status distribution">
+                                <svg id="complaint-status-chart" viewBox="0 0 160 160" focusable="false"></svg>
+                                <div class="donut-center">
+                                    <strong id="donut-total">0</strong>
+                                    <span>Active cases</span>
+                                </div>
+                            </div>
+                            <div class="insights-legend" id="complaint-status-legend">
+                                <p class="legend-empty">No complaints to visualize.</p>
+                            </div>
+                        </div>
+                        <div class="priority-bars">
+                            <div class="priority-bars-header">
+                                <span>Priority mix</span>
+                                <span id="priority-total-label">0 complaints</span>
+                            </div>
+                            <div class="priority-bars-list" id="priority-bars">
+                                <p class="legend-empty">No data yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Loading State -->
                 <div id="loading" class="loading">
                     <div class="spinner"></div>

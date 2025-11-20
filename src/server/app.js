@@ -799,7 +799,7 @@ class CitizenLinkApp {
     });
 
     // Public pages
-    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'OAuthContinuation', 'success', 'email-verification-success'];
+    const publicPages = ['login', 'signup', 'resetPass', 'reset-password', 'confirm-password-change', 'OAuthContinuation', 'success', 'email-verification-success'];
     publicPages.forEach(page => {
       this.app.get(`/${page}`, (req, res) => {
         res.sendFile(path.join(config.rootDir, 'views', 'pages', `${page}.html`));
@@ -912,7 +912,7 @@ class CitizenLinkApp {
       // Load clustering configuration from environment or use defaults
       const clusteringConfig = {
         intervalHours: process.env.CLUSTERING_INTERVAL_HOURS ?
-          parseInt(process.env.CLUSTERING_INTERVAL_HOURS) : 6,
+          parseFloat(process.env.CLUSTERING_INTERVAL_HOURS) : (5 / 60),
         radiusKm: process.env.CLUSTERING_RADIUS_KM ?
           parseFloat(process.env.CLUSTERING_RADIUS_KM) : 0.5,
         minComplaintsPerCluster: process.env.CLUSTERING_MIN_COMPLAINTS ?

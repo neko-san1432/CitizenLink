@@ -3,19 +3,19 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 10000;
+  z-index: var(--z-toast, 99999) !important; /* Highest z-index to ensure toasts appear above all modals */
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3, 10px);
   max-width: 400px;
   pointer-events: none;
 }
 
 .toast {
-  background: white;
+  background: var(--gray-50, #ffffff);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--primary-600, #3b82f6);
   padding: 0;
   margin: 0;
   opacity: 0;
@@ -60,21 +60,21 @@
 .toast-title {
   font-weight: 600;
   font-size: 14px;
-  color: #1f2937;
+  color: var(--gray-900, #1f2937);
   margin-bottom: 4px;
   line-height: 1.4;
 }
 
 .toast-message {
   font-size: 13px;
-  color: #4b5563;
+  color: var(--gray-600, #4b5563);
   line-height: 1.4;
   word-wrap: break-word;
 }
 
 .toast-metadata {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--gray-500, #6b7280);
   margin-top: 6px;
   font-style: italic;
 }
@@ -83,7 +83,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: #9ca3af;
+  color: var(--gray-400, #9ca3af);
   cursor: pointer;
   padding: 0;
   width: 20px;
@@ -97,8 +97,8 @@
 }
 
 .toast-close:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--gray-200, #f3f4f6);
+  color: var(--gray-700, #374151);
 }
 
 .toast-progress {
@@ -106,71 +106,71 @@
   bottom: 0;
   left: 0;
   height: 3px;
-  background: #3b82f6;
+  background: var(--primary-600, #3b82f6);
   animation: toast-progress linear;
   border-radius: 0 0 8px 8px;
 }
 
 /* Toast Types */
 .toast-success {
-  border-left-color: #10b981;
+  border-left-color: var(--success-500, #10b981);
 }
 
 .toast-success .toast-icon {
-  color: #10b981;
+  color: var(--success-500, #10b981);
 }
 
 .toast-success .toast-progress {
-  background: #10b981;
+  background: var(--success-500, #10b981);
 }
 
 .toast-error {
-  border-left-color: #ef4444;
+  border-left-color: var(--error-500, #ef4444);
 }
 
 .toast-error .toast-icon {
-  color: #ef4444;
+  color: var(--error-500, #ef4444);
 }
 
 .toast-error .toast-progress {
-  background: #ef4444;
+  background: var(--error-500, #ef4444);
 }
 
 .toast-warning {
-  border-left-color: #f59e0b;
+  border-left-color: var(--warning-500, #f59e0b);
 }
 
 .toast-warning .toast-icon {
-  color: #f59e0b;
+  color: var(--warning-500, #f59e0b);
 }
 
 .toast-warning .toast-progress {
-  background: #f59e0b;
+  background: var(--warning-500, #f59e0b);
 }
 
 .toast-urgent {
-  border-left-color: #dc2626;
-  background: #fef2f2;
+  border-left-color: var(--error-600, #dc2626);
+  background: var(--error-50, #fef2f2);
 }
 
 .toast-urgent .toast-icon {
-  color: #dc2626;
+  color: var(--error-600, #dc2626);
 }
 
 .toast-urgent .toast-progress {
-  background: #dc2626;
+  background: var(--error-600, #dc2626);
 }
 
 .toast-info {
-  border-left-color: #3b82f6;
+  border-left-color: var(--info-500, #3b82f6);
 }
 
 .toast-info .toast-icon {
-  color: #3b82f6;
+  color: var(--info-500, #3b82f6);
 }
 
 .toast-info .toast-progress {
-  background: #3b82f6;
+  background: var(--info-500, #3b82f6);
 }
 
 /* Clickable toast */
@@ -210,30 +210,28 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .toast {
-    background: #1f2937;
-    color: #f9fafb;
-  }
-  
-  .toast-title {
-    color: #f9fafb;
-  }
-  
-  .toast-message {
-    color: #d1d5db;
-  }
-  
-  .toast-metadata {
-    color: #9ca3af;
-  }
-  
-  .toast-close {
-    color: #9ca3af;
-  }
-  
-  .toast-close:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
+html.dark .toast {
+  background: var(--gray-100, #1f2937);
+  color: var(--gray-100, #f9fafb);
+}
+
+html.dark .toast-title {
+  color: var(--gray-100, #f9fafb);
+}
+
+html.dark .toast-message {
+  color: var(--gray-400, #d1d5db);
+}
+
+html.dark .toast-metadata {
+  color: var(--gray-500, #9ca3af);
+}
+
+html.dark .toast-close {
+  color: var(--gray-500, #9ca3af);
+}
+
+html.dark .toast-close:hover {
+  background: var(--gray-200, #374151);
+  color: var(--gray-100, #f9fafb);
 }

@@ -21,7 +21,13 @@ class HeatmapControls {
       minPts: 3
     };
     this.isVisible = true;
+    this.userRole = null;
+    this.userDepartmentCode = null;
+    this.isDepartmentLocked = false;
+    this.loadDepartmentsPromise = null;
+    this.loadCategoriesPromise = null;
     this.createControls();
+    this.initializeUserContext();
   }
   /**
    * Create the controls UI
@@ -37,8 +43,8 @@ class HeatmapControls {
       mapContainer.parentNode.insertBefore(controlsContainer, mapContainer.nextSibling);
     }
     this.setupEventListeners();
-    this.loadCategories();
-    this.loadDepartments();
+    this.loadCategoriesPromise = this.loadCategories();
+    this.loadDepartmentsPromise = this.loadDepartments();
   }
   /**
    * Get HTML for controls
@@ -94,7 +100,7 @@ class HeatmapControls {
           </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" id="department-filter-control">
           <label>Department Filter:</label>
           <select id="department-filter">
             <option value="">All Departments</option>
@@ -188,6 +194,79 @@ class HeatmapControls {
         <div id="error-display" class="error" style="display: none;"></div>
       </div>
     `;
+  }
+
+  /**
+   * Initialize user role context for role-based UI adjustments
+   */
+  async initializeUserContext() {
+    try {
+      const { getUserRole } = await import('../../auth/authChecker.js');
+      this.userRole = await getUserRole();
+    } catch (error) {
+      console.warn('[HEATMAP_CONTROLS] Failed to determine user role:', error);
+    }
+
+    if (this.userRole === 'lgu-admin') {
+      try {
+        this.userDepartmentCode = (await this.getUserDepartment()) || null;
+      } catch (error) {
+        console.warn('[HEATMAP_CONTROLS] Unable to load user department:', error);
+      }
+
+      if (this.userDepartmentCode) {
+        try {
+          await this.loadDepartmentsPromise;
+        } catch (_) {
+          // Ignore loading errors here; we still lock the UI
+        }
+        this.lockDepartmentFilterToUserOffice();
+        this.currentFilters.department = this.userDepartmentCode;
+        this.applyFilters();
+      }
+    }
+  }
+
+  /**
+   * Hide department filter and show notice for LGU admins
+   */
+  lockDepartmentFilterToUserOffice() {
+    this.isDepartmentLocked = true;
+    const deptSelect = document.getElementById('department-filter');
+    if (deptSelect) {
+      deptSelect.value = this.userDepartmentCode || '';
+      deptSelect.disabled = true;
+    }
+
+    const deptGroup = document.getElementById('department-filter-control');
+    if (deptGroup) {
+      deptGroup.style.display = 'none';
+    }
+
+    let notice = document.getElementById('department-locked-notice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'department-locked-notice';
+      notice.className = 'control-group department-locked-notice';
+      notice.innerHTML = `
+        <label>Office Scope:</label>
+        <p style="margin: 0; font-size: 12px; color: #374151;">
+          Complaints are limited to your assigned office
+          <strong class="locked-office-code">${this.userDepartmentCode}</strong>.
+        </p>
+      `;
+      const controls = document.querySelector('#heatmap-controls .control-section');
+      if (controls && deptGroup && deptGroup.parentNode) {
+        deptGroup.parentNode.insertBefore(notice, deptGroup.nextSibling);
+      } else if (controls) {
+        controls.appendChild(notice);
+      }
+    } else {
+      const codeSpan = notice.querySelector('.locked-office-code');
+      if (codeSpan) {
+        codeSpan.textContent = this.userDepartmentCode;
+      }
+    }
   }
   /**
    * Set up event listeners
@@ -291,12 +370,20 @@ class HeatmapControls {
    */
   resetFilters() {
     // Reset form values
-    document.getElementById('status-filter').value = '';
-    document.getElementById('type-filter').value = '';
-    document.getElementById('department-filter').value = '';
-    document.getElementById('start-date').value = '';
-    document.getElementById('end-date').value = '';
-    document.getElementById('include-resolved').checked = true;
+    const statusFilter = document.getElementById('status-filter');
+    if (statusFilter) statusFilter.value = '';
+    const typeFilter = document.getElementById('type-filter');
+    if (typeFilter) typeFilter.value = '';
+    const departmentFilter = document.getElementById('department-filter');
+    if (departmentFilter) {
+      departmentFilter.value = this.isDepartmentLocked ? (this.userDepartmentCode || '') : '';
+    }
+    const startDate = document.getElementById('start-date');
+    if (startDate) startDate.value = '';
+    const endDate = document.getElementById('end-date');
+    if (endDate) endDate.value = '';
+    const includeResolved = document.getElementById('include-resolved');
+    if (includeResolved) includeResolved.checked = true;
     // Reset clustering
     document.getElementById('enable-clustering').checked = false;
     this.toggleClustering(false);
@@ -304,7 +391,7 @@ class HeatmapControls {
     this.currentFilters = {
       status: '',
       type: '',
-      department: '',
+      department: this.isDepartmentLocked ? (this.userDepartmentCode || '') : '',
       startDate: '',
       endDate: '',
       includeResolved: true
@@ -320,6 +407,14 @@ class HeatmapControls {
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     if (!startDateInput || !endDateInput) return;
+    const clearDates = () => {
+      startDateInput.value = '';
+      endDateInput.value = '';
+    };
+    if (!timeRange) {
+      clearDates();
+      return;
+    }
     let startDate, endDate;
     switch (timeRange) {
       case 'today':
@@ -341,6 +436,7 @@ class HeatmapControls {
         endDate = now;
         break;
       default:
+        clearDates();
         return;
     }
     startDateInput.value = startDate.toISOString().split('T')[0];
@@ -351,11 +447,15 @@ class HeatmapControls {
    * @returns {Object} Current filters
    */
   getCurrentFilters() {
+    const selectedDepartment = document.getElementById('department-filter')?.value || '';
+    const enforcedDepartment = this.isDepartmentLocked
+      ? (this.userDepartmentCode || '')
+      : selectedDepartment;
     return {
       status: document.getElementById('status-filter')?.value || '',
       category: this.currentFilters.category || '',
       subcategory: this.currentFilters.subcategory || '',
-      department: document.getElementById('department-filter')?.value || '',
+      department: enforcedDepartment,
       timeRange: this.currentFilters.timeRange || '',
       startDate: document.getElementById('start-date')?.value || '',
       endDate: document.getElementById('end-date')?.value || '',
@@ -618,7 +718,11 @@ class HeatmapControls {
       const departments = await getDepartments();
 
       // Get user's department and sort departments to put user's office first
-      const userDepartmentCode = await this.getUserDepartment();
+      const userDepartmentCode = this.userDepartmentCode || await this.getUserDepartment();
+      if (userDepartmentCode && !this.userDepartmentCode) {
+        this.userDepartmentCode = userDepartmentCode;
+      }
+
       if (userDepartmentCode && departments && departments.length > 0) {
         // Sort: user's department first, then others
         departments.sort((a, b) => {
@@ -651,6 +755,10 @@ class HeatmapControls {
           }
           departmentSelect.appendChild(option);
         });
+
+        if (this.isDepartmentLocked) {
+          this.lockDepartmentFilterToUserOffice();
+        }
       }
     } catch (error) {
       console.error('Error loading departments for heatmap:', error);

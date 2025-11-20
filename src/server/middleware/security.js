@@ -13,6 +13,8 @@ const cspConfig = {
     scriptSrc: [
       '\'self\'',
       // no 'unsafe-inline' — enforced CSP-compliant scripts only
+      // Allow specific inline script hash for dashboard
+      '\'sha256-0Dr8sVaJkoiX93UyTTWlbHfCjfIBgNYRC1k4YSi6ZY8=\'',
       'https://www.google.com',
       'https://www.gstatic.com',
       'https://unpkg.com',
@@ -50,7 +52,12 @@ const cspConfig = {
       'https://r2cdn.perplexity.ai'
     ],
     objectSrc: ['\'none\''],
-    mediaSrc: ['\'self\''],
+    mediaSrc: [
+      '\'self\'',
+      'data:',
+      'blob:',
+      'https://*.supabase.co'
+    ],
     frameSrc: [
       'https://www.google.com',
       'https://www.google.com/recaptcha'

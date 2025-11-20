@@ -1,7 +1,7 @@
 // login, register, change pass, and additional social media
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
-import { saveUserMeta, getOAuthContext } from './authChecker.js';
+import { saveUserMeta, getOAuthContext, setOAuthContext } from './authChecker.js';
 import { setButtonLoading, temporarilyMark } from '../utils/buttonState.js';
 import { addCsrfTokenToForm } from '../utils/csrf.js';
 import { validateAndSanitizeForm, isValidPhilippineMobile, validatePassword, isValidEmail } from '../utils/validation.js';
@@ -101,6 +101,7 @@ const regFormEl = document.getElementById('regForm');
 if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   e.preventDefault(); // prevent page refresh
   const firstName = document.getElementById('firstName')?.value.trim() || '';
+  const middleName = document.getElementById('middleName')?.value.trim() || '';
   const lastName = document.getElementById('lastName')?.value.trim() || '';
   const email = document.getElementById('email').value.trim();
   const mobile = document.getElementById('mobile').value.trim();
@@ -118,6 +119,7 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
   // Validate form data
   const validationRules = {
     firstName: { required: true, minLength: 1, maxLength: 100 },
+    middleName: { required: false, minLength: 0, maxLength: 100 },
     lastName: { required: true, minLength: 1, maxLength: 100 },
     email: { required: true, type: 'email' },
     mobile: { required: true, type: 'mobile' },
@@ -127,7 +129,7 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
     barangay: { required: false, minLength: 0, maxLength: 100 },
     gender: { required: false }
   };
-  const formData = { firstName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, barangay, gender };
+  const formData = { firstName, middleName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, barangay, gender };
   const validation = validateAndSanitizeForm(formData, validationRules);
   if (!validation.isValid) {
     showMessage('error', validation.errors.join(', '));
@@ -152,6 +154,7 @@ if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
       password: regPass,
       confirmPassword: reRegPass,
       firstName: validation.sanitizedData.firstName,
+      middleName: validation.sanitizedData.middleName || '',
       lastName: validation.sanitizedData.lastName,
       mobileNumber: `+63${validation.sanitizedData.mobile}`,
       gender: validation.sanitizedData.gender || '',
@@ -207,6 +210,14 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
   const remember = document.getElementById('remember-me')?.checked || false;
+  
+  // Store device trust preference
+  try {
+    const { setDeviceTrusted } = await import('./authChecker.js');
+    setDeviceTrusted(remember);
+  } catch (error) {
+    console.error('[AUTH] Failed to set device trust preference:', error);
+  }
   // Get login button elements
   const loginBtn = document.getElementById('login-submit-btn');
   const loginBtnIcon = document.getElementById('login-btn-icon');
@@ -229,18 +240,31 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   };
   // Function to hide loading state
   const hideLoading = () => {
-    if (!loginBtn || !loginBtnIcon) return;
-    // Restore original icon if stored
-    if (loginBtn.dataset.originalIcon) {
+    if (!loginBtn) return;
+    
+    // Get current icon element (might have been replaced)
+    const currentIcon = document.getElementById('login-btn-icon');
+    if (currentIcon && loginBtn.dataset.originalIcon) {
+      // Restore original icon
       const originalIconHtml = loginBtn.dataset.originalIcon;
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = originalIconHtml;
       const restoredIcon = tempDiv.firstElementChild;
-      loginBtnIcon.parentNode.replaceChild(restoredIcon, loginBtnIcon);
+      if (restoredIcon) {
+        currentIcon.parentNode.replaceChild(restoredIcon, currentIcon);
+      }
     }
+    
+    // Remove spinning class if it exists
+    if (currentIcon) {
+      currentIcon.classList.remove('spinning');
+    }
+    
     // Re-enable button
     loginBtn.disabled = false;
-    loginBtnText.textContent = 'Sign in';
+    if (loginBtnText) {
+      loginBtnText.textContent = 'Sign in';
+    }
   };
   // Basic validation
   if (!email || !pass) {
@@ -315,21 +339,11 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
           });
 
           if (!retryResp.ok) {
+            // Soft-fail: proceed with login flow even if verification endpoint is slow/unavailable.
+            // We already have a valid server session; the dashboard/header will reconcile on load.
             const retryErrorData = await retryResp.json().catch(() => ({}));
-            console.error('[CLIENT AUTH] ❌ Session verification failed:', retryErrorData);
-            let errorMessage = 'Session verification failed. ';
-            if (retryResp.status === 401) {
-              errorMessage += 'Your session has expired. Please log in again.';
-            } else if (retryResp.status === 403) {
-              errorMessage += 'Access denied. Please contact support.';
-            } else if (retryResp.status >= 500) {
-              errorMessage += 'Server error. Please try again later.';
-            } else {
-              errorMessage += 'Please try logging in again.';
-            }
-            showMessage('error', errorMessage);
-            hideLoading();
-            return;
+            console.warn('[CLIENT AUTH] ⚠️ Session verification did not complete, continuing:', retryErrorData);
+            showMessage('info', 'Signing you in… finalizing session.');
           }
         }
       } catch (error) {
@@ -372,11 +386,27 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       }
       // Redirect to dashboard based on role
       // console.log removed for security
+      // Ensure loading UI is cleared if redirect doesn't happen (rare race)
+      try {
+        hideLoading();
+      } catch (e) {}
       setTimeout(() => {
         // console.log removed for security
-        window.location.href = '/dashboard';
+        try { window.location.href = '/dashboard'; } catch (e) { /* ignore */ }
       }, 1500);
+      // Safety fallback: if navigation hasn't started after 7s, clear loading state
+      setTimeout(() => {
+        try {
+          const stillOnLogin = window.location.pathname && window.location.pathname.toLowerCase().includes('/login');
+          if (stillOnLogin) {
+            try { hideLoading(); } catch (e) {}
+            showMessage('info', 'Login appears to be taking longer than usual. If you are not redirected, please refresh the page.');
+          }
+        } catch (_) {}
+      }, 7000);
     } else {
+      // Login failed - hide loading state
+      hideLoading();
       showMessage('error', result.error || 'Login failed');
       // If OAuth context suggests provider was intended but failed, route to signup
       const ctx = getOAuthContext();
@@ -386,43 +416,70 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     }
   } catch (error) {
     console.error('Login error:', error);
+    // Hide loading state on error
+    hideLoading();
     showMessage('error', 'Login failed. Please try again.');
   }
 });
-// OAuth sign-in buttons
-const googleBtn = document.getElementById('login-google');
-if (googleBtn) {
-  googleBtn.addEventListener('click', async () => {
+// OAuth sign-in buttons (popup-based)
+const oauthButtons = [
+  { id: 'login-google', provider: 'google' },
+  { id: 'login-facebook', provider: 'facebook' }
+];
+
+oauthButtons.forEach(({ id, provider }) => {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.addEventListener('click', () => startOAuthPopup(provider));
+});
+
+async function startOAuthPopup(provider) {
+  const scopes = provider === 'google'
+    ? 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
+    : 'email public_profile';
+  try {
+    // Determine intent based on current page
+    const isSignupPage = window.location.pathname.includes('/signup');
+    const intent = isSignupPage ? 'signup' : 'login';
+    setOAuthContext({ provider, intent, status: 'pending', startedAt: Date.now() });
+  } catch {}
+  try {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: {
-        redirectTo: `${window.location.origin}/success`,
-        // Request additional scopes to get phone number
-        scopes: 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
+        redirectTo: `${window.location.origin}/success?popup=1`,
+        scopes,
+        skipBrowserRedirect: true
       }
     });
     if (error) {
-      showMessage('error', error.message || 'Google sign-in failed');
-      window.location.href = '/signup';
-    }
-  });
+      throw error;
 }
-const fbBtn = document.getElementById('login-facebook');
-if (fbBtn) {
-  fbBtn.addEventListener('click', async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook',
+    const authUrl = data?.url;
+    if (!authUrl) {
+      // Fallback to full redirect if URL not returned
+      await supabase.auth.signInWithOAuth({
+        provider,
       options: {
         redirectTo: `${window.location.origin}/success`,
-        // Valid Facebook scopes: email and public_profile
-        scopes: 'email public_profile'
-      }
-    });
-    if (error) {
-      showMessage('error', error.message || 'Facebook sign-in failed');
-      window.location.href = '/signup';
+          scopes
+        }
+      });
+      return;
     }
-  });
+    const popup = window.open(
+      authUrl,
+      'cl_oauth_popup',
+      'width=520,height=640,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes'
+    );
+    if (!popup) {
+      throw new Error('Popup blocked. Please allow popups for CitizenLink to continue.');
+    }
+    popup.focus();
+  } catch (error) {
+    console.error(`[AUTH] ${provider} OAuth popup error:`, error);
+    showMessage('error', error.message || `${provider} sign-in failed`);
+  }
 }
 // Email field remains empty and editable for both login and register
 // Note: Session cookie is now set by server during login - no client-side cookie setting needed

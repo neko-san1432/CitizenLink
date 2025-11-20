@@ -1,5 +1,8 @@
 import { getUserRole, refreshMetaFromSession } from '../auth/authChecker.js';
 import showMessage from '../components/toast.js';
+import { addCsrfTokenToHeaders } from '../utils/csrf.js';
+
+let cachedProfile = null;
 
 async function checkAuthentication() {
   try {
@@ -278,45 +281,96 @@ function scrollToAnchorIfNeeded() {
   // This function is kept for backward compatibility but does nothing
 }
 function wireChangePassword() {
+  const modal = document.getElementById('password-change-modal');
+  const openBtn = document.getElementById('open-password-change-modal');
+  const closeBtn = document.getElementById('close-password-modal');
+  const cancelBtn = document.getElementById('cancel-password-change');
   const form = document.getElementById('change-password-form');
-  const messageEl = document.getElementById('email-confirmation-message');
-  if (!form) return;
+  const messageEl = document.getElementById('password-confirmation-message');
+  
+  if (!modal || !form) return;
+
+  // Open modal
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      modal.style.display = 'flex';
+      modal.style.visibility = 'visible';
+      modal.style.opacity = '1';
+    });
+  }
+
+  // Close modal handlers
+  const closeModal = () => {
+    modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
+    form.reset();
+    if (messageEl) {
+      messageEl.style.display = 'none';
+    }
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Form submission
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const currentPassword = document.getElementById('current-password')?.value || '';
-    const newPassword = document.getElementById('new-password')?.value || '';
-    const confirmNewPassword = document.getElementById('confirm-new-password')?.value || '';
+    const logoutAllDevices = document.getElementById('logout-all-devices')?.checked || false;
+    
     // Validate inputs
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      showMessage('error', 'All password fields are required', 4000);
+    if (!currentPassword) {
+      showMessage('error', 'Current password is required', 4000);
       return;
     }
-    if (newPassword !== confirmNewPassword) {
-      showMessage('error', 'New passwords do not match', 4000);
-      return;
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn?.textContent || 'Request Password Change';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
     }
+
     try {
+      // Get CSRF token and add to headers
+      const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
       const res = await fetch('/api/auth/request-password-change', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword })
+        headers,
+        body: JSON.stringify({ currentPassword, logoutAllDevices })
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request password change');
+      
       // Show success message with email confirmation info
       if (messageEl) {
-        messageEl.textContent = json.message || 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to complete the password change.';
-        messageEl.classList.remove('hidden');
+        const messageText = json.message || 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to set your new password.';
+        messageEl.querySelector('p').textContent = messageText;
+        messageEl.style.display = 'block';
       }
       showMessage('success', 'Password change request sent! Please check your email for confirmation.', 5000);
       form.reset();
-      // Hide message after 10 seconds
+      
+      // Close modal after 3 seconds
       setTimeout(() => {
-        if (messageEl) messageEl.classList.add('hidden');
-      }, 10000);
+        closeModal();
+      }, 3000);
     } catch (err) {
       showMessage('error', err.message || 'Failed to request password change', 4000);
-      if (messageEl) messageEl.classList.add('hidden');
+      if (messageEl) {
+        messageEl.style.display = 'none';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
@@ -564,15 +618,32 @@ function wireEmailEdit() {
       }
 
       try {
+        // Step 1: Verify password server-side (security)
+        const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
         const res = await fetch('/api/auth/request-email-change', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ newEmail, currentPassword })
         });
         const json = await res.json().catch(() => ({}));
-        if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request email change');
+        if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to verify password');
 
-        showMessage('success', json.message || 'Confirmation email sent! Please check your new email inbox.', 5000);
+        // Step 2: Update email client-side using Supabase's standard flow
+        const { supabase } = await import('/js/config/config.js');
+        const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+          email: newEmail
+        });
+
+        if (updateError) {
+          // Check if email is already in use
+          const errorMsg = String(updateError.message || '').toLowerCase();
+          if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate')) {
+            throw new Error('This email address is already registered');
+          }
+          throw new Error(updateError.message || 'Failed to update email');
+        }
+
+        showMessage('success', 'A confirmation email has been sent to your new email address. Please check your inbox and click the confirmation link to complete the email change.', 5000);
         closeModal();
       } catch (err) {
         showMessage('error', err.message || 'Failed to request email change', 4000);
@@ -756,10 +827,124 @@ function wireAddressEdit() {
     }
   });
 }
+
+function wireAccountDeletion(profile) {
+  if (!profile) return;
+  const openBtn = document.getElementById('open-delete-account');
+  const modal = document.getElementById('delete-account-modal');
+  const closeBtn = document.getElementById('delete-account-close');
+  const cancelBtn = document.getElementById('cancel-delete-account');
+  const form = document.getElementById('delete-account-form');
+  const confirmInput = document.getElementById('delete-account-confirm-input');
+  const reasonInput = document.getElementById('delete-account-reason');
+  const ackInput = document.getElementById('delete-account-ack');
+  const emailHint = document.getElementById('delete-account-email-hint');
+  const submitBtn = document.getElementById('delete-account-submit');
+
+  if (!openBtn || !modal || !form) return;
+
+  const userEmail = (profile?.email || '').trim();
+  if (emailHint) {
+    emailHint.textContent = userEmail || 'your email';
+  }
+
+  const openModal = () => {
+    if (emailHint) {
+      emailHint.textContent = userEmail || 'your email';
+    }
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    confirmInput?.focus();
+  };
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
+    form.reset();
+    if (ackInput) ackInput.checked = false;
+  };
+
+  openBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openModal();
+  });
+
+  cancelBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeModal();
+  });
+
+  closeBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeModal();
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!userEmail) {
+      showMessage('error', 'Unable to determine your email. Please re-login and try again.', 4000);
+      return;
+    }
+    const typed = (confirmInput?.value || '').trim().toLowerCase();
+    if (typed !== userEmail.toLowerCase()) {
+      showMessage('error', 'Please type your email exactly to confirm.', 4000);
+      return;
+    }
+    const reason = (reasonInput?.value || '').trim();
+    if (!reason || reason.length < 10) {
+      showMessage('error', 'Please share a short reason (at least 10 characters).', 4000);
+      return;
+    }
+    if (!ackInput?.checked) {
+      showMessage('error', 'Please acknowledge that this action is permanent.', 4000);
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Deleting...';
+    }
+
+    try {
+      const headers = await addCsrfTokenToHeaders({ 'Content-Type': 'application/json' });
+      const res = await fetch('/api/compliance/delete', {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ confirm: true, reason })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || 'Failed to delete account');
+      }
+      showMessage('success', 'Your account has been deleted. Redirecting...', 4000);
+      closeModal();
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2500);
+    } catch (err) {
+      console.error('[PROFILE] Delete account error:', err);
+      showMessage('error', err.message || 'Failed to delete account', 4000);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Delete My Account';
+      }
+    }
+  });
+}
 document.addEventListener('DOMContentLoaded', async () => {
   if (!(await checkAuthentication())) return;
   try {
     const profile = await fetchProfile();
+    cachedProfile = profile;
     const role = profile?.role || profile?.normalizedRole || profile?.normalized_role || 'citizen';
     const roleLower = role.toLowerCase();
     const isStaff = roleLower === 'lgu' || roleLower === 'lgu-officer' || roleLower === 'lgu-admin';
@@ -795,4 +980,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireEmailEdit();
   wireMobileEdit();
   wireAddressEdit();
+  wireAccountDeletion(cachedProfile);
 });

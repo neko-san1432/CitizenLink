@@ -42,11 +42,12 @@ class ErrorHandler {
   }
   static handlePageError(err, req, res) {
     const statusCode = this.getStatusCode(err);
+    const viewsRoot = path.join(config.rootDir, 'views', 'pages');
     if (statusCode === 404) {
-      return res.status(404).sendFile(path.join(__dirname, '../views/pages/404.html'));
+      return res.status(404).sendFile(path.join(viewsRoot, '404.html'));
     }
     // For other errors, send a generic error page or redirect
-    return res.status(500).sendFile(path.join(__dirname, '../views/pages/500.html'));
+    return res.status(500).sendFile(path.join(viewsRoot, '500.html'));
   }
   static sanitizeErrorMessage(message) {
     if (!message || typeof message !== 'string') {

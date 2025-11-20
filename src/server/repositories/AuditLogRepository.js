@@ -22,6 +22,26 @@ class AuditLogRepository {
    */
   async log(actionType, performedBy, options = {}) {
     try {
+      // Skip logging if performedBy is not provided
+      if (!performedBy) {
+        return false;
+      }
+
+      // Check if the user exists before logging (to avoid foreign key constraint errors)
+      // This can happen when users are deleted but audit logs are still being created
+      try {
+        const { data: user, error: userError } = await this.supabase.auth.admin.getUserById(performedBy);
+        if (userError || !user?.user) {
+          // User doesn't exist (likely deleted), skip audit log
+          console.warn(`[AUDIT_LOG] Skipping audit log for deleted user: ${performedBy} (action: ${actionType})`);
+          return false;
+        }
+      } catch (checkError) {
+        // If we can't check the user, log a warning but don't fail
+        console.warn(`[AUDIT_LOG] Could not verify user existence for ${performedBy}:`, checkError.message);
+        // Continue with logging attempt - if it fails due to FK constraint, we'll catch it below
+      }
+
       const {
         targetType = null,
         targetId = null,
@@ -44,12 +64,23 @@ class AuditLogRepository {
         });
 
       if (error) {
+        // Check if it's a foreign key constraint error
+        if (error.code === '23503' && error.message.includes('performed_by')) {
+          // User was deleted between check and insert, skip silently
+          console.warn(`[AUDIT_LOG] Skipping audit log - user ${performedBy} was deleted (action: ${actionType})`);
+          return false;
+        }
         console.error('[AUDIT_LOG] Failed to log action:', error);
         // Don't throw - audit logging failure shouldn't break operations
         return false;
       }
       return true;
     } catch (error) {
+      // Handle foreign key constraint errors gracefully
+      if (error.code === '23503' && error.message && error.message.includes('performed_by')) {
+        console.warn(`[AUDIT_LOG] Skipping audit log - user was deleted (action: ${actionType})`);
+        return false;
+      }
       console.error('[AUDIT_LOG] Log error:', error);
       return false;
     }

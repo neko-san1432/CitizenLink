@@ -159,6 +159,11 @@ function setupLocationPicker(map) {
   const latInput = document.getElementById('latitude');
   const lngInput = document.getElementById('longitude');
   const locationInput = document.getElementById('location');
+  if (locationInput) {
+    locationInput.readOnly = true;
+    locationInput.setAttribute('aria-live', 'polite');
+    locationInput.setAttribute('title', 'Move the map or drag the pin to change the address.');
+  }
   if (!latInput || !lngInput) {
     console.error('Latitude/longitude input fields not found');
     return;

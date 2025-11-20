@@ -1,39 +1,33 @@
 :root {
-  --color-surface: #ffffff;
-  --color-text: #1f2937;
-  --color-line: #e5e7eb;
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #1f2937;
-  --sidebar-hover: #f3f4f6;
-  --sidebar-active: #3b82f6;
-  --sidebar-border: #e5e7eb;
+  --color-surface: var(--gray-50);
+  --color-text: var(--gray-900);
+  --color-line: var(--gray-200);
+  --sidebar-bg: var(--gray-50);
+  --sidebar-text: var(--gray-900);
+  --sidebar-hover: var(--gray-100);
+  --sidebar-active: var(--primary-600);
+  --sidebar-border: var(--gray-200);
   --sidebar-shadow: rgba(0, 0, 0, 0.1);
-  --sidebar-brand-bg: #f8fafc;
-  --sidebar-search-bg: #f1f5f9;
-  --sidebar-footer-bg: #f8fafc;
-  /* Z-index variables for proper stacking */
-  --z-header: 1000;
-  --z-backdrop: 1100;
-  --z-sidebar: 1300; /* Increased to ensure sidebar is above backdrop */
+  --sidebar-brand-bg: var(--gray-100);
+  --sidebar-search-bg: var(--gray-100);
+  --sidebar-footer-bg: var(--gray-100);
+  /* Z-index: use global tokens from theme.css (do not override values here) */
 }
 
 html.dark {
-  --color-surface: #1f2937;
-  --color-text: #f3f4f6;
-  --color-line: #374151;
-  --sidebar-bg: #1f2937;
-  --sidebar-text: #f3f4f6;
-  --sidebar-hover: #374151;
-  --sidebar-active: #3b82f6;
-  --sidebar-border: #374151;
+  --color-surface: var(--gray-100);
+  --color-text: var(--gray-100);
+  --color-line: var(--gray-300);
+  --sidebar-bg: var(--gray-100);
+  --sidebar-text: var(--gray-100);
+  --sidebar-hover: var(--gray-200);
+  --sidebar-active: var(--primary-500);
+  --sidebar-border: var(--gray-300);
   --sidebar-shadow: rgba(0, 0, 0, 0.3);
-  --sidebar-brand-bg: #111827;
-  --sidebar-search-bg: #374151;
-  --sidebar-footer-bg: #111827;
-  /* Z-index variables remain the same in dark mode */
-  --z-header: 1000;
-  --z-backdrop: 1100;
-  --z-sidebar: 1300; /* Increased to ensure sidebar is above backdrop */
+  --sidebar-brand-bg: var(--gray-50);
+  --sidebar-search-bg: var(--gray-200);
+  --sidebar-footer-bg: var(--gray-50);
+  /* Z-index: inherit from theme.css */
 }
 
 

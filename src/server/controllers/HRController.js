@@ -50,7 +50,7 @@ class HRController {
       const filters = {
         role: req.query.role,
         department_code: req.query.department_code,
-        is_active: req.query.is_active !== void 0 ? req.query.is_active === 'true' : null
+        is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined
       };
       const result = await this.hrService.getSignupLinks(hrId, filters);
       res.json(result);
@@ -240,26 +240,6 @@ class HRController {
     }
   }
   /**
-   * GET /api/hr/role-distribution
-   * Get role distribution for pie chart (HR office only)
-   */
-  async getRoleDistribution(req, res) {
-    try {
-      const hrId = req.user.id;
-      const result = await this.hrService.getRoleDistribution(hrId);
-      res.json({
-        success: true,
-        ...result
-      });
-    } catch (error) {
-      console.error('[HR_CONTROLLER] Get role distribution error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to get role distribution'
-      });
-    }
-  }
-  /**
    * GET /api/hr/pending-signups
    * List users with status pending_approval (HR-scoped)
    */
@@ -269,12 +249,12 @@ class HRController {
       // Reuse UserService listing, then filter by metadata
       const result = await this.userService.getUsers({ includeInactive: true }, { page: 1, limit: 200 });
       const hrDept = req.user?.department || req.user?.raw_user_meta_data?.department || req.user?.raw_user_meta_data?.dpt || null;
-
+      
       // Get list of users who used signup codes (check signup_links table)
       const Database = require('../config/database');
       const db = Database.getInstance();
       const supabase = db.getClient();
-
+      
       // Map of user_id -> { role, department_code } from signup_links table
       const usersWithSignupCodes = new Map();
       try {
@@ -282,7 +262,7 @@ class HRController {
           .from('signup_links')
           .select('used_by, role, department_code')
           .not('used_by', 'is', null);
-
+        
         if (!linksError && usedLinks) {
           usedLinks.forEach(link => {
             if (link.used_by) {
@@ -299,7 +279,7 @@ class HRController {
       } catch (linksErr) {
         console.error('[HR] Error fetching signup links:', linksErr);
       }
-
+      
       // Debug: Log all users to see what we're working with
       console.log('[HR] getPendingSignups - Total users fetched:', result.users?.length || 0);
       console.log('[HR] Sample users (first 5):', result.users?.slice(0, 5).map(u => ({
@@ -312,63 +292,63 @@ class HRController {
         role: u.role,
         used_signup_code: usersWithSignupCodes.has(u.id)
       })));
-
+      
       // Filter for pending signups - check both status field and pending_role in metadata
       const pending = (result.users || []).filter(u => {
         // Check status in multiple places
-        const status = u.status ||
-                      u.raw_user_meta_data?.status ||
-                      u.user_metadata?.status ||
+        const status = u.status || 
+                      u.raw_user_meta_data?.status || 
+                      u.user_metadata?.status || 
                       null;
-
+        
         // Check for pending_role in metadata (this indicates pending approval)
-        const hasPendingRole = u.raw_user_meta_data?.pending_role ||
-                              u.user_metadata?.pending_role ||
+        const hasPendingRole = u.raw_user_meta_data?.pending_role || 
+                              u.user_metadata?.pending_role || 
                               null;
-
+        
         // Check for pending_signup_code (indicates they used a signup code)
-        const hasPendingCode = u.raw_user_meta_data?.pending_signup_code ||
-                              u.user_metadata?.pending_signup_code ||
+        const hasPendingCode = u.raw_user_meta_data?.pending_signup_code || 
+                              u.user_metadata?.pending_signup_code || 
                               null;
-
+        
         // Check if user used a signup code (from signup_links table)
         const signupCodeInfo = usersWithSignupCodes.get(u.id);
-        const usedSignupCode = signupCodeInfo !== void 0;
-
+        const usedSignupCode = signupCodeInfo !== undefined;
+        
         // Get pending department from metadata OR from signup_links table
-        let pendingDept = u.raw_user_meta_data?.pending_department ||
-                         u.user_metadata?.pending_department ||
+        let pendingDept = u.raw_user_meta_data?.pending_department || 
+                         u.user_metadata?.pending_department || 
                          null;
         // If metadata doesn't have pending_department but user used a signup code, get it from signup_links
         if (!pendingDept && signupCodeInfo) {
           pendingDept = signupCodeInfo.department_code;
         }
-
+        
         // Get pending role from metadata OR from signup_links table
         let pendingRole = hasPendingRole;
         if (!pendingRole && signupCodeInfo) {
           pendingRole = signupCodeInfo.role;
         }
-
+        
         // User is pending if:
         // 1. status is 'pending_approval' OR
         // 2. has pending_role (from metadata or signup_links) OR
         // 3. has pending_signup_code OR
         // 4. has status 'pending_verification' AND used a signup code (metadata update failed) AND is citizen
-        const isPending = status === 'pending_approval' ||
-                         pendingRole ||
-                         hasPendingCode ||
+        const isPending = status === 'pending_approval' || 
+                         pendingRole || 
+                         hasPendingCode || 
                          (status === 'pending_verification' && usedSignupCode && u.role === 'citizen');
-
+        
         if (!isPending) {
           return false;
         }
-
-        // Department filtering:
+        
+        // Department filtering: 
         // - Super-admin can see ALL pending signups across all offices (no filter)
         // - HR users can only see pending signups within their own office
         const isSuperAdmin = req.user?.normalized_role === 'super-admin' || req.user?.role === 'super-admin';
-
+        
         if (!isSuperAdmin && hrDept) {
           // HR user: only show pending signups for their department
           // If pending signup has a department and it doesn't match HR's department, filter it out
@@ -378,10 +358,10 @@ class HRController {
           // If HR has a department but pending signup doesn't have one, we might want to filter it out too
           // (This depends on business logic - for now, we'll allow it if pendingDept is null)
         }
-
+        
         return true;
       });
-
+      
       // Enhance pending users with signup code info if metadata is missing
       const enhancedPending = pending.map(u => {
         const signupCodeInfo = usersWithSignupCodes.get(u.id);
@@ -398,7 +378,7 @@ class HRController {
         }
         return u;
       });
-
+      
       console.log('[HR] getPendingSignups - Found', enhancedPending.length, 'pending signups for HR:', hrId, 'department:', hrDept);
       console.log('[HR] Sample pending users:', enhancedPending.slice(0, 3).map(u => ({
         id: u.id,
@@ -408,7 +388,7 @@ class HRController {
         pending_department: u.raw_user_meta_data?.pending_department || u.user_metadata?.pending_department,
         from_signup_links: usersWithSignupCodes.has(u.id)
       })));
-
+      
       return res.json({ success: true, data: enhancedPending });
     } catch (error) {
       console.error('[HR] getPendingSignups error:', error);
@@ -425,17 +405,17 @@ class HRController {
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
       if (!user) return res.status(404).json({ success: false, error: 'User not found' });
-
+      
       // Get pending role and department from metadata first
       let pendingRole = user?.raw_user_meta_data?.pending_role || user?.user_metadata?.pending_role;
       let pendingDept = user?.raw_user_meta_data?.pending_department || user?.user_metadata?.pending_department;
-
+      
       // If not in metadata, check signup_links table (metadata update may have failed)
       if (!pendingRole || !pendingDept) {
         const Database = require('../config/database');
         const db = Database.getInstance();
         const supabase = db.getClient();
-
+        
         try {
           const { data: signupLinks, error: linkError } = await supabase
             .from('signup_links')
@@ -444,9 +424,9 @@ class HRController {
             .not('used_by', 'is', null)
             .order('used_at', { ascending: false })
             .limit(1);
-
+          
           const signupLink = signupLinks && signupLinks.length > 0 ? signupLinks[0] : null;
-
+          
           if (!linkError && signupLink) {
             if (!pendingRole && signupLink.role) {
               pendingRole = signupLink.role;
@@ -467,33 +447,33 @@ class HRController {
           console.error('[HR] Error fetching signup link:', linkErr);
         }
       }
-
+      
       if (!pendingRole) {
         console.error('[HR] No pending role found for user:', userId);
         return res.status(400).json({ success: false, error: 'No pending role to approve. User may not have registered with a signup code.' });
       }
-
+      
       // Normalize role using general normalization function
       const { normalizeRole } = require('../utils/roleValidation');
       const normalizedRole = normalizeRole(pendingRole);
-
+      
       if (pendingRole !== normalizedRole) {
         console.log('[HR] Normalizing role from', pendingRole, 'to', normalizedRole, 'for user:', userId);
       }
-
+      
       // Ensure we're using the normalized role consistently
       console.log('[HR] Approval role mapping:', {
         pendingRole,
         normalizedRole,
         userId
       });
-
+      
       // HR department scope enforcement (super-admin bypasses)
       const isSuper = (req.user?.normalized_role === 'super-admin' || req.user?.role === 'super-admin');
       if (!isSuper && req.user?.department && pendingDept && String(req.user.department) !== String(pendingDept)) {
         return res.status(403).json({ success: false, error: 'You can only approve for your own office' });
       }
-
+      
       // Apply role/department and clear pending flags
       // Set department in both formats for consistency (department and dpt)
       const updated = await this.userService.updateUser(userId, {
@@ -507,7 +487,7 @@ class HRController {
         pending_department: null,
         pending_signup_code: null
       }, hrId);
-
+      
       console.log('[HR] Approved signup:', {
         userId,
         role: normalizedRole,

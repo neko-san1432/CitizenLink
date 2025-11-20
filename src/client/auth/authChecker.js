@@ -63,6 +63,16 @@ let isCheckingRoleChange = false;
 
 export const getUserRole = async (options = {}) => {
   const { refresh = false } = options;
+  
+  // Check for pending OAuth signup - don't check role if user is in the middle of OAuth signup
+  try {
+    const ctx = getOAuthContext();
+    if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
+      // Return null for incomplete OAuth signups (suppress errors)
+      return null;
+    }
+  } catch {}
+  
   if (!refresh) {
     const cached = getUserMeta();
     if (cached && cached.role) return cached.role;
@@ -94,12 +104,27 @@ export const getUserRole = async (options = {}) => {
         return data.data.role;
       }
     } else if (response.status === 401) {
+      // Check for pending OAuth signup before throwing error
+      try {
+        const ctx = getOAuthContext();
+        if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
+          // Suppress error for incomplete OAuth signups
+          return null;
+        }
+      } catch {}
+      
       // Session expired or missing; clear cache and trigger re-login path
-      try { localStorage.removeItem('cl_user_meta'); } catch {}
-      throw new Error('Unauthorized');
+      // But don't throw on landing page or auth pages
+      if (!isAuthPage()) {
+        try { localStorage.removeItem('cl_user_meta'); } catch {}
+        throw new Error('Unauthorized');
+      }
     }
   } catch (error) {
-    console.warn('Failed to get role from API:', error);
+    // Suppress errors on landing page or auth pages
+    if (!isAuthPage()) {
+      console.warn('Failed to get role from API:', error);
+    }
   }
   // Fallback to session metadata
   const { data: { session } } = await supabase.auth.getSession();
@@ -113,8 +138,30 @@ export const getUserRole = async (options = {}) => {
   if (role || name) saveUserMeta({ role, name });
   return role;
 };
-// Check if token is valid and refresh if needed
+// Check if device is trusted (allows auto-refresh)
+const isDeviceTrusted = () => {
+  try {
+    const trusted = localStorage.getItem('device_trusted');
+    return trusted === 'true';
+  } catch {
+    return false;
+  }
+};
 
+// Store device trust preference
+export const setDeviceTrusted = (trusted) => {
+  try {
+    if (trusted) {
+      localStorage.setItem('device_trusted', 'true');
+    } else {
+      localStorage.removeItem('device_trusted');
+    }
+  } catch (error) {
+    console.error('[AUTH] Failed to store device trust preference:', error);
+  }
+};
+
+// Check if token is valid and refresh if needed
 export const validateAndRefreshToken = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -125,7 +172,12 @@ export const validateAndRefreshToken = async () => {
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = session.expires_at;
     if (expiresAt && now >= expiresAt) {
-      // Try to refresh the session
+      // Check if device is trusted - if not, don't auto-refresh
+      if (!isDeviceTrusted()) {
+        console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
+        return false;
+      }
+      // Try to refresh the session (only if device is trusted)
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
         return false;
@@ -165,6 +217,13 @@ export const initializeAuthListener = () => {
       startTokenExpiryMonitoring();
     }
     if (event === 'TOKEN_REFRESHED' && session) {
+      // Check if device is trusted before allowing auto-refresh
+      if (!isDeviceTrusted()) {
+        console.log('[AUTH] Token refresh attempted but device is not trusted. Signing out.');
+        await supabase.auth.signOut();
+        handleSessionExpired();
+        return;
+      }
       try {
         // Update server-side cookie with new token
         await fetch('/auth/session', {
@@ -181,6 +240,8 @@ export const initializeAuthListener = () => {
     if (event === 'SIGNED_OUT') {
       localStorage.removeItem(storageKey);
       localStorage.removeItem(oauthKey);
+      // Note: We keep device_trusted preference even after logout
+      // so it persists for the next login
     }
   });
 };
@@ -191,7 +252,7 @@ const MAX_NO_SESSION_ATTEMPTS = 3;
 const isAuthPage = () => {
   try {
     const p = (window.location.pathname || '').toLowerCase();
-    return p === '/login' || p === '/signup' || p === '/signup-with-code' || p === '/resetpassword' || p === '/reset-password' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation' || p === '/complete-position-signup';
+    return p === '/' || p === '/login' || p === '/signup' || p === '/signup-with-code' || p === '/resetpassword' || p === '/reset-password' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation' || p === '/complete-position-signup';
   } catch { return false; }
 };
 
@@ -217,6 +278,16 @@ export const startTokenExpiryMonitoring = () => {
         return;
       }
 
+      // Check for pending OAuth signup - don't check authentication if user is in the middle of OAuth signup
+      try {
+        const ctx = getOAuthContext();
+        if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
+          // Suppress authentication checks for incomplete OAuth signups
+          tokenExpiryTimer = null;
+          return;
+        }
+      } catch {}
+      
       // Check if user is authenticated via API instead of Supabase session
       const response = await fetch('/api/user/role', {
         method: 'GET',
@@ -226,12 +297,30 @@ export const startTokenExpiryMonitoring = () => {
         }
       });
       if (!response.ok) {
-        // If 401, check if session still exists
+        // If 401, check if session still exists and if device is trusted
         if (response.status === 401) {
           const { data: { session: currentSession } } = await supabase.auth.getSession();
           if (!currentSession) {
             // Session expired, stop monitoring silently
             tokenExpiryTimer = null;
+            return;
+          }
+          
+          // Check for pending OAuth signup before showing error
+          try {
+            const ctx = getOAuthContext();
+            if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
+              // Suppress error for incomplete OAuth signups
+              tokenExpiryTimer = null;
+              return;
+            }
+          } catch {}
+          
+          // If device is not trusted, don't try to refresh - require re-login
+          if (!isDeviceTrusted()) {
+            console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
+            tokenExpiryTimer = null;
+            handleSessionExpired();
             return;
           }
         }
@@ -240,6 +329,14 @@ export const startTokenExpiryMonitoring = () => {
           tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000);
         } else {
           tokenExpiryTimer = null;
+          // Check for pending OAuth signup before showing error
+          try {
+            const ctx = getOAuthContext();
+            if (ctx && ctx.status === 'pending') {
+              // Suppress error for incomplete OAuth signups
+              return;
+            }
+          } catch {}
           if (!window.location.pathname.includes('/review-queue')) {
             handleSessionExpired();
           }
@@ -280,6 +377,17 @@ export const stopTokenExpiryMonitoring = () => {
 const handleSessionExpired = async () => {
   if (isAuthPage()) return;
   if (window.location.pathname === '/login') return;
+  
+  // Check for pending OAuth signup - don't show error if user is in the middle of OAuth signup
+  try {
+    const ctx = getOAuthContext();
+    if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
+      // Suppress error for incomplete OAuth signups
+      stopTokenExpiryMonitoring();
+      return;
+    }
+  } catch {}
+  
   stopTokenExpiryMonitoring();
   showSessionExpiredToast();
 

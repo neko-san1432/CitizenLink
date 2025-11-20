@@ -46,7 +46,7 @@ router.get('/verify-email', authLimiter, ErrorHandler.asyncWrapper(AuthControlle
 // CSRF disabled for forgot-password to allow public POST from reset page
 router.post('/forgot-password', passwordResetLimiter, ErrorHandler.asyncWrapper(async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, logoutOption } = req.body; // logoutOption: 'all', 'others', or 'none' (handled client-side)
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -275,7 +275,7 @@ router.put('/profile', authenticateUser, ErrorHandler.asyncWrapper(AuthControlle
 router.post('/request-password-change', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.requestPasswordChange));
 /**
  * @route   GET /api/auth/confirm-password-change
- * @desc    Confirm password change via email token
+ * @desc    Redirect to client-side confirmation page
  * @access  Public
  */
 router.get('/confirm-password-change', ErrorHandler.asyncWrapper(AuthController.confirmPasswordChange));
@@ -291,6 +291,12 @@ router.post('/change-password', authenticateUser, authLimiter, csrfProtection, E
  * @access  Private
  */
 router.post('/request-email-change', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.requestEmailChange));
+/**
+ * @route   POST /api/auth/invalidate-all-sessions
+ * @desc    Invalidate all active sessions for the current user
+ * @access  Private
+ */
+router.post('/invalidate-all-sessions', authenticateUser, authLimiter, csrfProtection, ErrorHandler.asyncWrapper(AuthController.invalidateAllSessions));
 /**
  * @route   POST /api/auth/logout
  * @desc    Logout user

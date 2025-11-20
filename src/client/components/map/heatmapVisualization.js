@@ -167,6 +167,7 @@ class HeatmapVisualization {
     this.map = map;
     this.complaintData = [];
     this.allComplaintData = []; // Store all complaints for client-side filtering
+    this.roleScopedCache = null; // Cache filtered complaints per role for this tick
     this.markerMap = new Map(); // Map complaint ID to marker for quick lookup
     this.clusters = [];
     this.heatmapLayer = null;
@@ -221,6 +222,78 @@ class HeatmapVisualization {
       });
     }
   }
+
+  /**
+   * Normalize all department sources for a complaint into uppercase codes
+   * @param {Object} complaint
+   * @returns {string[]} department codes
+   */
+  getComplaintDepartments(complaint) {
+    if (!complaint) return [];
+
+    const rawEntries = [];
+    const pushValue = (value) => {
+      if (value === null || value === undefined) return;
+      if (Array.isArray(value)) {
+        value.forEach(pushValue);
+        return;
+      }
+      rawEntries.push(value);
+    };
+
+    pushValue(complaint.departments);
+    pushValue(complaint.department_r);
+    pushValue(complaint.secondaryDepartments);
+    pushValue(complaint.department);
+    pushValue(complaint.departmentCode || complaint.department_code);
+
+    const normalized = rawEntries
+      .map((entry) => {
+        if (!entry) return '';
+        if (typeof entry === 'string') return entry;
+        if (typeof entry === 'object') {
+          return entry.code ||
+                 entry.department_code ||
+                 entry.departmentCode ||
+                 entry.value ||
+                 entry.name ||
+                 '';
+        }
+        return String(entry || '');
+      })
+      .flatMap((value) => value.split(','))
+      .map((value) => value.toUpperCase().trim())
+      .filter(Boolean);
+
+    return [...new Set(normalized)];
+  }
+
+  /**
+   * Scope visible complaints based on role
+   * @returns {Array} complaints limited to current user's access
+   */
+  getRoleScopedComplaints() {
+    if (!Array.isArray(this.allComplaintData)) return [];
+
+    const cacheHit = this.roleScopedCache &&
+      this.roleScopedCache.role === this.userRole &&
+      this.roleScopedCache.department === this.userDepartment &&
+      this.roleScopedCache.sourceSize === this.allComplaintData.length;
+
+    if (cacheHit) {
+      return this.roleScopedCache.data;
+    }
+
+    const scoped = this.filterComplaintsByRole(this.allComplaintData);
+    this.roleScopedCache = {
+      role: this.userRole,
+      department: this.userDepartment,
+      sourceSize: this.allComplaintData.length,
+      data: scoped
+    };
+
+    return scoped;
+  }
   /**
    * Initialize user role and department for role-based filtering
    */
@@ -246,6 +319,8 @@ class HeatmapVisualization {
       console.error('[HEATMAP] Failed to initialize user role:', error);
       this.userRole = 'citizen'; // Default fallback
     }
+    // Clear scoped cache so new role context takes effect immediately
+    this.roleScopedCache = null;
   }
 
   /**
@@ -272,12 +347,10 @@ class HeatmapVisualization {
 
     // LGU Admins: See only complaints assigned to their department
     if (this.userRole === 'lgu-admin' && this.userDepartment) {
+      const targetDept = String(this.userDepartment || '').toUpperCase().trim();
       return complaints.filter(complaint => {
-        const complaintDepartments = Array.isArray(complaint.departments) ? complaint.departments :
-          (Array.isArray(complaint.department_r) ? complaint.department_r : []);
-        return complaintDepartments.some(dept =>
-          String(dept || '').toUpperCase().trim() === String(this.userDepartment || '').toUpperCase().trim()
-        );
+        const complaintDepartments = this.getComplaintDepartments(complaint);
+        return complaintDepartments.includes(targetDept);
       });
     }
 
@@ -295,10 +368,24 @@ class HeatmapVisualization {
       this.currentFilters = filters;
       // Reset filtered count for this load
       this._filteredCount = 0;
+      
+      // CRITICAL: Role-based filter handling
+      // - Coordinators and super-admins: Remove department filter (see all complaints)
+      // - LGU Admins: Add department filter if not present (see only their office)
+      const sanitizedFilters = { ...filters };
+      if (this.userRole === 'complaint-coordinator' || this.userRole === 'super-admin') {
+        delete sanitizedFilters.department;
+        console.log('[HEATMAP] Coordinator/Super-admin detected - removing department filter from API request');
+      } else if (this.userRole === 'lgu-admin' && this.userDepartment && !sanitizedFilters.department) {
+        // Automatically add department filter for LGU admins if not already present
+        sanitizedFilters.department = this.userDepartment;
+        console.log('[HEATMAP] LGU Admin detected - adding department filter to API request:', this.userDepartment);
+      }
+      
       const queryParams = new URLSearchParams();
       // Explicitly include resolved complaints by default for heatmap
-      queryParams.append('includeResolved', filters.includeResolved !== false ? 'true' : 'false');
-      Object.entries(filters).forEach(([key, value]) => {
+      queryParams.append('includeResolved', sanitizedFilters.includeResolved !== false ? 'true' : 'false');
+      Object.entries(sanitizedFilters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === 'includeResolved') return;
         if (value !== null && value !== void 0 && value !== '') {
@@ -309,6 +396,13 @@ class HeatmapVisualization {
             queryParams.append(key, value);
           }
         }
+      });
+      
+      console.log('[HEATMAP] Loading complaint data with filters:', {
+        role: this.userRole,
+        originalFilters: filters,
+        sanitizedFilters,
+        queryString: queryParams.toString()
       });
       // console.log removed for security
       // Use apiClient for authenticated requests
@@ -345,43 +439,22 @@ class HeatmapVisualization {
         });
       }
 
-      this.allComplaintData = raw
-        .filter((item) => {
-          // Ensure lat/lng exist and are valid numbers
+      const sanitizedData = raw
+        .map((item) => {
           const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
           const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
           const isValid = Number.isFinite(lat) && Number.isFinite(lng) &&
-                          lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+            lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
           if (!isValid) {
             console.warn('[HEATMAP] Skipping complaint with invalid coordinates:', item.id, { lat: item.lat, lng: item.lng });
-            return false;
+            return null;
           }
 
-          // Filter by boundary if enabled (this is the only server-side filter we keep)
-          if (this.filterByBoundary) {
-            const withinBoundary = isWithinCityBoundary(lat, lng);
-            if (!withinBoundary) {
-              // Only log first few filtered complaints to avoid console spam
-              if (!this._filteredCount) this._filteredCount = 0;
-              if (this._filteredCount < 3) {
-                console.log('[HEATMAP] Filtering out complaint outside city boundaries:', item.id, { lat, lng });
-              }
-              this._filteredCount++;
-              return false;
-            }
-          }
-
-          return true;
-        })
-        .map((item) => {
-          // Ensure numeric types
-          const lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat);
-          const lng = typeof item.lng === 'number' ? item.lng : parseFloat(item.lng);
           return {
             ...item,
             lat,
             lng,
-            // Ensure required fields have defaults
             priority: item.priority || 'medium',
             status: item.status || item.workflow_status || 'new',
             workflow_status: item.workflow_status || item.status || 'new',
@@ -390,9 +463,52 @@ class HeatmapVisualization {
             type: item.type || item.category || 'General',
             category: item.category || item.type || 'General',
             location: item.location || item.location_text || '',
-            submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
+            submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString()
           };
+        })
+        .filter(Boolean);
+
+      this._filteredCount = 0;
+      let filteredByBoundary = [];
+      let withinBoundaryData = sanitizedData;
+
+      if (this.filterByBoundary) {
+        withinBoundaryData = sanitizedData.filter((item) => {
+          const withinBoundary = isWithinCityBoundary(item.lat, item.lng);
+          if (!withinBoundary) {
+            if (filteredByBoundary.length < 3) {
+              console.log('[HEATMAP] Filtering out complaint outside city boundaries:', item.id, {
+                lat: item.lat,
+                lng: item.lng
+              });
+            }
+            filteredByBoundary.push(item);
+            this._filteredCount++;
+            return false;
+          }
+          return true;
         });
+
+        if (this._filteredCount > 0) {
+          const filteredRatio = this._filteredCount / sanitizedData.length;
+          if (filteredRatio >= 0.25) {
+            console.warn('[HEATMAP] High boundary filter drop rate detected:', {
+              filtered: this._filteredCount,
+              total: sanitizedData.length,
+              ratio: `${(filteredRatio * 100).toFixed(1)}%`
+            });
+            console.warn('[HEATMAP] Falling back to bounding-box filtering for this session.');
+            withinBoundaryData = sanitizedData;
+            this.filterByBoundary = false;
+            this._filteredCount = 0;
+          }
+        }
+      }
+
+      this.allComplaintData = withinBoundaryData;
+
+      // Invalidate role cache when new data arrives
+      this.roleScopedCache = null;
 
       // Initialize user role if not already done
       if (!this.userRole) {
@@ -589,10 +705,11 @@ class HeatmapVisualization {
       this.heatmapLayer = null;
     }
 
-    // For heatmap visualization, use allComplaintData (all complaints within boundaries)
-    // This ensures heatmap shows all complaints regardless of role
-    // Markers will be filtered by role separately
-    const heatmapData = this.allComplaintData || this.complaintData || [];
+    // For heatmap visualization, use role-scoped complaints
+    // LGU Admins see only complaints assigned to their department
+    // Coordinators and super-admins see all complaints
+    // Markers use the same filtered data
+    const heatmapData = this.getRoleScopedComplaints() || this.complaintData || [];
 
     if (heatmapData.length === 0) {
       console.warn('[HEATMAP] No complaint data available for heatmap');
@@ -693,14 +810,21 @@ class HeatmapVisualization {
     console.log('[FILTER] applyClientSideFilters called with filters:', filters);
     console.log('[FILTER] Total complaints before filtering:', this.allComplaintData?.length || 0);
 
-    if (!this.allComplaintData || this.allComplaintData.length === 0) {
+    const baseData = this.getRoleScopedComplaints();
+
+    if (!baseData || baseData.length === 0) {
       console.log('[FILTER] No complaint data available');
       this.complaintData = [];
       return;
     }
 
+    const effectiveFilters = { ...filters };
+    if (this.userRole === 'lgu-admin' && this.userDepartment) {
+      effectiveFilters.department = this.userDepartment;
+    }
+
     // Debug: Check sample complaints for department data
-    const sampleComplaints = this.allComplaintData.slice(0, 5);
+    const sampleComplaints = baseData.slice(0, 5);
     console.log('[FILTER] Sample complaints before filtering:', sampleComplaints.map(c => ({
       id: c.id,
       title: c.title?.substring(0, 30),
@@ -711,10 +835,10 @@ class HeatmapVisualization {
       allKeys: Object.keys(c)
     })));
 
-    this.complaintData = this.allComplaintData.filter((complaint) => {
+    this.complaintData = baseData.filter((complaint) => {
       // Filter by status
-      if (filters.status && filters.status !== '') {
-        const statusArray = Array.isArray(filters.status) ? filters.status : [filters.status];
+      if (effectiveFilters.status && effectiveFilters.status !== '') {
+        const statusArray = Array.isArray(effectiveFilters.status) ? effectiveFilters.status : [effectiveFilters.status];
         const complaintStatus = (complaint.status || complaint.workflow_status || 'new').toLowerCase();
         const complaintWorkflowStatus = (complaint.workflow_status || 'new').toLowerCase();
         const complaintConfirmationStatus = (complaint.confirmation_status || 'pending').toLowerCase();
@@ -750,28 +874,27 @@ class HeatmapVisualization {
       }
 
       // Filter by category (UUIDs from categories table)
-      if (filters.category && filters.category !== '') {
-        const categoryArray = Array.isArray(filters.category) ? filters.category : [filters.category];
+      if (effectiveFilters.category && effectiveFilters.category !== '') {
+        const categoryArray = Array.isArray(effectiveFilters.category) ? effectiveFilters.category : [effectiveFilters.category];
         // complaint.category should be a UUID that matches the filter UUIDs
         const complaintCategory = complaint.category || '';
         if (!complaintCategory || !categoryArray.includes(complaintCategory)) return false;
       }
 
       // Filter by subcategory (UUIDs from subcategories table)
-      if (filters.subcategory && filters.subcategory !== '') {
-        const subcategoryArray = Array.isArray(filters.subcategory) ? filters.subcategory : [filters.subcategory];
+      if (effectiveFilters.subcategory && effectiveFilters.subcategory !== '') {
+        const subcategoryArray = Array.isArray(effectiveFilters.subcategory) ? effectiveFilters.subcategory : [effectiveFilters.subcategory];
         // complaint.subcategory should be a UUID that matches the filter UUIDs
         const complaintSubcategory = complaint.subcategory || '';
         if (!complaintSubcategory || !subcategoryArray.includes(complaintSubcategory)) return false;
       }
 
       // Filter by department - checks departments array (backend transforms department_r to departments)
-      if (filters.department && filters.department !== '') {
-        const departmentArray = Array.isArray(filters.department) ? filters.department : [filters.department];
+      if (effectiveFilters.department && effectiveFilters.department !== '') {
+        const departmentArray = Array.isArray(effectiveFilters.department) ? effectiveFilters.department : [effectiveFilters.department];
         // Get complaint's assigned departments - backend returns as 'departments' field (from department_r)
         // Fallback to department_r in case backend format changes
-        const complaintDepartments = Array.isArray(complaint.departments) ? complaint.departments :
-          (Array.isArray(complaint.department_r) ? complaint.department_r : []);
+        const complaintDepartments = this.getComplaintDepartments(complaint);
 
         // Debug logging
         if (departmentArray.length > 0) {
@@ -814,7 +937,7 @@ class HeatmapVisualization {
       }
 
       // Filter by includeResolved
-      if (filters.includeResolved === false) {
+      if (effectiveFilters.includeResolved === false) {
         const workflowStatus = (complaint.workflow_status || 'new').toLowerCase();
         if (workflowStatus === 'completed' || workflowStatus === 'cancelled') {
           return false;
@@ -822,22 +945,22 @@ class HeatmapVisualization {
       }
 
       // Filter by date range
-      if (filters.startDate || filters.endDate) {
+      if (effectiveFilters.startDate || effectiveFilters.endDate) {
         const complaintDate = new Date(complaint.submittedAt || complaint.submitted_at);
         if (isNaN(complaintDate.getTime())) {
           return false; // Invalid date, exclude
         }
 
-        if (filters.startDate) {
-          const startDate = new Date(filters.startDate);
+        if (effectiveFilters.startDate) {
+          const startDate = new Date(effectiveFilters.startDate);
           startDate.setHours(0, 0, 0, 0);
           if (complaintDate < startDate) {
             return false;
           }
         }
 
-        if (filters.endDate) {
-          const endDate = new Date(filters.endDate);
+        if (effectiveFilters.endDate) {
+          const endDate = new Date(effectiveFilters.endDate);
           endDate.setHours(23, 59, 59, 999);
           if (complaintDate > endDate) {
             return false;
@@ -850,10 +973,10 @@ class HeatmapVisualization {
 
     // Debug logging after filtering
     console.log('[FILTER] Filtering complete:', {
-      totalBefore: this.allComplaintData.length,
+      totalBefore: baseData.length,
       totalAfter: this.complaintData.length,
-      filteredOut: this.allComplaintData.length - this.complaintData.length,
-      departmentFilter: filters.department,
+      filteredOut: baseData.length - this.complaintData.length,
+      departmentFilter: effectiveFilters.department,
       sampleFiltered: this.complaintData.slice(0, 3).map(c => ({
         id: c.id,
         title: c.title?.substring(0, 30),
@@ -889,7 +1012,7 @@ class HeatmapVisualization {
     }
 
     // Filter complaints for markers based on role
-    let complaintsForMarkers = this.allComplaintData;
+    let complaintsForMarkers = this.getRoleScopedComplaints();
 
     // Citizens: No markers (only heatmap)
     if (this.userRole === 'citizen') {
@@ -904,10 +1027,10 @@ class HeatmapVisualization {
       complaintsForMarkers = this.allComplaintData;
       console.log('[HEATMAP] Coordinator/Super-admin: Showing all markers');
     }
-    // LGU Admins: Only assigned complaints
+    // LGU Admins: Only complaints assigned to their office/department
     else if (this.userRole === 'lgu-admin' && this.userDepartment) {
-      complaintsForMarkers = this.filterComplaintsByRole(this.allComplaintData);
-      console.log(`[HEATMAP] LGU Admin: Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`);
+      complaintsForMarkers = this.getRoleScopedComplaints();
+      console.log(`[HEATMAP] LGU Admin (${this.userDepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`);
     }
     // Default: No markers
     else {

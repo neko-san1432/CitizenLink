@@ -7,9 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <!-- Consolidated CSS: style.css imports app.css, toast.css, header styles -->
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/toast.css">
-    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/pages/login.css">
 </head>
 <body class="auth-page">
@@ -97,7 +96,7 @@
                                 <label class="checkbox-wrapper">
                                     <input type="checkbox" id="remember-me">
                                     <span class="checkbox-custom"></span>
-                                    <span class="checkbox-label">Remember me</span>
+                                    <span class="checkbox-label">Trust this device</span>
                                 </label>
                                 <a href="/reset-password" class="forgot-link">Forgot password?</a>
                             </div>
@@ -153,6 +152,7 @@
     <script type="module" src="./js/components/toast.js"></script>
     <!-- reCAPTCHA disabled for development -->
     <!-- <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script> -->
+    <script type="module" src="./js/utils/passwordToggle.js"></script>
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/login-page.js"></script>
     <script type="module" src="./js/auth/authChecker.js"></script>

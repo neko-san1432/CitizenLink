@@ -148,8 +148,8 @@
   
 }
 
+/* Respect reduced motion preference - no animated overlays (none currently) */
 @media (prefers-reduced-motion: reduce) {
-  .hero::before {}
 }
 
 /* Dark Mode Styles */

@@ -320,7 +320,11 @@ class SimilarityCalculatorService {
         throw new Error(`Failed to save clusters: ${error.message}`);
       }
 
-      console.log(`[SIMILARITY] Successfully saved ${clusters.length} clusters`);
+      console.log(`[SIMILARITY] Successfully saved ${clusters.length} cluster(s) to database`);
+      if (data && data.length > 0) {
+        const totalComplaints = clusters.reduce((sum, cluster) => sum + (cluster.complaint_ids?.length || 0), 0);
+        console.log(`[SIMILARITY] Total complaints in clusters: ${totalComplaints}`);
+      }
       return { success: true, saved: clusters.length, data };
     } catch (error) {
       console.error('[SIMILARITY] Save clusters exception:', error);

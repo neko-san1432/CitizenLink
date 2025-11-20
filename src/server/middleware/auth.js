@@ -38,6 +38,42 @@ const authenticateUser = async (req, res, next) => {
       return res.redirect(`/login?message=${encodeURIComponent('Invalid session. Please login again')}&type=error`);
     }
 
+    // Check if sessions were invalidated (e.g., after password change)
+    // When password changes, we mark sessions as invalidated in metadata
+    // All tokens issued before this time should be rejected
+    const userMetadata = tokenUser.user_metadata || {};
+    const sessionsInvalidatedAt = userMetadata.sessions_invalidated_at;
+    const passwordChangedAt = userMetadata.password_changed_at;
+    
+    if (sessionsInvalidatedAt || passwordChangedAt) {
+      // Decode JWT token to get issued-at time (iat claim)
+      // JWT format: header.payload.signature (base64url encoded)
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          // Decode payload (second part)
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+          const tokenIssuedAt = payload.iat ? new Date(payload.iat * 1000) : null;
+          const invalidationTime = sessionsInvalidatedAt || passwordChangedAt;
+          
+          if (tokenIssuedAt && invalidationTime && new Date(invalidationTime) > tokenIssuedAt) {
+            // Token was issued before password change/invalidation, reject it immediately
+            if (req.path.startsWith('/api/')) {
+              return res.status(401).json({
+                success: false,
+                error: 'Session invalidated. Please login again.'
+              });
+            }
+            return res.redirect(`/login?message=${encodeURIComponent('Session invalidated. Please login again')}&type=error`);
+          }
+        }
+      } catch (jwtErr) {
+        // If JWT decoding fails, allow the request (fallback to Supabase validation)
+        // This prevents breaking authentication if token format changes
+        console.warn('[AUTH] Failed to decode JWT for session invalidation check:', jwtErr.message);
+      }
+    }
+
     // Extract and combine user metadata
     const combinedMetadata = extractUserMetadata(tokenUser);
 

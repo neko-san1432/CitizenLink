@@ -84,6 +84,24 @@ let currentFilters = {
     // Initialize user role for role-based filtering
     await heatmapViz.initializeUserRole();
 
+    console.log('[HEATMAP] User role initialized:', {
+      role: heatmapViz.userRole,
+      department: heatmapViz.userDepartment,
+      isCoordinator: heatmapViz.userRole === 'complaint-coordinator',
+      isSuperAdmin: heatmapViz.userRole === 'super-admin'
+    });
+
+    // LGU Admins are always scoped to their assigned office
+    // Coordinators and super-admins should NOT have department filters applied
+    if (heatmapViz.userRole === 'lgu-admin' && heatmapViz.userDepartment) {
+      currentFilters.department = heatmapViz.userDepartment;
+      console.log('[HEATMAP] LGU Admin detected - applying department filter:', heatmapViz.userDepartment);
+    } else if (heatmapViz.userRole === 'complaint-coordinator' || heatmapViz.userRole === 'super-admin') {
+      // Ensure coordinators and super-admins have NO department filter
+      currentFilters.department = '';
+      console.log('[HEATMAP] Coordinator/Super-admin detected - NO department filter applied');
+    }
+
     // Store globally for boundaryGenerator to access
     window.heatmapViz = heatmapViz;
 
@@ -552,7 +570,22 @@ function setupControlPanel() {
   function applyFiltersAndUpdate() {
     const statusValues = getCheckedValues('status-checkbox');
     const categoryValues = getCheckedValues('category-checkbox');
-    const departmentValues = getCheckedValues('department-checkbox');
+    // Only apply department filter for LGU admins, NOT for coordinators or super-admins
+    const userRestrictedDepartment = (heatmapViz?.userRole === 'lgu-admin' && heatmapViz.userDepartment)
+      ? heatmapViz.userDepartment
+      : null;
+    
+    // Coordinators and super-admins should see all complaints (no department filter)
+    const isCoordinatorOrSuperAdmin = heatmapViz?.userRole === 'complaint-coordinator' || heatmapViz?.userRole === 'super-admin';
+    const departmentValues = isCoordinatorOrSuperAdmin ? null : (userRestrictedDepartment || getCheckedValues('department-checkbox'));
+    
+    console.log('[HEATMAP] Applying filters:', {
+      role: heatmapViz?.userRole,
+      isCoordinatorOrSuperAdmin,
+      userRestrictedDepartment,
+      departmentValues,
+      willFilterByDepartment: !isCoordinatorOrSuperAdmin && departmentValues && departmentValues.length > 0
+    });
     const startDate = document.getElementById('date-range-start')?.value || '';
     const endDate = document.getElementById('date-range-end')?.value || '';
 
@@ -563,7 +596,7 @@ function setupControlPanel() {
     currentFilters = {
       status: statusValues.length > 0 ? statusValues : '',
       category: categoryValues.length > 0 ? categoryValues : '',
-      department: departmentValues.length > 0 ? departmentValues : '',
+      department: departmentValues && departmentValues.length > 0 ? departmentValues : '',
       includeResolved: document.getElementById('include-resolved').checked,
       startDate,
       endDate
@@ -759,7 +792,7 @@ function setupControlPanel() {
       currentFilters = {
         status: '',
         category: '',
-        department: '',
+        department: (heatmapViz?.userRole === 'lgu-admin' && heatmapViz.userDepartment) ? heatmapViz.userDepartment : '',
         includeResolved: true,
         startDate: '',
         endDate: ''
@@ -902,6 +935,24 @@ async function loadDepartments() {
     const loading = document.getElementById('department-loading');
     if (loading) loading.remove();
 
+    const isLguAdmin = heatmapViz?.userRole === 'lgu-admin';
+    const userDepartmentCode = heatmapViz?.userDepartment || await getUserDepartment();
+
+    if (isLguAdmin && userDepartmentCode) {
+      const notice = document.createElement('div');
+      notice.style.cssText = 'padding: 12px; background: #f9fafb; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; color: #374151;';
+      notice.innerHTML = `
+        <strong>Office Scope</strong>
+        <p style="margin: 6px 0 0 0; font-size: 12px;">
+          Complaints are automatically filtered to your office
+          <span style="font-weight: 600;">${userDepartmentCode}</span>.
+        </p>
+      `;
+      group.appendChild(notice);
+      currentFilters.department = userDepartmentCode;
+      return;
+    }
+
     // Try using getActiveDepartments first (simpler endpoint)
     let departments = [];
     try {
@@ -928,14 +979,14 @@ async function loadDepartments() {
     }
 
     // Get user's department and sort departments to put user's office first
-    const userDepartmentCode = await getUserDepartment();
-    if (userDepartmentCode && departments && departments.length > 0) {
+    const resolvedUserDepartmentCode = userDepartmentCode;
+    if (resolvedUserDepartmentCode && departments && departments.length > 0) {
       // Sort: user's department first, then others
       departments.sort((a, b) => {
         const aCode = (a.code || '').toUpperCase();
         const bCode = (b.code || '').toUpperCase();
-        const aIsUserDept = aCode === userDepartmentCode;
-        const bIsUserDept = bCode === userDepartmentCode;
+        const aIsUserDept = aCode === resolvedUserDepartmentCode;
+        const bIsUserDept = bCode === resolvedUserDepartmentCode;
 
         if (aIsUserDept && !bIsUserDept) return -1;
         if (!aIsUserDept && bIsUserDept) return 1;
@@ -963,7 +1014,7 @@ async function loadDepartments() {
         const deptName = dept.name || `Department ${dept.code || dept.id}`;
         const deptCode = dept.code ? `(${dept.code})` : '';
         // Highlight user's department with bold text
-        const isUserDept = userDepartmentCode && (dept.code || '').toUpperCase() === userDepartmentCode;
+        const isUserDept = resolvedUserDepartmentCode && (dept.code || '').toUpperCase() === resolvedUserDepartmentCode;
         const text = document.createTextNode(`${deptName} ${deptCode}`);
         label.appendChild(checkbox);
         label.appendChild(text);
@@ -972,7 +1023,7 @@ async function loadDepartments() {
         }
         group.appendChild(label);
       });
-      console.log(`[HEATMAP] Loaded ${departments.length} department(s) for filtering${userDepartmentCode ? ` (user's office: ${userDepartmentCode} at top)` : ''}`);
+      console.log(`[HEATMAP] Loaded ${departments.length} department(s) for filtering${resolvedUserDepartmentCode ? ` (user's office: ${resolvedUserDepartmentCode} at top)` : ''}`);
     } else {
       const noDeptMsg = document.createElement('div');
       noDeptMsg.textContent = 'No departments available';

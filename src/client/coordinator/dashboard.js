@@ -104,13 +104,20 @@ function createComplaintCard(complaint) {
   if (algorithmFlags.high_confidence_duplicate) {
     flagHTML = `
       <div class="algorithm-flag high-confidence">
-        ⚠️ High confidence duplicate detected
+        <span class="flag-icon">⚠️</span>
+        <span class="flag-text">
+          <strong>HIGH CONFIDENCE DUPLICATE DETECTED</strong>
+          <span class="flag-subtext">Similarity score ≥85% - Review required</span>
+        </span>
       </div>
     `;
   } else if (algorithmFlags.has_duplicates) {
     flagHTML = `
       <div class="algorithm-flag">
-        🔍 ${algorithmFlags.similarity_count} potential duplicate(s) found
+        <span class="flag-icon">🔍</span>
+        <span class="flag-text">
+          ${algorithmFlags.similarity_count} potential duplicate(s) found
+        </span>
       </div>
     `;
   }

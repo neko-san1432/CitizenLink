@@ -100,7 +100,6 @@
 
 .stats-label {
   font-size: 0.875rem;
-  text-
   letter-spacing: 0.05em;
   color: var(--gray-600);
   margin: 0}
@@ -674,10 +673,7 @@ html.dark .dashboard-empty-description {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-card,
-  .quick-action {}
-  
-  .dashboard-card:hover {}
+  /* No motion-specific overrides at this time */
 }
 
 @media (prefers-contrast: high) {

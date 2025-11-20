@@ -122,6 +122,36 @@ class ComplianceService {
     };
 
     try {
+      const safeDelete = async (table, column, label = `${table}.${column}`) => {
+        try {
+          const { error } = await this.supabase
+            .from(table)
+            .delete()
+            .eq(column, userId);
+          if (!error) {
+            deletionLog.deletedData.push(`deleted_${label}`);
+          }
+        } catch (err) {
+          console.warn(`[COMPLIANCE] Skipped delete for ${table}.${column}:`, err.message || err);
+        }
+      };
+
+      const safeUpdateNull = async (table, column, label = `${table}.${column}`) => {
+        try {
+          const payload = {};
+          payload[column] = null;
+          const { error } = await this.supabase
+            .from(table)
+            .update(payload)
+            .eq(column, userId);
+          if (!error) {
+            deletionLog.deletedData.push(`nulled_${label}`);
+          }
+        } catch (err) {
+          console.warn(`[COMPLIANCE] Skipped nulling for ${table}.${column}:`, err.message || err);
+        }
+      };
+
       // Log deletion request
       await this.auditLog.log('data_deletion_requested', performedBy, {
         targetType: 'user',
@@ -131,73 +161,93 @@ class ComplianceService {
         userAgent
       });
 
-      // Delete from related tables (maintain referential integrity)
-      // Note: Some data may need to be anonymized rather than deleted for legal/compliance reasons
+      // Delete related data (respect FK order)
+      await safeDelete('notification', 'user_id');
+      await safeDelete('notification', 'owner');
+      await safeDelete('user_sessions', 'user_id');
 
-      // Delete notifications
-      const { error: notifError } = await this.supabase
-        .from('app_notifications')
-        .delete()
-        .eq('user_id', userId);
-      if (!notifError) deletionLog.deletedData.push('notifications');
+      await safeDelete('complaint_assignments', 'assigned_to', 'complaint_assignments.assigned_to');
+      await safeDelete('complaint_assignments', 'assigned_by', 'complaint_assignments.assigned_by');
 
-      // Delete user sessions
-      const { error: sessionsError } = await this.supabase
-        .from('user_sessions')
-        .delete()
-        .eq('user_id', userId);
-      if (!sessionsError) deletionLog.deletedData.push('sessions');
+      await safeDelete('complaint_coordinators', 'user_id');
+      await safeDelete('complaint_coordinators', 'created_by');
 
-      // Delete complaint assignments (where user is assigned)
-      const { error: assignmentsError } = await this.supabase
-        .from('complaint_assignments')
-        .delete()
-        .eq('assigned_to', userId);
-      if (!assignmentsError) deletionLog.deletedData.push('complaint_assignments');
+      await safeDelete('complaint_duplicates', 'merged_by');
+      await safeDelete('complaint_evidence', 'uploaded_by');
+      await safeDelete('complaint_history', 'performed_by');
+      await safeDelete('complaint_reminders', 'reminded_by');
+      await safeDelete('complaint_similarities', 'reviewed_by');
+      await safeDelete('complaint_workflow_logs', 'action_by');
 
-      // Anonymize complaints (keep for system integrity but remove personal data)
-      const { data: userComplaints } = await this.supabase
-        .from('complaints')
-        .select('id')
-        .eq('submitted_by', userId);
+      await safeDelete('department_transfers', 'user_id');
+      await safeDelete('department_transfers', 'performed_by');
 
-      if (userComplaints && userComplaints.length > 0) {
-        // Anonymize complaints by setting submitted_by to null
-        const { error: complaintsError } = await this.supabase
-          .from('complaints')
-          .update({ submitted_by: null })
-          .eq('submitted_by', userId);
-        if (!complaintsError) deletionLog.deletedData.push('complaints_anonymized');
-      }
+      await safeDelete('events', 'created_by');
+      await safeDelete('invitation_tokens', 'created_by');
 
-      // Delete role changes
-      const { error: roleChangesError } = await this.supabase
-        .from('role_changes')
-        .delete()
-        .eq('user_id', userId);
-      if (!roleChangesError) deletionLog.deletedData.push('role_changes');
+      await safeDelete('news', 'author_id');
+      await safeDelete('notices', 'created_by');
 
-      // Delete coordinator assignments
-      const { error: coordinatorError } = await this.supabase
-        .from('complaint_coordinators')
-        .delete()
-        .eq('user_id', userId);
-      if (!coordinatorError) deletionLog.deletedData.push('coordinator_assignments');
+      await safeDelete('role_changes', 'user_id', 'role_changes.user_id');
+      await safeDelete('role_changes', 'performed_by', 'role_changes.performed_by');
 
-      // Delete audit logs (keep anonymized version for compliance)
-      // Note: We keep audit logs but anonymize the user reference
-      const { error: auditError } = await this.supabase
-        .from('audit_logs')
-        .update({ performed_by: null })
-        .eq('performed_by', userId);
-      if (!auditError) deletionLog.deletedData.push('audit_logs_anonymized');
+      await safeDelete('signup_links', 'created_by');
+
+      await safeDelete('task_forces', 'coordinator_id', 'task_forces.coordinator_id');
+      await safeDelete('task_forces', 'created_by', 'task_forces.created_by');
+      await safeDelete('task_forces', 'ended_by', 'task_forces.ended_by');
+
+      await safeDelete('user_role_history', 'user_id', 'user_role_history.user_id');
+      await safeDelete('user_role_history', 'changed_by', 'user_role_history.changed_by');
+
+      await safeDelete('audit_logs', 'performed_by');
+
+      await safeDelete('complaints', 'submitted_by', 'complaints.submitted_by');
+      await safeUpdateNull('complaints', 'cancelled_by', 'complaints.cancelled_by');
+      await safeUpdateNull('complaints', 'resolved_by', 'complaints.resolved_by');
+      await safeUpdateNull('complaints', 'assigned_coordinator_id', 'complaints.assigned_coordinator_id');
+      await safeUpdateNull('complaints', 'master_complaint_id', 'complaints.master_complaint_id');
+      await safeUpdateNull('complaints', 'task_force_id', 'complaints.task_force_id');
+
+      // Optional profile-style cleanup (tables may or may not exist)
+      await safeDelete('user_settings', 'user_id');
+      await safeDelete('user_preferences', 'user_id');
+      await safeDelete('user_devices', 'user_id');
+      await safeDelete('profiles', 'id');
 
       // Finally, delete the user from auth.users (Supabase Admin API)
+      let authUserExists = true;
+      try {
+        const { data: existingAuthUser, error: fetchAuthUserError } = await this.supabase.auth.admin.getUserById(userId);
+        if (fetchAuthUserError) {
+          if (fetchAuthUserError.status === 404) {
+            authUserExists = false;
+          } else {
+            console.warn('[COMPLIANCE] Unable to verify auth user before deletion:', fetchAuthUserError.message || fetchAuthUserError);
+          }
+        } else if (!existingAuthUser?.user) {
+          authUserExists = false;
+        }
+      } catch (lookupError) {
+        console.warn('[COMPLIANCE] Auth user lookup failed prior to deletion:', lookupError.message || lookupError);
+      }
+
+      if (authUserExists) {
       const { error: deleteUserError } = await this.supabase.auth.admin.deleteUser(userId);
       if (deleteUserError) {
+          const isAlreadyMissing = /not\s+found/i.test(deleteUserError.message || '');
+          if (!isAlreadyMissing) {
         throw new Error(`Failed to delete user: ${deleteUserError.message}`);
       }
+          authUserExists = false;
+        } else {
       deletionLog.deletedData.push('auth_user');
+        }
+      }
+
+      if (!authUserExists) {
+        deletionLog.deletedData.push('auth_user_missing');
+      }
 
       // Log successful deletion
       await this.auditLog.log('data_deletion_completed', performedBy, {

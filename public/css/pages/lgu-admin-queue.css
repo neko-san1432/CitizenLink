@@ -91,6 +91,245 @@
     letter-spacing: 0.05em;
 }
 
+.insights-section {
+    margin-bottom: 32px;
+}
+
+.insights-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 35px -25px rgba(15, 23, 42, 0.6);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.insights-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.insights-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.75rem;
+    margin: 0 0 8px 0;
+    color: #3b82f6;
+    font-weight: 700;
+}
+
+.insights-subtitle {
+    margin: 4px 0 0 0;
+    color: #6b7280;
+    max-width: 600px;
+}
+
+.insights-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.insights-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.15);
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    align-items: center;
+}
+
+.donut-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+}
+
+#complaint-status-chart {
+    width: 100%;
+    height: auto;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.donut-center strong {
+    font-size: 2.25rem;
+    color: #111827;
+}
+
+.donut-center span {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.donut-track {
+    fill: none;
+    stroke: #f3f4f6;
+    stroke-width: 14;
+}
+
+.donut-slice {
+    fill: none;
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: opacity 0.2s ease;
+}
+
+.donut-slice:hover {
+    opacity: 0.85;
+}
+
+.insights-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.legend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: #f9fafb;
+}
+
+.legend-row-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.legend-label {
+    font-weight: 600;
+    color: #111827;
+}
+
+.legend-count {
+    font-weight: 600;
+    color: #111827;
+}
+
+.legend-percent {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-left: 8px;
+}
+
+.legend-empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.priority-bars {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.priority-bars-header {
+    display: flex;
+    justify-content: space-between;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.priority-bars-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.priority-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.priority-row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.priority-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.priority-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.priority-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+.priority-value span {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-left: 6px;
+}
+
+.priority-progress {
+    width: 100%;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.priority-progress span {
+    display: block;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    .insights-card {
+        padding: 20px;
+    }
+}
+
 /* Complaints List */
 .complaints-list {
     display: flex;
@@ -214,6 +453,7 @@
     line-height: 1.6;
     margin: 0 0 12px 0;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;

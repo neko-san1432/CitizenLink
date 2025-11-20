@@ -4,6 +4,7 @@ import { supabase } from '../config/config.js';
 let departmentsCache = [];
 let selectedUser = null;
 let currentUserRole = null;
+let currentUserId = null;
 
 // Helper function to get auth headers
 async function getAuthHeaders() {
@@ -21,6 +22,7 @@ async function getCurrentUserRole() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
+      currentUserId = session.user.id;
       const metadata = session.user.user_metadata || session.user.raw_user_meta_data || {};
       return metadata.role || 'citizen';
     }
@@ -153,6 +155,32 @@ function setupHandlers() {
   const banForm = document.getElementById('ban-form');
   if (banForm) {
     banForm.addEventListener('submit', onBanSubmit);
+  }
+
+  // Delete user modal handlers
+  const deleteCloseBtn = document.getElementById('delete-user-close');
+  if (deleteCloseBtn) {
+    deleteCloseBtn.addEventListener('click', hideDeleteModal);
+  }
+
+  const deleteCancelBtn = document.getElementById('delete-user-cancel');
+  if (deleteCancelBtn) {
+    deleteCancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideDeleteModal();
+    });
+  }
+
+  const deleteModal = document.getElementById('delete-user-modal');
+  if (deleteModal) {
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) hideDeleteModal();
+    });
+  }
+
+  const deleteForm = document.getElementById('delete-user-form');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', onDeleteUserSubmit);
   }
 
   // Ban type change handler
@@ -397,6 +425,9 @@ async function loadUserDetails(userId) {
         }
       }
 
+      const isTargetSuperAdmin = String(u.role || '').toLowerCase() === 'super-admin';
+      const canDeleteUser = currentUserRole === 'super-admin' && u.id !== currentUserId && !isTargetSuperAdmin;
+
       container.innerHTML = `
         <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
           <div style="width:48px; height:48px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center;">👤</div>
@@ -414,8 +445,19 @@ async function loadUserDetails(userId) {
         <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
           ${!isBanned ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(u.email || '')}', '${escapeHtml(u.fullName || u.name || '')}', '${u.id}')">Ban Now</button>` : ''}
           ${isBanned && currentUserRole === 'super-admin' ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban</button>` : ''}
+          ${canDeleteUser ? '<button class="btn btn-secondary" id="delete-user-btn">Delete Account</button>' : ''}
         </div>
       `;
+
+      if (canDeleteUser) {
+        const deleteBtn = container.querySelector('#delete-user-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openDeleteModal(u);
+          });
+        }
+      }
     }
   } catch (e) {
     console.error('[USER_MANAGER] Error loading user details:', e);
@@ -744,9 +786,113 @@ async function unbanUser(userId) {
   }
 }
 
+function openDeleteModal(user) {
+  const modal = document.getElementById('delete-user-modal');
+  if (!modal) {
+    showMessage('error', 'Delete modal not found');
+    return;
+  }
+
+  selectedUser = user;
+  const nameLabel = document.getElementById('delete-user-name');
+  const emailLabel = document.getElementById('delete-user-email');
+  const confirmInput = document.getElementById('delete-user-confirm-input');
+  const reasonInput = document.getElementById('delete-user-reason');
+
+  if (nameLabel) {
+    nameLabel.textContent = user.fullName || user.name || user.email || 'Selected user';
+  }
+  if (emailLabel) {
+    emailLabel.textContent = user.email || 'N/A';
+  }
+  if (confirmInput) {
+    confirmInput.value = '';
+    confirmInput.placeholder = (user.email || '').toLowerCase();
+  }
+  if (reasonInput) {
+    reasonInput.value = '';
+  }
+
+  modal.style.display = 'flex';
+  modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.style.zIndex = '10000';
+}
+
+function hideDeleteModal() {
+  const modal = document.getElementById('delete-user-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
+  }
+}
+
+async function onDeleteUserSubmit(e) {
+  e.preventDefault();
+  if (!selectedUser) {
+    showMessage('error', 'No user selected for deletion');
+    return;
+  }
+
+  const confirmInput = document.getElementById('delete-user-confirm-input');
+  const reasonInput = document.getElementById('delete-user-reason');
+  const submitBtn = document.getElementById('delete-user-submit');
+
+  const expected = (selectedUser.email || '').toLowerCase();
+  const provided = (confirmInput?.value || '').trim().toLowerCase();
+  if (!expected || provided !== expected) {
+    showMessage('error', 'Please type the user\'s email to confirm deletion');
+    return;
+  }
+
+  const reason = (reasonInput?.value || '').trim();
+  if (!reason || reason.length < 10) {
+    showMessage('error', 'Please provide a reason (at least 10 characters)');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Deleting...';
+  }
+
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch('/api/compliance/delete', {
+      method: 'DELETE',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ userId: selectedUser.id, reason })
+    });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok || !result?.success) {
+      throw new Error(result?.error || 'Failed to delete user');
+    }
+
+    showMessage('success', 'User deleted successfully');
+    hideDeleteModal();
+    selectedUser = null;
+    const details = document.getElementById('um-user-details');
+    if (details) {
+      details.innerHTML = '<p class="empty-state">Select a user to manage.</p>';
+    }
+    await refreshUserList();
+  } catch (error) {
+    console.error('[USER_MANAGER] Delete user error:', error);
+    showMessage('error', error.message || 'Failed to delete user');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Delete User';
+    }
+  }
+}
+
 // Make functions available globally for inline onclick handlers
 window.openBanModal = openBanModal;
 window.unbanUser = unbanUser;
+window.openDeleteModal = openDeleteModal;
 
 function escapeHtml(s) {
   if (s == null) return '';

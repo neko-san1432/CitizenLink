@@ -1,18 +1,30 @@
 // Index/landing page specific functionality
 import { supabase } from '../config/config.js';
-import { logout } from './authChecker.js';
+import { logout, getOAuthContext } from './authChecker.js';
+import { shouldSkipAuthCheck } from '../utils/oauth-cleanup.js';
 
 // Track if logout event listener has been added
 let logoutListenerAdded = false;
 // Check authentication status and update UI
 const checkAuthenticationAndUpdateUI = async () => {
   try {
+    // Check for incomplete OAuth signup - if pending, don't show authenticated UI
+    const hasPendingOAuth = shouldSkipAuthCheck();
+    
     // console.log removed for security
     // Get current session
     const { data: { session }, error } = await supabase.auth.getSession();
     const unauthenticatedButtons = document.getElementById('unauthenticated-buttons');
     const authenticatedButtons = document.getElementById('authenticated-buttons');
     const logoutBtn = document.getElementById('logout-btn');
+    
+    // If there's a pending OAuth signup, always show unauthenticated buttons
+    if (hasPendingOAuth) {
+      if (unauthenticatedButtons) unauthenticatedButtons.classList.remove('hidden');
+      if (authenticatedButtons) authenticatedButtons.classList.add('hidden');
+      return;
+    }
+    
     if (session && !error) {
       // console.log removed for security
       // Get user metadata
@@ -55,7 +67,11 @@ const checkAuthenticationAndUpdateUI = async () => {
   }
 };
 // Initialize index page
-const initializeIndexPage = () => {
+const initializeIndexPage = async () => {
+  // Setup navigation cleanup for login/signup buttons and brand logo
+  const { setupNavigationCleanup } = await import('../utils/navigation.js');
+  setupNavigationCleanup();
+  
   // Run authentication check when page loads
   checkAuthenticationAndUpdateUI();
   // Also run immediately in case DOMContentLoaded already fired

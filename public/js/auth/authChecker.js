@@ -119,8 +119,30 @@ export const getUserRole = async (options = {}) => {
   if (role || name) saveUserMeta({ role, name });
   return role;
 };
-// Check if token is valid and refresh if needed
+// Check if device is trusted (allows auto-refresh)
+const isDeviceTrusted = () => {
+  try {
+    const trusted = localStorage.getItem('device_trusted');
+    return trusted === 'true';
+  } catch {
+    return false;
+  }
+};
 
+// Store device trust preference
+export const setDeviceTrusted = (trusted) => {
+  try {
+    if (trusted) {
+      localStorage.setItem('device_trusted', 'true');
+    } else {
+      localStorage.removeItem('device_trusted');
+    }
+  } catch (error) {
+    console.error('[AUTH] Failed to store device trust preference:', error);
+  }
+};
+
+// Check if token is valid and refresh if needed
 export const validateAndRefreshToken = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -132,8 +154,13 @@ export const validateAndRefreshToken = async () => {
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = session.expires_at;
     if (expiresAt && now >= expiresAt) {
+      // Check if device is trusted - if not, don't auto-refresh
+      if (!isDeviceTrusted()) {
+        console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
+        return false;
+      }
       console.log('Session expired, attempting refresh...');
-      // Try to refresh the session
+      // Try to refresh the session (only if device is trusted)
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
         console.log('Session refresh failed:', refreshError?.message);
@@ -176,6 +203,13 @@ export const initializeAuthListener = () => {
       startTokenExpiryMonitoring();
     }
     if (event === 'TOKEN_REFRESHED' && session) {
+      // Check if device is trusted before allowing auto-refresh
+      if (!isDeviceTrusted()) {
+        console.log('[AUTH] Token refresh attempted but device is not trusted. Signing out.');
+        await supabase.auth.signOut();
+        handleSessionExpired();
+        return;
+      }
       // console.log removed for security
       try {
         // Update server-side cookie with new token
@@ -195,6 +229,8 @@ export const initializeAuthListener = () => {
       // console.log removed for security
       localStorage.removeItem(storageKey);
       localStorage.removeItem(oauthKey);
+      // Note: We keep device_trusted preference even after logout
+      // so it persists for the next login
     }
   });
 };
@@ -243,15 +279,37 @@ export const startTokenExpiryMonitoring = () => {
         }
       });
       if (!response.ok) {
-        // If 401, check if session still exists
+        // If 401, check if device is trusted before attempting refresh
         if (response.status === 401) {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (!currentSession) {
-            // Session expired, stop monitoring silently
+          // If device is not trusted, don't try to refresh - require re-login
+          if (!isDeviceTrusted()) {
+            console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
             tokenExpiryTimer = null;
+            handleSessionExpired();
+            return;
+          }
+          // Try to refresh session - if it fails, session is definitely invalid
+          try {
+            const { data: { session: refreshData }, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError || !refreshData?.session) {
+              // Session is invalid (likely password changed), immediately redirect
+              tokenExpiryTimer = null;
+              handleSessionExpired();
+              return;
+            }
+            // Session refreshed successfully, but API still returns 401
+            // This means server-side session is invalid - redirect immediately
+            tokenExpiryTimer = null;
+            handleSessionExpired();
+            return;
+          } catch (refreshErr) {
+            // Refresh failed, session is invalid
+            tokenExpiryTimer = null;
+            handleSessionExpired();
             return;
           }
         }
+        // For other errors, retry a few times
         noSessionAttempts++;
         if (noSessionAttempts < MAX_NO_SESSION_ATTEMPTS) {
           tokenExpiryTimer = setTimeout(checkTokenExpiry, 30000); // Wait 30 seconds instead of 5

@@ -71,6 +71,19 @@ class ApiClient {
       }
       return await response.json();
     } catch (error) {
+      // Handle connection errors gracefully
+      if (error.message?.includes('Failed to fetch') || 
+          error.message?.includes('ERR_CONNECTION_REFUSED') ||
+          error.name === 'TypeError') {
+        // Server is likely down or unreachable
+        console.warn('[API_CLIENT] Server connection error:', error.message);
+        // Return a structured error response instead of throwing
+        return {
+          success: false,
+          error: 'Connection refused. Server may be unavailable.',
+          connectionError: true
+        };
+      }
       console.error('API GET error:', error);
       throw error;
     }

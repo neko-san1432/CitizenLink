@@ -127,6 +127,46 @@
     </div>
   </div>
 
+<!-- Delete User Modal -->
+<div id="delete-user-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
+  <div class="action-card" style="max-width:540px; width:92%; background:white;">
+    <div class="action-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h3>Delete User Account</h3>
+      <button id="delete-user-close" class="btn btn-secondary">Close</button>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#991b1b;">
+      <strong>Danger:</strong> This permanently deletes the account, removes linked sessions, and anonymizes filed complaints. This action cannot be undone.
+    </div>
+    <ul style="margin-bottom:1rem; color:#4b5563; font-size:0.9rem; padding-left:1.2rem;">
+      <li>All sessions and notifications are removed immediately.</li>
+      <li>Open assignments linked to this user will no longer show the officer/admin name.</li>
+      <li>Filed complaints stay in the system but are anonymized for auditing.</li>
+    </ul>
+    <form id="delete-user-form" class="action-form">
+      <div class="form-group">
+        <label>Selected User</label>
+        <p style="margin:0; color:#1f2937;">
+          <strong id="delete-user-name">—</strong><br>
+          <span id="delete-user-email" style="color:#6b7280; font-size:0.9rem;">—</span>
+        </p>
+      </div>
+      <div class="form-group">
+        <label>Type the user's email to confirm</label>
+        <input id="delete-user-confirm-input" type="text" placeholder="user@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Reason for deletion</label>
+        <textarea id="delete-user-reason" rows="3" placeholder="e.g., Duplicate account, requested by LGU admin" required></textarea>
+        <small style="color:#6b7280;">Provide at least 10 characters for auditing purposes.</small>
+      </div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+        <button type="submit" class="btn btn-danger" id="delete-user-submit">Delete User</button>
+        <button class="btn btn-secondary" id="delete-user-cancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
   <div id="toast-container" class="toast-container"></div>
   <script type="module" src="/js/components/toast.js"></script>
   <script type="module" src="/js/components/header.js"></script>

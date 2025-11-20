@@ -1,9 +1,70 @@
 // Login page specific functionality
 import { supabase } from '../config/config.js';
+import { shouldSkipAuthCheck } from '../utils/oauth-cleanup.js';
+import { getOAuthContext } from './authChecker.js';
+
+// Clear OAuth context and session when landing on login page (without deleting users)
+// This prevents redirects when user explicitly navigated here
+const clearOAuthContextOnLanding = async () => {
+  try {
+    const ctx = getOAuthContext();
+    // Only clear if there's a pending OAuth AND user explicitly navigated (not from OAuth redirect)
+    if (ctx && ctx.status === 'pending') {
+      // Check if this is coming from an OAuth redirect (don't clear if it is)
+      const urlParams = new URLSearchParams(window.location.search);
+      const isOAuthRedirect = urlParams.get('code') || urlParams.get('error') || urlParams.get('popup') === '1';
+      
+      // Only clear if user explicitly navigated here (not from OAuth redirect)
+      if (!isOAuthRedirect) {
+        // User explicitly navigated to login - clear OAuth context and session to prevent redirects
+        // But don't delete the user - that only happens on explicit button clicks
+        const { clearOAuthContext } = await import('./authChecker.js');
+        clearOAuthContext();
+        
+        // Clear session to prevent redirects to oauth-continuation
+        try {
+          await supabase.auth.signOut();
+        } catch {}
+        try {
+          await fetch('/auth/session', { method: 'DELETE' });
+        } catch {}
+        
+        // Clear Supabase storage
+        try {
+          const keys = Object.keys(localStorage);
+          keys.forEach(key => {
+            if (key.startsWith('sb-') || key.includes('supabase')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch {}
+      }
+    }
+  } catch (error) {
+    console.warn('[LOGIN] Error clearing OAuth context on landing:', error);
+  }
+};
 
 // Check if user is already logged in and redirect to dashboard
 const checkAuthentication = async () => {
   try {
+    // Clear OAuth context if user explicitly navigated here (prevents redirects)
+    await clearOAuthContextOnLanding();
+    
+    // Check if we just cleaned up OAuth - skip redirects
+    let oauthCleanupFlag = false;
+    try {
+      oauthCleanupFlag = sessionStorage.getItem('cl_oauth_cleanup') === 'true';
+      if (oauthCleanupFlag) {
+        sessionStorage.removeItem('cl_oauth_cleanup');
+      }
+    } catch {}
+    
+    // If we just cleaned up, don't redirect - let user proceed with login
+    if (oauthCleanupFlag) {
+      return;
+    }
+    
     // Check if redirected due to session expiration - don't auto-login
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('session_expired') === 'true') {
@@ -32,6 +93,8 @@ const checkAuthentication = async () => {
         // console.log removed for security
         window.location.href = '/dashboard';
       } else {
+        // User has incomplete registration - redirect to continuation
+        // This is the normal flow after OAuth signup
         // console.log removed for security
         window.location.href = '/oauth-continuation';
       }
@@ -64,7 +127,11 @@ const handleUrlMessages = () => {
   }
 };
 // Initialize login page
-const initializeLoginPage = () => {
+const initializeLoginPage = async () => {
+  // Setup navigation cleanup for login/signup buttons and brand logo
+  const { setupNavigationCleanup } = await import('../utils/navigation.js');
+  setupNavigationCleanup();
+  
   // Run authentication check when page loads
   checkAuthentication();
   // Handle URL messages

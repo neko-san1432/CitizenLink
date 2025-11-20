@@ -35,7 +35,10 @@
   background: rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2)}
 
-.heatmap-menu-btn:active {}
+/* Active state subtle feedback */
+.heatmap-menu-btn:active {
+  transform: scale(0.98);
+}
 
 #sidebar.open ~ .heatmap-menu-btn {
   opacity: 0;
@@ -96,7 +99,6 @@
   margin-bottom: 8px;
   color: #495057;
   font-size: 13px;
-  text-
   letter-spacing: 0.5px}
 
 .control-group select,
@@ -292,4 +294,4 @@ small {
     left: 15px}
 }
 
-.map-controls {}
+/* removed empty rule */

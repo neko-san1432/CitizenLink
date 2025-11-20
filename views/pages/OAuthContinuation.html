@@ -7,9 +7,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Complete Your Profile</title>
+    <!-- Consolidated CSS: style.css imports app.css, toast.css, header styles -->
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/toast.css">
-    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/pages/signup.css">
     <link rel="stylesheet" href="./css/pages/oauth-complete.css">
 </head>
@@ -51,6 +50,23 @@
                 <div class="auth-content">
                     <div class="auth-main">
                         <form id="oauthCompleteForm" class="signup-form">
+                            <div class="signup-progress-indicator" id="signup-progress-indicator">
+                                <div class="progress-label">
+                                    <span id="signup-progress-label">Step 1 of 3 · 0% complete</span>
+                                </div>
+                                <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                    <div class="progress-fill" id="signup-progress-fill" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div class="signup-steps" id="signup-steps">
+                                <div class="signup-step" data-step="1">
+                                    <header class="step-card-header">
+                                        <div class="step-chip">Step 1</div>
+                                        <div class="step-card-copy">
+                                            <h3>Confirm your identity</h3>
+                                            <p>Review the information provided by your OAuth account.</p>
+                                        </div>
+                                    </header>
             <!-- First Name Field -->
                             <div class="form-group form-half">
                 <label for="firstName" class="form-label">First Name</label>
@@ -63,6 +79,31 @@
                     placeholder="Enter your first name"
                     required
                     autocomplete="given-name"
+                                        readonly
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Name is set by your OAuth provider"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+            </div>
+
+            <!-- Middle Name Field -->
+                            <div class="form-group form-half">
+                <label for="middleName" class="form-label">Middle Name</label>
+                                <div class="input-wrapper">
+                <input 
+                                        class="input"
+                    type="text" 
+                    id="middleName" 
+                    name="middleName" 
+                    placeholder="Enter your middle name"
+                    autocomplete="additional-name"
                                         readonly
                                         disabled
                                         aria-disabled="true"
@@ -103,6 +144,39 @@
                                 </div>
             </div>
 
+            <!-- Email Field (readonly) -->
+                            <div class="form-group form-half">
+                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                <input 
+                                        class="input"
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Email"
+                    readonly 
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Email is set by your OAuth provider"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+            </div>
+
+                                </div>
+                                <div class="signup-step" data-step="2" hidden>
+                                    <header class="step-card-header">
+                                        <div class="step-chip">Step 2</div>
+                                        <div class="step-card-copy">
+                                            <h3>Contact & demographics</h3>
+                                            <p>Share the local details coordinators need to reach you.</p>
+                                        </div>
+                                    </header>
             <!-- Address Line 1 -->
                             <div class="form-group form-full">
                 <label for="addressLine1" class="form-label">Address (Line 1)</label>
@@ -129,31 +203,6 @@
                 </select>
                                 </div>
             </div>
-
-            <!-- Email Field (readonly) -->
-                            <div class="form-group form-half">
-                <label for="email" class="form-label">Email Address</label>
-                                <div class="input-wrapper">
-                <input 
-                                        class="input"
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    placeholder="Email"
-                    readonly 
-                                        disabled
-                                        aria-disabled="true"
-                                        title="Email is set by your OAuth provider"
-                    class="readonly"
-                                    >
-                                    <div class="input-icon">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-            </div>
             
             <!-- Phone Field -->
                             <div class="form-group form-half">
@@ -173,6 +222,16 @@
                                     >
                 </div>
             </div>
+                                </div>
+
+                                <div class="signup-step" data-step="3" hidden>
+                                    <header class="step-card-header">
+                                        <div class="step-chip">Step 3</div>
+                                        <div class="step-card-copy">
+                                            <h3>Security check</h3>
+                                            <p>Agree to our policies and finish verification.</p>
+                                        </div>
+                                    </header>
 
             <!-- Terms and Privacy -->
                             <div class="form-group form-full">
@@ -188,14 +247,13 @@
 
             <!-- Captcha -->
                             <div id="oauth-complete-captcha" class="captcha-container form-full"></div>
-            
-                            <!-- Submit Button -->
-                            <button class="btn btn-primary btn-lg w-full form-full" type="submit">
-                                <span>Complete Registration</span>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
+                                </div>
+                            </div>
+                            <div class="step-actions" id="signup-step-actions">
+                                <button type="button" class="btn btn-secondary" id="signup-prev-btn" hidden>Back</button>
+                                <button type="button" class="btn btn-primary" id="signup-next-btn">Next</button>
+                                <button type="submit" class="btn btn-primary" id="signup-submit-btn" hidden>Complete Registration</button>
+                            </div>
         </form>
                     </div>
                 </div>
@@ -208,6 +266,6 @@
     </main>
 </body>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script type="module" src="./js/auth/oauth-complete.js"></script>
-<script type="module" src="./js/auth/oauth-continuation-page.js"></script>
+<script type="module" src="/js/auth/oauth-continuation-page.js"></script>
+<script type="module" src="/js/auth/signup-progressive.js"></script>
 </html>

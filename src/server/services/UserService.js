@@ -22,6 +22,7 @@ class UserService {
       email,
       password,
       firstName,
+      middleName,
       lastName,
       name, // Single name field (for OAuth users)
       mobileNumber,
@@ -33,9 +34,11 @@ class UserService {
       isOAuth = false // Flag to indicate if this is OAuth signup
     } = userData;
     // Handle single name field - use name if provided, otherwise combine firstName + lastName
-    const displayName = name || `${firstName || ''} ${lastName || ''}`.trim();
-    const firstNameFinal = firstName || displayName.split(' ')[0] || '';
-    const lastNameFinal = lastName || displayName.split(' ').slice(1).join(' ') || '';
+    const displayName = name || [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
+    const nameParts = displayName ? displayName.split(' ') : [];
+    const firstNameFinal = firstName || nameParts[0] || '';
+    const middleNameFinal = middleName || nameParts.slice(1, -1).join(' ') || '';
+    const lastNameFinal = lastName || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
     // Validate required fields
     this.validateUserData(userData, isOAuth);
     const normalizedRole = this.normalizeRole(role);
@@ -48,6 +51,7 @@ class UserService {
         user_metadata: {
           // Public metadata (visible to user)
           first_name: firstNameFinal,
+          middle_name: middleNameFinal || null,
           last_name: lastNameFinal,
           name: displayName,
           role,
@@ -85,6 +89,7 @@ class UserService {
         raw_user_meta_data: {
           // Server-side metadata
           first_name: firstNameFinal,
+          middle_name: middleNameFinal || null,
           last_name: lastNameFinal,
           name: displayName,
           role,

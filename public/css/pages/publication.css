@@ -18,7 +18,6 @@
 .pub-list, .pub-detail { background:white; border:none; border-radius:0; overflow-y:auto; padding:1rem }
 /* Only a simple vertical line separating the two */
 .pub-list { border-right: 1px solid #e5e7eb }
-.pub-detail { }
 
 .pub-card { border:1px solid #eef2f7; border-radius:12px; padding:.9rem; margin-bottom:.75rem; cursor:pointer; background:#fafafa }
 .pub-card:hover { background:#f3f4f6 }

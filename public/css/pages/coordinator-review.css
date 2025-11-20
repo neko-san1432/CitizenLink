@@ -1059,6 +1059,68 @@ html.dark .empty-state h2 {
     text-decoration: underline;
 }
 
+/* High Confidence Duplicate Alert */
+.duplicate-alert {
+    background: #fef2f2;
+    border: 2px solid #fecaca;
+    border-left: 4px solid #ef4444;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+    z-index: 1; /* Ensure it's above content but below modals */
+}
+
+.duplicate-alert.high-confidence {
+    background: #fef2f2;
+    border-color: #fecaca;
+    border-left-color: #ef4444;
+}
+
+.duplicate-alert .alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.duplicate-alert .alert-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.duplicate-alert .alert-text {
+    flex: 1;
+}
+
+.duplicate-alert .alert-text strong {
+    display: block;
+    color: #991b1b;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.duplicate-alert .alert-text p {
+    margin: 0;
+    color: #7f1d1d;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .complainant-id {
     font-family: var(--font-mono, 'Courier New', monospace);
     font-size: 0.75rem;
