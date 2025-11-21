@@ -8,15 +8,20 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 
+    0px 1px 3px rgba(0, 0, 0, 0.08),
+    0px 2px 8px rgba(0, 0, 0, 0.04);
   overflow: visible;
   min-height: 64px;
   max-height: 64px;
   box-sizing: border-box;
+  transition: all var(--transition-normal, 200ms);
 }
 .header-container.scrolled {
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: var(--shadow-md);
+  box-shadow: 
+    0px 2px 8px rgba(0, 0, 0, 0.10),
+    0px 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .header-content {
@@ -54,16 +59,19 @@
   cursor: pointer;
   overflow: hidden;
   box-sizing: border-box;
+  transition: all var(--transition-sm, 150ms);
 }
 
 .menu-toggle:hover {
   background: var(--gray-200);
   border-color: var(--gray-300);
   color: var(--gray-800);
+  transform: scale(1.05);
 }
 
 .menu-toggle:active {
   background: var(--gray-300);
+  transform: scale(0.98);
 }
 
 .menu-toggle svg {
@@ -85,22 +93,25 @@
   font-size: 1.25rem;
   letter-spacing: -0.025em;
   padding: var(--space-2) 0;
+  transition: all var(--transition-sm, 150ms);
 }
 
 .brand-logo:hover {
   color: var(--primary-600);
+  transform: translateY(-1px);
 }
 
 .brand-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
-  color: white;
-  font-size: 1rem;
-  border-radius: var(--radius-md);
+  width: 50px;
+  height: 50px;
+  /*border-radius: var(--radius-md);*/
+  background-image: url('/public/assets/img/CitizenLink-logo-no-text.png'); /* <--- IMPORTANT: Update this path */
+  background-size: 150%; /* or 'cover' depending on your logo */
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .brand-logo:hover .brand-icon {
@@ -108,7 +119,9 @@
 }
 
 .brand-text {
-  font-weight: 700;
+  font-size: 25px;
+  font-weight: 900;
+  color:rgb(28, 76, 153);
 }
 
 .header-right {
@@ -136,16 +149,22 @@
   cursor: pointer;
   position: relative;
   box-sizing: border-box;
+  transition: all var(--transition-sm, 150ms);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .header-action:hover {
   background: var(--gray-200);
   border-color: var(--gray-300);
   color: var(--gray-800);
+  transform: translateY(-1px);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .header-action:active {
   background: var(--gray-300);
+  transform: translateY(0);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .header-action svg {
@@ -173,20 +192,29 @@
   color: #64748b;
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0px 1px 3px rgba(0, 0, 0, 0.08),
+    0px 2px 4px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   box-sizing: border-box;
+  transition: all var(--transition-sm, 150ms) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .notification-btn:hover {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-color: #3b82f6;
   color: white;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0px 4px 12px rgba(59, 130, 246, 0.20),
+    0px 8px 20px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
 }
 
 .notification-btn:active {
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+  box-shadow: 
+    0px 2px 8px rgba(59, 130, 246, 0.15),
+    0px 4px 12px rgba(59, 130, 246, 0.10);
+  transform: translateY(0);
 }
 
 .notification-badge {
@@ -215,12 +243,16 @@
   border-color: var(--primary-200);
   color: var(--primary-700);
   box-sizing: border-box;
+  transition: all var(--transition-sm, 150ms);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .profile-btn:hover {
   background: var(--primary-100);
   border-color: var(--primary-300);
   color: var(--primary-800);
+  transform: translateY(-1px);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .profile-avatar {
@@ -240,11 +272,13 @@
   background: var(--warning-50);
   border-color: var(--warning-200);
   color: var(--warning-700);
+  transition: all var(--transition-sm, 150ms);
 }
 
 .theme-toggle:hover {
   background: var(--warning-100);
   border-color: var(--warning-300);
+  transform: translateY(-1px);
   color: var(--warning-800);
 }
 
@@ -285,17 +319,25 @@
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 
+    0px 4px 16px rgba(0, 0, 0, 0.12),
+    0px 8px 24px rgba(0, 0, 0, 0.08),
+    0px 0px 0px 1px rgba(0, 0, 0, 0.02);
   min-width: 320px;
   max-width: 400px;
   z-index: var(--z-dropdown);
   opacity: 0;
   visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--transition-normal, 200ms) cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .header-dropdown.show {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0);
 }
 
 .dropdown-header {
@@ -304,6 +346,8 @@
   justify-content: space-between;
   padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(to bottom, var(--gray-50), white);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .dropdown-title {
@@ -311,6 +355,8 @@
   font-size: 1rem;
   margin: 0;
   color: var(--gray-900);
+  letter-spacing: -0.01em;
+  font-family: var(--font-family);
 }
 
 .dropdown-close {
@@ -320,11 +366,16 @@
   color: var(--gray-600);
   cursor: pointer;
   padding: var(--space-1);
+  transition: all var(--transition-sm, 150ms);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropdown-close:hover {
-  background: var(--gray-300);
+  background: var(--gray-200);
   color: var(--gray-800);
+  transform: scale(1.1);
 }
 
 .dropdown-content {
@@ -344,19 +395,25 @@
   left: auto !important;
   max-height: 500px;
   width: 380px;
-  background: white;
+  background: rgba(255, 255, 255, 0.98);
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0px 8px 24px rgba(0, 0, 0, 0.12),
+    0px 16px 48px rgba(0, 0, 0, 0.08),
+    0px 0px 0px 1px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--gray-200);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   overflow-y: auto;
   opacity: 0;
+  transform: translateY(-10px) scale(0.98);
   z-index: 1000;
+  transition: all var(--transition-normal, 200ms) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .notification-panel.show {
   opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .notification-item {
@@ -367,10 +424,12 @@
   border-bottom: 1px solid #f1f5f9;
   position: relative;
   cursor: pointer;
+  transition: all var(--transition-sm, 150ms);
 }
 
 .notification-item:hover {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  transform: translateX(-2px);
 }
 
 .notification-item:last-child {
@@ -405,12 +464,19 @@
   justify-content: center;
   color: #64748b;
   font-size: 18px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0px 1px 3px rgba(0, 0, 0, 0.08),
+    0px 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-sm, 150ms);
 }
 
 .notification-item:hover .notification-icon {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
+  transform: scale(1.05);
+  box-shadow: 
+    0px 2px 6px rgba(59, 130, 246, 0.15),
+    0px 4px 8px rgba(59, 130, 246, 0.10);
 }
 
 .notification-content {
@@ -419,23 +485,25 @@
 }
 
 .notification-title {
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.875rem;
   margin: 0 0 6px 0;
   line-height: 1.3;
   color: #1e293b;
   letter-spacing: -0.01em;
+  font-family: var(--font-family);
 }
 
 .notification-message {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: #64748b;
-  line-height: 1.4;
+  line-height: 1.5;
   margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-family: var(--font-family);
 }
 
 .notification-time {
@@ -537,6 +605,64 @@
   font-size: 0.75rem;
   color: var(--gray-600);
   margin: 0;
+}
+
+/* Dropdown Item Styling */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  color: var(--gray-700);
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+  transition: all var(--transition-sm, 150ms);
+  border-radius: var(--radius-md);
+  margin: var(--space-1) var(--space-2);
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+  color: var(--primary-700);
+  transform: translateX(2px);
+}
+
+.dropdown-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: all var(--transition-sm, 150ms);
+}
+
+.dropdown-item:hover svg {
+  transform: scale(1.1);
+  color: var(--primary-600);
+}
+
+.dropdown-item.logout-btn {
+  color: var(--error-600);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--space-4);
+  border-radius: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.dropdown-item.logout-btn:hover {
+  background: linear-gradient(135deg, var(--error-50), var(--error-100));
+  color: var(--error-700);
+}
+
+.dropdown-item.logout-btn:hover svg {
+  color: var(--error-600);
 }
 
 @media (max-width: 768px) {
@@ -688,7 +814,7 @@
 }
 
 .dark .brand-text {
-  color: var(--gray-100) !important;
+  color: var(white) !important;
 }
 
 .dark .brand-text:hover {
@@ -769,8 +895,116 @@ html.dark .brand-text:hover {
   color: var(--gray-500);
 }
 
+/* Enhanced Dark Mode Styles */
+html.dark .header-container {
+  background: rgba(30, 41, 59, 0.95);
+  border-bottom-color: #334155;
+  box-shadow: 
+    0px 1px 3px rgba(0, 0, 0, 0.3),
+    0px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .header-container.scrolled {
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 
+    0px 2px 8px rgba(0, 0, 0, 0.4),
+    0px 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .menu-toggle,
+html.dark .header-action {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+  color: var(--gray-300);
+}
+
+html.dark .menu-toggle:hover,
+html.dark .header-action:hover {
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--gray-100);
+}
+
+html.dark .header-dropdown {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: #334155;
+  box-shadow: 
+    0px 8px 24px rgba(0, 0, 0, 0.4),
+    0px 16px 48px rgba(0, 0, 0, 0.3),
+    0px 0px 0px 1px rgba(255, 255, 255, 0.05);
+}
+
+html.dark .dropdown-header {
+  background: linear-gradient(to bottom, var(--gray-800), var(--gray-900));
+  border-color: #334155;
+}
+
+html.dark .dropdown-item {
+  color: var(--gray-300);
+}
+
+html.dark .dropdown-item:hover {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  color: white;
+}
+
+html.dark .dropdown-item.logout-btn {
+  color: var(--error-400);
+  border-top-color: #334155;
+}
+
+html.dark .dropdown-item.logout-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+  color: var(--error-300);
+}
+
+html.dark .notification-panel {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: #334155;
+  box-shadow: 
+    0px 8px 24px rgba(0, 0, 0, 0.5),
+    0px 16px 48px rgba(0, 0, 0, 0.4),
+    0px 0px 0px 1px rgba(255, 255, 255, 0.05);
+}
+
+html.dark .notification-item {
+  border-bottom-color: #334155;
+}
+
+html.dark .notification-item:hover {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+html.dark .notification-item.unread {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(29, 78, 216, 0.15));
+  border-left-color: var(--primary-500);
+}
+
+html.dark .notification-icon {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  color: var(--gray-400);
+}
+
+html.dark .notification-item:hover .notification-icon {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+html.dark .notification-title {
+  color: var(--gray-100);
+}
+
+html.dark .notification-message {
+  color: var(--gray-400);
+}
+
+html.dark .notification-time {
+  color: var(--gray-500);
+}
+
 /* Dark mode for notification button */
-.dark .notification-btn {
+.dark .notification-btn,
+html.dark .notification-btn {
   background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
   border-color: #4b5563;
   color: #d1d5db;

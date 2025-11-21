@@ -18,7 +18,7 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="/" class="brand-logo">
-                    <div class="brand-icon">C</div>
+                    <div class="brand-icon"></div>
                     <span class="brand-text">CitizenLink</span>
                 </a>
             </div>
@@ -52,10 +52,10 @@
                         <form id="regForm" class="signup-form">
                             <!-- First Name Field -->
                             <div class="form-group form-half">
-                                <label for="firstName" class="form-label">First Name</label>
+                                <label for="firstName" class="form-label form-label-required">First Name</label>
                                 <div class="input-wrapper">
                                     <input 
-                                        class="input" 
+                                        class="input form-control" 
                                         type="text" 
                                         id="firstName" 
                                         name="firstName" 
@@ -203,10 +203,10 @@
 
                             <!-- Email Field -->
                             <div class="form-group form-half">
-                                <label for="email" class="form-label">Email Address</label>
+                                <label for="email" class="form-label form-label-required">Email Address</label>
                                 <div class="input-wrapper">
                                     <input 
-                                        class="input" 
+                                        class="input form-control" 
                                         type="email" 
                                         id="email" 
                                         name="email" 
@@ -244,10 +244,10 @@
 
                             <!-- Password Field -->
                             <div class="form-group form-half">
-                                <label for="regPassword" class="form-label">Password</label>
+                                <label for="regPassword" class="form-label form-label-required">Password</label>
                                 <div class="input-wrapper">
                                     <input 
-                                        class="input" 
+                                        class="input form-control" 
                                         type="password" 
                                         id="regPassword" 
                                         name="password" 
@@ -273,10 +273,10 @@
 
                             <!-- Confirm Password Field -->
                             <div class="form-group form-half">
-                                <label for="reRegPassword" class="form-label">Confirm Password</label>
+                                <label for="reRegPassword" class="form-label form-label-required">Confirm Password</label>
                                 <div class="input-wrapper">
                                     <input 
-                                        class="input" 
+                                        class="input form-control" 
                                         type="password" 
                                         id="reRegPassword" 
                                         name="confirmPassword" 
@@ -365,14 +365,14 @@
 
     <!-- Simple Modal HTML -->
     <div id="termsModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
-        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Terms and Conditions</h3>
-                <button class="modal-close" data-modal="termsModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: var(--radius-lg); width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: var(--shadow-2xl);">
+            <div class="modal-header" style="padding: var(--space-6); background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.05)); border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-600); color: var(--gray-900);">Terms and Conditions</h3>
+                <button class="modal-close" data-modal="termsModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray-600); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: color var(--transition-sm);">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
-                <h4>By using CitizenLink, you agree to the following terms:</h4>
-                <ul>
+            <div class="modal-body" style="padding: var(--space-6); max-height: 50vh; overflow-y: auto; color: var(--gray-700); line-height: var(--line-height-relaxed);">
+                <h4 style="color: var(--gray-900); font-weight: var(--font-weight-600); margin-bottom: var(--space-3);">By using CitizenLink, you agree to the following terms:</h4>
+                <ul style="padding-left: var(--space-6);">
                     <li>Provide accurate information when filing complaints</li>
                     <li>Use the platform responsibly and lawfully</li>
                     <li>Respect other users and government officials</li>
@@ -380,27 +380,27 @@
                     <li>Maintain the confidentiality of your account credentials</li>
                     <li>Report any security concerns immediately</li>
                 </ul>
-                <p><strong>These terms may be updated periodically. Continued use constitutes acceptance of changes.</strong></p>
+                <p style="margin-top: var(--space-4); color: var(--gray-600);"><strong>These terms may be updated periodically. Continued use constitutes acceptance of changes.</strong></p>
             </div>
-            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn btn-secondary" data-modal="termsModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
-                <button class="btn btn-primary" data-accept="terms" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
+            <div class="modal-footer" style="padding: var(--space-6); background: var(--gray-50); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-4);">
+                <button class="btn btn-secondary" data-modal="termsModal" style="background: var(--gray-300); color: var(--gray-900); border: none; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-600);">Close</button>
+                <button class="btn btn-primary" data-accept="terms" style="background: linear-gradient(135deg, var(--primary-500), var(--primary-600)); color: white; border: none; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-600);">I Accept</button>
             </div>
         </div>
     </div>
 
     <div id="privacyModal" class="modal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); isolation: isolate;">
-        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-            <div class="modal-header" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600;">Privacy Policy</h3>
-                <button class="modal-close" data-modal="privacyModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; padding: 0; width: 30px; height: 30px;">&times;</button>
+        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: var(--radius-lg); width: 90%; max-width: 500px; max-height: 80vh; overflow: hidden; box-shadow: var(--shadow-2xl);">
+            <div class="modal-header" style="padding: var(--space-6); background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.05)); border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-600); color: var(--gray-900);">Privacy Policy</h3>
+                <button class="modal-close" data-modal="privacyModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray-600); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: color var(--transition-sm);">&times;</button>
             </div>
-            <div class="modal-body privacy-content" style="padding: 20px; max-height: 50vh; overflow-y: auto;">
+            <div class="modal-body privacy-content" style="padding: var(--space-6); max-height: 50vh; overflow-y: auto; color: var(--gray-700); line-height: var(--line-height-relaxed);">
                 <div id="privacyModalContent"></div>
             </div>
-            <div class="modal-footer" style="padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn btn-secondary" data-modal="privacyModal" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
-                <button class="btn btn-primary" data-accept="privacy" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">I Accept</button>
+            <div class="modal-footer" style="padding: var(--space-6); background: var(--gray-50); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-4);">
+                <button class="btn btn-secondary" data-modal="privacyModal" style="background: var(--gray-300); color: var(--gray-900); border: none; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-600);">Close</button>
+                <button class="btn btn-primary" data-accept="privacy" style="background: linear-gradient(135deg, var(--primary-500), var(--primary-600)); color: white; border: none; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-600);">I Accept</button>
             </div>
         </div>
     </div>

@@ -1,4 +1,17 @@
-  @import url('/css/app.css');
+/* Enhanced Design System & Components */
+@import url('/css/design-system.css');
+@import url('/css/utilities.css');
+@import url('/css/layouts.css');
+@import url('/css/animations.css');
+
+/* Component Enhancements */
+@import url('/css/components/buttons-enhanced.css');
+@import url('/css/components/cards-enhanced.css');
+@import url('/css/components/forms-enhanced.css');
+@import url('/css/components/tables-lists.css');
+
+/* Original Stylesheets */
+@import url('/css/app.css');
 @import url('/css/toast.css');
 @import url('/css/header-redesign.css');
 @import url('/css/pages/dashboard-redesign.css');
@@ -114,6 +127,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
+  color: var(--gray-800);
   line-height: 1.25;
   letter-spacing: -0.025em;
 }
@@ -179,6 +193,7 @@ a:hover {
   background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
   border-color: var(--primary-700);
   box-shadow: var(--shadow-md);
+  color: white;
 }
 
 .btn-secondary {
@@ -194,6 +209,7 @@ a:hover {
 
 .btn-outline {
   background: transparent;
+  border-color:white;
 }
 
 .btn-outline:hover {

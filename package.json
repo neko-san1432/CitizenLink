@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
+    "cheerio": "^1.1.2",
     "cross-fetch": "^4.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-no-unsanitized": "^4.1.4",

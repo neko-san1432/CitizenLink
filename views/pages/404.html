@@ -7,8 +7,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>404 - Page Not Found | CitizenLink</title>
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/pages/404.css">
+    <style>
+        body { background: var(--gray-50); }
+        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: var(--space-6); text-align: center; }
+        .error-icon { font-size: 5rem; margin-bottom: var(--space-4); }
+        .error-code { font-size: var(--font-size-4xl); font-weight: var(--font-weight-700); color: var(--primary-600); margin-bottom: var(--space-2); }
+        .error-title { font-size: var(--font-size-3xl); font-weight: var(--font-weight-700); color: var(--gray-900); margin-bottom: var(--space-4); }
+        .error-message { font-size: var(--font-size-lg); color: var(--gray-600); margin-bottom: var(--space-8); max-width: 500px; line-height: var(--line-height-relaxed); }
+        .action-buttons { display: flex; gap: var(--space-4); justify-content: center; margin-bottom: var(--space-12); flex-wrap: wrap; }
+        .suggestions { text-align: left; background: white; padding: var(--space-6); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 400px; }
+        .suggestions h3 { font-size: var(--font-size-lg); font-weight: var(--font-weight-600); margin-bottom: var(--space-4); color: var(--gray-900); }
+        .suggestions ul { list-style: none; padding: 0; }
+        .suggestions li { margin-bottom: var(--space-2); }
+        .suggestions a { color: var(--primary-600); text-decoration: none; transition: color var(--transition-sm); }
+        .suggestions a:hover { color: var(--primary-700); text-decoration: underline; }
+    </style>
 </head>
 <body>
     <div class="error-container">
@@ -21,8 +36,8 @@
         </p>
         
         <div class="action-buttons">
-            <a href="/" class="btn btn-primary">🏠 Go Home</a>
-            <button id="go-back" class="btn" type="button">← Go Back</button>
+            <a href="/" class="btn btn-primary btn-lg">🏠 Go Home</a>
+            <button id="go-back" class="btn btn-secondary btn-lg" type="button">← Go Back</button>
         </div>
 
         <div class="suggestions">

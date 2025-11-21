@@ -15,7 +15,7 @@ export function createHeader() {
           </svg>
         </button>
         <a href="${brandConfig.dashboardUrl}" class="brand-logo">
-          <div class="brand-icon">C</div>
+          <div class="brand-icon"></div>
           <span class="brand-text">${brandConfig.name}</span>
         </a>
       </div>

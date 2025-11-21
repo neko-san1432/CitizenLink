@@ -2,7 +2,7 @@
   padding: 0 var(--space-4);
   min-height: calc(100vh - 64px);
   max-height: calc(100vh - 64px);
-  background: var(--gray-50);
+  background: #f5f7fa;
   position: relative;
   overflow-y: auto;
   box-sizing: border-box}
@@ -45,11 +45,20 @@
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   border: 1px solid var(--gray-200);
-  
+  box-shadow: 
+    0px 1px 3px rgba(0, 0, 0, 0.08),
+    0px 4px 12px rgba(0, 0, 0, 0.06),
+    0px 0px 0px 1px rgba(0, 0, 0, 0.02);
+  transition: all var(--transition-normal);
   overflow: hidden}
 
 .dashboard-card:hover {
-  box-shadow: var(--shadow-md)}
+  box-shadow: 
+    0px 4px 16px rgba(0, 0, 0, 0.12),
+    0px 8px 24px rgba(0, 0, 0, 0.08),
+    0px 0px 0px 1px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--primary-200)}
 
 .dashboard-card-header {
   display: flex;
@@ -455,25 +464,41 @@
 }
 
 /* Dark mode styles */
-.dark .dashboard-container {
-  background: var(--gray-900)}
+.dark .dashboard-container,
+html.dark .dashboard-container {
+  background: #0f172a}
 
-.dark .dashboard-header {
-  background: var(--gray-800);
-  border-color: var(--gray-700)}
-.dark .dashboard-title {
-  color: var(--gray-100)}
+.dark .dashboard-header,
+html.dark .dashboard-header {
+  background: #1e293b;
+  border-color: #334155}
 
-.dark .dashboard-subtitle {
-  color: var(--gray-300)}
+.dark .dashboard-title,
+html.dark .dashboard-title {
+  color: #f1f5f9}
 
-.dark .dashboard-card {
-  background: var(--gray-800);
-  border-color: var(--gray-700)}
+.dark .dashboard-subtitle,
+html.dark .dashboard-subtitle {
+  color: #cbd5e1}
 
-.dark .dashboard-card:hover {
-  background: var(--gray-750);
-  border-color: var(--gray-600)}
+.dark .dashboard-card,
+html.dark .dashboard-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 
+    0px 2px 8px rgba(0, 0, 0, 0.4),
+    0px 4px 12px rgba(0, 0, 0, 0.3),
+    0px 0px 0px 1px rgba(255, 255, 255, 0.05)}
+
+.dark .dashboard-card:hover,
+html.dark .dashboard-card:hover {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 
+    0px 4px 16px rgba(0, 0, 0, 0.5),
+    0px 8px 24px rgba(0, 0, 0, 0.4),
+    0px 0px 0px 1px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px)}
 
 .dark .dashboard-card-title {
   color: var(--gray-100)}

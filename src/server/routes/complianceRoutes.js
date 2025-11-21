@@ -3,7 +3,7 @@ const router = express.Router();
 const complianceController = require('../controllers/ComplianceController');
 const { authenticateUser } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiting');
-const ErrorHandler = require('../middleware/errorHandler');
+const { ErrorHandler } = require('../middleware/errorHandler');
 
 /**
  * @route   GET /api/compliance/export

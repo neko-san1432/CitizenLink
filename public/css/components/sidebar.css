@@ -114,7 +114,7 @@ html.dark {
   color: var(--sidebar-text, #1f2937) !important;
 }
 
-.brand-icon {
+/*.brand-icon {
   width: 40px !important;
   height: 40px !important;
   background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
@@ -126,7 +126,7 @@ html.dark {
   font-weight: bold !important;
   font-size: 16px !important;
   flex-shrink: 0 !important;
-}
+}*/
 
 .brand-text {
   display: flex !important;
@@ -376,8 +376,54 @@ html.dark {
 }
 
 /* Dark mode specific adjustments */
+html.dark #sidebar {
+  background: var(--gray-800) !important;
+  border-right-color: var(--gray-700) !important;
+}
+
+html.dark .sidebar-brand {
+  background: var(--gray-900) !important;
+  border-bottom-color: var(--gray-700) !important;
+}
+
+html.dark .sidebar-menu a {
+  color: var(--gray-200) !important;
+}
+
+html.dark .sidebar-menu a:hover {
+  background: var(--gray-700) !important;
+  color: white !important;
+}
+
+html.dark .sidebar-menu a.active {
+  background: var(--primary-600) !important;
+  color: white !important;
+}
+
+html.dark .sidebar-bottom {
+  background: var(--gray-900) !important;
+  border-top-color: var(--gray-700) !important;
+}
+
 html.dark .theme-toggle {
-  background: var(--sidebar-hover);
+  background: var(--gray-800) !important;
+  border-color: var(--gray-700) !important;
+}
+
+html.dark .theme-toggle:hover {
+  background: var(--gray-700) !important;
+}
+
+html.dark .theme-toggle-label {
+  color: var(--gray-200) !important;
+}
+
+html.dark .toggle-switch {
+  background: var(--gray-600) !important;
+}
+
+html.dark .toggle-switch.active {
+  background: var(--primary-600) !important;
 }
 
 html.dark .logout-link {

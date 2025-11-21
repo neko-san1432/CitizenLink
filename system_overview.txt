@@ -1,0 +1,94 @@
+# CitizenLink System Overview
+
+## 1. Introduction
+
+**CitizenLink** is a modern, secure, and user-friendly citizen complaint management system designed to streamline the process of reporting, tracking, and resolving public complaints. The system provides a centralized platform for citizens to submit complaints, for LGU (Local Government Unit) officers to manage and address these complaints, and for administrators to oversee the entire workflow.
+
+## 2. System Architecture
+
+The application follows a **client-server architecture**, with a clear separation between the front-end (client) and back-end (server).
+
+### 2.1. Back-End (Server-Side)
+
+The back-end is built with **Node.js** and the **Express.js** framework. It is responsible for:
+- **API Endpoints:** Providing a RESTful API for the front-end to interact with.
+- **Business Logic:** Handling all the core logic of the application, such as user authentication, complaint processing, and notification services.
+- **Database Interaction:** Managing all communication with the Supabase (PostgreSQL) database.
+- **Security:** Implementing security measures like authentication, authorization, input validation, and protection against common web vulnerabilities.
+
+The server-side code is structured into the following directories:
+- `src/server/config`: Configuration files for the server, database, and other services.
+- `src/server/controllers`: Handles incoming requests, processes them, and sends back responses.
+- `src/server/middleware`: Middleware functions for tasks like authentication, logging, and error handling.
+- `src/server/models`: Defines the data structures and models for the application (e.g., Complaint, User).
+- `src/server/repositories`: Manages data access and abstracts the database interactions.
+- `src/server/routes`: Defines the API routes and maps them to the corresponding controllers.
+- `src/server/services`: Contains the core business logic of the application.
+- `src/server/utils`: Utility functions used across the server-side application.
+
+### 2.2. Front-End (Client-Side)
+
+The front-end is a traditional multi-page application using vanilla JavaScript, HTML, and CSS. It is responsible for:
+- **User Interface (UI):** Rendering the user interface and providing an interactive experience for users.
+- **Client-Side Logic:** Handling user interactions, form submissions, and communication with the back-end API.
+- **Data Visualization:** Displaying data in a user-friendly way, such as the complaint heatmap.
+
+The front-end code is structured into the following directories:
+- `public/`: Contains all the static assets for the client-side application.
+  - `css/`: Stylesheets for the application.
+  - `js/`: JavaScript files for client-side logic.
+  - `assets/`: Images, icons, and other static assets.
+- `views/`: HTML templates for the different pages of the application.
+
+### 2.3. Database
+
+The system uses **Supabase**, which provides a PostgreSQL database, authentication services, and other back-end features. The database schema is defined in `database/DB_FORMAT.sql`.
+
+## 3. Key Features
+
+- **User Roles:** The system supports multiple user roles with different levels of permissions:
+  - **Citizen:** Can submit and track their own complaints.
+  - **LGU Officer:** Can view and update the status of assigned complaints.
+  - **LGU Admin:** Can manage users and complaints within their LGU.
+  - **Coordinator:** Can assign complaints to LGU officers.
+  - **Super Admin:** Has full access to the system and can manage all users and complaints.
+- **Complaint Management:** A comprehensive workflow for submitting, assigning, tracking, and resolving complaints.
+- **Real-Time Notifications:** Users receive real-time notifications about updates to their complaints.
+- **Heatmap Visualization:** A heatmap that visualizes the geographic distribution of complaints.
+- **Secure Authentication:** Secure user authentication and session management using Supabase Auth.
+- **Audit Trails:** Logs of all significant actions performed by users for accountability and security.
+
+## 4. Technologies Used
+
+- **Back-End:**
+  - **Node.js:** JavaScript runtime environment.
+  - **Express.js:** Web application framework for Node.js.
+  - **Supabase:** Back-end as a Service (BaaS) platform for database and authentication.
+  - **PostgreSQL:** The underlying database used by Supabase.
+- **Front-End:**
+  - **HTML, CSS, JavaScript:** The core technologies for building the user interface.
+  - **Chart.js:** For creating charts and data visualizations.
+- **Development & Tooling:**
+  - **Nodemon:** For automatically restarting the server during development.
+  - **Jest:** For running automated tests.
+  - **ESLint:** For code linting and maintaining code quality.
+  - **Git & GitHub:** For version control and source code management.
+
+## 5. Security
+
+Security is a key focus of the CitizenLink system. The following measures are in place:
+- **Authentication & Authorization:** Secure user authentication and role-based access control.
+- **Input Validation:** All user input is validated on both the client-side and server-side to prevent common vulnerabilities like XSS and SQL injection.
+- **Data Sanitization:** Using libraries like `isomorphic-dompurify` to sanitize user-generated content.
+- **Security Headers:** Using `helmet` to set various HTTP headers to improve security.
+- **CSRF Protection:** Measures to protect against Cross-Site Request Forgery attacks.
+- **Rate Limiting:** To prevent brute-force attacks.
+- **Dependency Security:** Regularly scanning for vulnerabilities in third-party dependencies.
+
+## 6. Testing
+
+The system has a suite of automated tests to ensure its quality and reliability. The tests are categorized into:
+- **Functional Tests:** To test the end-to-end functionality of the application.
+- **Integration Tests:** To test the interaction between different parts of the system.
+- **Security Tests:** To test for common security vulnerabilities.
+The testing framework used is **Jest**.
