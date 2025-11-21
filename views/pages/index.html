@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CitizenLink</title>
+    <title>CitizenLink - Report Issues & Track Progress</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
@@ -16,16 +16,16 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="/" class="brand-logo">
-                    <div class="brand-icon">C</div>
+                    <div class="brand-icon"></div>
                     <span class="brand-text">CitizenLink</span>
                 </a>
             </div>
             <div class="header-right">
-                <div id="unauthenticated-buttons" class="flex items-center gap-2">
+                <div id="unauthenticated-buttons" class="d-flex items-center gap-2">
                     <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
                     <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
                 </div>
-                <div id="authenticated-buttons" class="hidden flex items-center gap-2">
+                <div id="authenticated-buttons" class="hidden d-flex items-center gap-2">
                     <a href="/dashboard" id="dashboard-btn" class="btn btn-primary">Go to Dashboard</a>
                     <button id="logout-btn" type="button" class="btn btn-secondary">Logout</button>
                 </div>
@@ -33,6 +33,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <main class="hero animate-fade-in" role="main">
       <section class="hero-inner container mx-auto px-4 py-12">
         <div class="max-w-2xl">
@@ -57,12 +58,38 @@
           <div class="card p-6">
             <h3 class="card-title text-primary">Department Routing</h3>
             <p class="mt-1 text-gray-600">We route complaints to the right LGU department automatically.</p>
+=======
+    <main role="main">
+      <section class="hero">
+        <div class="hero-inner">
+          <h1>CitizenLink</h1>
+          <p>Report issues, track progress, and help improve your community. Share your concerns and get real-time updates as your complaints are processed by the right departments.</p>
+
+          <div class="hero-actions">
+            <a href="/signup" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="/login" class="btn btn-outline btn-lg">I already have an account</a>
+          </div>
+
+          <div class="cards-grid">
+            <div class="card">
+              <h3>📋 Easy Reporting</h3>
+              <p>File a complaint with photos and location in minutes. Our intuitive form makes it simple to report any issue in your area.</p>
+            </div>
+            <div class="card">
+              <h3>🔔 Real-time Updates</h3>
+              <p>Get notified as your report moves through the process. Stay informed about the status and actions taken on your complaint.</p>
+            </div>
+            <div class="card">
+              <h3>🎯 Smart Routing</h3>
+              <p>We automatically route complaints to the right LGU department. Faster resolution through intelligent categorization.</p>
+            </div>
+>>>>>>> 0292d7f (Final changes before migrating to main branch - UI improvements, animations, and system documentation)
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="footer">
+    <footer>
       <small>© <span id="year"></span> CitizenLink. All rights reserved.</small>
       <nav class="footer-links">
         <a href="/privacy-notice">Privacy Notice</a>
