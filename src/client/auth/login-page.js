@@ -1,7 +1,7 @@
 // Login page specific functionality
 import { supabase } from '../config/config.js';
 import { shouldSkipAuthCheck } from '../utils/oauth-cleanup.js';
-import { getOAuthContext } from './authChecker.js';
+import { getOAuthContext, suppressAuthErrorNotifications } from './authChecker.js';
 
 // Clear OAuth context and session when landing on login page (without deleting users)
 // This prevents redirects when user explicitly navigated here
@@ -16,8 +16,33 @@ const clearOAuthContextOnLanding = async () => {
       
       // Only clear if user explicitly navigated here (not from OAuth redirect)
       if (!isOAuthRedirect) {
-        // User explicitly navigated to login - clear OAuth context and session to prevent redirects
-        // But don't delete the user - that only happens on explicit button clicks
+        console.log('[LOGIN] User navigated to login during OAuth signup - cleaning up');
+        suppressAuthErrorNotifications();
+        
+        // Get user ID before signing out (for deletion)
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        // Delete incomplete OAuth signup from database
+        if (userId && session?.access_token && ctx.intent === 'signup') {
+          try {
+            const token = session.access_token;
+            const headers = { 
+              'Authorization': `Bearer ${token}`
+            };
+            
+            await fetch('/api/auth/oauth-incomplete', {
+              method: 'DELETE',
+              headers,
+              credentials: 'include'
+            });
+            console.log('[LOGIN] Incomplete OAuth signup deleted');
+          } catch (deleteError) {
+            console.warn('[LOGIN] Error deleting incomplete signup:', deleteError);
+          }
+        }
+        
+        // Clear OAuth context and session
         const { clearOAuthContext } = await import('./authChecker.js');
         clearOAuthContext();
         

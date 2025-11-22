@@ -1,4 +1,4 @@
-// ID Verification: upload/camera capture, optional OCR call, and form autofill
+// ID Verification: upload/camera capture and OCR for identity verification
 // Expected OCR API response shape (example):
 // {
 //   fields: {
@@ -16,10 +16,13 @@
 //   rawText: "...",
 //   provider: "textract|vision|tesseract|custom"
 // }
+// Note: Extracted fields are displayed for verification purposes only, not for form autofill
 
 (function () {
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const container = qs('#id-step-placeholder');
+  if (!container) return;
 
   const modeBtns = qsa('.id-mode-btn');
   const uploadPanel = qs('[data-mode-panel="upload"]');
@@ -45,10 +48,15 @@
   const review = qs('#id-review');
   const reviewGrid = qs('#id-review-grid');
 
-  const form = qs('#regForm');
+  const form = qs('#regForm') || qs('#oauthCompleteForm');
 
   let mediaStream = null;
   let capturedBlob = null;
+  let isStartingCamera = false; // Prevent multiple simultaneous start attempts
+  let lastCameraError = null;
+  let cameraErrorCount = 0;
+  let cameraCooldownUntil = 0; // Timestamp when camera can be retried
+  let extractedIdData = null; // Store extracted ID data for comparison
 
   function setMode(mode) {
     modeBtns.forEach((b) => {
@@ -62,6 +70,8 @@
     if (!isUpload) {
       previewWrap.hidden = true;
       fileInput.value = '';
+      // Don't auto-start - let user explicitly click "Enable camera" button
+      // This prevents permission issues and race conditions
     } else {
       stopCamera();
       cameraPreviewWrap.hidden = true;
@@ -106,24 +116,234 @@
 
   // Camera handling
   async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status('Camera not supported on this device. Please use Upload mode.', 'error');
+      return;
+    }
+
+    // Check cooldown period
+    const now = Date.now();
+    if (now < cameraCooldownUntil) {
+      const secondsLeft = Math.ceil((cameraCooldownUntil - now) / 1000);
+      status(`Please wait ${secondsLeft} second${secondsLeft > 1 ? 's' : ''} before trying again.`, 'info');
+      return;
+    }
+
+    // Prevent multiple simultaneous start attempts
+    if (isStartingCamera) {
+      status('Camera is already starting. Please wait...', 'info');
+      return;
+    }
+
+    // Stop any existing camera stream first
+    if (mediaStream) {
+      stopCamera();
+      // Wait longer for cleanup to ensure resources are released
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    isStartingCamera = true;
+
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      cameraStartBtn.disabled = true;
+      status('Requesting camera access...', 'info');
+      
+      // Strategy: Try simplest constraints first, then progressively more specific
+      // This avoids NotReadableError from overly complex constraints
+      let mediaStreamAttempt = null;
+      let lastError = null;
+      
+      // Attempt 1: Absolute simplest - just request any video
+      try {
+        status('Checking camera availability...', 'info');
+        mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        console.log('Camera access granted with simple constraints');
+      } catch (simpleError) {
+        lastError = simpleError;
+        console.log('Simple constraints failed, trying rear camera...', simpleError.name);
+        
+        // Attempt 2: Try rear camera (environment) with minimal constraints
+        await new Promise(resolve => setTimeout(resolve, 300));
+        try {
+          mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' }, 
+            audio: false 
+          });
+          console.log('Camera access granted with rear camera');
+        } catch (rearError) {
+          lastError = rearError;
+          console.log('Rear camera failed, trying any camera with basic constraints...', rearError.name);
+          
+          // Attempt 3: Any camera with basic quality
+          await new Promise(resolve => setTimeout(resolve, 300));
+          try {
+            mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({ 
+              video: { width: 640, height: 480 }, 
+              audio: false 
+            });
+            console.log('Camera access granted with basic constraints');
+          } catch (basicError) {
+            lastError = basicError;
+            console.log('All camera attempts failed', basicError.name);
+            throw basicError; // Re-throw to be caught by outer catch
+          }
+        }
+      }
+      
+      mediaStream = mediaStreamAttempt;
+      
+      // Success - reset error tracking
+      cameraErrorCount = 0;
+      lastCameraError = null;
+      
       cameraVideo.srcObject = mediaStream;
-      cameraCaptureBtn.disabled = false;
-      cameraStopBtn.disabled = false;
-      status('Camera enabled');
+      const cameraWrap = cameraVideo.closest('.camera-wrap');
+      
+      // Wait for video to be ready
+      const onVideoReady = () => {
+        cameraVideo.classList.add('ready');
+        if (cameraWrap) cameraWrap.classList.add('active');
+        cameraCaptureBtn.disabled = false;
+        cameraStopBtn.disabled = false;
+        status('Camera ready. Position your ID in the frame and click Capture.', 'success');
+      };
+      
+      cameraVideo.addEventListener('loadedmetadata', onVideoReady, { once: true });
+      cameraVideo.addEventListener('playing', onVideoReady, { once: true });
+      
+      cameraVideo.play().catch(err => {
+        console.warn('Video play error:', err);
+        // Still enable capture if metadata is loaded
+        if (cameraVideo.videoWidth > 0) {
+          onVideoReady();
+        }
+      });
+      
+      cameraStartBtn.disabled = false;
+      isStartingCamera = false;
     } catch (e) {
-      status('Unable to access camera. Please allow permissions or use Upload mode.', 'error');
+      console.error('Camera error:', e);
+      isStartingCamera = false;
+      cameraStartBtn.disabled = false;
+      
+      // Clean up any partial stream directly (don't call stopCamera to avoid recursion)
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((t) => {
+          t.stop();
+          t.enabled = false;
+        });
+        mediaStream = null;
+      }
+      if (cameraVideo) {
+        cameraVideo.srcObject = null;
+        cameraVideo.classList.remove('ready');
+        const cameraWrap = cameraVideo.closest('.camera-wrap');
+        if (cameraWrap) cameraWrap.classList.remove('active');
+      }
+      
+      let errorMsg = 'Unable to access camera. ';
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        errorMsg += 'Please allow camera permissions in your browser settings and try again.';
+      } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+        errorMsg += 'No camera found. Please use Upload mode instead.';
+      } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+        cameraErrorCount++;
+        lastCameraError = e.name;
+        
+        // Implement exponential backoff: 3s, 6s, 10s, then suggest upload mode
+        const cooldownSeconds = cameraErrorCount === 1 ? 3 : cameraErrorCount === 2 ? 6 : 10;
+        cameraCooldownUntil = Date.now() + (cooldownSeconds * 1000);
+        
+        errorMsg = 'Camera cannot be accessed. ';
+        
+        if (cameraErrorCount === 1) {
+          errorMsg += 'This usually means the camera is being used by another application. ';
+          errorMsg += 'Please close Zoom, Teams, Skype, Discord, or other video apps, then wait 3 seconds and try again.';
+        } else if (cameraErrorCount === 2) {
+          errorMsg += 'The camera is still unavailable. ';
+          errorMsg += 'Please check: (1) Close all video apps, (2) Close other browser tabs using camera, (3) Restart your browser. ';
+          errorMsg += 'Wait 6 seconds before trying again, or use Upload mode instead.';
+        } else {
+          errorMsg += 'Camera access failed multiple times. ';
+          errorMsg += 'Please use Upload mode to continue, or restart your computer and try again.';
+          // After 3 failures, suggest switching to upload mode
+          setTimeout(() => {
+            const uploadBtn = Array.from(modeBtns).find(b => b.dataset.mode === 'upload');
+            if (uploadBtn) {
+              status('💡 Tip: Switch to "Upload" mode to continue without camera.', 'info');
+              // Highlight the upload button
+              uploadBtn.style.border = '2px solid var(--info-500)';
+              uploadBtn.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+              setTimeout(() => {
+                uploadBtn.style.border = '';
+                uploadBtn.style.boxShadow = '';
+              }, 5000);
+            }
+          }, 2000);
+        }
+        
+        // Disable button during cooldown
+        cameraStartBtn.disabled = true;
+        const cooldownTimer = setInterval(() => {
+          const remaining = Math.ceil((cameraCooldownUntil - Date.now()) / 1000);
+          if (remaining > 0) {
+            status(`Please wait ${remaining} second${remaining > 1 ? 's' : ''}...`, 'info');
+          } else {
+            clearInterval(cooldownTimer);
+            cameraStartBtn.disabled = false;
+            if (cameraErrorCount <= 2) {
+              status('You can try clicking "Enable camera" again now.', 'info');
+            } else {
+              status('Consider using Upload mode instead.', 'info');
+            }
+          }
+        }, 1000);
+        
+        // Clear timer after cooldown
+        setTimeout(() => clearInterval(cooldownTimer), cooldownSeconds * 1000 + 100);
+      } else if (e.name === 'OverconstrainedError' || e.name === 'ConstraintNotSatisfiedError') {
+        errorMsg += 'Camera does not support the requested settings. Trying with basic settings...';
+        // Try again with minimal constraints
+        setTimeout(async () => {
+          try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            cameraVideo.srcObject = mediaStream;
+            cameraVideo.play();
+            status('Camera started with basic settings.', 'success');
+          } catch (retryError) {
+            status('Could not start camera. Please use Upload mode instead.', 'error');
+          }
+        }, 1000);
+      } else {
+        errorMsg += 'Please use Upload mode or check your camera settings.';
+      }
+      status(errorMsg, 'error');
     }
   }
 
   function stopCamera() {
+    isStartingCamera = false; // Reset flag to allow restart
+    
     if (mediaStream) {
-      mediaStream.getTracks().forEach((t) => t.stop());
+      // Stop all tracks more thoroughly
+      const tracks = mediaStream.getTracks();
+      tracks.forEach((t) => {
+        t.stop();
+        t.enabled = false;
+      });
+      // Clear the stream
       mediaStream = null;
     }
+    if (cameraVideo) {
+      // Pause video first
+      cameraVideo.pause();
+      cameraVideo.srcObject = null;
+      cameraVideo.classList.remove('ready');
+      const cameraWrap = cameraVideo.closest('.camera-wrap');
+      if (cameraWrap) cameraWrap.classList.remove('active');
+    }
     cameraCaptureBtn.disabled = true;
-    cameraStopBtn.disabled = true;
+    cameraStopBtn.disabled = false; // Allow restart
   }
 
   cameraStartBtn?.addEventListener('click', startCamera);
@@ -133,28 +353,57 @@
   });
 
   cameraCaptureBtn?.addEventListener('click', () => {
-    if (!cameraVideo.videoWidth) return;
-    const w = cameraVideo.videoWidth;
-    const h = cameraVideo.videoHeight;
-    cameraCanvas.width = w;
-    cameraCanvas.height = h;
-    const ctx = cameraCanvas.getContext('2d');
-    ctx.drawImage(cameraVideo, 0, 0, w, h);
-    cameraCanvas.toBlob((blob) => {
-      capturedBlob = blob;
-      const url = URL.createObjectURL(blob);
-      cameraPreviewImg.src = url;
-      cameraPreviewWrap.hidden = false;
-      updateScanEnabled();
-      status('Image captured. You may proceed to Extract & Autofill.');
-    }, 'image/jpeg', 0.95);
+    if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+      status('Camera not ready. Please wait for the camera to initialize.', 'error');
+      return;
+    }
+    
+    try {
+      const w = cameraVideo.videoWidth;
+      const h = cameraVideo.videoHeight;
+      cameraCanvas.width = w;
+      cameraCanvas.height = h;
+      const ctx = cameraCanvas.getContext('2d');
+      
+      // Draw the video frame to canvas
+      ctx.drawImage(cameraVideo, 0, 0, w, h);
+      
+      // Convert to blob
+      cameraCanvas.toBlob((blob) => {
+        if (!blob) {
+          status('Failed to capture image. Please try again.', 'error');
+          return;
+        }
+        
+        capturedBlob = blob;
+        const url = URL.createObjectURL(blob);
+        cameraPreviewImg.src = url;
+        cameraPreviewWrap.hidden = false;
+        
+        // Stop camera after capture to save resources
+        stopCamera();
+        
+        updateScanEnabled();
+        status('Image captured successfully! You may proceed to verify your ID.', 'success');
+      }, 'image/jpeg', 0.92); // Slightly lower quality for smaller file size
+    } catch (err) {
+      console.error('Capture error:', err);
+      status('Failed to capture image. Please try again.', 'error');
+    }
   });
 
   cameraRetakeBtn?.addEventListener('click', () => {
+    if (cameraPreviewImg.src) {
+      URL.revokeObjectURL(cameraPreviewImg.src);
+    }
     capturedBlob = null;
     cameraPreviewImg.src = '';
     cameraPreviewWrap.hidden = true;
     updateScanEnabled();
+    // Restart camera for retake
+    if (cameraPanel && !cameraPanel.hidden) {
+      startCamera();
+    }
   });
 
   // Mode toggle
@@ -162,7 +411,7 @@
 
   consent?.addEventListener('change', updateScanEnabled);
 
-  // Scan and autofill
+  // Scan and verify ID
   scanBtn?.addEventListener('click', async () => {
     const usingUpload = !uploadPanel.hidden;
     const file = usingUpload ? fileInput.files?.[0] : null;
@@ -180,16 +429,53 @@
         body: fd,
       });
 
-      if (!res.ok) {
-        throw new Error(`OCR service returned ${res.status}`);
-      }
       const data = await res.json();
-      renderReview(data?.fields || {}, data?.provider);
-      autofillForm(data?.fields || {});
-      status('ID processed. Extracted fields shown below. Please review before submitting.', 'success');
+
+      // Handle error responses from OCR service
+      if (!res.ok || !data.success) {
+        const errorCode = data.error || 'UNKNOWN_ERROR';
+        let errorMessage = data.message || 'Could not process the ID automatically.';
+        
+        // Provide specific error messages based on error type
+        if (errorCode === 'TEXT_DETECTION_FAILED' || errorCode === 'NO_FIELDS_EXTRACTED') {
+          errorMessage = data.message || 'Text detection failed. ';
+          if (data.details && data.details.suggestions) {
+            errorMessage += '\n\nSuggestions:\n' + data.details.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n');
+          } else {
+            errorMessage += 'This may be due to poor image quality, blur, or camera issues. Please try again with a clearer image.';
+          }
+        } else if (res.status === 400) {
+          errorMessage = data.message || 'Invalid image. Please ensure the image is clear and readable.';
+        } else if (res.status >= 500) {
+          errorMessage = 'Server error occurred while processing the ID. Please try again later.';
+        }
+        
+        status(errorMessage, 'error');
+        console.error('OCR error:', {
+          code: errorCode,
+          message: data.message,
+          details: data.details
+        });
+        return;
+      }
+
+      // Store extracted ID data
+      extractedIdData = data?.fields || {};
+      
+      // Success - compare with form data (this will also render the results)
+      compareWithFormData(extractedIdData);
     } catch (err) {
-      console.warn('OCR error', err);
-      status('Could not process the ID automatically. You can continue filling out the form manually.', 'error');
+      console.error('OCR error', err);
+      // Determine if it's a network error, camera issue, or other error
+      let errorMessage = 'Could not process the ID automatically. ';
+      if (err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
+        errorMessage += 'Network error. Please check your connection and try again.';
+      } else if (err.message && err.message.includes('camera')) {
+        errorMessage += 'Camera error detected. Please try using Upload mode instead, or check your camera settings.';
+      } else {
+        errorMessage += 'Please try again with a clearer image or continue with manual verification.';
+      }
+      status(errorMessage, 'error');
     } finally {
       scanBtn.disabled = false;
     }
@@ -201,58 +487,365 @@
       reviewGrid.innerHTML = '';
       return;
     }
-    const entries = Object.entries(fields);
-    reviewGrid.innerHTML = entries.map(([k, v]) => {
-      const safeK = escapeHtml(k);
-      const safeV = escapeHtml(String(v ?? ''));
-      return `<div class="kv"><div class="k">${safeK}</div><div class="v">${safeV}</div></div>`;
+    
+    // Field name mapping for better display
+    const fieldLabels = {
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      middleName: 'Middle Name',
+      addressLine1: 'Address Line 1',
+      addressLine2: 'Address Line 2',
+      barangay: 'Barangay',
+      sex: 'Sex/Gender',
+      idNumber: 'ID Number',
+      birthDate: 'Birth Date',
+      expiryDate: 'Expiry Date'
+    };
+    
+    // Filter out null/empty values and format entries
+    const entries = Object.entries(fields)
+      .filter(([k, v]) => v != null && String(v).trim() !== '')
+      .map(([k, v]) => {
+        const label = fieldLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        let value = String(v).trim();
+        
+        // Format dates if they're in ISO format
+        if ((k === 'birthDate' || k === 'expiryDate') && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const date = new Date(value);
+          value = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        return { key: k, label, value };
+      });
+    
+    if (entries.length === 0) {
+      review.hidden = true;
+      reviewGrid.innerHTML = '';
+      return;
+    }
+    
+    reviewGrid.innerHTML = entries.map(({ key, label, value }) => {
+      const safeLabel = escapeHtml(label);
+      const safeValue = escapeHtml(value);
+      return `<div class="kv"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;
     }).join('');
+    
     review.hidden = false;
   }
 
-  function autofillForm(fields) {
-    // Map OCR keys to form inputs
-    const map = [
-      ['firstName', '#firstName'],
-      ['lastName', '#lastName'],
-      ['middleName', '#middleName'], // may not exist
-      ['addressLine1', '#addressLine1'],
-      ['addressLine2', '#addressLine2'],
-      ['barangay', '#barangay'],
-      ['sex', '#gender'],
+  /**
+   * Compare extracted ID data with form data
+   * Only compares fields that exist in both the ID and the form
+   */
+  function compareWithFormData(idFields) {
+    if (!idFields || Object.keys(idFields).length === 0) {
+      // If no ID data, just show extracted fields if any
+      if (reviewGrid) {
+        renderReview(idFields || {});
+      }
+      return;
+    }
+
+    // Get current form values (check if fields exist in the form)
+    const formData = {};
+    const formFieldMap = {
+      firstName: '#firstName',
+      lastName: '#lastName',
+      middleName: '#middleName',
+      addressLine1: '#addressLine1',
+      addressLine2: '#addressLine2',
+      barangay: '#barangay',
+      gender: '#gender'
+    };
+
+    // Only get form values for fields that actually exist in the DOM
+    Object.entries(formFieldMap).forEach(([key, selector]) => {
+      const element = qs(selector);
+      if (element) {
+        formData[key] = (element.value || '').trim();
+      }
+    });
+
+    // Normalize strings for comparison (remove extra spaces, convert to uppercase)
+    const normalize = (str) => {
+      if (!str) return '';
+      return str.replace(/\s+/g, ' ').trim().toUpperCase();
+    };
+
+    // Compare gender values (handle different formats)
+    const normalizeGender = (gender) => {
+      if (!gender) return '';
+      const g = gender.toLowerCase();
+      if (g.startsWith('m') || g === 'he' || g === 'male') return 'MALE';
+      if (g.startsWith('f') || g === 'she' || g === 'female') return 'FEMALE';
+      return gender.toUpperCase();
+    };
+
+    // Compare ID gender with form gender
+    const normalizeIdGender = (idGender) => {
+      if (!idGender) return '';
+      const g = String(idGender).toLowerCase();
+      if (g.startsWith('m') || g === 'male') return 'MALE';
+      if (g.startsWith('f') || g === 'female') return 'FEMALE';
+      return String(idGender).toUpperCase();
+    };
+
+    // Field mapping: ID field name -> Form field name -> Display name
+    const fieldMappings = [
+      { idField: 'firstName', formField: 'firstName', displayName: 'First Name', type: 'name', required: true },
+      { idField: 'lastName', formField: 'lastName', displayName: 'Last Name', type: 'name', required: true },
+      { idField: 'middleName', formField: 'middleName', displayName: 'Middle Name', type: 'name', required: false },
+      { idField: 'addressLine1', formField: 'addressLine1', displayName: 'Address', type: 'address', required: false },
+      { idField: 'barangay', formField: 'barangay', displayName: 'Barangay', type: 'address', required: false },
+      { idField: 'sex', formField: 'gender', displayName: 'Gender', type: 'gender', required: false }
     ];
 
-    map.forEach(([key, sel]) => {
-      const el = qs(sel);
-      if (!el) return;
-      const val = normalizeField(key, fields[key]);
-      if (!val) return;
-      try {
-        if (el.tagName === 'SELECT') {
-          // Try to match option text/value (case-insensitive)
-          const options = Array.from(el.options);
-          const found = options.find(o => (o.value || o.textContent).toLowerCase() === String(val).toLowerCase());
-          if (found) el.value = found.value; else el.value = '';
+    // Perform comparisons - only for fields that exist in both ID and form
+    const comparisons = [];
+    const availableIdFields = Object.keys(idFields).filter(key => idFields[key] != null && String(idFields[key]).trim() !== '');
+    const availableFormFields = Object.keys(formData);
+
+    fieldMappings.forEach(mapping => {
+      // Only compare if:
+      // 1. The ID has this field
+      // 2. The form has this field (element exists in DOM)
+      const idHasField = availableIdFields.includes(mapping.idField);
+      const formHasField = availableFormFields.includes(mapping.formField);
+      
+      if (idHasField && formHasField) {
+        const idValue = String(idFields[mapping.idField]).trim();
+        const formValue = formData[mapping.formField] || '';
+        
+        let match = false;
+        
+        if (mapping.type === 'gender') {
+          // Special handling for gender
+          const idGender = normalizeIdGender(idValue);
+          const formGender = normalizeGender(formValue);
+          match = !formValue || idGender === formGender; // Optional field
         } else {
-          if (!el.value) el.value = String(val);
+          // For names and addresses
+          const normalizedId = normalize(idValue);
+          const normalizedForm = normalize(formValue);
+          
+          if (!formValue && !mapping.required) {
+            // Optional field not entered - consider it a match
+            match = true;
+          } else if (normalizedId === normalizedForm) {
+            // Exact match
+            match = true;
+          } else if (normalizedId.length > 0 && normalizedForm.length > 0) {
+            // Partial match (one contains the other)
+            match = normalizedId.includes(normalizedForm) || normalizedForm.includes(normalizedId);
+          }
         }
-        el.classList.add('autofilled');
-        setTimeout(() => el.classList.remove('autofilled'), 2600);
-      } catch {}
+        
+        comparisons.push({
+          field: mapping.displayName,
+          idValue: idValue,
+          formValue: formValue || '(not entered)',
+          match: match,
+          type: mapping.type,
+          required: mapping.required
+        });
+      }
     });
+
+    // Track fields that exist in ID but not in form (for information display)
+    const idOnlyFields = availableIdFields.filter(idField => 
+      !fieldMappings.some(m => m.idField === idField && availableFormFields.includes(m.formField))
+    );
+
+    // Display results
+    displayComparisonResults(comparisons, idOnlyFields);
+    
+    // Return result for status message
+    return { comparisons, idOnlyFields };
+
+    // Display comparison results
+    displayComparisonResults(comparisons);
   }
 
-  function normalizeField(key, value) {
-    if (value == null) return '';
-    const v = String(value).trim();
-    if (!v) return '';
-    if (key === 'sex') {
-      const x = v.toLowerCase();
-      if (x.startsWith('m')) return 'he';
-      if (x.startsWith('f')) return 'she';
-      return '';
+  /**
+   * Display comparison results
+   */
+  function displayComparisonResults(comparisons, idOnlyFields = []) {
+    // If no comparisons possible, show extracted ID data only
+    if (!comparisons || comparisons.length === 0) {
+      if (extractedIdData && reviewGrid) {
+        let message = '<div style="padding: 12px; background: var(--gray-100); border-radius: 6px; margin-bottom: 16px;">';
+        message += '<div style="font-weight: 600; margin-bottom: 8px;">ID Information Extracted</div>';
+        message += '<div style="font-size: 0.9rem; color: var(--gray-700);">';
+        
+        if (idOnlyFields.length > 0) {
+          message += '⚠️ Some fields from your ID cannot be compared because they are not present in the registration form. ';
+        } else {
+          message += 'ℹ️ No matching fields found between the ID and the form. ';
+        }
+        message += 'Please verify the information manually.</div></div>';
+        
+        const extractedHtml = renderExtractedFieldsOnly(extractedIdData);
+        reviewGrid.innerHTML = message + extractedHtml;
+        review.hidden = false;
+        status('ID processed. Some fields cannot be automatically compared with the form.', 'info');
+      }
+      return;
     }
-    return v;
+
+    // Count matches and mismatches
+    const matches = comparisons.filter(c => c.match).length;
+    const mismatches = comparisons.filter(c => !c.match).length;
+    const total = comparisons.length;
+
+    // Update review section with comparison results
+    if (reviewGrid) {
+      const comparisonHtml = comparisons.map(comp => {
+        const matchIcon = comp.match ? 
+          '<span style="color: var(--success-600); margin-right: 8px;">✓</span>' : 
+          '<span style="color: var(--error-600); margin-right: 8px;">✗</span>';
+        const matchClass = comp.match ? 'match' : 'mismatch';
+        const safeField = escapeHtml(comp.field);
+        const safeIdValue = escapeHtml(comp.idValue);
+        const safeFormValue = escapeHtml(comp.formValue);
+        
+        return `
+          <div class="comparison-item ${matchClass}" style="margin-bottom: 12px; padding: 12px; border-radius: 6px; background: ${comp.match ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-left: 3px solid ${comp.match ? 'var(--success-600)' : 'var(--error-600)'};">
+            <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
+              ${matchIcon}
+              <span>${safeField}</span>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--gray-700); margin-bottom: 4px;">
+              <strong>ID:</strong> ${safeIdValue}
+            </div>
+            <div style="font-size: 0.9rem; color: var(--gray-700);">
+              <strong>Form:</strong> ${safeFormValue}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Also show other extracted fields that weren't compared (like ID number, dates)
+      const otherFieldsHtml = renderOtherExtractedFields(extractedIdData, comparisons);
+      
+      // Show warning if some ID fields couldn't be compared
+      const idOnlyWarning = (idOnlyFields && idOnlyFields.length > 0) ? `
+        <div style="margin-top: 16px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border-left: 3px solid var(--warning-600);">
+          <div style="font-size: 0.9rem; color: var(--warning-700);">
+            <strong>Note:</strong> Some fields from your ID (${idOnlyFields.length}) could not be compared because they are not present in the registration form.
+          </div>
+        </div>
+      ` : '';
+
+      const summaryHtml = `
+        <div style="margin-bottom: 16px; padding: 12px; background: var(--gray-100); border-radius: 6px;">
+          <div style="font-weight: 600; margin-bottom: 8px;">Verification Summary</div>
+          <div style="font-size: 0.9rem;">
+            <span style="color: var(--success-600);">✓ ${matches} match${matches !== 1 ? 'es' : ''}</span>
+            ${mismatches > 0 ? `<span style="color: var(--error-600); margin-left: 16px;">✗ ${mismatches} mismatch${mismatches !== 1 ? 'es' : ''}</span>` : ''}
+            <span style="color: var(--gray-600); margin-left: 16px;">(${total} total)</span>
+          </div>
+          ${mismatches > 0 ? `
+            <div style="margin-top: 8px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--error-700);">
+              ⚠️ Please review the mismatched fields and ensure your information matches your ID.
+            </div>
+          ` : `
+            <div style="margin-top: 8px; padding: 8px; background: rgba(34, 197, 94, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--success-700);">
+              ✓ Your information matches the ID.
+            </div>
+          `}
+        </div>
+      `;
+
+      reviewGrid.innerHTML = summaryHtml + comparisonHtml + (otherFieldsHtml ? '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-300);"><div style="font-weight: 600; margin-bottom: 12px;">Other ID Information</div>' + otherFieldsHtml + '</div>' : '') + idOnlyWarning;
+      review.hidden = false;
+    }
+
+    // Update status message
+    if (mismatches === 0) {
+      status('✓ Verification complete: All information matches your ID.', 'success');
+    } else {
+      status(`⚠️ Verification: ${mismatches} field${mismatches !== 1 ? 's' : ''} do not match. Please review and correct.`, 'error');
+    }
+  }
+
+  /**
+   * Render other extracted fields that aren't being compared (ID number, dates, etc.)
+   */
+  function renderOtherExtractedFields(idFields, comparisons) {
+    if (!idFields) return '';
+    
+    const comparedFields = ['firstName', 'lastName', 'middleName', 'addressLine1', 'barangay', 'sex'];
+    const otherFields = Object.entries(idFields)
+      .filter(([key, value]) => !comparedFields.includes(key) && value != null && String(value).trim() !== '')
+      .map(([key, value]) => {
+        const fieldLabels = {
+          idNumber: 'ID Number',
+          birthDate: 'Birth Date',
+          expiryDate: 'Expiry Date',
+          addressLine2: 'Address Line 2'
+        };
+        const label = fieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        let displayValue = String(value).trim();
+        
+        // Format dates
+        if ((key === 'birthDate' || key === 'expiryDate') && displayValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const date = new Date(displayValue);
+          displayValue = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        return { label, value: displayValue };
+      });
+
+    if (otherFields.length === 0) return '';
+
+    return otherFields.map(({ label, value }) => {
+      const safeLabel = escapeHtml(label);
+      const safeValue = escapeHtml(value);
+      return `<div class="kv" style="margin-bottom: 8px;"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;
+    }).join('');
+  }
+
+  /**
+   * Render extracted fields only (when no comparison is possible)
+   */
+  function renderExtractedFieldsOnly(idFields) {
+    if (!idFields) return '';
+    
+    const fieldLabels = {
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      middleName: 'Middle Name',
+      addressLine1: 'Address Line 1',
+      addressLine2: 'Address Line 2',
+      barangay: 'Barangay',
+      sex: 'Sex/Gender',
+      idNumber: 'ID Number',
+      birthDate: 'Birth Date',
+      expiryDate: 'Expiry Date'
+    };
+    
+    const entries = Object.entries(idFields)
+      .filter(([k, v]) => v != null && String(v).trim() !== '')
+      .map(([k, v]) => {
+        const label = fieldLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        let value = String(v).trim();
+        
+        // Format dates
+        if ((k === 'birthDate' || k === 'expiryDate') && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const date = new Date(value);
+          value = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        return { key: k, label, value };
+      });
+    
+    if (entries.length === 0) return '';
+    
+    return entries.map(({ key, label, value }) => {
+      const safeLabel = escapeHtml(label);
+      const safeValue = escapeHtml(value);
+      return `<div class="kv" style="margin-bottom: 8px;"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;
+    }).join('');
   }
 
   function status(text, kind = 'info') {
@@ -264,6 +857,24 @@
   function escapeHtml(s) {
     return s.replace(/[&<>"]+/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   }
+
+  // Re-run comparison when form fields change (if ID data is available)
+  const formFields = ['firstName', 'lastName', 'middleName', 'addressLine1', 'addressLine2', 'barangay', 'gender'];
+  formFields.forEach(fieldId => {
+    const field = qs(`#${fieldId}`);
+    if (field) {
+      field.addEventListener('input', () => {
+        if (extractedIdData) {
+          compareWithFormData(extractedIdData);
+        }
+      });
+      field.addEventListener('change', () => {
+        if (extractedIdData) {
+          compareWithFormData(extractedIdData);
+        }
+      });
+    }
+  });
 
   // Initialize
   setMode('upload');

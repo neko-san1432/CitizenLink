@@ -211,11 +211,8 @@ class CitizenLinkApp {
       const { normalizeRole } = require('./utils/roleValidation');
       const userRole = req.user?.role || 'citizen';
       const normalizedRole = normalizeRole(userRole);
-      if (userRole !== normalizedRole) {
-        console.log('[DASHBOARD] Normalizing role from', userRole, 'to', normalizedRole, 'for dashboard routing');
-      }
       const dashboardPath = this.getDashboardPath(normalizedRole);
-      console.log('[DASHBOARD] Routing dashboard for role:', normalizedRole, 'path:', dashboardPath);
+      // console.log removed for cleanup
       res.sendFile(dashboardPath);
     });
     // General protected pages (simplified URLs)
@@ -808,6 +805,10 @@ class CitizenLinkApp {
     // OAuth continuation aliases (lowercase, hyphenated)
     this.app.get(['/oauth-continuation', '/oauthcontinuation'], (req, res) => {
       res.sendFile(path.join(config.rootDir, 'views', 'pages', 'OAuthContinuation.html'));
+    });
+    // OAuth callback page (handles OAuth redirect)
+    this.app.get('/oauth-callback', (req, res) => {
+      res.sendFile(path.join(config.rootDir, 'views', 'pages', 'oauth-callback.html'));
     });
     // Special signup with code page
     this.app.get('/signup-with-code', (req, res) => {

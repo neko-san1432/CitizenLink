@@ -11,6 +11,8 @@ try {
   console.warn('[RATE LIMIT] Database not available, using in-memory fallback');
 }
 
+
+
 // In-memory fallback store
 const rateLimitStore = new Map();
 
@@ -24,7 +26,7 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Database-backed rate limit operations
+// Database-backed rate limit operations (Fallback)
 async function getRateLimitFromDB(key, windowMs) {
   if (!supabase) return null;
 
@@ -140,11 +142,18 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
       rateLimitData.resetTime = now + windowMs;
     }
 
-    // Save to database (async, don't wait)
-    saveRateLimitToDB(key, rateLimitData, windowMs).catch(() => {
-      // If DB save fails, keep in-memory copy
+    // Save to database (async, don't wait) - Optimized to only sync periodically or on critical thresholds
+    // For high-volume traffic (200k users), we shouldn't hit DB on every request
+    // Only sync if it's a new window or significant change
+    if (rateLimitData.requests.length % 10 === 0 || rateLimitData.requests.length >= effectiveMaxRequests) {
+      saveRateLimitToDB(key, rateLimitData, windowMs).catch(() => {
+        // If DB save fails, keep in-memory copy
+        rateLimitStore.set(key, rateLimitData);
+      });
+    } else {
+      // Just update in-memory
       rateLimitStore.set(key, rateLimitData);
-    });
+    }
 
     // Add headers for rate limit info
     res.set({

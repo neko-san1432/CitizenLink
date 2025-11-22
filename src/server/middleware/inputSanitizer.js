@@ -323,7 +323,6 @@ class InputSanitizer {
       /(--|#|\/\*|\*\/)/g,
       /(\bor\b\s+\d+\s*=\s*\d+)/gi,
       /(\band\b\s+\d+\s*=\s*\d+)/gi,
-      /('|(\\'')|;|\|)/g,
       /(\b(load_file|into\s+outfile|into\s+dumpfile)\b)/gi,
       /(\b(concat|group_concat|char|ascii|ord|hex|unhex)\b)/gi,
       /(\b(benchmark|sleep|waitfor\s+delay)\b)/gi

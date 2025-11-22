@@ -944,22 +944,80 @@
   position: relative;
   width: 100%;
   aspect-ratio: 4/3;
-  background: black;
+  background: #000;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  border: 2px solid var(--gray-200);
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#id-camera, #id-canvas {
+#id-camera {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  transform: scaleX(-1); /* Mirror for better UX (like selfie mode) */
+}
+
+#id-camera.ready {
+  border: 2px solid var(--success-500);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+#id-canvas {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: black;
+  background: #000;
+  display: none;
+}
+
+.camera-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.camera-wrap.active::before {
+  opacity: 1;
 }
 
 .camera-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  margin-top: var(--space-3);
+  justify-content: center;
+}
+
+.camera-actions .btn {
+  min-width: 120px;
+}
+
+#camera-capture-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+#camera-capture-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#camera-capture-btn:not(:disabled):hover {
+  transform: scale(1.05);
+  transition: transform 0.2s;
 }
 
 .id-verify-footer {
@@ -1005,7 +1063,7 @@
 .review-grid .k { color: var(--gray-600); }
 .review-grid .v { color: var(--gray-900); font-weight: 600; }
 
-/* Autofill highlight */
+/* Autofill highlight (deprecated - autofill functionality removed, kept for potential future use) */
 .autofilled {
   border-color: var(--info-400) !important;
   box-shadow: 0 0 0 3px rgba(56,189,248,0.18) !important;

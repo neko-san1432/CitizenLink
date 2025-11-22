@@ -4,6 +4,8 @@ const supabase = Database.getClient();
 const { ValidationError, ConflictError } = require('../middleware/errorHandler');
 
 class UserService {
+  constructor() {
+  }
   // Map arbitrary role strings to allowed DB values
   normalizeRole(rawRole) {
     if (!rawRole) return 'citizen';
@@ -159,6 +161,9 @@ class UserService {
       if (emailError) {
         console.warn('Email verification sending failed:', emailError.message);
       }
+
+
+
       return {
         id: authUserId,
         email: authData.user.email,
@@ -250,6 +255,9 @@ class UserService {
       if (error) {
         throw new Error(`Failed to update user: ${error.message}`);
       }
+
+
+
       return this.formatUserResponse(authData.user);
     } catch (error) {
       console.error('Update user error:', error);

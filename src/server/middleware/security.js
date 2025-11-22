@@ -98,8 +98,9 @@ const customSecurityHeaders = (req, res, next) => {
   // Permissions Policy (formerly Feature Policy)
   // Allow geolocation in development, restrict in production
   const geolocationPolicy = process.env.NODE_ENV === 'production' ? 'geolocation=(self)' : 'geolocation=*';
+  // Allow camera for ID verification, deny microphone and payment
   res.setHeader('Permissions-Policy',
-    `camera=(), microphone=(), ${geolocationPolicy}, payment=()`
+    `camera=(self), microphone=(), ${geolocationPolicy}, payment=()`
   );
   next();
 };

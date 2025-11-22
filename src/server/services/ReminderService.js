@@ -390,12 +390,30 @@ class ReminderService {
       if (error) {
         // Only log non-PGRST116 errors (PGRST116 = no rows returned, which is expected)
         if (error.code !== 'PGRST116') {
-          // Check if it's a network error
-          if (error.message && error.message.includes('fetch failed')) {
+          // Check if error message contains HTML (indicates server/infrastructure error)
+          const errorMessage = error.message || '';
+          const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                             errorMessage.includes('<html') ||
+                             errorMessage.includes('Cloudflare') ||
+                             errorMessage.includes('Internal server error');
+          
+          if (isHtmlError) {
+            // Extract error code from HTML if possible
+            const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
+            const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
+            console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
+              errorCode: errorCode,
+              type: 'HTML_ERROR_RESPONSE',
+              message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
+              complaintId: complaintId
+            });
+          } else if (errorMessage.includes('fetch failed')) {
+            // Check if it's a network error
             console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', error.message);
           } else {
+            // Standard Supabase error
             console.error('[REMINDER_SERVICE] Error getting last reminder:', {
-              message: error.message || 'Unknown error',
+              message: errorMessage,
               code: error.code,
               details: error.details || '',
               hint: error.hint || ''
@@ -408,11 +426,26 @@ class ReminderService {
       return data || null;
     } catch (error) {
       // Handle network errors gracefully
-      if (error instanceof TypeError && error.message.includes('fetch failed')) {
-        console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', error.message);
+      const errorMessage = error.message || '';
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                         errorMessage.includes('<html') ||
+                         errorMessage.includes('Cloudflare') ||
+                         errorMessage.includes('Internal server error');
+      
+      if (isHtmlError) {
+        const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
+        const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
+        console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
+          errorCode: errorCode,
+          type: 'HTML_ERROR_RESPONSE',
+          message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
+          complaintId: complaintId
+        });
+      } else if (error instanceof TypeError && errorMessage.includes('fetch failed')) {
+        console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', errorMessage);
       } else {
         console.error('[REMINDER_SERVICE] Unexpected error getting last reminder:', {
-          message: error.message || 'Unknown error',
+          message: errorMessage,
           stack: error.stack
         });
       }

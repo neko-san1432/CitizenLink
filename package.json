@@ -25,6 +25,7 @@
     "helmet": "^8.1.0",
     "isomorphic-dompurify": "^1.8.0",
     "multer": "^2.0.2",
+    "tesseract.js": "^6.0.1",
     "validator": "^13.15.15",
     "xss": "^1.0.14"
   },

@@ -3,6 +3,13 @@
  * Comprehensive complaint review and management system
  */
 import showMessage from '../components/toast.js';
+
+// Check for OAuth success message
+const oauthSuccessMessage = sessionStorage.getItem('oauth_success_message');
+if (oauthSuccessMessage) {
+  sessionStorage.removeItem('oauth_success_message');
+  showMessage('success', oauthSuccessMessage, 5000);
+}
 import apiClient from '../config/apiClient.js';
 
 // Dashboard state

@@ -441,44 +441,41 @@ async function startOAuthPopup(provider) {
     // Determine intent based on current page
     const isSignupPage = window.location.pathname.includes('/signup');
     const intent = isSignupPage ? 'signup' : 'login';
-    setOAuthContext({ provider, intent, status: 'pending', startedAt: Date.now() });
-  } catch {}
-  try {
+    
+    // Set OAuth context to track the flow
+    setOAuthContext({ 
+      provider, 
+      intent, 
+      status: 'pending', 
+      startedAt: Date.now() 
+    });
+    
+    console.log('[OAUTH] Starting OAuth flow:', { provider, intent });
+    
+    // Direct redirect (no popup) - simpler and more reliable
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/success?popup=1`,
-        scopes,
-        skipBrowserRedirect: true
+        redirectTo: `${window.location.origin}/oauth-callback`,
+        scopes
       }
     });
+    
     if (error) {
       throw error;
-}
-    const authUrl = data?.url;
-    if (!authUrl) {
-      // Fallback to full redirect if URL not returned
-      await supabase.auth.signInWithOAuth({
-        provider,
-      options: {
-        redirectTo: `${window.location.origin}/success`,
-          scopes
-        }
-      });
-      return;
     }
-    const popup = window.open(
-      authUrl,
-      'cl_oauth_popup',
-      'width=520,height=640,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes'
-    );
-    if (!popup) {
-      throw new Error('Popup blocked. Please allow popups for CitizenLink to continue.');
+    
+    // If URL is returned, redirect to it
+    if (data?.url) {
+      window.location.href = data.url;
     }
-    popup.focus();
   } catch (error) {
-    console.error(`[AUTH] ${provider} OAuth popup error:`, error);
+    console.error(`[OAUTH] ${provider} OAuth error:`, error);
     showMessage('error', error.message || `${provider} sign-in failed`);
+    // Clear OAuth context on error
+    try {
+      clearOAuthContext();
+    } catch {}
   }
 }
 // Email field remains empty and editable for both login and register

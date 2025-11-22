@@ -38,7 +38,42 @@ class SimilarityCalculatorService {
         query = query.lte('submitted_at', filters.dateTo);
       }
       const { data: complaints, error } = await query.limit(200);
-      if (error) throw error;
+      if (error) {
+        // Check if error message contains HTML (indicates server/infrastructure error)
+        const errorMessage = error.message || '';
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                           errorMessage.includes('<html') ||
+                           errorMessage.includes('Cloudflare') ||
+                           errorMessage.includes('Internal server error');
+        
+        // Check if it's a network error
+        const isNetworkError = errorMessage.includes('fetch failed') || 
+                              error instanceof TypeError;
+        
+        if (isHtmlError) {
+          const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
+          const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
+          console.error('[SIMILARITY] Infrastructure error in radius search (Supabase/Cloudflare server error):', {
+            errorCode: errorCode,
+            type: 'HTML_ERROR_RESPONSE',
+            operation: 'findSimilarInRadius'
+          });
+          throw new Error(`Database infrastructure error: Supabase/Cloudflare server returned error ${errorCode}. Please try again later.`);
+        } else if (isNetworkError) {
+          console.warn('[SIMILARITY] Network error in radius search (database may be unreachable):', {
+            message: errorMessage,
+            operation: 'findSimilarInRadius'
+          });
+          throw new Error(`Database network error: Unable to connect to database. Please check your network connection.`);
+        } else {
+          console.error('[SIMILARITY] Radius search error:', {
+            message: errorMessage,
+            code: error.code,
+            operation: 'findSimilarInRadius'
+          });
+          throw error;
+        }
+      }
       // Filter by distance
       const nearby = complaints.filter(complaint => {
         const distance = this.calculateDistance(
@@ -100,8 +135,46 @@ class SimilarityCalculatorService {
 
       const { data: complaints, error } = await query;
       if (error) {
-        console.error('[SIMILARITY] Database query error:', error);
-        throw new Error(`Database query failed: ${error.message}`);
+        // Check if error message contains HTML (indicates server/infrastructure error)
+        const errorMessage = error.message || '';
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                           errorMessage.includes('<html') ||
+                           errorMessage.includes('Cloudflare') ||
+                           errorMessage.includes('Internal server error');
+        
+        // Check if it's a network error
+        const isNetworkError = errorMessage.includes('fetch failed') || 
+                              error instanceof TypeError;
+        
+        if (isHtmlError) {
+          // Extract error code from HTML if possible
+          const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
+          const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
+          console.error('[SIMILARITY] Infrastructure error in database query (Supabase/Cloudflare server error):', {
+            errorCode: errorCode,
+            type: 'HTML_ERROR_RESPONSE',
+            message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
+            operation: 'detectClusters'
+          });
+          throw new Error(`Database infrastructure error: Supabase/Cloudflare server returned error ${errorCode}. Please try again later.`);
+        } else if (isNetworkError) {
+          console.warn('[SIMILARITY] Network error in database query (database may be unreachable):', {
+            message: errorMessage,
+            code: error.code,
+            operation: 'detectClusters'
+          });
+          throw new Error(`Database network error: Unable to connect to database. Please check your network connection and Supabase configuration.`);
+        } else {
+          // Standard Supabase error
+          console.error('[SIMILARITY] Database query error:', {
+            message: errorMessage,
+            code: error.code,
+            details: error.details || '',
+            hint: error.hint || '',
+            operation: 'detectClusters'
+          });
+          throw new Error(`Database query failed: ${errorMessage}`);
+        }
       }
 
       if (!complaints || complaints.length === 0) {
@@ -127,7 +200,24 @@ class SimilarityCalculatorService {
       await this.saveClusters(clusters);
       return clusters;
     } catch (error) {
-      console.error('[SIMILARITY] Cluster detection error:', error);
+      // Handle network errors gracefully
+      const errorMessage = error.message || '';
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                         errorMessage.includes('<html') ||
+                         errorMessage.includes('Cloudflare') ||
+                         errorMessage.includes('Internal server error');
+      const isNetworkError = errorMessage.includes('fetch failed') || 
+                            error instanceof TypeError;
+      
+      if (isHtmlError || isNetworkError) {
+        // Already logged in the query error handler above
+        console.error('[SIMILARITY] Cluster detection failed due to infrastructure/network error');
+      } else {
+        console.error('[SIMILARITY] Cluster detection error:', {
+          message: errorMessage,
+          stack: error.stack
+        });
+      }
       throw error;
     }
   }
@@ -305,7 +395,14 @@ class SimilarityCalculatorService {
         .eq('status', 'active');
 
       if (deactivateError) {
-        console.warn('[SIMILARITY] Failed to deactivate old clusters:', deactivateError.message);
+        const deactivateMsg = deactivateError.message || '';
+        const isNetworkError = deactivateMsg.includes('fetch failed') || 
+                              deactivateError instanceof TypeError;
+        if (isNetworkError) {
+          console.warn('[SIMILARITY] Network error deactivating old clusters (database may be unreachable):', deactivateMsg);
+        } else {
+          console.warn('[SIMILARITY] Failed to deactivate old clusters:', deactivateMsg);
+        }
         // Continue anyway - might be first run
       }
 
@@ -316,8 +413,36 @@ class SimilarityCalculatorService {
         .select();
 
       if (error) {
-        console.error('[SIMILARITY] Save clusters error:', error);
-        throw new Error(`Failed to save clusters: ${error.message}`);
+        const errorMessage = error.message || '';
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                           errorMessage.includes('<html') ||
+                           errorMessage.includes('Cloudflare');
+        const isNetworkError = errorMessage.includes('fetch failed') || 
+                              error instanceof TypeError;
+        
+        if (isHtmlError) {
+          const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
+          const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
+          console.error('[SIMILARITY] Infrastructure error saving clusters (Supabase/Cloudflare server error):', {
+            errorCode: errorCode,
+            type: 'HTML_ERROR_RESPONSE',
+            operation: 'saveClusters'
+          });
+          throw new Error(`Database infrastructure error: Failed to save clusters. Supabase/Cloudflare server returned error ${errorCode}.`);
+        } else if (isNetworkError) {
+          console.error('[SIMILARITY] Network error saving clusters (database may be unreachable):', {
+            message: errorMessage,
+            operation: 'saveClusters'
+          });
+          throw new Error(`Database network error: Failed to save clusters. Unable to connect to database.`);
+        } else {
+          console.error('[SIMILARITY] Save clusters error:', {
+            message: errorMessage,
+            code: error.code,
+            operation: 'saveClusters'
+          });
+          throw new Error(`Failed to save clusters: ${errorMessage}`);
+        }
       }
 
       console.log(`[SIMILARITY] Successfully saved ${clusters.length} cluster(s) to database`);
@@ -348,10 +473,32 @@ class SimilarityCalculatorService {
         .eq('complaint_id', complaintId)
         .order('similarity_score', { ascending: false })
         .limit(limit);
-      if (error) throw error;
+      if (error) {
+        const errorMessage = error.message || '';
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                           errorMessage.includes('<html') ||
+                           errorMessage.includes('Cloudflare');
+        const isNetworkError = errorMessage.includes('fetch failed') || 
+                              error instanceof TypeError;
+        
+        if (isHtmlError || isNetworkError) {
+          console.warn('[SIMILARITY] Network/infrastructure error getting nearest similar:', {
+            message: errorMessage,
+            operation: 'getNearestSimilar'
+          });
+          throw new Error(`Database connection error: Unable to retrieve similar complaints. Please try again later.`);
+        }
+        throw error;
+      }
       return similarities || [];
     } catch (error) {
-      console.error('[SIMILARITY] Get nearest error:', error);
+      const errorMessage = error.message || '';
+      if (!errorMessage.includes('Database connection error') && !errorMessage.includes('Database infrastructure error')) {
+        console.error('[SIMILARITY] Get nearest error:', {
+          message: errorMessage,
+          stack: error.stack
+        });
+      }
       throw error;
     }
   }
@@ -385,7 +532,24 @@ class SimilarityCalculatorService {
       .select('*')
       .eq('id', complaintId)
       .single();
-    if (error) throw error;
+    if (error) {
+      const errorMessage = error.message || '';
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+                         errorMessage.includes('<html') ||
+                         errorMessage.includes('Cloudflare');
+      const isNetworkError = errorMessage.includes('fetch failed') || 
+                            error instanceof TypeError;
+      
+      if (isHtmlError || isNetworkError) {
+        console.warn('[SIMILARITY] Network/infrastructure error getting complaint:', {
+          message: errorMessage,
+          complaintId: complaintId,
+          operation: 'getComplaint'
+        });
+        throw new Error(`Database connection error: Unable to retrieve complaint. Please try again later.`);
+      }
+      throw error;
+    }
     return data;
   }
 }

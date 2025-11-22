@@ -21,31 +21,16 @@ class NotificationService {
   */
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
-      // console.log removed for security
-      // Use admin auth API instead of direct table query
-      let users = [];
-      try {
-        const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
-        if (authError) {
-          console.warn('[NOTIFICATION] Failed to get auth users:', authError.message);
-          return { success: false, error: authError.message };
-        }
-        users = authUsers.users || [];
-      } catch (authErr) {
-        console.warn('[NOTIFICATION] Auth API error:', authErr.message);
-        return { success: false, error: authErr.message };
-      }
-      // Filter for admins in the specific department
-      const admins = users.filter(user => {
-        const metadata = user.user_metadata || {};
-        const rawMetadata = user.raw_user_meta_data || {};
-        const role = metadata.role || rawMetadata.role || '';
-        return role === 'lgu-admin' &&
-               (metadata.dpt === departmentCode ||
-                rawMetadata.dpt === departmentCode ||
-                metadata.department === departmentCode ||
-                rawMetadata.department === departmentCode);
+      // Use RPC for efficient lookup (O(1) instead of O(N))
+      const { data: admins, error } = await this.supabase.rpc('get_users_by_role', {
+        p_role: 'lgu-admin',
+        p_department: departmentCode
       });
+
+      if (error) {
+        console.warn('[NOTIFICATION] Failed to fetch admins via RPC:', error.message);
+        return { success: false, error: error.message };
+      }
       // console.log removed for security
       if (admins.length === 0) {
         console.warn(`[NOTIFICATION] No LGU admins found for department ${departmentCode}`);
@@ -743,27 +728,15 @@ class NotificationService {
    */
   async notifyAllCoordinators(complaintId, complaintTitle) {
     try {
-      // console.log removed for security
-      // Use admin auth API to find coordinators
-      let users = [];
-      try {
-        const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
-        if (authError) {
-          console.error('[NOTIFICATION] Error fetching auth users for coordinators:', authError);
-          return { success: false, error: authError.message };
-        }
-        users = authUsers.users || [];
-      } catch (authErr) {
-        console.error('[NOTIFICATION] Auth API error for coordinators:', authErr);
-        return { success: false, error: authErr.message };
-      }
-      // Find all users with base_role = complaint-coordinator
-      const coordinators = users.filter(user => {
-        const metadata = user.user_metadata || {};
-        const rawMetadata = user.raw_user_meta_data || {};
-        const baseRole = metadata.base_role || rawMetadata.base_role;
-        return baseRole === 'complaint-coordinator';
+      // Use RPC for efficient lookup
+      const { data: coordinators, error } = await this.supabase.rpc('get_users_by_role', {
+        p_role: 'complaint-coordinator'
       });
+
+      if (error) {
+        console.error('[NOTIFICATION] Failed to fetch coordinators via RPC:', error.message);
+        return { success: false, error: error.message };
+      }
       // console.log removed for security
       if (coordinators.length === 0) {
         console.warn(`[NOTIFICATION] No complaint coordinators found for complaint ${complaintId}`);

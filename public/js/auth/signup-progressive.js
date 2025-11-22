@@ -1,4 +1,56 @@
 // Lightweight progressive signup step manager
+const BARANGAY_LIST = [
+    'Aplaya',
+    'Balabag',
+    'Binaton',
+    'Cogon',
+    'Colorado',
+    'Dawis',
+    'Dulangan',
+    'Goma',
+    'Igpit',
+    'Kiagot',
+    'Lungag',
+    'Mahayahay',
+    'Matti',
+    'Kapatagan (Rizal)',
+    'Ruparan',
+    'San Agustin',
+    'San Jose (Balutakay)',
+    'San Miguel (Odaca)',
+    'San Roque',
+    'Sinawilan',
+    'Soong',
+    'Tiguman',
+    'Tres de Mayo',
+    'Zone 1 (Pob.)',
+    'Zone 2 (Pob.)',
+    'Zone 3 (Pob.)'
+];
+
+const initBarangaySelect = () => {
+    const select = document.getElementById('barangay');
+    if (!select || select.dataset.populated === 'true') return;
+
+    const currentValue = select.value;
+    select.innerHTML = '<option value="" selected>Select barangay</option>';
+    BARANGAY_LIST.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+    if (currentValue) {
+        const match = BARANGAY_LIST.find(b => b.toLowerCase() === currentValue.toLowerCase());
+        if (match) {
+            select.value = match;
+        }
+    }
+    select.dataset.populated = 'true';
+};
+
+document.addEventListener('DOMContentLoaded', initBarangaySelect);
+
 const stepsRoot = document.getElementById('signup-steps');
 if (stepsRoot) {
     const steps = Array.from(stepsRoot.querySelectorAll('.signup-step'));

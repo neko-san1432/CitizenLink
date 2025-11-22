@@ -1,5 +1,6 @@
 const express = require('express');
 const AuthController = require('../controllers/AuthController');
+const OAuthController = require('../controllers/OAuthController');
 const { authenticateUser } = require('../middleware/auth');
 const { ErrorHandler } = require('../middleware/errorHandler');
 const { csrfProtection, generateCsrfToken } = require('../middleware/csrf');
@@ -315,6 +316,18 @@ router.post('/complete-oauth', authenticateUser, authLimiter, ErrorHandler.async
  * @access  Private
  */
 router.post('/complete-oauth-hr', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(AuthController.completeOAuthHR));
+/**
+ * @route   GET /api/auth/oauth-status
+ * @desc    Check OAuth user status and determine redirect
+ * @access  Protected
+ */
+router.get('/oauth-status', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(OAuthController.checkOAuthStatus));
+/**
+ * @route   DELETE /api/auth/oauth-incomplete
+ * @desc    Delete incomplete OAuth signup
+ * @access  Protected
+ */
+router.delete('/oauth-incomplete', authenticateUser, authLimiter, ErrorHandler.asyncWrapper(OAuthController.deleteIncompleteSignup));
 /**
  * @route   GET /api/auth/sessions
  * @desc    Get user's active sessions

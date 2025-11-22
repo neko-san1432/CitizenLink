@@ -2,6 +2,8 @@ import { supabase } from '../config/config.js';
 
 const storageKey = 'cl_user_meta';
 const oauthKey = 'cl_oauth_context';
+const authErrorSuppressKey = 'cl_auth_suppress_until';
+const SUPPRESS_DURATION_MS = 8000;
 
 export const saveUserMeta = (meta) => {
   try {
@@ -53,6 +55,45 @@ export const getOAuthContext = () => {
 export const clearOAuthContext = () => {
   try { localStorage.removeItem(oauthKey); } catch {}
 };
+
+export const suppressAuthErrorNotifications = (duration = SUPPRESS_DURATION_MS) => {
+  try {
+    const expiresAt = Date.now() + duration;
+    sessionStorage.setItem(authErrorSuppressKey, String(expiresAt));
+  } catch {}
+};
+
+const isAuthErrorSuppressed = () => {
+  try {
+    const value = sessionStorage.getItem(authErrorSuppressKey);
+    if (!value) return false;
+    const expiresAt = parseInt(value, 10);
+    if (Number.isNaN(expiresAt)) {
+      sessionStorage.removeItem(authErrorSuppressKey);
+      return false;
+    }
+    if (Date.now() <= expiresAt) {
+      return true;
+    }
+    sessionStorage.removeItem(authErrorSuppressKey);
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+const clearAuthErrorSuppression = () => {
+  try { sessionStorage.removeItem(authErrorSuppressKey); } catch {}
+};
+
+const hasPendingOAuthSignup = () => {
+  try {
+    const ctx = getOAuthContext();
+    return ctx && ctx.intent === 'signup' && (ctx.status === 'pending' || ctx.status === 'handoff');
+  } catch {
+    return false;
+  }
+};
 // Cache for API calls to prevent excessive requests
 let roleApiCache = null;
 let roleApiCacheTime = 0;
@@ -63,6 +104,9 @@ let isCheckingRoleChange = false;
 
 export const getUserRole = async (options = {}) => {
   const { refresh = false } = options;
+  if (hasPendingOAuthSignup()) {
+    return null;
+  }
   if (!refresh) {
     const cached = getUserMeta();
     if (cached && cached.role) return cached.role;
@@ -270,6 +314,11 @@ export const startTokenExpiryMonitoring = () => {
         return;
       }
 
+      if (hasPendingOAuthSignup()) {
+        tokenExpiryTimer = null;
+        return;
+      }
+
       // Check if user is authenticated via API instead of Supabase session
       const response = await fetch('/api/user/role', {
         method: 'GET',
@@ -281,6 +330,10 @@ export const startTokenExpiryMonitoring = () => {
       if (!response.ok) {
         // If 401, check if device is trusted before attempting refresh
         if (response.status === 401) {
+          if (hasPendingOAuthSignup()) {
+            tokenExpiryTimer = null;
+            return;
+          }
           // If device is not trusted, don't try to refresh - require re-login
           if (!isDeviceTrusted()) {
             console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
@@ -316,7 +369,7 @@ export const startTokenExpiryMonitoring = () => {
         } else {
           tokenExpiryTimer = null;
           // Don't redirect if we're on a page that might be loading
-          if (!window.location.pathname.includes('/review-queue')) {
+          if (!window.location.pathname.includes('/review-queue') && !hasPendingOAuthSignup()) {
             handleSessionExpired();
           }
         }
@@ -358,6 +411,11 @@ export const stopTokenExpiryMonitoring = () => {
 };
 // Handle session expired - show toast and logout
 const handleSessionExpired = async () => {
+  if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
+    console.log('[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)');
+    clearAuthErrorSuppression();
+    return;
+  }
   if (isAuthPage()) return;
   // Prevent multiple redirects
   if (window.location.pathname === '/login') return;
@@ -400,6 +458,11 @@ const handleSessionExpired = async () => {
 };
 // Show session expired toast
 const showSessionExpiredToast = () => {
+  if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
+    console.log('[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)');
+    clearAuthErrorSuppression();
+    return;
+  }
   // Import toast functionality
   import('../components/toast.js').then(({ showMessage }) => {
     showMessage('error', 'Authentication failed. Please log in again.', 5000);

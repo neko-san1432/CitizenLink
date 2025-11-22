@@ -262,10 +262,17 @@ if (oauthCompleteForm) {
       }
       
       showMessage('success', 'Profile completed successfully! Redirecting to dashboard...');
+      
+      // Clear OAuth context since signup is complete
+      try {
+        const { clearOAuthContext } = await import('./authChecker.js');
+        clearOAuthContext();
+      } catch {}
+      
+      // Redirect immediately to dashboard
       setTimeout(() => {
-        // Redirect directly to dashboard (user is already authenticated)
         window.location.href = '/dashboard';
-      }, 2000);
+      }, 1000);
     } catch (err) {
       console.error('OAuth completion error:', err);
       showMessage('error', 'Registration failed. Please try again.');

@@ -2,6 +2,8 @@ import { supabase } from '../config/config.js';
 
 const storageKey = 'cl_user_meta';
 const oauthKey = 'cl_oauth_context';
+const authErrorSuppressKey = 'cl_auth_suppress_until';
+const SUPPRESS_DURATION_MS = 8000;
 
 export const saveUserMeta = (meta) => {
   try {
@@ -52,6 +54,49 @@ export const getOAuthContext = () => {
 
 export const clearOAuthContext = () => {
   try { localStorage.removeItem(oauthKey); } catch {}
+};
+
+export const suppressAuthErrorNotifications = (duration = SUPPRESS_DURATION_MS) => {
+  try {
+    const expiresAt = Date.now() + duration;
+    sessionStorage.setItem(authErrorSuppressKey, String(expiresAt));
+  } catch {}
+};
+
+const isAuthErrorSuppressed = () => {
+  try {
+    const value = sessionStorage.getItem(authErrorSuppressKey);
+    if (!value) return false;
+    const expiresAt = parseInt(value, 10);
+    if (Number.isNaN(expiresAt)) {
+      sessionStorage.removeItem(authErrorSuppressKey);
+      return false;
+    }
+    if (Date.now() <= expiresAt) {
+      return true;
+    }
+    sessionStorage.removeItem(authErrorSuppressKey);
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+const clearAuthErrorSuppression = () => {
+  try { sessionStorage.removeItem(authErrorSuppressKey); } catch {}
+};
+
+const hasPendingOAuthSignup = () => {
+  try {
+    const ctx = getOAuthContext();
+    return ctx && ctx.intent === 'signup' && (ctx.status === 'pending' || ctx.status === 'handoff');
+  } catch {
+    return false;
+  }
+};
+
+export {
+  suppressAuthErrorNotifications
 };
 // Cache for API calls to prevent excessive requests
 let roleApiCache = null;
@@ -375,6 +420,11 @@ export const stopTokenExpiryMonitoring = () => {
 };
 // Handle session expired - show toast and logout
 const handleSessionExpired = async () => {
+  if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
+    console.log('[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)');
+    clearAuthErrorSuppression();
+    return;
+  }
   if (isAuthPage()) return;
   if (window.location.pathname === '/login') return;
   
@@ -425,6 +475,11 @@ const handleSessionExpired = async () => {
 };
 // Show session expired toast
 const showSessionExpiredToast = () => {
+  if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
+    console.log('[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)');
+    clearAuthErrorSuppression();
+    return;
+  }
   import('../components/toast.js').then(({ showMessage }) => {
     showMessage('error', 'Authentication failed. Please log in again.', 5000);
   }).catch(async () => {

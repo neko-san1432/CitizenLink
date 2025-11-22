@@ -7,9 +7,11 @@ const coordinatorController = new CoordinatorController();
 // Middleware to check if user is a coordinator
 // For now, we'll let any authenticated user access (can be restricted later)
 const requireCoordinator = (req, res, next) => {
-  // TODO: Add actual coordinator check
-  // For now, just pass through if authenticated
-  next();
+  if (req.user && req.user.role === 'complaint-coordinator') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Access denied. Coordinator role required.' });
+  }
 };
 
 /**

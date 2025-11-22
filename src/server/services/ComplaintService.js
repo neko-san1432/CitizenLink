@@ -16,7 +16,7 @@ class ComplaintService {
   }
   async createComplaint(userId, complaintData, files = []) {
     // Debug: Log received complaint data
-    // console.log removed for security
+    // Debug: Log received complaint data
     // Parse preferred_departments - handle both array and individual values
     let preferredDepartments = complaintData.preferred_departments || [];
     // If preferred_departments is a string, check if it's JSON or just a single value
@@ -26,7 +26,7 @@ class ComplaintService {
         preferredDepartments = JSON.parse(preferredDepartments);
       } catch (e) {
         // If JSON parsing fails, treat it as a single department code
-        // console.log removed for security
+        // If JSON parsing fails, treat it as a single department code
         preferredDepartments = [preferredDepartments].filter(Boolean);
       }
     }
@@ -34,7 +34,7 @@ class ComplaintService {
     if (!Array.isArray(preferredDepartments)) {
       preferredDepartments = [preferredDepartments].filter(Boolean);
     }
-    // console.log removed for security
+
     // Map client field names to server field names
     const mappedData = {
       ...complaintData,
@@ -54,7 +54,7 @@ class ComplaintService {
     const preparedData = prepareComplaintForInsert(mappedData);
 
     // Debug: Log what fields are being sent to database
-    // console.log removed for security
+    // Debug: Log what fields are being sent to database
 
     // Validate data consistency
     const consistencyCheck = validateComplaintConsistency(preparedData);
@@ -68,7 +68,7 @@ class ComplaintService {
     }
     const sanitizedData = complaint.sanitizeForInsert();
     const createdComplaint = await this.complaintRepo.create(sanitizedData);
-    // console.log removed for security
+
     try {
       await this._processWorkflow(createdComplaint, preferredDepartments);
       await this._processFileUploads(createdComplaint.id, files, userId);
@@ -90,7 +90,7 @@ class ComplaintService {
           createdComplaint.title
         );
         if (coordResult.success) {
-          // console.log removed for security
+
         } else {
           console.warn('[COMPLAINT] Failed to send coordinator notifications:', coordResult.error);
         }
@@ -115,7 +115,7 @@ class ComplaintService {
           workflow_status: 'new',
           updated_at: new Date().toISOString()
         });
-        // console.log removed for security
+
         // Create complaint_assignments for primary and secondary departments
         for (const deptCode of departmentArray) {
           try {
@@ -152,7 +152,7 @@ class ComplaintService {
     // try {
     //   const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
     //   if (autoAssignResult && autoAssignResult.length > 0) {
-    //     // console.log removed for security
+
     //   }
     // } catch (error) {
     //   console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
@@ -168,7 +168,7 @@ class ComplaintService {
           //   to_dept: targetDept,
           //   reason: 'Auto-assigned available coordinator'
           // });
-          // console.log removed for security
+
         }
       } catch (error) {
         console.warn('[WORKFLOW] Coordinator assignment failed:', error.message);
@@ -245,7 +245,7 @@ class ComplaintService {
         } catch (dbErr) {
           console.error('[FILE] Evidence metadata storage failed:', dbErr);
         }
-        // console.log removed for security
+
       } catch (error) {
         console.error('[FILE] Processing error:', error);
       }
@@ -585,7 +585,7 @@ class ComplaintService {
     return stats;
   }
   async getComplaintLocations(filters = {}) {
-    // console.log removed for security
+
     const {
       status,
       confirmationStatus,
@@ -597,7 +597,7 @@ class ComplaintService {
       includeResolved = true
     } = filters;
     try {
-      // console.log removed for security
+
       // First, get total count of complaints with coordinates for debugging
       // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
       const supabase = Database.getClient(); // Use direct service role client
@@ -606,15 +606,15 @@ class ComplaintService {
         .select('id', { count: 'exact', head: true })
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
+
+
+
+
       // Also check total complaints without coordinate filter using direct service role
       const { count: totalComplaints } = await supabase
         .from('complaints')
         .select('id', { count: 'exact', head: true });
-      // console.log removed for security
+
       // CRITICAL FIX: Build base query using DIRECT service role client, not this.complaintRepo.supabase
       // This ensures we bypass any RLS policies that might be filtering results
       // The repository might be using a different client instance
@@ -624,9 +624,9 @@ class ComplaintService {
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
         .order('submitted_at', { ascending: false }); // Add ordering for consistency
-      // console.log removed for security
+
       // Log filter parameters
-      // console.log removed for security
+
       // Filter by workflow_status (supports array for multiple values)
       if (status) {
         if (Array.isArray(status) && status.length > 0) {
@@ -636,16 +636,16 @@ class ComplaintService {
           // Single status
           query = query.eq('workflow_status', status);
         }
-        // console.log removed for security
+
       } else {
         // No status filter - check if we should exclude resolved
         if (!includeResolved) {
           // Exclude completed and cancelled complaints
           query = query.neq('workflow_status', 'completed').neq('workflow_status', 'cancelled');
-          // console.log removed for security
+
         } else {
           // includeResolved is true - show ALL complaints regardless of status
-          // console.log removed for security
+
         }
       }
 
@@ -658,7 +658,7 @@ class ComplaintService {
           // Single confirmation status
           query = query.eq('confirmation_status', confirmationStatus);
         }
-        // console.log removed for security
+
       }
       // No 'type' field in schema; do not filter by it
       // Filter by department - checks department_r array (text array field)

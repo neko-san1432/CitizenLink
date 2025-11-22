@@ -5,6 +5,13 @@
 import showMessage from '../components/toast.js';
 import { initializeRoleToggle } from '../auth/roleToggle.js';
 
+// Check for OAuth success message
+const oauthSuccessMessage = sessionStorage.getItem('oauth_success_message');
+if (oauthSuccessMessage) {
+  sessionStorage.removeItem('oauth_success_message');
+  showMessage('success', oauthSuccessMessage, 5000);
+}
+
 // Priority scoring system
 const PRIORITY_SCORES = {
   urgent: 4,

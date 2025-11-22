@@ -6,6 +6,7 @@ const settingRoutes = require('./settingRoutes');
 const supabaseRoutes = require('./supabaseRoutes');
 const captchaRoutes = require('./captchaRoutes');
 const coordinatorRoutes = require('./coordinatorRoutes');
+const ocrRoutes = require('./ocrRoutes');
 const { apiLimiter } = require('../middleware/rateLimiting');
 
 let hrRoutes;
@@ -39,6 +40,7 @@ router.use('/complaints', complaintRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/settings', settingRoutes);
 router.use('/coordinator', coordinatorRoutes);
+router.use('/identity', ocrRoutes);
 router.use('/hr', hrRoutes);
 router.use('/superadmin', superAdminRoutes);
 router.use('/lgu-admin', lguAdminRoutes);

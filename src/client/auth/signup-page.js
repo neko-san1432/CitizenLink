@@ -2,7 +2,7 @@
 import { supabase } from '../config/config.js';
 import showMessage from '../components/toast.js';
 import { renderPrivacyNotice } from '../utils/privacyContent.js';
-import { getOAuthContext, setOAuthContext, clearOAuthContext } from '../auth/authChecker.js';
+import { getOAuthContext, setOAuthContext, clearOAuthContext, suppressAuthErrorNotifications } from '../auth/authChecker.js';
 import { shouldSkipAuthCheck } from '../utils/oauth-cleanup.js';
 
 // Check if user is already logged in and redirect to dashboard
@@ -28,8 +28,33 @@ const clearOAuthContextOnLanding = async () => {
       
       // Only clear if user explicitly navigated here (not from OAuth redirect)
       if (!isOAuthRedirect) {
-        // User explicitly navigated to signup - clear OAuth context and session to prevent redirects
-        // But don't delete the user - that only happens on explicit button clicks
+        console.log('[SIGNUP] User navigated to signup during OAuth signup - cleaning up');
+        suppressAuthErrorNotifications();
+        
+        // Get user ID before signing out (for deletion)
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        // Delete incomplete OAuth signup from database
+        if (userId && session?.access_token && ctx.intent === 'signup') {
+          try {
+            const token = session.access_token;
+            const headers = { 
+              'Authorization': `Bearer ${token}`
+            };
+            
+            await fetch('/api/auth/oauth-incomplete', {
+              method: 'DELETE',
+              headers,
+              credentials: 'include'
+            });
+            console.log('[SIGNUP] Incomplete OAuth signup deleted');
+          } catch (deleteError) {
+            console.warn('[SIGNUP] Error deleting incomplete signup:', deleteError);
+          }
+        }
+        
+        // Clear OAuth context and session
         clearOAuthContext();
         
         // Clear session to prevent redirects to oauth-continuation
@@ -322,19 +347,139 @@ function setupSignupMethodSelector() {
 }
 
 function setupOAuthPopupBridge() {
-  window.addEventListener('message', (event) => {
+  window.addEventListener('message', async (event) => {
     if (event.origin !== window.location.origin) return;
-    const { type, payload } = event.data || {};
+    
+    // Log the full event data to debug
+    console.log('[SIGNUP] Received message from popup:', event.data);
+    console.log('[SIGNUP] Full event:', {
+      type: event.data?.type,
+      redirectTo: event.data?.redirectTo,
+      incomplete: event.data?.incomplete,
+      payload: event.data?.payload,
+      fullData: event.data
+    });
+    
+    const { type, payload, redirectTo, incomplete } = event.data || {};
+    
     if (type === 'oauth-signup-success') {
       const provider = (payload?.provider || 'OAuth').replace(/^\w/, (c) => c.toUpperCase());
+      console.log('[SIGNUP] ✅ OAuth signup success, provider:', provider);
+      console.log('[SIGNUP] Message details:', {
+        redirectTo,
+        incomplete,
+        hasPayload: !!payload
+      });
+      
       try {
         const ctx = getOAuthContext() || {};
         setOAuthContext({ ...ctx, status: 'handoff' });
-      } catch {}
+        console.log('[SIGNUP] OAuth context updated to handoff');
+      } catch (e) {
+        console.error('[SIGNUP] Error updating OAuth context:', e);
+      }
+      
+      // CRITICAL: Set the session in this window before redirecting
+      // Supabase sessions are window-specific, so we need to sync it from popup
+      const accessToken = event.data?.accessToken;
+      const refreshToken = event.data?.refreshToken;
+      
+      if (accessToken && refreshToken) {
+        try {
+          console.log('[SIGNUP] Setting session in main window...');
+          console.log('[SIGNUP] Access token length:', accessToken.length);
+          console.log('[SIGNUP] Refresh token length:', refreshToken.length);
+          
+          // Set the session using setSession
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error('[SIGNUP] ❌ Error setting session:', error);
+            console.error('[SIGNUP] Error details:', error.message, error.status);
+          } else {
+            console.log('[SIGNUP] ✅ Session set successfully in main window');
+            
+            // Verify session is actually set
+            const { data: { session: verifySession }, error: verifyError } = await supabase.auth.getSession();
+            if (verifySession) {
+              console.log('[SIGNUP] ✅ Session verified - user ID:', verifySession.user?.id);
+            } else {
+              console.error('[SIGNUP] ❌ Session verification failed:', verifyError);
+            }
+            
+            // Also set server-side cookie
+            try {
+              const cookieResponse = await fetch('/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ access_token: accessToken })
+              });
+              if (cookieResponse.ok) {
+                console.log('[SIGNUP] ✅ Server session cookie set');
+              } else {
+                console.warn('[SIGNUP] ⚠️ Server session cookie not set:', cookieResponse.status);
+              }
+            } catch (cookieError) {
+              console.warn('[SIGNUP] ⚠️ Error setting server cookie:', cookieError);
+            }
+          }
+        } catch (sessionError) {
+          console.error('[SIGNUP] ❌ Error setting session:', sessionError);
+          console.error('[SIGNUP] Error stack:', sessionError.stack);
+        }
+      } else {
+        console.warn('[SIGNUP] ⚠️ No access/refresh tokens in message');
+        console.warn('[SIGNUP] Access token:', !!accessToken, 'Refresh token:', !!refreshToken);
+      }
+      
       showMessage('success', `${provider} connected. Finishing setup...`);
-      setTimeout(() => {
-        window.location.href = '/oauth-continuation';
-      }, 900);
+      
+      // CRITICAL: Always redirect to continuation for OAuth signups
+      // Extract redirectTo from event.data if not in destructured variables
+      const actualRedirectTo = redirectTo || event.data?.redirectTo || '/oauth-continuation';
+      
+      console.log('[SIGNUP] Redirect decision:', {
+        willRedirect: true,
+        redirectTo: actualRedirectTo,
+        incomplete: incomplete !== undefined ? incomplete : event.data?.incomplete,
+        eventDataKeys: Object.keys(event.data || {}),
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken
+      });
+      
+      console.log('[SIGNUP] ✅ REDIRECTING TO:', actualRedirectTo);
+      
+      // CRITICAL: If we have tokens, pass them in URL hash for Supabase to pick up
+      // This is how Supabase normally handles OAuth redirects
+      let redirectUrl = actualRedirectTo;
+      if (accessToken && refreshToken) {
+        // Add tokens to URL hash - Supabase will automatically extract and set them
+        const hashParams = new URLSearchParams();
+        hashParams.set('access_token', accessToken);
+        hashParams.set('refresh_token', refreshToken);
+        hashParams.set('type', 'recovery'); // This tells Supabase to set the session
+        redirectUrl = `${actualRedirectTo}#${hashParams.toString()}`;
+        console.log('[SIGNUP] Adding session tokens to URL hash for Supabase');
+      }
+      
+      // Increased delay to ensure session is fully set and persisted before redirect
+      setTimeout(async () => {
+        // Double-check session before redirect
+        const { data: { session: finalCheck }, error: finalError } = await supabase.auth.getSession();
+        if (finalCheck) {
+          console.log('[SIGNUP] ✅ Final session check passed - user ID:', finalCheck.user?.id);
+          console.log('[SIGNUP] Executing redirect now...');
+          window.location.href = redirectUrl;
+        } else {
+          console.warn('[SIGNUP] ⚠️ Session check failed, but redirecting anyway with tokens in URL');
+          console.warn('[SIGNUP] Supabase will extract tokens from URL hash');
+          // Redirect anyway - Supabase will extract tokens from URL hash
+          window.location.href = redirectUrl;
+        }
+      }, 800); // Increased delay to ensure session is fully persisted
     }
     if (type === 'oauth-user-exists') {
       cleanupPendingOAuth('User already exist');

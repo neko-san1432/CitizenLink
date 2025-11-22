@@ -22,6 +22,10 @@
             </div>
             <h1 class="success-title">Success!</h1>
             <p class="success-message">Your request completed successfully.</p>
+            <div id="debug-info" style="background: yellow; padding: 10px; margin: 10px 0; border: 2px solid red;">
+                <strong>DEBUG INFO:</strong>
+                <div id="debug-content">Loading...</div>
+            </div>
             <div class="success-actions">
                 <a href="/" class="btn btn-secondary">Go Home</a>
                 <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
@@ -30,7 +34,83 @@
     </div>
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="/js/components/toast.js"></script>
-    <script type="module" src="/js/components/success.js"></script>
+    <script>
+  // IMMEDIATE DIAGNOSTICS - These should ALWAYS run
+  (function() {
+    try {
+      // Update debug div immediately
+      const debugDiv = document.getElementById('debug-content');
+      if (debugDiv) {
+        debugDiv.innerHTML = 'Script running! Check console.';
+      }
+      
+      console.log('========================================');
+      console.log('[SUCCESS_HTML] ✅ success.html loaded');
+      console.log('[SUCCESS_HTML] URL:', window.location.href);
+      console.log('[SUCCESS_HTML] Timestamp:', new Date().toISOString());
+      console.log('[SUCCESS_HTML] Document readyState:', document.readyState);
+      console.log('[SUCCESS_HTML] User Agent:', navigator.userAgent);
+      console.log('[SUCCESS_HTML] About to load module scripts...');
+      console.log('========================================');
+      
+      // Update debug div with more info
+      if (debugDiv) {
+        setTimeout(() => {
+          debugDiv.innerHTML = `
+            <div>URL: ${window.location.href}</div>
+            <div>ReadyState: ${document.readyState}</div>
+            <div>Check console for detailed logs</div>
+          `;
+        }, 100);
+      }
+      
+      // Also try alert as fallback
+      if (window.location.search.includes('debug')) {
+        alert('SUCCESS PAGE LOADED - Check console');
+      }
+    } catch (e) {
+      console.error('[SUCCESS_HTML] Error in inline script:', e);
+      const debugDiv = document.getElementById('debug-content');
+      if (debugDiv) {
+        debugDiv.innerHTML = 'ERROR: ' + e.message;
+      }
+      alert('ERROR in success.html inline script: ' + e.message);
+    }
+  })();
+</script>
+<script>
+  // Check for script load errors BEFORE loading module
+  window.addEventListener('error', (e) => {
+    console.error('[SUCCESS_HTML] Global error caught:', {
+      message: e.message,
+      filename: e.filename,
+      lineno: e.lineno,
+      colno: e.colno,
+      error: e.error
+    });
+    if (e.filename && e.filename.includes('success')) {
+      console.error('[SUCCESS_HTML] ❌ Script load error:', e);
+      alert('ERROR loading success.js: ' + e.message);
+    }
+  }, true);
+  
+  // Check for unhandled promise rejections
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('[SUCCESS_HTML] Unhandled promise rejection:', e.reason);
+  });
+  
+  console.log('[SUCCESS_HTML] Error handlers registered, loading module...');
+</script>
+<script type="module" src="/js/components/success.js"></script>
+<script>
+  // Verify module loaded
+  setTimeout(() => {
+    console.log('[SUCCESS_HTML] Module load check (after 1s):', {
+      pathname: window.location.pathname,
+      stillOnSuccess: window.location.pathname === '/success'
+    });
+  }, 1000);
+</script>
 </body>
 </html>
 

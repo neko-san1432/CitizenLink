@@ -153,48 +153,10 @@ class AuthController {
           timestamp: new Date().toISOString()
         });
 
-        // Check if user exists to determine if it's "user not found" vs "wrong password"
-        // Note: This exposes user enumeration, but provides better UX with specific error messages
-        let isUserNotFound = false;
-        try {
-          const { data: userData, error: getUserError } = await supabase.auth.admin.getUserByEmail(email.toLowerCase());
-          // If getUserByEmail fails or returns no user, user doesn't exist
-          // Supabase returns error when user doesn't exist, so check both error and data
-          if (getUserError) {
-            // Check if error indicates user not found
-            const errorMsg = getUserError.message?.toLowerCase() || '';
-            const errorCode = getUserError.status || getUserError.code || '';
-            // Supabase typically returns 404 or specific error codes for non-existent users
-            if (errorCode === 404 ||
-                errorMsg.includes('user not found') ||
-                errorMsg.includes('no user found') ||
-                errorMsg.includes('does not exist')) {
-              isUserNotFound = true;
-            }
-          } else if (!userData?.user) {
-            // No error but also no user data means user doesn't exist
-            isUserNotFound = true;
-          }
-        } catch (checkError) {
-          // If admin API check fails (network error, etc.), fall back to error message pattern matching
-          console.warn('[LOGIN] Admin API check failed, using fallback:', checkError.message);
-          const errorMessage = authError.message?.toLowerCase() || '';
-          const errorCode = authError.code?.toLowerCase() || '';
-
-          isUserNotFound =
-            errorMessage.includes('user not found') ||
-            errorMessage.includes('no user found') ||
-            errorMessage.includes('user does not exist') ||
-            errorCode === 'user_not_found';
-        }
-
-        const errorResponse = isUserNotFound
-          ? 'User not found'
-          : 'Invalid email or password';
-
+        // Generic error message to prevent user enumeration
         return res.status(401).json({
           success: false,
-          error: errorResponse
+          error: 'Invalid email or password'
         });
       }
       const userId = authData.user.id;
@@ -689,6 +651,7 @@ class AuthController {
     try {
       const userId = req.user.id; // From auth middleware
       
+      console.log('[OAUTH_SIGNUP] ========================================');
       console.log('[OAUTH_SIGNUP] Status: STARTED', {
         userId,
         email: req.user?.email,
@@ -696,6 +659,7 @@ class AuthController {
         ip: req.ip,
         userAgent: req.get('user-agent')
       });
+      console.log('[OAUTH_SIGNUP] Request body keys:', Object.keys(req.body || {}));
 
       const {
         email,

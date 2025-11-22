@@ -28,6 +28,87 @@
                     <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
                 </div>
             </div>
+
+                    <!-- ID Verification Section -->
+                    <div id="id-step-placeholder">
+                        <section class="form-group form-full" aria-labelledby="id-verify-title">
+                            <div class="id-verify-card">
+                                <div class="id-verify-header">
+                                    <div>
+                                        <h2 id="id-verify-title" class="id-verify-title">Verify your identity</h2>
+                                        <p class="id-verify-subtitle">Upload or scan a government ID to verify your identity.</p>
+                                    </div>
+                                    <div class="id-verify-actions" role="tablist" aria-label="ID capture modes">
+                                        <button type="button" class="id-mode-btn active" data-mode="upload" role="tab" aria-selected="true">Upload</button>
+                                        <button type="button" class="id-mode-btn" data-mode="camera" role="tab" aria-selected="false">Use camera</button>
+                                    </div>
+                                </div>
+
+                                <div class="id-verify-body">
+                                    <!-- Upload mode -->
+                                    <div class="id-mode id-mode-upload" data-mode-panel="upload">
+                                        <label class="upload-dropzone">
+                                            <input type="file" id="id-file-input" accept="image/*,application/pdf" hidden>
+                                            <div class="upload-dropzone-inner">
+                                                <div class="upload-icon">
+                                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M7 9l5-5 5 5M12 4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p class="upload-title">Drag & drop or click to upload</p>
+                                                    <p class="upload-subtitle">Accepts clear photos of valid government IDs (JPG, PNG, PDF)</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <div class="id-preview" id="id-preview" hidden>
+                                            <img id="id-preview-img" alt="Uploaded ID preview" />
+                                            <button type="button" class="btn btn-secondary btn-sm" id="id-clear-btn">Remove</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Camera mode -->
+                                    <div class="id-mode id-mode-camera" data-mode-panel="camera" hidden>
+                                        <div class="camera-wrap">
+                                            <video id="id-camera" playsinline autoplay muted></video>
+                                            <canvas id="id-canvas" hidden></canvas>
+                                        </div>
+                                        <div class="camera-actions">
+                                            <button type="button" class="btn btn-secondary" id="camera-start-btn">Enable camera</button>
+                                            <button type="button" class="btn btn-primary" id="camera-capture-btn" disabled>Capture</button>
+                                            <button type="button" class="btn btn-secondary" id="camera-stop-btn" disabled>Stop</button>
+                                        </div>
+                                        <div class="id-preview" id="id-camera-preview" hidden>
+                                            <img id="id-captured-img" alt="Captured ID preview" />
+                                            <button type="button" class="btn btn-secondary btn-sm" id="camera-retake-btn">Retake</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="id-verify-footer">
+                                    <div class="id-verify-consent">
+                                        <label class="checkbox-wrapper small">
+                                            <input type="checkbox" id="id-consent-checkbox">
+                                            <span class="checkbox-custom"></span>
+                                            <span>I consent to process my ID for verification as described in the Privacy Policy.</span>
+                                        </label>
+                                    </div>
+                                    <div class="id-verify-actions-row">
+                                        <button type="button" id="id-scan-btn" class="btn btn-primary" disabled>
+                                            <span>Verify ID</span>
+                                        </button>
+                                        <div class="id-verify-status" id="id-verify-status" aria-live="polite"></div>
+                                    </div>
+                                    <details class="id-verify-review" id="id-review" hidden>
+                                        <summary>View extracted fields</summary>
+                                        <div class="id-review-grid" id="id-review-grid"></div>
+                                    </details>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
         </div>
     </div>
 
@@ -222,6 +303,16 @@
                                     >
                 </div>
             </div>
+
+            <!-- Barangay -->
+                            <div class="form-group form-half">
+                <label for="barangay" class="form-label">Barangay</label>
+                                <div class="input-wrapper">
+                                    <select id="barangay" name="barangay" class="input" required>
+                    <option value="" selected>Select barangay</option>
+                </select>
+                                </div>
+            </div>
                                 </div>
 
                                 <div class="signup-step" data-step="3" hidden>
@@ -268,4 +359,5 @@
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script type="module" src="/js/auth/oauth-continuation-page.js"></script>
 <script type="module" src="/js/auth/signup-progressive.js"></script>
+<script type="module" src="/js/pages/signup-id-verify.js"></script>
 </html>
