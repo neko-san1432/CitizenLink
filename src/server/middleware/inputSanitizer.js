@@ -194,8 +194,8 @@ class InputSanitizer {
       return { valid: false, error: 'Password is required' };
     }
 
-    if (password.length < 8) {
-      return { valid: false, error: 'Password must be at least 8 characters' };
+    if (password.length < 4) {
+      return { valid: false, error: 'Password must be at least 4 characters' };
     }
 
     if (password.length > 128) {

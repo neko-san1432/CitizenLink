@@ -13,14 +13,40 @@ if (!document.getElementById('spinner-animation')) {
 
 // Get signup code from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
-const signupCode = urlParams.get('code');
-// Pre-fill the signup code if provided in URL
+let signupCode = urlParams.get('code');
+
+// Form persistence logic
+const FORM_STORAGE_KEY = 'cl_signup_form_data';
+
+// Try to recover signup code from storage if missing
+if (!signupCode) {
+  try {
+    const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      if (parsed.signupCode) {
+        signupCode = parsed.signupCode;
+        console.log('Restored signup code from storage:', signupCode);
+        
+        // Update URL to reflect code
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('code', signupCode);
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to recover signup code:', e);
+  }
+}
+
+// Pre-fill the signup code if provided in URL or recovered
 if (signupCode) {
   const codeInput = document.getElementById('signupCode');
   if (codeInput) {
     codeInput.value = signupCode;
   }
 }
+
 // OAuth signup function
 async function signupWithOAuth(provider) {
   try {
@@ -55,6 +81,7 @@ async function signupWithOAuth(provider) {
     showMessage('error', `Failed to sign in with ${provider}`);
   }
 }
+
 // Function to initialize signup code validation
 function initializeSignupCodeValidation() {
   // Check if signup code is provided in URL
@@ -76,17 +103,6 @@ function initializeSignupCodeValidation() {
 document.getElementById('oauth-google')?.addEventListener('click', () => signupWithOAuth('google'));
 document.getElementById('oauth-facebook')?.addEventListener('click', () => signupWithOAuth('facebook'));
 
-// Initialize validation when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeSignupCodeValidation();
-    renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
-  });
-} else {
-  // DOM is already loaded, run immediately
-  initializeSignupCodeValidation();
-  renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
-}
 async function validateSignupCode(code) {
   try {
     const response = await fetch(`/api/hr/validate-signup-code/${code}?t=${Date.now()}`);
@@ -116,9 +132,76 @@ async function validateSignupCode(code) {
     showMessage('error', 'Failed to validate signup code');
   }
 }
-// Handle form submission
-const signupForm = document.getElementById('signup-form');
-if (signupForm) {
+
+// Handle form submission and persistence
+function setupFormPersistence() {
+  const signupForm = document.getElementById('signup-form');
+  if (!signupForm) return;
+
+  // Form persistence logic
+  const FORM_STORAGE_KEY = 'cl_signup_form_data';
+
+  function saveFormData() {
+    const formData = new FormData(signupForm);
+    const dataToSave = {};
+    
+    for (const [key, value] of formData.entries()) {
+      // Don't save sensitive fields
+      // Save signupCode to allow session recovery
+      if (key !== 'password' && key !== 'confirmPassword' && key !== 'agreedToTerms') {
+        dataToSave[key] = value;
+      }
+    }
+    
+    try {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (e) {
+      console.warn('Failed to save form data:', e);
+    }
+  }
+
+  function loadFormData() {
+    try {
+      const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+      console.log('Loading form data from storage:', savedData ? 'Found data' : 'No data');
+      
+      if (!savedData) return;
+      
+      const parsedData = JSON.parse(savedData);
+      
+      Object.keys(parsedData).forEach(key => {
+        const input = signupForm.querySelector(`[name="${key}"]`);
+        if (input) {
+          input.value = parsedData[key];
+          // Trigger input event to ensure UI updates (like floating labels)
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to load form data:', e);
+    }
+  }
+
+  function clearFormData() {
+    try {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Failed to clear form data:', e);
+    }
+  }
+
+  // Load saved data on init
+  console.log('Initializing form persistence...');
+  loadFormData();
+
+  // Save data on input changes
+  signupForm.addEventListener('input', (e) => {
+    // Debounce saving if needed, but for now direct save is fine for simple text
+    if (e.target.name !== 'password' && e.target.name !== 'confirmPassword') {
+      saveFormData();
+    }
+  });
+
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -148,6 +231,20 @@ if (signupForm) {
       showMessage('error', validation.errors.join(', '));
       return;
     }
+    
+    // Check if ID verification is complete
+    let verificationComplete = false;
+    try {
+      verificationComplete = sessionStorage.getItem('cl_verification_complete') === 'true';
+    } catch (e) {
+      console.warn('Could not check verification status:', e);
+    }
+    
+    if (!verificationComplete) {
+      showMessage('error', 'Please complete ID verification before signing up.');
+      return;
+    }
+    
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
     const originalHTML = submitButton.innerHTML;
@@ -178,6 +275,7 @@ if (signupForm) {
       const result = await response.json();
       if (result.success) {
         showMessage('success', 'Account created successfully! Redirecting to dashboard...');
+        clearFormData(); // Clear saved form data
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 3000);
@@ -206,5 +304,19 @@ if (signupForm) {
       submitButton.disabled = false;
     }
   });
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeSignupCodeValidation();
+    renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
+    setupFormPersistence();
+  });
+} else {
+  // DOM is already loaded, run immediately
+  initializeSignupCodeValidation();
+  renderPrivacyNotice('#privacyModalContent', { headingTag: 'h4' });
+  setupFormPersistence();
 }
 // Code validation removed - no automatic validation on blur

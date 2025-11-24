@@ -170,7 +170,76 @@ const prefillSignupInfo = async () => {
 };
 // Handle form submission
 const positionSignupForm = document.getElementById('positionSignupForm');
+
+// Form persistence logic for OAuth completion
+const OAUTH_FORM_STORAGE_KEY = 'cl_oauth_form_data';
+
+function saveOAuthFormData() {
+  if (!positionSignupForm) return;
+  
+  const formData = new FormData(positionSignupForm);
+  const dataToSave = {};
+  
+  for (const [key, value] of formData.entries()) {
+    // Save all fields including hidden ones if needed, but exclude sensitive if any (none here really)
+    // We want to save name, email, mobile, signupCode
+    dataToSave[key] = value;
+  }
+  
+  try {
+    localStorage.setItem(OAUTH_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.warn('Failed to save OAuth form data:', e);
+  }
+}
+
+function loadOAuthFormData() {
+  if (!positionSignupForm) return;
+  
+  try {
+    const savedData = localStorage.getItem(OAUTH_FORM_STORAGE_KEY);
+    if (!savedData) return;
+    
+    const parsedData = JSON.parse(savedData);
+    
+    Object.keys(parsedData).forEach(key => {
+      const input = positionSignupForm.querySelector(`[name="${key}"]`);
+      // Only restore if input is empty or editable (don't overwrite read-only prefilled data unless it matches)
+      // Actually, we should be careful. If OAuth prefilled it, we might want to keep that.
+      // But if user edited it and refreshed, we want their edit.
+      // Strategy: Restore everything, but maybe check if readOnly?
+      if (input && !input.readOnly) {
+        input.value = parsedData[key];
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  } catch (e) {
+    console.warn('Failed to load OAuth form data:', e);
+  }
+}
+
+function clearOAuthFormData() {
+  try {
+    localStorage.removeItem(OAUTH_FORM_STORAGE_KEY);
+  } catch (e) {
+    console.warn('Failed to clear OAuth form data:', e);
+  }
+}
+
 if (positionSignupForm) {
+  // Load saved data on init - AFTER prefill logic runs?
+  // We should probably run this after prefill to overwrite with user edits if any
+  // But prefill is async. Let's hook into the prefill completion or just run it with a delay/check.
+  // Actually, prefill runs on load. We can run this after.
+  
+  // Wait a tick for prefill to potentially happen, then load user saved data on top
+  setTimeout(loadOAuthFormData, 500);
+
+  // Save data on input changes
+  positionSignupForm.addEventListener('input', () => {
+    saveOAuthFormData();
+  });
+
   positionSignupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('name').value.trim();
@@ -232,6 +301,7 @@ if (positionSignupForm) {
         return;
       }
       showMessage('success', 'Registration completed successfully! Redirecting to dashboard...');
+      clearOAuthFormData(); // Clear saved data
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);

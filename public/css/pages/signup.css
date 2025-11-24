@@ -1477,28 +1477,19 @@ html, body {
 }
 
 /* Mobile: Stacked layout */
+/* Main layout container */
 .auth-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: clamp(24px, 2.5vw, 40px);
+  padding: clamp(12px, 1.5vw, 20px);
+  width: 100%;
+  max-width: 640px; /* Limit width for readability in single column */
+  margin: 0 auto;
 }
 
 .auth-main {
   width: 100%;
-  order: 1;
-}
-
-/* Mobile Auth Sidebar Container - Zero Padding */
-.auth-sidebar {
-  width: 100%;
-  order: 2;
-  padding: var(--space-4) 0;
-  border-top: 1px solid var(--gray-200);
-  border-left: none;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
   justify-content: flex-start;
   gap: var(--space-4);
 }
@@ -2585,4 +2576,66 @@ html, body {
     width: 100%;
   }
 }
+
+/* Wrapper for the full-width signup method section */
+.signup-method-wrapper {
+  padding: 0 clamp(8px, 1vw, 16px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  .signup-method-wrapper {
+    padding: 0 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .signup-method-wrapper {
+    padding: 0 3rem; /* Keep aligned with auth-content */
+  }
+}
+
+/* Ensure the section inside doesn't have conflicting margins */
+.signup-method-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Restore grid layout for main column */
+.signup-method-grid {
+  margin-top: clamp(16px, 2vw, 24px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(12px, 1.25vw, 18px);
+}
+
+.signup-method-card {
+  width: 100%;
+  /* Reset flex properties if any */
+  flex: initial;
+  padding: clamp(16px, 1.5vw, 24px);
+  flex-direction: row;
+  text-align: left;
+}
+
+.signup-method-card .method-copy,
+.signup-method-card .method-chevron {
+  display: block; /* Restore visibility */
+}
+
+.signup-method-card .method-body {
+  align-items: flex-start;
+}
+
+
+
+/* Responsive: Stack on small screens */
+@media (max-width: 768px) {
+  .auth-extras-row {
+    flex-direction: column;
+  }
+}
+
+
 

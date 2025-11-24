@@ -98,112 +98,182 @@ async function verifyCaptchaOrFail(widgetId) {
   }
 }
 const regFormEl = document.getElementById('regForm');
-if (regFormEl) regFormEl.addEventListener('submit', async (e) => {
-  e.preventDefault(); // prevent page refresh
-  const firstName = document.getElementById('firstName')?.value.trim() || '';
-  const middleName = document.getElementById('middleName')?.value.trim() || '';
-  const lastName = document.getElementById('lastName')?.value.trim() || '';
-  const email = document.getElementById('email').value.trim();
-  const mobile = document.getElementById('mobile').value.trim();
-  const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
-  const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
-  const barangay = document.getElementById('barangay')?.value.trim() || '';
-  const gender = document.getElementById('gender')?.value || '';
-  const regPass = document.getElementById('regPassword').value;
-  const reRegPass = document.getElementById('reRegPassword').value;
-  // Early password length checks
-  if (!regPass || regPass.length < 8) {
-    showMessage('error', 'Password must be at least 8 characters long');
-    return;
-  }
-  // Validate form data
-  const validationRules = {
-    firstName: { required: true, minLength: 1, maxLength: 100 },
-    middleName: { required: false, minLength: 0, maxLength: 100 },
-    lastName: { required: true, minLength: 1, maxLength: 100 },
-    email: { required: true, type: 'email' },
-    mobile: { required: true, type: 'mobile' },
-    regPassword: { required: true, type: 'password' },
-    addressLine1: { required: false, minLength: 0, maxLength: 255 },
-    addressLine2: { required: false, minLength: 0, maxLength: 255 },
-    barangay: { required: false, minLength: 0, maxLength: 100 },
-    gender: { required: false }
-  };
-  const formData = { firstName, middleName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, barangay, gender };
-  const validation = validateAndSanitizeForm(formData, validationRules);
-  if (!validation.isValid) {
-    showMessage('error', validation.errors.join(', '));
-    return;
-  }
-  // Additional password confirmation check
-  if (reRegPass !== regPass) {
-    showMessage('error', 'Passwords don\'t match');
-    return;
-  }
 
-  // verify captcha
-  const captchaResult = await verifyCaptchaOrFail(registerCaptchaWidgetId);
-  if (!captchaResult.ok) return;
+// Form persistence logic for registration
+const REG_FORM_STORAGE_KEY = 'cl_reg_form_data';
 
-  try {
-    const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn');
-    const resetBtn = setButtonLoading(submitBtn, 'Creating account...');
-    // Build JSON payload (role defaults to 'citizen' on backend)
-    const payload = {
-      email: validation.sanitizedData.email,
-      password: regPass,
-      confirmPassword: reRegPass,
-      firstName: validation.sanitizedData.firstName,
-      middleName: validation.sanitizedData.middleName || '',
-      lastName: validation.sanitizedData.lastName,
-      mobileNumber: `+63${validation.sanitizedData.mobile}`,
-      gender: validation.sanitizedData.gender || '',
-      address: {
-        line1: validation.sanitizedData.addressLine1 || '',
-        line2: validation.sanitizedData.addressLine2 || '',
-        barangay: validation.sanitizedData.barangay || ''
-      },
-      // role: 'citizen', // backend defaults to citizen
-      agreedToTerms: true,
-      isOAuth: false // Regular signup
-    };
-    // Submit via API instead of direct Supabase call
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await response.json();
-    // Be tolerant of API variations: treat 2xx with clear success message as success
-    const successMessage = (result && result.message) ? String(result.message) : '';
-    const isHttpSuccess = response.ok; // includes 201
-    const isApiSuccess = result && result.success === true;
-    const looksLikeSuccess = /account created|verify your email|verification email/i.test(successMessage);
-    if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
-      // SECURITY: Tokens are no longer in response, Supabase session is managed server-side
-      // Server sets HttpOnly cookie, client relies on that for authentication
-      // No need to manually set session here as server handles it
-      showMessage('success', 'Successfully registered. Please confirm via the email we sent.');
-      temporarilyMark(submitBtn, 'Success', 'btn-success');
-      resetBtn();
-      setTimeout(()=>{window.location.href = '/login';},3000);
-    } else {
-      const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
-      if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken') || errMsg.includes('email already exist')) {
-        showMessage('error', 'Email already exist');
-      } else {
-        showMessage('error', result.error || successMessage || 'Registration failed');
-      }
-      temporarilyMark(submitBtn, 'Failed', 'btn-danger');
-      resetBtn();
+function saveRegFormData() {
+  if (!regFormEl) return;
+  
+  const formData = new FormData(regFormEl);
+  const dataToSave = {};
+  
+  for (const [key, value] of formData.entries()) {
+    // Don't save sensitive fields
+    if (key !== 'regPassword' && key !== 'reRegPassword') {
+      dataToSave[key] = value;
     }
-  } catch (error) {
-    console.error('Registration error:', error);
-    showMessage('error', 'Registration failed. Please try again.');
-    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); temporarilyMark(submitBtn, 'Failed', 'btn-danger'); } catch {}
-    try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); } catch {}
   }
-});
+  
+  try {
+    localStorage.setItem(REG_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.warn('Failed to save registration form data:', e);
+  }
+}
+
+function loadRegFormData() {
+  if (!regFormEl) return;
+  
+  try {
+    const savedData = localStorage.getItem(REG_FORM_STORAGE_KEY);
+    if (!savedData) return;
+    
+    const parsedData = JSON.parse(savedData);
+    
+    Object.keys(parsedData).forEach(key => {
+      const input = regFormEl.querySelector(`[name="${key}"]`);
+      if (input && input.type !== 'file') { // Skip file inputs
+        input.value = parsedData[key];
+        // Trigger input event to ensure UI updates (like floating labels)
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  } catch (e) {
+    console.warn('Failed to load registration form data:', e);
+  }
+}
+
+function clearRegFormData() {
+  try {
+    localStorage.removeItem(REG_FORM_STORAGE_KEY);
+    localStorage.removeItem('cl_signup_step_index'); // Clear step index too
+  } catch (e) {
+    console.warn('Failed to clear registration form data:', e);
+  }
+}
+
+// Initialize persistence if form exists
+if (regFormEl) {
+  // Load saved data on init
+  loadRegFormData();
+
+  // Save data on input changes
+  regFormEl.addEventListener('input', (e) => {
+    // Debounce saving if needed, but for now direct save is fine for simple text
+    if (e.target.name !== 'regPassword' && e.target.name !== 'reRegPassword') {
+      saveRegFormData();
+    }
+  });
+
+  regFormEl.addEventListener('submit', async (e) => {
+    e.preventDefault(); // prevent page refresh
+    const firstName = document.getElementById('firstName')?.value.trim() || '';
+    const middleName = document.getElementById('middleName')?.value.trim() || '';
+    const lastName = document.getElementById('lastName')?.value.trim() || '';
+    const email = document.getElementById('email').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+    const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
+    const barangay = document.getElementById('barangay')?.value.trim() || '';
+    const gender = document.getElementById('gender')?.value || '';
+    const regPass = document.getElementById('regPassword').value;
+    const reRegPass = document.getElementById('reRegPassword').value;
+    // Early password length checks
+    if (!regPass || regPass.length < 8) {
+      showMessage('error', 'Password must be at least 8 characters long');
+      return;
+    }
+    // Validate form data
+    const validationRules = {
+      firstName: { required: true, minLength: 1, maxLength: 100 },
+      middleName: { required: false, minLength: 0, maxLength: 100 },
+      lastName: { required: true, minLength: 1, maxLength: 100 },
+      email: { required: true, type: 'email' },
+      mobile: { required: true, type: 'mobile' },
+      regPassword: { required: true, type: 'password' },
+      addressLine1: { required: false, minLength: 0, maxLength: 255 },
+      addressLine2: { required: false, minLength: 0, maxLength: 255 },
+      barangay: { required: false, minLength: 0, maxLength: 100 },
+      gender: { required: false }
+    };
+    const formData = { firstName, middleName, lastName, email, mobile, regPassword: regPass, addressLine1, addressLine2, barangay, gender };
+    const validation = validateAndSanitizeForm(formData, validationRules);
+    if (!validation.isValid) {
+      showMessage('error', validation.errors.join(', '));
+      return;
+    }
+    // Additional password confirmation check
+    if (reRegPass !== regPass) {
+      showMessage('error', 'Passwords don\'t match');
+      return;
+    }
+
+    // verify captcha
+    const captchaResult = await verifyCaptchaOrFail(registerCaptchaWidgetId);
+    if (!captchaResult.ok) return;
+
+    try {
+      const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn');
+      const resetBtn = setButtonLoading(submitBtn, 'Creating account...');
+      // Build JSON payload (role defaults to 'citizen' on backend)
+      const payload = {
+        email: validation.sanitizedData.email,
+        password: regPass,
+        confirmPassword: reRegPass,
+        firstName: validation.sanitizedData.firstName,
+        middleName: validation.sanitizedData.middleName || '',
+        lastName: validation.sanitizedData.lastName,
+        mobileNumber: `+63${validation.sanitizedData.mobile}`,
+        gender: validation.sanitizedData.gender || '',
+        address: {
+          line1: validation.sanitizedData.addressLine1 || '',
+          line2: validation.sanitizedData.addressLine2 || '',
+          barangay: validation.sanitizedData.barangay || ''
+        },
+        // role: 'citizen', // backend defaults to citizen
+        agreedToTerms: true,
+        isOAuth: false // Regular signup
+      };
+      // Submit via API instead of direct Supabase call
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      // Be tolerant of API variations: treat 2xx with clear success message as success
+      const successMessage = (result && result.message) ? String(result.message) : '';
+      const isHttpSuccess = response.ok; // includes 201
+      const isApiSuccess = result && result.success === true;
+      const looksLikeSuccess = /account created|verify your email|verification email/i.test(successMessage);
+      if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
+        // SECURITY: Tokens are no longer in response, Supabase session is managed server-side
+        // Server sets HttpOnly cookie, client relies on that for authentication
+        // No need to manually set session here as server handles it
+        showMessage('success', 'Successfully registered. Please confirm via the email we sent.');
+        clearRegFormData(); // Clear saved form data
+        temporarilyMark(submitBtn, 'Success', 'btn-success');
+        resetBtn();
+        setTimeout(()=>{window.location.href = '/login';},3000);
+      } else {
+        const errMsg = (result && result.error ? String(result.error) : '').toLowerCase();
+        if (errMsg.includes('already registered') || errMsg.includes('already exists') || errMsg.includes('duplicate') || errMsg.includes('email is used') || errMsg.includes('email taken') || errMsg.includes('email already exist')) {
+          showMessage('error', 'Email already exist');
+        } else {
+          showMessage('error', result.error || successMessage || 'Registration failed');
+        }
+        temporarilyMark(submitBtn, 'Failed', 'btn-danger');
+        resetBtn();
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      showMessage('error', 'Registration failed. Please try again.');
+      try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); temporarilyMark(submitBtn, 'Failed', 'btn-danger'); } catch {}
+      try { const submitBtn = regFormEl.querySelector('button[type="submit"], .btn-primary, .btn'); } catch {}
+    }
+  });
+}
 const loginFormEl = document.getElementById('login');
 if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   e.preventDefault();

@@ -65,6 +65,60 @@ async function verifyCaptchaOrFail(widgetId) {
     }
   }
 }
+// Form persistence logic
+const OAUTH_FORM_STORAGE_KEY = 'cl_oauth_complete_form_data';
+
+function saveOAuthFormData() {
+  const form = document.getElementById('oauthCompleteForm');
+  if (!form) return;
+  
+  const formData = new FormData(form);
+  const dataToSave = {};
+  
+  for (const [key, value] of formData.entries()) {
+    // Don't save sensitive fields
+    if (key !== 'regPassword' && key !== 'reRegPassword') {
+      dataToSave[key] = value;
+    }
+  }
+  
+  try {
+    localStorage.setItem(OAUTH_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.warn('Failed to save OAuth form data:', e);
+  }
+}
+
+function loadOAuthFormData() {
+  try {
+    const savedData = localStorage.getItem(OAUTH_FORM_STORAGE_KEY);
+    if (!savedData) return;
+    
+    const parsedData = JSON.parse(savedData);
+    const form = document.getElementById('oauthCompleteForm');
+    if (!form) return;
+    
+    Object.keys(parsedData).forEach(key => {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (input && input.type !== 'file') {
+        input.value = parsedData[key];
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  } catch (e) {
+    console.warn('Failed to load OAuth form data:', e);
+  }
+}
+
+function clearOAuthFormData() {
+  try {
+    localStorage.removeItem(OAUTH_FORM_STORAGE_KEY);
+    localStorage.removeItem('cl_signup_step_index'); // Also clear step index
+  } catch (e) {
+    console.warn('Failed to clear OAuth form data:', e);
+  }
+}
+
 // Prefill OAuth data from provider
 const prefillOAuthData = async () => {
   try {
@@ -83,18 +137,18 @@ const prefillOAuthData = async () => {
 
       // Prefill firstName
       const firstNameInput = document.getElementById('firstName');
-      if (firstNameInput && firstName) {
+      if (firstNameInput && firstName && !firstNameInput.value) {
         firstNameInput.value = firstName;
       }
 
       const middleNameInput = document.getElementById('middleName');
-      if (middleNameInput && middleName) {
+      if (middleNameInput && middleName && !middleNameInput.value) {
         middleNameInput.value = middleName;
       }
 
       // Prefill lastName
       const lastNameInput = document.getElementById('lastName');
-      if (lastNameInput && lastName) {
+      if (lastNameInput && lastName && !lastNameInput.value) {
         lastNameInput.value = lastName;
       }
 
@@ -105,14 +159,12 @@ const prefillOAuthData = async () => {
       }
 
       // Try to get phone from OAuth provider (Google, Facebook, etc.)
-      // Google provides: user_metadata.phone_number or user_metadata.phone
-      // Facebook provides: user_metadata.phone_number
       const oauthPhone = user.user_metadata?.phone_number ||
                         user.user_metadata?.phone ||
                         user.user_metadata?.mobile ||
                         null;
       const mobileInput = document.getElementById('mobile');
-      if (mobileInput) {
+      if (mobileInput && !mobileInput.value) {
         if (oauthPhone) {
           // Extract digits only (handle various formats: +63XXX, +1XXX, etc.)
           let digits = oauthPhone.replace(/\D/g, '');
@@ -134,11 +186,22 @@ const prefillOAuthData = async () => {
     }
   } catch (error) {
     console.error('Error prefilling OAuth data:', error);
+  } finally {
+    // Load saved data AFTER prefill to ensure user edits are preserved
+    loadOAuthFormData();
   }
 };
+
 // Handle form submission
 const oauthCompleteForm = document.getElementById('oauthCompleteForm');
 if (oauthCompleteForm) {
+  // Save on input
+  oauthCompleteForm.addEventListener('input', (e) => {
+    if (e.target.name !== 'regPassword' && e.target.name !== 'reRegPassword') {
+      saveOAuthFormData();
+    }
+  });
+
   oauthCompleteForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const firstName = document.getElementById('firstName')?.value.trim() || '';
@@ -262,6 +325,7 @@ if (oauthCompleteForm) {
       }
       
       showMessage('success', 'Profile completed successfully! Redirecting to dashboard...');
+      clearOAuthFormData(); // Clear saved form data
       
       // Clear OAuth context since signup is complete
       try {

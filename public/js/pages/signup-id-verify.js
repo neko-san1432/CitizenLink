@@ -462,6 +462,48 @@
       // Store extracted ID data
       extractedIdData = data?.fields || {};
       
+      // Store verification data in backend
+      try {
+        const storeResponse = await fetch('/api/verification/store', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            idType: data.idType,
+            fields: data.fields,
+            confidence: data.confidence
+          })
+        });
+
+        const storeResult = await storeResponse.json();
+
+        if (!storeResponse.ok || !storeResult.success) {
+          // Handle duplicate ID number error
+          if (storeResult.error === 'ID_NUMBER_ALREADY_REGISTERED') {
+            status('⚠️ This ID number is already registered. Each ID can only be used once.', 'error');
+            return;
+          }
+          
+          console.error('Failed to store verification:', storeResult);
+          status('⚠️ Verification processed but could not be saved. Please try again.', 'error');
+          return;
+        }
+
+        // Store verification ID for signup
+        try {
+          sessionStorage.setItem('cl_verification_id', storeResult.data.verificationId);
+          sessionStorage.setItem('cl_verification_complete', 'true');
+        } catch (storageError) {
+          console.warn('Could not store verification ID in session:', storageError);
+        }
+
+        console.log('[ID_VERIFY] Verification stored:', storeResult.data.verificationId);
+      } catch (storeError) {
+        console.error('Error storing verification:', storeError);
+        status('⚠️ Could not save verification data. Please try again.', 'error');
+        return;
+      }
+      
       // Success - compare with form data (this will also render the results)
       compareWithFormData(extractedIdData);
     } catch (err) {

@@ -314,6 +314,8 @@ function setupSignupMethodSelector() {
     }
     selectMethod('none', { persist });
     clearOAuthContext();
+    try { localStorage.removeItem('cl_signup_step_index'); } catch {} // Reset step index storage
+    document.dispatchEvent(new Event('signup-reset')); // Reset UI step to 0
   };
   resetSignupStateHandler = resetSignupState;
 
@@ -341,9 +343,9 @@ function setupSignupMethodSelector() {
     window.scrollTo({ top: methodTop - 40, behavior: 'smooth' });
   });
 
-  const handlePageExit = () => resetSignupState({ persist: true });
-  window.addEventListener('pagehide', handlePageExit);
-  window.addEventListener('beforeunload', handlePageExit);
+  // Removed handlePageExit to allow persistence across refreshes
+  // window.addEventListener('pagehide', handlePageExit);
+  // window.addEventListener('beforeunload', handlePageExit);
 }
 
 function setupOAuthPopupBridge() {

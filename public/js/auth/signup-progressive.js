@@ -62,6 +62,8 @@ if (stepsRoot) {
     const progressBar = progressFill ? progressFill.parentElement : null;
     let current = 0;
 
+    const STEP_STORAGE_KEY = 'cl_signup_step_index';
+
     function showStep(index) {
         steps.forEach((s, i) => {
             s.hidden = i !== index;
@@ -76,6 +78,11 @@ if (stepsRoot) {
         // focus first input in step
         const first = steps[index].querySelector('input,select,textarea,button');
         if (first) first.focus();
+        
+        // Save current step
+        try {
+            localStorage.setItem(STEP_STORAGE_KEY, String(current));
+        } catch (e) {}
     }
 
     function updateProgress() {
@@ -128,7 +135,26 @@ if (stepsRoot) {
     });
 
     // initialize
-    showStep(0);
+    let initialStep = 0;
+    try {
+        const saved = localStorage.getItem(STEP_STORAGE_KEY);
+        if (saved !== null) {
+            initialStep = parseInt(saved, 10);
+            if (isNaN(initialStep) || initialStep < 0 || initialStep >= steps.length) {
+                initialStep = 0;
+            }
+        }
+    } catch (e) {}
+    
+    // Ensure we don't start on a step that requires previous data if that data is missing?
+    // For now, trust the user/persistence.
+    showStep(initialStep);
+
+    // Listen for reset event from other scripts
+    document.addEventListener('signup-reset', () => {
+        showStep(0);
+        try { localStorage.removeItem(STEP_STORAGE_KEY); } catch {}
+    });
 }
 
 export {};
