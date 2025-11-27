@@ -6,6 +6,17 @@ import showMessage from '../components/toast.js';
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
+  // Attach event listeners to refresh buttons
+  const refreshBtnHeader = document.getElementById('refresh-btn-header');
+  if (refreshBtnHeader) {
+    refreshBtnHeader.addEventListener('click', loadPendingSignups);
+  }
+
+  const refreshBtnSection = document.getElementById('refresh-btn-section');
+  if (refreshBtnSection) {
+    refreshBtnSection.addEventListener('click', loadPendingSignups);
+  }
+
   await loadPendingSignups();
 });
 

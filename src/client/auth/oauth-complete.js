@@ -130,10 +130,24 @@ const prefillOAuthData = async () => {
       const rawMeta = user.raw_user_meta_data || {};
       const combined = { ...identityData, ...meta, ...rawMeta };
       const fullName = combined.full_name || combined.name || '';
-      const nameParts = fullName.trim() ? fullName.trim().split(' ') : [];
-      const firstName = combined.given_name || combined.first_name || nameParts[0] || '';
-      const middleName = combined.middle_name || nameParts.slice(1, -1).join(' ') || '';
-      const lastName = combined.family_name || combined.last_name || nameParts.slice(-1)[0] || '';
+      
+      // Prioritize explicit fields
+      let firstName = combined.given_name || combined.first_name || '';
+      let lastName = combined.family_name || combined.last_name || '';
+      let middleName = combined.middle_name || '';
+
+      // If explicit fields are missing, try to parse from full name
+      if (!firstName && !lastName && fullName) {
+          const nameParts = fullName.trim().split(' ');
+          if (nameParts.length === 1) {
+              firstName = nameParts[0];
+          } else if (nameParts.length > 1) {
+              // Assume last word is last name, everything else is first name
+              // Do NOT infer middle name automatically to avoid splitting multi-word first names
+              lastName = nameParts.pop();
+              firstName = nameParts.join(' ');
+          }
+      }
 
       // Prefill firstName
       const firstNameInput = document.getElementById('firstName');
@@ -142,8 +156,16 @@ const prefillOAuthData = async () => {
       }
 
       const middleNameInput = document.getElementById('middleName');
-      if (middleNameInput && middleName && !middleNameInput.value) {
-        middleNameInput.value = middleName;
+      if (middleNameInput) {
+        if (middleName && !middleNameInput.value) {
+            middleNameInput.value = middleName;
+        } else if (!middleName && !middleNameInput.value) {
+            // Enable if empty so user can enter it or leave it blank
+            middleNameInput.removeAttribute('readonly');
+            middleNameInput.removeAttribute('disabled');
+            middleNameInput.removeAttribute('aria-disabled');
+            middleNameInput.removeAttribute('title');
+        }
       }
 
       // Prefill lastName

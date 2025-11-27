@@ -244,12 +244,14 @@ class LinkGenerator {
         <div class="link-details">
           <div><strong>Code:</strong> ${link.code}</div>
           <div><strong>Used:</strong> ${link.used_at ? this.formatDate(link.used_at) : 'Not used'}</div>
-          <div><strong>URL:</strong> <a href="${link.url}" target="_blank">Open Link</a></div>
+          <div><strong>URL:</strong> ${!link.is_used ? `<a href="${link.url}" target="_blank">Open Link</a>` : '<span style="color: #9ca3af; font-style: italic;">Link used</span>'}</div>
         </div>
         <div class="link-actions">
+          ${!link.is_used ? `
           <button class="btn btn-sm btn-primary copy-link-url-btn" data-link-url="${encodeURIComponent(link.url)}">
             Copy URL
           </button>
+          ` : ''}
           ${!link.is_used && !link.is_expired ? `
             <button class="btn btn-sm btn-warning deactivate-link-btn" data-link-id="${link.id}">
               Deactivate

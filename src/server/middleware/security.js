@@ -12,7 +12,7 @@ const cspConfig = {
     ],
     scriptSrc: [
       '\'self\'',
-      // no 'unsafe-inline' — enforced CSP-compliant scripts only
+      '\'unsafe-eval\'', // Required for some reCAPTCHA implementations
       // Allow specific inline script hash for dashboard
       '\'sha256-0Dr8sVaJkoiX93UyTTWlbHfCjfIBgNYRC1k4YSi6ZY8=\'',
       'https://www.google.com',
@@ -32,6 +32,11 @@ const cspConfig = {
       'https://unpkg.com',
       'https://unpkg.com/leaflet@*/dist/images/*',
       'https://*.supabase.co'
+    ],
+    workerSrc: [
+      '\'self\'',
+      'blob:',
+      'https://www.google.com'
     ],
     connectSrc: [
       '\'self\'',

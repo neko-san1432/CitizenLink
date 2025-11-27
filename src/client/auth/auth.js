@@ -295,9 +295,14 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   // Function to show loading state
   const showLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    // Store original icon HTML
-    const originalIcon = loginBtnIcon.outerHTML;
-    loginBtn.dataset.originalIcon = originalIcon;
+    
+    // Store original icon HTML only if not already stored
+    // This prevents overwriting with the spinner if called multiple times
+    if (!loginBtn.dataset.originalIcon) {
+      const originalIcon = loginBtnIcon.outerHTML;
+      loginBtn.dataset.originalIcon = originalIcon;
+    }
+    
     // Replace icon with loading spinner (CSS animation will handle rotation)
     loginBtnIcon.innerHTML = `
       <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
@@ -308,6 +313,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
     loginBtn.disabled = true;
     loginBtnText.textContent = 'Signing in...';
   };
+
   // Function to hide loading state
   const hideLoading = () => {
     if (!loginBtn) return;
@@ -323,6 +329,9 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       if (restoredIcon) {
         currentIcon.parentNode.replaceChild(restoredIcon, currentIcon);
       }
+      // Clear the stored icon so we can capture it fresh next time if needed
+      // (though keeping it is also fine, clearing is safer for state resets)
+      delete loginBtn.dataset.originalIcon;
     }
     
     // Remove spinning class if it exists
@@ -336,23 +345,28 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       loginBtnText.textContent = 'Sign in';
     }
   };
+
   // Basic validation
   if (!email || !pass) {
     showMessage('error', 'Email and password are required');
     return;
   }
+
   if (!isValidEmail(email)) {
     showMessage('error', 'Please enter a valid email address');
     return;
   }
+
   // Show loading state
   showLoading();
+
   // verify captcha
   const captchaResult = await verifyCaptchaOrFail(loginCaptchaWidgetId);
   if (!captchaResult.ok) {
     hideLoading();
     return;
   }
+
   try {
     // Submit via API with JSON body
     const response = await fetch('/api/auth/login', {
@@ -360,83 +374,81 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass, remember })
     });
+
     const result = await response.json();
+
     if (result.success) {
       // SECURITY: Server handles all authentication and sets HttpOnly cookie
       // Client syncs Supabase session state using refresh token from server response
       try {
         // Server already authenticated and set cookie, now sync client-side Supabase session
         const refreshToken = result.data?.refresh_token;
-        const expiresAt = result.data?.expires_at;
-
+        
         if (refreshToken) {
           // Use refresh token to get full Supabase session without re-authenticating
-          const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession({
+          // Wrap in timeout to prevent hanging
+          const syncPromise = supabase.auth.refreshSession({
             refresh_token: refreshToken
           });
+          
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session sync timeout')), 3000)
+          );
+
+          const { data: sessionData, error: refreshError } = await Promise.race([syncPromise, timeoutPromise])
+            .catch(err => ({ error: err }));
 
           if (refreshError || !sessionData?.session) {
-            console.warn('[CLIENT AUTH] ⚠️ Failed to sync Supabase session:', refreshError?.message);
+            console.warn('[CLIENT AUTH] ⚠️ Failed to sync Supabase session:', refreshError?.message || 'Unknown error');
             // Server cookie is still valid, continue with server-side auth only
-            // Some client-side Supabase features may not work, but core functionality will
-          } else {
-            // Successfully synced Supabase session
-            // Server cookie is already set, client session is now synced
           }
         } else {
           console.warn('[CLIENT AUTH] ⚠️ No refresh token in response, client-side Supabase features may be limited');
         }
 
         // Verify session by hitting a protected endpoint
-        await new Promise(r => setTimeout(r, 100)); // Brief wait for cookie to be set
-        const resp = await fetch('/api/user/role', {
-          method: 'GET',
-          credentials: 'include', // Ensure cookies are sent
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!resp.ok) {
-          // Try one more time with a longer wait
-          await new Promise(r => setTimeout(r, 1000));
-          const retryResp = await fetch('/api/user/role', {
+        // Also wrapped in timeout/race to prevent blocking
+        const verifyPromise = async () => {
+          await new Promise(r => setTimeout(r, 100)); // Brief wait for cookie
+          const resp = await fetch('/api/user/role', {
             method: 'GET',
             credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
           });
+          if (!resp.ok) throw new Error('Role check failed');
+          return resp;
+        };
 
-          if (!retryResp.ok) {
-            // Soft-fail: proceed with login flow even if verification endpoint is slow/unavailable.
-            // We already have a valid server session; the dashboard/header will reconcile on load.
-            const retryErrorData = await retryResp.json().catch(() => ({}));
-            console.warn('[CLIENT AUTH] ⚠️ Session verification did not complete, continuing:', retryErrorData);
-            showMessage('info', 'Signing you in… finalizing session.');
-          }
-        }
+        await Promise.race([
+          verifyPromise(),
+          new Promise(r => setTimeout(r, 2000)) // 2s max wait for verification
+        ]).catch(err => console.warn('[CLIENT AUTH] ⚠️ Session verification skipped:', err.message));
+
       } catch (error) {
         console.error('[CLIENT AUTH] Error in session sync:', error);
         // Don't fail login if session sync fails - server cookie is still valid
-        // Log error but continue with server-side authentication
       }
+
       showMessage('success', 'Logged in successfully');
+
       // SECURITY: Use user data from server response (server is source of truth)
-      // Fall back to Supabase session only if server data is incomplete
       const serverUser = result.data?.user;
       let role = serverUser?.role || serverUser?.normalizedRole || null;
       let name = serverUser?.name || serverUser?.fullName || null;
 
       // If server data is incomplete, try to get from Supabase session
       if (!role || !name) {
-        const { data: { session: clientSession } } = await supabase.auth.getSession();
-        if (clientSession?.user) {
-          const userMetadata = clientSession.user.user_metadata || {};
-          const rawUserMetaData = clientSession.user.raw_user_meta_data || {};
-          const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
-          role = role || combinedMetadata.role || combinedMetadata.normalized_role || null;
-          name = name || combinedMetadata.name || null;
+        try {
+          const { data: { session: clientSession } } = await supabase.auth.getSession();
+          if (clientSession?.user) {
+            const userMetadata = clientSession.user.user_metadata || {};
+            const rawUserMetaData = clientSession.user.raw_user_meta_data || {};
+            const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
+            role = role || combinedMetadata.role || combinedMetadata.normalized_role || null;
+            name = name || combinedMetadata.name || null;
+          }
+        } catch (e) {
+          console.warn('Failed to fetch client session metadata:', e);
         }
       }
 
@@ -444,26 +456,26 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       if (role || name) {
         saveUserMeta({ role, name });
       }
+
       // Check if user has completed registration
       if (!role || !name) {
-        // console.log removed for security
         showMessage('error', 'Please complete your profile first');
+        hideLoading(); // Ensure button is reset
         setTimeout(() => {
-          // console.log removed for security
           window.location.href = '/OAuthContinuation';
         }, 2000);
         return;
       }
+
       // Redirect to dashboard based on role
-      // console.log removed for security
-      // Ensure loading UI is cleared if redirect doesn't happen (rare race)
       try {
         hideLoading();
       } catch (e) {}
+      
       setTimeout(() => {
-        // console.log removed for security
         try { window.location.href = '/dashboard'; } catch (e) { /* ignore */ }
       }, 1500);
+
       // Safety fallback: if navigation hasn't started after 7s, clear loading state
       setTimeout(() => {
         try {
@@ -474,10 +486,12 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
           }
         } catch (_) {}
       }, 7000);
+
     } else {
       // Login failed - hide loading state
       hideLoading();
       showMessage('error', result.error || 'Login failed');
+      
       // If OAuth context suggests provider was intended but failed, route to signup
       const ctx = getOAuthContext();
       if (ctx && ctx.provider) {

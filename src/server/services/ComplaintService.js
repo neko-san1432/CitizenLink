@@ -554,34 +554,76 @@ class ComplaintService {
   }
   async getComplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
-    let query = this.complaintRepo.supabase
-      .from('complaints')
-      .select('workflow_status, subtype, priority, submitted_at');
-    if (department) {
-      query = query.contains('department_r', [department]);
+    
+    // Helper to build base query
+    const buildQuery = () => {
+      let query = this.complaintRepo.supabase
+        .from('complaints')
+        .select('workflow_status, subtype, priority, submitted_at');
+      
+      if (department) {
+        query = query.contains('department_r', [department]);
+      }
+      if (dateFrom) {
+        query = query.gte('submitted_at', dateFrom);
+      }
+      if (dateTo) {
+        query = query.lte('submitted_at', dateTo);
+      }
+      return query;
+    };
+
+    // Fetch all rows using pagination to bypass default limits
+    let allData = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await buildQuery()
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      if (error) throw error;
+      
+      if (data.length > 0) {
+        allData = allData.concat(data);
+        page++;
+        // If we got less than pageSize, we're done
+        if (data.length < pageSize) hasMore = false;
+      } else {
+        hasMore = false;
+      }
     }
-    if (dateFrom) {
-      query = query.gte('submitted_at', dateFrom);
-    }
-    if (dateTo) {
-      query = query.lte('submitted_at', dateTo);
-    }
-    const { data, error } = await query;
-    if (error) throw error;
+
     const stats = {
-      total: data.length,
+      total: allData.length,
       by_status: {},
       by_subtype: {},
       by_priority: {},
       by_month: {}
     };
-    data.forEach(complaint => {
+
+    allData.forEach(complaint => {
+      // Count by status
       stats.by_status[complaint.workflow_status] = (stats.by_status[complaint.workflow_status] || 0) + 1;
-      stats.by_subtype[complaint.subtype] = (stats.by_subtype[complaint.subtype] || 0) + 1;
-      stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
-      const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
-      stats.by_month[month] = (stats.by_month[month] || 0) + 1;
+      
+      // Count by subtype
+      if (complaint.subtype) {
+        stats.by_subtype[complaint.subtype] = (stats.by_subtype[complaint.subtype] || 0) + 1;
+      }
+      
+      // Count by priority
+      if (complaint.priority) {
+        stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
+      }
+      
+      // Count by month
+      if (complaint.submitted_at) {
+        const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
+        stats.by_month[month] = (stats.by_month[month] || 0) + 1;
+      }
     });
+
     return stats;
   }
   async getComplaintLocations(filters = {}) {
@@ -1189,6 +1231,51 @@ class ComplaintService {
       };
     } catch (error) {
       console.error('Error getting false complaints:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get false complaint statistics
+   * @returns {Promise<Object>} Statistics about false complaints
+   */
+  async getFalseComplaintStatistics() {
+    try {
+      const Database = require('../config/database');
+      const supabase = Database.getClient();
+
+      // Get total count of false complaints
+      const { count: total, error: countError } = await supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_false_complaint', true);
+
+      if (countError) throw countError;
+
+      // Get recent false complaints (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: recent, error: recentError } = await supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_false_complaint', true)
+        .gte('false_complaint_marked_at', thirtyDaysAgo.toISOString());
+
+      if (recentError) throw recentError;
+
+      return {
+        success: true,
+        data: {
+          total: total || 0,
+          recent: recent || 0
+        }
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error getting false complaint stats:', error);
       return {
         success: false,
         error: error.message

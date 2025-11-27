@@ -1,0 +1,327 @@
+/* Admin Departments Page Styles */
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    color: var(--gray-900);
+}
+
+/* Stats Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-600);
+    margin: 0 0 0.5rem 0;
+    line-height: 1;
+}
+
+.stat-card p {
+    margin: 0;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+/* Department Grid */
+.department-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.department-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.department-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.department-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.department-code {
+    font-family: monospace;
+    font-weight: 700;
+    background: var(--gray-100);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-md);
+    color: var(--gray-700);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background: var(--success-50);
+    color: var(--success-600);
+}
+
+.status-inactive {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.department-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: var(--gray-900);
+}
+
+.department-card p {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+    flex: 1;
+}
+
+/* Officers Section */
+.officers-section {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 1rem;
+    margin-top: auto;
+    margin-bottom: 1rem;
+}
+
+.officers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.officers-header h4 {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    margin: 0;
+}
+
+.toggle-officers {
+    background: none;
+    border: none;
+    color: var(--primary-600);
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.toggle-officers:hover {
+    text-decoration: underline;
+}
+
+.officers-list {
+    display: grid;
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.officer-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    align-items: center;
+}
+
+.officer-status {
+    position: relative;
+}
+
+.officer-avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-100);
+    color: var(--primary-700);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+}
+
+.status-online { background-color: var(--success-500); }
+.status-away { background-color: var(--warning-500); }
+.status-offline { background-color: var(--gray-400); }
+
+.officer-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.officer-name {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--gray-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.officer-role {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+}
+
+.officer-status-text {
+    margin: 0;
+    font-size: 0.75rem;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.status-online-text { color: var(--success-600); }
+.status-away-text { color: var(--warning-600); }
+.status-offline-text { color: var(--gray-500); }
+
+.officer-last-seen {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    display: inline-block;
+}
+
+.no-officers {
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+    padding: 1rem;
+    font-style: italic;
+}
+
+/* Department Actions */
+.department-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.department-actions .btn {
+    flex: 1;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--gray-900);
+}
+
+.btn-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .department-grid {
+        grid-template-columns: 1fr;
+    }
+}

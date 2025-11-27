@@ -7,13 +7,18 @@ const supabase = Database.getClient();
 const authenticateUser = async (req, res, next) => {
   try {
     // Extract token from cookies or headers
+    const authHeader = req.headers.authorization;
+    const cookieToken = req.cookies?.sb_access_token;
+    
+    // Prioritize Authorization header as it contains the most recent token from the client
     const token =
-      req.cookies?.sb_access_token ||
-      req.cookies?.sb_access_token_debug ||
-      req.headers.authorization?.replace('Bearer ', '');
+      authHeader?.replace('Bearer ', '') ||
+      cookieToken ||
+      req.cookies?.sb_access_token_debug;
 
     if (!token) {
-      if (req.path.startsWith('/api/')) {
+      console.log('[AUTH DEBUG] No token found. Cookies:', Object.keys(req.cookies), 'Auth Header:', !!authHeader);
+      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
           error: 'No authentication token'
@@ -29,10 +34,11 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      if (req.path.startsWith('/api/')) {
+      console.log('[AUTH DEBUG] Token validation failed:', error?.message);
+      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid token'
+          error: error?.message || 'Invalid token'
         });
       }
       return res.redirect(`/login?message=${encodeURIComponent('Invalid session. Please login again')}&type=error`);
@@ -58,7 +64,7 @@ const authenticateUser = async (req, res, next) => {
           
           if (tokenIssuedAt && invalidationTime && new Date(invalidationTime) > tokenIssuedAt) {
             // Token was issued before password change/invalidation, reject it immediately
-            if (req.path.startsWith('/api/')) {
+            if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
               return res.status(401).json({
                 success: false,
                 error: 'Session invalidated. Please login again.'
@@ -88,7 +94,7 @@ const authenticateUser = async (req, res, next) => {
         userId: tokenUser.id
       });
 
-      if (req.path.startsWith('/api/')) {
+      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
         return res.status(403).json({
           success: false,
           error: `Invalid role: ${roleValidation.error}`

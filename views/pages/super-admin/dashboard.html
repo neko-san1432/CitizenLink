@@ -115,37 +115,36 @@
                 </div>
             </div>
 
-            <!-- Role Distribution Pie Chart -->
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h2 class="section-title">📊 Role Distribution</h2>
-                    <div class="section-controls">
-                        <button class="btn btn-info" id="refresh-role-distribution-btn">Refresh</button>
-                    </div>
-                </div>
-                <div class="content-container" style="display: flex; justify-content: center; align-items: center; padding: 2rem;">
-                    <canvas id="role-distribution-chart" style="max-width: 500px; max-height: 500px;"></canvas>
-                </div>
-            </div>
-
-            <!-- Latest Registered Users Section -->
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h2 class="section-title">👤 Latest Registered Users</h2>
-                    <div class="section-controls">
-                        <button class="btn btn-info" id="refresh-latest-users-btn">Refresh</button>
-                    </div>
-                </div>
-                <div id="latest-users-container" class="content-container">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Loading latest users...</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Main Content Grid -->
             <div class="dashboard-grid">
+                <!-- Role Distribution Pie Chart -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📊 Role Distribution</h2>
+                        <div class="section-controls">
+                            <button class="btn btn-info" id="refresh-role-distribution-btn">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="content-container" style="display: flex; justify-content: center; align-items: center; padding: 2rem;">
+                        <canvas id="role-distribution-chart" style="max-width: 500px; max-height: 500px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Latest Registered Users Section -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">👤 Latest Registered Users</h2>
+                        <div class="section-controls">
+                            <button class="btn btn-info" id="refresh-latest-users-btn">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="latest-users-container" class="content-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading latest users...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

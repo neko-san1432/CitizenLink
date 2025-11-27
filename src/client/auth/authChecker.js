@@ -129,12 +129,21 @@ export const getUserRole = async (options = {}) => {
   }
   try {
     // Try to get role from API first (server has complete metadata)
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     const token = session?.access_token;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    
+    if (!token) {
+      console.warn('[AUTH CHECKER] No session token available for role check', { sessionError });
+    } else {
+      console.log('[AUTH CHECKER] Session token found, length:', token.length);
     }
+    
+    // Always include Authorization header if token exists
+    const headers = { 
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+
     const response = await fetch('/api/user/role', {
       method: 'GET',
       headers,

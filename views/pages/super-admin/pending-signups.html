@@ -29,7 +29,7 @@
                     <p class="dashboard-subtitle">Review and approve pending user signup requests</p>
                 </div>
                 <div class="header-quick-actions">
-                    <button class="quick-action-btn quick-action-btn--sm" onclick="loadPendingSignups()">
+                    <button id="refresh-btn-header" class="quick-action-btn quick-action-btn--sm">
                         <div class="quick-action-icon">🔄</div>
                         <div class="quick-action-text">Refresh</div>
                     </button>
@@ -42,7 +42,7 @@
                     <div class="section-header">
                         <h2 class="section-title">Pending Signup Requests</h2>
                         <div class="section-controls">
-                            <button class="btn btn-info" onclick="loadPendingSignups()">Refresh</button>
+                            <button id="refresh-btn-section" class="btn btn-info">Refresh</button>
                         </div>
                     </div>
                     <div id="pending-signups-container" class="content-container">
