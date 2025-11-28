@@ -1,6 +1,7 @@
 /**
  * Server-side Department Mapping Utilities
  * Provides dynamic department mapping for server-side services
+ * // Touched to force restart
  */
 const Database = require('../config/database');
 
@@ -9,7 +10,7 @@ const supabase = db.getClient();
 // Cache for department data
 let departmentCache = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 0; // Disable cache to ensure fresh data
 /**
  * Get all departments with their codes and names
  */

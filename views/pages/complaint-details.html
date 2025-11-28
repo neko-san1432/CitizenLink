@@ -52,13 +52,13 @@
                 </div>
 
                 <!-- Complaint Details -->
-                <div id="complaint-details" class="complaint-details" style="display: none;">
+                <div id="complaint-details" class="complaint-details animate-fade-in" style="display: none;">
                     <!-- Complaint Header -->
-                    <div class="complaint-header">
+                    <div class="complaint-header glass-panel p-6 rounded-xl mb-6">
                         <div class="complaint-title-section">
-                            <h1 id="complaint-title" class="complaint-title">Complaint Title</h1>
-                            <div class="complaint-meta">
-                                <span id="complaint-id" class="complaint-id">#12345</span>
+                            <h1 id="complaint-title" class="complaint-title text-2xl font-bold text-gray-800">Complaint Title</h1>
+                            <div class="complaint-meta mt-2 flex gap-3">
+                                <span id="complaint-id" class="complaint-id text-gray-500">#12345</span>
                                 <span id="complaint-status" class="complaint-status status-pending">Pending</span>
                                 <span id="complaint-priority" class="complaint-priority priority-medium">Medium</span>
                             </div>
@@ -69,37 +69,37 @@
                     </div>
 
                     <!-- Status Timeline - Horizontal Stepper -->
-                    <div class="status-timeline">
-                        <h3>Status Progress</h3>
+                    <div class="status-timeline glass-panel p-6 rounded-xl mb-6">
+                        <h3 class="text-lg font-bold mb-4">Status Progress</h3>
                         <div id="timeline-items" class="progress-stepper">
                             <!-- Progress stepper will be populated here -->
                         </div>
                     </div>
 
                     <!-- Complaint Content -->
-                    <div class="complaint-content">
-                        <div class="content-section">
-                            <h3>Description</h3>
-                            <p id="complaint-description">Complaint description will be loaded here...</p>
+                    <div class="complaint-content grid gap-6">
+                        <div class="content-section glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-2">Description</h3>
+                            <p id="complaint-description" class="text-gray-700">Complaint description will be loaded here...</p>
                         </div>
 
-                        <div class="content-section">
-                            <h3>Location</h3>
+                        <div class="content-section glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-2">Location</h3>
                             <div id="complaint-location" class="location-info">
                                 <!-- Location details will be populated here -->
                             </div>
                         </div>
 
                         <!-- Complainant Information (Only visible to admin, officers, and coordinators) -->
-                        <div id="complainant-section" class="content-section" style="display: none;">
-                            <h3>👤 Complainant Information</h3>
+                        <div id="complainant-section" class="content-section glass-panel p-6 rounded-xl" style="display: none;">
+                            <h3 class="text-lg font-bold mb-2">👤 Complainant Information</h3>
                             <div id="complainant-info" class="complainant-info">
                                 <!-- Complainant details will be populated here -->
                             </div>
                         </div>
 
-                        <div class="content-section">
-                            <h3>Attachments</h3>
+                        <div class="content-section glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-2">Attachments</h3>
                             <div id="complaint-attachments" class="attachments-list">
                                 <!-- Attachments will be populated here -->
                             </div>
@@ -107,7 +107,7 @@
                     </div>
 
                     <!-- Role-specific sections -->
-                    <div id="role-specific-content">
+                    <div id="role-specific-content" class="mt-6">
                         <!-- Content will be populated based on user role -->
                     </div>
                 </div>

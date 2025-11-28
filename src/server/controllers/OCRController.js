@@ -1,7 +1,7 @@
 ﻿const path = require('path');
 const fs = require('fs');
 const fsPromises = fs.promises;
-const Tesseract = require('tesseract.js');
+const { spawn } = require('child_process');
 const IDVerificationService = require('../services/IDVerificationService');
 
 // Try to load Sharp, but make it optional
@@ -13,6 +13,11 @@ try {
 }
 
 class OCRController {
+  constructor() {
+    // Python script path
+    this.pythonScriptPath = path.join(__dirname, '../services/ocr_service.py');
+  }
+
   /**
    * Detect ID type from extracted text
    */
@@ -42,28 +47,6 @@ class OCRController {
     }
     
     return 'unknown';
-  }
-
-  /**
-   * Combine multiple OCR results to get the best text extraction
-   */
-  combineOcrResults(results) {
-    if (results.length === 0) return '';
-    if (results.length === 1) return results[0].text;
-    
-    // Extract unique lines from all results
-    const allLines = new Set();
-    results.forEach(result => {
-      const lines = result.text.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 2); // Filter out very short lines
-      lines.forEach(line => allLines.add(line));
-    });
-    
-    // Sort by length (longer lines are usually more complete)
-    return Array.from(allLines)
-      .sort((a, b) => b.length - a.length)
-      .join('\n');
   }
 
   /**
@@ -127,6 +110,7 @@ class OCRController {
         
         // Check if label appears in line with word boundaries
         const labelRegex = new RegExp(`(^|[^A-Z])${labelUpper.replace(/\s+/g, '\\s+')}($|[^A-Z])`, 'i');
+        
         if (labelRegex.test(line)) {
           const match = line.match(labelRegex);
           const labelEndIndex = match.index + match[0].length - (match[2] ? 1 : 0);
@@ -157,14 +141,10 @@ class OCRController {
             cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
           }
           
-          
-          // Validate if pattern provided
           if (valuePattern && !valuePattern.test(cleaned.toUpperCase())) {
-            console.log(`[OCR] Label "${label}" matched but value "${cleaned}" failed pattern validation`);
             continue;
           }
           
-          console.log(`[OCR] Matched field "${label}" -> "${cleaned}"`);
           return cleaned;
         }
       }
@@ -189,23 +169,18 @@ class OCRController {
         'EPUBLIKA'
     ];
 
-    // Check for digits - names should not have numbers (except maybe suffixes like 3rd, but rare on IDs)
     if (/\d/.test(value)) return null;
 
-    // Normalize: Uppercase, remove non-name chars (keep letters, spaces, dots, dashes)
     let cleaned = value.toUpperCase().replace(/[^A-Z\s.-]/g, ' ').trim();
-    cleaned = cleaned.replace(/\s+/g, ' '); // Collapse spaces
+    cleaned = cleaned.replace(/\s+/g, ' ');
 
-    // Must have at least 2 letters
     const letterCount = (cleaned.match(/[A-Z]/g) || []).length;
     if (letterCount < 2) return null;
 
-    // Check against excluded words
     const words = cleaned.split(' ');
     const isExcluded = words.some(word => {
         return EXCLUDED_WORDS.some(excluded => {
             if (word === excluded) return true;
-            // Fuzzy match for longer words
             if (excluded.length > 4) {
                 return this.levenshteinDistance(word, excluded) <= 2;
             }
@@ -214,8 +189,6 @@ class OCRController {
     });
 
     if (isExcluded) return null;
-    
-    // Strict regex checks for headers
     if (/REPUBLIKA|PILIPINAS|PHILIPPINES|PHILSYS|PUBLIKA/i.test(cleaned)) return null;
 
     return cleaned;
@@ -225,8 +198,6 @@ class OCRController {
    * Parse Philippine National ID (PhilID)
    */
   parsePhilId(text) {
-    console.log('[OCR] DEBUG MARKER: parsePhilId started');
-
     const fields = {
       lastName: null,
       firstName: null,
@@ -239,22 +210,18 @@ class OCRController {
 
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-    // PhilSys Card Number (PCN)
     const idMatch = text.match(/(\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4})/);
     if (idMatch) fields.idNumber = idMatch[1].replace(/[\s-]/g, '');
 
-    // Label-based extraction
     fields.lastName = this.findFieldByLabel(lines, ['Apelyido', 'Apilyedo', 'Apalyida', 'Apalyido', 'Last Name'], /^[A-Z\s.-]+$/);
     fields.firstName = this.findFieldByLabel(lines, ['Mga Pangalan', 'Given Names', 'Pangalan'], /^[A-Z\s.-]+$/);
     fields.middleName = this.findFieldByLabel(lines, ['Gitnang Apelyido', 'Gitnang Apilyedo', 'witnang', 'Middle Name'], /^[A-Z\s.-]+$/);
     fields.address = this.findFieldByLabel(lines, ['Tirahan', 'Address', 'Nrahan'], null);
 
-    // Validate and clean extracted names immediately
     fields.lastName = this.cleanAndValidateName(fields.lastName);
     fields.firstName = this.cleanAndValidateName(fields.firstName);
     fields.middleName = this.cleanAndValidateName(fields.middleName);
 
-    // Date of Birth
     const dateMatch = text.match(/([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})/i);
     if (dateMatch) {
       fields.birthDate = this.parseDateString(dateMatch[0]);
@@ -263,22 +230,13 @@ class OCRController {
       if (dobRaw) fields.birthDate = this.parseDateString(dobRaw);
     }
     
-    // Fallback to heuristic if label-based failed
     let nameLines = [];
     if (!fields.lastName || !fields.firstName) {
-        console.log('[OCR] Label-based extraction failed for names, trying heuristic fallback...');
-
-        // Find lines that look like names
         nameLines = lines.map(l => this.cleanAndValidateName(l)).filter(l => l !== null);
-        
-        // Filter out address if already found
         if (fields.address) {
             const addrUpper = fields.address.toUpperCase();
             nameLines = nameLines.filter(l => !addrUpper.includes(l) && !l.includes(addrUpper));
         }
-
-        console.log('[OCR] Potential name lines found via heuristic:', nameLines);
-        
         if (nameLines.length > 0) {
              if (!fields.lastName && nameLines.length >= 1) fields.lastName = nameLines[0];
              if (!fields.firstName && nameLines.length >= 2) fields.firstName = nameLines[1];
@@ -286,14 +244,10 @@ class OCRController {
         }
     }
 
-    // Sex/Gender
     if (text.match(/\bMALE\b/i) || text.match(/\bLALAKI\b/i)) fields.sex = 'Male';
     else if (text.match(/\bFEMALE\b/i) || text.match(/\bBABAE\b/i)) fields.sex = 'Female';
 
-    console.log('[OCR] Extracted PhilID fields (raw):', fields);
-    
-    // Format to the requested JSON structure
-    const formatted = {
+    return {
       full_name: {
         value: [fields.firstName, fields.middleName, fields.lastName].filter(Boolean).join(' '),
         confidence: fields.firstName && fields.lastName ? 0.9 : 0.0
@@ -314,36 +268,11 @@ class OCRController {
         value: fields.idNumber || "",
         confidence: fields.idNumber ? 0.95 : 0.0
       },
-      issue_date: {
-        value: "",
-        confidence: 0.0
-      },
-      face_region_detected: {
-        value: false,
-        confidence: 0.0
-      },
-      signature_region_detected: {
-        value: false,
-        confidence: 0.0
-      },
-      qr_code_data: {
-        value: "",
-        confidence: 0.0
-      }
+      issue_date: { value: "", confidence: 0.0 },
+      face_region_detected: { value: false, confidence: 0.0 },
+      signature_region_detected: { value: false, confidence: 0.0 },
+      qr_code_data: { value: "", confidence: 0.0 }
     };
-
-    // Log to file for debugging (Always run this)
-    try {
-        const debugLog = `
-[${new Date().toISOString()}]
-Raw Lines: ${JSON.stringify(lines, null, 2)}
-Extracted Fields: ${JSON.stringify(fields, null, 2)}
-Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
-`;
-        fs.writeFileSync('C:/Users/User/Documents/Projects/acads/CitizenLink/ocr-debug.log', debugLog);
-    } catch (e) { console.error('Failed to write debug log', e); }
-
-    return formatted;
   }
 
   /**
@@ -361,13 +290,11 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
 
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     
-    // PRN number
     const prnMatch = text.match(/([A-Z]\d{3}[\s-]?\d{4}[\s-]?\d{4})/);
     if (prnMatch) fields.idNumber = prnMatch[1];
 
     fields.address = this.findFieldByLabel(lines, ['Address', 'Tirahan'], null);
     
-    // Dates
     const dates = text.match(/\d{4}[-/]\d{2}[-/]\d{2}/g);
     if (dates && dates.length >= 1) fields.birthDate = this.parseDateString(dates[0]);
 
@@ -390,94 +317,65 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
 
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-    // License number
     const licMatch = text.match(/([A-Z]\d{2}-?\d{2}-?\d{6})/);
     if (licMatch) fields.idNumber = licMatch[1];
 
-    // Dates
     const dates = text.match(/\d{4}[-/]\d{2}[-/]\d{2}/g);
     if (dates && dates.length > 0) fields.birthDate = this.parseDateString(dates[0]);
 
-    // Sex
     if (text.match(/\bM\b/) || text.match(/\bMale\b/i)) fields.sex = 'Male';
     else if (text.match(/\bF\b/) || text.match(/\bFemale\b/i)) fields.sex = 'Female';
 
     return this.cleanFields(fields);
   }
 
-  /**
-   * Helper: Parse date string in various formats
-   */
   parseDateString(dateStr) {
     if (!dateStr) return null;
-    
     try {
-      // Handle format: "JULY 14, 2004" or "14 Aug 80"
       const monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 
                          'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
       const monthAbbr = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
                          'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
       
-      // Try parsing "MONTH DAY, YEAR" format
       const monthDayYearMatch = dateStr.match(/([A-Z]+)\s+(\d{1,2}),?\s+(\d{2,4})/i);
       if (monthDayYearMatch) {
         const monthName = monthDayYearMatch[1].toUpperCase();
         const day = monthDayYearMatch[2].padStart(2, '0');
         let year = monthDayYearMatch[3];
-        
-        // Handle 2-digit years
         if (year.length === 2) {
           const yearNum = parseInt(year);
           year = yearNum > 50 ? `19${year}` : `20${year}`;
         }
-        
         let monthIndex = monthNames.indexOf(monthName);
-        if (monthIndex === -1) {
-          monthIndex = monthAbbr.findIndex(m => monthName.startsWith(m));
-        }
-        
+        if (monthIndex === -1) monthIndex = monthAbbr.findIndex(m => monthName.startsWith(m));
         if (monthIndex !== -1) {
           const month = (monthIndex + 1).toString().padStart(2, '0');
           return `${year}-${month}-${day}`;
         }
       }
       
-      // Handle numeric formats: YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY
       const parts = dateStr.split(/[-/]/);
       if (parts.length === 3) {
         let year, month, day;
         if (parts[0].length === 4) {
-          // YYYY-MM-DD format
           [year, month, day] = parts;
         } else {
-          // MM-DD-YYYY or DD-MM-YYYY
           if (parseInt(parts[0]) > 12) {
-            // DD-MM-YYYY
             [day, month, year] = parts;
           } else {
-            // MM-DD-YYYY
             [month, day, year] = parts;
           }
         }
-        
-        // Handle 2-digit years
         if (year.length === 2) {
           const yearNum = parseInt(year);
           year = yearNum > 50 ? `19${year}` : `20${year}`;
         }
-        
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
-      
       return null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
 
-  /**
-   * Helper: Clean fields object by removing null/empty values
-   */
   cleanFields(fields) {
     const cleaned = {};
     for (const [key, value] of Object.entries(fields)) {
@@ -488,50 +386,79 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
     return cleaned;
   }
 
-  /**
-   * Detect and crop ID card from image
-   */
   async detectAndCropCard(imagePath) {
     if (!sharp) return imagePath;
-
     try {
       console.log('[OCR] Attempting to detect and crop card...');
       const image = sharp(imagePath);
       const metadata = await image.metadata();
-      
-      // Strategy 1: Trim uniform background (e.g. scanning against white/black background)
-      const trimmedBuffer = await image.clone()
-        .trim({ threshold: 50 }) // Higher threshold for noisier backgrounds
-        .toBuffer();
-        
+      const trimmedBuffer = await image.clone().trim({ threshold: 50 }).toBuffer();
       const trimmedMeta = await sharp(trimmedBuffer).metadata();
-      
-      // Check if trimming did anything significant
       const widthRatio = trimmedMeta.width / metadata.width;
       const heightRatio = trimmedMeta.height / metadata.height;
-      
-      let finalBuffer = trimmedBuffer;
-      let usedStrategy = 'trim';
-      
       if (widthRatio > 0.95 && heightRatio > 0.95) {
          console.log('[OCR] Trimming ineffective, using original image.');
-         // Smart crop proved unreliable with complex backgrounds, so we skip it
          return imagePath;
       }
-      
-      // Save to new temp file
       const parsedPath = path.parse(imagePath);
       const cropPath = path.join(parsedPath.dir, `${parsedPath.name}_cropped${parsedPath.ext}`);
-      
-      await sharp(finalBuffer).toFile(cropPath);
-      
-      console.log(`[OCR] Card cropped using ${usedStrategy}. Saved to: ${cropPath}`);
+      await sharp(trimmedBuffer).toFile(cropPath);
+      console.log(`[OCR] Card cropped. Saved to: ${cropPath}`);
       return cropPath;
-      
     } catch (error) {
       console.warn('[OCR] Card detection failed, using original image:', error.message);
       return imagePath;
     }
+  }
+
+  /**
+   * Execute Python OCR script
+   */
+  async runPythonOCR(imagePath) {
+    return new Promise((resolve, reject) => {
+      console.log(`[OCR] Spawning Python process: python ${this.pythonScriptPath} ${imagePath}`);
+      
+      // Add site-packages to PYTHONPATH
+      const sitePackages = 'C:\\Users\\User\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\site-packages';
+      const env = { ...process.env, PYTHONPATH: sitePackages + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : '') };
+      
+      const pythonProcess = spawn('python', [this.pythonScriptPath, imagePath], { env });
+      
+      let stdoutData = '';
+      let stderrData = '';
+
+      pythonProcess.stdout.on('data', (data) => {
+        stdoutData += data.toString();
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        stderrData += data.toString();
+        // Also log stderr to console for debugging
+        process.stderr.write(`[Python OCR] ${data}`);
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`[OCR] Python process exited with code ${code}`);
+          return reject(new Error(`OCR process failed: ${stderrData}`));
+        }
+        
+        try {
+          const result = JSON.parse(stdoutData);
+          if (result.error) {
+            return reject(new Error(result.error));
+          }
+          resolve(result);
+        } catch (e) {
+          console.error('[OCR] Failed to parse Python output:', stdoutData);
+          reject(new Error('Invalid JSON output from OCR script'));
+        }
+      });
+      
+      pythonProcess.on('error', (err) => {
+        reject(err);
+      });
+    });
   }
 
   async processId(req, res) {
@@ -539,112 +466,80 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
     try {
       const file = req.file;
       if (!file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded'
-        });
+        return res.status(400).json({ success: false, error: 'No file uploaded' });
       }
 
-      console.log('[OCR] Received file:', {
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        path: file.path
-      });
+      console.log('[OCR] Received file:', file.originalname);
 
-      // Check if file is an image
       if (!file.mimetype.startsWith('image/')) {
-        return res.status(400).json({
-          success: false,
-          error: 'File must be an image (JPEG, PNG, etc.)'
-        });
+        return res.status(400).json({ success: false, error: 'File must be an image' });
       }
 
-      // Enhanced image preprocessing with Sharp for better OCR accuracy
       let processedImagePath = null;
       let workingPath = file.path;
       
       if (sharp) {
         try {
-          // 1. Detect and Crop Card
           const croppedPath = await this.detectAndCropCard(file.path);
           if (croppedPath !== file.path) {
              workingPath = croppedPath;
              intermediateFiles.push(workingPath);
           }
 
-          // 2. Preprocess for OCR (Resize, Binarize, etc.)
           const metadata = await sharp(workingPath).metadata();
-          console.log('[OCR] Processing image:', { width: metadata.width, height: metadata.height });
-          
-          // Scale up image if it's too small (minimum 1500px width for better OCR)
           const minWidth = 1500;
           const scaleFactor = metadata.width < minWidth ? minWidth / metadata.width : 1;
           const targetWidth = Math.round(metadata.width * scaleFactor);
           const targetHeight = Math.round(metadata.height * scaleFactor);
           
-          // Create enhanced preprocessing pipeline
           let pipeline = sharp(workingPath)
-            .resize(targetWidth, targetHeight, {
-              kernel: sharp.kernel.lanczos3,
-              fit: 'fill'
-            })
-            .greyscale() // Convert to grayscale
-            .normalize({ // Enhance contrast
-              lower: 5,
-              upper: 95
-            })
-            .modulate({ // Adjust brightness and saturation
-              brightness: 1.1,
-              saturation: 1.2
-            })
-            .sharpen({
-              sigma: 1.5,
-              m1: 1.0,
-              m2: 2.0,
-              x1: 10,
-              y2: 10,
-              y3: 20,
-            });
+            .resize(targetWidth, targetHeight, { kernel: sharp.kernel.lanczos3, fit: 'fill' })
+            .greyscale()
+            .normalize({ lower: 5, upper: 95 })
+            .modulate({ brightness: 1.1, saturation: 1.2 })
+            .sharpen({ sigma: 1.5, m1: 1.0, m2: 2.0, x1: 10, y2: 10, y3: 20 });
 
-          // Save processed image
-          processedImagePath = path.join(path.dirname(file.path), `processed_${path.basename(file.path)}`);
+          // Ensure processed image has an extension for PaddleOCR
+          const ext = path.extname(file.originalname) || '.jpg';
+          processedImagePath = path.join(path.dirname(file.path), `processed_${path.basename(file.path)}${ext}`);
           await pipeline.toFile(processedImagePath);
           intermediateFiles.push(processedImagePath);
           
-          console.log('[OCR] Image preprocessed and saved to:', processedImagePath);
+          console.log('[OCR] Image preprocessed:', processedImagePath);
         } catch (err) {
           console.error('[OCR] Preprocessing failed:', err);
-          // Fallback to original if processing fails
-          processedImagePath = file.path;
+          // Fallback to original, but we need to ensure it has extension
+          const ext = path.extname(file.originalname) || '.jpg';
+          const tempPath = file.path + ext;
+          await fsPromises.copyFile(file.path, tempPath);
+          processedImagePath = tempPath;
+          intermediateFiles.push(processedImagePath);
         }
       } else {
-        processedImagePath = file.path;
+        // No sharp, use original but ensure extension
+        const ext = path.extname(file.originalname) || '.jpg';
+        const tempPath = file.path + ext;
+        await fsPromises.copyFile(file.path, tempPath);
+        processedImagePath = tempPath;
+        intermediateFiles.push(processedImagePath);
       }
 
-      // Perform OCR
-      console.log('[OCR] Starting Tesseract recognition...');
-      const worker = await Tesseract.createWorker('eng');
+      console.log('[OCR] Starting PaddleOCR recognition (Python)...');
       
-      // Configure Tesseract for ID cards
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.,/ ',
-        preserve_interword_spaces: '1',
-      });
-
-      const { data: { text, confidence } } = await worker.recognize(processedImagePath);
-      await worker.terminate();
-
-      console.log(`[OCR] Recognition complete. Confidence: ${confidence}%`);
+      const ocrResult = await this.runPythonOCR(processedImagePath);
       
-      // Clean up temp files
+      const text = ocrResult.text;
+      const confidence = ocrResult.average_confidence * 100; // Convert to percentage
+      
+      console.log(`[OCR] Recognition complete. Confidence: ${confidence.toFixed(2)}%`);
+      console.log(`[OCR] Extracted Text Length: ${text.length}`);
+      
       try {
         for (const p of intermediateFiles) {
             if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
         }
-      } catch (e) { console.error('[OCR] Cleanup error:', e); }
+      } catch (e) {}
 
-      // Parse fields
       const idType = this.detectIdType(text);
       console.log(`[OCR] Detected ID type: ${idType}`);
       
@@ -660,8 +555,6 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
 
     } catch (error) {
       console.error('[OCR] Processing error:', error);
-      
-      // Clean up on error
       try {
         for (const p of intermediateFiles) {
             if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
@@ -678,8 +571,6 @@ Name Lines (Heuristic): ${JSON.stringify(nameLines, null, 2)}
 }
 
 const ocrController = new OCRController();
-
-// Bind methods to ensure 'this' context is preserved
 module.exports = {
   processId: ocrController.processId.bind(ocrController)
 };

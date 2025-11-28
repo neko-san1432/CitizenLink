@@ -421,7 +421,15 @@ import { supabase } from '../config/config.js';
     if (!blob) return;
 
     scanBtn.disabled = true;
-    status('Processing ID… This may take a few seconds.');
+    
+    // Start timer for elapsed time
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      status(`Processing ID… This may take a few seconds. (${elapsed}s)`);
+    }, 1000);
+    
+    status('Processing ID… This may take a few seconds. (0s)');
 
     try {
       const fd = new FormData();
@@ -566,11 +574,12 @@ import { supabase } from '../config/config.js';
         errorMessage += 'Network error. Please check your connection and try again.';
       } else if (err.message && err.message.includes('camera')) {
         errorMessage += 'Camera error detected. Please try using Upload mode instead, or check your camera settings.';
-      } else {
+      } else {    
         errorMessage += 'Please try again with a clearer image or continue with manual verification.';
       }
       status(errorMessage, 'error');
     } finally {
+      clearInterval(timerInterval);
       scanBtn.disabled = false;
     }
   });

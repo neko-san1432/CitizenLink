@@ -16,8 +16,6 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "axios": "^1.13.0",
-    "chart.js": "^4.5.0",
-    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -25,7 +23,6 @@
     "helmet": "^8.1.0",
     "isomorphic-dompurify": "^1.8.0",
     "multer": "^2.0.2",
-    "tesseract.js": "^6.0.1",
     "validator": "^13.15.15",
     "xss": "^1.0.14"
   },

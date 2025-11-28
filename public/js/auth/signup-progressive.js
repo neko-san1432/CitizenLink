@@ -1,3 +1,5 @@
+import showMessage from '../components/toast.js';
+
 // Lightweight progressive signup step manager
 const BARANGAY_LIST = [
     'Aplaya',
@@ -109,6 +111,17 @@ if (stepsRoot) {
                 }
             }
         }
+
+        // Check for ID verification step
+        const idPlaceholder = steps[current].querySelector('#id-step-placeholder');
+        if (idPlaceholder) {
+            const passed = sessionStorage.getItem('cl_verification_passed') === 'true';
+            if (!passed) {
+                showMessage('error', 'Verification failed. Please ensure your ID matches your profile information before proceeding.');
+                return false;
+            }
+        }
+
         return true;
     }
 

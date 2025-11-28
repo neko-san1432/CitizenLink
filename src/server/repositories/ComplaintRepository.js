@@ -8,8 +8,18 @@ class ComplaintRepository {
   constructor() {
     this.supabase = Database.getClient();
   }
-  async create(complaintData) {
-    const { data, error } = await this.supabase
+  async create(complaintData, token = null) {
+    let client = this.supabase;
+    if (token) {
+      const { createClient } = require('@supabase/supabase-js');
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY; // Fallback if anon key missing
+      client = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: token } }
+      });
+    }
+
+    const { data, error } = await client
       .from('complaints')
       .insert(complaintData)
       .select()
@@ -17,9 +27,19 @@ class ComplaintRepository {
     if (error) throw error;
     return new Complaint(data);
   }
-  async findById(id) {
+  async findById(id, token = null) {
     try {
-      const { data, error } = await this.supabase
+      let client = this.supabase;
+      if (token) {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+        client = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: token } }
+        });
+      }
+
+      const { data, error } = await client
         .from('complaints')
         .select('*')
         .eq('id', id)
@@ -43,7 +63,7 @@ class ComplaintRepository {
       
       const complaint = new Complaint(data);
       // Get assignment data for progress tracking (without accessing auth.users)
-      const { data: assignments } = await this.supabase
+      const { data: assignments } = await client
         .from('complaint_assignments')
         .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
         .eq('complaint_id', id)
@@ -171,8 +191,9 @@ class ComplaintRepository {
       })
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) return null;
     return new Complaint(data);
   }
   async updateStatus(id, status, notes = null) {

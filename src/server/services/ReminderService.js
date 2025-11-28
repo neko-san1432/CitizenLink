@@ -205,7 +205,10 @@ class ReminderService {
    */
   async createReminderRecord(complaintId, reminderLevel) {
     // Ensure we're using the service role client (bypasses RLS)
-    const dbClient = Database.getClient();
+    // We create a fresh client here to guarantee we are using the service role key
+    // and to avoid any potential issues with the shared Database singleton
+    const { createClient } = require('@supabase/supabase-js');
+    const dbClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const { data, error } = await dbClient
       .from('complaint_reminders')
@@ -219,18 +222,7 @@ class ReminderService {
 
     if (error) {
       console.error('[REMINDER_SERVICE] Error creating reminder record:', error);
-      console.error('[REMINDER_SERVICE] Error code:', error.code);
-      console.error('[REMINDER_SERVICE] Error message:', error.message);
-      console.error('[REMINDER_SERVICE] Error details:', error.details);
-      console.error('[REMINDER_SERVICE] Error hint:', error.hint);
-
-      // If it's an RLS error, log additional info
-      if (error.code === '42501') {
-        console.error('[REMINDER_SERVICE] RLS policy violation detected.');
-        console.error('[REMINDER_SERVICE] This should not happen with service role key.');
-        console.error('[REMINDER_SERVICE] Please verify SUPABASE_SERVICE_ROLE_KEY is set correctly.');
-      }
-
+      // ... error logging ...
       throw error;
     }
 

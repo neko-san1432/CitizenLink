@@ -10,6 +10,7 @@ class ComplaintController {
     try {
       const { user } = req;
       const complaintData = req.body;
+      const token = req.headers.authorization; // Get token from headers
       // Handle multer .fields() response (files is an object, not array)
       let files = [];
       if (req.files && req.files.evidenceFiles) {
@@ -18,7 +19,8 @@ class ComplaintController {
       const complaint = await this.complaintService.createComplaint(
         user.id,
         complaintData,
-        files
+        files,
+        token
       );
       const response = {
         success: true,

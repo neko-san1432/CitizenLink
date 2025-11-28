@@ -259,7 +259,7 @@ input[type="password"] {
   box-sizing: border-box;
 }
 
-.hidden { display: none !important; }
+.hidden, [hidden] { display: none !important; }
 .visible { visibility: visible; }
 .invisible { visibility: hidden; }
 .text-center { text-align: center; }
@@ -527,6 +527,87 @@ html.dark .dashboard-container {
 html.dark .container,
 html.dark .container-fluid {
   color: var(--gray-800);
+}
+
+/* ============================================
+   AESTHETIC UPGRADES
+   ============================================ */
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+html.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Cards */
+.card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 8px -5px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .card {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Vibrant Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  border: none;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Global Background Gradient */
+body {
+  background: radial-gradient(circle at top left, var(--primary-50), transparent 40%),
+              radial-gradient(circle at bottom right, var(--success-50), transparent 40%),
+              var(--gray-50);
+  background-attachment: fixed;
+}
+
+html.dark body {
+  background: radial-gradient(circle at top left, rgba(30, 58, 138, 0.2), transparent 40%),
+              radial-gradient(circle at bottom right, rgba(6, 78, 59, 0.1), transparent 40%),
+              var(--gray-900);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 /* Smooth transitions for theme switching - only for elements that benefit */
