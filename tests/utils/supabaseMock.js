@@ -23,7 +23,7 @@ class SupabaseMock {
       const user = {
         id: userId,
         email,
-        email_confirmed_at: null,
+        email_confirmed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         user_metadata: options?.data || {},
       };
@@ -43,7 +43,7 @@ class SupabaseMock {
         };
       }
       const session = {
-        access_token: `token_${Date.now()}`,
+        access_token: `token_${Date.now()}_${Math.random()}`,
         refresh_token: `refresh_${Date.now()}`,
         expires_at: Date.now() + 3600000,
         user: {
@@ -75,6 +75,7 @@ class SupabaseMock {
     }),
 
     signOut: jest.fn(async () => {
+      this.sessions.clear();
       return { data: {}, error: null };
     }),
 

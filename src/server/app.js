@@ -131,22 +131,7 @@ class CitizenLinkApp {
         });
       }
     });
-    // Debug endpoint (development only)
-    if (process.env.NODE_ENV === 'development') {
-      this.app.get('/debug/auth', async (req, res) => {
-        try {
-          const diagnostics = {
-            timestamp: new Date().toISOString(),
-            environment: process.env.NODE_ENV,
-            hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
-            hasSupabaseServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
-          };
-          res.json({ success: true, diagnostics });
-        } catch (error) {
-          res.status(500).json({ success: false, error: error.message });
-        }
-      });
-    }
+    // Debug endpoint removed for production safety
     // Protected Pages (must come before public routes and 404 handler)
     this.setupProtectedRoutes();
     // Public Pages
@@ -526,86 +511,7 @@ class CitizenLinkApp {
         }
       });
     });
-    // Debug endpoint for role switcher
-    this.app.get('/debug-role-switcher', authenticateUser, (req, res) => {
-      const { user } = req;
-      const role = user.role || 'citizen';
-      const metaBase = user.raw_user_meta_data?.base_role || null;
-      const baseRole = metaBase || (role !== 'citizen' ? role : null);
-      const isInCitizen = role === 'citizen' && baseRole && baseRole !== 'citizen';
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Debug Role Switcher</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .button:hover { background: #0056b3; }
-    </style>
-</head>
-<body>
-    <h1>Role Switcher Debug</h1>
-    
-    <div class="info">
-        <h3>API Response:</h3>
-        <pre>${JSON.stringify({
-    success: true,
-    data: {
-      role,
-      name: user.name || 'Unknown',
-      email: user.email,
-      metadata: user.raw_user_meta_data,
-      base_role: baseRole,
-      actual_role: baseRole
-    }
-  }, null, 2)}</pre>
-    </div>
-    
-    <div class="info">
-        <h3>Role Analysis:</h3>
-        <p><strong>Current Role:</strong> ${role}</p>
-        <p><strong>Base Role:</strong> ${baseRole}</p>
-        <p><strong>Is in Citizen Mode:</strong> ${isInCitizen}</p>
-        <p><strong>Should Show Button:</strong> ${isInCitizen}</p>
-    </div>
-    
-    <div class="info">
-        <h3>Role Switcher Button:</h3>
-        ${isInCitizen ?
-    `<button class="button" onclick="switchRole()">Switch to ${baseRole.toUpperCase()}</button>` :
-    '<p>No button should appear - user is not in citizen mode with base role</p>'
-}
-    </div>
-    <script>
-        async function switchRole() {
-            try {
-                const response = await fetch('/api/user/switch-role', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        targetRole: '${baseRole}',
-                        previousRole: 'citizen'
-                    })
-                });
-                if (response.ok) {
-                    alert('Role switched successfully! Page will reload...');
-                    window.location.reload();
-                } else {
-                    alert('Failed to switch role');
-                }
-            } catch (error) {
-                alert('Error switching role: ' + error.message);
-            }
-        }
-    </script>
-</body>
-</html>`;
-
-      res.send(html);
-    });
+    // Debug endpoint for role switcher removed for production safety
 
     // Session health endpoint for monitoring (public - no auth required)
     this.app.get('/auth/session/health', async (req, res) => {

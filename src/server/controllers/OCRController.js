@@ -419,10 +419,7 @@ class OCRController {
       console.log(`[OCR] Spawning Python process: python ${this.pythonScriptPath} ${imagePath}`);
       
       // Add site-packages to PYTHONPATH
-      const sitePackages = 'C:\\Users\\User\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\site-packages';
-      const env = { ...process.env, PYTHONPATH: sitePackages + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : '') };
-      
-      const pythonProcess = spawn('python', [this.pythonScriptPath, imagePath], { env });
+      const pythonProcess = spawn('python', [this.pythonScriptPath, imagePath], { env: process.env });
       
       let stdoutData = '';
       let stderrData = '';

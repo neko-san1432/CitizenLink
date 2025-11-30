@@ -165,8 +165,9 @@ class AuthController {
       const combinedMetadata = extractUserMetadata(authData.user);
 
       // Check ban status
-      const isBanned = combinedMetadata.isBanned === true;
-      const { banExpiresAt } = combinedMetadata;
+      // Check ban status
+      const isBanned = combinedMetadata.isBanned === true || combinedMetadata.banned === true;
+      const banExpiresAt = combinedMetadata.banExpiresAt || combinedMetadata.ban_expires_at;
 
       if (isBanned && banExpiresAt) {
         const expirationDate = new Date(banExpiresAt);
@@ -222,6 +223,14 @@ class AuthController {
         return res.status(403).json({
           success: false,
           error: `Account is ${user.status}. Please contact support.`
+        });
+      }
+
+      // Check email verification
+      if (!user.emailVerified) {
+        return res.status(403).json({
+          success: false,
+          error: 'Please verify your email address before logging in.'
         });
       }
       // Track login (continue even if tracking fails)

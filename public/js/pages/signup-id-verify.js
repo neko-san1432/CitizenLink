@@ -494,13 +494,22 @@ import { supabase } from '../config/config.js';
           headers['Authorization'] = `Bearer ${token}`;
         }
 
+        // Normalize ID number for backend (server expects idNumber)
+        if (!extractedIdData.idNumber) {
+            extractedIdData.idNumber = extractedIdData.public_id_number || 
+                                     extractedIdData.id_number || 
+                                     extractedIdData.IDNumber || 
+                                     extractedIdData.documentNumber ||
+                                     '';
+        }
+
         const storeResponse = await fetch('/api/verification/store', {
           method: 'POST',
           headers,
           credentials: 'include',
           body: JSON.stringify({
             idType: data.idType,
-            fields: data.fields, // Keep full data for backend storage
+            fields: extractedIdData, // Use flattened data for backend storage
             confidence: data.confidence
           })
         });
@@ -738,6 +747,11 @@ import { supabase } from '../config/config.js';
       if (!s1 || !s2) return 0;
       if (s1 === s2) return 100;
       
+      // Partial Match Check: If one contains the other (and length > 3), it's a match
+      if ((s1.includes(s2) || s2.includes(s1)) && Math.min(s1.length, s2.length) > 3) {
+        return 100;
+      }
+      
       const distance = levenshteinDistance(s1, s2);
       const maxLength = Math.max(s1.length, s2.length);
       const similarity = (1 - distance / maxLength) * 100;
@@ -773,8 +787,8 @@ import { supabase } from '../config/config.js';
             match = true;
             score = 100;
           } else {
-            // Enforce 85% threshold
-            match = score >= 85;
+            // Enforce 80% threshold
+            match = score >= 80;
           }
         }
         

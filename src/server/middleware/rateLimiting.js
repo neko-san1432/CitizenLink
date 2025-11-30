@@ -210,6 +210,7 @@ function getRateLimitStatus(ip) {
 }
 
 module.exports = {
+  createRateLimiter,
   apiLimiter,
   authLimiter,
   loginLimiter,

@@ -372,7 +372,7 @@ class HRService {
       let hrDepartment = null;
       if (hrRole === 'lgu-hr') {
         // Fallback to metadata if role is just 'lgu-hr'
-        const hrMetadata = hrUser.user.raw_user_meta_data || {};
+        const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
         hrDepartment = hrMetadata.department;
       }
       // Role-based restrictions

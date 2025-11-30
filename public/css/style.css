@@ -535,24 +535,24 @@ html.dark .container-fluid {
 
 /* Glassmorphism Utilities */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 }
 
 html.dark .glass-panel {
   background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* Enhanced Cards */
 .card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(229, 231, 235, 0.5);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-xl);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -564,8 +564,8 @@ html.dark .glass-panel {
 }
 
 html.dark .card {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(255, 255, 255, 0.05);
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Vibrant Buttons */
@@ -588,15 +588,15 @@ html.dark .card {
 
 /* Global Background Gradient */
 body {
-  background: radial-gradient(circle at top left, var(--primary-50), transparent 40%),
-              radial-gradient(circle at bottom right, var(--success-50), transparent 40%),
+  background: radial-gradient(circle at top left, var(--primary-100), transparent 40%),
+              radial-gradient(circle at bottom right, var(--success-100), transparent 40%),
               var(--gray-50);
   background-attachment: fixed;
 }
 
 html.dark body {
-  background: radial-gradient(circle at top left, rgba(30, 58, 138, 0.2), transparent 40%),
-              radial-gradient(circle at bottom right, rgba(6, 78, 59, 0.1), transparent 40%),
+  background: radial-gradient(circle at top left, rgba(30, 58, 138, 0.3), transparent 40%),
+              radial-gradient(circle at bottom right, rgba(6, 78, 59, 0.2), transparent 40%),
               var(--gray-900);
 }
 

@@ -302,7 +302,7 @@ const setupInterruptionHandlers = () => {
       if (ctx && ctx.intent === 'signup' && ctx.status !== 'completed') {
         const lastActivity = ctx.lastActivity || ctx.startedAt || 0;
         const elapsed = Date.now() - lastActivity;
-        const STALE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+        const STALE_TIMEOUT = 60 * 60 * 1000; // 60 minutes
         
         if (elapsed > STALE_TIMEOUT) {
           showMessage('error', 'OAuth signup session expired. Please start over.');

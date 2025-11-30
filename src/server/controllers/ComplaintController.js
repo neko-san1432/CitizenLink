@@ -372,7 +372,18 @@ class ComplaintController {
       // Handle arrays for multiple selections (Express parses multiple query params as arrays)
       const statusArray = Array.isArray(status) ? status : (status ? [status] : []);
       const categoryArray = Array.isArray(category) ? category : (category ? [category] : []);
-      const departmentArray = Array.isArray(department) ? department : (department ? [department] : []);
+      let departmentArray = Array.isArray(department) ? department : (department ? [department] : []);
+
+      // ROLE-BASED FILTERING: Enforce department restrictions
+      const userRole = req.user?.role || 'citizen';
+      const userDepartment = req.user?.department;
+
+      // LGU Admins and Officers can ONLY see their own department's data
+      if (['lgu-admin', 'lgu-officer'].includes(userRole) && userDepartment) {
+        departmentArray = [userDepartment];
+      }
+      // Complaint Coordinators see ALL (or filtered by query if they choose)
+      // Citizens see ALL (public data) or filtered by query
 
       // Process status filters - separate workflow_status and confirmation_status
       const workflowStatuses = [];

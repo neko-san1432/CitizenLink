@@ -11,6 +11,7 @@ describe('Complete Authentication Flow', () => {
   let mockSupabase;
 
   beforeEach(() => {
+    jest.resetModules();
     mockSupabase = new SupabaseMock();
     jest.mock('../../src/server/config/database', () => ({
       getClient: () => mockSupabase,
@@ -131,10 +132,11 @@ describe('Complete Authentication Flow', () => {
       const user = createTestUser();
 
       // Step 1: Create user
-      await mockSupabase.auth.signUp({
+      const signupResult = await mockSupabase.auth.signUp({
         email: user.email,
         password: user.password,
       });
+      const userId = signupResult.data.user.id;
 
       // Step 2: Request password reset
       const resetReq = createMockRequest({
@@ -161,7 +163,7 @@ describe('Complete Authentication Flow', () => {
       mockSupabase.auth.verifyOtp.mockResolvedValue({
         data: {
           user: {
-            id: 'user_123',
+            id: userId,
             email: user.email,
           },
         },
@@ -196,6 +198,12 @@ describe('Complete Authentication Flow', () => {
     it('should handle session refresh', async () => {
       const user = createTestUser();
 
+      // Signup first
+      await mockSupabase.auth.signUp({
+        email: user.email,
+        password: user.password,
+      });
+
       // Login
       const loginResult = await mockSupabase.auth.signInWithPassword({
         email: user.email,
@@ -228,6 +236,12 @@ describe('Complete Authentication Flow', () => {
 
     it('should track multiple sessions', async () => {
       const user = createTestUser();
+
+      // Signup first
+      await mockSupabase.auth.signUp({
+        email: user.email,
+        password: user.password,
+      });
 
       // Create multiple sessions
       const session1 = await mockSupabase.auth.signInWithPassword({

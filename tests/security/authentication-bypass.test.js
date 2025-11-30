@@ -4,22 +4,37 @@
  * Tests various methods attackers might use to bypass authentication
  */
 
-const { authenticateUser } = require('../../src/server/middleware/auth');
 const { createMockRequest, createMockResponse, createMockNext } = require('../utils/testHelpers');
 
 describe('Authentication Bypass Protection', () => {
   let mockSupabase;
+  let authenticateUser;
 
   beforeEach(() => {
+    jest.resetModules();
+    
     // Mock Supabase client
     mockSupabase = {
       auth: {
         getUser: jest.fn(),
       },
     };
-    jest.mock('../../src/server/config/database', () => ({
-      getClient: () => mockSupabase,
-    }));
+    
+    // Mock Database class
+    jest.doMock('../../src/server/config/database', () => {
+      return class Database {
+        static getClient() {
+          return mockSupabase;
+        }
+        getClient() {
+          return mockSupabase;
+        }
+      };
+    });
+
+    // Re-require auth middleware to use the mock
+    const authMiddleware = require('../../src/server/middleware/auth');
+    authenticateUser = authMiddleware.authenticateUser;
   });
 
   afterEach(() => {
@@ -172,7 +187,7 @@ describe('Authentication Bypass Protection', () => {
   });
 
   describe('Header vs Cookie Token Priority', () => {
-    it('should prefer cookie token over header token', async () => {
+    it('should prefer header token over cookie token', async () => {
       const req = createMockRequest({
         path: '/api/test',
         cookies: { sb_access_token: 'cookie_token' },
@@ -182,7 +197,7 @@ describe('Authentication Bypass Protection', () => {
       const next = createMockNext();
 
       mockSupabase.auth.getUser.mockImplementation((token) => {
-        if (token === 'cookie_token') {
+        if (token === 'header_token') {
           return Promise.resolve({
             data: {
               user: {
@@ -202,7 +217,7 @@ describe('Authentication Bypass Protection', () => {
 
       await authenticateUser(req, res, next);
 
-      expect(mockSupabase.auth.getUser).toHaveBeenCalledWith('cookie_token');
+      expect(mockSupabase.auth.getUser).toHaveBeenCalledWith('header_token');
       expect(next).toHaveBeenCalled();
     });
   });

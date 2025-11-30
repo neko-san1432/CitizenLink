@@ -4,21 +4,28 @@
  * Tests session security and hijacking prevention mechanisms
  */
 
-const { authenticateUser } = require('../../src/server/middleware/auth');
+const SupabaseMock = require('../utils/supabaseMock');
 const { createMockRequest, createMockResponse, createMockNext, generateMockToken } = require('../utils/testHelpers');
 
 describe('Session Hijacking Prevention', () => {
   let mockSupabase;
+  let authenticateUser;
 
   beforeEach(() => {
-    mockSupabase = {
-      auth: {
-        getUser: jest.fn(),
-      },
-    };
-    jest.mock('../../src/server/config/database', () => ({
-      getClient: () => mockSupabase,
-    }));
+    jest.resetModules(); // Reset cache to allow fresh mocks
+    mockSupabase = new SupabaseMock();
+    
+    // Mock the database config to return our mock class
+    jest.doMock('../../src/server/config/database', () => {
+      return class DatabaseMock {
+        static getClient() { return mockSupabase; }
+        getClient() { return mockSupabase; }
+      };
+    });
+
+    // Require the middleware AFTER mocking
+    const authMiddleware = require('../../src/server/middleware/auth');
+    authenticateUser = authMiddleware.authenticateUser;
   });
 
   afterEach(() => {
@@ -27,9 +34,6 @@ describe('Session Hijacking Prevention', () => {
 
   describe('HttpOnly Cookie Protection', () => {
     it('should set cookies with HttpOnly flag', () => {
-      // This test verifies that cookies are set with HttpOnly
-      // The actual cookie setting happens in AuthController
-      // We test that the cookie options include httpOnly: true
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
 
@@ -37,13 +41,10 @@ describe('Session Hijacking Prevention', () => {
     });
 
     it('should prevent JavaScript access to cookies', () => {
-      // HttpOnly cookies cannot be accessed via document.cookie
-      // This is a browser security feature, tested here conceptually
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
 
       expect(options.httpOnly).toBe(true);
-      // In a real browser, document.cookie would not include HttpOnly cookies
     });
   });
 
@@ -67,8 +68,6 @@ describe('Session Hijacking Prevention', () => {
       const { getCookieOptions } = require('../../src/server/utils/authUtils');
       const options = getCookieOptions(false);
 
-      // In development, secure might be false to allow HTTP
-      // This depends on implementation
       expect(options).toHaveProperty('secure');
 
       process.env.NODE_ENV = originalEnv;
@@ -102,15 +101,18 @@ describe('Session Hijacking Prevention', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: {
-          user: {
-            id: 'user_123',
-            email: 'test@example.com',
-            user_metadata: { role: 'citizen' },
-          },
-        },
-        error: null,
+      // Setup mock user in SupabaseMock
+      mockSupabase.sessions.set(token, {
+        user: {
+          id: 'user_123',
+          email: 'test@example.com',
+          user_metadata: { role: 'citizen' },
+        }
+      });
+      mockSupabase.users.set('user_123', {
+        id: 'user_123',
+        email: 'test@example.com',
+        user_metadata: { role: 'citizen' },
       });
 
       await authenticateUser(req, res, next);
@@ -127,11 +129,6 @@ describe('Session Hijacking Prevention', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'Invalid token' },
-      });
-
       await authenticateUser(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
@@ -146,11 +143,7 @@ describe('Session Hijacking Prevention', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'Token expired' },
-      });
-
+      // SupabaseMock returns error for unknown tokens by default
       await authenticateUser(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
@@ -160,8 +153,6 @@ describe('Session Hijacking Prevention', () => {
 
   describe('Session Fixation', () => {
     it('should issue new tokens on login', () => {
-      // New tokens should be generated on each login
-      // This prevents session fixation attacks
       const token1 = generateMockToken('user_123');
       const token2 = generateMockToken('user_123');
 
@@ -169,11 +160,7 @@ describe('Session Hijacking Prevention', () => {
     });
 
     it('should invalidate old sessions on logout', async () => {
-      // When user logs out, old tokens should be invalidated
-      // This is tested by checking logout functionality
       const { logout } = require('../../src/server/controllers/AuthController');
-
-      // Mock logout to verify session cleanup
       expect(logout).toBeDefined();
     });
   });
@@ -190,18 +177,15 @@ describe('Session Hijacking Prevention', () => {
         cookies: { sb_access_token: token2 },
       });
 
-      mockSupabase.auth.getUser.mockImplementation((token) => {
-        return Promise.resolve({
-          data: {
-            user: {
-              id: 'user_123',
-              email: 'test@example.com',
-              user_metadata: { role: 'citizen' },
-            },
-          },
-          error: null,
-        });
-      });
+      // Setup mock user
+      const user = {
+        id: 'user_123',
+        email: 'test@example.com',
+        user_metadata: { role: 'citizen' },
+      };
+      mockSupabase.users.set('user_123', user);
+      mockSupabase.sessions.set(token1, { user });
+      mockSupabase.sessions.set(token2, { user });
 
       const res1 = createMockResponse();
       const res2 = createMockResponse();
@@ -218,8 +202,6 @@ describe('Session Hijacking Prevention', () => {
 
   describe('IP Address Changes', () => {
     it('should not reject requests from different IPs', async () => {
-      // Note: IP-based session validation is not implemented
-      // This test documents current behavior
       const token = generateMockToken('user_123');
 
       const req1 = createMockRequest({
@@ -227,20 +209,17 @@ describe('Session Hijacking Prevention', () => {
         cookies: { sb_access_token: token },
       });
       const req2 = createMockRequest({
-        ip: '192.168.1.2', // Different IP
+        ip: '192.168.1.2',
         cookies: { sb_access_token: token },
       });
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: {
-          user: {
-            id: 'user_123',
-            email: 'test@example.com',
-            user_metadata: { role: 'citizen' },
-          },
-        },
-        error: null,
-      });
+      const user = {
+        id: 'user_123',
+        email: 'test@example.com',
+        user_metadata: { role: 'citizen' },
+      };
+      mockSupabase.users.set('user_123', user);
+      mockSupabase.sessions.set(token, { user });
 
       const res1 = createMockResponse();
       const res2 = createMockResponse();
@@ -250,7 +229,6 @@ describe('Session Hijacking Prevention', () => {
       await authenticateUser(req1, res1, next1);
       await authenticateUser(req2, res2, next2);
 
-      // Both should succeed (IP validation not implemented)
       expect(next1).toHaveBeenCalled();
       expect(next2).toHaveBeenCalled();
     });
@@ -275,20 +253,16 @@ describe('Session Hijacking Prevention', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: {
-          user: {
-            id: 'user_123',
-            email: 'test@example.com',
-            user_metadata: { role: 'citizen' },
-          },
-        },
-        error: null,
-      });
+      const user = {
+        id: 'user_123',
+        email: 'test@example.com',
+        user_metadata: { role: 'citizen' },
+      };
+      mockSupabase.users.set('user_123', user);
+      mockSupabase.sessions.set(token, { user });
 
       await authenticateUser(req, res, next);
 
-      // Token should not appear in response
       const jsonCalls = res.json.mock.calls;
       jsonCalls.forEach(call => {
         const response = call[0];

@@ -571,8 +571,8 @@ function setupOAuthAbortWatcher() {
   const handleBeforeUnload = async () => {
     const ctx = getOAuthContext();
     if (ctx && ctx.intent === 'signup' && ctx.status === 'pending') {
-      // Cleanup on page unload
-      await cleanupPendingOAuth('User closed tab or navigated away');
+      // Cleanup on page unload (silently)
+      await cleanupPendingOAuth(null);
     }
   };
 
@@ -593,7 +593,7 @@ function setupOAuthAbortWatcher() {
   const handlePageHide = async () => {
     const ctx = getOAuthContext();
     if (ctx && ctx.intent === 'signup' && ctx.status === 'pending') {
-      await cleanupPendingOAuth('User navigated away');
+      await cleanupPendingOAuth(null);
     }
   };
 

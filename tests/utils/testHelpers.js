@@ -29,6 +29,7 @@ function generateMockToken(userId, _expiresIn = '1h') {
     sub: userId,
     exp: Math.floor(Date.now() / 1000) + 3600,
     iat: Math.floor(Date.now() / 1000),
+    jti: crypto.randomUUID(),
   })).toString('base64url');
   return `${header}.${payload}.signature`;
 }
@@ -40,6 +41,7 @@ function createMockRequest(overrides = {}) {
   return {
     method: 'GET',
     path: '/api/test',
+    originalUrl: overrides.path || '/api/test',
     headers: {},
     cookies: {},
     body: {},

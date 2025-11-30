@@ -4,21 +4,33 @@
  * Tests session creation, refresh, and invalidation
  */
 
-const { authenticateUser } = require('../../src/server/middleware/auth');
 const { createMockRequest, createMockResponse, createMockNext, generateMockToken } = require('../utils/testHelpers');
+const SupabaseMock = require('../utils/supabaseMock');
 
 describe('Session Management', () => {
   let mockSupabase;
+  let authenticateUser;
 
   beforeEach(() => {
-    mockSupabase = {
-      auth: {
-        getUser: jest.fn(),
-      },
-    };
-    jest.mock('../../src/server/config/database', () => ({
-      getClient: () => mockSupabase,
-    }));
+    jest.resetModules();
+    
+    mockSupabase = new SupabaseMock();
+    
+    // Mock Database class
+    jest.doMock('../../src/server/config/database', () => {
+      return class Database {
+        static getClient() {
+          return mockSupabase;
+        }
+        getClient() {
+          return mockSupabase;
+        }
+      };
+    });
+
+    // Re-require auth middleware to use the mock
+    const authMiddleware = require('../../src/server/middleware/auth');
+    authenticateUser = authMiddleware.authenticateUser;
   });
 
   afterEach(() => {

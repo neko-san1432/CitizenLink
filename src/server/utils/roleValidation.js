@@ -1,11 +1,20 @@
+
 /**
  * Role Validation Utilities
  * Validates user roles against department codes from database
  */
 const Database = require('../config/database');
 
-const db = new Database();
-const supabase = db.getClient();
+// Lazy initialization of Supabase client
+let supabaseInstance = null;
+function getSupabase() {
+  if (!supabaseInstance) {
+    const db = new Database();
+    supabaseInstance = db.getClient();
+  }
+  return supabaseInstance;
+}
+
 // Cache for department codes
 let departmentCodesCache = null;
 let cacheTimestamp = null;
@@ -20,6 +29,7 @@ async function getValidDepartmentCodes() {
     return departmentCodesCache;
   }
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('departments')
       .select('code, name, is_active')
@@ -180,6 +190,7 @@ function extractDepartmentCode(role) {
 async function getDepartmentByCode(code) {
   if (!code) return null;
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('departments')
       .select('id, name, code, description, level, is_active')
@@ -206,6 +217,7 @@ function clearDepartmentCodesCache() {
  */
 async function getValidDepartments() {
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('departments')
       .select('code, name, level')
