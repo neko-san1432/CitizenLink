@@ -4,15 +4,15 @@ const DepartmentRepository = require('../repositories/DepartmentRepository');
 const Complaint = require('../models/Complaint');
 const NotificationService = require('./NotificationService');
 const { normalizeComplaintData, prepareComplaintForInsert, validateComplaintConsistency, getAssignmentProgress } = require('../utils/complaintUtils');
-const Database = require('../config/database');
+
 
 class ComplaintService {
 
-  constructor() {
-    this.complaintRepo = new ComplaintRepository();
-    this.assignmentRepo = new ComplaintAssignmentRepository();
-    this.departmentRepo = new DepartmentRepository();
-    this.notificationService = new NotificationService();
+  constructor(complaintRepo, assignmentRepo, departmentRepo, notificationService) {
+    this.complaintRepo = complaintRepo || new ComplaintRepository();
+    this.assignmentRepo = assignmentRepo || new ComplaintAssignmentRepository();
+    this.departmentRepo = departmentRepo || new DepartmentRepository();
+    this.notificationService = notificationService || new NotificationService();
   }
   async createComplaint(userId, complaintData, files = [], token = null) {
     // Debug: Log received complaint data
@@ -193,10 +193,7 @@ class ComplaintService {
       return [];
     }
     // Use the same Database instance to ensure consistent client
-    const Database = require('../config/database');
-
-    const db = new Database();
-    const supabase = db.getClient();
+    const supabase = this.complaintRepo.supabase;
     const evidenceFiles = [];
     for (const file of files) {
       try {
@@ -266,10 +263,7 @@ class ComplaintService {
     if (!files || files.length === 0) {
       return [];
     }
-    const Database = require('../config/database');
-
-    const db = new Database();
-    const supabase = db.getClient();
+    const supabase = this.complaintRepo.supabase;
     const evidenceFiles = [];
     for (const file of files) {
       try {
@@ -642,7 +636,7 @@ class ComplaintService {
 
       // First, get total count of complaints with coordinates for debugging
       // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
-      const supabase = Database.getClient(); // Use direct service role client
+      const supabase = this.complaintRepo.supabase; // Use repository client
       const { count: totalWithCoords } = await supabase
         .from('complaints')
         .select('id', { count: 'exact', head: true })
@@ -1534,6 +1528,118 @@ class ComplaintService {
       console.error('[COMPLAINT_SERVICE] Error getting confirmation message:', error);
       // Return a default message instead of throwing
       return 'Unable to load confirmation status.';
+    }
+  }
+  /**
+   * Mark a complaint as false
+   * @param {string} complaintId - Complaint ID
+   * @param {string} userId - User ID marking the complaint
+   * @param {string} reason - Reason for marking as false
+   * @returns {Promise<Object>} Result
+   */
+  async markAsFalseComplaint(complaintId, userId, reason) {
+    try {
+      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
+        .from('complaints')
+        .update({
+          is_false_complaint: true,
+          false_complaint_reason: reason,
+          workflow_status: 'rejected',
+          marked_false_by: userId,
+          false_complaint_marked_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Log action
+      try {
+        await this.complaintRepo.logAction(complaintId, 'marked_false', {
+          reason,
+          details: { marked_by: userId }
+        });
+      } catch (logError) {
+        console.warn('[AUDIT] Log action failed:', logError.message);
+      }
+
+      return {
+        success: true,
+        data: updatedComplaint,
+        message: 'Complaint marked as false successfully'
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error marking as false:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Mark a complaint as duplicate
+   * @param {string} complaintId - Complaint ID
+   * @param {string} masterComplaintId - Master Complaint ID
+   * @param {string} userId - User ID marking the duplicate
+   * @returns {Promise<Object>} Result
+   */
+  async markAsDuplicate(complaintId, masterComplaintId, userId) {
+    try {
+      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      if (!complaint) {
+        throw new Error('Complaint not found');
+      }
+
+      const masterComplaint = await this.complaintRepo.getComplaintById(masterComplaintId);
+      if (!masterComplaint) {
+        throw new Error('Master complaint not found');
+      }
+
+      const { data: updatedComplaint, error: updateError } = await this.complaintRepo.supabase
+        .from('complaints')
+        .update({
+          is_duplicate: true,
+          master_complaint_id: masterComplaintId,
+          workflow_status: 'closed', // Or 'rejected'/'duplicate' if available
+          duplicate_marked_by: userId,
+          duplicate_marked_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Log action
+      try {
+        await this.complaintRepo.logAction(complaintId, 'marked_duplicate', {
+          reason: `Duplicate of ${masterComplaintId}`,
+          details: { marked_by: userId, master_id: masterComplaintId }
+        });
+      } catch (logError) {
+        console.warn('[AUDIT] Log action failed:', logError.message);
+      }
+
+      return {
+        success: true,
+        data: updatedComplaint,
+        message: 'Complaint marked as duplicate successfully'
+      };
+    } catch (error) {
+      console.error('[COMPLAINT_SERVICE] Error marking as duplicate:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 }

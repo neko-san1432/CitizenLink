@@ -29,6 +29,7 @@ const healthRoutes = require('./healthRoutes');
 const departmentStructureRoutes = require('./departmentStructureRoutes');
 const complianceRoutes = require('./complianceRoutes');
 const officeConfirmationRoutes = require('./officeConfirmationRoutes');
+const publicApiRoutes = require('./publicApiRoutes');
 
 const router = express.Router();
 // CAPTCHA routes
@@ -56,5 +57,7 @@ router.use('/health', healthRoutes);
 router.use('/department-structure', departmentStructureRoutes);
 router.use('/compliance', complianceRoutes);
 router.use('/office-confirmation', officeConfirmationRoutes);
+// Public API routes (boundaries, geocoding)
+router.use('/', publicApiRoutes);
 
 module.exports = router;

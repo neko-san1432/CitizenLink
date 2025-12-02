@@ -1,4 +1,4 @@
-# CitizenLink 2.0
+  # CitizenLink 2.0
 
 **Modern Citizen Complaint Management System with Advanced Analytics and Clean Architecture**
 
@@ -47,7 +47,12 @@ cp .env.example .env
 # Edit .env with your configuration
 
 # Run database migrations
+# Run database migrations
 npm run migrate
+
+# Apply Row Level Security (RLS) policies
+# Run the SQL script in your Supabase SQL Editor:
+# scripts/setup_rls.sql
 
 # Start development server
 npm run dev
@@ -68,6 +73,7 @@ npm run dev
 | **express** | ^4.21.2 | Fast, minimalist web framework for Node.js. Serves as the core HTTP server handling routing, middleware, and request/response management. |
 | **helmet** | ^8.1.0 | Security middleware that sets various HTTP headers to protect against common web vulnerabilities (XSS, clickjacking, MIME sniffing). Implements Content Security Policy (CSP). |
 | **isomorphic-dompurify** | ^1.8.0 | Client and server-side HTML sanitization library. Prevents XSS attacks by cleaning malicious HTML content in user inputs and outputs. |
+| **joi** | ^18.0.2 | Object schema validation library. Used for declarative validation of request payloads (body, query, params) to ensure data integrity and security. |
 | **multer** | ^2.0.2 | Multipart/form-data middleware for handling file uploads. Manages complaint evidence attachments with file type validation and size limits. |
 | **validator** | ^13.15.15 | String validation and sanitization library. Provides comprehensive input validation for emails, URLs, phone numbers, and other data types. |
 | **xss** | ^1.0.14 | Cross-Site Scripting (XSS) prevention library. Sanitizes user input to prevent malicious script injection attacks. |
@@ -295,6 +301,8 @@ class ComplaintRepository {
 | **Singleton Pattern** | Database connection (`Database` class) | Single shared instance for database connections, resource optimization |
 | **Facade Pattern** | Service layer methods that orchestrate multiple operations | Simplified interface to complex subsystems |
 | **Chain of Responsibility** | Express middleware chain | Sequential processing of requests through multiple handlers |
+| **Centralized Error Handling** | `ErrorHandler` class, `asyncWrapper` | Global error catching and standardized response formatting |
+| **Dependency Injection** | Constructor injection in `ComplaintService` | Decoupled dependencies for better testability |
 
 #### 📋 Layer Responsibilities Summary
 
@@ -338,6 +346,8 @@ Comprehensive security implementation across multiple layers with advanced threa
 - **Clickjacking Prevention**: X-Frame-Options headers
 - **MIME Sniffing Protection**: X-Content-Type-Options headers
 - **Input Sanitization**: Comprehensive input validation and sanitization with validator.js
+- **Input Sanitization**: Comprehensive input validation and sanitization with validator.js
+- **Declarative Validation**: Request payload validation using **Joi** schemas
 - **Rate Limiting**: Advanced rate limiting system with configurable limits per endpoint type
 
 #### Database Security
