@@ -157,9 +157,14 @@
 
 ## Evidence of Improvements
 
+> **Repository:** [neko-san1432/CitizenLink](https://github.com/neko-san1432/CitizenLink)  
+> **Main Implementation Commit:** [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea)
+
 ### Code Snippets: Before and After
 
 #### 1. Authentication Session Invalidation (Added)
+
+**Commit:** [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) | **File:** [`src/server/middleware/auth.js`](https://github.com/neko-san1432/CitizenLink/blob/610dfea/src/server/middleware/auth.js)
 
 **Before:** No session invalidation on password change
 
@@ -189,6 +194,8 @@ if (sessionsInvalidatedAt || passwordChangedAt) {
 
 #### 2. Notification Deduplication (Added)
 
+**Commit:** [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) | **File:** [`src/server/services/NotificationService.js`](https://github.com/neko-san1432/CitizenLink/blob/610dfea/src/server/services/NotificationService.js)
+
 **Before:** No duplicate notification prevention
 
 **After:** (`src/server/services/NotificationService.js`)
@@ -214,6 +221,8 @@ async checkDuplicateNotification(userId, type, title, metadata = {}) {
 
 #### 3. Centralized Error Handler (Refactored)
 
+**Commit:** [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) | **File:** [`src/server/utils/errorHandler.js`](https://github.com/neko-san1432/CitizenLink/blob/610dfea/src/server/utils/errorHandler.js)
+
 **Before:** Error handling scattered across controllers
 
 **After:** (`src/server/utils/errorHandler.js`)
@@ -234,6 +243,8 @@ const handleError = (error, context = 'UNKNOWN') => {
 ```
 
 #### 4. Role Validation Extraction (Refactored)
+
+**Commit:** [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) | **File:** [`src/server/utils/roleValidation.js`](https://github.com/neko-san1432/CitizenLink/blob/610dfea/src/server/utils/roleValidation.js)
 
 **Before:** Role validation logic in auth middleware
 
@@ -257,16 +268,16 @@ const validateUserRole = async (role) => {
 
 ### Issues Resolved Since Last Report
 
-| # | Issue | Resolution | Date |
-|---|-------|------------|------|
-| 1 | Session tokens valid after password change | Implemented JWT issued-at validation against password change timestamp | Resolved |
-| 2 | Duplicate notifications flooding users | Added 24-hour deduplication check before creating notifications | Resolved |
-| 3 | Inconsistent error responses | Created centralized ErrorHandler with standardized response format | Resolved |
-| 4 | Role validation in multiple locations | Extracted to dedicated roleValidation utility module | Resolved |
-| 5 | Console.log statements leaking sensitive data | Removed or replaced with secure logging | In Progress |
-| 6 | Missing rate limiting on sensitive endpoints | Implemented multi-tier rate limiting system | Resolved |
-| 7 | XSS vulnerabilities in user input | Added multi-layer sanitization with DOMPurify and xss library | Resolved |
-| 8 | Complaint data normalization issues | Created utility functions for consistent data handling | Resolved |
+| # | Issue | Resolution | Commit |
+|---|-------|------------|--------|
+| 1 | Session tokens valid after password change | Implemented JWT issued-at validation against password change timestamp | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 2 | Duplicate notifications flooding users | Added 24-hour deduplication check before creating notifications | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 3 | Inconsistent error responses | Created centralized ErrorHandler with standardized response format | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 4 | Role validation in multiple locations | Extracted to dedicated roleValidation utility module | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 5 | Console.log statements leaking sensitive data | Removed or replaced with secure logging | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 6 | Missing rate limiting on sensitive endpoints | Implemented multi-tier rate limiting system | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 7 | XSS vulnerabilities in user input | Added multi-layer sanitization with DOMPurify and xss library | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
+| 8 | Complaint data normalization issues | Created utility functions for consistent data handling | [`610dfea`](https://github.com/neko-san1432/CitizenLink/commit/610dfea) |
 
 ---
 
