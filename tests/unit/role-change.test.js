@@ -1,4 +1,3 @@
-
 describe('RoleManagementService - Role Changes', () => {
   let RoleManagementService;
   let roleService;
@@ -128,7 +127,7 @@ describe('RoleManagementService - Role Changes', () => {
         expect.objectContaining({
           user_metadata: expect.objectContaining({
             role: 'lgu', // Service normalizes lgu-officer to lgu
-            department: department,
+            department,
             previous_role: currentRole
           })
         })
@@ -173,7 +172,7 @@ describe('RoleManagementService - Role Changes', () => {
 
       expect(result.success).toBe(true);
       expect(result.new_role).toBe(newRole);
-      
+
       // Verify department is NOT in the update payload (or explicitly set to null/undefined if that's how the service handles it)
       // The service uses `delete updatedMetadata.department`, so it shouldn't be present.
       const updateCall = mockSupabase.auth.admin.updateUserById.mock.calls[0][1];
@@ -207,7 +206,7 @@ describe('RoleManagementService - Role Changes', () => {
         },
         error: null
       });
-       mockSupabase.from.mockReturnValue({
+      mockSupabase.from.mockReturnValue({
         insert: jest.fn().mockResolvedValue({ error: null })
       });
 
@@ -220,7 +219,7 @@ describe('RoleManagementService - Role Changes', () => {
         expect.objectContaining({
           user_metadata: expect.objectContaining({
             role: newRole,
-            department: department
+            department
           })
         })
       );

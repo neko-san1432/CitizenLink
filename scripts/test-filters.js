@@ -18,10 +18,10 @@ const testResults = {
 function logTest(name, passed, message = '') {
   if (passed) {
     testResults.passed.push({ name, message });
-    console.log(`✓ PASS: ${name}${message ? ' - ' + message : ''}`);
+    console.log(`✓ PASS: ${name}${message ? ` - ${  message}` : ''}`);
   } else {
     testResults.failed.push({ name, message });
-    console.error(`✗ FAIL: ${name}${message ? ' - ' + message : ''}`);
+    console.error(`✗ FAIL: ${name}${message ? ` - ${  message}` : ''}`);
   }
 }
 
@@ -94,9 +94,9 @@ async function testFilters() {
         logTest('Status Filter - Database Query', false, statusError.message);
       } else {
         const allMatch = statusFiltered.every(c => c.workflow_status === testStatus);
-        logTest('Status Filter - Database Query', allMatch, 
+        logTest('Status Filter - Database Query', allMatch,
           `${statusFiltered.length} complaints with status "${testStatus}"`);
-        
+
         if (statusFiltered.length === 0) {
           logWarning('Status Filter', `No complaints found for status "${testStatus}"`);
         }
@@ -122,7 +122,7 @@ async function testFilters() {
         const allMatch = categoryFiltered.every(c => c.category === testCategory);
         logTest('Category Filter - Database Query', allMatch,
           `${categoryFiltered.length} complaints with category "${testCategory.substring(0, 8)}..."`);
-        
+
         if (categoryFiltered.length === 0) {
           logWarning('Category Filter', `No complaints found for category "${testCategory.substring(0, 8)}..."`);
         }
@@ -151,7 +151,7 @@ async function testFilters() {
         });
         logTest('Department Filter - Database Query', allMatch,
           `${deptFiltered.length} complaints with department "${testDepartment}"`);
-        
+
         if (deptFiltered.length === 0) {
           logWarning('Department Filter', `No complaints found for department "${testDepartment}"`);
         }
@@ -202,7 +202,7 @@ async function testFilters() {
       });
       logTest('Date Range Filter - Last 30 Days', allInRange,
         `${date30Filtered.length} complaints in last 30 days`);
-      
+
       // Verify 30 days includes 7 days
       if (date7Filtered && date30Filtered) {
         const includes7Days = date7Filtered.length <= date30Filtered.length;
@@ -228,10 +228,10 @@ async function testFilters() {
       .not('longitude', 'is', null);
 
     if (withResolvedError || withoutResolvedError) {
-      logTest('Include Resolved Filter', false, 
+      logTest('Include Resolved Filter', false,
         withResolvedError?.message || withoutResolvedError?.message);
     } else {
-      const resolvedCount = (withResolved || []).filter(c => 
+      const resolvedCount = (withResolved || []).filter(c =>
         c.workflow_status === 'completed' || c.workflow_status === 'cancelled'
       ).length;
       const logicCorrect = (withResolved?.length || 0) >= (withoutResolved?.length || 0);
@@ -244,7 +244,7 @@ async function testFilters() {
     if (uniqueStatuses.length > 0 && uniqueCategories.length > 0) {
       const testStatus = uniqueStatuses[0];
       const testCategory = uniqueCategories[0];
-      
+
       const { data: combinedFiltered, error: combinedError } = await supabase
         .from('complaints')
         .select('id, workflow_status, category')
@@ -256,7 +256,7 @@ async function testFilters() {
       if (combinedError) {
         logTest('Combined Filters - Status + Category', false, combinedError.message);
       } else {
-        const allMatch = combinedFiltered.every(c => 
+        const allMatch = combinedFiltered.every(c =>
           c.workflow_status === testStatus && c.category === testCategory
         );
         logTest('Combined Filters - Status + Category', allMatch,
@@ -288,20 +288,20 @@ async function testFilters() {
           .eq('workflow_status', testStatus)
           .not('latitude', 'is', null)
           .not('longitude', 'is', null);
-        
-        const result2 = await complaintService.getComplaintLocations({ 
-          status: testStatus, 
-          includeResolved: true 
+
+        const result2 = await complaintService.getComplaintLocations({
+          status: testStatus,
+          includeResolved: true
         });
         const hasFilteredData = Array.isArray(result2);
-        
+
         // The API should return fewer or equal to total, and should match the direct count
         const countMatches = result2.length === directCount || (directCount > 0 && result2.length > 0);
         logTest('API Service - Status Filter', hasFilteredData && countMatches,
           `API returned ${result2?.length || 0} complaints, DB direct query: ${directCount || 0} with status "${testStatus}"`);
-        
+
         if (!countMatches && directCount > 0) {
-          logWarning('API Service - Status Filter', 
+          logWarning('API Service - Status Filter',
             `Status filter count mismatch. API: ${result2?.length || 0}, Direct DB: ${directCount}`);
         }
       }
@@ -309,9 +309,9 @@ async function testFilters() {
       // Test with department filter
       if (uniqueDepartments.length > 0) {
         const testDept = uniqueDepartments[0];
-        const result3 = await complaintService.getComplaintLocations({ 
-          department: testDept, 
-          includeResolved: true 
+        const result3 = await complaintService.getComplaintLocations({
+          department: testDept,
+          includeResolved: true
         });
         const hasFilteredData = Array.isArray(result3);
         logTest('API Service - Department Filter', hasFilteredData,
@@ -319,9 +319,9 @@ async function testFilters() {
       }
 
       // Test with date range
-      const result4 = await complaintService.getComplaintLocations({ 
+      const result4 = await complaintService.getComplaintLocations({
         startDate: last30Days.toISOString(),
-        includeResolved: true 
+        includeResolved: true
       });
       const hasDateFilter = Array.isArray(result4);
       logTest('API Service - Date Range Filter', hasDateFilter,
@@ -334,11 +334,11 @@ async function testFilters() {
     // Test 8: Boundary Filter
     console.log('\n[TEST] Testing Boundary Filter...');
     const { isWithinDigosBoundary } = require('../src/shared/boundaryValidator');
-    
+
     // Test points inside boundary
     const insidePoint = { lat: 6.85, lng: 125.35 }; // Approximate center of Digos
     const insideResult = isWithinDigosBoundary(insidePoint.lat, insidePoint.lng);
-    logTest('Boundary Filter - Inside Point', insideResult, 
+    logTest('Boundary Filter - Inside Point', insideResult,
       `Point (${insidePoint.lat}, ${insidePoint.lng}) should be inside`);
 
     // Test points outside boundary
@@ -354,7 +354,7 @@ async function testFilters() {
       `Point (${edgePoint.lat}, ${edgePoint.lng}) at boundary edge`);
 
     // Summary
-    console.log('\n' + '='.repeat(80));
+    console.log(`\n${  '='.repeat(80)}`);
     console.log('TEST SUMMARY');
     console.log('='.repeat(80));
     console.log(`Total Tests: ${testResults.passed.length + testResults.failed.length}`);

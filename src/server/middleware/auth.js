@@ -9,7 +9,7 @@ const authenticateUser = async (req, res, next) => {
     // Extract token from cookies or headers
     const authHeader = req.headers.authorization;
     const cookieToken = req.cookies?.sb_access_token;
-    
+
     // Prioritize Authorization header as it contains the most recent token from the client
     const token =
       authHeader?.replace('Bearer ', '') ||
@@ -17,7 +17,7 @@ const authenticateUser = async (req, res, next) => {
       req.cookies?.sb_access_token_debug;
 
     if (!token) {
-      console.log('[AUTH DEBUG] No token found. Cookies:', Object.keys(req.cookies), 'Auth Header:', !!authHeader);
+      console.log('[AUTH DEBUG] No token found. Cookies:', Object.keys(req.cookies), 'Auth Header:', Boolean(authHeader));
       if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
         return res.status(401).json({
           success: false,
@@ -50,7 +50,7 @@ const authenticateUser = async (req, res, next) => {
     const userMetadata = tokenUser.user_metadata || {};
     const sessionsInvalidatedAt = userMetadata.sessions_invalidated_at;
     const passwordChangedAt = userMetadata.password_changed_at;
-    
+
     if (sessionsInvalidatedAt || passwordChangedAt) {
       // Decode JWT token to get issued-at time (iat claim)
       // JWT format: header.payload.signature (base64url encoded)
@@ -61,7 +61,7 @@ const authenticateUser = async (req, res, next) => {
           const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
           const tokenIssuedAt = payload.iat ? new Date(payload.iat * 1000) : null;
           const invalidationTime = sessionsInvalidatedAt || passwordChangedAt;
-          
+
           if (tokenIssuedAt && invalidationTime && new Date(invalidationTime) > tokenIssuedAt) {
             // Token was issued before password change/invalidation, reject it immediately
             if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {

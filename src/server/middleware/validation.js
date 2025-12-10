@@ -95,7 +95,7 @@ const schemas = {
   sendReminder: Joi.object({
     // No body required
   }),
-  
+
   // Params validation (e.g. for /:id)
   paramsId: Joi.object({
     id: idSchema

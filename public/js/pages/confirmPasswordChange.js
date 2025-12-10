@@ -42,9 +42,9 @@ async function clearSessionsAfterPasswordChange(supabase, userId = null, scope =
     // Step 2: Clear server session cookie (only if logging out all sessions)
     if (scope === 'all') {
       try {
-        await fetch('/auth/session', { 
+        await fetch('/auth/session', {
           method: 'DELETE',
-          credentials: 'include' 
+          credentials: 'include'
         });
       } catch (cookieErr) {
         console.warn('[PASSWORD CHANGE] Error clearing server session cookie:', cookieErr);
@@ -63,11 +63,11 @@ async function clearSessionsAfterPasswordChange(supabase, userId = null, scope =
     if (scope === 'all') {
       try {
         const storageKeys = [
-          'sb-' + (supabase.supabaseUrl?.split('//')[1]?.split('.')[0] || 'default') + '-auth-token',
+          `sb-${  supabase.supabaseUrl?.split('//')[1]?.split('.')[0] || 'default'  }-auth-token`,
           'oauth_context',
           'user_meta'
         ];
-        
+
         storageKeys.forEach(key => {
           try {
             localStorage.removeItem(key);
@@ -172,19 +172,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       const password = newPasswordInput.value.trim();
       const confirm = confirmPasswordInput.value.trim();
-      
+
       if (!password || !confirm) {
         showMessage('error', 'Both fields are required', 3000);
         return;
       }
-      
+
       if (password !== confirm) {
         showMessage('error', 'Passwords do not match', 3000);
         return;
       }
 
       const resetBtn = setButtonLoading(setPasswordBtn, 'Updating...');
-      
+
       try {
         // Update password using Supabase
         // This automatically invalidates all refresh tokens
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (user) {
           const metadata = user.user_metadata || {};
           const shouldLogoutAll = logoutAllDevices || metadata.logout_all_devices_on_password_change;
-          
+
           // Immediately mark sessions as invalidated in metadata
           // This ensures tokens issued before password change are rejected
           const updatedMetadata = {
@@ -204,12 +204,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             password_changed_at: new Date().toISOString(),
             sessions_invalidated_at: new Date().toISOString()
           };
-          
+
           // Clear the logout flag if it exists
           if (metadata.logout_all_devices_on_password_change) {
             updatedMetadata.logout_all_devices_on_password_change = null;
           }
-          
+
           await supabase.auth.updateUser({
             data: updatedMetadata
           });

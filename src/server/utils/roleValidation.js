@@ -1,4 +1,3 @@
-
 /**
  * Role Validation Utilities
  * Validates user roles against department codes from database

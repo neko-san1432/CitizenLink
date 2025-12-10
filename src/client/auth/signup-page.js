@@ -15,77 +15,13 @@ const shouldDeferAuthRedirect = () => {
   }
 };
 
-// Clear OAuth context and session when landing on signup page (without deleting users)
-// This prevents redirects when user explicitly navigated here
-const clearOAuthContextOnLanding = async () => {
-  try {
-    const ctx = getOAuthContext();
-    // Only clear if there's a pending OAuth AND user explicitly navigated (not from OAuth redirect)
-    if (ctx && ctx.status === 'pending') {
-      // Check if this is coming from an OAuth redirect (don't clear if it is)
-      const urlParams = new URLSearchParams(window.location.search);
-      const isOAuthRedirect = urlParams.get('code') || urlParams.get('error') || urlParams.get('popup') === '1';
-      
-      // Only clear if user explicitly navigated here (not from OAuth redirect)
-      if (!isOAuthRedirect) {
-        console.log('[SIGNUP] User navigated to signup during OAuth signup - cleaning up');
-        suppressAuthErrorNotifications();
-        
-        // Get user ID before signing out (for deletion)
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
-        
-        // Delete incomplete OAuth signup from database
-        if (userId && session?.access_token && ctx.intent === 'signup') {
-          try {
-            const token = session.access_token;
-            const headers = { 
-              'Authorization': `Bearer ${token}`
-            };
-            
-            await fetch('/api/auth/oauth-incomplete', {
-              method: 'DELETE',
-              headers,
-              credentials: 'include'
-            });
-            console.log('[SIGNUP] Incomplete OAuth signup deleted');
-          } catch (deleteError) {
-            console.warn('[SIGNUP] Error deleting incomplete signup:', deleteError);
-          }
-        }
-        
-        // Clear OAuth context and session
-        clearOAuthContext();
-        
-        // Clear session to prevent redirects to oauth-continuation
-        try {
-          await supabase.auth.signOut();
-        } catch {}
-        try {
-          await fetch('/auth/session', { method: 'DELETE' });
-        } catch {}
-        
-        // Clear Supabase storage
-        try {
-          const keys = Object.keys(localStorage);
-          keys.forEach(key => {
-            if (key.startsWith('sb-') || key.includes('supabase')) {
-              localStorage.removeItem(key);
-            }
-          });
-        } catch {}
-      }
-    }
-  } catch (error) {
-    console.warn('[SIGNUP] Error clearing OAuth context on landing:', error);
-  }
-};
+// Global Guard handles all cleanup now - redundant code removed
 
 const checkAuthentication = async () => {
   try {
-    // Clear OAuth context if user explicitly navigated here (prevents redirects)
-    await clearOAuthContextOnLanding();
-    
+    // Global Guard already ran at init
+    // await clearOAuthContextOnLanding();
+
     // Check if we just cleaned up OAuth - skip redirects
     let oauthCleanupFlag = false;
     try {
@@ -94,17 +30,17 @@ const checkAuthentication = async () => {
         sessionStorage.removeItem('cl_oauth_cleanup');
       }
     } catch {}
-    
+
     // If we just cleaned up, don't redirect - let user proceed with signup
     if (oauthCleanupFlag) {
       return;
     }
-    
+
     // Check for pending OAuth - if exists and user explicitly navigated, don't redirect
     // But allow legitimate OAuth continuation redirects
     const oauthCtx = getOAuthContext();
     const hasPendingOAuth = oauthCtx && oauthCtx.status === 'pending';
-    
+
     // Only skip redirect if user explicitly navigated (not from OAuth redirect)
     if (hasPendingOAuth) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -158,10 +94,14 @@ let oauthAbortWatcherInstalled = false;
 
 // Initialize signup page
 const initializeSignupPage = async () => {
+  // CRITICAL: Run Global OAuth Guard FIRST to wipe stale state
+  const { initGlobalOAuthGuard } = await import('../utils/global-oauth-guard.js');
+  await initGlobalOAuthGuard();
+
   // Setup navigation cleanup for login/signup buttons and brand logo
   const { setupNavigationCleanup } = await import('../utils/navigation.js');
   setupNavigationCleanup();
-  
+
   // Run authentication check when page loads
   checkAuthentication();
 
@@ -351,7 +291,7 @@ function setupSignupMethodSelector() {
 function setupOAuthPopupBridge() {
   window.addEventListener('message', async (event) => {
     if (event.origin !== window.location.origin) return;
-    
+
     // Log the full event data to debug
     console.log('[SIGNUP] Received message from popup:', event.data);
     console.log('[SIGNUP] Full event:', {
@@ -361,18 +301,18 @@ function setupOAuthPopupBridge() {
       payload: event.data?.payload,
       fullData: event.data
     });
-    
+
     const { type, payload, redirectTo, incomplete } = event.data || {};
-    
+
     if (type === 'oauth-signup-success') {
       const provider = (payload?.provider || 'OAuth').replace(/^\w/, (c) => c.toUpperCase());
       console.log('[SIGNUP] ✅ OAuth signup success, provider:', provider);
       console.log('[SIGNUP] Message details:', {
         redirectTo,
         incomplete,
-        hasPayload: !!payload
+        hasPayload: Boolean(payload)
       });
-      
+
       try {
         const ctx = getOAuthContext() || {};
         setOAuthContext({ ...ctx, status: 'handoff' });
@@ -380,30 +320,30 @@ function setupOAuthPopupBridge() {
       } catch (e) {
         console.error('[SIGNUP] Error updating OAuth context:', e);
       }
-      
+
       // CRITICAL: Set the session in this window before redirecting
       // Supabase sessions are window-specific, so we need to sync it from popup
       const accessToken = event.data?.accessToken;
       const refreshToken = event.data?.refreshToken;
-      
+
       if (accessToken && refreshToken) {
         try {
           console.log('[SIGNUP] Setting session in main window...');
           console.log('[SIGNUP] Access token length:', accessToken.length);
           console.log('[SIGNUP] Refresh token length:', refreshToken.length);
-          
+
           // Set the session using setSession
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
-          
+
           if (error) {
             console.error('[SIGNUP] ❌ Error setting session:', error);
             console.error('[SIGNUP] Error details:', error.message, error.status);
           } else {
             console.log('[SIGNUP] ✅ Session set successfully in main window');
-            
+
             // Verify session is actually set
             const { data: { session: verifySession }, error: verifyError } = await supabase.auth.getSession();
             if (verifySession) {
@@ -411,7 +351,7 @@ function setupOAuthPopupBridge() {
             } else {
               console.error('[SIGNUP] ❌ Session verification failed:', verifyError);
             }
-            
+
             // Also set server-side cookie
             try {
               const cookieResponse = await fetch('/auth/session', {
@@ -434,26 +374,26 @@ function setupOAuthPopupBridge() {
         }
       } else {
         console.warn('[SIGNUP] ⚠️ No access/refresh tokens in message');
-        console.warn('[SIGNUP] Access token:', !!accessToken, 'Refresh token:', !!refreshToken);
+        console.warn('[SIGNUP] Access token:', Boolean(accessToken), 'Refresh token:', Boolean(refreshToken));
       }
-      
+
       showMessage('success', `${provider} connected. Finishing setup...`);
-      
+
       // CRITICAL: Always redirect to continuation for OAuth signups
       // Extract redirectTo from event.data if not in destructured variables
       const actualRedirectTo = redirectTo || event.data?.redirectTo || '/oauth-continuation';
-      
+
       console.log('[SIGNUP] Redirect decision:', {
         willRedirect: true,
         redirectTo: actualRedirectTo,
         incomplete: incomplete !== undefined ? incomplete : event.data?.incomplete,
         eventDataKeys: Object.keys(event.data || {}),
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken
+        hasAccessToken: Boolean(accessToken),
+        hasRefreshToken: Boolean(refreshToken)
       });
-      
+
       console.log('[SIGNUP] ✅ REDIRECTING TO:', actualRedirectTo);
-      
+
       // CRITICAL: If we have tokens, pass them in URL hash for Supabase to pick up
       // This is how Supabase normally handles OAuth redirects
       let redirectUrl = actualRedirectTo;
@@ -466,7 +406,7 @@ function setupOAuthPopupBridge() {
         redirectUrl = `${actualRedirectTo}#${hashParams.toString()}`;
         console.log('[SIGNUP] Adding session tokens to URL hash for Supabase');
       }
-      
+
       // Increased delay to ensure session is fully set and persisted before redirect
       setTimeout(async () => {
         // Double-check session before redirect
@@ -499,7 +439,7 @@ async function cleanupPendingOAuth(message = 'OAuth signup was cancelled. Please
     // Get user ID before signing out
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
-    
+
     // Delete user from database if user exists and has valid session
     if (userId && session?.access_token) {
       try {
@@ -507,7 +447,7 @@ async function cleanupPendingOAuth(message = 'OAuth signup was cancelled. Please
         const token = session.access_token;
         const headers = { 'Content-Type': 'application/json' };
         headers['Authorization'] = `Bearer ${token}`;
-        
+
         // Delete user data (this will also delete from auth.users)
         // If this fails, we'll still proceed with sign out and context clearing
         const deleteResponse = await fetch('/api/compliance/delete', {
@@ -520,11 +460,11 @@ async function cleanupPendingOAuth(message = 'OAuth signup was cancelled. Please
             reason: 'Incomplete OAuth signup cancelled by user'
           })
         });
-        
+
         // Only log if it's not a 401/403 (expected for invalid sessions)
         if (!deleteResponse.ok) {
           const errorData = await deleteResponse.json().catch(() => ({}));
-          const status = deleteResponse.status;
+          const {status} = deleteResponse;
           // Don't log auth errors - they're expected for incomplete signups
           if (status !== 401 && status !== 403) {
             console.warn('[SIGNUP] Failed to delete incomplete OAuth user:', errorData.error || 'Unknown error');
@@ -535,11 +475,11 @@ async function cleanupPendingOAuth(message = 'OAuth signup was cancelled. Please
         // The sign out below will still clear the session
       }
     }
-    
+
     // Sign out after deletion attempt
     await supabase.auth.signOut();
   } catch {}
-  
+
   try { await fetch('/auth/session', { method: 'DELETE' }); } catch {}
   clearOAuthContext();
   resetSignupStateHandler?.({ persist: true });

@@ -19,8 +19,8 @@ const cleanupIncompleteOAuthSignup = async (reason = 'OAuth signup was interrupt
     // 2. Intent is 'login' (existing user)
     // 3. Status is 'completed' (already done)
     // 4. User type is 'existing' (existing user with incomplete profile)
-    if (!ctx || 
-        ctx.intent !== 'signup' || 
+    if (!ctx ||
+        ctx.intent !== 'signup' ||
         ctx.status === 'completed' ||
         ctx.userType === 'existing' ||
         ctx.isExistingIncomplete) {
@@ -42,19 +42,19 @@ const cleanupIncompleteOAuthSignup = async (reason = 'OAuth signup was interrupt
     if (userId && session?.access_token) {
       try {
         const token = session.access_token;
-        const headers = { 
+        const headers = {
           'Authorization': `Bearer ${token}`
         };
-        
+
         const deleteResponse = await fetch('/api/auth/oauth-incomplete', {
           method: 'DELETE',
           headers,
           credentials: 'include'
         });
-        
+
         if (!deleteResponse.ok) {
           const errorData = await deleteResponse.json().catch(() => ({}));
-          const status = deleteResponse.status;
+          const {status} = deleteResponse;
           // Don't log auth errors - they're expected for incomplete signups
           if (status !== 401 && status !== 403) {
             console.warn('[OAUTH_CONT] Failed to delete incomplete OAuth signup:', errorData.error || 'Unknown error');
@@ -71,7 +71,7 @@ const cleanupIncompleteOAuthSignup = async (reason = 'OAuth signup was interrupt
     try {
       await supabase.auth.signOut();
     } catch {}
-    
+
     try {
       await fetch('/auth/session', { method: 'DELETE' });
     } catch {}
@@ -102,42 +102,42 @@ const validateOAuthContinuation = async () => {
     let session = null;
     let error = null;
     let retries = 3;
-    
+
     while (retries > 0 && !session) {
       // console.log(`[OAUTH_CONT_VALIDATE] Checking session (${4 - retries}/3)...`);
       const result = await supabase.auth.getSession();
       session = result.data?.session;
       error = result.error;
-      
+
       if (session) {
         // console.log('[OAUTH_CONT_VALIDATE] ✅ Session found!');
         break;
       }
-      
+
       if (retries > 1) {
         // console.log('[OAUTH_CONT_VALIDATE] ⏳ Session not found, retrying in 500ms...');
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       retries--;
     }
-    
+
     /* console.log('[OAUTH_CONT_VALIDATE] Session check result:', {
       hasSession: !!session,
       hasError: !!error,
       error: error?.message,
       userId: session?.user?.id
     }); */
-    
+
     if (!session || error) {
       // No session - user shouldn't be here
       console.warn('[OAUTH_CONT_VALIDATE] ❌ No session found after retries:', error);
       // console.log('[OAUTH_CONT_VALIDATE] Checking localStorage for session data...');
-      
+
       // Check if there's any session data in localStorage
       const storageKeys = Object.keys(localStorage);
       const supabaseKeys = storageKeys.filter(k => k.includes('supabase') || k.startsWith('sb-'));
       // console.log('[OAUTH_CONT_VALIDATE] Supabase storage keys:', supabaseKeys);
-      
+
       // console.log('[OAUTH_CONT_VALIDATE] Redirecting to signup...');
       showMessage('error', 'Session expired. Please start over.');
       cleanupIncompleteOAuthSignup('Session expired');
@@ -146,16 +146,16 @@ const validateOAuthContinuation = async () => {
       }, 2000);
       return false;
     }
-    
+
     // console.log('[OAUTH_CONT_VALIDATE] ✅ Session exists');
 
     // Check if user is already fully registered
     // console.log('[OAUTH_CONT_VALIDATE] Checking registration status...');
-    const user = session.user;
+    const {user} = session;
     const role = user?.user_metadata?.role || user?.raw_user_meta_data?.role;
     const name = user?.user_metadata?.name || user?.raw_user_meta_data?.name;
-    const hasMobile = user?.user_metadata?.mobile_number || 
-                     user?.user_metadata?.mobile || 
+    const hasMobile = user?.user_metadata?.mobile_number ||
+                     user?.user_metadata?.mobile ||
                      user?.phone;
 
     /* console.log('[OAUTH_CONT_VALIDATE] Registration check:', {
@@ -172,20 +172,20 @@ const validateOAuthContinuation = async () => {
       window.location.href = '/dashboard';
       return false;
     }
-    
+
     // console.log('[OAUTH_CONT_VALIDATE] ✅ User is not fully registered');
 
     // Check if there's a valid OAuth context
     // console.log('[OAUTH_CONT_VALIDATE] Checking OAuth context...');
     let ctx = getOAuthContext();
     // console.log('[OAUTH_CONT_VALIDATE] OAuth context:', ctx);
-    
+
     if (!ctx || ctx.intent !== 'signup') {
       // Context might be missing if page was refreshed or context was cleared
       // Check if user has OAuth identity to determine if this is an OAuth signup
       const provider = user?.identities?.[0]?.provider;
       // console.log('[OAUTH_CONT_VALIDATE] Context missing or wrong intent, checking provider:', provider);
-      
+
       if (provider) {
         // User has OAuth identity but no context - recreate context
         // console.log('[OAUTH_CONT_VALIDATE] ✅ OAuth context missing, recreating from session');
@@ -216,7 +216,7 @@ const validateOAuthContinuation = async () => {
       // console.log('[OAUTH_CONT_VALIDATE] Updating context status to handoff');
       setOAuthContext({ ...ctx, status: 'handoff' });
     }
-    
+
     // console.log('[OAUTH_CONT_VALIDATE] ✅ Validation passed, showing form');
     return true;
   } catch (error) {
@@ -303,7 +303,7 @@ const setupInterruptionHandlers = () => {
         const lastActivity = ctx.lastActivity || ctx.startedAt || 0;
         const elapsed = Date.now() - lastActivity;
         const STALE_TIMEOUT = 60 * 60 * 1000; // 60 minutes
-        
+
         if (elapsed > STALE_TIMEOUT) {
           showMessage('error', 'OAuth signup session expired. Please start over.');
           cleanupIncompleteOAuthSignup('Session expired due to inactivity');
@@ -343,7 +343,7 @@ const initializeOAuthContinuationPage = async () => {
   // console.log('[OAUTH_CONT] URL:', window.location.href);
   // console.log('[OAUTH_CONT] URL Hash:', window.location.hash);
   // console.log('[OAUTH_CONT] Timestamp:', new Date().toISOString());
-  
+
   // Check if there are tokens in the URL hash (from Supabase redirect)
   if (window.location.hash) {
     // console.log('[OAUTH_CONT] URL hash detected, Supabase may extract session from it');
@@ -351,17 +351,17 @@ const initializeOAuthContinuationPage = async () => {
     // Wait a moment for Supabase to process the hash
     await new Promise(resolve => setTimeout(resolve, 500));
   }
-  
+
   // Check OAuth context
   const ctx = getOAuthContext();
   // console.log('[OAUTH_CONT] OAuth Context:', ctx);
-  
+
   // Update page title and subtitle based on user type
   const updatePageMessages = () => {
     const isNewSignup = ctx?.isNewSignup || ctx?.intent === 'signup';
     const userType = ctx?.userType || (isNewSignup ? 'new' : 'existing');
     const customMessage = ctx?.message;
-    
+
     // Update page title
     const titleElement = document.querySelector('.auth-title');
     if (titleElement) {
@@ -371,7 +371,7 @@ const initializeOAuthContinuationPage = async () => {
         titleElement.textContent = 'Complete Your Profile';
       }
     }
-    
+
     // Update subtitle
     const subtitleElement = document.querySelector('.auth-subtitle');
     if (subtitleElement) {
@@ -383,7 +383,7 @@ const initializeOAuthContinuationPage = async () => {
         subtitleElement.textContent = 'Your profile is incomplete. Please provide the missing information to continue.';
       }
     }
-    
+
     // Update submit button text
     const submitButton = document.getElementById('signup-submit-btn');
     if (submitButton) {
@@ -393,19 +393,19 @@ const initializeOAuthContinuationPage = async () => {
         submitButton.textContent = 'Update Profile';
       }
     }
-    
+
     /* console.log('[OAUTH_CONT] Updated page messages:', {
       isNewSignup,
       userType,
       customMessage
     }); */
   };
-  
+
   // Update messages if context is available
   if (ctx) {
     updatePageMessages();
   }
-  
+
   // Check session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   // console.log('[OAUTH_CONT] Session exists:', !!session);
@@ -420,25 +420,25 @@ const initializeOAuthContinuationPage = async () => {
       provider: session.user.identities?.[0]?.provider
     }); */
   }
-  
+
   const form = document.getElementById('oauthCompleteForm');
   const steps = document.getElementById('signup-steps');
   const step1 = document.querySelector('.signup-step[data-step="1"]');
   // console.log('[OAUTH_CONT] Form element exists:', !!form);
   // console.log('[OAUTH_CONT] Steps container exists:', !!steps);
   // console.log('[OAUTH_CONT] Step 1 exists:', !!step1);
-  
+
   // First, validate that user should be here
   // console.log('[OAUTH_CONT] Starting validation...');
   const isValid = await validateOAuthContinuation();
   // console.log('[OAUTH_CONT] Validation result:', isValid);
-  
+
   // Re-check context after validation (it might have been updated)
   const updatedCtx = getOAuthContext();
   if (updatedCtx && updatedCtx !== ctx) {
     updatePageMessages();
   }
-  
+
   if (!isValid) {
     // console.log('[OAUTH_CONT] ❌ Validation failed, redirecting...');
     // console.log('[OAUTH_CONT] ========================================');
@@ -462,23 +462,23 @@ const initializeOAuthContinuationPage = async () => {
       const rawMeta = user.raw_user_meta_data || {};
       const combined = { ...identityData, ...meta, ...rawMeta };
       const fullName = combined.full_name || combined.name || '';
-      
+
       // Prioritize explicit fields
       let firstName = combined.given_name || combined.first_name || '';
       let lastName = combined.family_name || combined.last_name || '';
-      let middleName = combined.middle_name || '';
+      const middleName = combined.middle_name || '';
 
       // If explicit fields are missing, try to parse from full name
       if (!firstName && !lastName && fullName) {
-          const nameParts = fullName.trim().split(' ');
-          if (nameParts.length === 1) {
-              firstName = nameParts[0];
-          } else if (nameParts.length > 1) {
-              // Assume last word is last name, everything else is first name
-              // Do NOT infer middle name automatically to avoid splitting multi-word first names
-              lastName = nameParts.pop();
-              firstName = nameParts.join(' ');
-          }
+        const nameParts = fullName.trim().split(' ');
+        if (nameParts.length === 1) {
+          firstName = nameParts[0];
+        } else if (nameParts.length > 1) {
+          // Assume last word is last name, everything else is first name
+          // Do NOT infer middle name automatically to avoid splitting multi-word first names
+          lastName = nameParts.pop();
+          firstName = nameParts.join(' ');
+        }
       }
 
       const firstNameInput = document.getElementById('firstName');
@@ -489,14 +489,14 @@ const initializeOAuthContinuationPage = async () => {
       const middleNameInput = document.getElementById('middleName');
       if (middleNameInput) {
         if (middleName) {
-            middleNameInput.value = middleName;
-            // console.log('[OAUTH_CONT] Prefilled middleName:', middleName);
+          middleNameInput.value = middleName;
+          // console.log('[OAUTH_CONT] Prefilled middleName:', middleName);
         } else {
-            // Enable if empty so user can enter it or leave it blank
-            middleNameInput.removeAttribute('readonly');
-            middleNameInput.removeAttribute('disabled');
-            middleNameInput.removeAttribute('aria-disabled');
-            middleNameInput.removeAttribute('title');
+          // Enable if empty so user can enter it or leave it blank
+          middleNameInput.removeAttribute('readonly');
+          middleNameInput.removeAttribute('disabled');
+          middleNameInput.removeAttribute('aria-disabled');
+          middleNameInput.removeAttribute('title');
         }
       }
       const lastNameInput = document.getElementById('lastName');
@@ -509,7 +509,7 @@ const initializeOAuthContinuationPage = async () => {
         emailInput.value = user.email;
         // console.log('[OAUTH_CONT] Prefilled email:', user.email);
       }
-      
+
       // Try to get phone from OAuth provider
       const oauthPhone = user.user_metadata?.phone_number ||
                         user.user_metadata?.phone ||
@@ -536,10 +536,10 @@ const initializeOAuthContinuationPage = async () => {
   // Initialize CAPTCHA
   // console.log('[OAUTH_CONT] Initializing CAPTCHA...');
   initializeCaptcha();
-  
+
   // Re-initialize CAPTCHA after a delay to handle async script loading
   setTimeout(initializeCaptcha, 1000);
-  
+
   // Verify form is visible
   const formVisible = form && form.offsetParent !== null;
   const step1Visible = step1 && step1.offsetParent !== null;
@@ -550,9 +550,8 @@ const initializeOAuthContinuationPage = async () => {
     step1Visible: step1Visible,
     step1Hidden: step1?.hasAttribute('hidden')
   }); */
-  
 
-  
+
   // console.log('[OAUTH_CONT] ✅ Page initialization complete');
   // console.log('[OAUTH_CONT] ========================================');
 };
@@ -560,9 +559,9 @@ const initializeOAuthContinuationPage = async () => {
 // Global handler for ID verification success (called by signup-id-verify.js)
 window.handleVerificationSuccess = (data) => {
   console.log('[OAUTH_CONT] Handling verification success:', data);
-  
+
   if (!data) return;
-  
+
   // Populate form fields with OCR data
   const fields = {
     firstName: data.firstName,
@@ -571,9 +570,9 @@ window.handleVerificationSuccess = (data) => {
     addressLine1: data.address,
     // Map other fields if needed
   };
-  
+
   let updatedCount = 0;
-  
+
   Object.entries(fields).forEach(([id, value]) => {
     if (value) {
       const input = document.getElementById(id);
@@ -583,24 +582,24 @@ window.handleVerificationSuccess = (data) => {
         // User said: "if it matches the field in both the id and the form"
         // This implies validation. But prefilling is a good first step.
         if (input.value !== value) {
-            input.value = value;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            updatedCount++;
+          input.value = value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          updatedCount++;
         }
       }
     }
   });
-  
+
   if (updatedCount > 0) {
     showMessage('success', 'Form updated with ID information.');
   } else {
     showMessage('success', 'ID verified. Information matches form.');
   }
-  
+
   // Unlock next step if needed (handled by signup-progressive.js usually)
   const nextBtn = document.getElementById('signup-next-btn');
   if (nextBtn) {
-      nextBtn.removeAttribute('disabled');
+    nextBtn.removeAttribute('disabled');
   }
 };
 

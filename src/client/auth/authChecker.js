@@ -95,9 +95,7 @@ const hasPendingOAuthSignup = () => {
   }
 };
 
-export {
-  suppressAuthErrorNotifications
-};
+// Redundant export removed
 // Cache for API calls to prevent excessive requests
 let roleApiCache = null;
 let roleApiCacheTime = 0;
@@ -108,7 +106,7 @@ let isCheckingRoleChange = false;
 
 export const getUserRole = async (options = {}) => {
   const { refresh = false } = options;
-  
+
   // Check for pending OAuth signup - don't check role if user is in the middle of OAuth signup
   try {
     const ctx = getOAuthContext();
@@ -117,7 +115,7 @@ export const getUserRole = async (options = {}) => {
       return null;
     }
   } catch {}
-  
+
   if (!refresh) {
     const cached = getUserMeta();
     if (cached && cached.role) return cached.role;
@@ -131,15 +129,15 @@ export const getUserRole = async (options = {}) => {
     // Try to get role from API first (server has complete metadata)
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     const token = session?.access_token;
-    
+
     if (!token) {
       console.warn('[AUTH CHECKER] No session token available for role check', { sessionError });
     } else {
       console.log('[AUTH CHECKER] Session token found, length:', token.length);
     }
-    
+
     // Always include Authorization header if token exists
-    const headers = { 
+    const headers = {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
@@ -166,7 +164,7 @@ export const getUserRole = async (options = {}) => {
           return null;
         }
       } catch {}
-      
+
       // Session expired or missing; clear cache and trigger re-login path
       // But don't throw on landing page or auth pages
       if (!isAuthPage()) {
@@ -341,7 +339,7 @@ export const startTokenExpiryMonitoring = () => {
           return;
         }
       } catch {}
-      
+
       // Check if user is authenticated via API instead of Supabase session
       const response = await fetch('/api/user/role', {
         method: 'GET',
@@ -359,7 +357,7 @@ export const startTokenExpiryMonitoring = () => {
             tokenExpiryTimer = null;
             return;
           }
-          
+
           // Check for pending OAuth signup before showing error
           try {
             const ctx = getOAuthContext();
@@ -369,7 +367,7 @@ export const startTokenExpiryMonitoring = () => {
               return;
             }
           } catch {}
-          
+
           // If device is not trusted, don't try to refresh - require re-login
           if (!isDeviceTrusted()) {
             console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
@@ -436,7 +434,7 @@ const handleSessionExpired = async () => {
   }
   if (isAuthPage()) return;
   if (window.location.pathname === '/login') return;
-  
+
   // Check for pending OAuth signup - don't show error if user is in the middle of OAuth signup
   try {
     const ctx = getOAuthContext();
@@ -446,7 +444,7 @@ const handleSessionExpired = async () => {
       return;
     }
   } catch {}
-  
+
   stopTokenExpiryMonitoring();
   showSessionExpiredToast();
 
@@ -618,8 +616,10 @@ const formatRoleNameForDisplay = (role) => {
 
   return roleNames[role] || role;
 };
-try {
-  window.getUserRole = (opts) => getUserRole(opts);
-  initializeAuthListener();
-  startTokenExpiryMonitoring();
-} catch {}
+window.getUserRole = (opts) => getUserRole(opts);
+initializeAuthListener();
+startTokenExpiryMonitoring();
+// Initialize Global OAuth Guard
+import('../utils/global-oauth-guard.js').then(({ initGlobalOAuthGuard }) => {
+  initGlobalOAuthGuard();
+});

@@ -169,7 +169,7 @@ async function loadUnreadCount() {
     }
   } catch (error) {
     // Only log non-connection errors
-    if (!error.message?.includes('Failed to fetch') && 
+    if (!error.message?.includes('Failed to fetch') &&
         !error.message?.includes('ERR_CONNECTION_REFUSED')) {
       console.error('[NOTIFICATION] Failed to load unread count:', error);
     }

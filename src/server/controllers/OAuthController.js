@@ -22,10 +22,10 @@ class OAuthController {
 
       // Get OAuth intent from query parameter or header (set by client)
       const intent = req.query.intent || req.headers['x-oauth-intent'] || 'login'; // Default to login for safety
-      
+
       // Get user from Supabase
       const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-      
+
       if (userError || !userData?.user) {
         console.error('[OAUTH_CHECK] Error fetching user:', userError);
         return res.status(500).json({
@@ -35,27 +35,27 @@ class OAuthController {
         });
       }
 
-      const user = userData.user;
+      const {user} = userData;
       const metadata = extractUserMetadata(user);
-      
+
       // Check if user has complete metadata
-      const hasRole = !!(metadata.role);
-      const hasName = !!(metadata.name || metadata.first_name || metadata.last_name);
-      const hasMobile = !!(metadata.mobile_number || metadata.mobile || user.phone);
-      
+      const hasRole = Boolean(metadata.role);
+      const hasName = Boolean(metadata.name || metadata.first_name || metadata.last_name);
+      const hasMobile = Boolean(metadata.mobile_number || metadata.mobile || user.phone);
+
       const isComplete = hasRole && hasName && hasMobile;
-      
+
       // Detect if user is new (just created) or existing
       // New users: created within last 5 minutes and no previous logins
       const createdAt = new Date(user.created_at);
       const now = new Date();
       const minutesSinceCreation = (now - createdAt) / (1000 * 60);
       const isNewUser = minutesSinceCreation < 5 && !user.last_sign_in_at;
-      
+
       // Check if user has any previous sign-ins (indicates existing account)
-      const hasPreviousSignIns = !!user.last_sign_in_at && 
+      const hasPreviousSignIns = Boolean(user.last_sign_in_at) &&
                                  user.last_sign_in_at !== user.created_at;
-      
+
       // Determine user type
       let userType = 'existing';
       if (isNewUser && !hasPreviousSignIns) {
@@ -66,7 +66,7 @@ class OAuthController {
         // Complete profile but no previous sign-ins - likely existing but first OAuth login
         userType = 'existing';
       }
-      
+
       console.log('[OAUTH_CHECK] User status:', {
         userId,
         email: user.email,
@@ -88,37 +88,37 @@ class OAuthController {
         return res.json({
           success: true,
           complete: true,
-          userType: userType,
-          intent: intent,
+          userType,
+          intent,
           redirectTo: '/dashboard',
-          message: userType === 'new' 
-            ? 'Registration completed successfully!' 
+          message: userType === 'new'
+            ? 'Registration completed successfully!'
             : 'Welcome back!'
         });
-      } else {
-        // User needs to complete profile
-        // Determine if this is a new signup or existing user with incomplete profile
-        const isNewSignup = userType === 'new' || intent === 'signup';
-        const isExistingIncomplete = userType === 'existing' && intent === 'login';
-        
-        return res.json({
-          success: true,
-          complete: false,
-          userType: userType,
-          intent: intent,
-          isNewSignup: isNewSignup,
-          isExistingIncomplete: isExistingIncomplete,
-          redirectTo: '/oauth-continuation',
-          missingFields: {
-            role: !hasRole,
-            name: !hasName,
-            mobile: !hasMobile
-          },
-          message: isNewSignup
-            ? 'Please complete your registration to continue.'
-            : 'Your profile is incomplete. Please complete it to continue.'
-        });
       }
+      // User needs to complete profile
+      // Determine if this is a new signup or existing user with incomplete profile
+      const isNewSignup = userType === 'new' || intent === 'signup';
+      const isExistingIncomplete = userType === 'existing' && intent === 'login';
+
+      return res.json({
+        success: true,
+        complete: false,
+        userType,
+        intent,
+        isNewSignup,
+        isExistingIncomplete,
+        redirectTo: '/oauth-continuation',
+        missingFields: {
+          role: !hasRole,
+          name: !hasName,
+          mobile: !hasMobile
+        },
+        message: isNewSignup
+          ? 'Please complete your registration to continue.'
+          : 'Your profile is incomplete. Please complete it to continue.'
+      });
+
     } catch (error) {
       console.error('[OAUTH_CHECK] Error:', error);
       return res.status(500).json({
@@ -145,7 +145,7 @@ class OAuthController {
 
       // Check if user is incomplete
       const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-      
+
       if (userError || !userData?.user) {
         return res.status(404).json({
           success: false,
@@ -153,13 +153,13 @@ class OAuthController {
         });
       }
 
-      const user = userData.user;
+      const {user} = userData;
       const metadata = extractUserMetadata(user);
-      
-      const hasRole = !!(metadata.role);
-      const hasName = !!(metadata.name || metadata.first_name || metadata.last_name);
-      const hasMobile = !!(metadata.mobile_number || metadata.mobile || user.phone);
-      
+
+      const hasRole = Boolean(metadata.role);
+      const hasName = Boolean(metadata.name || metadata.first_name || metadata.last_name);
+      const hasMobile = Boolean(metadata.mobile_number || metadata.mobile || user.phone);
+
       const isComplete = hasRole && hasName && hasMobile;
 
       // Only delete if incomplete
@@ -171,7 +171,7 @@ class OAuthController {
 
         // Delete user from Supabase
         const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-        
+
         if (deleteError) {
           if (deleteError.code === 'user_not_found' || deleteError.status === 404) {
             console.warn('[OAUTH_CLEANUP] User already deleted, treating as success');
@@ -188,13 +188,13 @@ class OAuthController {
           success: true,
           message: 'Incomplete signup deleted'
         });
-      } else {
-        // User is complete, don't delete
-        return res.json({
-          success: true,
-          message: 'User is complete, not deleted'
-        });
       }
+      // User is complete, don't delete
+      return res.json({
+        success: true,
+        message: 'User is complete, not deleted'
+      });
+
     } catch (error) {
       console.error('[OAUTH_CLEANUP] Error:', error);
       return res.status(500).json({

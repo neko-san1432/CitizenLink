@@ -574,11 +574,11 @@ function setupControlPanel() {
     const userRestrictedDepartment = (heatmapViz?.userRole === 'lgu-admin' && heatmapViz.userDepartment)
       ? heatmapViz.userDepartment
       : null;
-    
+
     // Coordinators and super-admins should see all complaints (no department filter)
     const isCoordinatorOrSuperAdmin = heatmapViz?.userRole === 'complaint-coordinator' || heatmapViz?.userRole === 'super-admin';
     const departmentValues = isCoordinatorOrSuperAdmin ? null : (userRestrictedDepartment || getCheckedValues('department-checkbox'));
-    
+
     console.log('[HEATMAP] Applying filters:', {
       role: heatmapViz?.userRole,
       isCoordinatorOrSuperAdmin,

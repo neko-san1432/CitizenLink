@@ -799,13 +799,13 @@ class ComplaintDetails {
                       interactive: false
                     },
                     interactive: false,
-                    onEachFeature: function(feature, layer) {
+                    onEachFeature(feature, layer) {
                       // Disable all interactions to prevent black box on click
                       layer.options.interactive = false;
                       layer.off('click');
                       layer.off('mouseover');
                       layer.off('mouseout');
-                      
+
                       if (barangay.name) {
                         layer.bindTooltip(barangay.name, {
                           permanent: false,

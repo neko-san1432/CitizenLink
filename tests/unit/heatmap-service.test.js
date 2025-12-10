@@ -1,6 +1,6 @@
 /**
  * Unit Tests: Heatmap Service
- * 
+ *
  * Tests the heatmap data transformation and filtering logic
  */
 
@@ -10,7 +10,7 @@ describe('Heatmap Data Processing', () => {
       const validateCoordinates = (lat, lng) => {
         const parsedLat = parseFloat(lat);
         const parsedLng = parseFloat(lng);
-        return !isNaN(parsedLat) && !isNaN(parsedLng) && 
+        return !isNaN(parsedLat) && !isNaN(parsedLng) &&
                isFinite(parsedLat) && isFinite(parsedLng);
       };
 
@@ -25,7 +25,7 @@ describe('Heatmap Data Processing', () => {
     it('should parse string coordinates to numbers', () => {
       const lat = parseFloat('14.5995');
       const lng = parseFloat('120.9842');
-      
+
       expect(lat).toBe(14.5995);
       expect(lng).toBe(120.9842);
       expect(typeof lat).toBe('number');
@@ -38,11 +38,11 @@ describe('Heatmap Data Processing', () => {
       const complaint = {
         department_r: ['DPWH', 'DPS']
       };
-      
-      const departmentR = Array.isArray(complaint.department_r) 
-        ? complaint.department_r 
+
+      const departmentR = Array.isArray(complaint.department_r)
+        ? complaint.department_r
         : (complaint.department_r ? [complaint.department_r] : []);
-      
+
       expect(departmentR).toEqual(['DPWH', 'DPS']);
       expect(departmentR.length).toBe(2);
     });
@@ -51,11 +51,11 @@ describe('Heatmap Data Processing', () => {
       const complaint = {
         department_r: 'DPWH'
       };
-      
-      const departmentR = Array.isArray(complaint.department_r) 
-        ? complaint.department_r 
+
+      const departmentR = Array.isArray(complaint.department_r)
+        ? complaint.department_r
         : (complaint.department_r ? [complaint.department_r] : []);
-      
+
       expect(departmentR).toEqual(['DPWH']);
       expect(Array.isArray(departmentR)).toBe(true);
     });
@@ -64,11 +64,11 @@ describe('Heatmap Data Processing', () => {
       const complaint = {
         department_r: null
       };
-      
-      const departmentR = Array.isArray(complaint.department_r) 
-        ? complaint.department_r 
+
+      const departmentR = Array.isArray(complaint.department_r)
+        ? complaint.department_r
         : (complaint.department_r ? [complaint.department_r] : []);
-      
+
       expect(departmentR).toEqual([]);
     });
   });
@@ -92,8 +92,8 @@ describe('Heatmap Data Processing', () => {
       // Simulate transformation logic
       const lat = parseFloat(mockComplaint.latitude);
       const lng = parseFloat(mockComplaint.longitude);
-      const departmentR = Array.isArray(mockComplaint.department_r) 
-        ? mockComplaint.department_r 
+      const departmentR = Array.isArray(mockComplaint.department_r)
+        ? mockComplaint.department_r
         : (mockComplaint.department_r ? [mockComplaint.department_r] : []);
 
       const transformed = {
@@ -134,11 +134,11 @@ describe('Heatmap Data Processing', () => {
         .map(complaint => {
           const lat = parseFloat(complaint.latitude);
           const lng = parseFloat(complaint.longitude);
-          
+
           if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
             return null;
           }
-          
+
           return { ...complaint, lat, lng };
         })
         .filter(Boolean);
@@ -191,7 +191,7 @@ describe('Heatmap Data Processing', () => {
       ];
 
       const department = 'DPWH';
-      const filtered = complaints.filter(c => 
+      const filtered = complaints.filter(c =>
         Array.isArray(c.department_r) && c.department_r.includes(department)
       );
 

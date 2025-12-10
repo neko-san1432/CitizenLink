@@ -181,7 +181,7 @@ class ClusteringScheduler {
 
       console.log(`[CLUSTERING_SCHEDULER] Clustering completed successfully`);
       console.log(`[CLUSTERING_SCHEDULER] Found ${clusters.length} cluster(s) in ${duration}s`);
-      
+
       // Log detailed information about each cluster
       if (clusters.length > 0) {
         console.log(`[CLUSTERING_SCHEDULER] Cluster details:`);
@@ -205,7 +205,7 @@ class ClusteringScheduler {
       };
     } catch (error) {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      
+
       // Handle network errors gracefully
       if (error instanceof TypeError && error.message.includes('fetch failed')) {
         console.error(`[CLUSTERING_SCHEDULER] Clustering failed after ${duration}s: Database query failed: ${error.message}`);
@@ -254,5 +254,4 @@ class ClusteringScheduler {
 }
 
 module.exports = ClusteringScheduler;
-
 

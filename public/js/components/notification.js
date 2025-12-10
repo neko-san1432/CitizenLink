@@ -2,8 +2,6 @@ import apiClient from '../config/apiClient.js';
 import { getNotificationIcon } from '../utils/icons.js';
 import showMessage from './toast.js';
 
-const POLLING_INTERVAL_MS = 30000;
-
 class NotificationService {
   async fetchNotifications(page, limit) {
     const response = await apiClient.get(`/api/notifications?limit=${limit}&offset=${page * limit}`);
@@ -25,10 +23,6 @@ class NotificationService {
     return apiClient.get('/api/notifications/count');
   }
 
-  async getLatest(limit = 1) {
-    return apiClient.get(`/api/notifications/latest?limit=${limit}`);
-  }
-
   async markAsRead(notificationId) {
     return apiClient.post(`/api/notifications/${notificationId}/mark-read`, {});
   }
@@ -41,7 +35,9 @@ class NotificationService {
 class NotificationManager {
   constructor(service) {
     this.service = service;
-    this.connectionErrorCount = 0; // Track consecutive connection errors
+    this.eventSource = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectDelay = 30000; // 30 seconds max delay
     this.state = {
       page: 0,
       limit: 10,
@@ -49,7 +45,8 @@ class NotificationManager {
       loading: false,
       notifications: [],
       isFirstLoad: true,
-      lastNotificationId: null
+      lastNotificationId: null,
+      connected: false
     };
     this.dom = {
       button: null,
@@ -63,7 +60,6 @@ class NotificationManager {
       error: null,
       badge: null
     };
-    this.pollingInterval = null;
 
     this.handleButtonClick = this.handleButtonClick.bind(this);
     this.handleCloseClick = this.handleCloseClick.bind(this);
@@ -80,7 +76,7 @@ class NotificationManager {
     }
     this.bindEvents();
     this.loadUnreadCount();
-    this.startPolling();
+    this.connectStream();
   }
 
   cacheDom() {
@@ -156,7 +152,9 @@ class NotificationManager {
     this.dom.panel.offsetHeight; // force reflow
     setTimeout(() => {
       this.dom.panel?.classList.add('show');
-      this.loadNotifications({ reset: this.state.isFirstLoad, showLoading: this.state.isFirstLoad });
+      // Always reload on open to ensure sync, but don't show full loading spinner if we have data
+      const showLoading = this.state.notifications.length === 0;
+      this.loadNotifications({ reset: true, showLoading });
     }, 10);
   }
 
@@ -170,19 +168,97 @@ class NotificationManager {
     }, 300);
   }
 
-  startPolling() {
-    this.stopPolling();
-    this.pollingInterval = setInterval(() => {
-      this.loadUnreadCount();
-      this.checkForNewNotifications();
-    }, POLLING_INTERVAL_MS);
+  connectStream() {
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+
+    // Use relative URL - browser handles cookie automatically
+    this.eventSource = new EventSource('/api/notifications/stream');
+
+    this.eventSource.onopen = () => {
+      console.log('[NOTIFICATION] Connected to real-time stream');
+      this.state.connected = true;
+      this.reconnectAttempts = 0;
+      this.updateConnectionStatus(true);
+    };
+
+    this.eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Handle heartbeat/connection messages
+        if (data.type === 'connected' || data.type === 'ping') {
+          return;
+        }
+
+        // Handle new notification
+        this.handleNewNotification(data);
+      } catch (error) {
+        console.error('[NOTIFICATION] Error parsing event data:', error);
+      }
+    };
+
+    this.eventSource.onerror = (error) => {
+      console.warn('[NOTIFICATION] Stream connection lost:', error);
+      this.state.connected = false;
+      this.updateConnectionStatus(false);
+      this.eventSource.close();
+      this.eventSource = null;
+      this.scheduleReconnect();
+    };
   }
 
-  stopPolling() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
+  scheduleReconnect() {
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), this.maxReconnectDelay);
+    console.log(`[NOTIFICATION] Reconnecting in ${delay}ms...`);
+
+    setTimeout(() => {
+      this.reconnectAttempts++;
+      this.connectStream();
+    }, delay);
+  }
+
+  updateConnectionStatus(connected) {
+    // Optional: Add visual indicator for connection status
+    if (this.dom.button) {
+      this.dom.button.style.opacity = connected ? '1' : '0.7';
     }
+  }
+
+  handleNewNotification(notification) {
+    // Format notification data
+    const formatted = {
+      ...notification,
+      time: formatRelativeTime(notification.created_at),
+      read: false
+    };
+
+    // Add to local state
+    this.state.notifications.unshift(formatted);
+
+    // Update UI
+    this.renderNotifications();
+
+    // Update badge count
+    const currentCount = parseInt(this.dom.badge?.textContent || '0') || 0;
+    this.updateBadge(currentCount + 1);
+
+    // Show toast if panel is closed
+    if (!this.dom.panel?.classList.contains('show')) {
+      showMessage('info', `New Notification: ${notification.title}`);
+      this.showNewNotificationIndicator();
+    }
+  }
+
+  showNewNotificationIndicator() {
+    if (!this.dom.button) return;
+
+    // Add a pulse animation or shake effect
+    this.dom.button.classList.add('notification-pulse');
+    setTimeout(() => {
+      this.dom.button.classList.remove('notification-pulse');
+    }, 1000);
   }
 
   async loadUnreadCount() {
@@ -190,91 +266,55 @@ class NotificationManager {
       const response = await this.service.getUnreadCount();
       if (response?.success) {
         this.updateBadge(response.count);
-        // Reset connection error state on success
-        this.connectionErrorCount = 0;
-      } else if (response?.connectionError) {
-        // Handle connection errors gracefully
-        this.connectionErrorCount = (this.connectionErrorCount || 0) + 1;
-        // If we've had multiple connection errors, stop polling temporarily
-        if (this.connectionErrorCount >= 3) {
-          console.warn('[NOTIFICATION] Multiple connection errors detected. Stopping polling.');
-          this.stopPolling();
-          // Try to restart polling after a longer delay (5 minutes)
-          setTimeout(() => {
-            console.log('[NOTIFICATION] Attempting to restart polling...');
-            this.connectionErrorCount = 0;
-            this.startPolling();
-          }, 5 * 60 * 1000);
-        }
       }
     } catch (error) {
-      // Only log non-connection errors
-      if (!error.message?.includes('Failed to fetch') && 
-          !error.message?.includes('ERR_CONNECTION_REFUSED')) {
-        console.error('[NOTIFICATION] Failed to load unread count:', error);
-      }
+      console.error('[NOTIFICATION] Failed to load unread count:', error);
     }
-  }
-
-  async checkForNewNotifications() {
-    try {
-      if (this.state.notifications.length === 0 || !this.state.lastNotificationId) {
-        return;
-      }
-      const response = await this.service.getLatest();
-      if (response.success && response.notifications?.length) {
-        const latest = response.notifications[0];
-        if (latest.id !== this.state.lastNotificationId) {
-          this.state.notifications.unshift({
-            ...latest,
-            time: formatRelativeTime(latest.created_at),
-            read: Boolean(latest.read)
-          });
-          this.state.lastNotificationId = latest.id;
-          this.renderNotifications();
-          this.updateBadge(this.state.notifications.filter(n => !n.read).length);
-          this.showNewNotificationIndicator();
-        }
-      }
-    } catch (error) {
-      console.error('[NOTIFICATION] Failed to check for new notifications:', error);
-    }
-  }
-
-  showNewNotificationIndicator() {
-    if (!this.dom.panel) return;
-    this.dom.panel.style.transform = 'scale(1.02)';
-    setTimeout(() => {
-      if (this.dom.panel) {
-        this.dom.panel.style.transform = 'scale(1)';
-      }
-    }, 200);
   }
 
   async loadNotifications({ reset = false, showLoading = true } = {}) {
     if (this.state.loading) return;
+
     if (reset) {
       this.state.page = 0;
-      this.state.notifications = [];
+      // Don't clear notifications immediately to avoid flash, unless it's first load
+      if (this.state.isFirstLoad) {
+        this.state.notifications = [];
+      }
       this.state.hasMore = true;
     }
+
     if (!this.state.hasMore) return;
+
     this.state.loading = true;
     if (showLoading) {
       this.showLoadingState(true);
     }
     this.hideErrorState();
+
     try {
       const { notifications, hasMore } = await this.service.fetchNotifications(this.state.page, this.state.limit);
-      this.mergeNotifications(notifications, reset);
+
+      if (reset) {
+        this.state.notifications = notifications;
+      } else {
+        this.mergeNotifications(notifications);
+      }
+
       this.state.hasMore = hasMore;
       this.state.page += 1;
+
       if (notifications.length > 0) {
         this.state.lastNotificationId = notifications[0].id;
       }
+
       this.renderNotifications();
       this.updateShowMoreButton();
-      this.updateBadge(this.state.notifications.filter(n => !n.read).length);
+
+      // Update badge based on unread count in fetched items (approximation)
+      // Better to rely on loadUnreadCount for accuracy
+      this.loadUnreadCount();
+
       this.state.isFirstLoad = false;
     } catch (error) {
       console.error('[NOTIFICATION] Error loading notifications:', error);
@@ -287,32 +327,33 @@ class NotificationManager {
     }
   }
 
-  mergeNotifications(newNotifications, reset) {
-    if (reset) {
-      this.state.notifications = newNotifications;
-      return;
-    }
+  mergeNotifications(newNotifications) {
     const existingMap = new Map(this.state.notifications.map(n => [n.id, n]));
-    const merged = [];
+
     for (const notification of newNotifications) {
-      if (existingMap.has(notification.id)) {
-        merged.push(existingMap.get(notification.id));
-        existingMap.delete(notification.id);
-      } else {
-        merged.push(notification);
+      if (!existingMap.has(notification.id)) {
+        this.state.notifications.push(notification);
       }
     }
-    merged.push(...existingMap.values());
-    this.state.notifications = merged;
+
+    // Re-sort by date
+    this.state.notifications.sort((a, b) =>
+      new Date(b.created_at) - new Date(a.created_at)
+    );
   }
 
   renderNotifications() {
     if (!this.dom.content) return;
+
     if (this.state.notifications.length === 0) {
       this.dom.content.innerHTML = '<div class="no-notifications">No notifications yet</div>';
       return;
     }
-    this.dom.content.innerHTML = this.state.notifications.map((notification, index) => this.renderNotificationItem(notification, index)).join('');
+
+    this.dom.content.innerHTML = this.state.notifications
+      .map((notification, index) => this.renderNotificationItem(notification, index))
+      .join('');
+
     this.attachItemHandlers();
   }
 
@@ -322,12 +363,15 @@ class NotificationManager {
       : notification.priority === 'warning'
         ? 'notification-warning'
         : '';
-    const isNew = index < 3 && !notification.read;
+
+    // Highlight first few if unread
+    const isNew = !notification.read && index < 3;
     const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
     const readClass = notification.read ? 'read' : 'unread';
     const clickableClass = notification.read ? '' : 'clickable';
     const readIndicator = notification.read ? '<div class="read-indicator" title="Read">✓</div>' : '';
     const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : '';
+
     return `
       <div class="notification-item ${readClass} ${priorityClass} ${isNew ? 'new-notification' : ''} ${clickableClass}"
            data-id="${notification.id}"
@@ -354,42 +398,51 @@ class NotificationManager {
   async handleNotificationClick(event, element) {
     event.preventDefault();
     event.stopPropagation();
+
     const notificationId = element.dataset.id;
-    if (!notificationId) {
-      console.error('[NOTIFICATION] No notification ID found');
-      return;
-    }
-    const link = element.dataset.link;
+    if (!notificationId) return;
+
+    const {link} = element.dataset;
     const isRead = element.classList.contains('read');
+
     if (!isRead) {
       try {
-        const response = await this.service.markAsRead(notificationId);
-        if (response?.success) {
-          element.classList.remove('unread', 'clickable');
-          element.classList.add('read');
-          element.querySelector('.notification-mark-read')?.remove();
+        // Optimistic update
+        element.classList.remove('unread', 'clickable');
+        element.classList.add('read');
+        element.querySelector('.notification-mark-read')?.remove();
+
+        // Add read indicator
+        if (!element.querySelector('.read-indicator')) {
           const readIndicator = document.createElement('div');
           readIndicator.className = 'read-indicator';
           readIndicator.title = 'Read';
           readIndicator.textContent = '✓';
           element.appendChild(readIndicator);
-          const notification = this.state.notifications.find(n => n.id === notificationId);
-          if (notification) {
-            notification.read = true;
-          }
-          await this.loadUnreadCount();
-          if (link) {
-            this.closePanel();
-            setTimeout(() => {
-              window.location.href = link;
-            }, 100);
-          }
-        } else {
-          console.error('[NOTIFICATION] Failed to mark as read:', response);
+        }
+
+        // Update local state
+        const notification = this.state.notifications.find(n => n.id === notificationId);
+        if (notification) {
+          notification.read = true;
+        }
+
+        // Update badge
+        const currentCount = parseInt(this.dom.badge?.textContent || '0') || 0;
+        this.updateBadge(Math.max(0, currentCount - 1));
+
+        // API call
+        await this.service.markAsRead(notificationId);
+
+        if (link) {
+          this.closePanel();
+          setTimeout(() => {
+            window.location.href = link;
+          }, 100);
         }
       } catch (error) {
         console.error('[NOTIFICATION] Failed to mark as read:', error);
-        showMessage('error', 'Failed to mark notification as read. Please try again.');
+        // Revert on error would go here
       }
     } else if (link) {
       this.closePanel();
@@ -399,6 +452,7 @@ class NotificationManager {
 
   updateShowMoreButton() {
     if (!this.dom.showMore) return;
+
     if (!this.state.hasMore) {
       this.dom.showMore.style.display = 'none';
     } else {
@@ -422,33 +476,32 @@ class NotificationManager {
 
   async markAllAsRead() {
     if (!this.dom.markAll) return;
+
     this.dom.markAll.disabled = true;
     this.dom.markAll.style.opacity = '0.5';
-    const resetButtonState = () => {
-      this.dom.markAll.disabled = false;
-      this.dom.markAll.style.opacity = '1';
-    };
+
     try {
       const response = await this.service.markAllRead();
       if (response?.success) {
-        this.state.notifications = this.state.notifications.map(notification => ({ ...notification, read: true }));
+        this.state.notifications.forEach(n => n.read = true);
         this.renderNotifications();
         this.updateBadge(0);
+
         const originalText = this.dom.markAll.innerHTML;
         this.dom.markAll.innerHTML = '<span style="color: #10b981;">✓ All Read</span>';
+
         setTimeout(() => {
           if (this.dom.markAll) {
             this.dom.markAll.innerHTML = originalText;
-            resetButtonState();
+            this.dom.markAll.disabled = false;
+            this.dom.markAll.style.opacity = '1';
           }
         }, 2000);
-      } else {
-        throw new Error('Failed to mark all as read');
       }
     } catch (error) {
       console.error('[NOTIFICATION] Failed to mark all as read:', error);
-      alert('Failed to mark all notifications as read. Please try again.');
-      resetButtonState();
+      this.dom.markAll.disabled = false;
+      this.dom.markAll.style.opacity = '1';
     }
   }
 
@@ -457,6 +510,7 @@ class NotificationManager {
       this.dom.badge = document.getElementById('notification-badge');
     }
     if (!this.dom.badge) return;
+
     if (count > 0) {
       this.dom.badge.textContent = count > 99 ? '99+' : count;
       this.dom.badge.classList.remove('hidden');
@@ -476,10 +530,6 @@ export function closeNotificationPanel() {
   notificationManager.closePanel();
 }
 
-export function stopPolling() {
-  notificationManager.stopPolling();
-}
-
 export function updateNotificationCount(count) {
   notificationManager.updateBadge(count);
 }
@@ -492,11 +542,13 @@ function formatRelativeTime(timestamp) {
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
+
   if (diffSecs < 60) return 'Just now';
   if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+
   return time.toLocaleDateString();
 }
 

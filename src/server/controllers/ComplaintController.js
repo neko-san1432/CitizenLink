@@ -51,7 +51,6 @@ class ComplaintController {
     const userId = req.user.id;
 
 
-
     const result = await this.complaintService.cancelComplaint(complaintId, userId, reason);
     res.json({
       success: true,
@@ -154,7 +153,6 @@ class ComplaintController {
     const { user } = req;
 
 
-
     const complaint = await this.complaintService.updateComplaintStatus(
       id,
       status,
@@ -177,7 +175,6 @@ class ComplaintController {
 
     // Optional evidence from officer during submit-for-approval
     const files = (req.files && req.files.evidenceFiles) ? req.files.evidenceFiles : [];
-
 
 
     // Citizens can only confirm resolution (one-way)
@@ -205,7 +202,6 @@ class ComplaintController {
     const { user } = req;
 
 
-
     const complaint = await this.complaintService.assignCoordinator(
       id,
       coordinator_id,
@@ -223,7 +219,6 @@ class ComplaintController {
     const { id } = req.params;
     const { from_department, to_department, reason } = req.body;
     const { user } = req;
-
 
 
     const complaint = await this.complaintService.transferComplaint(
@@ -338,7 +333,6 @@ class ComplaintController {
     const { user } = req;
 
 
-
     const result = await this.complaintService.markAsFalseComplaint(
       id,
       user.id,
@@ -359,7 +353,6 @@ class ComplaintController {
     const { id } = req.params;
     const { masterComplaintId } = req.body;
     const { user } = req;
-
 
 
     const result = await this.complaintService.markAsDuplicate(
@@ -436,7 +429,6 @@ class ComplaintController {
     const { id: complaintId } = req.params;
     const { confirmed, feedback } = req.body;
     const { user } = req;
-
 
 
     const result = await this.complaintService.confirmResolution(

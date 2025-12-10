@@ -17,13 +17,13 @@ describe('Heatmap Role-Based Filtering', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Setup mock service
     mockServiceInstance = {
       getComplaintLocations: jest.fn().mockResolvedValue([])
     };
     ComplaintService.mockImplementation(() => mockServiceInstance);
-    
+
     // Initialize controller
     complaintController = new ComplaintController();
   });
@@ -49,7 +49,7 @@ describe('Heatmap Role-Based Filtering', () => {
           includeResolved: true
         })
       );
-      
+
       const callArgs = mockServiceInstance.getComplaintLocations.mock.calls[0][0];
       expect(callArgs.department).toBeUndefined();
     });

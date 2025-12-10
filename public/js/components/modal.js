@@ -212,7 +212,7 @@ window.cleanupStuckModals = function() {
   if (window.modalManager) {
     window.modalManager.cleanupAllModals();
   }
-  
+
   // Fallback: manually clean up any stuck overlays
   const stuckModals = document.querySelectorAll('.modal.active, .modal-overlay.active');
   stuckModals.forEach(modal => {
@@ -221,10 +221,10 @@ window.cleanupStuckModals = function() {
     modal.style.visibility = 'hidden';
     modal.style.opacity = '0';
   });
-  
+
   // Remove body class
   document.body.classList.remove('modal-open');
-  
+
   // Remove any dynamically created modals that might be stuck
   const dynamicModals = document.querySelectorAll('[id^="map-modal"], [id^="modal-"]:not(#modal-overlay)');
   dynamicModals.forEach(modal => {

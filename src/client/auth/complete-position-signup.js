@@ -176,16 +176,16 @@ const OAUTH_FORM_STORAGE_KEY = 'cl_oauth_form_data';
 
 function saveOAuthFormData() {
   if (!positionSignupForm) return;
-  
+
   const formData = new FormData(positionSignupForm);
   const dataToSave = {};
-  
+
   for (const [key, value] of formData.entries()) {
     // Save all fields including hidden ones if needed, but exclude sensitive if any (none here really)
     // We want to save name, email, mobile, signupCode
     dataToSave[key] = value;
   }
-  
+
   try {
     localStorage.setItem(OAUTH_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
@@ -195,13 +195,13 @@ function saveOAuthFormData() {
 
 function loadOAuthFormData() {
   if (!positionSignupForm) return;
-  
+
   try {
     const savedData = localStorage.getItem(OAUTH_FORM_STORAGE_KEY);
     if (!savedData) return;
-    
+
     const parsedData = JSON.parse(savedData);
-    
+
     Object.keys(parsedData).forEach(key => {
       const input = positionSignupForm.querySelector(`[name="${key}"]`);
       // Only restore if input is empty or editable (don't overwrite read-only prefilled data unless it matches)
@@ -231,7 +231,7 @@ if (positionSignupForm) {
   // We should probably run this after prefill to overwrite with user edits if any
   // But prefill is async. Let's hook into the prefill completion or just run it with a delay/check.
   // Actually, prefill runs on load. We can run this after.
-  
+
   // Wait a tick for prefill to potentially happen, then load user saved data on top
   setTimeout(loadOAuthFormData, 500);
 

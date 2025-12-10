@@ -12,14 +12,14 @@ describe('Authentication Bypass Protection', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    
+
     // Mock Supabase client
     mockSupabase = {
       auth: {
         getUser: jest.fn(),
       },
     };
-    
+
     // Mock Database class
     jest.doMock('../../src/server/config/database', () => {
       return class Database {

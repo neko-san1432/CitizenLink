@@ -104,17 +104,17 @@ const REG_FORM_STORAGE_KEY = 'cl_reg_form_data';
 
 function saveRegFormData() {
   if (!regFormEl) return;
-  
+
   const formData = new FormData(regFormEl);
   const dataToSave = {};
-  
+
   for (const [key, value] of formData.entries()) {
     // Don't save sensitive fields
     if (key !== 'regPassword' && key !== 'reRegPassword') {
       dataToSave[key] = value;
     }
   }
-  
+
   try {
     localStorage.setItem(REG_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
@@ -124,13 +124,13 @@ function saveRegFormData() {
 
 function loadRegFormData() {
   if (!regFormEl) return;
-  
+
   try {
     const savedData = localStorage.getItem(REG_FORM_STORAGE_KEY);
     if (!savedData) return;
-    
+
     const parsedData = JSON.parse(savedData);
-    
+
     Object.keys(parsedData).forEach(key => {
       const input = regFormEl.querySelector(`[name="${key}"]`);
       if (input && input.type !== 'file') { // Skip file inputs
@@ -280,7 +280,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
   const remember = document.getElementById('remember-me')?.checked || false;
-  
+
   // Store device trust preference
   try {
     const { setDeviceTrusted } = await import('./authChecker.js');
@@ -295,14 +295,14 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   // Function to show loading state
   const showLoading = () => {
     if (!loginBtn || !loginBtnIcon) return;
-    
+
     // Store original icon HTML only if not already stored
     // This prevents overwriting with the spinner if called multiple times
     if (!loginBtn.dataset.originalIcon) {
       const originalIcon = loginBtnIcon.outerHTML;
       loginBtn.dataset.originalIcon = originalIcon;
     }
-    
+
     // Replace icon with loading spinner (CSS animation will handle rotation)
     loginBtnIcon.innerHTML = `
       <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
@@ -317,7 +317,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
   // Function to hide loading state
   const hideLoading = () => {
     if (!loginBtn) return;
-    
+
     // Get current icon element (might have been replaced)
     const currentIcon = document.getElementById('login-btn-icon');
     if (currentIcon && loginBtn.dataset.originalIcon) {
@@ -333,12 +333,12 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       // (though keeping it is also fine, clearing is safer for state resets)
       delete loginBtn.dataset.originalIcon;
     }
-    
+
     // Remove spinning class if it exists
     if (currentIcon) {
       currentIcon.classList.remove('spinning');
     }
-    
+
     // Re-enable button
     loginBtn.disabled = false;
     if (loginBtnText) {
@@ -383,15 +383,15 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       try {
         // Server already authenticated and set cookie, now sync client-side Supabase session
         const refreshToken = result.data?.refresh_token;
-        
+
         if (refreshToken) {
           // Use refresh token to get full Supabase session without re-authenticating
           // Wrap in timeout to prevent hanging
           const syncPromise = supabase.auth.refreshSession({
             refresh_token: refreshToken
           });
-          
-          const timeoutPromise = new Promise((_, reject) => 
+
+          const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Session sync timeout')), 3000)
           );
 
@@ -471,7 +471,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       try {
         hideLoading();
       } catch (e) {}
-      
+
       setTimeout(() => {
         try { window.location.href = '/dashboard'; } catch (e) { /* ignore */ }
       }, 1500);
@@ -491,7 +491,7 @@ if (loginFormEl) loginFormEl.addEventListener('submit', async (e) => {
       // Login failed - hide loading state
       hideLoading();
       showMessage('error', result.error || 'Login failed');
-      
+
       // If OAuth context suggests provider was intended but failed, route to signup
       const ctx = getOAuthContext();
       if (ctx && ctx.provider) {
@@ -525,17 +525,17 @@ async function startOAuthPopup(provider) {
     // Determine intent based on current page
     const isSignupPage = window.location.pathname.includes('/signup');
     const intent = isSignupPage ? 'signup' : 'login';
-    
+
     // Set OAuth context to track the flow
-    setOAuthContext({ 
-      provider, 
-      intent, 
-      status: 'pending', 
-      startedAt: Date.now() 
+    setOAuthContext({
+      provider,
+      intent,
+      status: 'pending',
+      startedAt: Date.now()
     });
-    
+
     console.log('[OAUTH] Starting OAuth flow:', { provider, intent });
-    
+
     // Direct redirect (no popup) - simpler and more reliable
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -544,11 +544,11 @@ async function startOAuthPopup(provider) {
         scopes
       }
     });
-    
+
     if (error) {
       throw error;
     }
-    
+
     // If URL is returned, redirect to it
     if (data?.url) {
       window.location.href = data.url;

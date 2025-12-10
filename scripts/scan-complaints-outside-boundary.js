@@ -94,14 +94,14 @@ async function scanComplaintsOutsideBoundary() {
     }
 
     // Report results
-    console.log('\n' + '='.repeat(80));
+    console.log(`\n${  '='.repeat(80)}`);
     console.log('SCAN RESULTS');
     console.log('='.repeat(80));
     console.log(`Total complaints scanned: ${complaints.length}`);
     console.log(`Complaints within boundary: ${complaints.length - outsideBoundary.length - invalidCoordinates.length}`);
     console.log(`Complaints outside boundary: ${outsideBoundary.length}`);
     console.log(`Complaints with invalid coordinates: ${invalidCoordinates.length}`);
-    console.log('='.repeat(80) + '\n');
+    console.log(`${'='.repeat(80)  }\n`);
 
     if (invalidCoordinates.length > 0) {
       console.log('INVALID COORDINATES:');
@@ -132,7 +132,7 @@ async function scanComplaintsOutsideBoundary() {
       // Generate summary CSV
       const csv = [
         'ID,Title,Latitude,Longitude,Location,Status,Submitted At,Google Maps Link',
-        ...outsideBoundary.map(c => 
+        ...outsideBoundary.map(c =>
           `"${c.id}","${c.title.replace(/"/g, '""')}",${c.latitude},${c.longitude},"${(c.location_text || '').replace(/"/g, '""')}","${c.workflow_status}","${c.submitted_at || ''}","https://www.google.com/maps?q=${c.latitude},${c.longitude}"`
         )
       ].join('\n');

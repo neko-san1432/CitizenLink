@@ -10,5 +10,3 @@ router.post('/ocr', authLimiter, upload.single('file'), OCRController.processId)
 
 module.exports = router;
 
-
-

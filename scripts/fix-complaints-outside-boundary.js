@@ -40,7 +40,7 @@ function clampToBounds(lat, lng, bounds) {
  */
 function findValidCoordinate(lat, lng, bounds) {
   // First, clamp to bounding box
-  let { lat: clampedLat, lng: clampedLng } = clampToBounds(lat, lng, bounds);
+  const { lat: clampedLat, lng: clampedLng } = clampToBounds(lat, lng, bounds);
 
   // Check if clamped coordinate is within boundary
   if (isWithinDigosBoundary(clampedLat, clampedLng)) {
@@ -171,7 +171,7 @@ async function fixComplaintsOutsideBoundary() {
 
     for (let i = 0; i < complaintsToFix.length; i += batchSize) {
       const batch = complaintsToFix.slice(i, i + batchSize);
-      
+
       for (const complaint of batch) {
         try {
           const { error: updateError } = await supabase
@@ -201,13 +201,13 @@ async function fixComplaintsOutsideBoundary() {
     }
 
     // Report results
-    console.log('\n' + '='.repeat(80));
+    console.log(`\n${  '='.repeat(80)}`);
     console.log('FIX RESULTS');
     console.log('='.repeat(80));
     console.log(`Total complaints to fix: ${complaintsToFix.length}`);
     console.log(`Successfully updated: ${updated}`);
     console.log(`Failed: ${failed}`);
-    console.log('='.repeat(80) + '\n');
+    console.log(`${'='.repeat(80)  }\n`);
 
     // Verify fixes
     console.log('[FIX] Verifying fixes...');
@@ -230,7 +230,7 @@ async function fixComplaintsOutsideBoundary() {
     const path = require('path');
     const csv = [
       'ID,Title,Old Latitude,Old Longitude,New Latitude,New Longitude,Location',
-      ...complaintsToFix.map(c => 
+      ...complaintsToFix.map(c =>
         `"${c.id}","${c.title.replace(/"/g, '""')}",${c.oldLat},${c.oldLng},${c.newLat},${c.newLng},"${(c.location_text || '').replace(/"/g, '""')}"`
       )
     ].join('\n');

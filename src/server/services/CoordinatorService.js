@@ -13,13 +13,14 @@ const { classifyComplaints } = require('../utils/barangayClassifier');
 */
 class CoordinatorService {
 
-  constructor() {
-    this.coordinatorRepo = new CoordinatorRepository();
-    this.assignmentRepo = new ComplaintAssignmentRepository();
-    this.departmentRepo = new DepartmentRepository();
+  constructor(coordinatorRepo, assignmentRepo, departmentRepo, notificationService) {
+    this.coordinatorRepo = coordinatorRepo || new CoordinatorRepository();
+    // this.coordinatorRepo.setInConstructor = true; // Removed debug flag
+    this.assignmentRepo = assignmentRepo || new ComplaintAssignmentRepository();
+    this.departmentRepo = departmentRepo || new DepartmentRepository();
     this.duplicationService = new DuplicationDetectionService();
     this.similarityService = new SimilarityCalculatorService();
-    this.notificationService = new NotificationService();
+    this.notificationService = notificationService || new NotificationService();
     this.suggestionService = new RuleBasedSuggestionService();
   }
   /**
@@ -475,7 +476,6 @@ class CoordinatorService {
   */
   async assignToDepartment(complaintId, departmentName, coordinatorId, options = {}) {
     try {
-      // console.log removed for security
       // Update complaint with department assignment
       const assigned = await this.coordinatorRepo.assignToDepartment(
         complaintId,
@@ -494,7 +494,6 @@ class CoordinatorService {
       if (updateError) {
         console.warn('[COORDINATOR_SERVICE] Failed to update department_r field:', updateError.message);
       }
-      // Create complaint_assignments record
       try {
         const { data: dept, error: deptError } = await this.coordinatorRepo.supabase
           .from('departments')
@@ -521,31 +520,32 @@ class CoordinatorService {
           if (assignError) {
             console.warn('[COORDINATOR_SERVICE] Assignment creation failed:', assignError.message);
           } else {
-            // console.log removed for security
+            try {
+              // Notify specific officer if assigned
+              if (options.assigned_to) {
+                await this.notificationService.notifyTaskAssigned(
+                  options.assigned_to,
+                  complaintId,
+                  assigned.title || 'New Complaint',
+                  options.priority || assigned.priority || 'medium',
+                  options.deadline || assigned.response_deadline || null
+                );
+              }
+
+              // Notify department admins
+              await this.notificationService.notifyDepartmentAdminsByCode(
+                departmentName,
+                complaintId,
+                assigned.title || 'New Complaint'
+              );
+
+            } catch (e) {
+              console.warn('[COORDINATOR_SERVICE] Notification failed:', e.message);
+            }
           }
         }
-      } catch (e) {
-        console.warn('[COORDINATOR_SERVICE] Assignment creation failed:', e.message);
-      }
-      // Notify department admins
-      try {
-        await this.notifyDepartmentAdmins(departmentName, complaintId, assigned.title || 'New Complaint');
-      } catch (e) {
-        console.warn('[COORDINATOR_SERVICE] Admin notification failed:', e.message);
-      }
-      // If an officer is immediately assigned, notify them
-      if (options && options.assigned_to) {
-        try {
-          await this.notificationService.notifyTaskAssigned(
-            options.assigned_to,
-            complaintId,
-            assigned.title || 'New Complaint',
-            options.priority || assigned.priority || 'medium',
-            options.deadline || assigned.response_deadline || null
-          );
-        } catch (e) {
-          console.warn('[COORDINATOR_SERVICE] Officer notification failed:', e.message);
-        }
+      } catch (assignmentError) {
+        console.warn('[COORDINATOR_SERVICE] Assignment process failed:', assignmentError.message);
       }
       return {
         success: true,
@@ -700,6 +700,7 @@ class CoordinatorService {
             );
           }
           // Notify department admins using the working method
+          console.log('[COORDINATOR_SERVICE] assignToDepartment calling notifyDepartmentAdmins. notificationService:', this.notificationService);
           await this.notifyDepartmentAdmins(departmentName, assigned[0]?.id, assigned[0]?.title || 'New Complaints');
         }
       } catch (e) {
@@ -840,39 +841,7 @@ class CoordinatorService {
     }
   }
   /**
-   * Notify department admins about new assignment
-   */
-  async notifyDepartmentAdmins(departmentCode, complaintId, complaintTitle) {
-    try {
-      // console.log removed for security
-      // Use the NotificationService method that properly handles auth.users queries
-      await this.notificationService.notifyDepartmentAdminsByCode(
-        departmentCode,
-        complaintId,
-        complaintTitle
-      );
-    } catch (error) {
       console.error('[COORDINATOR_SERVICE] Notify department admins error:', error);
-    }
-  }
-  /**
-  * Notify officer about task assignment
-  */
-  async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
-    try {
-      const notifPriority = priority === 'urgent' ? 'urgent' :
-        priority === 'high' ? 'warning' : 'info';
-      await this.notificationService.notifyTaskAssigned(
-        officerId,
-        complaintId,
-        complaintTitle,
-        notifPriority,
-        deadline
-      );
-    } catch (error) {
-      console.warn('[COORDINATOR_SERVICE] Task assignment notification failed:', error.message);
-    }
-  }
   /**
    * LGU Admin sends reminder to officer about pending task
    */

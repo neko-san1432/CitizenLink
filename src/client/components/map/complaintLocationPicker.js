@@ -265,24 +265,24 @@ function setupLocationPicker(map) {
     }
   }
 
-  
+
   // Track coordinate validity state
   let coordinatesValid = false;
-  
+
   // Update coordinates function with boundary validation
   async function updateCoordinates(lat, lng, showWarning = true) {
     // Use higher precision (8 decimal places) for better accuracy
     // This ensures the exact marker position is captured
     latInput.value = parseFloat(lat.toFixed(8)).toString();
     lngInput.value = parseFloat(lng.toFixed(8)).toString();
-    
+
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
     coordinatesValid = isValid;
-    
+
     // Update submit button state based on coordinate validity
     updateSubmitButtonState();
-    
+
     if (!isValid && showWarning) {
       showBoundaryWarning();
       // Change marker color to red to indicate invalid location (using divIcon for CSP compliance)
@@ -333,7 +333,7 @@ function setupLocationPicker(map) {
       }
     }
   }
-  
+
   // Update submit button state based on coordinate validity
   function updateSubmitButtonState() {
     const submitBtn = document.querySelector('.submit-btn, button[type="submit"]');
@@ -398,17 +398,17 @@ function setupLocationPicker(map) {
     const latlng = e.target.getLatLng();
     const finalLat = latlng.lat;
     const finalLng = latlng.lng;
-    
+
     // Ensure marker position matches input values exactly
     await updateCoordinates(finalLat, finalLng, true); // Show warning on drag end
     updateLocationText(finalLat, finalLng);
-    
+
     // Double-check: ensure marker position matches saved coordinates
     const savedLat = parseFloat(latInput.value);
     const savedLng = parseFloat(lngInput.value);
     const markerLat = marker.getLatLng().lat;
     const markerLng = marker.getLatLng().lng;
-    
+
     // If there's a mismatch, update marker to match saved coordinates
     if (Math.abs(savedLat - markerLat) > 0.000001 || Math.abs(savedLng - markerLng) > 0.000001) {
       marker.setLatLng([savedLat, savedLng]);

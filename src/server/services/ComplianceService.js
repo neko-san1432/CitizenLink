@@ -233,15 +233,15 @@ class ComplianceService {
       }
 
       if (authUserExists) {
-      const { error: deleteUserError } = await this.supabase.auth.admin.deleteUser(userId);
-      if (deleteUserError) {
+        const { error: deleteUserError } = await this.supabase.auth.admin.deleteUser(userId);
+        if (deleteUserError) {
           const isAlreadyMissing = /not\s+found/i.test(deleteUserError.message || '');
           if (!isAlreadyMissing) {
-        throw new Error(`Failed to delete user: ${deleteUserError.message}`);
-      }
+            throw new Error(`Failed to delete user: ${deleteUserError.message}`);
+          }
           authUserExists = false;
         } else {
-      deletionLog.deletedData.push('auth_user');
+          deletionLog.deletedData.push('auth_user');
         }
       }
 

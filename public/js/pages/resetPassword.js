@@ -118,15 +118,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const logoutAllDevices = urlParams.get('logout_all_devices') === 'true';
         const logoutOption = localStorage.getItem('password_reset_logout_option');
-        
+
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        
+
         // Clear logout option from localStorage
         if (logoutOption) {
           localStorage.removeItem('password_reset_logout_option');
         }
-        
+
         // Handle logout based on option
         // Call server endpoint to invalidate all sessions immediately (including access tokens)
         if (logoutAllDevices || logoutOption === 'all') {
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               headers,
               body: JSON.stringify({ scope: 'all' })
             });
-            
+
             if (invalidateRes.ok) {
               // Also sign out locally
               await supabase.auth.signOut();
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             msg.textContent = 'Password updated successfully. All sessions have been logged out. Please sign in again with your new password.';
             showMessage('success', 'Password updated and all sessions logged out', 5000);
           }
-          
+
           // Redirect to login after 3 seconds
           setTimeout(() => {
             window.location.href = '/login';
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               headers,
               body: JSON.stringify({ scope: 'others' })
             });
-            
+
             if (invalidateRes.ok) {
               // Also sign out other devices via client API
               await supabase.auth.signOut({ scope: 'others' });
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           msg.textContent = 'Password updated successfully. You can close this page and sign in with your new password.';
           showMessage('success', 'Password updated successfully', 4000);
         }
-        
+
         newInput.value = '';
         confirmInput.value = '';
         temporarilyMark(btn, 'Updated', 'btn-success');
@@ -233,10 +233,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (signInError) throw new Error('Current password is incorrect');
         // Check if logout all devices was requested (from user metadata)
         const logoutAllDevices = userData?.user?.user_metadata?.logout_all_devices_on_password_change === true;
-        
+
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        
+
         // Clear the logout flag from metadata
         // Invalidate sessions server-side if requested
         if (logoutAllDevices) {
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               logout_all_devices_on_password_change: null
             }
           });
-          
+
           // Invalidate other sessions server-side (including access tokens)
           try {
             const { addCsrfTokenToHeaders } = await import('../utils/csrf.js');
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               headers,
               body: JSON.stringify({ scope: 'others' })
             });
-            
+
             if (invalidateRes.ok) {
               // Also sign out other devices via client API
               await supabase.auth.signOut({ scope: 'others' });
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           showMessage('success', 'Password updated successfully', 4000);
           msg.textContent = 'Password updated successfully.';
         }
-        
+
         currentInput.value = '';
         newInputLi.value = '';
         confirmInputLi.value = '';
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (requestForm) {
     const emailInput = document.getElementById('request-email');
     const requestBtn = document.getElementById('request-btn');
-    
+
     // Open confirmation modal instead of submitting directly
     requestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -342,31 +342,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
       if (!pendingEmail) return;
-      
+
       const logoutOption = document.querySelector('input[name="logout-option"]:checked')?.value || 'none';
       const emailInput = document.getElementById('request-email');
       const requestBtn = document.getElementById('request-btn');
-      
+
       closeConfirmModal();
-      
+
       const resetBtn = setButtonLoading(requestBtn, 'Sending...');
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             email: pendingEmail,
-            logoutOption: logoutOption // 'all', 'others', or 'none'
+            logoutOption // 'all', 'others', or 'none'
           })
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to send reset email');
-        
+
         // Store logout option in localStorage to check after password reset
         if (logoutOption !== 'none') {
           localStorage.setItem('password_reset_logout_option', logoutOption);
         }
-        
+
         showMessage('success', 'Reset link sent. Check your inbox.', 4000);
         msg.textContent = 'Reset link sent. Please check your inbox and follow the instructions.';
         emailInput.value = '';

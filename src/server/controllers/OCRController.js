@@ -23,20 +23,20 @@ class OCRController {
    */
   detectIdType(text) {
     const normalized = text.toUpperCase();
-    
-    if (normalized.includes('PHILIPPINE POSTAL CORPORATION') || 
+
+    if (normalized.includes('PHILIPPINE POSTAL CORPORATION') ||
         normalized.includes('POSTAL IDENTITY CARD') ||
         normalized.includes('PHLPOST') ||
         normalized.includes('POSTAL ID')) {
       return 'philpost';
     }
-    
+
     if (normalized.includes('PAMBANSANG PAGKAKAKILANLAN') ||
         normalized.includes('PHILIPPINE IDENTIFICATION CARD') ||
         normalized.includes('REPUBLIKA NG PILIPINAS') && normalized.includes('PAGKAKAKILANLAN')) {
       return 'philid';
     }
-    
+
     if (normalized.includes('DRIVER\'S LICENSE') ||
         normalized.includes('DRIVERS LICENSE') ||
         normalized.includes('LAND TRANSPORTATION OFFICE') ||
@@ -45,7 +45,7 @@ class OCRController {
         normalized.includes('PROFESSIONAL')) {
       return 'drivers_license';
     }
-    
+
     return 'unknown';
   }
 
@@ -57,7 +57,7 @@ class OCRController {
     if (idType === 'unknown') {
       idType = this.detectIdType(text);
     }
-    
+
     // Use format-specific parsers
     switch (idType) {
       case 'philid':
@@ -103,35 +103,35 @@ class OCRController {
   findFieldByLabel(lines, labels, valuePattern = null) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       for (const label of labels) {
         const lineUpper = line.toUpperCase();
         const labelUpper = label.toUpperCase();
-        
+
         // Check if label appears in line with word boundaries
         const labelRegex = new RegExp(`(^|[^A-Z])${labelUpper.replace(/\s+/g, '\\s+')}($|[^A-Z])`, 'i');
-        
+
         if (labelRegex.test(line)) {
           const match = line.match(labelRegex);
           const labelEndIndex = match.index + match[0].length - (match[2] ? 1 : 0);
           let value = line.substring(labelEndIndex).replace(/[:.\\/]/g, '').trim();
-          
+
           // Check if value looks like another label
           const labelKeywords = ['LAST', 'NAME', 'FIRST', 'GIVEN', 'MIDDLE', 'NAMES', 'PANGALAN', 'APILYEDO', 'APELYIDO', 'GITNANG'];
           const valueWords = value.toUpperCase().split(/\s+/);
           const hasLabelKeyword = valueWords.some(w => labelKeywords.includes(w));
-          
+
           // Use next line if value is empty or looks like a label
           if ((value.length < 2 || hasLabelKeyword) && i + 1 < lines.length) {
-             value = lines[i + 1].trim();
+            value = lines[i + 1].trim();
           }
-          
+
           // Clean value
           let cleaned = value.replace(/[^A-Z0-9\s.-]/gi, '').trim();
           cleaned = cleaned.replace(/^(oy|Yr|sh|w|a|i|d|v|J|ju|fa|Ra|pn)\s+/i, '').trim();
           cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
           cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
-          
+
           // If still too short, try next line
           if (cleaned.length < 3 && i + 1 < lines.length) {
             value = lines[i + 1].trim();
@@ -140,11 +140,11 @@ class OCRController {
             cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
             cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
           }
-          
+
           if (valuePattern && !valuePattern.test(cleaned.toUpperCase())) {
             continue;
           }
-          
+
           return cleaned;
         }
       }
@@ -157,16 +157,16 @@ class OCRController {
    */
   cleanAndValidateName(value) {
     if (!value) return null;
-    
+
     const EXCLUDED_WORDS = [
-        'REPUBLIKA', 'PILIPINAS', 'PHILIPPINES', 'PAGKAKAKILANLAN', 
-        'LAST', 'NAME', 'GIVEN', 'APILYEDO', 'MGA', 'PANGALAN', 
-        'GITNANG', 'MIDDLE', 'SEX', 'DATE', 'BIRTH', 'ADDRESS',
-        'TIRAHAN', 'LALAKI', 'BABAE', 'MALE', 'FEMALE',
-        'HALALAN', 'KOMISYON', 'PHILSYS', 'CARD', 'NUMBER',
-        'ID', 'ISSUE', 'ISSUING', 'AUTHORITY', 'NAMAS', 'IZ',
-        'PUBLIKA', 'PILIPINA', 'OO', '00', 'REPUBLIC', 'PHILIPPINE',
-        'EPUBLIKA'
+      'REPUBLIKA', 'PILIPINAS', 'PHILIPPINES', 'PAGKAKAKILANLAN',
+      'LAST', 'NAME', 'GIVEN', 'APILYEDO', 'MGA', 'PANGALAN',
+      'GITNANG', 'MIDDLE', 'SEX', 'DATE', 'BIRTH', 'ADDRESS',
+      'TIRAHAN', 'LALAKI', 'BABAE', 'MALE', 'FEMALE',
+      'HALALAN', 'KOMISYON', 'PHILSYS', 'CARD', 'NUMBER',
+      'ID', 'ISSUE', 'ISSUING', 'AUTHORITY', 'NAMAS', 'IZ',
+      'PUBLIKA', 'PILIPINA', 'OO', '00', 'REPUBLIC', 'PHILIPPINE',
+      'EPUBLIKA'
     ];
 
     if (/\d/.test(value)) return null;
@@ -179,13 +179,13 @@ class OCRController {
 
     const words = cleaned.split(' ');
     const isExcluded = words.some(word => {
-        return EXCLUDED_WORDS.some(excluded => {
-            if (word === excluded) return true;
-            if (excluded.length > 4) {
-                return this.levenshteinDistance(word, excluded) <= 2;
-            }
-            return false;
-        });
+      return EXCLUDED_WORDS.some(excluded => {
+        if (word === excluded) return true;
+        if (excluded.length > 4) {
+          return this.levenshteinDistance(word, excluded) <= 2;
+        }
+        return false;
+      });
     });
 
     if (isExcluded) return null;
@@ -229,19 +229,19 @@ class OCRController {
       const dobRaw = this.findFieldByLabel(lines, ['Petsa ng Kapanganakan', 'Date of Birth', 'falsa ng']);
       if (dobRaw) fields.birthDate = this.parseDateString(dobRaw);
     }
-    
+
     let nameLines = [];
     if (!fields.lastName || !fields.firstName) {
-        nameLines = lines.map(l => this.cleanAndValidateName(l)).filter(l => l !== null);
-        if (fields.address) {
-            const addrUpper = fields.address.toUpperCase();
-            nameLines = nameLines.filter(l => !addrUpper.includes(l) && !l.includes(addrUpper));
-        }
-        if (nameLines.length > 0) {
-             if (!fields.lastName && nameLines.length >= 1) fields.lastName = nameLines[0];
-             if (!fields.firstName && nameLines.length >= 2) fields.firstName = nameLines[1];
-             if (!fields.middleName && nameLines.length >= 3) fields.middleName = nameLines[2];
-        }
+      nameLines = lines.map(l => this.cleanAndValidateName(l)).filter(l => l !== null);
+      if (fields.address) {
+        const addrUpper = fields.address.toUpperCase();
+        nameLines = nameLines.filter(l => !addrUpper.includes(l) && !l.includes(addrUpper));
+      }
+      if (nameLines.length > 0) {
+        if (!fields.lastName && nameLines.length >= 1) fields.lastName = nameLines[0];
+        if (!fields.firstName && nameLines.length >= 2) fields.firstName = nameLines[1];
+        if (!fields.middleName && nameLines.length >= 3) fields.middleName = nameLines[2];
+      }
     }
 
     if (text.match(/\bMALE\b/i) || text.match(/\bLALAKI\b/i)) fields.sex = 'Male';
@@ -253,25 +253,25 @@ class OCRController {
         confidence: fields.firstName && fields.lastName ? 0.9 : 0.0
       },
       sex: {
-        value: fields.sex || "",
+        value: fields.sex || '',
         confidence: fields.sex ? 0.9 : 0.0
       },
       date_of_birth: {
-        value: fields.birthDate || "",
+        value: fields.birthDate || '',
         confidence: fields.birthDate ? 0.9 : 0.0
       },
       address: {
-        value: fields.address || "",
+        value: fields.address || '',
         confidence: fields.address ? 0.8 : 0.0
       },
       public_id_number: {
-        value: fields.idNumber || "",
+        value: fields.idNumber || '',
         confidence: fields.idNumber ? 0.95 : 0.0
       },
-      issue_date: { value: "", confidence: 0.0 },
+      issue_date: { value: '', confidence: 0.0 },
       face_region_detected: { value: false, confidence: 0.0 },
       signature_region_detected: { value: false, confidence: 0.0 },
-      qr_code_data: { value: "", confidence: 0.0 }
+      qr_code_data: { value: '', confidence: 0.0 }
     };
   }
 
@@ -289,12 +289,12 @@ class OCRController {
     };
 
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
+
     const prnMatch = text.match(/([A-Z]\d{3}[\s-]?\d{4}[\s-]?\d{4})/);
     if (prnMatch) fields.idNumber = prnMatch[1];
 
     fields.address = this.findFieldByLabel(lines, ['Address', 'Tirahan'], null);
-    
+
     const dates = text.match(/\d{4}[-/]\d{2}[-/]\d{2}/g);
     if (dates && dates.length >= 1) fields.birthDate = this.parseDateString(dates[0]);
 
@@ -332,11 +332,11 @@ class OCRController {
   parseDateString(dateStr) {
     if (!dateStr) return null;
     try {
-      const monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 
-                         'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
-      const monthAbbr = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
-                         'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-      
+      const monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+        'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+      const monthAbbr = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+        'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
       const monthDayYearMatch = dateStr.match(/([A-Z]+)\s+(\d{1,2}),?\s+(\d{2,4})/i);
       if (monthDayYearMatch) {
         const monthName = monthDayYearMatch[1].toUpperCase();
@@ -353,18 +353,16 @@ class OCRController {
           return `${year}-${month}-${day}`;
         }
       }
-      
+
       const parts = dateStr.split(/[-/]/);
       if (parts.length === 3) {
         let year, month, day;
         if (parts[0].length === 4) {
           [year, month, day] = parts;
+        } else if (parseInt(parts[0]) > 12) {
+          [day, month, year] = parts;
         } else {
-          if (parseInt(parts[0]) > 12) {
-            [day, month, year] = parts;
-          } else {
-            [month, day, year] = parts;
-          }
+          [month, day, year] = parts;
         }
         if (year.length === 2) {
           const yearNum = parseInt(year);
@@ -397,8 +395,8 @@ class OCRController {
       const widthRatio = trimmedMeta.width / metadata.width;
       const heightRatio = trimmedMeta.height / metadata.height;
       if (widthRatio > 0.95 && heightRatio > 0.95) {
-         console.log('[OCR] Trimming ineffective, using original image.');
-         return imagePath;
+        console.log('[OCR] Trimming ineffective, using original image.');
+        return imagePath;
       }
       const parsedPath = path.parse(imagePath);
       const cropPath = path.join(parsedPath.dir, `${parsedPath.name}_cropped${parsedPath.ext}`);
@@ -417,10 +415,10 @@ class OCRController {
   async runPythonOCR(imagePath) {
     return new Promise((resolve, reject) => {
       console.log(`[OCR] Spawning Python process: python ${this.pythonScriptPath} ${imagePath}`);
-      
+
       // Add site-packages to PYTHONPATH
       const pythonProcess = spawn('python', [this.pythonScriptPath, imagePath], { env: process.env });
-      
+
       let stdoutData = '';
       let stderrData = '';
 
@@ -439,7 +437,7 @@ class OCRController {
           console.error(`[OCR] Python process exited with code ${code}`);
           return reject(new Error(`OCR process failed: ${stderrData}`));
         }
-        
+
         try {
           const result = JSON.parse(stdoutData);
           if (result.error) {
@@ -451,7 +449,7 @@ class OCRController {
           reject(new Error('Invalid JSON output from OCR script'));
         }
       });
-      
+
       pythonProcess.on('error', (err) => {
         reject(err);
       });
@@ -459,9 +457,9 @@ class OCRController {
   }
 
   async processId(req, res) {
-    let intermediateFiles = [];
+    const intermediateFiles = [];
     try {
-      const file = req.file;
+      const {file} = req;
       if (!file) {
         return res.status(400).json({ success: false, error: 'No file uploaded' });
       }
@@ -474,13 +472,13 @@ class OCRController {
 
       let processedImagePath = null;
       let workingPath = file.path;
-      
+
       if (sharp) {
         try {
           const croppedPath = await this.detectAndCropCard(file.path);
           if (croppedPath !== file.path) {
-             workingPath = croppedPath;
-             intermediateFiles.push(workingPath);
+            workingPath = croppedPath;
+            intermediateFiles.push(workingPath);
           }
 
           const metadata = await sharp(workingPath).metadata();
@@ -488,8 +486,8 @@ class OCRController {
           const scaleFactor = metadata.width < minWidth ? minWidth / metadata.width : 1;
           const targetWidth = Math.round(metadata.width * scaleFactor);
           const targetHeight = Math.round(metadata.height * scaleFactor);
-          
-          let pipeline = sharp(workingPath)
+
+          const pipeline = sharp(workingPath)
             .resize(targetWidth, targetHeight, { kernel: sharp.kernel.lanczos3, fit: 'fill' })
             .greyscale()
             .normalize({ lower: 5, upper: 95 })
@@ -501,7 +499,7 @@ class OCRController {
           processedImagePath = path.join(path.dirname(file.path), `processed_${path.basename(file.path)}${ext}`);
           await pipeline.toFile(processedImagePath);
           intermediateFiles.push(processedImagePath);
-          
+
           console.log('[OCR] Image preprocessed:', processedImagePath);
         } catch (err) {
           console.error('[OCR] Preprocessing failed:', err);
@@ -522,26 +520,26 @@ class OCRController {
       }
 
       console.log('[OCR] Starting PaddleOCR recognition (Python)...');
-      
+
       const ocrResult = await this.runPythonOCR(processedImagePath);
-      
-      const text = ocrResult.text;
+
+      const {text} = ocrResult;
       const confidence = ocrResult.average_confidence * 100; // Convert to percentage
-      
+
       console.log(`[OCR] Recognition complete. Confidence: ${confidence.toFixed(2)}%`);
       console.log(`[OCR] Extracted Text Length: ${text.length}`);
-      
+
       try {
         for (const p of intermediateFiles) {
-            if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
+          if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
         }
       } catch (e) {}
 
       const idType = this.detectIdType(text);
       console.log(`[OCR] Detected ID type: ${idType}`);
-      
+
       const fields = this.parseIdFields(text, idType);
-      
+
       return res.json({
         success: true,
         idType,
@@ -554,7 +552,7 @@ class OCRController {
       console.error('[OCR] Processing error:', error);
       try {
         for (const p of intermediateFiles) {
-            if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
+          if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
         }
       } catch (e) {}
 

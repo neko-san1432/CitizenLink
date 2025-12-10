@@ -1,4 +1,3 @@
-
 describe('Link Generator (HRService)', () => {
   let HRService;
   let hrService;
@@ -62,7 +61,7 @@ describe('Link Generator (HRService)', () => {
       const deptCode = 'HEALTH';
 
       mockRoleService.getUserRole.mockResolvedValue('lgu-hr');
-      
+
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
         data: { user: { user_metadata: { department: 'HEALTH' } } },
         error: null
@@ -114,7 +113,7 @@ describe('Link Generator (HRService)', () => {
 
     it('should allow Super Admin to create link for any department', async () => {
       const adminId = 'admin_123';
-      
+
       mockRoleService.getUserRole.mockResolvedValue('super-admin');
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
         data: { user: { user_metadata: {} } }
@@ -229,7 +228,7 @@ describe('Link Generator (HRService)', () => {
     it('should fetch links for LGU-HR filtered by department', async () => {
       const hrId = 'hr_123';
       const department = 'HEALTH';
-      
+
       mockRoleService.getUserRole.mockResolvedValue('lgu-hr');
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
         data: { user: { user_metadata: { department } } }
@@ -257,7 +256,7 @@ describe('Link Generator (HRService)', () => {
 
     it('should fetch all links for Super Admin', async () => {
       const adminId = 'admin_123';
-      
+
       mockRoleService.getUserRole.mockResolvedValue('super-admin');
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
         data: { user: { user_metadata: {} } }
@@ -281,7 +280,7 @@ describe('Link Generator (HRService)', () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(2);
       // Should NOT filter by department_code
-      const calls = mockEq.mock.calls;
+      const {calls} = mockEq.mock;
       const deptFilter = calls.find(call => call[0] === 'department_code');
       expect(deptFilter).toBeUndefined();
     });

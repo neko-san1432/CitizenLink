@@ -153,9 +153,9 @@ async function renderComplaint() {
   }
   // Check for high confidence duplicates (similarity score >= 0.85)
   const duplicateCandidates = currentComplaint.analysis?.duplicate_candidates || [];
-  const hasHighConfidenceDuplicate = duplicateCandidates.length > 0 || 
+  const hasHighConfidenceDuplicate = duplicateCandidates.length > 0 ||
     (similarities && similarities.some(s => (s.similarity_score || s.score || 0) >= 0.85));
-  
+
   // Show/hide high confidence duplicate alert
   const duplicateAlert = document.getElementById('high-confidence-duplicate-alert');
   if (duplicateAlert) {

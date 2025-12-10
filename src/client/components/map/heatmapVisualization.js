@@ -368,7 +368,7 @@ class HeatmapVisualization {
       this.currentFilters = filters;
       // Reset filtered count for this load
       this._filteredCount = 0;
-      
+
       // CRITICAL: Role-based filter handling
       // - Coordinators and super-admins: Remove department filter (see all complaints)
       // - LGU Admins: Add department filter if not present (see only their office)
@@ -381,7 +381,7 @@ class HeatmapVisualization {
         sanitizedFilters.department = this.userDepartment;
         console.log('[HEATMAP] LGU Admin detected - adding department filter to API request:', this.userDepartment);
       }
-      
+
       const queryParams = new URLSearchParams();
       // Explicitly include resolved complaints by default for heatmap
       queryParams.append('includeResolved', sanitizedFilters.includeResolved !== false ? 'true' : 'false');
@@ -397,7 +397,7 @@ class HeatmapVisualization {
           }
         }
       });
-      
+
       console.log('[HEATMAP] Loading complaint data with filters:', {
         role: this.userRole,
         originalFilters: filters,
@@ -469,7 +469,7 @@ class HeatmapVisualization {
         .filter(Boolean);
 
       this._filteredCount = 0;
-      let filteredByBoundary = [];
+      const filteredByBoundary = [];
       let withinBoundaryData = sanitizedData;
 
       if (this.filterByBoundary) {

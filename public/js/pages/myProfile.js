@@ -287,7 +287,7 @@ function wireChangePassword() {
   const cancelBtn = document.getElementById('cancel-password-change');
   const form = document.getElementById('change-password-form');
   const messageEl = document.getElementById('password-confirmation-message');
-  
+
   if (!modal || !form) return;
 
   // Open modal
@@ -323,13 +323,13 @@ function wireChangePassword() {
     e.preventDefault();
     const currentPassword = document.getElementById('current-password')?.value || '';
     const logoutAllDevices = document.getElementById('logout-all-devices')?.checked || false;
-    
+
     // Validate inputs
     if (!currentPassword) {
       showMessage('error', 'Current password is required', 4000);
       return;
     }
-    
+
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn?.textContent || 'Request Password Change';
     if (submitBtn) {
@@ -347,7 +347,7 @@ function wireChangePassword() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to request password change');
-      
+
       // Show success message with email confirmation info
       if (messageEl) {
         const messageText = json.message || 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to set your new password.';
@@ -356,7 +356,7 @@ function wireChangePassword() {
       }
       showMessage('success', 'Password change request sent! Please check your email for confirmation.', 5000);
       form.reset();
-      
+
       // Close modal after 3 seconds
       setTimeout(() => {
         closeModal();

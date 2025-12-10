@@ -45,7 +45,7 @@ describe('Notification System', () => {
     mockSupabase.limit.mockReturnThis();
     mockSupabase.range.mockReturnThis();
     mockSupabase.single.mockReturnThis(); // single() usually returns Promise, but we can override per test
-    
+
     // Mock channel/subscription for SSE
     const mockSubscription = { unsubscribe: jest.fn() };
     const mockChannel = {
@@ -135,7 +135,7 @@ describe('Notification System', () => {
       it('should return paginated notifications', async () => {
         const mockData = [{ id: 1 }, { id: 2 }];
         // range() returns this, so we mock then()
-        // But wait, range() is usually terminal in Supabase js? 
+        // But wait, range() is usually terminal in Supabase js?
         // Actually range() returns the builder.
         // So we mock then()
         mockSupabase.then.mockImplementation((resolve) => resolve({ data: mockData, error: null, count: 10 }));

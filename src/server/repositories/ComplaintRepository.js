@@ -44,7 +44,7 @@ class ComplaintRepository {
         .select('*')
         .eq('id', id)
         .maybeSingle(); // Use maybeSingle() instead of single() to return null when no rows found
-      
+
       if (error) {
         // PGRST116 = no rows returned (expected when complaint doesn't exist)
         if (error.code === 'PGRST116') {
@@ -55,12 +55,12 @@ class ComplaintRepository {
         console.error(`[COMPLAINT_REPO] Error fetching complaint ${id}:`, error);
         throw error;
       }
-      
+
       if (!data) {
         console.log(`[COMPLAINT_REPO] Complaint ${id} not found (no data)`);
         return null;
       }
-      
+
       const complaint = new Complaint(data);
       // Get assignment data for progress tracking (without accessing auth.users)
       const { data: assignments } = await client

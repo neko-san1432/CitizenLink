@@ -74,7 +74,7 @@ class ApiClient {
       return await response.json();
     } catch (error) {
       // Handle connection errors gracefully
-      if (error.message?.includes('Failed to fetch') || 
+      if (error.message?.includes('Failed to fetch') ||
           error.message?.includes('ERR_CONNECTION_REFUSED') ||
           error.name === 'TypeError') {
         // Server is likely down or unreachable

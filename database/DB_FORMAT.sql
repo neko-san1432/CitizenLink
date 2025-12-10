@@ -260,6 +260,23 @@ CREATE TABLE public.events (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT events_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.id_verifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  id_number text NOT NULL,
+  id_type text NOT NULL,
+  extracted_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  verification_status text NOT NULL DEFAULT 'pending'::text CHECK (verification_status = ANY (ARRAY['pending'::text, 'verified'::text, 'rejected'::text, 'flagged'::text])),
+  confidence_score numeric CHECK (confidence_score >= 0::numeric AND confidence_score <= 100::numeric),
+  verified_at timestamp with time zone,
+  verified_by uuid,
+  rejection_reason text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT id_verifications_pkey PRIMARY KEY (id),
+  CONSTRAINT id_verifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT id_verifications_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES auth.users(id)
+);
 CREATE TABLE public.invitation_tokens (
   token character varying NOT NULL,
   created_by uuid NOT NULL,
@@ -405,7 +422,7 @@ CREATE TABLE public.upcomingEvents (
 CREATE TABLE public.user_role_history (
   id bigint NOT NULL DEFAULT nextval('user_role_history_id_seq'::regclass),
   user_id uuid NOT NULL,
-  old_role text,
+  old_role text,yes
   new_role text NOT NULL,
   changed_by uuid,
   reason text,

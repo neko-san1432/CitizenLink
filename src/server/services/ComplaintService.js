@@ -193,7 +193,7 @@ class ComplaintService {
       return [];
     }
     // Use the same Database instance to ensure consistent client
-    const supabase = this.complaintRepo.supabase;
+    const {supabase} = this.complaintRepo;
     const evidenceFiles = [];
     for (const file of files) {
       try {
@@ -263,7 +263,7 @@ class ComplaintService {
     if (!files || files.length === 0) {
       return [];
     }
-    const supabase = this.complaintRepo.supabase;
+    const {supabase} = this.complaintRepo;
     const evidenceFiles = [];
     for (const file of files) {
       try {
@@ -329,49 +329,49 @@ class ComplaintService {
         console.log(`[COMPLAINT_SERVICE] Access denied: User ${userId} attempted to access complaint ${id} owned by ${complaint.submitted_by}`);
         throw new Error('Access denied');
       }
-    // Get assignment data for progress tracking (without accessing auth.users)
-    const { data: assignments } = await this.complaintRepo.supabase
-      .from('complaint_assignments')
-      .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
-      .eq('complaint_id', id)
-      .order('officer_order', { ascending: true });
-    // Add assignments to complaint data
-    complaint.assignments = assignments || [];
-    // Fetch complainant info from auth.users for admin, officers, and coordinators
-    // Only fetch if userId is null (meaning user is not a citizen viewing their own complaint)
-    if (!userId && complaint.submitted_by) {
-      try {
-        const { data: submitterData, error: submitterError } = await this.complaintRepo.supabase.auth.admin.getUserById(complaint.submitted_by);
-        if (!submitterError && submitterData?.user) {
-          const {user} = submitterData;
-          const meta = user.user_metadata || {};
-          const rawMeta = user.raw_user_meta_data || {};
-          const combined = { ...rawMeta, ...meta };
-          complaint.submitted_by_profile = {
-            id: user.id,
-            email: user.email,
-            name: combined.name || `${combined.first_name || ''} ${combined.last_name || ''}`.trim() || user.email,
-            firstName: combined.first_name,
-            lastName: combined.last_name,
-            mobileNumber: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
-            mobile: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
-            raw_user_meta_data: rawMeta
-          };
-        }
-      } catch (error) {
-        console.error('[COMPLAINT_SERVICE] Error fetching complainant info:', error);
+      // Get assignment data for progress tracking (without accessing auth.users)
+      const { data: assignments } = await this.complaintRepo.supabase
+        .from('complaint_assignments')
+        .select('id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at')
+        .eq('complaint_id', id)
+        .order('officer_order', { ascending: true });
+      // Add assignments to complaint data
+      complaint.assignments = assignments || [];
+      // Fetch complainant info from auth.users for admin, officers, and coordinators
+      // Only fetch if userId is null (meaning user is not a citizen viewing their own complaint)
+      if (!userId && complaint.submitted_by) {
+        try {
+          const { data: submitterData, error: submitterError } = await this.complaintRepo.supabase.auth.admin.getUserById(complaint.submitted_by);
+          if (!submitterError && submitterData?.user) {
+            const {user} = submitterData;
+            const meta = user.user_metadata || {};
+            const rawMeta = user.raw_user_meta_data || {};
+            const combined = { ...rawMeta, ...meta };
+            complaint.submitted_by_profile = {
+              id: user.id,
+              email: user.email,
+              name: combined.name || `${combined.first_name || ''} ${combined.last_name || ''}`.trim() || user.email,
+              firstName: combined.first_name,
+              lastName: combined.last_name,
+              mobileNumber: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
+              mobile: rawMeta.mobile_number || meta.mobile_number || combined.mobile_number || null,
+              raw_user_meta_data: rawMeta
+            };
+          }
+        } catch (error) {
+          console.error('[COMPLAINT_SERVICE] Error fetching complainant info:', error);
         // Continue without complainant info if fetch fails
+        }
       }
-    }
-    // Reconcile workflow (eventual consistency)
-    try {
-      await this.reconcileWorkflowStatus(id);
-    } catch (error) {
+      // Reconcile workflow (eventual consistency)
+      try {
+        await this.reconcileWorkflowStatus(id);
+      } catch (error) {
       // Silently fail if reconciliation is not available
-      console.warn('[COMPLAINT_SERVICE] Workflow reconciliation skipped:', error.message);
-    }
-    // Return normalized complaint data for frontend compatibility
-    return normalizeComplaintData(complaint);
+        console.warn('[COMPLAINT_SERVICE] Workflow reconciliation skipped:', error.message);
+      }
+      // Return normalized complaint data for frontend compatibility
+      return normalizeComplaintData(complaint);
     } catch (error) {
       // Re-throw known errors (Complaint not found, Access denied)
       if (error.message === 'Complaint not found' || error.message === 'Access denied') {
@@ -548,13 +548,13 @@ class ComplaintService {
   }
   async getComplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
-    
+
     // Helper to build base query
     const buildQuery = () => {
       let query = this.complaintRepo.supabase
         .from('complaints')
         .select('workflow_status, subtype, priority, submitted_at');
-      
+
       if (department) {
         query = query.contains('department_r', [department]);
       }
@@ -576,9 +576,9 @@ class ComplaintService {
     while (hasMore) {
       const { data, error } = await buildQuery()
         .range(page * pageSize, (page + 1) * pageSize - 1);
-      
+
       if (error) throw error;
-      
+
       if (data.length > 0) {
         allData = allData.concat(data);
         page++;
@@ -600,17 +600,17 @@ class ComplaintService {
     allData.forEach(complaint => {
       // Count by status
       stats.by_status[complaint.workflow_status] = (stats.by_status[complaint.workflow_status] || 0) + 1;
-      
+
       // Count by subtype
       if (complaint.subtype) {
         stats.by_subtype[complaint.subtype] = (stats.by_subtype[complaint.subtype] || 0) + 1;
       }
-      
+
       // Count by priority
       if (complaint.priority) {
         stats.by_priority[complaint.priority] = (stats.by_priority[complaint.priority] || 0) + 1;
       }
-      
+
       // Count by month
       if (complaint.submitted_at) {
         const month = new Date(complaint.submitted_at).toISOString().slice(0, 7);
@@ -636,14 +636,12 @@ class ComplaintService {
 
       // First, get total count of complaints with coordinates for debugging
       // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
-      const supabase = this.complaintRepo.supabase; // Use repository client
+      const {supabase} = this.complaintRepo; // Use repository client
       const { count: totalWithCoords } = await supabase
         .from('complaints')
         .select('id', { count: 'exact', head: true })
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
-
-
 
 
       // Also check total complaints without coordinate filter using direct service role
@@ -747,7 +745,7 @@ class ComplaintService {
         .select('id', { count: 'exact', head: true })
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
-      
+
       // Apply same filters to count query
       if (status) {
         if (Array.isArray(status) && status.length > 0) {
@@ -758,7 +756,7 @@ class ComplaintService {
       } else if (!includeResolved) {
         countQuery.neq('workflow_status', 'completed').neq('workflow_status', 'cancelled');
       }
-      
+
       if (confirmationStatus) {
         if (Array.isArray(confirmationStatus) && confirmationStatus.length > 0) {
           countQuery.in('confirmation_status', confirmationStatus);
@@ -766,7 +764,7 @@ class ComplaintService {
           countQuery.eq('confirmation_status', confirmationStatus);
         }
       }
-      
+
       if (department) {
         if (Array.isArray(department) && department.length > 0) {
           const deptConditions = department.map(dept => `department_r.cs.{${dept}}`).join(',');
@@ -777,7 +775,7 @@ class ComplaintService {
           countQuery.contains('department_r', [department]);
         }
       }
-      
+
       if (category) {
         if (Array.isArray(category) && category.length > 0) {
           countQuery.in('category', category);
@@ -785,27 +783,27 @@ class ComplaintService {
           countQuery.eq('category', category);
         }
       }
-      
+
       if (subcategory) {
         countQuery.eq('subcategory', subcategory);
       }
-      
+
       if (startDate) {
         countQuery.gte('submitted_at', startDate);
       }
       if (endDate) {
         countQuery.lte('submitted_at', endDate);
       }
-      
+
       const { count: totalCount, error: countError } = await countQuery;
-      
+
       if (countError) {
         console.error('[COMPLAINT-SERVICE] Error getting total count:', countError);
         // Continue anyway - pagination will handle it
       }
-      
+
       console.log(`[COMPLAINT-SERVICE] Total complaints matching filters: ${totalCount || 'unknown'}`);
-      
+
       // Use pagination to fetch all records in batches
       const batchSize = 1000; // Fetch in batches of 1000
       let allData = [];
@@ -841,7 +839,7 @@ class ComplaintService {
           console.log(`[COMPLAINT-SERVICE] Reached total count (${totalCount}), stopping pagination`);
           hasMore = false;
         }
-        
+
         // Additional safety: prevent infinite loops
         if (offset > 100000) {
           console.warn('[COMPLAINT-SERVICE] Safety limit reached (100k records), stopping pagination');
@@ -1252,7 +1250,7 @@ class ComplaintService {
       // Get recent false complaints (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const { count: recent, error: recentError } = await supabase
         .from('complaints')
         .select('*', { count: 'exact', head: true })
@@ -1390,7 +1388,7 @@ class ComplaintService {
     try {
       // Use repository client (service-role) to avoid RLS issues
       const {supabase} = this.complaintRepo;
-      
+
       // Update the complaint with citizen's confirmation directly
       // TODO: Re-enable table update when schema supports confirmed_by_citizen, citizen_confirmation_date, etc.
       // Currently bypassing table update and relying on RPC because columns might be missing or RLS issues.
@@ -1406,7 +1404,7 @@ class ComplaintService {
         updateData.resolved_at = new Date().toISOString();
         updateData.last_activity_at = new Date().toISOString();
       }
-      
+
       const { data: updatedComplaint, error: updateError } = await supabase
         .from('complaints')
         .update(updateData)
@@ -1418,7 +1416,7 @@ class ComplaintService {
       if (!updatedComplaint) throw new Error('Complaint not found or access denied');
       if (updatedComplaint.submitted_by !== citizenId) throw new Error('Access denied');
       */
-     
+
       // Bypass table update for now
       const updatedComplaint = { id: complaintId, confirmed_by_citizen: confirmed };
 
@@ -1482,30 +1480,30 @@ class ComplaintService {
         case 'waiting_for_complainant':
           if (isCitizen) {
             return 'Please confirm if the resolution meets your expectations. Your confirmation is required to complete this complaint.';
-          } else {
-            return 'Waiting for complainant\'s confirmation. The citizen needs to review and confirm the resolution.';
           }
+          return 'Waiting for complainant\'s confirmation. The citizen needs to review and confirm the resolution.';
+
 
         case 'waiting_for_responders':
           if (isCitizen) {
             return 'Waiting for responders\' confirmation. Officers are reviewing the resolution.';
-          } else {
-            return 'Please confirm the resolution. Officers need to confirm that the complaint has been resolved.';
           }
+          return 'Please confirm the resolution. Officers need to confirm that the complaint has been resolved.';
+
 
         case 'confirmed':
           if (isCitizen) {
             return 'Resolution confirmed. This complaint has been successfully resolved and confirmed by all parties.';
-          } else {
-            return 'Resolution confirmed by all parties. This complaint is now complete.';
           }
+          return 'Resolution confirmed by all parties. This complaint is now complete.';
+
 
         case 'disputed':
           if (isCitizen) {
             return 'Resolution disputed. The complaint resolution has been disputed and may require further review.';
-          } else {
-            return 'Resolution disputed by complainant. The complaint may require additional action or review.';
           }
+          return 'Resolution disputed by complainant. The complaint may require additional action or review.';
+
 
         case 'pending':
         default:
@@ -1515,14 +1513,14 @@ class ComplaintService {
               return 'Waiting for your confirmation. Please review the resolution and confirm if it meets your expectations.';
             } else if (!isCitizen && !allRespondersConfirmed) {
               return 'Waiting for responders\' confirmation. Officers need to confirm the resolution.';
-            } else {
-              return 'Resolution pending confirmation from all parties.';
             }
+            return 'Resolution pending confirmation from all parties.';
+
           } else if (workflowStatus === 'in_progress' || workflowStatus === 'assigned') {
             return 'Complaint is being processed. Confirmation will be required once the resolution is complete.';
-          } else {
-            return 'Complaint is pending review and assignment.';
           }
+          return 'Complaint is pending review and assignment.';
+
       }
     } catch (error) {
       console.error('[COMPLAINT_SERVICE] Error getting confirmation message:', error);

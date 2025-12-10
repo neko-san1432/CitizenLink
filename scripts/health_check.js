@@ -1,4 +1,3 @@
-
 const http = require('http');
 
 const PORT = process.env.PORT || 3001;
@@ -24,7 +23,7 @@ const checkEndpoint = (path, name) => {
 
 const runHealthCheck = async () => {
   console.log(`Starting Health Check against ${BASE_URL}...\n`);
-  
+
   const results = await Promise.all([
     checkEndpoint('/', 'Home Page'),
     checkEndpoint('/api/health', 'API Health'), // Assuming this exists, or we check a known static asset

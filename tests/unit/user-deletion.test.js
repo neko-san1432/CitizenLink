@@ -11,7 +11,7 @@ describe('User Deletion and Data Cleanup', () => {
 
   beforeEach(() => {
     complianceService = new ComplianceService();
-    
+
     // Mock Supabase client
     mockSupabase = {
       auth: {
@@ -27,7 +27,7 @@ describe('User Deletion and Data Cleanup', () => {
 
     // Inject mock
     complianceService.supabase = mockSupabase;
-    
+
     // Mock AuditLogRepository
     complianceService.auditLog = {
       log: jest.fn().mockResolvedValue(true),
@@ -53,10 +53,10 @@ describe('User Deletion and Data Cleanup', () => {
     it('should delete user complaints', async () => {
       const userId = 'user_123';
       const performedBy = 'admin_user';
-      
+
       const deleteMock = jest.fn().mockReturnThis();
       const eqMock = jest.fn().mockResolvedValue({ error: null });
-      
+
       mockSupabase.from = jest.fn(() => ({
         delete: deleteMock,
         eq: eqMock
@@ -98,7 +98,7 @@ describe('User Deletion and Data Cleanup', () => {
 
     it('should preserve audit logs even after user deletion', async () => {
       const userId = 'user_123';
-      
+
       // Audit logs should NOT be deleted
       mockSupabase.from = jest.fn((table) => {
         if (table === 'audit_logs') {
@@ -119,7 +119,6 @@ describe('User Deletion and Data Cleanup', () => {
       }
     });
   });
-
 
 
   describe('Permission Checks', () => {
@@ -144,7 +143,7 @@ describe('User Deletion and Data Cleanup', () => {
 
       const isSelfDeletion = currentUserId === targetUserId;
       expect(isSelfDeletion).toBe(true);
-      
+
       // Self-deletion should be blocked
       if (isSelfDeletion) {
         const shouldBlock = true;

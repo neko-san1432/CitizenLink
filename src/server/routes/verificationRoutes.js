@@ -11,7 +11,7 @@ const { authenticateUser } = require('../middleware/auth');
 router.post('/store', authenticateUser, async (req, res) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -57,7 +57,7 @@ router.post('/store', authenticateUser, async (req, res) => {
     });
   } catch (error) {
     console.error('[VERIFICATION] Store error:', error);
-    
+
     // Handle specific error cases
     if (error.message === 'ID_NUMBER_ALREADY_REGISTERED') {
       return res.status(409).json({
@@ -82,7 +82,7 @@ router.post('/store', authenticateUser, async (req, res) => {
 router.get('/status', authenticateUser, async (req, res) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,

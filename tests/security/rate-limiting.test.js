@@ -12,7 +12,7 @@ describe('Rate Limiting Security', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    
+
     // Mock Database to throw error, forcing in-memory fallback
     jest.doMock('../../src/server/config/database', () => ({
       getClient: () => { throw new Error('DB disabled for testing'); }

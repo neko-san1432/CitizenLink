@@ -19,7 +19,7 @@ module.exports = {
   rules: {
     // Code style rules for all files
     'indent': ['error', 2, { 'SwitchCase': 1 }],
-    'linebreak-style': ['error', 'unix'],
+    'linebreak-style': 'off',
     'quotes': ['error', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': true }],
     'semi': ['error', 'always'],
     'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],

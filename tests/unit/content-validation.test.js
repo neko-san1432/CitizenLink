@@ -14,8 +14,8 @@ describe('Content Submission Validation', () => {
         status: 'draft'
       };
 
-      const hasRequiredFields = Boolean(validArticle.title && 
-                               validArticle.content && 
+      const hasRequiredFields = Boolean(validArticle.title &&
+                               validArticle.content &&
                                validArticle.author);
       expect(hasRequiredFields).toBe(true);
     });
@@ -210,7 +210,7 @@ describe('Content Submission Validation', () => {
 
     it('should allow LGU officers to create events', () => {
       const allowedRoles = ['super-admin', 'lgu-admin', 'lgu-officer', 'hr'];
-      
+
       allowedRoles.forEach(role => {
         const canCreateEvent = allowedRoles.includes(role);
         expect(canCreateEvent).toBe(true);

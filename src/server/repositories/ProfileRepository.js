@@ -20,7 +20,7 @@ class ProfileRepository {
     }
 
     const { data, error } = await query;
-    
+
     if (error) {
       console.error('[PROFILE_REPO] Error finding profiles by role:', error);
       return [];

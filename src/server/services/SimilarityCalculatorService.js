@@ -41,20 +41,20 @@ class SimilarityCalculatorService {
       if (error) {
         // Check if error message contains HTML (indicates server/infrastructure error)
         const errorMessage = error.message || '';
-        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                            errorMessage.includes('<html') ||
                            errorMessage.includes('Cloudflare') ||
                            errorMessage.includes('Internal server error');
-        
+
         // Check if it's a network error
-        const isNetworkError = errorMessage.includes('fetch failed') || 
+        const isNetworkError = errorMessage.includes('fetch failed') ||
                               error instanceof TypeError;
-        
+
         if (isHtmlError) {
           const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
           const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
           console.error('[SIMILARITY] Infrastructure error in radius search (Supabase/Cloudflare server error):', {
-            errorCode: errorCode,
+            errorCode,
             type: 'HTML_ERROR_RESPONSE',
             operation: 'findSimilarInRadius'
           });
@@ -137,21 +137,21 @@ class SimilarityCalculatorService {
       if (error) {
         // Check if error message contains HTML (indicates server/infrastructure error)
         const errorMessage = error.message || '';
-        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                            errorMessage.includes('<html') ||
                            errorMessage.includes('Cloudflare') ||
                            errorMessage.includes('Internal server error');
-        
+
         // Check if it's a network error
-        const isNetworkError = errorMessage.includes('fetch failed') || 
+        const isNetworkError = errorMessage.includes('fetch failed') ||
                               error instanceof TypeError;
-        
+
         if (isHtmlError) {
           // Extract error code from HTML if possible
           const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
           const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
           console.error('[SIMILARITY] Infrastructure error in database query (Supabase/Cloudflare server error):', {
-            errorCode: errorCode,
+            errorCode,
             type: 'HTML_ERROR_RESPONSE',
             message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
             operation: 'detectClusters'
@@ -202,13 +202,13 @@ class SimilarityCalculatorService {
     } catch (error) {
       // Handle network errors gracefully
       const errorMessage = error.message || '';
-      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                          errorMessage.includes('<html') ||
                          errorMessage.includes('Cloudflare') ||
                          errorMessage.includes('Internal server error');
-      const isNetworkError = errorMessage.includes('fetch failed') || 
+      const isNetworkError = errorMessage.includes('fetch failed') ||
                             error instanceof TypeError;
-      
+
       if (isHtmlError || isNetworkError) {
         // Already logged in the query error handler above
         console.error('[SIMILARITY] Cluster detection failed due to infrastructure/network error');
@@ -396,7 +396,7 @@ class SimilarityCalculatorService {
 
       if (deactivateError) {
         const deactivateMsg = deactivateError.message || '';
-        const isNetworkError = deactivateMsg.includes('fetch failed') || 
+        const isNetworkError = deactivateMsg.includes('fetch failed') ||
                               deactivateError instanceof TypeError;
         if (isNetworkError) {
           console.warn('[SIMILARITY] Network error deactivating old clusters (database may be unreachable):', deactivateMsg);
@@ -414,17 +414,17 @@ class SimilarityCalculatorService {
 
       if (error) {
         const errorMessage = error.message || '';
-        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                            errorMessage.includes('<html') ||
                            errorMessage.includes('Cloudflare');
-        const isNetworkError = errorMessage.includes('fetch failed') || 
+        const isNetworkError = errorMessage.includes('fetch failed') ||
                               error instanceof TypeError;
-        
+
         if (isHtmlError) {
           const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
           const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
           console.error('[SIMILARITY] Infrastructure error saving clusters (Supabase/Cloudflare server error):', {
-            errorCode: errorCode,
+            errorCode,
             type: 'HTML_ERROR_RESPONSE',
             operation: 'saveClusters'
           });
@@ -475,12 +475,12 @@ class SimilarityCalculatorService {
         .limit(limit);
       if (error) {
         const errorMessage = error.message || '';
-        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+        const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                            errorMessage.includes('<html') ||
                            errorMessage.includes('Cloudflare');
-        const isNetworkError = errorMessage.includes('fetch failed') || 
+        const isNetworkError = errorMessage.includes('fetch failed') ||
                               error instanceof TypeError;
-        
+
         if (isHtmlError || isNetworkError) {
           console.warn('[SIMILARITY] Network/infrastructure error getting nearest similar:', {
             message: errorMessage,
@@ -534,16 +534,16 @@ class SimilarityCalculatorService {
       .single();
     if (error) {
       const errorMessage = error.message || '';
-      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                          errorMessage.includes('<html') ||
                          errorMessage.includes('Cloudflare');
-      const isNetworkError = errorMessage.includes('fetch failed') || 
+      const isNetworkError = errorMessage.includes('fetch failed') ||
                             error instanceof TypeError;
-      
+
       if (isHtmlError || isNetworkError) {
         console.warn('[SIMILARITY] Network/infrastructure error getting complaint:', {
           message: errorMessage,
-          complaintId: complaintId,
+          complaintId,
           operation: 'getComplaint'
         });
         throw new Error(`Database connection error: Unable to retrieve complaint. Please try again later.`);

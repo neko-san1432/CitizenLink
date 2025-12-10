@@ -180,7 +180,7 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
       const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('delete_user_sessions', {
         user_uuid: userId
       });
-      
+
       if (!rpcError && rpcData !== null) {
         return {
           success: true,
@@ -188,13 +188,13 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
           method: 'rpc'
         };
       }
-      
+
       // Try the logged version if simple one doesn't exist
       if (rpcError) {
         const { data: logData, error: logError } = await supabaseAdmin.rpc('delete_user_sessions_with_log', {
           user_uuid: userId
         });
-        
+
         if (!logError && logData) {
           return {
             success: true,
@@ -231,7 +231,7 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
     // However, access tokens remain valid until expiration (~1 hour)
     // To force immediate invalidation, we need to change the password hash
     console.warn('[AUTH] Using fallback method: Changing password hash to invalidate all sessions immediately');
-    
+
     try {
       // Get current user to preserve password
       const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);

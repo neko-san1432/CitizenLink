@@ -13,9 +13,9 @@ describe('Session Management', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    
+
     mockSupabase = new SupabaseMock();
-    
+
     // Mock Database class
     jest.doMock('../../src/server/config/database', () => {
       return class Database {

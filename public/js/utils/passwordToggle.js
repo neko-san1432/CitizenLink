@@ -56,14 +56,14 @@ function initPasswordToggle(passwordInput) {
   toggleBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const isPassword = passwordInput.type === 'password';
     passwordInput.type = isPassword ? 'text' : 'password';
-    
+
     // Toggle icon visibility
     const showIcon = toggleBtn.querySelector('.eye-show');
     const hideIcon = toggleBtn.querySelector('.eye-hide');
-    
+
     if (isPassword) {
       // Show password - show hide icon
       showIcon.style.display = 'none';
@@ -87,7 +87,7 @@ function initPasswordToggle(passwordInput) {
 export function initAllPasswordToggles() {
   // Find all password inputs
   const passwordInputs = document.querySelectorAll('input[type="password"]');
-  
+
   passwordInputs.forEach(input => {
     initPasswordToggle(input);
   });

@@ -370,7 +370,7 @@ class ReminderService {
         console.warn('[REMINDER_SERVICE] Supabase client not available');
         return null;
       }
-      
+
       const { data, error } = await supabase
         .from('complaint_reminders')
         .select('*')
@@ -378,26 +378,26 @@ class ReminderService {
         .order('reminded_at', { ascending: false })
         .limit(1)
         .maybeSingle(); // Use maybeSingle() instead of single() to return null when no rows found
-      
+
       if (error) {
         // Only log non-PGRST116 errors (PGRST116 = no rows returned, which is expected)
         if (error.code !== 'PGRST116') {
           // Check if error message contains HTML (indicates server/infrastructure error)
           const errorMessage = error.message || '';
-          const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+          const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                              errorMessage.includes('<html') ||
                              errorMessage.includes('Cloudflare') ||
                              errorMessage.includes('Internal server error');
-          
+
           if (isHtmlError) {
             // Extract error code from HTML if possible
             const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
             const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
             console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
-              errorCode: errorCode,
+              errorCode,
               type: 'HTML_ERROR_RESPONSE',
               message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
-              complaintId: complaintId
+              complaintId
             });
           } else if (errorMessage.includes('fetch failed')) {
             // Check if it's a network error
@@ -414,24 +414,24 @@ class ReminderService {
         }
         return null;
       }
-      
+
       return data || null;
     } catch (error) {
       // Handle network errors gracefully
       const errorMessage = error.message || '';
-      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') || 
+      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
                          errorMessage.includes('<html') ||
                          errorMessage.includes('Cloudflare') ||
                          errorMessage.includes('Internal server error');
-      
+
       if (isHtmlError) {
         const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
         const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
         console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
-          errorCode: errorCode,
+          errorCode,
           type: 'HTML_ERROR_RESPONSE',
           message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
-          complaintId: complaintId
+          complaintId
         });
       } else if (error instanceof TypeError && errorMessage.includes('fetch failed')) {
         console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', errorMessage);

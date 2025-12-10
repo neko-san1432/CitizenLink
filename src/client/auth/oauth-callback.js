@@ -18,7 +18,7 @@ const processOAuthCallback = async () => {
 
     // Get the session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+
     if (sessionError || !session) {
       console.error('[OAUTH_CALLBACK] No session found:', sessionError);
       window.location.href = '/login?err=oauth_failed';
@@ -34,7 +34,7 @@ const processOAuthCallback = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: session.access_token })
       });
-      
+
       if (!cookieResponse.ok) {
         console.warn('[OAUTH_CALLBACK] Failed to set server cookie');
       }
@@ -45,7 +45,7 @@ const processOAuthCallback = async () => {
     // Get OAuth intent from context (set when user clicked OAuth button)
     const oauthContext = getOAuthContext();
     const intent = oauthContext?.intent || 'login'; // Default to login for safety
-    
+
     console.log('[OAUTH_CALLBACK] OAuth intent:', intent);
     console.log('[OAUTH_CALLBACK] OAuth context:', oauthContext);
 
@@ -71,39 +71,39 @@ const processOAuthCallback = async () => {
         console.log('[OAUTH_CALLBACK] User is complete, redirecting to dashboard');
         console.log('[OAUTH_CALLBACK] User type:', statusData.userType);
         console.log('[OAUTH_CALLBACK] Message:', statusData.message);
-        
+
         // Clear OAuth context since we're done
         clearOAuthContext();
-        
+
         // Store a success message if available
         if (statusData.message) {
           sessionStorage.setItem('oauth_success_message', statusData.message);
         }
-        
+
         window.location.href = '/dashboard';
       } else {
         // User needs to complete profile - go to continuation
         const isNewSignup = statusData.isNewSignup || intent === 'signup';
         const isExistingIncomplete = statusData.isExistingIncomplete || (intent === 'login' && !statusData.isNewSignup);
-        
+
         console.log('[OAUTH_CALLBACK] User is incomplete, redirecting to continuation');
         console.log('[OAUTH_CALLBACK] Is new signup:', isNewSignup);
         console.log('[OAUTH_CALLBACK] Is existing incomplete:', isExistingIncomplete);
         console.log('[OAUTH_CALLBACK] User type:', statusData.userType);
-        
+
         // Set OAuth context for continuation page
         const provider = session.user?.identities?.[0]?.provider || 'oauth';
         setOAuthContext({
           provider,
           email: session.user?.email,
-          intent: intent,
+          intent,
           status: 'handoff',
           startedAt: Date.now(),
           userType: statusData.userType,
-          isNewSignup: isNewSignup,
+          isNewSignup,
           message: statusData.message
         });
-        
+
         window.location.href = '/oauth-continuation';
       }
     } catch (statusError) {

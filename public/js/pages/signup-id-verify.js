@@ -83,8 +83,8 @@ import { supabase } from '../config/config.js';
   }
 
   function updateScanEnabled() {
-    const hasUpload = !!fileInput.files?.[0];
-    const hasCapture = !!capturedBlob;
+    const hasUpload = Boolean(fileInput.files?.[0]);
+    const hasCapture = Boolean(capturedBlob);
     const ok = consent.checked && (hasUpload || hasCapture);
     scanBtn.disabled = !ok;
   }
@@ -149,12 +149,12 @@ import { supabase } from '../config/config.js';
     try {
       cameraStartBtn.disabled = true;
       status('Requesting camera access...', 'info');
-      
+
       // Strategy: Try simplest constraints first, then progressively more specific
       // This avoids NotReadableError from overly complex constraints
       let mediaStreamAttempt = null;
       let lastError = null;
-      
+
       // Attempt 1: Absolute simplest - just request any video
       try {
         status('Checking camera availability...', 'info');
@@ -163,25 +163,25 @@ import { supabase } from '../config/config.js';
       } catch (simpleError) {
         lastError = simpleError;
         console.log('Simple constraints failed, trying rear camera...', simpleError.name);
-        
+
         // Attempt 2: Try rear camera (environment) with minimal constraints
         await new Promise(resolve => setTimeout(resolve, 300));
         try {
-          mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' }, 
-            audio: false 
+          mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
           });
           console.log('Camera access granted with rear camera');
         } catch (rearError) {
           lastError = rearError;
           console.log('Rear camera failed, trying any camera with basic constraints...', rearError.name);
-          
+
           // Attempt 3: Any camera with basic quality
           await new Promise(resolve => setTimeout(resolve, 300));
           try {
-            mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({ 
-              video: { width: 640, height: 480 }, 
-              audio: false 
+            mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({
+              video: { width: 640, height: 480 },
+              audio: false
             });
             console.log('Camera access granted with basic constraints');
           } catch (basicError) {
@@ -191,16 +191,16 @@ import { supabase } from '../config/config.js';
           }
         }
       }
-      
+
       mediaStream = mediaStreamAttempt;
-      
+
       // Success - reset error tracking
       cameraErrorCount = 0;
       lastCameraError = null;
-      
+
       cameraVideo.srcObject = mediaStream;
       const cameraWrap = cameraVideo.closest('.camera-wrap');
-      
+
       // Wait for video to be ready
       const onVideoReady = () => {
         cameraVideo.classList.add('ready');
@@ -209,10 +209,10 @@ import { supabase } from '../config/config.js';
         cameraStopBtn.disabled = false;
         status('Camera ready. Position your ID in the frame and click Capture.', 'success');
       };
-      
+
       cameraVideo.addEventListener('loadedmetadata', onVideoReady, { once: true });
       cameraVideo.addEventListener('playing', onVideoReady, { once: true });
-      
+
       cameraVideo.play().catch(err => {
         console.warn('Video play error:', err);
         // Still enable capture if metadata is loaded
@@ -220,14 +220,14 @@ import { supabase } from '../config/config.js';
           onVideoReady();
         }
       });
-      
+
       cameraStartBtn.disabled = false;
       isStartingCamera = false;
     } catch (e) {
       console.error('Camera error:', e);
       isStartingCamera = false;
       cameraStartBtn.disabled = false;
-      
+
       // Clean up any partial stream directly (don't call stopCamera to avoid recursion)
       if (mediaStream) {
         mediaStream.getTracks().forEach((t) => {
@@ -242,7 +242,7 @@ import { supabase } from '../config/config.js';
         const cameraWrap = cameraVideo.closest('.camera-wrap');
         if (cameraWrap) cameraWrap.classList.remove('active');
       }
-      
+
       let errorMsg = 'Unable to access camera. ';
       if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
         errorMsg += 'Please allow camera permissions in your browser settings and try again.';
@@ -251,13 +251,13 @@ import { supabase } from '../config/config.js';
       } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
         cameraErrorCount++;
         lastCameraError = e.name;
-        
+
         // Implement exponential backoff: 3s, 6s, 10s, then suggest upload mode
         const cooldownSeconds = cameraErrorCount === 1 ? 3 : cameraErrorCount === 2 ? 6 : 10;
         cameraCooldownUntil = Date.now() + (cooldownSeconds * 1000);
-        
+
         errorMsg = 'Camera cannot be accessed. ';
-        
+
         if (cameraErrorCount === 1) {
           errorMsg += 'This usually means the camera is being used by another application. ';
           errorMsg += 'Please close Zoom, Teams, Skype, Discord, or other video apps, then wait 3 seconds and try again.';
@@ -283,7 +283,7 @@ import { supabase } from '../config/config.js';
             }
           }, 2000);
         }
-        
+
         // Disable button during cooldown
         cameraStartBtn.disabled = true;
         const cooldownTimer = setInterval(() => {
@@ -300,7 +300,7 @@ import { supabase } from '../config/config.js';
             }
           }
         }, 1000);
-        
+
         // Clear timer after cooldown
         setTimeout(() => clearInterval(cooldownTimer), cooldownSeconds * 1000 + 100);
       } else if (e.name === 'OverconstrainedError' || e.name === 'ConstraintNotSatisfiedError') {
@@ -325,7 +325,7 @@ import { supabase } from '../config/config.js';
 
   function stopCamera() {
     isStartingCamera = false; // Reset flag to allow restart
-    
+
     if (mediaStream) {
       // Stop all tracks more thoroughly
       const tracks = mediaStream.getTracks();
@@ -359,32 +359,32 @@ import { supabase } from '../config/config.js';
       status('Camera not ready. Please wait for the camera to initialize.', 'error');
       return;
     }
-    
+
     try {
       const w = cameraVideo.videoWidth;
       const h = cameraVideo.videoHeight;
       cameraCanvas.width = w;
       cameraCanvas.height = h;
       const ctx = cameraCanvas.getContext('2d');
-      
+
       // Draw the video frame to canvas
       ctx.drawImage(cameraVideo, 0, 0, w, h);
-      
+
       // Convert to blob
       cameraCanvas.toBlob((blob) => {
         if (!blob) {
           status('Failed to capture image. Please try again.', 'error');
           return;
         }
-        
+
         capturedBlob = blob;
         const url = URL.createObjectURL(blob);
         cameraPreviewImg.src = url;
         cameraPreviewWrap.hidden = false;
-        
+
         // Stop camera after capture to save resources
         stopCamera();
-        
+
         updateScanEnabled();
         status('Image captured successfully! You may proceed to verify your ID.', 'success');
       }, 'image/jpeg', 0.92); // Slightly lower quality for smaller file size
@@ -421,14 +421,14 @@ import { supabase } from '../config/config.js';
     if (!blob) return;
 
     scanBtn.disabled = true;
-    
+
     // Start timer for elapsed time
     const startTime = Date.now();
     const timerInterval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       status(`Processing ID… This may take a few seconds. (${elapsed}s)`);
     }, 1000);
-    
+
     status('Processing ID… This may take a few seconds. (0s)');
 
     try {
@@ -445,12 +445,12 @@ import { supabase } from '../config/config.js';
       if (!res.ok || !data.success) {
         const errorCode = data.error || 'UNKNOWN_ERROR';
         let errorMessage = data.message || 'Could not process the ID automatically.';
-        
+
         // Provide specific error messages based on error type
         if (errorCode === 'TEXT_DETECTION_FAILED' || errorCode === 'NO_FIELDS_EXTRACTED') {
           errorMessage = data.message || 'Text detection failed. ';
           if (data.details && data.details.suggestions) {
-            errorMessage += '\n\nSuggestions:\n' + data.details.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n');
+            errorMessage += `\n\nSuggestions:\n${  data.details.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
           } else {
             errorMessage += 'This may be due to poor image quality, blur, or camera issues. Please try again with a clearer image.';
           }
@@ -459,7 +459,7 @@ import { supabase } from '../config/config.js';
         } else if (res.status >= 500) {
           errorMessage = 'Server error occurred while processing the ID. Please try again later.';
         }
-        
+
         status(errorMessage, 'error');
         console.error('OCR error:', {
           code: errorCode,
@@ -472,23 +472,23 @@ import { supabase } from '../config/config.js';
       // Store extracted ID data
       const rawFields = data?.fields || {};
       extractedIdData = {};
-      
+
       // Flatten fields if they are objects with value/confidence (Handle new OCR format)
       Object.keys(rawFields).forEach(key => {
         const val = rawFields[key];
         if (val && typeof val === 'object' && val.value !== undefined) {
-            extractedIdData[key] = val.value;
+          extractedIdData[key] = val.value;
         } else {
-            extractedIdData[key] = val;
+          extractedIdData[key] = val;
         }
       });
-      
+
       // Store verification data in backend
       try {
         // Get current session token to ensure request is authenticated
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
-        
+
         const headers = { 'Content-Type': 'application/json' };
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
@@ -496,9 +496,9 @@ import { supabase } from '../config/config.js';
 
         // Normalize ID number for backend (server expects idNumber)
         if (!extractedIdData.idNumber) {
-            extractedIdData.idNumber = extractedIdData.public_id_number || 
-                                     extractedIdData.id_number || 
-                                     extractedIdData.IDNumber || 
+          extractedIdData.idNumber = extractedIdData.public_id_number ||
+                                     extractedIdData.id_number ||
+                                     extractedIdData.IDNumber ||
                                      extractedIdData.documentNumber ||
                                      '';
         }
@@ -523,27 +523,27 @@ import { supabase } from '../config/config.js';
             // Don't redirect, just warn and proceed
             status('⚠️ Verification verified locally. Server storage failed (Session), but you may proceed.', 'warning');
           } else if (storeResult.error === 'ID_NUMBER_ALREADY_REGISTERED') {
-             // This is a hard error, we should probably stop? 
-             // But user wants to proceed. Let's warn.
-             status('⚠️ This ID number is already registered.', 'warning');
+            // This is a hard error, we should probably stop?
+            // But user wants to proceed. Let's warn.
+            status('⚠️ This ID number is already registered.', 'warning');
           } else {
-             console.error('Failed to store verification:', storeResult);
-             status('⚠️ Verification verified locally. Server storage failed.', 'warning');
+            console.error('Failed to store verification:', storeResult);
+            status('⚠️ Verification verified locally. Server storage failed.', 'warning');
           }
-          
+
           // Proceed anyway (simulate success for frontend flow)
           // Store dummy verification ID to allow form submission
           try {
-            sessionStorage.setItem('cl_verification_id', 'local_verified_' + Date.now());
+            sessionStorage.setItem('cl_verification_id', `local_verified_${  Date.now()}`);
             sessionStorage.setItem('cl_verification_complete', 'true');
           } catch (e) {}
-          
+
           // Call success handler to unlock "Next" button
           if (typeof window.handleVerificationSuccess === 'function') {
             window.handleVerificationSuccess({
-               idType: data.idType,
-               idNumber: extractedIdData.idNumber || extractedIdData.public_id_number,
-               ...extractedIdData
+              idType: data.idType,
+              idNumber: extractedIdData.idNumber || extractedIdData.public_id_number,
+              ...extractedIdData
             });
           }
           return;
@@ -558,21 +558,21 @@ import { supabase } from '../config/config.js';
         }
 
         console.log('[ID_VERIFY] Verification stored:', storeResult.data.verificationId);
-        
+
         // Call success handler
         if (typeof window.handleVerificationSuccess === 'function') {
-            window.handleVerificationSuccess({
-               idType: data.idType,
-               idNumber: extractedIdData.idNumber || extractedIdData.public_id_number,
-               ...extractedIdData
-            });
+          window.handleVerificationSuccess({
+            idType: data.idType,
+            idNumber: extractedIdData.idNumber || extractedIdData.public_id_number,
+            ...extractedIdData
+          });
         }
       } catch (storeError) {
         console.error('Error storing verification:', storeError);
         status('⚠️ Could not save verification data. Please try again.', 'error');
         return;
       }
-      
+
       // Success - compare with form data (this will also render the results)
       compareWithFormData(extractedIdData);
     } catch (err) {
@@ -583,7 +583,7 @@ import { supabase } from '../config/config.js';
         errorMessage += 'Network error. Please check your connection and try again.';
       } else if (err.message && err.message.includes('camera')) {
         errorMessage += 'Camera error detected. Please try using Upload mode instead, or check your camera settings.';
-      } else {    
+      } else {
         errorMessage += 'Please try again with a clearer image or continue with manual verification.';
       }
       status(errorMessage, 'error');
@@ -599,7 +599,7 @@ import { supabase } from '../config/config.js';
       reviewGrid.innerHTML = '';
       return;
     }
-    
+
     // Field name mapping for better display
     const fieldLabels = {
       firstName: 'First Name',
@@ -613,35 +613,35 @@ import { supabase } from '../config/config.js';
       birthDate: 'Birth Date',
       expiryDate: 'Expiry Date'
     };
-    
+
     // Filter out null/empty values and format entries
     const entries = Object.entries(fields)
       .filter(([k, v]) => v != null && String(v).trim() !== '')
       .map(([k, v]) => {
         const label = fieldLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         let value = String(v).trim();
-        
+
         // Format dates if they're in ISO format
         if ((k === 'birthDate' || k === 'expiryDate') && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
           const date = new Date(value);
           value = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
-        
+
         return { key: k, label, value };
       });
-    
+
     if (entries.length === 0) {
       review.hidden = true;
       reviewGrid.innerHTML = '';
       return;
     }
-    
+
     reviewGrid.innerHTML = entries.map(({ key, label, value }) => {
       const safeLabel = escapeHtml(label);
       const safeValue = escapeHtml(value);
       return `<div class="kv"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;
     }).join('');
-    
+
     review.hidden = false;
   }
 
@@ -746,12 +746,12 @@ import { supabase } from '../config/config.js';
       if (!s1 && !s2) return 100;
       if (!s1 || !s2) return 0;
       if (s1 === s2) return 100;
-      
+
       // Partial Match Check: If one contains the other (and length > 3), it's a match
       if ((s1.includes(s2) || s2.includes(s1)) && Math.min(s1.length, s2.length) > 3) {
         return 100;
       }
-      
+
       const distance = levenshteinDistance(s1, s2);
       const maxLength = Math.max(s1.length, s2.length);
       const similarity = (1 - distance / maxLength) * 100;
@@ -764,14 +764,14 @@ import { supabase } from '../config/config.js';
       // 2. The form has this field (element exists in DOM)
       const idHasField = availableIdFields.includes(mapping.idField);
       const formHasField = availableFormFields.includes(mapping.formField);
-      
+
       if (idHasField && formHasField) {
         const idValue = String(idFields[mapping.idField]).trim();
         const formValue = formData[mapping.formField] || '';
-        
+
         let match = false;
         let score = 0;
-        
+
         if (mapping.type === 'gender') {
           // Special handling for gender
           const idGender = normalizeIdGender(idValue);
@@ -781,7 +781,7 @@ import { supabase } from '../config/config.js';
         } else {
           // For names and addresses
           score = calculateSimilarity(idValue, formValue);
-          
+
           if (!formValue && !mapping.required) {
             // Optional field not entered - consider it a match
             match = true;
@@ -791,12 +791,12 @@ import { supabase } from '../config/config.js';
             match = score >= 80;
           }
         }
-        
+
         comparisons.push({
           field: mapping.displayName,
-          idValue: idValue,
+          idValue,
           formValue: formValue || '(not entered)',
-          match: match,
+          match,
           score: Math.round(score),
           type: mapping.type,
           required: mapping.required
@@ -805,13 +805,13 @@ import { supabase } from '../config/config.js';
     });
 
     // Track fields that exist in ID but not in form (for information display)
-    const idOnlyFields = availableIdFields.filter(idField => 
+    const idOnlyFields = availableIdFields.filter(idField =>
       !fieldMappings.some(m => m.idField === idField && availableFormFields.includes(m.formField))
     );
 
     // Display results
     displayComparisonResults(comparisons, idOnlyFields);
-    
+
     // Return result for status message
     return { comparisons, idOnlyFields };
 
@@ -829,14 +829,14 @@ import { supabase } from '../config/config.js';
         let message = '<div style="padding: 12px; background: var(--gray-100); border-radius: 6px; margin-bottom: 16px;">';
         message += '<div style="font-weight: 600; margin-bottom: 8px;">ID Information Extracted</div>';
         message += '<div style="font-size: 0.9rem; color: var(--gray-700);">';
-        
+
         if (idOnlyFields.length > 0) {
           message += '⚠️ Some fields from your ID cannot be compared because they are not present in the registration form. ';
         } else {
           message += 'ℹ️ No matching fields found between the ID and the form. ';
         }
         message += 'Please verify the information manually.</div></div>';
-        
+
         const extractedHtml = renderExtractedFieldsOnly(extractedIdData);
         reviewGrid.innerHTML = message + extractedHtml;
         review.hidden = false;
@@ -849,7 +849,7 @@ import { supabase } from '../config/config.js';
     const matches = comparisons.filter(c => c.match).length;
     const mismatches = comparisons.filter(c => !c.match).length;
     const total = comparisons.length;
-    
+
     // Determine overall status
     // Fail if any REQUIRED field is a mismatch
     const failedRequired = comparisons.filter(c => c.required && !c.match);
@@ -858,15 +858,15 @@ import { supabase } from '../config/config.js';
     // Update review section with comparison results
     if (reviewGrid) {
       const comparisonHtml = comparisons.map(comp => {
-        const matchIcon = comp.match ? 
-          '<span style="color: var(--success-600); margin-right: 8px;">✓</span>' : 
+        const matchIcon = comp.match ?
+          '<span style="color: var(--success-600); margin-right: 8px;">✓</span>' :
           '<span style="color: var(--error-600); margin-right: 8px;">✗</span>';
         const matchClass = comp.match ? 'match' : 'mismatch';
         const safeField = escapeHtml(comp.field);
         const safeIdValue = escapeHtml(comp.idValue);
         const safeFormValue = escapeHtml(comp.formValue);
         const scoreDisplay = comp.type !== 'gender' ? `<span style="font-size: 0.8em; color: var(--gray-500); margin-left: auto;">${comp.score}% Match</span>` : '';
-        
+
         return `
           <div class="comparison-item ${matchClass}" style="margin-bottom: 12px; padding: 12px; border-radius: 6px; background: ${comp.match ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-left: 3px solid ${comp.match ? 'var(--success-600)' : 'var(--error-600)'};">
             <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
@@ -884,7 +884,7 @@ import { supabase } from '../config/config.js';
           </div>
         `;
       }).join('');
-      
+
       // Add overall status message
       let statusHtml = '';
       if (passed) {
@@ -911,7 +911,7 @@ import { supabase } from '../config/config.js';
 
       // Also show other extracted fields that weren't compared (like ID number, dates)
       const otherFieldsHtml = renderOtherExtractedFields(extractedIdData, comparisons);
-      
+
       // Show warning if some ID fields couldn't be compared
       const idOnlyWarning = (idOnlyFields && idOnlyFields.length > 0) ? `
         <div style="margin-top: 16px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border-left: 3px solid var(--warning-600);">
@@ -941,7 +941,7 @@ import { supabase } from '../config/config.js';
         </div>
       `;
 
-      reviewGrid.innerHTML = summaryHtml + comparisonHtml + (otherFieldsHtml ? '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-300);"><div style="font-weight: 600; margin-bottom: 12px;">Other ID Information</div>' + otherFieldsHtml + '</div>' : '') + idOnlyWarning;
+      reviewGrid.innerHTML = summaryHtml + comparisonHtml + (otherFieldsHtml ? `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-300);"><div style="font-weight: 600; margin-bottom: 12px;">Other ID Information</div>${  otherFieldsHtml  }</div>` : '') + idOnlyWarning;
       review.hidden = false;
     }
 
@@ -958,7 +958,7 @@ import { supabase } from '../config/config.js';
    */
   function renderOtherExtractedFields(idFields, comparisons) {
     if (!idFields) return '';
-    
+
     const comparedFields = ['firstName', 'lastName', 'middleName', 'addressLine1', 'barangay', 'sex'];
     const otherFields = Object.entries(idFields)
       .filter(([key, value]) => !comparedFields.includes(key) && value != null && String(value).trim() !== '')
@@ -971,13 +971,13 @@ import { supabase } from '../config/config.js';
         };
         const label = fieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         let displayValue = String(value).trim();
-        
+
         // Format dates
         if ((key === 'birthDate' || key === 'expiryDate') && displayValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
           const date = new Date(displayValue);
           displayValue = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
-        
+
         return { label, value: displayValue };
       });
 
@@ -995,7 +995,7 @@ import { supabase } from '../config/config.js';
    */
   function renderExtractedFieldsOnly(idFields) {
     if (!idFields) return '';
-    
+
     const fieldLabels = {
       firstName: 'First Name',
       lastName: 'Last Name',
@@ -1008,24 +1008,24 @@ import { supabase } from '../config/config.js';
       birthDate: 'Birth Date',
       expiryDate: 'Expiry Date'
     };
-    
+
     const entries = Object.entries(idFields)
       .filter(([k, v]) => v != null && String(v).trim() !== '')
       .map(([k, v]) => {
         const label = fieldLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         let value = String(v).trim();
-        
+
         // Format dates
         if ((k === 'birthDate' || k === 'expiryDate') && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
           const date = new Date(value);
           value = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
-        
+
         return { key: k, label, value };
       });
-    
+
     if (entries.length === 0) return '';
-    
+
     return entries.map(({ key, label, value }) => {
       const safeLabel = escapeHtml(label);
       const safeValue = escapeHtml(value);

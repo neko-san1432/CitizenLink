@@ -387,27 +387,27 @@ class AuthController {
       const { currentPassword, logoutAllDevices } = req.body;
       const userId = req.user.id;
       const userEmail = req.user.email;
-      
+
       if (!currentPassword) {
         return res.status(400).json({
           success: false,
           error: 'Current password is required'
         });
       }
-      
+
       // Verify current password by attempting to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: currentPassword
       });
-      
+
       if (signInError || !signInData) {
         return res.status(400).json({
           success: false,
           error: 'Current password is incorrect'
         });
       }
-      
+
       // Store logout preference in user metadata temporarily
       // This will be checked when password is actually changed
       if (logoutAllDevices) {
@@ -421,21 +421,21 @@ class AuthController {
 
       // Send password reset email - user will enter new password on confirmation page
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      const redirectUrl = logoutAllDevices 
+      const redirectUrl = logoutAllDevices
         ? `${frontendUrl}/confirm-password-change?logout_all_devices=true`
         : `${frontendUrl}/confirm-password-change`;
-      
+
       const { error: emailError } = await supabase.auth.resetPasswordForEmail(userEmail, {
         redirectTo: redirectUrl
       });
-      
+
       if (emailError) {
         return res.status(400).json({
           success: false,
           error: 'Failed to send confirmation email. Please try again later.'
         });
       }
-      
+
       res.json({
         success: true,
         message: 'A confirmation email has been sent to your email address. Please check your inbox and click the confirmation link to set your new password.'
@@ -510,7 +510,7 @@ class AuthController {
         email: currentEmail,
         password: currentPassword
       });
-      
+
       if (signInError || !signInData || !signInData.session) {
         return res.status(400).json({
           success: false,
@@ -607,7 +607,7 @@ class AuthController {
 
       res.json({
         success: true,
-        message: scope === 'others' 
+        message: scope === 'others'
           ? 'All other sessions have been invalidated'
           : 'All sessions have been invalidated',
         ...result
@@ -659,7 +659,7 @@ class AuthController {
     const startTime = Date.now();
     try {
       const userId = req.user.id; // From auth middleware
-      
+
       console.log('[OAUTH_SIGNUP] ========================================');
       console.log('[OAUTH_SIGNUP] Status: STARTED', {
         userId,
@@ -757,7 +757,7 @@ class AuthController {
       }
 
       const currentUserEmail = currentUser.user.email || email;
-      
+
       // Check if email already exists for a different user (shouldn't happen with Supabase, but safety check)
       if (email && email.toLowerCase() !== currentUserEmail.toLowerCase()) {
         const { data: existingUserByEmail } = await supabase.auth.admin.getUserByEmail(email.toLowerCase());
@@ -772,7 +772,7 @@ class AuthController {
       const currentMetadata = currentUser.user.user_metadata || {};
       const currentRawMetadata = currentUser.user.raw_user_meta_data || {};
       const existingMetadata = { ...currentMetadata, ...currentRawMetadata };
-      
+
       // Check if user is already fully registered (has role and name)
       // If so, this might be an attempt to re-register with OAuth
       if (existingMetadata.role && existingMetadata.name && existingMetadata.mobile_number) {
@@ -838,9 +838,9 @@ class AuthController {
 
       console.log('[OAUTH_SIGNUP] Status: UPDATING_USER_METADATA', {
         userId,
-        hasPassword: !!password,
+        hasPassword: Boolean(password),
         role: metadataUpdate.role,
-        hasMobile: !!metadataUpdate.mobile_number,
+        hasMobile: Boolean(metadataUpdate.mobile_number),
         timestamp: new Date().toISOString()
       });
 
@@ -878,7 +878,7 @@ class AuthController {
         email: updatedUser.user.email,
         name: displayName,
         role: normalizedRole,
-        hasMobile: !!metadataUpdate.mobile_number,
+        hasMobile: Boolean(metadataUpdate.mobile_number),
         duration: `${duration}ms`,
         timestamp: new Date().toISOString()
       });
@@ -1125,7 +1125,7 @@ class AuthController {
         userId,
         role,
         department_code,
-        hasMobile: !!mobile,
+        hasMobile: Boolean(mobile),
         timestamp: new Date().toISOString()
       });
       const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(userId, {

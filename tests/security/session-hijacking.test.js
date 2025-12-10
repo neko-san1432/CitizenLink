@@ -14,7 +14,7 @@ describe('Session Hijacking Prevention', () => {
   beforeEach(() => {
     jest.resetModules(); // Reset cache to allow fresh mocks
     mockSupabase = new SupabaseMock();
-    
+
     // Mock the database config to return our mock class
     jest.doMock('../../src/server/config/database', () => {
       return class DatabaseMock {

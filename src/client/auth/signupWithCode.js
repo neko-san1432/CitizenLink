@@ -27,7 +27,7 @@ if (!signupCode) {
       if (parsed.signupCode) {
         signupCode = parsed.signupCode;
         console.log('Restored signup code from storage:', signupCode);
-        
+
         // Update URL to reflect code
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('code', signupCode);
@@ -144,7 +144,7 @@ function setupFormPersistence() {
   function saveFormData() {
     const formData = new FormData(signupForm);
     const dataToSave = {};
-    
+
     for (const [key, value] of formData.entries()) {
       // Don't save sensitive fields
       // Save signupCode to allow session recovery
@@ -152,7 +152,7 @@ function setupFormPersistence() {
         dataToSave[key] = value;
       }
     }
-    
+
     try {
       localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (e) {
@@ -164,11 +164,11 @@ function setupFormPersistence() {
     try {
       const savedData = localStorage.getItem(FORM_STORAGE_KEY);
       console.log('Loading form data from storage:', savedData ? 'Found data' : 'No data');
-      
+
       if (!savedData) return;
-      
+
       const parsedData = JSON.parse(savedData);
-      
+
       Object.keys(parsedData).forEach(key => {
         const input = signupForm.querySelector(`[name="${key}"]`);
         if (input) {
@@ -231,7 +231,7 @@ function setupFormPersistence() {
       showMessage('error', validation.errors.join(', '));
       return;
     }
-    
+
     // Check if ID verification is complete
     let verificationComplete = false;
     try {
@@ -239,12 +239,12 @@ function setupFormPersistence() {
     } catch (e) {
       console.warn('Could not check verification status:', e);
     }
-    
+
     if (!verificationComplete) {
       showMessage('error', 'Please complete ID verification before signing up.');
       return;
     }
-    
+
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
     const originalHTML = submitButton.innerHTML;

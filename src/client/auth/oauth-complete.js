@@ -71,17 +71,17 @@ const OAUTH_FORM_STORAGE_KEY = 'cl_oauth_complete_form_data';
 function saveOAuthFormData() {
   const form = document.getElementById('oauthCompleteForm');
   if (!form) return;
-  
+
   const formData = new FormData(form);
   const dataToSave = {};
-  
+
   for (const [key, value] of formData.entries()) {
     // Don't save sensitive fields
     if (key !== 'regPassword' && key !== 'reRegPassword') {
       dataToSave[key] = value;
     }
   }
-  
+
   try {
     localStorage.setItem(OAUTH_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
@@ -93,11 +93,11 @@ function loadOAuthFormData() {
   try {
     const savedData = localStorage.getItem(OAUTH_FORM_STORAGE_KEY);
     if (!savedData) return;
-    
+
     const parsedData = JSON.parse(savedData);
     const form = document.getElementById('oauthCompleteForm');
     if (!form) return;
-    
+
     Object.keys(parsedData).forEach(key => {
       const input = form.querySelector(`[name="${key}"]`);
       if (input && input.type !== 'file') {
@@ -130,23 +130,23 @@ const prefillOAuthData = async () => {
       const rawMeta = user.raw_user_meta_data || {};
       const combined = { ...identityData, ...meta, ...rawMeta };
       const fullName = combined.full_name || combined.name || '';
-      
+
       // Prioritize explicit fields
       let firstName = combined.given_name || combined.first_name || '';
       let lastName = combined.family_name || combined.last_name || '';
-      let middleName = combined.middle_name || '';
+      const middleName = combined.middle_name || '';
 
       // If explicit fields are missing, try to parse from full name
       if (!firstName && !lastName && fullName) {
-          const nameParts = fullName.trim().split(' ');
-          if (nameParts.length === 1) {
-              firstName = nameParts[0];
-          } else if (nameParts.length > 1) {
-              // Assume last word is last name, everything else is first name
-              // Do NOT infer middle name automatically to avoid splitting multi-word first names
-              lastName = nameParts.pop();
-              firstName = nameParts.join(' ');
-          }
+        const nameParts = fullName.trim().split(' ');
+        if (nameParts.length === 1) {
+          firstName = nameParts[0];
+        } else if (nameParts.length > 1) {
+          // Assume last word is last name, everything else is first name
+          // Do NOT infer middle name automatically to avoid splitting multi-word first names
+          lastName = nameParts.pop();
+          firstName = nameParts.join(' ');
+        }
       }
 
       // Prefill firstName
@@ -158,13 +158,13 @@ const prefillOAuthData = async () => {
       const middleNameInput = document.getElementById('middleName');
       if (middleNameInput) {
         if (middleName && !middleNameInput.value) {
-            middleNameInput.value = middleName;
+          middleNameInput.value = middleName;
         } else if (!middleName && !middleNameInput.value) {
-            // Enable if empty so user can enter it or leave it blank
-            middleNameInput.removeAttribute('readonly');
-            middleNameInput.removeAttribute('disabled');
-            middleNameInput.removeAttribute('aria-disabled');
-            middleNameInput.removeAttribute('title');
+          // Enable if empty so user can enter it or leave it blank
+          middleNameInput.removeAttribute('readonly');
+          middleNameInput.removeAttribute('disabled');
+          middleNameInput.removeAttribute('aria-disabled');
+          middleNameInput.removeAttribute('title');
         }
       }
 
@@ -304,18 +304,18 @@ if (oauthCompleteForm) {
       // Get access token from current session
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
-      
+
       const headers = {
         'Content-Type': 'application/json'
       };
-      
+
       // Add Authorization header if we have a token
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
         // Also include in body as fallback
         payload.access_token = accessToken;
       }
-      
+
       const response = await fetch('/api/auth/complete-oauth', {
         method: 'POST',
         headers,
@@ -345,16 +345,16 @@ if (oauthCompleteForm) {
       } catch (error) {
         console.warn('[OAUTH_COMPLETE] Error updating OAuth context:', error);
       }
-      
+
       showMessage('success', 'Profile completed successfully! Redirecting to dashboard...');
       clearOAuthFormData(); // Clear saved form data
-      
+
       // Clear OAuth context since signup is complete
       try {
         const { clearOAuthContext } = await import('./authChecker.js');
         clearOAuthContext();
       } catch {}
-      
+
       // Redirect immediately to dashboard
       setTimeout(() => {
         window.location.href = '/dashboard';

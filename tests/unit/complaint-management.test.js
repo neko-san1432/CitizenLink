@@ -50,9 +50,9 @@ describe('ComplaintService - Management Features', () => {
 
       // Mock Supabase update for markAsFalseComplaint
       mockSupabase.single.mockResolvedValueOnce({
-        data: { 
-          id: complaintId, 
-          is_false_complaint: true, 
+        data: {
+          id: complaintId,
+          is_false_complaint: true,
           false_complaint_reason: reason,
           workflow_status: 'rejected'
         },
@@ -64,7 +64,7 @@ describe('ComplaintService - Management Features', () => {
       expect(result.success).toBe(true);
       expect(result.data.is_false_complaint).toBe(true);
       expect(result.data.workflow_status).toBe('rejected');
-      
+
       // Verify update call
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
         is_false_complaint: true,
@@ -91,9 +91,9 @@ describe('ComplaintService - Management Features', () => {
 
       // Mock Supabase update
       mockSupabase.single.mockResolvedValueOnce({
-        data: { 
-          id: complaintId, 
-          is_duplicate: true, 
+        data: {
+          id: complaintId,
+          is_duplicate: true,
           master_complaint_id: masterId,
           workflow_status: 'closed'
         },
@@ -105,7 +105,7 @@ describe('ComplaintService - Management Features', () => {
       expect(result.success).toBe(true);
       expect(result.data.is_duplicate).toBe(true);
       expect(result.data.master_complaint_id).toBe(masterId);
-      
+
     });
   });
 
@@ -128,8 +128,8 @@ describe('ComplaintService - Management Features', () => {
 
       // Mock Supabase update
       mockSupabase.single.mockResolvedValueOnce({
-        data: { 
-          id: complaintId, 
+        data: {
+          id: complaintId,
           workflow_status: 'cancelled',
           cancellation_reason: reason,
           cancelled_by: userId
@@ -141,7 +141,7 @@ describe('ComplaintService - Management Features', () => {
 
       expect(result.workflow_status).toBe('cancelled');
       expect(result.cancellation_reason).toBe(reason);
-      
+
       // Verify update call
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
         workflow_status: 'cancelled',
