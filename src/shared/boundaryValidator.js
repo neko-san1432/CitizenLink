@@ -136,9 +136,9 @@ function isWithinDigosBoundary(latitude, longitude) {
           longitude <= bounds.maxLng
         );
         if (inBounds) {
-          console.log('[BOUNDARY_VALIDATOR] Polygon check failed but coordinates within bounding box, allowing:', { lat: latitude, lng: longitude });
+          console.log('[BOUNDARY_VALIDATOR] Polygon check failed but coordinates within bounding box, allowing:', { lat: '[REDACTED]', lng: '[REDACTED]' });
         } else {
-          console.log('[BOUNDARY_VALIDATOR] Coordinates outside boundary:', { lat: latitude, lng: longitude, bounds });
+          console.log('[BOUNDARY_VALIDATOR] Coordinates outside boundary:', { lat: '[REDACTED]', lng: '[REDACTED]', bounds });
         }
         return inBounds;
       }

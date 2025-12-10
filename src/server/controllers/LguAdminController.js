@@ -275,15 +275,15 @@ class LguAdminController {
         if (!isAnyLguUser) {
           console.error('[LGU_ADMIN] Officer is not an LGU user:', {
             officerId,
-            officerEmail: officer.email,
+            officerEmail: '[REDACTED]',
             role,
             departmentCode,
-            metadata,
-            rawMetadata
+            metadata: '[REDACTED]',
+            rawMetadata: '[REDACTED]'
           });
           rejectedOfficers.push({
             id: officerId,
-            email: officer.email,
+            email: '[REDACTED]',
             reason: 'Officer is not an LGU user',
             role,
             departmentCode

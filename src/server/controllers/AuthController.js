@@ -147,7 +147,7 @@ class AuthController {
       if (authError) {
         // Log detailed error server-side only
         console.error('[LOGIN] Authentication failed:', {
-          email: email.toLowerCase(),
+          email: '[REDACTED]',
           error: authError.message,
           code: authError.code,
           timestamp: new Date().toISOString()
@@ -663,9 +663,9 @@ class AuthController {
       console.log('[OAUTH_SIGNUP] ========================================');
       console.log('[OAUTH_SIGNUP] Status: STARTED', {
         userId,
-        email: req.user?.email,
+        email: '[REDACTED]',
         timestamp: new Date().toISOString(),
-        ip: req.ip,
+        ip: '[REDACTED]',
         userAgent: req.get('user-agent')
       });
       console.log('[OAUTH_SIGNUP] Request body keys:', Object.keys(req.body || {}));
@@ -875,8 +875,8 @@ class AuthController {
       const duration = Date.now() - startTime;
       console.log('[OAUTH_SIGNUP] Status: SUCCESS', {
         userId,
-        email: updatedUser.user.email,
-        name: displayName,
+        email: '[REDACTED]',
+        name: '[REDACTED]',
         role: normalizedRole,
         hasMobile: Boolean(metadataUpdate.mobile_number),
         duration: `${duration}ms`,
@@ -1057,9 +1057,9 @@ class AuthController {
 
       console.log('[OAUTH_SIGNUP_HR] Status: STARTED', {
         userId,
-        email: req.user?.email,
+        email: '[REDACTED]',
         timestamp: new Date().toISOString(),
-        ip: req.ip
+        ip: '[REDACTED]'
       });
 
       const { name, mobile, signupCode } = req.body || {};
@@ -1196,7 +1196,7 @@ class AuthController {
       const duration = Date.now() - startTime;
       console.log('[OAUTH_SIGNUP_HR] Status: SUCCESS', {
         userId,
-        email: updatedUser.user.email,
+        email: '[REDACTED]',
         role: completeMetadata.role,
         department: completeMetadata.department,
         duration: `${duration}ms`,

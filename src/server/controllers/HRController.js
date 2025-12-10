@@ -283,7 +283,7 @@ class HRController {
       // Debug: Log all users to see what we're working with
       console.log('[HR] getPendingSignups - Total users fetched:', result.users?.length || 0);
       console.log('[HR] Sample users (first 5):', result.users?.slice(0, 5).map(u => ({
-        email: u.email,
+        email: '[REDACTED]',
         status: u.status,
         raw_status: u.raw_user_meta_data?.status,
         meta_status: u.user_metadata?.status,
@@ -382,7 +382,7 @@ class HRController {
       console.log('[HR] getPendingSignups - Found', enhancedPending.length, 'pending signups for HR:', hrId, 'department:', hrDept);
       console.log('[HR] Sample pending users:', enhancedPending.slice(0, 3).map(u => ({
         id: u.id,
-        email: u.email,
+        email: '[REDACTED]',
         status: u.status,
         pending_role: u.raw_user_meta_data?.pending_role || u.user_metadata?.pending_role,
         pending_department: u.raw_user_meta_data?.pending_department || u.user_metadata?.pending_department,

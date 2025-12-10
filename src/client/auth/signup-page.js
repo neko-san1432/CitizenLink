@@ -293,13 +293,13 @@ function setupOAuthPopupBridge() {
     if (event.origin !== window.location.origin) return;
 
     // Log the full event data to debug
-    console.log('[SIGNUP] Received message from popup:', event.data);
+    // console.log('[SIGNUP] Received message from popup:', event.data); // Redacted for security
     console.log('[SIGNUP] Full event:', {
       type: event.data?.type,
       redirectTo: event.data?.redirectTo,
       incomplete: event.data?.incomplete,
-      payload: event.data?.payload,
-      fullData: event.data
+      // payload: event.data?.payload, // Redacted for security
+      // fullData: event.data // Redacted for security
     });
 
     const { type, payload, redirectTo, incomplete } = event.data || {};

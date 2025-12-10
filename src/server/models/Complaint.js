@@ -60,11 +60,11 @@ class Complaint {
         const isValid = isWithinDigosBoundary(lat, lng);
         if (!isValid) {
           console.log('[COMPLAINT VALIDATION] Coordinates outside boundary:', {
-            lat,
-            lng,
-            location_text: data.location_text,
-            original_lat: data.latitude,
-            original_lng: data.longitude
+            lat: '[REDACTED]',
+            lng: '[REDACTED]',
+            location_text: '[REDACTED]',
+            original_lat: '[REDACTED]',
+            original_lng: '[REDACTED]'
           });
           errors.push('Complaint location must be within Digos City boundaries');
         }

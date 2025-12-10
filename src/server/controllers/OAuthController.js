@@ -69,7 +69,7 @@ class OAuthController {
 
       console.log('[OAUTH_CHECK] User status:', {
         userId,
-        email: user.email,
+        email: '[REDACTED]',
         intent,
         userType,
         hasRole,
@@ -166,7 +166,7 @@ class OAuthController {
       if (!isComplete) {
         console.log('[OAUTH_CLEANUP] Deleting incomplete OAuth signup:', {
           userId,
-          email: user.email
+          email: '[REDACTED]'
         });
 
         // Delete user from Supabase

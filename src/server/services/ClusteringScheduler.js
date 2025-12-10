@@ -189,7 +189,7 @@ class ClusteringScheduler {
           const complaintCount = cluster.complaint_ids?.length || 0;
           console.log(`  [CLUSTERING_SCHEDULER] Cluster ${index + 1}: "${cluster.cluster_name}"`);
           console.log(`    - Complaints: ${complaintCount}`);
-          console.log(`    - Location: (${cluster.center_lat?.toFixed(6)}, ${cluster.center_lng?.toFixed(6)})`);
+          console.log(`    - Location: ([REDACTED], [REDACTED])`);
           console.log(`    - Radius: ${cluster.radius_meters?.toFixed(0)}m`);
           console.log(`    - Pattern: ${cluster.pattern_type || 'normal'}`);
         });
