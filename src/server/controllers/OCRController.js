@@ -98,57 +98,95 @@ class OCRController {
   }
 
   /**
-   * Helper: Find field value by looking for a label
+   * Helper: Extract and clean value from line(s)
+   */
+  extractAndCleanValue(line, startIndex, lineIndex, lines) {
+    let value = line.substring(startIndex).replace(/[:.\\/]/g, '').trim();
+
+    // Check if value looks like another label
+    const labelKeywords = ['LAST', 'NAME', 'FIRST', 'GIVEN', 'MIDDLE', 'NAMES', 'PANGALAN', 'APILYEDO', 'APELYIDO', 'GITNANG'];
+    const valueWords = value.toUpperCase().split(/\s+/);
+    const hasLabelKeyword = valueWords.some(w => labelKeywords.includes(w));
+
+    // Use next line if value is empty or looks like a label
+    if ((value.length < 2 || hasLabelKeyword) && lineIndex + 1 < lines.length) {
+      value = lines[lineIndex + 1].trim();
+    }
+
+    // Clean value
+    let cleaned = value.replace(/[^A-Z0-9\s.-]/gi, '').trim();
+    cleaned = cleaned.replace(/^(oy|Yr|sh|w|a|i|d|v|J|ju|fa|Ra|pn)\s+/i, '').trim();
+    cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
+    cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
+
+    // If still too short, try next line
+    if (cleaned.length < 3 && lineIndex + 1 < lines.length) {
+      value = lines[lineIndex + 1].trim();
+      cleaned = value.replace(/[^A-Z0-9\s.-]/gi, '').trim();
+      cleaned = cleaned.replace(/^(oy|Yr|sh|w|a|i|d|v|J|ju|fa|Ra|pn)\s+/i, '').trim();
+      cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
+      cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
+    }
+    
+    return cleaned;
+  }
+
+  /**
+   * Helper: Find field value by looking for a label (Exact + Fuzzy)
    */
   findFieldByLabel(lines, labels, valuePattern = null) {
+    // 1. First pass: Exact Regex Matches
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
 
       for (const label of labels) {
-        const lineUpper = line.toUpperCase();
         const labelUpper = label.toUpperCase();
-
         // Check if label appears in line with word boundaries
         const labelRegex = new RegExp(`(^|[^A-Z])${labelUpper.replace(/\s+/g, '\\s+')}($|[^A-Z])`, 'i');
 
         if (labelRegex.test(line)) {
           const match = line.match(labelRegex);
           const labelEndIndex = match.index + match[0].length - (match[2] ? 1 : 0);
-          let value = line.substring(labelEndIndex).replace(/[:.\\/]/g, '').trim();
-
-          // Check if value looks like another label
-          const labelKeywords = ['LAST', 'NAME', 'FIRST', 'GIVEN', 'MIDDLE', 'NAMES', 'PANGALAN', 'APILYEDO', 'APELYIDO', 'GITNANG'];
-          const valueWords = value.toUpperCase().split(/\s+/);
-          const hasLabelKeyword = valueWords.some(w => labelKeywords.includes(w));
-
-          // Use next line if value is empty or looks like a label
-          if ((value.length < 2 || hasLabelKeyword) && i + 1 < lines.length) {
-            value = lines[i + 1].trim();
-          }
-
-          // Clean value
-          let cleaned = value.replace(/[^A-Z0-9\s.-]/gi, '').trim();
-          cleaned = cleaned.replace(/^(oy|Yr|sh|w|a|i|d|v|J|ju|fa|Ra|pn)\s+/i, '').trim();
-          cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
-          cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
-
-          // If still too short, try next line
-          if (cleaned.length < 3 && i + 1 < lines.length) {
-            value = lines[i + 1].trim();
-            cleaned = value.replace(/[^A-Z0-9\s.-]/gi, '').trim();
-            cleaned = cleaned.replace(/^(oy|Yr|sh|w|a|i|d|v|J|ju|fa|Ra|pn)\s+/i, '').trim();
-            cleaned = cleaned.replace(/\s+(Yr|oy|sh|w|a|i|d|v|J)$/i, '').trim();
-            cleaned = cleaned.replace(/\s+\d+$/g, '').trim();
-          }
-
-          if (valuePattern && !valuePattern.test(cleaned.toUpperCase())) {
-            continue;
-          }
-
+          
+          const cleaned = this.extractAndCleanValue(line, labelEndIndex, i, lines);
+          if (valuePattern && !valuePattern.test(cleaned.toUpperCase())) continue;
           return cleaned;
         }
       }
     }
+
+    // 2. Second pass: Fuzzy Matching
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      // Split line into words to check against labels
+      const words = line.split(/[\s:.,]+/);
+      
+      for (const label of labels) {
+        const labelUpper = label.toUpperCase();
+        
+        for (const word of words) {
+          if (word.length < 3) continue;
+          if (Math.abs(word.length - label.length) > 2) continue; // Optimization
+          
+          const dist = this.levenshteinDistance(word.toUpperCase(), labelUpper);
+          // Allow 1 edit for short labels, 2 for longer
+          const threshold = label.length > 5 ? 2 : 1; 
+
+          if (dist <= threshold) {
+             // Found a fuzzy match
+             const matchIndex = line.indexOf(word);
+             if (matchIndex !== -1) {
+                const labelEndIndex = matchIndex + word.length;
+                const cleaned = this.extractAndCleanValue(line, labelEndIndex, i, lines);
+                if (valuePattern && !valuePattern.test(cleaned.toUpperCase())) continue;
+                console.log(`[OCR] Fuzzy match found for '${label}': '${word}' (Dist: ${dist}) -> ${cleaned}`);
+                return cleaned;
+             }
+          }
+        }
+      }
+    }
+    
     return null;
   }
 
@@ -540,6 +578,13 @@ class OCRController {
 
       const fields = this.parseIdFields(text, idType);
 
+      // Cleanup original file if it exists and wasn't already cleaned up
+      try {
+        if (file && file.path && fs.existsSync(file.path)) {
+            await fsPromises.unlink(file.path).catch(() => {});
+        }
+      } catch (e) {}
+
       return res.json({
         success: true,
         idType,
@@ -553,6 +598,10 @@ class OCRController {
       try {
         for (const p of intermediateFiles) {
           if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
+        }
+        // Cleanup original file on error as well
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            await fsPromises.unlink(req.file.path).catch(() => {});
         }
       } catch (e) {}
 
