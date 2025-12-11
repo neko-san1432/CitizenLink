@@ -5,17 +5,19 @@ import logging
 from paddleocr import PaddleOCR
 
 # Configure logging to stderr so it doesn't pollute stdout (which is used for JSON)
-logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+# Only show ERROR logs to silence warnings and info messages
+logging.basicConfig(level=logging.ERROR, stream=sys.stderr)
 
 def process_image(image_path):
     try:
         # Initialize PaddleOCR
         # use_angle_cls=True enables angle classification
         # lang='en' for English (or 'ch' for Chinese/English mix which is default and robust)
-        ocr = PaddleOCR(use_angle_cls=True, lang='en')
+        # show_log=False disables internal PaddleOCR logging
+        ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
         
         logging.info(f"Processing image: {image_path}")
-        result = ocr.ocr(image_path)
+        result = ocr.predict(image_path)
         
         # Result is a list of lists (one for each page)
         # We assume single page

@@ -12,6 +12,8 @@
 
 /* Original Stylesheets */
 @import url('/css/app.css');
+@import url('/css/theme.css');
+  @import url('/css/app.css');
 @import url('/css/toast.css');
 @import url('/css/header-redesign.css');
 @import url('/css/pages/dashboard-redesign.css');
