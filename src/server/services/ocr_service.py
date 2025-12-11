@@ -13,8 +13,7 @@ def process_image(image_path):
         # Initialize PaddleOCR
         # use_angle_cls=True enables angle classification
         # lang='en' for English (or 'ch' for Chinese/English mix which is default and robust)
-        # show_log=False disables internal PaddleOCR logging
-        ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+        ocr = PaddleOCR(use_angle_cls=True, lang='en')
         
         logging.info(f"Processing image: {image_path}")
         result = ocr.predict(image_path)

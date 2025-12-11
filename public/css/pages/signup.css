@@ -2534,10 +2534,11 @@ html, body {
 }
 .step-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: var(--space-2);
-  align-items: stretch;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: flex-end; /* Align buttons to the right */
+  margin-top: var(--space-4);
 }
 
 .step-actions .btn {
@@ -2563,10 +2564,10 @@ html, body {
     align-items: stretch;
   }
   .step-actions {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: var(--space-2);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between; /* Space out buttons on mobile */
+    gap: var(--space-3);
   }
   .signup-step {
     padding: 1.25rem;
@@ -2639,3 +2640,10 @@ html, body {
 
 
 
+
+/* Disabled summary state for inactive review section */
+.review-summary-disabled {
+  color: var(--gray-400);
+  cursor: not-allowed;
+  pointer-events: none;
+}

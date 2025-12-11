@@ -822,25 +822,21 @@ import { supabase } from '../config/config.js';
   /**
    * Display comparison results
    */
+  /**
+   * Display comparison results
+   */
   function displayComparisonResults(comparisons, idOnlyFields = []) {
     // If no comparisons possible, show extracted ID data only
     if (!comparisons || comparisons.length === 0) {
       if (extractedIdData && reviewGrid) {
-        let message = '<div style="padding: 12px; background: var(--gray-100); border-radius: 6px; margin-bottom: 16px;">';
-        message += '<div style="font-weight: 600; margin-bottom: 8px;">ID Information Extracted</div>';
-        message += '<div style="font-size: 0.9rem; color: var(--gray-700);">';
-
-        if (idOnlyFields.length > 0) {
-          message += '⚠️ Some fields from your ID cannot be compared because they are not present in the registration form. ';
-        } else {
-          message += 'ℹ️ No matching fields found between the ID and the form. ';
-        }
-        message += 'Please verify the information manually.</div></div>';
+        let message = '<div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">';
+        message += '<div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Picture is not clear or ID not valid</div>';
+        message += '<div style="color: var(--error-600); font-size: 0.9rem;">We could not automatically verify your information. Please ensure the image is clear and you are using a valid PhilSys ID.</div></div>';
 
         const extractedHtml = renderExtractedFieldsOnly(extractedIdData);
         reviewGrid.innerHTML = message + extractedHtml;
         review.hidden = false;
-        status('ID processed. Some fields cannot be automatically compared with the form.', 'info');
+        status('Picture is not clear or ID not valid. Please try again.', 'error');
       }
       return;
     }
@@ -848,12 +844,70 @@ import { supabase } from '../config/config.js';
     // Count matches and mismatches
     const matches = comparisons.filter(c => c.match).length;
     const mismatches = comparisons.filter(c => !c.match).length;
-    const total = comparisons.length;
+    
+    // Check for ID Type validity (must be PhilID/PhilSys)
+    const isPhilId = extractedIdData?.idType === 'philid' || extractedIdData?.idType === 'philpost'; 
+    // ^ Assuming philpost is also acceptable or adjust accordingly. 
+    // If strict PhilSys request: 
+    // const isPhilId = extractedIdData?.idType === 'philid';
 
     // Determine overall status
     // Fail if any REQUIRED field is a mismatch
     const failedRequired = comparisons.filter(c => c.required && !c.match);
-    const passed = failedRequired.length === 0;
+    const passed = failedRequired.length === 0 && isPhilId;
+
+    // Build the status HTML message based on specific failure modes
+    let statusHtml = '';
+
+    if (passed) {
+      statusHtml = `
+        <div style="padding: 16px; background: var(--success-50); border: 1px solid var(--success-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <div style="color: var(--success-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Confirmed</div>
+          <div style="color: var(--success-600); font-size: 0.9rem;">Your ID matches your profile information.</div>
+        </div>
+      `;
+      sessionStorage.setItem('cl_verification_passed', 'true');
+      status('✓ Identity Confirmed.', 'success');
+
+    } else if (!isPhilId) {
+       statusHtml = `
+        <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">ID Not Valid</div>
+          <div style="color: var(--error-600); font-size: 0.9rem;">
+            Please use only a valid <strong>PhilSys ID</strong> (National ID). Other ID types are not recommended for this verification.
+          </div>
+        </div>
+      `;
+      sessionStorage.removeItem('cl_verification_passed');
+      status('ID Not Valid. Please use PhilSys ID.', 'error');
+
+    } else if (failedRequired.length > 0) {
+       // Identity didn't match (mismatches in required fields)
+       statusHtml = `
+        <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Didn't Match</div>
+          <div style="color: var(--error-600); font-size: 0.9rem;">
+            The information on your ID does not match the details you provided (${failedRequired.length} field${failedRequired.length !== 1 ? 's' : ''} mismatched).
+            <br>Please review your inputs or ensure the ID belongs to you.
+          </div>
+        </div>
+      `;
+      sessionStorage.removeItem('cl_verification_passed');
+      status("Identity Didn't Match. Please review your details.", 'error');
+
+    } else {
+        // Fallback for unclear cases (e.g. low confidence but technically matched optional fields?)
+        statusHtml = `
+        <div style="padding: 16px; background: var(--warning-50); border: 1px solid var(--warning-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <div style="color: var(--warning-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Picture is not clear</div>
+          <div style="color: var(--warning-600); font-size: 0.9rem;">
+            Some fields could not be confidently verified. Please try uploading a clearer image.
+          </div>
+        </div>
+      `;
+      sessionStorage.removeItem('cl_verification_passed');
+      status('Picture is not clear. Please try again.', 'warning');
+    }
 
     // Update review section with comparison results
     if (reviewGrid) {
@@ -885,71 +939,18 @@ import { supabase } from '../config/config.js';
         `;
       }).join('');
 
-      // Add overall status message
-      let statusHtml = '';
-      if (passed) {
-        statusHtml = `
-          <div style="padding: 16px; background: var(--success-50); border: 1px solid var(--success-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-            <div style="color: var(--success-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Verification Passed</div>
-            <div style="color: var(--success-600); font-size: 0.9rem;">Your ID matches your profile information.</div>
-          </div>
-        `;
-        // Enable next button or whatever mechanism exists
-        sessionStorage.setItem('cl_verification_passed', 'true');
-      } else {
-        statusHtml = `
-          <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-            <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Verification Failed</div>
-            <div style="color: var(--error-600); font-size: 0.9rem;">
-              ${failedRequired.length} required field${failedRequired.length !== 1 ? 's' : ''} do not match your ID with sufficient accuracy (85%+).
-              <br>Please check your form inputs or upload a clearer ID.
-            </div>
-          </div>
-        `;
-        sessionStorage.removeItem('cl_verification_passed');
-      }
-
-      // Also show other extracted fields that weren't compared (like ID number, dates)
+      // Also show other extracted fields
       const otherFieldsHtml = renderOtherExtractedFields(extractedIdData, comparisons);
 
-      // Show warning if some ID fields couldn't be compared
-      const idOnlyWarning = (idOnlyFields && idOnlyFields.length > 0) ? `
-        <div style="margin-top: 16px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border-left: 3px solid var(--warning-600);">
-          <div style="font-size: 0.9rem; color: var(--warning-700);">
-            <strong>Note:</strong> Some fields from your ID (${idOnlyFields.length}) could not be compared because they are not present in the registration form.
-          </div>
-        </div>
-      ` : '';
-
-      const summaryHtml = `
-        <div style="margin-bottom: 16px; padding: 12px; background: var(--gray-100); border-radius: 6px;">
-          <div style="font-weight: 600; margin-bottom: 8px;">Verification Summary</div>
-          <div style="font-size: 0.9rem;">
-            <span style="color: var(--success-600);">✓ ${matches} match${matches !== 1 ? 'es' : ''}</span>
-            ${mismatches > 0 ? `<span style="color: var(--error-600); margin-left: 16px;">✗ ${mismatches} mismatch${mismatches !== 1 ? 'es' : ''}</span>` : ''}
-            <span style="color: var(--gray-600); margin-left: 16px;">(${total} total)</span>
-          </div>
-          ${mismatches > 0 ? `
-            <div style="margin-top: 8px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--error-700);">
-              ⚠️ Please review the mismatched fields and ensure your information matches your ID.
-            </div>
-          ` : `
-            <div style="margin-top: 8px; padding: 8px; background: rgba(34, 197, 94, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--success-700);">
-              ✓ Your information matches the ID.
-            </div>
-          `}
-        </div>
-      `;
-
-      reviewGrid.innerHTML = summaryHtml + comparisonHtml + (otherFieldsHtml ? `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-300);"><div style="font-weight: 600; margin-bottom: 12px;">Other ID Information</div>${  otherFieldsHtml  }</div>` : '') + idOnlyWarning;
+      reviewGrid.innerHTML = statusHtml + comparisonHtml + (otherFieldsHtml ? `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-300);"><div style="font-weight: 600; margin-bottom: 12px;">Other ID Information</div>${otherFieldsHtml}</div>` : '');
+      
+      // Enable the review details now that process is finished
       review.hidden = false;
-    }
-
-    // Update status message
-    if (mismatches === 0) {
-      status('✓ Verification complete: All information matches your ID.', 'success');
-    } else {
-      status(`⚠️ Verification: ${mismatches} field${mismatches !== 1 ? 's' : ''} do not match. Please review and correct.`, 'error');
+      review.removeAttribute('disabled');
+      const summaryElement = review.querySelector('summary');
+      if (summaryElement) {
+        summaryElement.classList.remove('review-summary-disabled');
+      }
     }
   }
 
