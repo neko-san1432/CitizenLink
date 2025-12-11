@@ -7,8 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <!-- Consolidated CSS: style.css imports app.css, toast.css, header styles -->
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/pages/signup.css">
 </head>
 <body class="auth-page">
@@ -35,8 +36,8 @@
     </div>
     
     <!-- Main Content -->
-    <main class="auth-container animate-fade-in">
-        <div class="auth-card glass-panel">
+    <main class="auth-container">
+        <div class="auth-card">
             <!-- Header Section -->
             <div class="auth-header">
                 <h1 class="auth-title">Create your account</h1>
@@ -45,36 +46,9 @@
 
             <!-- Form Section -->
             <div class="auth-form">
-
                 <div class="auth-content">
                     <!-- Main Signup Form -->
                     <div class="auth-main">
-<<<<<<< HEAD
-                        <section class="signup-method-section" id="signup-method-section" aria-label="Signup methods">
-                            <div class="method-header">
-                                <p class="method-eyebrow">Step 0 · Choose how to start</p>
-                                <h2>Pick a signup method</h2>
-                                <p>Select email to use the guided form or connect with an OAuth provider.</p>
-                            </div>
-                            <div class="signup-method-grid" role="radiogroup">
-                                <button type="button" class="signup-method-card" data-signup-method="email" aria-pressed="false">
-                                    <div class="method-icon" aria-hidden="true">
-                                        <span class="method-dot"></span>
-                                    </div>
-                                    <div class="method-body">
-                                        <p class="method-title">Use email & password</p>
-                                        <p class="method-copy">4 guided steps with address, password, and ID verification.</p>
-                                    </div>
-                                    <span class="method-chevron" aria-hidden="true">→</span>
-                                </button>
-                                <button type="button" class="signup-method-card oauth" id="login-google" data-signup-method="google" aria-pressed="false">
-                                    <div class="method-icon" aria-hidden="true">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-=======
                         <form id="regForm" class="signup-form">
                             <!-- First Name Field -->
                             <div class="form-group form-half">
@@ -93,259 +67,68 @@
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
->>>>>>> 0292d7f (Final changes before migrating to main branch - UI improvements, animations, and system documentation)
                                         </svg>
                                     </div>
-                                    <div class="method-body">
-                                        <p class="method-title">Continue with Google</p>
-                                        <p class="method-copy">Recommended for Gmail or LGU Google Workspace accounts.</p>
-                                    </div>
-                                    <span class="method-chevron" aria-hidden="true">→</span>
-                                </button>
-                                <button type="button" class="signup-method-card oauth" id="login-facebook" data-signup-method="facebook" aria-pressed="false">
-                                    <div class="method-icon" aria-hidden="true">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true" focusable="false">
-                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                </div>
+                            </div>
+
+                            <!-- Last Name Field -->
+                            <div class="form-group form-half">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <div class="input-wrapper">
+                                    <input 
+                                        class="input" 
+                                        type="text" 
+                                        id="lastName" 
+                                        name="lastName" 
+                                        placeholder="Enter your last name"
+                                        required
+                                        autocomplete="family-name"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                     </div>
-                                    <div class="method-body">
-                                        <p class="method-title">Continue with Facebook</p>
-                                        <p class="method-copy">Use your existing Facebook presence for quicker updates.</p>
-                                    </div>
-                                    <span class="method-chevron" aria-hidden="true">→</span>
-                                </button>
-                            </div>
-                        </section>
-                        <form id="regForm" class="signup-form" data-method="none">
-
-                            <div class="signup-flow-placeholder" id="signup-flow-placeholder">
-                                <div class="placeholder-card">
-                                    <strong>Start by choosing “Use email” or connect via OAuth.</strong>
-                                    <p>The progressive form unlocks once you pick email. OAuth opens a secure popup and fills your name &amp; email on the next step.</p>
                                 </div>
                             </div>
-                            <div id="signup-email-flow" class="signup-email-flow" hidden>
-                                <button type="button" class="signup-method-back" id="signup-method-back" hidden>
-                                    <span class="back-icon" aria-hidden="true">←</span>
-                                    <span>Choose another method</span>
-                                </button>
-                                <div class="signup-progress-indicator" id="signup-progress-indicator">
-                                    <div class="progress-label">
-                                        <span id="signup-progress-label">0% complete</span>
-                                    </div>
-                                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                                        <div class="progress-fill" id="signup-progress-fill" style="width:0%"></div>
-                                    </div>
-                                </div>
-                            <!-- Progressive multi-step wrapper -->
-                            <div class="signup-steps" id="signup-steps">
-                                <div class="signup-step" data-step="1">
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 1</div>
-                                        <div class="step-card-copy">
-                                            <h3>Personal information</h3>
-                                            <p>Start with your basic contact details so we can reach you with status updates.</p>
-                                        </div>
-                                    </header>
-                                    <div class="form-group form-half">
-                                        <label for="firstName" class="form-label">First Name</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="text" id="firstName" name="firstName" placeholder="Enter your first name" required autocomplete="given-name">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="middleName" class="form-label">Middle Name (Optional)</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="text" id="middleName" name="middleName" placeholder="Enter your middle name" autocomplete="additional-name">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="lastName" class="form-label">Last Name</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="text" id="lastName" name="lastName" placeholder="Enter your last name" required autocomplete="family-name">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-full">
-                                        <label for="email" class="form-label">Email Address</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="email">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="mobile" class="form-label">Phone Number</label>
-                                        <div class="phone-input-wrapper">
-                                            <div class="phone-prefix">+63</div>
-                                            <input class="input phone-input" type="tel" id="mobile" name="mobile" placeholder="9123456789" maxlength="10" pattern="[0-9]{10}" required autocomplete="tel">
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="signup-step" data-step="2" hidden>
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 2</div>
-                                        <div class="step-card-copy">
-                                            <h3>Address & demographics</h3>
-                                            <p>This helps coordinators assign your concern to the correct barangay and office.</p>
-                                        </div>
-                                    </header>
-                                    <div class="form-group form-full">
-                                        <label for="addressLine1" class="form-label">Address Line 1 *</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="text" id="addressLine1" name="addressLine1" placeholder="House no., street" autocomplete="address-line1">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-full">
-                                        <label for="addressLine2" class="form-label">Address Line 2 (Optional)</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="text" id="addressLine2" name="addressLine2" placeholder="Unit, building, subdivision" autocomplete="address-line2">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="barangay" class="form-label">Barangay</label>
-                                        <div class="input-wrapper">
-                                            <select class="input" id="barangay" name="barangay"><option value="">Select barangay</option>
-                                                <!-- options preserved below by original markup -->
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="gender" class="form-label">Gender</label>
-                                        <div class="input-wrapper">
-                                            <select id="gender" name="gender" class="input"><option value="" selected>Select gender</option><option value="he">He</option><option value="she">She</option></select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="signup-step" data-step="3" hidden>
-                                    <header class="step-card-header">
-                                    <div class="step-chip">Step 3</div>
-                                    <div class="step-card-copy">
-                                        <h3>Security setup</h3>
-                                        <p>Create a strong password and agree to our policies to keep your account safe.</p>
-                                    </div>
-                                    </header>
-                                    <div class="form-group form-half">
-                                        <label for="regPassword" class="form-label">Password</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="password" id="regPassword" name="password" placeholder="Create a strong password" required autocomplete="new-password">
-                                        </div>
-                                        <div class="password-strength">
-                                            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-                                            <span class="strength-text" id="strength-text">Password strength</span>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-half">
-                                        <label for="reRegPassword" class="form-label">Confirm Password</label>
-                                        <div class="input-wrapper">
-                                            <input class="input" type="password" id="reRegPassword" name="confirmPassword" placeholder="Confirm your password" required autocomplete="new-password">
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-full">
-                                        <label class="checkbox-wrapper terms-checkbox"><input type="checkbox" id="terms-checkbox" required><span class="checkbox-custom"></span><span class="checkbox-label">I agree to the <a href="#" class="terms-link" data-open-terms>Terms and Conditions</a> and <a href="#" class="terms-link" data-open-privacy>Privacy Policy</a></span></label>
-                                    </div>
-                                </div>
-
-                                <div class="signup-step" data-step="4" hidden>
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 4</div>
-                                        <div class="step-card-copy">
-                                            <h3>Identity confirmation</h3>
-                                            <p>Upload or capture your ID so complaint coordinators can verify submissions quickly.</p>
-                                        </div>
-                                    </header>
-                                    <!-- ID verification and captcha live here (moved from main flow) -->
-                                    <div id="id-step-placeholder">
-                                        <!-- Inline copy of ID verification UI (moved here) -->
-                                        <section class="form-group form-full" aria-labelledby="id-verify-title">
-                                            <div class="id-verify-card">
-                                                <div class="id-verify-header">
-                                                    <div>
-                                                        <h2 id="id-verify-title" class="id-verify-title">Verify your identity</h2>
-                                                        <p class="id-verify-subtitle">Upload or scan a government ID to verify your identity.</p>
-                                                    </div>
-                                                    <div class="id-verify-actions" role="tablist" aria-label="ID capture modes">
-                                                        <button type="button" class="id-mode-btn active" data-mode="upload" role="tab" aria-selected="true">Upload</button>
-                                                        <button type="button" class="id-mode-btn" data-mode="camera" role="tab" aria-selected="false">Use camera</button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="id-verify-body">
-                                                    <!-- Upload mode -->
-                                                    <div class="id-mode id-mode-upload" data-mode-panel="upload">
-                                                        <label for="id-file-input" class="id-dropzone" tabindex="0">
-                                                            <div class="dz-icon" aria-hidden="true">
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                                    <path d="M12 16V7m0 0l-4 4m4-4l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                    <rect x="3" y="4" width="18" height="14" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-                                                                </svg>
-                                                            </div>
-                                                            <div class="dz-text">
-                                                                <strong>Click to upload</strong> or drag and drop
-                                                                <div class="dz-hint">Accepted: JPG, PNG, PDF (front side is enough)</div>
-                                                            </div>
-                                                            <input id="id-file-input" name="id-file" type="file" accept="image/*,application/pdf" hidden>
-                                                        </label>
-                                                        <div class="id-preview" id="id-preview" hidden>
-                                                            <img id="id-preview-img" alt="Uploaded ID preview" />
-                                                            <button type="button" class="btn btn-secondary btn-sm" id="id-clear-btn">Remove</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Camera mode -->
-                                                    <div class="id-mode id-mode-camera" data-mode-panel="camera" hidden>
-                                                        <div class="camera-wrap">
-                                                            <video id="id-camera" playsinline autoplay muted></video>
-                                                            <canvas id="id-canvas" hidden></canvas>
-                                                        </div>
-                                                        <div class="camera-actions">
-                                                            <button type="button" class="btn btn-secondary" id="camera-start-btn">Enable camera</button>
-                                                            <button type="button" class="btn btn-primary" id="camera-capture-btn" disabled>Capture</button>
-                                                            <button type="button" class="btn btn-secondary" id="camera-stop-btn" disabled>Stop</button>
-                                                        </div>
-                                                        <div class="id-preview" id="id-camera-preview" hidden>
-                                                            <img id="id-captured-img" alt="Captured ID preview" />
-                                                            <button type="button" class="btn btn-secondary btn-sm" id="camera-retake-btn">Retake</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="id-verify-footer">
-                                                    <div class="id-verify-consent">
-                                                        <label class="checkbox-wrapper small">
-                                                            <input type="checkbox" id="id-consent-checkbox">
-                                                            <span class="checkbox-custom"></span>
-                                                            <span>I consent to process my ID for verification as described in the Privacy Policy.</span>
-                                                        </label>
-                                                    </div>
-                                                    <div class="id-verify-actions-row">
-                                                        <button type="button" id="id-scan-btn" class="btn btn-primary" disabled>
-                                                            <span>Verify ID</span>
-                                                        </button>
-                                                        <div class="id-verify-status" id="id-verify-status" aria-live="polite"></div>
-                                                    </div>
-                                                    <details class="id-verify-review" id="id-review" hidden>
-                                                        <summary>Review extracted fields</summary>
-                                                        <div class="review-grid" id="id-review-grid"></div>
-                                                    </details>
-                                                </div>
-                                            </div>
-                                        </section>
-                                    </div>
-                                    <div id="register-captcha-step">
-                                        <div id="register-captcha" class="captcha-container form-full"></div>
+                            <!-- Address Line 1 -->
+                            <div class="form-group form-full">
+                                <label for="addressLine1" class="form-label">Address Line 1 *</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="addressLine1"
+                                        name="addressLine1"
+                                        placeholder="House no., street"
+                                        autocomplete="address-line1"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
 
-                                <div class="step-actions" id="signup-step-actions">
-                                    <button type="button" class="btn btn-secondary" id="signup-prev-btn" hidden>Back</button>
-                                    <button type="button" class="btn btn-primary" id="signup-next-btn">Next</button>
-                                    <button type="submit" class="btn btn-primary" id="signup-submit-btn" hidden>Create Account</button>
+                            <!-- Address Line 2 -->
+                            <div class="form-group form-full">
+                                <label for="addressLine2" class="form-label">Address Line 2 (Optional)</label>
+                                <div class="input-wrapper">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        id="addressLine2"
+                                        name="addressLine2"
+                                        placeholder="Unit, building, subdivision"
+                                        autocomplete="address-line2"
+                                    >
                                 </div>
                             </div>
-<<<<<<< HEAD
-                            <!-- (Fields are managed in the progressive steps above) -->
-=======
 
                             <!-- City and Province -->
                             <div class="form-group form-half">
@@ -533,12 +316,32 @@
                                     <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
->>>>>>> 0292d7f (Final changes before migrating to main branch - UI improvements, animations, and system documentation)
                         </form>
-
                     </div>
 
-
+                    <!-- OAuth Sidebar -->
+                    <div class="auth-sidebar">
+                        <div class="oauth-section">
+                            <h3 class="oauth-title">Quick Sign Up</h3>
+                            <div class="oauth-buttons">
+                                <button id="login-google" type="button" class="btn btn-secondary oauth-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    <span>Continue with Google</span>
+                                </button>
+                                <button id="login-facebook" type="button" class="btn btn-secondary oauth-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                    <span>Continue with Facebook</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -555,12 +358,9 @@
     <!-- Scripts -->
     <script type="module" src="./js/components/toast.js"></script>
     <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
-    <script type="module" src="./js/utils/passwordToggle.js"></script>
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/signup-page.js"></script>
     <script type="module" src="./js/auth/authChecker.js"></script>
-    <script type="module" src="./js/pages/signup-id-verify.js"></script>
-    <script type="module" src="./js/auth/signup-progressive.js"></script>
     
 
     <!-- Simple Modal HTML -->

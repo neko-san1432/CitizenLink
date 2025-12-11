@@ -7,8 +7,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <title>Complete Your Profile</title>
-    <!-- Consolidated CSS: style.css imports app.css, toast.css, header styles -->
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/header-redesign.css">
     <link rel="stylesheet" href="./css/pages/signup.css">
     <link rel="stylesheet" href="./css/pages/oauth-complete.css">
 </head>
@@ -28,9 +29,6 @@
                     <a href="/signup" id="signup-btn" class="btn btn-primary">Sign up</a>
                 </div>
             </div>
-
-
-
         </div>
     </div>
 
@@ -53,23 +51,6 @@
                 <div class="auth-content">
                     <div class="auth-main">
                         <form id="oauthCompleteForm" class="signup-form">
-                            <div class="signup-progress-indicator" id="signup-progress-indicator">
-                                <div class="progress-label">
-                                    <span id="signup-progress-label">Step 1 of 4 · 0% complete</span>
-                                </div>
-                                <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                                    <div class="progress-fill" id="signup-progress-fill" style="width:0%"></div>
-                                </div>
-                            </div>
-                            <div class="signup-steps" id="signup-steps">
-                                <div class="signup-step" data-step="1">
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 1</div>
-                                        <div class="step-card-copy">
-                                            <h3>Confirm your identity</h3>
-                                            <p>Review the information provided by your OAuth account.</p>
-                                        </div>
-                                    </header>
             <!-- First Name Field -->
                             <div class="form-group form-half">
                 <label for="firstName" class="form-label">First Name</label>
@@ -82,31 +63,6 @@
                     placeholder="Enter your first name"
                     required
                     autocomplete="given-name"
-                                        readonly
-                                        disabled
-                                        aria-disabled="true"
-                                        title="Name is set by your OAuth provider"
-                                    >
-                                    <div class="input-icon">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-            </div>
-
-            <!-- Middle Name Field -->
-                            <div class="form-group form-half">
-                <label for="middleName" class="form-label">Middle Name</label>
-                                <div class="input-wrapper">
-                <input 
-                                        class="input"
-                    type="text" 
-                    id="middleName" 
-                    name="middleName" 
-                    placeholder="Enter your middle name"
-                    autocomplete="additional-name"
                                         readonly
                                         disabled
                                         aria-disabled="true"
@@ -147,39 +103,6 @@
                                 </div>
             </div>
 
-            <!-- Email Field (readonly) -->
-                            <div class="form-group form-half">
-                <label for="email" class="form-label">Email Address</label>
-                                <div class="input-wrapper">
-                <input 
-                                        class="input"
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    placeholder="Email"
-                    readonly 
-                                        disabled
-                                        aria-disabled="true"
-                                        title="Email is set by your OAuth provider"
-                                    >
-                                    <div class="input-icon">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-            </div>
-
-                                </div>
-                                <div class="signup-step" data-step="2" hidden>
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 2</div>
-                                        <div class="step-card-copy">
-                                            <h3>Contact & demographics</h3>
-                                            <p>Share the local details coordinators need to reach you.</p>
-                                        </div>
-                                    </header>
             <!-- Address Line 1 -->
                             <div class="form-group form-full">
                 <label for="addressLine1" class="form-label">Address (Line 1)</label>
@@ -206,6 +129,31 @@
                 </select>
                                 </div>
             </div>
+
+            <!-- Email Field (readonly) -->
+                            <div class="form-group form-half">
+                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                <input 
+                                        class="input"
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Email"
+                    readonly 
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Email is set by your OAuth provider"
+                    class="readonly"
+                                    >
+                                    <div class="input-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+            </div>
             
             <!-- Phone Field -->
                             <div class="form-group form-half">
@@ -226,115 +174,6 @@
                 </div>
             </div>
 
-            <!-- Barangay -->
-                            <div class="form-group form-half">
-                <label for="barangay" class="form-label">Barangay</label>
-                                <div class="input-wrapper">
-                                    <select id="barangay" name="barangay" class="input" required>
-                    <option value="" selected>Select barangay</option>
-                </select>
-                                </div>
-            </div>
-                                </div>
-
-                                <div class="signup-step" data-step="3" hidden>
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 3</div>
-                                        <div class="step-card-copy">
-                                            <h3>Identity confirmation</h3>
-                                            <p>Upload or capture your ID so complaint coordinators can verify submissions quickly.</p>
-                                        </div>
-                                    </header>
-                                    <!-- ID Verification Section -->
-                                    <div id="id-step-placeholder">
-                                        <section class="form-group form-full" aria-labelledby="id-verify-title">
-                                            <div class="id-verify-card">
-                                                <div class="id-verify-header">
-                                                    <div>
-                                                        <h2 id="id-verify-title" class="id-verify-title">Verify your identity</h2>
-                                                        <p class="id-verify-subtitle">Upload or scan a government ID to verify your identity.</p>
-                                                    </div>
-                                                    <div class="id-verify-actions" role="tablist" aria-label="ID capture modes">
-                                                        <button type="button" class="id-mode-btn active" data-mode="upload" role="tab" aria-selected="true">Upload</button>
-                                                        <button type="button" class="id-mode-btn" data-mode="camera" role="tab" aria-selected="false">Use camera</button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="id-verify-body">
-                                                    <!-- Upload mode -->
-                                                    <div class="id-mode id-mode-upload" data-mode-panel="upload">
-                                                        <label class="upload-dropzone">
-                                                            <input type="file" id="id-file-input" accept="image/*,application/pdf" hidden>
-                                                            <div class="upload-dropzone-inner">
-                                                                <div class="upload-icon">
-                                                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                                                                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                        <path d="M7 9l5-5 5 5M12 4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                    </svg>
-                                                                </div>
-                                                                <div>
-                                                                    <p class="upload-title">Drag & drop or click to upload</p>
-                                                                    <p class="upload-subtitle">Accepts clear photos of valid government IDs (JPG, PNG, PDF)</p>
-                                                                </div>
-                                                            </div>
-                                                        </label>
-                                                        <div class="id-preview" id="id-preview" hidden>
-                                                            <img id="id-preview-img" alt="Uploaded ID preview" />
-                                                            <button type="button" class="btn btn-secondary btn-sm" id="id-clear-btn">Remove</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Camera mode -->
-                                                    <div class="id-mode id-mode-camera" data-mode-panel="camera" hidden>
-                                                        <div class="camera-wrap">
-                                                            <video id="id-camera" playsinline autoplay muted></video>
-                                                            <canvas id="id-canvas" hidden></canvas>
-                                                        </div>
-                                                        <div class="camera-actions">
-                                                            <button type="button" class="btn btn-secondary" id="camera-start-btn">Enable camera</button>
-                                                            <button type="button" class="btn btn-primary" id="camera-capture-btn" disabled>Capture</button>
-                                                            <button type="button" class="btn btn-secondary" id="camera-stop-btn" disabled>Stop</button>
-                                                        </div>
-                                                        <div class="id-preview" id="id-camera-preview" hidden>
-                                                            <img id="id-captured-img" alt="Captured ID preview" />
-                                                            <button type="button" class="btn btn-secondary btn-sm" id="camera-retake-btn">Retake</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="id-verify-footer">
-                                                    <div class="id-verify-consent">
-                                                        <label class="checkbox-wrapper small">
-                                                            <input type="checkbox" id="id-consent-checkbox">
-                                                            <span class="checkbox-custom"></span>
-                                                            <span>I consent to process my ID for verification as described in the Privacy Policy.</span>
-                                                        </label>
-                                                    </div>
-                                                    <div class="id-verify-actions-row">
-                                                        <button type="button" id="id-scan-btn" class="btn btn-primary" disabled>
-                                                            <span>Verify ID</span>
-                                                        </button>
-                                                        <div class="id-verify-status" id="id-verify-status" aria-live="polite"></div>
-                                                    </div>
-                                                    <details class="id-verify-review" id="id-review" hidden>
-                                                        <summary>View extracted fields</summary>
-                                                        <div class="id-review-grid" id="id-review-grid"></div>
-                                                    </details>
-                                                </div>
-                                            </div>
-                                        </section>
-                                    </div>
-                                </div>
-
-                                <div class="signup-step" data-step="4" hidden>
-                                    <header class="step-card-header">
-                                        <div class="step-chip">Step 4</div>
-                                        <div class="step-card-copy">
-                                            <h3>Security check</h3>
-                                            <p>Agree to our policies and finish verification.</p>
-                                        </div>
-                                    </header>
-
             <!-- Terms and Privacy -->
                             <div class="form-group form-full">
                                 <label class="checkbox-wrapper terms-checkbox">
@@ -342,20 +181,21 @@
                                     <span class="checkbox-custom"></span>
                     <span class="checkbox-label">
                         I agree to the <a id="toc">Terms and Conditions</a> 
-                        and <a id="pc" href="/privacy-notice" target="_blank">Privacy Notice</a>
+                        and <a id="pc">Privacy Consent</a>
                     </span>
                 </label>
             </div>
 
             <!-- Captcha -->
                             <div id="oauth-complete-captcha" class="captcha-container form-full"></div>
-                                </div>
-                            </div>
-                            <div class="step-actions" id="signup-step-actions">
-                                <button type="button" class="btn btn-secondary" id="signup-prev-btn" hidden>Back</button>
-                                <button type="button" class="btn btn-primary" id="signup-next-btn">Next</button>
-                                <button type="submit" class="btn btn-primary" id="signup-submit-btn" hidden>Complete Registration</button>
-                            </div>
+            
+                            <!-- Submit Button -->
+                            <button class="btn btn-primary btn-lg w-full form-full" type="submit">
+                                <span>Complete Registration</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
         </form>
                     </div>
                 </div>
@@ -368,8 +208,6 @@
     </main>
 </body>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script type="module" src="/js/auth/oauth-continuation-page.js"></script>
-<script type="module" src="/js/auth/signup-progressive.js"></script>
-<script type="module" src="/js/auth/oauth-complete.js"></script>
-<script type="module" src="/js/pages/signup-id-verify.js"></script>
+<script type="module" src="./js/auth/oauth-complete.js"></script>
+<script type="module" src="./js/auth/oauth-continuation-page.js"></script>
 </html>
