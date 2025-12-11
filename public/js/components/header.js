@@ -1,5 +1,5 @@
 import { brandConfig } from '../config/index.js';
-import { initializeNotificationButton, closeNotificationPanel as _closeNotificationPanel } from './notification.js';
+import { initializeNotificationButton, closeNotificationPanel } from './notification.js';
 
 // Header component for easy modification
 
@@ -46,20 +46,12 @@ export function createHeader() {
           <div id="notification-panel" class="header-dropdown notification-panel">
             <div class="dropdown-header">
               <h3 class="dropdown-title">Notifications</h3>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="mark-all-read" class="mark-all-read-btn" aria-label="Mark all as read" title="Mark all as read">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <span style="font-size: 0.75rem; margin-left: 4px;">Mark All</span>
-                </button>
-                <button id="close-notifications" class="dropdown-close" aria-label="Close notifications">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
+              <button id="close-notifications" class="dropdown-close" aria-label="Close notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             <div id="notification-content" class="dropdown-content">
               <div class="no-notifications">No notifications yet</div>
@@ -147,20 +139,20 @@ function initializeProfileButton() {
     console.warn('[HEADER] Profile button not found');
     return;
   }
-
+  
   const updateProfilePanelPosition = () => {
     const profilePanel = document.getElementById('profile-panel');
     if (!profilePanel) return;
-
+    
     const profileBtnRect = profileBtn.getBoundingClientRect();
-    const _headerHeight = 64; // Approximate header height
-
+    const headerHeight = 64; // Approximate header height
+    
     // Position panel below the profile button, aligned to the right
     profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;
     profilePanel.style.right = `${window.innerWidth - profileBtnRect.right}px`;
     profilePanel.style.left = 'auto';
   };
-
+  
   profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const notificationPanel = document.getElementById('notification-panel');
@@ -183,7 +175,7 @@ function initializeProfileButton() {
       }, 10);
     }
   });
-
+  
   // Update position on window resize
   window.addEventListener('resize', updateProfilePanelPosition);
 }
@@ -231,30 +223,30 @@ function initializeThemeToggle() {
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
-
+  
   // Update sidebar toggle if it exists
   const sidebarToggleSwitch = document.getElementById('sidebar-toggle-switch');
   if (sidebarToggleSwitch) {
     sidebarToggleSwitch.classList.toggle('active', savedTheme === 'dark');
   }
-
+  
   themeToggleBtn.addEventListener('click', () => {
     const rootElement = document.documentElement;
     const isDark = rootElement.classList.contains('dark');
     const newTheme = isDark ? 'light' : 'dark';
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-
+    
     // Update button appearance
     themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
-
+    
     // Sync sidebar toggle switch
     if (sidebarToggleSwitch) {
       sidebarToggleSwitch.classList.toggle('active', newTheme === 'dark');
     }
   });
-
+  
   function applyTheme(theme) {
     const rootElement = document.documentElement;
     if (theme === 'dark') {
@@ -269,14 +261,14 @@ function initializeThemeToggle() {
 function initializeHeaderScroll() {
   // Scroll behavior disabled - header should always be visible
   // This prevents the header from hiding when scrolling down
-
+  
   // Reset any existing transform styles that might have been applied
   const header = document.querySelector('.header-content');
   if (header) {
     header.style.transform = 'translateY(0)';
     header.style.transition = 'transform 0.3s ease';
   }
-
+  
   // Old code (disabled):
   // let lastScrollY = window.scrollY;
   // window.addEventListener('scroll', () => {
@@ -340,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     // Test if buttons were created
-    const _testNotificationBtn = document.getElementById('notification-btn');
+    const testNotificationBtn = document.getElementById('notification-btn');
     // Initialize header components
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector('.notification-container');
