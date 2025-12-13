@@ -1,0 +1,13 @@
+/* Clock component styles */
+.dashboard-clock {
+  font-family: "Source Code Pro", monospace;
+  font-weight: 600;
+  color: var(--text-color);
+  background: var(--bg-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+}

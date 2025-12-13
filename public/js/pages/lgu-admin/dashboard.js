@@ -1,10 +1,13 @@
-import apiClient from '../../config/apiClient.js';
-import showMessage from '../../components/toast.js';
-import { escapeHtml } from '../../utils/string.js';
-import { getStatusText, getStatusClass, getPriorityClass } from '../../utils/complaint.js';
+import apiClient from "../../config/apiClient.js";
+import showMessage from "../../components/toast.js";
+import { escapeHtml } from "../../utils/string.js";
+import {
+  getStatusText,
+  getStatusClass,
+  getPriorityClass,
+} from "../../utils/complaint.js";
 
 class LguAdminDashboard {
-
   constructor() {
     this.stats = null;
     this.assignments = [];
@@ -15,8 +18,8 @@ class LguAdminDashboard {
       await this.loadDashboardData();
       this.setupEventListeners();
     } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Initialization error:', error);
-      showMessage('error', 'Failed to initialize dashboard');
+      console.error("[LGU_ADMIN_DASHBOARD] Initialization error:", error);
+      showMessage("error", "Failed to initialize dashboard");
     }
   }
   async loadDashboardData() {
@@ -24,22 +27,24 @@ class LguAdminDashboard {
       await this.loadAssignments();
       await this.loadActivities();
     } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Load dashboard data error:', error);
-      showMessage('error', 'Failed to load dashboard data');
+      console.error("[LGU_ADMIN_DASHBOARD] Load dashboard data error:", error);
+      showMessage("error", "Failed to load dashboard data");
     }
   }
   // Statistics loading removed - no longer needed
   async loadAssignments() {
     try {
-      const response = await apiClient.get('/api/lgu-admin/department-assignments?limit=5');
+      const response = await apiClient.get(
+        "/api/lgu-admin/department-assignments?limit=5"
+      );
       if (response && response.success) {
         this.assignments = response.data || [];
         this.renderAssignments();
       } else {
-        throw new Error(response?.error || 'Failed to load assignments');
+        throw new Error(response?.error || "Failed to load assignments");
       }
     } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Load assignments error:', error);
+      console.error("[LGU_ADMIN_DASHBOARD] Load assignments error:", error);
       this.assignments = [];
       this.renderAssignments();
     }
@@ -50,14 +55,14 @@ class LguAdminDashboard {
       this.activities = this.assignments.slice(0, 5);
       this.renderActivities();
     } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Load activities error:', error);
+      console.error("[LGU_ADMIN_DASHBOARD] Load activities error:", error);
       this.activities = [];
       this.renderActivities();
     }
   }
   // Statistics methods removed - no longer needed
   renderAssignments() {
-    const container = document.getElementById('assignments-container');
+    const container = document.getElementById("assignments-container");
     if (!container) return;
     if (this.assignments.length === 0) {
       container.innerHTML = `
@@ -71,44 +76,63 @@ class LguAdminDashboard {
     }
     container.innerHTML = `
       <div class="assignments-list">
-        ${this.assignments.map(assignment => this.renderAssignmentCard(assignment)).join('')}
+        ${this.assignments
+          .slice(0, 1)
+          .map((assignment) => this.renderAssignmentCard(assignment))
+          .join("")}
       </div>
     `;
   }
   renderAssignmentCard(assignment) {
     const statusClass = getStatusClass(assignment.status);
     const priorityClass = getPriorityClass(assignment.priority);
-    const submittedDate = new Date(assignment.submitted_at).toLocaleDateString();
+    const submittedDate = new Date(
+      assignment.submitted_at
+    ).toLocaleDateString();
     return `
-      <div class="assignment-card">
-        <div class="assignment-header">
-          <div class="assignment-title">
-            <h4>${escapeHtml(assignment.title || 'Untitled Complaint')}</h4>
-            <div class="assignment-meta">
-              <span class="assignment-id">#${assignment.complaint_id.slice(-8)}</span>
-              <span class="assignment-date">${submittedDate}</span>
+      <div class="task-item">
+        <div class="task-header">
+          <div class="task-title">
+            <h4>${escapeHtml(assignment.title || "Untitled Complaint")}</h4>
+            <div class="task-meta">
+              <span class="task-type">#${assignment.complaint_id.slice(
+                -8
+              )}</span>
+              <span class="task-deadline">${submittedDate}</span>
             </div>
           </div>
           <div class="assignment-status">
-            <span class="status-badge ${statusClass}">${getStatusText(assignment.status)}</span>
-            <span class="priority-badge ${priorityClass}">${assignment.priority}</span>
+            <span class="status-badge ${statusClass}">${getStatusText(
+      assignment.status
+    )}</span>
+            <span class="priority-badge ${priorityClass}">${
+      assignment.priority
+    }</span>
           </div>
         </div>
-        <div class="assignment-content">
-          <p>${escapeHtml(assignment.description || 'No description available')}</p>
-          ${assignment.officer_name ? `
-            <div class="assignment-officer">
+        <div class="task-content">
+          <p>${escapeHtml(
+            assignment.description || "No description available"
+          )}</p>
+          ${
+            assignment.officer_name
+              ? `
+            <div class="task-officer" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
               <span class="detail-label">Officer:</span>
-              <span class="detail-value">${escapeHtml(assignment.officer_name)}</span>
+              <span class="detail-value">${escapeHtml(
+                assignment.officer_name
+              )}</span>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
       </div>
     `;
   }
 
   renderActivities() {
-    const container = document.getElementById('activity-container');
+    const container = document.getElementById("activity-container");
     if (!container) return;
     if (this.activities.length === 0) {
       container.innerHTML = `
@@ -122,7 +146,9 @@ class LguAdminDashboard {
     }
     container.innerHTML = `
       <div class="activities-list">
-        ${this.activities.map(activity => this.renderActivityItem(activity)).join('')}
+        ${this.activities
+          .map((activity) => this.renderActivityItem(activity))
+          .join("")}
       </div>
     `;
   }
@@ -133,10 +159,14 @@ class LguAdminDashboard {
       <div class="activity-item">
         <div class="activity-icon">📋</div>
         <div class="activity-content">
-          <div class="activity-title">${this.escapeHtml(activity.title || 'Complaint')}</div>
+          <div class="activity-title">${escapeHtml(
+            activity.title || "Complaint"
+          )}</div>
           <div class="activity-meta">
             <span class="activity-date">${date} at ${time}</span>
-            <span class="activity-status ${this.getStatusClass(activity.status)}">${this.getStatusText(activity.status)}</span>
+            <span class="activity-status ${getStatusClass(
+              activity.status
+            )}">${getStatusText(activity.status)}</span>
           </div>
         </div>
       </div>
@@ -144,50 +174,54 @@ class LguAdminDashboard {
   }
   setupEventListeners() {
     // Refresh buttons
-    const refreshActivityBtn = document.getElementById('refresh-activity');
+    const refreshActivityBtn = document.getElementById("refresh-activity");
     // Statistics refresh removed - no longer needed
     if (refreshActivityBtn) {
-      refreshActivityBtn.addEventListener('click', () => {
+      refreshActivityBtn.addEventListener("click", () => {
         this.loadActivities();
       });
     }
     // Quick action buttons
-    const viewAssignmentsBtn = document.querySelector('[onclick="viewAssignments()"]');
+    const viewAssignmentsBtn = document.querySelector(
+      '[onclick="viewAssignments()"]'
+    );
     const viewHeatmapBtn = document.querySelector('[onclick="viewHeatmap()"]');
-    const generateReportBtn = document.querySelector('[onclick="generateReport()"]');
+    const generateReportBtn = document.querySelector(
+      '[onclick="generateReport()"]'
+    );
     if (viewAssignmentsBtn) {
-      viewAssignmentsBtn.addEventListener('click', () => {
-        window.location.href = '/lgu-admin/assignments';
+      viewAssignmentsBtn.addEventListener("click", () => {
+        window.location.href = "/lgu-admin/assignments";
       });
     }
     if (viewHeatmapBtn) {
-      viewHeatmapBtn.addEventListener('click', () => {
-        window.location.href = '/lgu-admin/heatmap';
+      viewHeatmapBtn.addEventListener("click", () => {
+        window.location.href = "/lgu-admin/heatmap";
       });
     }
     if (generateReportBtn) {
-      generateReportBtn.addEventListener('click', () => {
+      generateReportBtn.addEventListener("click", () => {
         this.generateReport();
       });
     }
   }
   async generateReport() {
     try {
-      showMessage('info', 'Generating report...');
+      showMessage("info", "Generating report...");
       // This would typically generate a PDF or CSV report
       // For now, we'll just show a success message
       setTimeout(() => {
-        showMessage('success', 'Report generated successfully');
+        showMessage("success", "Report generated successfully");
       }, 1000);
     } catch (error) {
-      console.error('[LGU_ADMIN_DASHBOARD] Generate report error:', error);
-      showMessage('error', 'Failed to generate report');
+      console.error("[LGU_ADMIN_DASHBOARD] Generate report error:", error);
+      showMessage("error", "Failed to generate report");
     }
   }
   // Removed duplicate helpers in favor of shared utils
 }
 // Initialize the dashboard
 const dashboard = new LguAdminDashboard();
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   dashboard.init();
 });

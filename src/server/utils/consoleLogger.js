@@ -12,7 +12,7 @@ class ConsoleLogger {
       error: console.error,
       warn: console.warn,
       info: console.info,
-      debug: console.debug
+      debug: console.debug,
     };
     this.isCapturing = false;
   }
@@ -26,34 +26,38 @@ class ConsoleLogger {
     this.isCapturing = true;
     const self = this;
 
+    const formatTimestamp = () => {
+      return `[${new Date().toISOString()}]`;
+    };
+
     // Override console.log
-    console.log = function(...args) {
-      self.addLog('log', args);
-      self.originalConsole.log.apply(console, args);
+    console.log = function (...args) {
+      self.addLog("log", args);
+      self.originalConsole.log.apply(console, [formatTimestamp(), ...args]);
     };
 
     // Override console.error
-    console.error = function(...args) {
-      self.addLog('error', args);
-      self.originalConsole.error.apply(console, args);
+    console.error = function (...args) {
+      self.addLog("error", args);
+      self.originalConsole.error.apply(console, [formatTimestamp(), ...args]);
     };
 
     // Override console.warn
-    console.warn = function(...args) {
-      self.addLog('warn', args);
-      self.originalConsole.warn.apply(console, args);
+    console.warn = function (...args) {
+      self.addLog("warn", args);
+      self.originalConsole.warn.apply(console, [formatTimestamp(), ...args]);
     };
 
     // Override console.info
-    console.info = function(...args) {
-      self.addLog('info', args);
-      self.originalConsole.info.apply(console, args);
+    console.info = function (...args) {
+      self.addLog("info", args);
+      self.originalConsole.info.apply(console, [formatTimestamp(), ...args]);
     };
 
     // Override console.debug
-    console.debug = function(...args) {
-      self.addLog('debug', args);
-      self.originalConsole.debug.apply(console, args);
+    console.debug = function (...args) {
+      self.addLog("debug", args);
+      self.originalConsole.debug.apply(console, [formatTimestamp(), ...args]);
     };
   }
 
@@ -76,22 +80,24 @@ class ConsoleLogger {
    */
   addLog(level, args) {
     const timestamp = new Date();
-    const message = args.map(arg => {
-      if (typeof arg === 'object') {
-        try {
-          return JSON.stringify(arg, null, 2);
-        } catch (e) {
-          return String(arg);
+    const message = args
+      .map((arg) => {
+        if (typeof arg === "object") {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
         }
-      }
-      return String(arg);
-    }).join(' ');
+        return String(arg);
+      })
+      .join(" ");
 
     this.logs.push({
       level,
       message,
       timestamp: timestamp.toISOString(),
-      timestampFormatted: timestamp.toLocaleString()
+      timestampFormatted: timestamp.toLocaleString(),
     });
 
     // Keep only the most recent logs
@@ -104,23 +110,21 @@ class ConsoleLogger {
    * Get logs with optional filtering
    */
   getLogs(options = {}) {
-    const {
-      level,
-      limit = 500,
-      since = null
-    } = options;
+    const { level, limit = 500, since = null } = options;
 
     let filteredLogs = [...this.logs];
 
     // Filter by level
-    if (level && level !== 'all') {
-      filteredLogs = filteredLogs.filter(log => log.level === level);
+    if (level && level !== "all") {
+      filteredLogs = filteredLogs.filter((log) => log.level === level);
     }
 
     // Filter by timestamp
     if (since) {
       const sinceDate = new Date(since);
-      filteredLogs = filteredLogs.filter(log => new Date(log.timestamp) >= sinceDate);
+      filteredLogs = filteredLogs.filter(
+        (log) => new Date(log.timestamp) >= sinceDate
+      );
     }
 
     // Sort by timestamp (newest first)
@@ -152,4 +156,3 @@ const consoleLogger = new ConsoleLogger(1000);
 consoleLogger.startCapture();
 
 module.exports = consoleLogger;
-

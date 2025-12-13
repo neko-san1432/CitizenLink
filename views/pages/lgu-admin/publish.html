@@ -1,40 +1,44 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>Publish</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/toast.css">
-    <link rel="stylesheet" href="/css/components/sidebar.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/header-redesign.css">
-    <link rel="stylesheet" href="/css/pages/publish.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/publish.css" />
+  </head>
+  <body>
     <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        <div id="app" class="collapsible">
-            <h1>Publish</h1>
-            <section id="publish-controls">
-                <label for="content-type" class="form-label">Content Type</label>
-                <select id="content-type" class="select">
-                    <option value="news">News</option>
-                    <option value="events">Upcoming Event</option>
-                    <option value="notices">Notice</option>
-                </select>
-            </section>
-            <section id="publish-form"></section>
-        </div>
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div id="app" class="collapsible">
+        <h1>Publish</h1>
+        <section id="publish-controls">
+          <label for="content-type" class="form-label">Content Type</label>
+          <select id="content-type" class="select">
+            <option value="news">News</option>
+            <option value="events">Upcoming Event</option>
+            <option value="notices">Notice</option>
+          </select>
+        </section>
+        <section id="publish-form"></section>
+      </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
+    <script src="/js/lib/supabase.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/pages/lgu-admin/publish.js"></script>
-</body>
+  </body>
 </html>

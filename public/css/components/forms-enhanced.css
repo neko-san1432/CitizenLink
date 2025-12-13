@@ -37,7 +37,13 @@
   color: var(--gray-400);
 }
 
+/* Form Control */
 .form-control:invalid:not(:focus) {
+  /* Prevent aggressive validation on load - strict validation handled by JS or .was-validated */
+  border-color: var(--gray-300);
+}
+
+.was-validated .form-control:invalid:not(:focus) {
   border-color: var(--error-500);
 }
 
@@ -66,7 +72,7 @@ label,
 }
 
 .form-label-required::after {
-  content: ' *';
+  content: " *";
   color: var(--error-500);
 }
 
@@ -282,7 +288,7 @@ textarea.form-control {
 }
 
 .switch::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 24px;
   height: 24px;

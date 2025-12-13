@@ -1,8 +1,7 @@
-const ComplaintService = require('../services/ComplaintService');
-const { getWorkflowFromStatus } = require('../utils/complaintUtils');
+const ComplaintService = require("../services/ComplaintService");
+const { getWorkflowFromStatus } = require("../utils/complaintUtils");
 
 class ComplaintController {
-
   constructor() {
     this.complaintService = new ComplaintService();
   }
@@ -28,14 +27,19 @@ class ComplaintController {
     const response = {
       success: true,
       data: complaint,
-      message: 'Complaint submitted successfully'
+      message: "Complaint submitted successfully",
     };
 
-    if (complaint.department_r && complaint.department_r.length > 0 || complaint.assigned_coordinator_id) {
+    if (
+      (complaint.department_r && complaint.department_r.length > 0) ||
+      complaint.assigned_coordinator_id
+    ) {
       response.workflow = {
-        auto_assigned: Boolean(complaint.department_r && complaint.department_r.length > 0),
+        auto_assigned: Boolean(
+          complaint.department_r && complaint.department_r.length > 0
+        ),
         coordinator_assigned: Boolean(complaint.assigned_coordinator_id),
-        workflow_status: complaint.workflow_status
+        workflow_status: complaint.workflow_status,
       };
     }
 
@@ -50,12 +54,15 @@ class ComplaintController {
     const { reason } = req.body;
     const userId = req.user.id;
 
-
-    const result = await this.complaintService.cancelComplaint(complaintId, userId, reason);
+    const result = await this.complaintService.cancelComplaint(
+      complaintId,
+      userId,
+      reason
+    );
     res.json({
       success: true,
-      message: 'Complaint cancelled successfully',
-      data: result
+      message: "Complaint cancelled successfully",
+      data: result,
     });
   }
 
@@ -65,24 +72,32 @@ class ComplaintController {
   async sendReminder(req, res) {
     const { complaintId } = req.params;
     const userId = req.user.id;
-    const result = await this.complaintService.sendReminder(complaintId, userId);
+    const result = await this.complaintService.sendReminder(
+      complaintId,
+      userId
+    );
     res.json({
       success: true,
-      message: 'Reminder sent successfully',
-      data: result
+      message: "Reminder sent successfully",
+      data: result,
     });
   }
 
   async getMyComplaints(req, res) {
     const { user } = req;
+    const token = req.headers.authorization;
     const options = {
       page: req.query.page || 1,
       limit: req.query.limit || 10,
       status: req.query.status,
-      type: req.query.type
+      type: req.query.type,
+      token,
     };
 
-    const result = await this.complaintService.getUserComplaints(user.id, options);
+    const result = await this.complaintService.getUserComplaints(
+      user.id,
+      options
+    );
     res.json({
       success: true,
       data: result.complaints,
@@ -90,8 +105,8 @@ class ComplaintController {
         page: result.page,
         limit: result.limit,
         total: result.total,
-        totalPages: result.totalPages
-      }
+        totalPages: result.totalPages,
+      },
     });
   }
 
@@ -100,27 +115,34 @@ class ComplaintController {
     const result = await this.complaintService.getUserStatistics(user.id);
     res.json({
       success: true,
-      data: result
+      data: result,
     });
   }
 
   async getComplaintById(req, res) {
     const { user } = req;
     const { id } = req.params;
-    const userRole = user.role || 'citizen';
+    const userRole = user.role || "citizen";
 
-    console.log(`[COMPLAINT_CONTROLLER] Fetching complaint ${id} for user ${user.id} (role: ${userRole})`);
+    console.log(
+      `[COMPLAINT_CONTROLLER] Fetching complaint ${id} for user ${user.id} (role: ${userRole})`
+    );
 
+    const token = req.headers.authorization;
     let complaint;
-    if (userRole === 'citizen') {
-      complaint = await this.complaintService.getComplaintById(id, user.id);
+    if (userRole === "citizen") {
+      complaint = await this.complaintService.getComplaintById(
+        id,
+        user.id,
+        token
+      );
     } else {
-      complaint = await this.complaintService.getComplaintById(id);
+      complaint = await this.complaintService.getComplaintById(id, null, token);
     }
 
     res.json({
       success: true,
-      data: complaint
+      data: complaint,
     });
   }
 
@@ -131,7 +153,7 @@ class ComplaintController {
       status: req.query.status,
       type: req.query.type,
       department: req.query.department,
-      search: req.query.search
+      search: req.query.search,
     };
 
     const result = await this.complaintService.getAllComplaints(options);
@@ -142,8 +164,8 @@ class ComplaintController {
         page: result.page,
         limit: result.limit,
         total: result.total,
-        totalPages: result.totalPages
-      }
+        totalPages: result.totalPages,
+      },
     });
   }
 
@@ -151,7 +173,6 @@ class ComplaintController {
     const { id } = req.params;
     const { status, notes } = req.body;
     const { user } = req;
-
 
     const complaint = await this.complaintService.updateComplaintStatus(
       id,
@@ -163,7 +184,7 @@ class ComplaintController {
     res.json({
       success: true,
       data: complaint,
-      message: 'Complaint status updated successfully'
+      message: "Complaint status updated successfully",
     });
   }
 
@@ -171,15 +192,18 @@ class ComplaintController {
     const complaintId = req.params.id;
     const { status, resolution_notes, admin_notes, feedback } = req.body || {};
     const userId = req.user?.id;
-    const userRole = req.user?.role || 'citizen';
+    const userRole = req.user?.role || "citizen";
 
     // Optional evidence from officer during submit-for-approval
-    const files = (req.files && req.files.evidenceFiles) ? req.files.evidenceFiles : [];
-
+    const files =
+      req.files && req.files.evidenceFiles ? req.files.evidenceFiles : [];
 
     // Citizens can only confirm resolution (one-way)
-    if (userRole === 'citizen' && status !== 'resolved') {
-      return res.status(400).json({ success: false, error: 'Citizens can only confirm resolution' });
+    if (userRole === "citizen" && status !== "resolved") {
+      return res.status(400).json({
+        success: false,
+        error: "Citizens can only confirm resolution",
+      });
     }
 
     if (files && files.length > 0) {
@@ -189,7 +213,9 @@ class ComplaintController {
     const updated = await this.complaintService.updateComplaintStatus(
       complaintId,
       status,
-      userRole === 'citizen' ? null : (resolution_notes || admin_notes || feedback || null),
+      userRole === "citizen"
+        ? null
+        : resolution_notes || admin_notes || feedback || null,
       userId
     );
 
@@ -201,7 +227,6 @@ class ComplaintController {
     const { coordinator_id } = req.body;
     const { user } = req;
 
-
     const complaint = await this.complaintService.assignCoordinator(
       id,
       coordinator_id,
@@ -211,7 +236,7 @@ class ComplaintController {
     res.json({
       success: true,
       data: complaint,
-      message: 'Coordinator assigned successfully'
+      message: "Coordinator assigned successfully",
     });
   }
 
@@ -219,7 +244,6 @@ class ComplaintController {
     const { id } = req.params;
     const { from_department, to_department, reason } = req.body;
     const { user } = req;
-
 
     const complaint = await this.complaintService.transferComplaint(
       id,
@@ -232,7 +256,7 @@ class ComplaintController {
     res.json({
       success: true,
       data: complaint,
-      message: 'Complaint transferred successfully'
+      message: "Complaint transferred successfully",
     });
   }
 
@@ -240,13 +264,13 @@ class ComplaintController {
     const filters = {
       department: req.query.department,
       dateFrom: req.query.date_from,
-      dateTo: req.query.date_to
+      dateTo: req.query.date_to,
     };
 
     const stats = await this.complaintService.getComplaintStats(filters);
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   }
 
@@ -258,30 +282,43 @@ class ComplaintController {
       category,
       startDate,
       endDate,
-      includeResolved = 'true'
+      includeResolved = "true",
     } = req.query;
 
     // Map query params to service filters
     // Handle arrays for multiple selections (Express parses multiple query params as arrays)
-    const statusArray = Array.isArray(status) ? status : (status ? [status] : []);
-    const categoryArray = Array.isArray(category) ? category : (category ? [category] : []);
-    let departmentArray = Array.isArray(department) ? department : (department ? [department] : []);
+    const statusArray = Array.isArray(status) ? status : status ? [status] : [];
+    const categoryArray = Array.isArray(category)
+      ? category
+      : category
+      ? [category]
+      : [];
+    let departmentArray = Array.isArray(department)
+      ? department
+      : department
+      ? [department]
+      : [];
 
     // ROLE-BASED FILTERING: Enforce department restrictions
-    const userRole = req.user?.role || 'citizen';
+    const userRole = req.user?.role || "citizen";
     const userDepartment = req.user?.department;
 
     // LGU Admins and Officers can ONLY see their own department's data
-    if (['lgu-admin', 'lgu-officer'].includes(userRole) && userDepartment) {
+    if (["lgu-admin", "lgu-officer"].includes(userRole) && userDepartment) {
       departmentArray = [userDepartment];
     }
 
     // Process status filters - separate workflow_status and confirmation_status
     const workflowStatuses = [];
     const confirmationStatuses = [];
-    const confirmationStatusList = ['waiting_for_responders', 'waiting_for_complainant', 'confirmed', 'disputed'];
+    const confirmationStatusList = [
+      "waiting_for_responders",
+      "waiting_for_complainant",
+      "confirmed",
+      "disputed",
+    ];
 
-    statusArray.forEach(statusValue => {
+    statusArray.forEach((statusValue) => {
       if (!statusValue) return;
       const statusLower = statusValue.toLowerCase();
       if (confirmationStatusList.includes(statusLower)) {
@@ -291,7 +328,16 @@ class ComplaintController {
         const workflowStatus = getWorkflowFromStatus(statusValue);
         if (workflowStatus && workflowStatus !== statusValue) {
           workflowStatuses.push(workflowStatus);
-        } else if (['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'].includes(statusLower)) {
+        } else if (
+          [
+            "new",
+            "assigned",
+            "in_progress",
+            "pending_approval",
+            "completed",
+            "cancelled",
+          ].includes(statusLower)
+        ) {
           workflowStatuses.push(statusLower);
         }
       }
@@ -299,28 +345,31 @@ class ComplaintController {
 
     const serviceFilters = {
       status: workflowStatuses.length > 0 ? workflowStatuses : undefined,
-      confirmationStatus: confirmationStatuses.length > 0 ? confirmationStatuses : undefined,
+      confirmationStatus:
+        confirmationStatuses.length > 0 ? confirmationStatuses : undefined,
       category: categoryArray.length > 0 ? categoryArray : undefined,
       subcategory: req.query.subcategory || undefined,
       department: departmentArray.length > 0 ? departmentArray : undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-      includeResolved: includeResolved === 'true'
+      includeResolved: includeResolved === "true",
     };
 
     // Remove undefined values
-    Object.keys(serviceFilters).forEach(key => {
+    Object.keys(serviceFilters).forEach((key) => {
       if (serviceFilters[key] === void 0) {
         delete serviceFilters[key];
       }
     });
 
-    const locations = await this.complaintService.getComplaintLocations(serviceFilters);
+    const locations = await this.complaintService.getComplaintLocations(
+      serviceFilters
+    );
 
     res.json({
       success: true,
       data: locations,
-      count: locations.length
+      count: locations.length,
     });
   }
 
@@ -331,7 +380,6 @@ class ComplaintController {
     const { id } = req.params;
     const { reason } = req.body;
     const { user } = req;
-
 
     const result = await this.complaintService.markAsFalseComplaint(
       id,
@@ -354,7 +402,6 @@ class ComplaintController {
     const { masterComplaintId } = req.body;
     const { user } = req;
 
-
     const result = await this.complaintService.markAsDuplicate(
       id,
       masterComplaintId,
@@ -374,7 +421,7 @@ class ComplaintController {
   async getFalseComplaints(req, res) {
     const { limit } = req.query;
     const result = await this.complaintService.getFalseComplaints({
-      limit: limit ? parseInt(limit) : undefined
+      limit: limit ? parseInt(limit) : undefined,
     });
 
     if (!result.success) {
@@ -406,7 +453,10 @@ class ComplaintController {
     const { user } = req;
 
     // Extract completion evidence files if uploaded
-    const files = (req.files && req.files.completionEvidence) ? req.files.completionEvidence : [];
+    const files =
+      req.files && req.files.completionEvidence
+        ? req.files.completionEvidence
+        : [];
 
     const result = await this.complaintService.markAssignmentComplete(
       complaintId,
@@ -417,8 +467,8 @@ class ComplaintController {
 
     res.json({
       success: true,
-      message: 'Assignment marked as complete successfully',
-      data: result
+      message: "Assignment marked as complete successfully",
+      data: result,
     });
   }
 
@@ -430,7 +480,6 @@ class ComplaintController {
     const { confirmed, feedback } = req.body;
     const { user } = req;
 
-
     const result = await this.complaintService.confirmResolution(
       complaintId,
       user.id,
@@ -440,8 +489,10 @@ class ComplaintController {
 
     res.json({
       success: true,
-      message: confirmed ? 'Resolution confirmed successfully' : 'Resolution rejected',
-      data: result
+      message: confirmed
+        ? "Resolution confirmed successfully"
+        : "Resolution rejected",
+      data: result,
     });
   }
 
@@ -458,10 +509,13 @@ class ComplaintController {
   async getConfirmationMessage(req, res) {
     const { id } = req.params;
     const { user } = req;
-    const message = await this.complaintService.getConfirmationMessage(id, user.role);
+    const message = await this.complaintService.getConfirmationMessage(
+      id,
+      user.role
+    );
     res.json({
       success: true,
-      data: message
+      data: message,
     });
   }
 
@@ -469,14 +523,19 @@ class ComplaintController {
    * Create assignment for officers
    */
   async createAssignment(req, res) {
-    const {complaintId} = req.params; // Get from URL parameter
+    const { complaintId } = req.params; // Get from URL parameter
     const { officerIds } = req.body;
-    const {user} = req;
+    const { user } = req;
 
-    if (!complaintId || !officerIds || !Array.isArray(officerIds) || officerIds.length === 0) {
+    if (
+      !complaintId ||
+      !officerIds ||
+      !Array.isArray(officerIds) ||
+      officerIds.length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: complaintId and officerIds array'
+        error: "Missing required fields: complaintId and officerIds array",
       });
     }
 
@@ -489,7 +548,7 @@ class ComplaintController {
     res.json({
       success: true,
       data: result,
-      message: 'Assignment created successfully'
+      message: "Assignment created successfully",
     });
   }
 }

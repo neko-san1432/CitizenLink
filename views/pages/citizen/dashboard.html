@@ -2,9 +2,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>Dashboard</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/toast.css" />
@@ -13,6 +16,7 @@
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/header-redesign.css" />
     <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-redesign.css" />
     <link rel="stylesheet" href="/css/viewport-fix.css" />
   </head>
   <body>
@@ -24,18 +28,29 @@
         <div class="dashboard-header">
           <div class="dashboard-title-group">
             <h1>🏠 Citizen Dashboard</h1>
-            <p class="dashboard-subtitle">Your gateway to community engagement and complaint management</p>
+            <p class="dashboard-subtitle">
+              Your gateway to community engagement and complaint management
+            </p>
           </div>
           <div class="header-quick-actions">
-            <a class="quick-action-btn quick-action-btn--sm" href="/fileComplaint">
+            <a
+              class="quick-action-btn quick-action-btn--sm"
+              href="/fileComplaint"
+            >
               <div class="quick-action-icon">📝</div>
               <div class="quick-action-text">File</div>
             </a>
-            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile#complaints">
+            <a
+              class="quick-action-btn quick-action-btn--sm"
+              href="/myProfile#complaints"
+            >
               <div class="quick-action-icon">📋</div>
               <div class="quick-action-text">Complaints</div>
             </a>
-            <button class="quick-action-btn quick-action-btn--sm" id="view-map-btn">
+            <button
+              class="quick-action-btn quick-action-btn--sm"
+              id="view-map-btn"
+            >
               <div class="quick-action-icon">🗺️</div>
               <div class="quick-action-text">Map</div>
             </button>
@@ -43,7 +58,10 @@
               <div class="quick-action-icon">👤</div>
               <div class="quick-action-text">Profile</div>
             </a>
-            <a class="quick-action-btn quick-action-btn--sm" href="/departments">
+            <a
+              class="quick-action-btn quick-action-btn--sm"
+              href="/departments"
+            >
               <div class="quick-action-icon">🏢</div>
               <div class="quick-action-text">Depts</div>
             </a>
@@ -60,10 +78,17 @@
         <!-- Main Content Grid -->
         <div class="dashboard-grid animate-fade-in">
           <!-- My Complaints Status -->
-           <div class="dashboard-section my-complaints-section glass-panel rounded-xl p-6">
+          <div
+            class="dashboard-section my-complaints-section glass-panel rounded-xl p-6"
+          >
             <div class="section-header mb-4">
               <h2 class="section-title text-xl font-bold">📋 My Complaints</h2>
-              <button class="btn btn-primary btn-sm" id="view-all-complaints-btn">View All</button>
+              <button
+                class="btn btn-primary btn-sm"
+                id="view-all-complaints-btn"
+              >
+                View All
+              </button>
             </div>
             <div id="my-complaints-container" class="content-container">
               <div class="loading">
@@ -72,9 +97,6 @@
               </div>
             </div>
           </div>
-
-
-          
 
           <!-- Quick Tips -->
           <div class="dashboard-section glass-panel rounded-xl p-6">
@@ -85,31 +107,42 @@
               <div class="tip-item card p-4 flex gap-4 items-start">
                 <div class="tip-icon text-2xl">📝</div>
                 <div class="tip-content">
-                  <h4 class="font-bold text-primary">Filing Effective Complaints</h4>
-                  <p class="text-sm text-gray-600">Be specific about the location, include photos if possible, and provide detailed descriptions.</p>
+                  <h4 class="font-bold text-primary">
+                    Filing Effective Complaints
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    Be specific about the location, include photos if possible,
+                    and provide detailed descriptions.
+                  </p>
                 </div>
               </div>
               <div class="tip-item card p-4 flex gap-4 items-start">
                 <div class="tip-icon text-2xl">⏰</div>
                 <div class="tip-content">
                   <h4 class="font-bold text-primary">Response Times</h4>
-                  <p class="text-sm text-gray-600">Most complaints are reviewed within 24-48 hours and assigned to appropriate offices.</p>
+                  <p class="text-sm text-gray-600">
+                    Most complaints are reviewed within 24-48 hours and assigned
+                    to appropriate offices.
+                  </p>
                 </div>
               </div>
               <div class="tip-item card p-4 flex gap-4 items-start">
                 <div class="tip-icon text-2xl">📞</div>
                 <div class="tip-content">
                   <h4 class="font-bold text-primary">Emergency Contacts</h4>
-                  <p class="text-sm text-gray-600">For urgent matters, call the emergency hotline at (02) 123-4567.</p>
+                  <p class="text-sm text-gray-600">
+                    For urgent matters, call the emergency hotline at (02)
+                    123-4567.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
     <div id="toast-container" class="toast-container"></div>
+    <script src="/js/lib/supabase.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
@@ -119,4 +152,3 @@
     <script type="module" src="../../js/pages/citizen-dashboard.js"></script>
   </body>
 </html>
-

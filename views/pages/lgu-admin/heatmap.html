@@ -12,7 +12,10 @@
     />
 
     <!-- Leaflet Heat CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css"
+    />
 
     <style>
       * {
@@ -21,7 +24,8 @@
         box-sizing: border-box;
       }
 
-      html, body {
+      html,
+      body {
         height: 100%;
         overflow: hidden;
       }
@@ -56,7 +60,8 @@
         padding: 20px;
         z-index: 1000;
         overflow-y: auto;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
       }
 
       .controls-header {
@@ -252,7 +257,8 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         z-index: 1000;
         font-size: 13px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
         max-width: 240px;
         overflow: hidden;
         transition: max-height 0.3s ease, padding 0.3s ease;
@@ -371,18 +377,18 @@
         top: 54px !important; /* Reduced from 70px to bring zoom controls closer to row above */
         left: 10px !important;
       }
-      
+
       /* Ensure Leaflet controls have consistent width and spacing */
       /* Remove top margin from first control (zoom) to reduce gap above it */
       .leaflet-top.leaflet-left .leaflet-control {
         margin: 10px 0 0 0 !important;
       }
-      
+
       /* Remove top margin from zoom control specifically to reduce gap above it */
       .leaflet-top.leaflet-left .leaflet-control-zoom {
         margin-top: 0 !important;
       }
-      
+
       /* Ensure first control (zoom) has no top margin */
       .leaflet-top.leaflet-left .leaflet-control:first-child {
         margin-top: 0 !important;
@@ -411,32 +417,45 @@
         margin: 0 !important;
         flex-shrink: 0 !important;
       }
-      
 
       .menu-toggle-btn:hover {
         background: #f9fafb !important;
         border-color: #667eea !important;
       }
     </style>
-    
+
     <!-- Sidebar CSS - Load after inline styles to ensure proper cascade -->
     <link rel="stylesheet" href="/css/components/sidebar.css" />
   </head>
   <body>
     <!-- Sidebar -->
     <div id="sidebar" class="collapsible"></div>
-    
+
     <!-- Custom Controls Row (Menu, Reset View) -->
     <div class="map-custom-controls-row">
       <!-- Menu Toggle Button (for sidebar) -->
-      <button id="menu-toggle" class="menu-toggle-btn" title="Toggle Sidebar">☰</button>
-      
+      <button id="menu-toggle" class="menu-toggle-btn" title="Toggle Sidebar">
+        ☰
+      </button>
+
       <!-- Reset View Button -->
-      <button id="reset-view-btn" class="reset-view-btn" title="Reset View to Default">🏠</button>
+      <button
+        id="reset-view-btn"
+        class="reset-view-btn"
+        title="Reset View to Default"
+      >
+        🏠
+      </button>
     </div>
-    
+
     <!-- Toggle Controls Button -->
-    <button id="toggle-controls-btn" class="toggle-controls-btn" title="Toggle Controls">⚙️</button>
+    <button
+      id="toggle-controls-btn"
+      class="toggle-controls-btn"
+      title="Toggle Controls"
+    >
+      ⚙️
+    </button>
 
     <!-- Map Legend -->
     <div id="map-legend" class="map-legend collapsed">
@@ -446,51 +465,81 @@
       </div>
       <div class="legend-content">
         <div class="legend-section">
-        <div class="legend-title">Status</div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #6c757d; border: 2px solid #ffffff;"></div>
-          <span>New / Pending</span>
+          <div class="legend-title">Status</div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #6c757d; border: 2px solid #ffffff"
+            ></div>
+            <span>New / Pending</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #ffc107; border: 2px solid #ffffff"
+            ></div>
+            <span>Assigned</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #17a2b8; border: 2px solid #ffffff"
+            ></div>
+            <span>In Progress</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #fd7e14; border: 2px solid #ffffff"
+            ></div>
+            <span>Pending Approval</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #28a745; border: 2px solid #ffffff"
+            ></div>
+            <span>Completed / Confirmed</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #dc3545; border: 2px solid #ffffff"
+            ></div>
+            <span>Rejected / Disputed</span>
+          </div>
         </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #ffc107; border: 2px solid #ffffff;"></div>
-          <span>Assigned</span>
+        <div class="legend-section">
+          <div class="legend-title">Priority (Border)</div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #6c757d; border: 3px solid #28a745"
+            ></div>
+            <span>Low</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #6c757d; border: 3px solid #ffc107"
+            ></div>
+            <span>Medium</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #6c757d; border: 3px solid #fd7e14"
+            ></div>
+            <span>High</span>
+          </div>
+          <div class="legend-item">
+            <div
+              class="legend-marker"
+              style="background-color: #6c757d; border: 3px solid #dc3545"
+            ></div>
+            <span>Urgent</span>
+          </div>
         </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #17a2b8; border: 2px solid #ffffff;"></div>
-          <span>In Progress</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #fd7e14; border: 2px solid #ffffff;"></div>
-          <span>Pending Approval</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #28a745; border: 2px solid #ffffff;"></div>
-          <span>Completed / Confirmed</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #dc3545; border: 2px solid #ffffff;"></div>
-          <span>Rejected / Disputed</span>
-        </div>
-      </div>
-      <div class="legend-section">
-        <div class="legend-title">Priority (Border)</div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #6c757d; border: 3px solid #28a745;"></div>
-          <span>Low</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #6c757d; border: 3px solid #ffc107;"></div>
-          <span>Medium</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #6c757d; border: 3px solid #fd7e14;"></div>
-          <span>High</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-marker" style="background-color: #6c757d; border: 3px solid #dc3545;"></div>
-          <span>Urgent</span>
-        </div>
-      </div>
       </div>
     </div>
 
@@ -502,37 +551,317 @@
       </div>
       <div class="controls-content">
         <div class="control-group">
-          <button id="toggle-heatmap-btn" class="btn-secondary" style="width: 100%;">Toggle Heatmap</button>
-          <button id="toggle-markers-btn" class="btn-secondary" style="width: 100%; margin-top: 8px;">Toggle Markers</button>
+          <button
+            id="toggle-heatmap-btn"
+            class="btn-secondary"
+            style="width: 100%"
+          >
+            Toggle Heatmap
+          </button>
+          <button
+            id="toggle-markers-btn"
+            class="btn-secondary"
+            style="width: 100%; margin-top: 8px"
+          >
+            Toggle Markers
+          </button>
         </div>
-        
+
         <!-- Status Filter -->
         <div class="control-group">
           <label>Status Filter:</label>
-          <div id="status-filter-group" style="max-height: 200px; overflow-y: auto; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa;">
-            <div style="margin-bottom: 12px;">
-              <div style="font-weight: 600; font-size: 12px; color: #495057; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Standard Status</div>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="new" id="status-new">New</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="pending" id="status-pending">Pending</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="in progress" id="status-in-progress">In Progress</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="resolved" id="status-resolved">Resolved</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="completed" id="status-completed">Completed</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="closed" id="status-closed">Closed</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="rejected" id="status-rejected">Rejected</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="cancelled" id="status-cancelled">Cancelled</label>
+          <div
+            id="status-filter-group"
+            style="
+              max-height: 200px;
+              overflow-y: auto;
+              padding: 8px;
+              border: 1px solid #e0e0e0;
+              border-radius: 6px;
+              background: #fafafa;
+            "
+          >
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-weight: 600;
+                  font-size: 12px;
+                  color: #495057;
+                  margin-bottom: 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Standard Status
+              </div>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="new"
+                  id="status-new"
+                />New</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="pending"
+                  id="status-pending"
+                />Pending</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="in progress"
+                  id="status-in-progress"
+                />In Progress</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="resolved"
+                  id="status-resolved"
+                />Resolved</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="completed"
+                  id="status-completed"
+                />Completed</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="closed"
+                  id="status-closed"
+                />Closed</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="rejected"
+                  id="status-rejected"
+                />Rejected</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="cancelled"
+                  id="status-cancelled"
+                />Cancelled</label
+              >
             </div>
-            <div style="margin-bottom: 12px;">
-              <div style="font-weight: 600; font-size: 12px; color: #495057; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Workflow Status</div>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="assigned" id="status-assigned">Assigned</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="in_progress" id="status-in-progress-wf">In Progress (Workflow)</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="pending_approval" id="status-pending-approval">Pending Approval</label>
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-weight: 600;
+                  font-size: 12px;
+                  color: #495057;
+                  margin-bottom: 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Workflow Status
+              </div>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="assigned"
+                  id="status-assigned"
+                />Assigned</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="in_progress"
+                  id="status-in-progress-wf"
+                />In Progress (Workflow)</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="pending_approval"
+                  id="status-pending-approval"
+                />Pending Approval</label
+              >
             </div>
             <div>
-              <div style="font-weight: 600; font-size: 12px; color: #495057; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Confirmation Status</div>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="waiting_for_responders" id="status-waiting-responders">Waiting for Responders</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="waiting_for_complainant" id="status-waiting-complainant">Waiting for Complainant</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="confirmed" id="status-confirmed">Confirmed</label>
-              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0; cursor: pointer;"><input type="checkbox" class="status-checkbox" value="disputed" id="status-disputed">Disputed</label>
+              <div
+                style="
+                  font-weight: 600;
+                  font-size: 12px;
+                  color: #495057;
+                  margin-bottom: 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Confirmation Status
+              </div>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="waiting_for_responders"
+                  id="status-waiting-responders"
+                />Waiting for Responders</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="waiting_for_complainant"
+                  id="status-waiting-complainant"
+                />Waiting for Complainant</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="confirmed"
+                  id="status-confirmed"
+                />Confirmed</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: normal;
+                  padding: 2px 0;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  class="status-checkbox"
+                  value="disputed"
+                  id="status-disputed"
+                />Disputed</label
+              >
             </div>
           </div>
         </div>
@@ -540,33 +869,123 @@
         <!-- Category Filter -->
         <div class="control-group">
           <label>Category Filter:</label>
-          <div id="category-filter-group" style="max-height: 150px; overflow-y: auto; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa;">
-            <div id="category-loading" style="padding: 16px; text-align: center; color: #6c757d; font-size: 13px;">Loading categories...</div>
+          <div
+            id="category-filter-group"
+            style="
+              max-height: 150px;
+              overflow-y: auto;
+              padding: 8px;
+              border: 1px solid #e0e0e0;
+              border-radius: 6px;
+              background: #fafafa;
+            "
+          >
+            <div
+              id="category-loading"
+              style="
+                padding: 16px;
+                text-align: center;
+                color: #6c757d;
+                font-size: 13px;
+              "
+            >
+              Loading categories...
+            </div>
           </div>
         </div>
 
         <!-- Office Filter -->
         <div class="control-group">
           <label>Office Filter:</label>
-          <div id="department-filter-group" style="max-height: 150px; overflow-y: auto; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa;">
-            <div id="department-loading" style="padding: 16px; text-align: center; color: #6c757d; font-size: 13px;">Loading departments...</div>
+          <div
+            id="department-filter-group"
+            style="
+              max-height: 150px;
+              overflow-y: auto;
+              padding: 8px;
+              border: 1px solid #e0e0e0;
+              border-radius: 6px;
+              background: #fafafa;
+            "
+          >
+            <div
+              id="department-loading"
+              style="
+                padding: 16px;
+                text-align: center;
+                color: #6c757d;
+                font-size: 13px;
+              "
+            >
+              Loading departments...
+            </div>
           </div>
         </div>
 
         <!-- Date Range Filter -->
         <div class="control-group">
           <label>Date Range:</label>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <input type="date" id="date-range-start" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box;" placeholder="Start Date">
-            <input type="date" id="date-range-end" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box;" placeholder="End Date">
-            <button id="clear-date-range" style="padding: 6px 12px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s ease; width: 100%;">Clear Date Range</button>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <input
+              type="date"
+              id="date-range-start"
+              style="
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 13px;
+                width: 100%;
+                box-sizing: border-box;
+              "
+              placeholder="Start Date"
+            />
+            <input
+              type="date"
+              id="date-range-end"
+              style="
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 13px;
+                width: 100%;
+                box-sizing: border-box;
+              "
+              placeholder="End Date"
+            />
+            <button
+              id="clear-date-range"
+              style="
+                padding: 6px 12px;
+                background: #f0f0f0;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                width: 100%;
+              "
+            >
+              Clear Date Range
+            </button>
           </div>
         </div>
 
         <!-- Options -->
         <div class="control-group">
-          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-            <input type="checkbox" id="include-resolved" checked style="width: 18px; height: 18px; cursor: pointer;">
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              cursor: pointer;
+            "
+          >
+            <input
+              type="checkbox"
+              id="include-resolved"
+              checked
+              style="width: 18px; height: 18px; cursor: pointer"
+            />
             Include Resolved Complaints
           </label>
         </div>
@@ -574,22 +993,42 @@
         <div class="control-group">
           <label>Heatmap Intensity:</label>
           <div class="slider-container">
-            <input type="range" id="heatmap-intensity" min="0.1" max="2.0" step="0.1" value="1.0">
+            <input
+              type="range"
+              id="heatmap-intensity"
+              min="0.1"
+              max="2.0"
+              step="0.1"
+              value="1.0"
+            />
             <span class="slider-value" id="heatmap-intensity-value">1.0</span>
           </div>
         </div>
         <div class="control-group">
           <label>Zoom Threshold:</label>
           <div class="slider-container">
-            <input type="range" id="zoom-threshold" min="10" max="18" step="1" value="11">
+            <input
+              type="range"
+              id="zoom-threshold"
+              min="10"
+              max="18"
+              step="1"
+              value="11"
+            />
             <span class="slider-value" id="zoom-threshold-value">11</span>
           </div>
-          <small style="font-size: 11px; color: #6b7280;">Show markers at this zoom level</small>
+          <small style="font-size: 11px; color: #6b7280"
+            >Show markers at this zoom level</small
+          >
         </div>
         <div class="control-group">
           <div class="action-buttons">
-            <button id="reset-filters-btn" class="btn-primary">Reset Filters</button>
-            <button id="fit-bounds-btn" class="btn-secondary">Fit to All Markers</button>
+            <button id="reset-filters-btn" class="btn-primary">
+              Reset Filters
+            </button>
+            <button id="fit-bounds-btn" class="btn-secondary">
+              Fit to All Markers
+            </button>
           </div>
         </div>
         <div class="control-group">
@@ -609,6 +1048,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="/js/pages/heatmap-leaflet-check.js"></script>
+    <script src="/js/lib/supabase.js"></script>
     <script src="../../js/components/map/map-generator.js"></script>
     <script src="../../js/components/map/dbscan.js"></script>
     <script src="../../js/components/map/heatmapVisualization.js"></script>
@@ -616,6 +1056,9 @@
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script src="/js/pages/heatmap-init.js"></script>
-    <script type="module" src="../../js/components/map/boundaryGenerator.js"></script>
+    <script
+      type="module"
+      src="../../js/components/map/boundaryGenerator.js"
+    ></script>
   </body>
 </html>
