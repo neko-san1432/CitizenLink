@@ -835,26 +835,10 @@ class ComplaintService {
       // Only complaints with the selected department code in their department_r array will be returned
       if (department) {
         console.log("[COMPLAINT-SERVICE] Filtering by department:", department);
-        if (Array.isArray(department) && department.length > 0) {
-          // Multiple departments - check if any department in department_r array matches
-          // Use .or() with multiple .contains() conditions to check if department_r contains any of the selected codes
-          const deptConditions = department
-            .map((dept) => `department_r.cs.{${dept}}`)
-            .join(",");
-          console.log(
-            "[COMPLAINT-SERVICE] Department filter conditions:",
-            deptConditions
-          );
-          if (deptConditions) {
-            query = query.or(deptConditions);
-          }
-        } else if (!Array.isArray(department)) {
-          // Single department - check if department_r array contains this department code
-          console.log(
-            "[COMPLAINT-SERVICE] Single department filter:",
-            department
-          );
-          query = query.contains("department_r", [department]);
+        const depts = Array.isArray(department) ? department : [department];
+        if (depts.length > 0) {
+          // Use overlaps operator (&&) to check if department_r has common elements with depts array
+          query = query.overlaps("department_r", depts);
         }
       } else {
         console.log("[COMPLAINT-SERVICE] No department filter applied");
@@ -884,7 +868,8 @@ class ComplaintService {
       // For the heatmap, we want ALL complaints with coordinates
       // First, get the total count to know how many records we need to fetch
       // Clone the query for count to avoid modifying the original query
-      const countQuery = supabase
+      // Clone the query for count to avoid modifying the original query
+      let countQuery = supabase
         .from("complaints")
         .select("id", { count: "exact", head: true })
         .not("latitude", "is", null)
@@ -893,12 +878,12 @@ class ComplaintService {
       // Apply same filters to count query
       if (status) {
         if (Array.isArray(status) && status.length > 0) {
-          countQuery.in("workflow_status", status);
+          countQuery = countQuery.in("workflow_status", status);
         } else if (!Array.isArray(status)) {
-          countQuery.eq("workflow_status", status);
+          countQuery = countQuery.eq("workflow_status", status);
         }
       } else if (!includeResolved) {
-        countQuery
+        countQuery = countQuery
           .neq("workflow_status", "completed")
           .neq("workflow_status", "cancelled");
       }
@@ -908,42 +893,36 @@ class ComplaintService {
           Array.isArray(confirmationStatus) &&
           confirmationStatus.length > 0
         ) {
-          countQuery.in("confirmation_status", confirmationStatus);
+          countQuery = countQuery.in("confirmation_status", confirmationStatus);
         } else if (!Array.isArray(confirmationStatus)) {
-          countQuery.eq("confirmation_status", confirmationStatus);
+          countQuery = countQuery.eq("confirmation_status", confirmationStatus);
         }
       }
 
       if (department) {
-        if (Array.isArray(department) && department.length > 0) {
-          const deptConditions = department
-            .map((dept) => `department_r.cs.{${dept}}`)
-            .join(",");
-          if (deptConditions) {
-            countQuery.or(deptConditions);
-          }
-        } else if (!Array.isArray(department)) {
-          countQuery.contains("department_r", [department]);
+        const depts = Array.isArray(department) ? department : [department];
+        if (depts.length > 0) {
+          countQuery = countQuery.overlaps("department_r", depts);
         }
       }
 
       if (category) {
         if (Array.isArray(category) && category.length > 0) {
-          countQuery.in("category", category);
+          countQuery = countQuery.in("category", category);
         } else if (!Array.isArray(category)) {
-          countQuery.eq("category", category);
+          countQuery = countQuery.eq("category", category);
         }
       }
 
       if (subcategory) {
-        countQuery.eq("subcategory", subcategory);
+        countQuery = countQuery.eq("subcategory", subcategory);
       }
 
       if (startDate) {
-        countQuery.gte("submitted_at", startDate);
+        countQuery = countQuery.gte("submitted_at", startDate);
       }
       if (endDate) {
-        countQuery.lte("submitted_at", endDate);
+        countQuery = countQuery.lte("submitted_at", endDate);
       }
 
       const { count: totalCount, error: countError } = await countQuery;

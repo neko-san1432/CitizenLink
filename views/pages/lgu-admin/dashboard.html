@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/components/clock.css" />
     <link rel="stylesheet" href="/css/header-redesign.css" />
-    <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css?v=1.1" />
     <link rel="stylesheet" href="/css/viewport-fix.css" />
   </head>
   <body>
@@ -85,7 +85,7 @@
             </div>
             <div id="assignments-container" class="content-container">
               <div class="loading">
-                <div class="spinner"></div>
+                <div class="loader-ring"></div>
                 <p>Loading assignments...</p>
               </div>
             </div>
@@ -95,13 +95,13 @@
           <div class="dashboard-section">
             <div class="section-header">
               <h2 class="section-title">🕒 Recent Activity</h2>
-              <button class="btn btn-secondary" onclick="refreshActivity()">
+              <button id="refresh-activity-btn" class="btn btn-secondary">
                 Refresh
               </button>
             </div>
             <div id="activity-container" class="content-container">
               <div class="loading">
-                <div class="spinner"></div>
+                <div class="loader-ring"></div>
                 <p>Loading recent activity...</p>
               </div>
             </div>
@@ -111,13 +111,13 @@
           <div class="dashboard-section">
             <div class="section-header">
               <h2 class="section-title">🚨 Alerts & Notifications</h2>
-              <button class="btn btn-secondary" onclick="markAllRead()">
+              <button id="mark-all-read-btn" class="btn btn-secondary">
                 Mark All Read
               </button>
             </div>
             <div id="alerts-container" class="content-container">
               <div class="loading">
-                <div class="spinner"></div>
+                <div class="loader-ring"></div>
                 <p>Loading alerts and notifications...</p>
               </div>
             </div>
@@ -126,7 +126,7 @@
       </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
-    <script src="/js/lib/supabase.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>

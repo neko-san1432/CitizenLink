@@ -145,14 +145,6 @@
       .assignment-item {
         border-bottom: 1px solid #e2e8f0;
 
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
         padding: 1.5rem;
         transition: background 0.2s;
       }
@@ -337,17 +329,27 @@
       }
 
       .loading-spinner {
+        display: inline-block;
         width: 50px;
         height: 50px;
-        border: 4px solid #e2e8f0;
-        border-top-color: #3182ce;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
       }
-
-      @keyframes spin {
-        to {
+      .loading-spinner:after {
+        content: " ";
+        display: block;
+        width: 40px;
+        height: 40px;
+        margin: 4px;
+        border-radius: 50%;
+        border: 4px solid #3182ce;
+        border-color: #3182ce transparent #3182ce transparent;
+        animation: loader-ring 1.2s linear infinite;
+      }
+      @keyframes loader-ring {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
           transform: rotate(360deg);
         }
       }

@@ -271,13 +271,39 @@
   height: 100%;
 }
 
-.spinner {
+/* Robust Spinner */
+.loader-ring {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+}
+.loader-ring:after {
+  content: " ";
+  display: block;
   width: 32px;
   height: 32px;
-  border: 3px solid #e9ecef;
-  border-top: 3px solid #667eea;
+  margin: 4px;
   border-radius: 50%;
-  margin-bottom: 1rem;
+  border: 4px solid #667eea;
+  border-color: #667eea transparent #667eea transparent;
+  animation: loader-ring 1.2s linear infinite;
+}
+@keyframes loader-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Empty States */

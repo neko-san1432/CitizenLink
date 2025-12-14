@@ -12,6 +12,7 @@ class LguAdminDashboard {
     this.stats = null;
     this.assignments = [];
     this.activities = [];
+    this.alerts = [];
   }
   async init() {
     try {
@@ -26,6 +27,7 @@ class LguAdminDashboard {
     try {
       await this.loadAssignments();
       await this.loadActivities();
+      await this.loadAlerts();
     } catch (error) {
       console.error("[LGU_ADMIN_DASHBOARD] Load dashboard data error:", error);
       showMessage("error", "Failed to load dashboard data");
@@ -174,14 +176,25 @@ class LguAdminDashboard {
   }
   setupEventListeners() {
     // Refresh buttons
-    const refreshActivityBtn = document.getElementById("refresh-activity");
+    const refreshActivityBtn = document.getElementById("refresh-activity-btn");
     // Statistics refresh removed - no longer needed
     if (refreshActivityBtn) {
       refreshActivityBtn.addEventListener("click", () => {
         this.loadActivities();
       });
     }
-    // Quick action buttons
+
+    // Mark all read button
+    const markAllReadBtn = document.getElementById("mark-all-read-btn");
+    if (markAllReadBtn) {
+      markAllReadBtn.addEventListener("click", () => {
+        this.markAllRead();
+      });
+    }
+
+    // Quick action buttons - checks if elements exist before adding listeners
+    // Note: The HTML currently uses <a> tags for these, so these might be redundant
+    // but keeping them if the HTML structure changes back to buttons.
     const viewAssignmentsBtn = document.querySelector(
       '[onclick="viewAssignments()"]'
     );
@@ -218,10 +231,99 @@ class LguAdminDashboard {
       showMessage("error", "Failed to generate report");
     }
   }
-  // Removed duplicate helpers in favor of shared utils
+  async loadAlerts() {
+    try {
+      const response = await apiClient.get("/api/notifications/unread?limit=5");
+      if (response && response.success) {
+        this.alerts = response.notifications || [];
+        this.renderAlerts();
+      } else {
+        throw new Error(response?.error || "Failed to load alerts");
+      }
+    } catch (error) {
+      console.error("[LGU_ADMIN_DASHBOARD] Load alerts error:", error);
+      this.alerts = [];
+      this.renderAlerts();
+    }
+  }
+
+  renderAlerts() {
+    const container = document.getElementById("alerts-container");
+    if (!container) return;
+
+    if (this.alerts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎉</div>
+          <h3>All Caught Up</h3>
+          <p>No new alerts or notifications.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="alerts-list">
+        ${this.alerts.map((alert) => this.renderAlertItem(alert)).join("")}
+      </div>
+    `;
+  }
+
+  renderAlertItem(alert) {
+    const date = new Date(alert.created_at).toLocaleDateString();
+    const time = new Date(alert.created_at).toLocaleTimeString();
+
+    // Determine icon based on priority or type
+    let icon = "🔔";
+    if (alert.priority === "high" || alert.priority === "urgent") {
+      icon = "⚠️";
+    } else if (alert.type === "system") {
+      icon = "🤖";
+    } else if (alert.type === "success") {
+      icon = "✅";
+    }
+
+    return `
+      <div class="alert-item ${alert.read ? "read" : "unread"}">
+        <div class="alert-icon">${icon}</div>
+        <div class="alert-content">
+          <div class="alert-title">${escapeHtml(
+            alert.title || "Notification"
+          )}</div>
+          <div class="alert-message">${escapeHtml(alert.message || "")}</div>
+          <div class="alert-meta">
+            <span class="alert-time">${date} at ${time}</span>
+          </div>
+        </div>
+        ${
+          alert.link
+            ? `<a href="${alert.link}" class="btn-sm btn-outline">View</a>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  async markAllRead() {
+    try {
+      const response = await apiClient.post("/api/notifications/mark-all-read");
+      if (response && response.success) {
+        showMessage("success", "All notifications marked as read");
+        this.loadAlerts(); // Reload to show empty state
+      } else {
+        showMessage("error", "Failed to mark notifications as read");
+      }
+    } catch (error) {
+      console.error("[LGU_ADMIN_DASHBOARD] Mark all read error:", error);
+      showMessage("error", "Failed to mark notifications as read");
+    }
+  }
 }
+
+// Initialize the dashboard
 // Initialize the dashboard
 const dashboard = new LguAdminDashboard();
+window.dashboard = dashboard; // Expose for global functions
 document.addEventListener("DOMContentLoaded", () => {
   dashboard.init();
 });

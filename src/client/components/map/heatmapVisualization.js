@@ -135,17 +135,6 @@ function isWithinCityBoundary(lat, lng) {
   if (!window._boundaryDebugged && window.cityBoundaries.length > 0) {
     window._boundaryDebugged = true;
     const firstBoundary = window.cityBoundaries[0];
-    console.log("[BOUNDARY] First boundary structure:", {
-      hasGeojson: Boolean(firstBoundary.geojson),
-      geojsonType: firstBoundary.geojson?.type,
-      hasGeometry: Boolean(firstBoundary.geojson?.geometry),
-      geometryType: firstBoundary.geojson?.geometry?.type,
-      hasCoordinates: Boolean(firstBoundary.geojson?.coordinates),
-      hasGeometryCoordinates: Boolean(
-        firstBoundary.geojson?.geometry?.coordinates
-      ),
-      boundaryCount: window.cityBoundaries.length,
-    });
 
     // Test with a known point inside Digos City (approximate center)
     const testLat = 6.85;
@@ -161,9 +150,6 @@ function isWithinCityBoundary(lat, lng) {
         break;
       }
     }
-    console.log(
-      `[BOUNDARY] Test point (${testLat}, ${testLng}) - within boundary: ${testResult}`
-    );
   }
 
   // Check if point is within any barangay boundary
@@ -573,20 +559,9 @@ class HeatmapVisualization {
         });
 
         if (this._filteredCount > 0) {
-          const filteredRatio = this._filteredCount / sanitizedData.length;
-          if (filteredRatio >= 0.25) {
-            console.warn("[HEATMAP] High boundary filter drop rate detected:", {
-              filtered: this._filteredCount,
-              total: sanitizedData.length,
-              ratio: `${(filteredRatio * 100).toFixed(1)}%`,
-            });
-            console.warn(
-              "[HEATMAP] Falling back to bounding-box filtering for this session."
-            );
-            withinBoundaryData = sanitizedData;
-            this.filterByBoundary = false;
-            this._filteredCount = 0;
-          }
+          console.log(
+            `[HEATMAP] Filtered out ${this._filteredCount} complaints outside city boundaries based on strict filtering.`
+          );
         }
       }
 
@@ -944,19 +919,9 @@ class HeatmapVisualization {
    * @param {Object} filters - Filter criteria
    */
   applyClientSideFilters(filters = {}) {
-    console.log(
-      "[FILTER] applyClientSideFilters called with filters:",
-      filters
-    );
-    console.log(
-      "[FILTER] Total complaints before filtering:",
-      this.allComplaintData?.length || 0
-    );
-
     const baseData = this.getRoleScopedComplaints();
 
     if (!baseData || baseData.length === 0) {
-      console.log("[FILTER] No complaint data available");
       this.complaintData = [];
       return;
     }
@@ -967,21 +932,6 @@ class HeatmapVisualization {
     }
 
     // Debug: Check sample complaints for department data
-    const sampleComplaints = baseData.slice(0, 5);
-    console.log(
-      "[FILTER] Sample complaints before filtering:",
-      sampleComplaints.map((c) => ({
-        id: c.id,
-        title: c.title?.substring(0, 30),
-        departments: c.departments,
-        department_r: c.department_r,
-        hasDepartments:
-          Array.isArray(c.departments) && c.departments.length > 0,
-        hasDepartmentR:
-          Array.isArray(c.department_r) && c.department_r.length > 0,
-        allKeys: Object.keys(c),
-      }))
-    );
 
     this.complaintData = baseData.filter((complaint) => {
       // Filter by status
@@ -1066,23 +1016,9 @@ class HeatmapVisualization {
         const complaintDepartments = this.getComplaintDepartments(complaint);
 
         // Debug logging
-        if (departmentArray.length > 0) {
-          console.log("[FILTER] Department filter check:", {
-            filterDepts: departmentArray,
-            complaintDepts: complaintDepartments,
-            complaintId: complaint.id,
-            complaintTitle: complaint.title,
-            hasDepartments: complaint.departments ? "yes" : "no",
-            hasDepartmentR: complaint.department_r ? "yes" : "no",
-          });
-        }
 
         // If complaint has no departments assigned, exclude it from results
         if (complaintDepartments.length === 0) {
-          console.log(
-            "[FILTER] Complaint has no departments, excluding:",
-            complaint.id
-          );
           return false;
         }
 
@@ -1101,15 +1037,8 @@ class HeatmapVisualization {
         });
 
         if (!matchesDepartment) {
-          console.log("[FILTER] No department match, excluding:", {
-            complaintId: complaint.id,
-            filterDepts: departmentArray,
-            complaintDepts: complaintDepartments,
-          });
           return false;
         }
-
-        console.log("[FILTER] Department match found:", complaint.id);
       }
 
       // Filter by includeResolved
@@ -1152,19 +1081,6 @@ class HeatmapVisualization {
     });
 
     // Debug logging after filtering
-    console.log("[FILTER] Filtering complete:", {
-      totalBefore: baseData.length,
-      totalAfter: this.complaintData.length,
-      filteredOut: baseData.length - this.complaintData.length,
-      departmentFilter: effectiveFilters.department,
-      sampleFiltered: this.complaintData.slice(0, 3).map((c) => ({
-        id: c.id,
-        title: c.title?.substring(0, 30),
-        departments: c.departments,
-        hasDepartments:
-          Array.isArray(c.departments) && c.departments.length > 0,
-      })),
-    });
   }
 
   /**
@@ -1353,12 +1269,6 @@ class HeatmapVisualization {
         hiddenCount++;
       }
     });
-
-    console.log(
-      `[HEATMAP] Marker visibility triggered: ${visibleCount} visible, ${hiddenCount} hidden (total: ${
-        this.markerLayer.getLayers().length
-      })`
-    );
 
     // Dispatch custom event for marker visibility update
     if (typeof window !== "undefined" && window.dispatchEvent) {
