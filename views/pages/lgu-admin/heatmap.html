@@ -353,74 +353,217 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
 
-      .map-controls-panel.hidden {
-        display: none;
-      }
-
       /* Custom controls container - horizontal row */
       .map-custom-controls-row {
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
+        position: absolute !important;
+        top: 20px !important;
+        left: 20px !important;
         display: flex !important;
         flex-direction: row !important;
         gap: 10px !important;
-        z-index: 1200 !important;
+        z-index: 1000 !important;
         align-items: center !important;
         flex-wrap: nowrap !important;
       }
 
-      /* Move Leaflet controls down to avoid overlapping sidebar button */
-      /* Zoom controls and layer control (tile changer) stay together below the row */
-      /* Position closer to the menu/reset row to reduce gap */
+      /* Adjust Leaflet controls to sit below our custom row */
       .leaflet-top.leaflet-left {
-        top: 54px !important; /* Reduced from 70px to bring zoom controls closer to row above */
-        left: 10px !important;
+        top: 80px !important;
+        left: 20px !important;
       }
 
-      /* Ensure Leaflet controls have consistent width and spacing */
-      /* Remove top margin from first control (zoom) to reduce gap above it */
-      .leaflet-top.leaflet-left .leaflet-control {
-        margin: 10px 0 0 0 !important;
-      }
-
-      /* Remove top margin from zoom control specifically to reduce gap above it */
-      .leaflet-top.leaflet-left .leaflet-control-zoom {
-        margin-top: 0 !important;
-      }
-
-      /* Ensure first control (zoom) has no top margin */
-      .leaflet-top.leaflet-left .leaflet-control:first-child {
+      .leaflet-control-zoom {
         margin-top: 0 !important;
       }
 
       /* Menu toggle button - in horizontal row */
       .menu-toggle-btn {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        width: 34px !important;
-        height: 34px !important;
+        width: 44px !important;
+        height: 44px !important;
         background: white !important;
-        border: 2px solid rgba(0, 0, 0, 0.2) !important;
-        border-radius: 4px !important;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
         font-size: 20px !important;
         cursor: pointer !important;
-        z-index: 1 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
         margin: 0 !important;
         flex-shrink: 0 !important;
+        transition: all 0.2s ease !important;
       }
 
       .menu-toggle-btn:hover {
         background: #f9fafb !important;
-        border-color: #667eea !important;
+      }
+
+      /* Reset View Button */
+      .reset-view-btn {
+        width: 44px !important;
+        height: 44px !important;
+        background: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+        font-size: 18px !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .reset-view-btn:hover {
+        background: #f9fafb !important;
+      }
+
+      /* Side Toolbar Styles */
+      .side-toolbar {
+        position: fixed;
+        top: 60px;
+        right: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 1100;
+        background: transparent;
+      }
+      .toolbar-btn {
+        width: 44px;
+        height: 44px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        position: relative;
+      }
+      .toolbar-btn:hover {
+        background: #f9fafb;
+        transform: translateX(-2px);
+      }
+      .toolbar-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+      .toolbar-icon {
+        font-size: 20px;
+      }
+      .toolbar-tooltip {
+        position: absolute;
+        right: 52px;
+        background: #1f2937;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+      .toolbar-btn:hover .toolbar-tooltip {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* Updated Control Panel Styles */
+      .map-controls-panel {
+        position: fixed;
+        top: 60px;
+        right: 70px; /* Positioned to the left of the toolbar */
+        width: 320px;
+        max-height: calc(100vh - 80px); /* Leave room at bottom */
+        display: flex; /* Changed to flex for proper layout */
+        flex-direction: column;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+        z-index: 1000;
+        overflow-y: hidden; /* Hide main scroll, scroll content instead */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+
+      .map-controls-panel.hidden {
+        display: none;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(20px);
+      }
+
+      .controls-content {
+        overflow-y: auto; /* Scroll ONLY the content part */
+        flex: 1;
+      }
+
+      /* Section Styles */
+      .control-section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .control-section.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Filter Styles */
+      .filter-subtitle {
+        font-weight: 600;
+        font-size: 11px;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        margin-top: 4px;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #374151;
+        margin-bottom: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        padding: 6px 8px;
+        border-radius: 6px;
+      }
+      .checkbox-label:hover {
+        color: #111827;
+        background-color: #e5e7eb;
+      }
+      .status-checkbox {
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #d1d5db;
+        flex-shrink: 0;
+        accent-color: #667eea;
       }
     </style>
 
@@ -446,16 +589,19 @@
       >
         🏠
       </button>
+
+      <!-- Reset Filters Button -->
+      <button
+        id="reset-filters-btn"
+        class="menu-toggle-btn"
+        title="Reset All Filters"
+        style="margin-left: 0 !important; font-size: 18px !important"
+      >
+        🔄
+      </button>
     </div>
 
-    <!-- Toggle Controls Button -->
-    <button
-      id="toggle-controls-btn"
-      class="toggle-controls-btn"
-      title="Toggle Controls"
-    >
-      ⚙️
-    </button>
+    <!-- Toggle Controls Button REMOVED -->
 
     <!-- Map Legend -->
     <div id="map-legend" class="map-legend collapsed">
@@ -544,498 +690,353 @@
     </div>
 
     <!-- Control Panel -->
+    <!-- Side Toolbar -->
+    <div class="side-toolbar">
+      <button class="toolbar-btn active" data-target="display">
+        <span class="toolbar-icon">👁️</span>
+        <span class="toolbar-tooltip">Display</span>
+      </button>
+      <button class="toolbar-btn" data-target="date">
+        <span class="toolbar-icon">📅</span>
+        <span class="toolbar-tooltip">Date</span>
+      </button>
+      <button class="toolbar-btn" data-target="status">
+        <span class="toolbar-icon">☑️</span>
+        <span class="toolbar-tooltip">Status</span>
+      </button>
+      <button class="toolbar-btn" data-target="office">
+        <span class="toolbar-icon">🏢</span>
+        <span class="toolbar-tooltip">Office</span>
+      </button>
+      <button class="toolbar-btn" data-target="stats">
+        <span class="toolbar-icon">📊</span>
+        <span class="toolbar-tooltip">Stats</span>
+      </button>
+    </div>
+
+    <!-- Control Panel -->
     <div id="map-controls-panel" class="map-controls-panel hidden">
       <div class="controls-header">
-        <h3>🎛️ Heatmap Controls</h3>
+        <h3 id="panel-title">Display Options</h3>
         <button class="btn-close" id="close-controls-btn">×</button>
       </div>
+
       <div class="controls-content">
-        <div class="control-group">
-          <button
-            id="toggle-heatmap-btn"
-            class="btn-secondary"
-            style="width: 100%"
-          >
-            Toggle Heatmap
-          </button>
-          <button
-            id="toggle-markers-btn"
-            class="btn-secondary"
-            style="width: 100%; margin-top: 8px"
-          >
-            Toggle Markers
-          </button>
-        </div>
-
-        <!-- Status Filter -->
-        <div class="control-group">
-          <label>Status Filter:</label>
-          <div
-            id="status-filter-group"
-            style="
-              max-height: 200px;
-              overflow-y: auto;
-              padding: 8px;
-              border: 1px solid #e0e0e0;
-              border-radius: 6px;
-              background: #fafafa;
-            "
-          >
-            <div style="margin-bottom: 12px">
-              <div
-                style="
-                  font-weight: 600;
-                  font-size: 12px;
-                  color: #495057;
-                  margin-bottom: 6px;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-                "
-              >
-                Standard Status
-              </div>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="new"
-                  id="status-new"
-                />New</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="pending"
-                  id="status-pending"
-                />Pending</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="in progress"
-                  id="status-in-progress"
-                />In Progress</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="resolved"
-                  id="status-resolved"
-                />Resolved</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="completed"
-                  id="status-completed"
-                />Completed</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="closed"
-                  id="status-closed"
-                />Closed</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="rejected"
-                  id="status-rejected"
-                />Rejected</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="cancelled"
-                  id="status-cancelled"
-                />Cancelled</label
-              >
-            </div>
-            <div style="margin-bottom: 12px">
-              <div
-                style="
-                  font-weight: 600;
-                  font-size: 12px;
-                  color: #495057;
-                  margin-bottom: 6px;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-                "
-              >
-                Workflow Status
-              </div>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="assigned"
-                  id="status-assigned"
-                />Assigned</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="in_progress"
-                  id="status-in-progress-wf"
-                />In Progress (Workflow)</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="pending_approval"
-                  id="status-pending-approval"
-                />Pending Approval</label
-              >
-            </div>
-            <div>
-              <div
-                style="
-                  font-weight: 600;
-                  font-size: 12px;
-                  color: #495057;
-                  margin-bottom: 6px;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-                "
-              >
-                Confirmation Status
-              </div>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="waiting_for_responders"
-                  id="status-waiting-responders"
-                />Waiting for Responders</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="waiting_for_complainant"
-                  id="status-waiting-complainant"
-                />Waiting for Complainant</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="confirmed"
-                  id="status-confirmed"
-                />Confirmed</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-weight: normal;
-                  padding: 2px 0;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  class="status-checkbox"
-                  value="disputed"
-                  id="status-disputed"
-                />Disputed</label
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Category Filter -->
-        <div class="control-group">
-          <label>Category Filter:</label>
-          <div
-            id="category-filter-group"
-            style="
-              max-height: 150px;
-              overflow-y: auto;
-              padding: 8px;
-              border: 1px solid #e0e0e0;
-              border-radius: 6px;
-              background: #fafafa;
-            "
-          >
-            <div
-              id="category-loading"
-              style="
-                padding: 16px;
-                text-align: center;
-                color: #6c757d;
-                font-size: 13px;
-              "
-            >
-              Loading categories...
-            </div>
-          </div>
-        </div>
-
-        <!-- Office Filter -->
-        <div class="control-group">
-          <label>Office Filter:</label>
-          <div
-            id="department-filter-group"
-            style="
-              max-height: 150px;
-              overflow-y: auto;
-              padding: 8px;
-              border: 1px solid #e0e0e0;
-              border-radius: 6px;
-              background: #fafafa;
-            "
-          >
-            <div
-              id="department-loading"
-              style="
-                padding: 16px;
-                text-align: center;
-                color: #6c757d;
-                font-size: 13px;
-              "
-            >
-              Loading departments...
-            </div>
-          </div>
-        </div>
-
-        <!-- Date Range Filter -->
-        <div class="control-group">
-          <label>Date Range:</label>
-          <div style="display: flex; flex-direction: column; gap: 8px">
-            <input
-              type="date"
-              id="date-range-start"
-              style="
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                font-size: 13px;
-                width: 100%;
-                box-sizing: border-box;
-              "
-              placeholder="Start Date"
-            />
-            <input
-              type="date"
-              id="date-range-end"
-              style="
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                font-size: 13px;
-                width: 100%;
-                box-sizing: border-box;
-              "
-              placeholder="End Date"
-            />
+        <!-- Section: Display Options -->
+        <div id="section-display" class="control-section active">
+          <div class="control-group">
             <button
-              id="clear-date-range"
+              id="toggle-heatmap-btn"
+              class="btn-secondary"
+              style="width: 100%"
+            >
+              Toggle Heatmap
+            </button>
+            <button
+              id="toggle-markers-btn"
+              class="btn-secondary"
+              style="width: 100%; margin-top: 8px"
+            >
+              Toggle Markers
+            </button>
+          </div>
+
+          <div class="control-group">
+            <label
               style="
-                padding: 6px 12px;
-                background: #f0f0f0;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 cursor: pointer;
-                transition: all 0.2s ease;
-                width: 100%;
               "
             >
-              Clear Date Range
-            </button>
+              <input
+                type="checkbox"
+                id="include-resolved"
+                checked
+                style="width: 18px; height: 18px; cursor: pointer"
+              />
+              Include Resolved Complaints
+            </label>
           </div>
-        </div>
 
-        <!-- Options -->
-        <div class="control-group">
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              cursor: pointer;
-            "
-          >
-            <input
-              type="checkbox"
-              id="include-resolved"
-              checked
-              style="width: 18px; height: 18px; cursor: pointer"
-            />
-            Include Resolved Complaints
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Heatmap Intensity:</label>
-          <div class="slider-container">
-            <input
-              type="range"
-              id="heatmap-intensity"
-              min="0.1"
-              max="2.0"
-              step="0.1"
-              value="1.0"
-            />
-            <span class="slider-value" id="heatmap-intensity-value">1.0</span>
-          </div>
-        </div>
-        <div class="control-group">
-          <label>Zoom Threshold:</label>
-          <div class="slider-container">
-            <input
-              type="range"
-              id="zoom-threshold"
-              min="10"
-              max="18"
-              step="1"
-              value="11"
-            />
-            <span class="slider-value" id="zoom-threshold-value">11</span>
-          </div>
-          <small style="font-size: 11px; color: #6b7280"
-            >Show markers at this zoom level</small
-          >
-        </div>
-        <div class="control-group">
-          <div class="action-buttons">
-            <button id="reset-filters-btn" class="btn-primary">
-              Reset Filters
-            </button>
-            <button id="fit-bounds-btn" class="btn-secondary">
+          <div class="control-group">
+            <button
+              id="fit-bounds-btn"
+              class="btn-secondary"
+              style="width: 100%"
+            >
               Fit to All Markers
             </button>
           </div>
         </div>
-        <div class="control-group">
-          <label>Statistics:</label>
-          <div class="stats-display">
-            <p>Total Complaints: <span id="total-complaints-stat">0</span></p>
-            <p>Visible Markers: <span id="visible-markers-stat">0</span></p>
+
+        <!-- Section: Date Range -->
+        <div id="section-date" class="control-section">
+          <div class="control-group">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <input
+                type="date"
+                id="date-range-start"
+                style="
+                  padding: 8px;
+                  border: 1px solid #ddd;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  width: 100%;
+                  box-sizing: border-box;
+                "
+                placeholder="Start Date"
+              />
+              <input
+                type="date"
+                id="date-range-end"
+                style="
+                  padding: 8px;
+                  border: 1px solid #ddd;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  width: 100%;
+                  box-sizing: border-box;
+                "
+                placeholder="End Date"
+              />
+              <div style="display: flex; gap: 5px">
+                <button
+                  id="clear-date-range"
+                  style="
+                    padding: 6px 12px;
+                    background: #f0f0f0;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    flex: 1;
+                  "
+                >
+                  Clear
+                </button>
+                <!-- Today button will be inserted here dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Status Filter -->
+        <div id="section-status" class="control-section">
+          <div class="control-group">
+            <div
+              id="status-filter-group"
+              style="
+                max-height: 200px;
+                overflow-y: auto;
+                padding: 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                background: #fafafa;
+              "
+            >
+              <!-- Existing Status Checkboxes -->
+              <div style="margin-bottom: 12px">
+                <div class="filter-subtitle">Standard Status</div>
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="new"
+                    id="status-new"
+                  />New</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="pending"
+                    id="status-pending"
+                  />Pending</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="in progress"
+                    id="status-in-progress"
+                  />In Progress</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="resolved"
+                    id="status-resolved"
+                  />Resolved</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="completed"
+                    id="status-completed"
+                  />Completed</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="closed"
+                    id="status-closed"
+                  />Closed</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="rejected"
+                    id="status-rejected"
+                  />Rejected</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="cancelled"
+                    id="status-cancelled"
+                  />Cancelled</label
+                >
+              </div>
+              <div style="margin-bottom: 12px">
+                <div class="filter-subtitle">Workflow Status</div>
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="assigned"
+                    id="status-assigned"
+                  />Assigned</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="in_progress"
+                    id="status-in-progress-wf"
+                  />In Progress (Workflow)</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="pending_approval"
+                    id="status-pending-approval"
+                  />Pending Approval</label
+                >
+              </div>
+              <div>
+                <div class="filter-subtitle">Confirmation Status</div>
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="waiting_for_responders"
+                    id="status-waiting-responders"
+                  />Waiting for Responders</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="waiting_for_complainant"
+                    id="status-waiting-complainant"
+                  />Waiting for Complainant</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="confirmed"
+                    id="status-confirmed"
+                  />Confirmed</label
+                >
+                <label class="checkbox-label"
+                  ><input
+                    type="checkbox"
+                    class="status-checkbox"
+                    value="disputed"
+                    id="status-disputed"
+                  />Disputed</label
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Type & Office -->
+        <div id="section-office" class="control-section">
+          <!-- Category Filter -->
+          <div class="control-group">
+            <label>Category Filter:</label>
+            <div
+              id="category-filter-group"
+              style="
+                max-height: 150px;
+                overflow-y: auto;
+                padding: 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                background: #fafafa;
+              "
+            >
+              <div
+                id="category-loading"
+                style="
+                  padding: 16px;
+                  text-align: center;
+                  color: #6c757d;
+                  font-size: 13px;
+                "
+              >
+                Loading categories...
+              </div>
+            </div>
+          </div>
+
+          <!-- Office Filter -->
+          <div class="control-group">
+            <label>Office Filter:</label>
+            <div
+              id="department-filter-group"
+              style="
+                max-height: 150px;
+                overflow-y: auto;
+                padding: 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                background: #fafafa;
+              "
+            >
+              <div
+                id="department-loading"
+                style="
+                  padding: 16px;
+                  text-align: center;
+                  color: #6c757d;
+                  font-size: 13px;
+                "
+              >
+                Loading departments...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Statistics -->
+        <div id="section-stats" class="control-section">
+          <div class="control-group">
+            <div class="stats-display">
+              <p>Total Complaints: <span id="total-complaints-stat">0</span></p>
+              <p>Visible Markers: <span id="visible-markers-stat">0</span></p>
+            </div>
           </div>
         </div>
       </div>

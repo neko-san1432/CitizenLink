@@ -834,14 +834,14 @@ class ComplaintService {
       // Filter by department - checks department_r array (text array field)
       // Only complaints with the selected department code in their department_r array will be returned
       if (department) {
-        console.log("[COMPLAINT-SERVICE] Filtering by department:", department);
+        // console.log("[COMPLAINT-SERVICE] Filtering by department:", department);
         const depts = Array.isArray(department) ? department : [department];
         if (depts.length > 0) {
           // Use overlaps operator (&&) to check if department_r has common elements with depts array
           query = query.overlaps("department_r", depts);
         }
       } else {
-        console.log("[COMPLAINT-SERVICE] No department filter applied");
+        // console.log("[COMPLAINT-SERVICE] No department filter applied");
       }
       // Filter by category (UUIDs from categories table, supports array for multiple values)
       if (category) {
@@ -935,11 +935,11 @@ class ComplaintService {
         // Continue anyway - pagination will handle it
       }
 
-      console.log(
-        `[COMPLAINT-SERVICE] Total complaints matching filters: ${
-          totalCount || "unknown"
-        }`
-      );
+      // console.log(
+      //   `[COMPLAINT-SERVICE] Total complaints matching filters: ${
+      //     totalCount || "unknown"
+      //   }`
+      // );
 
       // Use pagination to fetch all records in batches
       const batchSize = 1000; // Fetch in batches of 1000
@@ -966,9 +966,9 @@ class ComplaintService {
 
         if (batchData && batchData.length > 0) {
           allData = allData.concat(batchData);
-          console.log(
-            `[COMPLAINT-SERVICE] Fetched batch: ${batchData.length} complaints (total so far: ${allData.length})`
-          );
+          // console.log(
+          //   `[COMPLAINT-SERVICE] Fetched batch: ${batchData.length} complaints (total so far: ${allData.length})`
+          // );
           offset += batchSize;
           // If we got fewer results than batchSize, we've reached the end
           hasMore = batchData.length === batchSize;
@@ -978,9 +978,9 @@ class ComplaintService {
 
         // Safety check: if we have a total count and we've fetched all records
         if (totalCount !== null && allData.length >= totalCount) {
-          console.log(
-            `[COMPLAINT-SERVICE] Reached total count (${totalCount}), stopping pagination`
-          );
+          // console.log(
+          //   `[COMPLAINT-SERVICE] Reached total count (${totalCount}), stopping pagination`
+          // );
           hasMore = false;
         }
 
@@ -994,9 +994,9 @@ class ComplaintService {
       }
 
       const data = allData;
-      console.log(
-        `[COMPLAINT-SERVICE] Fetched ${data.length} complaint(s) for heatmap using pagination`
-      );
+      // console.log(
+      //   `[COMPLAINT-SERVICE] Fetched ${data.length} complaint(s) for heatmap using pagination`
+      // );
       // console.log removed for security
       // console.log removed for security
       // console.log removed for security

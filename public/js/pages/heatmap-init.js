@@ -221,8 +221,8 @@ function updateDatePickerConstraints(selectedStartDate, selectedEndDate) {
     return;
   }
 
-  const { oldest, latest } = calculateDateRange(heatmapViz.allComplaintData);
-  if (!oldest || !latest) {
+  const { oldest } = calculateDateRange(heatmapViz.allComplaintData);
+  if (!oldest) {
     return;
   }
 
@@ -280,11 +280,26 @@ async function loadComplaintData() {
     // Setup date picker constraints based on loaded complaint data
     setupDatePickerConstraints();
 
-    // Create heatmap layer with all data
-    heatmapViz.createHeatmapLayer();
-    if (heatmapViz.heatmapLayer) {
-      heatmapViz.showHeatmap();
+    // Default to showing only Today's complaints
+    const dateStart = document.getElementById("date-range-start");
+    const dateEnd = document.getElementById("date-range-end");
+    if (dateStart && dateEnd) {
+      const today = new Date();
+      // Handle timezone offset to ensure we get the correct local date string
+      const offset = today.getTimezoneOffset() * 60000; // offset in milliseconds
+      const localToday = new Date(today.getTime() - offset);
+      const todayStr = localToday.toISOString().split("T")[0];
+
+      dateStart.value = todayStr;
+      dateEnd.value = todayStr;
+
+      // Update constraints for the selected dates
+      updateDatePickerConstraints(todayStr, todayStr);
+      console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
     }
+
+    // REMOVED: Redundant initial heatmap creation
+    // applyFiltersAndUpdate() below will create the heatmap with the "Today" filter applied
 
     // IMPORTANT: Do NOT create markers during initial load
     // Markers will be created lazily when user zooms in for the first time
@@ -490,35 +505,62 @@ function positionGearButton(disableTransition = false) {
 
 // Setup control panel event handlers
 function setupControlPanel() {
-  // Toggle controls visibility
-  document
-    .getElementById("toggle-controls-btn")
-    .addEventListener("click", () => {
-      const panel = document.getElementById("map-controls-panel");
-      const isClosing = !panel.classList.contains("hidden");
-      panel.classList.toggle("hidden");
+  const panel = document.getElementById("map-controls-panel");
+  const toolbarBtns = document.querySelectorAll(".toolbar-btn");
+  const sections = document.querySelectorAll(".control-section");
+  const panelTitle = document.getElementById("panel-title");
 
-      // Reposition gear button after toggling
-      // Disable transition when closing to prevent animation
-      setTimeout(() => {
-        positionGearButton(isClosing);
-      }, 50); // Small delay to ensure panel height is calculated
+  // Map section IDs to titles
+  const sectionTitles = {
+    display: "Display Options",
+    date: "Date Range",
+    status: "Status Filter",
+    office: "Type & Office",
+    stats: "Statistics",
+  };
+
+  toolbarBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.target;
+
+      // Update active state of buttons
+      toolbarBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // Show panel if hidden
+      if (panel.classList.contains("hidden")) {
+        panel.classList.remove("hidden");
+      }
+
+      // Show target section, hide others
+      sections.forEach((section) => {
+        section.classList.remove("active");
+        if (section.id === `section-${target}`) {
+          section.classList.add("active");
+        }
+      });
+
+      // Update panel title
+      if (panelTitle && sectionTitles[target]) {
+        panelTitle.textContent = sectionTitles[target];
+      }
     });
+  });
 
   document
     .getElementById("close-controls-btn")
     .addEventListener("click", () => {
-      document.getElementById("map-controls-panel").classList.add("hidden");
-      // Disable transition when closing to prevent animation
-      positionGearButton(true);
+      panel.classList.add("hidden");
+      // Remove active state from all toolbar buttons
+      toolbarBtns.forEach((b) => b.classList.remove("active"));
     });
 
-  // Reposition gear button when panel content changes (e.g., filters loaded)
+  // Reposition logic for gear button is REMOVED as gear button no longer exists
+
   const observer = new MutationObserver(() => {
-    positionGearButton();
+    // No-op for now, kept structure if needed later
   });
 
-  const panel = document.getElementById("map-controls-panel");
   if (panel) {
     observer.observe(panel, {
       childList: true,
@@ -528,16 +570,12 @@ function setupControlPanel() {
     });
   }
 
-  // Initial positioning
-  positionGearButton();
+  // Initial positioning - REMOVED
 
-  // Also reposition on window resize
-  window.addEventListener("resize", positionGearButton);
+  // Also reposition on window resize - REMOVED
 
   // Initialize reset view button positioning
-  // Make sure it's positioned correctly on initial load
   setTimeout(() => {
-    positionGearButton();
     positionResetViewButton();
   }, 100);
 
@@ -716,6 +754,33 @@ function setupControlPanel() {
         updateDatePickerConstraints("", "");
         debounceFilterUpdate(applyFiltersAndUpdate, 500);
       });
+
+      // Add "Today" button dynamically if it doesn't exist
+      if (!document.getElementById("filter-today-btn")) {
+        const todayBtn = document.createElement("button");
+        todayBtn.id = "filter-today-btn";
+        todayBtn.className = "btn btn-sm btn-outline-primary ms-1";
+        todayBtn.textContent = "Today";
+        todayBtn.type = "button";
+
+        // Insert after clear button
+        clearDateRange.parentNode.insertBefore(
+          todayBtn,
+          clearDateRange.nextSibling
+        );
+
+        todayBtn.addEventListener("click", () => {
+          const today = new Date();
+          const todayStr = today.toISOString().split("T")[0];
+
+          if (dateStart) dateStart.value = todayStr;
+          if (dateEnd) dateEnd.value = todayStr;
+
+          // Update constraints
+          updateDatePickerConstraints(todayStr, todayStr);
+          debounceFilterUpdate(applyFiltersAndUpdate, 500);
+        });
+      }
     }
 
     // Toggle markers button (hidden for citizens)
@@ -849,28 +914,42 @@ function setupControlPanel() {
     console.warn("[HEATMAP] Reset view button not found in DOM");
   }
 
-  // Heatmap intensity slider
-  const intensitySlider = document.getElementById("heatmap-intensity");
-  const intensityValue = document.getElementById("heatmap-intensity-value");
-  intensitySlider.addEventListener("input", (e) => {
-    const value = parseFloat(e.target.value);
-    intensityValue.textContent = value.toFixed(1);
-    if (heatmapViz) {
-      heatmapViz.heatmapConfig.intensity = value;
-      heatmapViz.hideHeatmap();
-      heatmapViz.createHeatmapLayer();
-      heatmapViz.showHeatmap();
-    }
+  // Accordion functionality
+  const accordionHeaders = document.querySelectorAll(".accordion-header");
+  accordionHeaders.forEach((header) => {
+    header.addEventListener("click", () => {
+      const section = header.parentElement;
+      const isActive = section.classList.contains("active");
+
+      // Close all sections except the one clicked (if it was already active, we'll close it below)
+      document.querySelectorAll(".accordion-section.active").forEach((s) => {
+        if (s !== section) {
+          s.classList.remove("active");
+        }
+      });
+
+      // Toggle clicked section
+      if (isActive) {
+        section.classList.remove("active");
+      } else {
+        section.classList.add("active");
+      }
+
+      // Reposition gear button after animation
+      setTimeout(() => {
+        positionGearButton();
+      }, 300);
+    });
   });
 
-  // Zoom threshold slider
-  const zoomSlider = document.getElementById("zoom-threshold");
-  const zoomValue = document.getElementById("zoom-threshold-value");
-  zoomSlider.addEventListener("input", (e) => {
-    const value = parseInt(e.target.value);
-    zoomValue.textContent = value;
-    // This can be used to control when markers appear
-  });
+  // Fixed Heatmap Configuration
+  if (heatmapViz) {
+    heatmapViz.heatmapConfig.intensity = 1.0; // Fixed intensity
+    // Zoom threshold is handled in updateZoomBasedVisibility with fixed value 11
+  }
+
+  // Initial icon setup is no longer needed as CSS handles rotation
+  // but we ensure only one section is open initially (handled by HTML class="active")
 
   // Load categories and departments
   loadCategories();

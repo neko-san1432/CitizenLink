@@ -17,8 +17,34 @@ async function initializeSupabase() {
         throw new Error("Missing Supabase client configuration");
       }
 
+      // Check for common UMD leak issues (where global exports/module are defined)
+      if (!window.supabase) {
+        if (
+          typeof window.exports === "object" &&
+          window.exports &&
+          window.exports.supabase
+        ) {
+          window.supabase = window.exports.supabase;
+          console.log("[Config] Recovered Supabase from window.exports");
+        } else if (
+          typeof window.module === "object" &&
+          window.module &&
+          window.module.exports &&
+          window.module.exports.supabase
+        ) {
+          window.supabase = window.module.exports.supabase;
+          console.log("[Config] Recovered Supabase from window.module.exports");
+        }
+      }
+
       // Ensure Supabase library is loaded
       if (!window.supabase || !window.supabase.createClient) {
+        console.error("[Config] Supabase library check failed:", {
+          windowSupabase: window.supabase,
+          hasCreateClient: window.supabase && !!window.supabase.createClient,
+          typeofSupabase: typeof window.supabase,
+          keys: window.supabase ? Object.keys(window.supabase) : [],
+        });
         throw new Error("Supabase library not loaded. Check script inclusion.");
       }
       const { createClient } = window.supabase;

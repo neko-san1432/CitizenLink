@@ -804,12 +804,12 @@ class HeatmapVisualization {
       this.heatmapLayer = null;
     }
 
-    // For heatmap visualization, use role-scoped complaints
-    // LGU Admins see only complaints assigned to their department
-    // Coordinators and super-admins see all complaints
-    // Markers use the same filtered data
-    const heatmapData =
-      this.getRoleScopedComplaints() || this.complaintData || [];
+    // Apply filters to determine which complaints should be visible
+    this.applyClientSideFilters(this.currentFilters || {});
+
+    // For heatmap visualization, use filtered complaintData
+    // markers use the same filtered data
+    const heatmapData = this.complaintData || [];
 
     if (heatmapData.length === 0) {
       console.warn("[HEATMAP] No complaint data available for heatmap");
