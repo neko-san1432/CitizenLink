@@ -666,18 +666,3 @@ async function startOAuthPopup(provider) {
     } catch {}
   }
 }
-// Email field remains empty and editable for both login and register
-// Note: Session cookie is now set by server during login - no client-side cookie setting needed
-// If not remembered, clear cookie on unload (best-effort for session cleanup)
-(function setupEphemeralSessionCleanup() {
-  try {
-    const rememberCheckbox = document.getElementById("remember-me");
-    if (!rememberCheckbox) return;
-    if (rememberCheckbox.checked) return; // user wants persistent
-    window.addEventListener("beforeunload", async () => {
-      try {
-        await fetch("/auth/session", { method: "DELETE" });
-      } catch {}
-    });
-  } catch {}
-})();

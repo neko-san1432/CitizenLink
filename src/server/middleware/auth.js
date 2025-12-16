@@ -1,6 +1,13 @@
-const Database = require('../config/database');
-const { validateUserRole, extractDepartmentCode } = require('../utils/roleValidation');
-const { extractUserMetadata, buildUserObject, handleAuthError } = require('../utils/authUtils');
+const Database = require("../config/database");
+const {
+  validateUserRole,
+  extractDepartmentCode,
+} = require("../utils/roleValidation");
+const {
+  extractUserMetadata,
+  buildUserObject,
+  handleAuthError,
+} = require("../utils/authUtils");
 
 const supabase = Database.getClient();
 
@@ -12,19 +19,21 @@ const authenticateUser = async (req, res, next) => {
 
     // Prioritize Authorization header as it contains the most recent token from the client
     const token =
-      authHeader?.replace('Bearer ', '') ||
+      authHeader?.replace("Bearer ", "") ||
       cookieToken ||
       req.cookies?.sb_access_token_debug;
 
     if (!token) {
-      console.log('[AUTH DEBUG] No token found. Cookies:', Object.keys(req.cookies), 'Auth Header:', Boolean(authHeader));
-      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
+      // console.log removed for security
+      if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
         return res.status(401).json({
           success: false,
-          error: 'No authentication token'
+          error: "No authentication token",
         });
       }
-      return res.redirect(`/login?message=${encodeURIComponent('Please login first')}&type=error`);
+      return res.redirect(
+        `/login?message=${encodeURIComponent("Please login first")}&type=error`
+      );
     }
 
     // Validate token with Supabase
@@ -34,14 +43,21 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      console.log('[AUTH DEBUG] Token validation failed:', error?.message);
-      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
+      // console.log removed for security
+      // Clear invalid cookie to prevent redirect loops
+      res.clearCookie("sb_access_token");
+
+      if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
         return res.status(401).json({
           success: false,
-          error: error?.message || 'Invalid token'
+          error: error?.message || "Invalid token",
         });
       }
-      return res.redirect(`/login?message=${encodeURIComponent('Invalid session. Please login again')}&type=error`);
+      return res.redirect(
+        `/login?message=${encodeURIComponent(
+          "Invalid session. Please login again"
+        )}&type=error`
+      );
     }
 
     // Check if sessions were invalidated (e.g., after password change)
@@ -55,28 +71,47 @@ const authenticateUser = async (req, res, next) => {
       // Decode JWT token to get issued-at time (iat claim)
       // JWT format: header.payload.signature (base64url encoded)
       try {
-        const tokenParts = token.split('.');
+        const tokenParts = token.split(".");
         if (tokenParts.length === 3) {
           // Decode payload (second part)
-          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-          const tokenIssuedAt = payload.iat ? new Date(payload.iat * 1000) : null;
+          const payload = JSON.parse(
+            Buffer.from(tokenParts[1], "base64").toString()
+          );
+          const tokenIssuedAt = payload.iat
+            ? new Date(payload.iat * 1000)
+            : null;
           const invalidationTime = sessionsInvalidatedAt || passwordChangedAt;
 
-          if (tokenIssuedAt && invalidationTime && new Date(invalidationTime) > tokenIssuedAt) {
+          if (
+            tokenIssuedAt &&
+            invalidationTime &&
+            new Date(invalidationTime) > tokenIssuedAt
+          ) {
             // Token was issued before password change/invalidation, reject it immediately
-            if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
+            res.clearCookie("sb_access_token");
+            if (
+              req.originalUrl.startsWith("/api/") ||
+              req.path.startsWith("/api/")
+            ) {
               return res.status(401).json({
                 success: false,
-                error: 'Session invalidated. Please login again.'
+                error: "Session invalidated. Please login again.",
               });
             }
-            return res.redirect(`/login?message=${encodeURIComponent('Session invalidated. Please login again')}&type=error`);
+            return res.redirect(
+              `/login?message=${encodeURIComponent(
+                "Session invalidated. Please login again"
+              )}&type=error`
+            );
           }
         }
       } catch (jwtErr) {
         // If JWT decoding fails, allow the request (fallback to Supabase validation)
         // This prevents breaking authentication if token format changes
-        console.warn('[AUTH] Failed to decode JWT for session invalidation check:', jwtErr.message);
+        console.warn(
+          "[AUTH] Failed to decode JWT for session invalidation check:",
+          jwtErr.message
+        );
       }
     }
 
@@ -84,34 +119,95 @@ const authenticateUser = async (req, res, next) => {
     const combinedMetadata = extractUserMetadata(tokenUser);
 
     // Validate user role and department code
-    const userRole = combinedMetadata.role || 'citizen';
+    const userRole = combinedMetadata.role || "citizen";
     const roleValidation = await validateUserRole(userRole);
 
     if (!roleValidation.isValid) {
-      console.error('[AUTH] ❌ Invalid role:', {
+      console.error("[AUTH] ❌ Invalid role:", {
         role: userRole,
         error: roleValidation.error,
-        userId: tokenUser.id
+        userId: tokenUser.id,
       });
 
-      if (req.originalUrl.startsWith('/api/') || req.path.startsWith('/api/')) {
+      // Clear cookie for invalid role to force re-login check
+      res.clearCookie("sb_access_token");
+
+      if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
         return res.status(403).json({
           success: false,
-          error: `Invalid role: ${roleValidation.error}`
+          error: `Invalid role: ${roleValidation.error}`,
         });
       }
-      return res.redirect(`/login?message=${encodeURIComponent(`Invalid role: ${roleValidation.error}`)}&type=error`);
+      return res.redirect(
+        `/login?message=${encodeURIComponent(
+          `Invalid role: ${roleValidation.error}`
+        )}&type=error`
+      );
     }
 
     // Extract department code for LGU roles
     const departmentCode = extractDepartmentCode(userRole);
 
     // Build standardized user object
-    req.user = buildUserObject(tokenUser, combinedMetadata, roleValidation, departmentCode);
+    req.user = buildUserObject(
+      tokenUser,
+      combinedMetadata,
+      roleValidation,
+      departmentCode
+    );
 
     next();
   } catch (error) {
-    return handleAuthError(error, req, res, 'Authentication failed. Please try again');
+    return handleAuthError(
+      error,
+      req,
+      res,
+      "Authentication failed. Please try again"
+    );
+  }
+};
+
+/**
+ * Middleware to redirect authenticated users to dashboard
+ * Used for login/signup pages to prevent access if already logged in
+ */
+const redirectIfAuthenticated = async (req, res, next) => {
+  try {
+    // If request has error parameters, likely a redirect from auth failure
+    // Don't auto-redirect back to dashboard (loop prevention)
+    if (
+      req.query.type === "error" ||
+      req.query.session_expired === "true" ||
+      req.query.message
+    ) {
+      return next();
+    }
+
+    const token = req.cookies?.sb_access_token;
+    if (!token) {
+      return next();
+    }
+
+    // Verify token validity before redirecting
+    // We do a lightweight check here - full validation happens on /dashboard access
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      // Invalid token, proceed to public page
+      // Optionally clear cookie here to be clean, but authenticateUser logic handles it too
+      res.clearCookie("sb_access_token");
+      return next();
+    }
+
+    // Valid session found - redirect to dashboard
+    return res.redirect("/dashboard");
+  } catch (error) {
+    // If error occurs, fail open (allow access to page)
+    console.error("[AUTH] redirectIfAuthenticated error:", error.message);
+    next();
   }
 };
 const requireRole = (allowedRoles) => {
@@ -121,50 +217,78 @@ const requireRole = (allowedRoles) => {
     const baseRole = req.user?.raw_user_meta_data?.base_role;
 
     if (!userRole) {
-      return res.redirect(`/login?message=${encodeURIComponent('Authentication incomplete: missing role. Please contact support.')}&type=error`);
+      return res.redirect(
+        `/login?message=${encodeURIComponent(
+          "Authentication incomplete: missing role. Please contact support."
+        )}&type=error`
+      );
     }
 
     const normalizedRole = String(userRole).trim().toLowerCase();
-    const normalizedBaseRole = baseRole ? String(baseRole).trim().toLowerCase() : null;
+    const normalizedBaseRole = baseRole
+      ? String(baseRole).trim().toLowerCase()
+      : null;
 
     const hasPermission = allowedRoles.some((allowedRole) => {
-      if (typeof allowedRole === 'string') {
+      if (typeof allowedRole === "string") {
         // Support wildcard matching (e.g., "lgu-admin*" matches "lgu-admin-{dept}")
-        if (allowedRole.includes('*')) {
+        if (allowedRole.includes("*")) {
           // Safe wildcard matching without dynamic regex
-          const pattern = allowedRole.replace(/\*/g, '.*');
+          const pattern = allowedRole.replace(/\*/g, ".*");
           // eslint-disable-next-line security/detect-non-literal-regexp
           const regex = new RegExp(`^${pattern}$`);
-          return regex.test(normalizedRole) || (normalizedBaseRole && regex.test(normalizedBaseRole));
+          return (
+            regex.test(normalizedRole) ||
+            (normalizedBaseRole && regex.test(normalizedBaseRole))
+          );
         }
-        return normalizedRole === allowedRole.toLowerCase() || (normalizedBaseRole && normalizedBaseRole === allowedRole.toLowerCase());
+        return (
+          normalizedRole === allowedRole.toLowerCase() ||
+          (normalizedBaseRole &&
+            normalizedBaseRole === allowedRole.toLowerCase())
+        );
       } else if (allowedRole instanceof RegExp) {
-        return allowedRole.test(normalizedRole) || (normalizedBaseRole && allowedRole.test(normalizedBaseRole));
-      } else if (typeof allowedRole === 'object' && allowedRole !== null) {
+        return (
+          allowedRole.test(normalizedRole) ||
+          (normalizedBaseRole && allowedRole.test(normalizedBaseRole))
+        );
+      } else if (typeof allowedRole === "object" && allowedRole !== null) {
         // Handle case where regex might be converted to object
-        console.error('[AUTH] Invalid role in allowedRoles array:', allowedRole);
+        console.error(
+          "[AUTH] Invalid role in allowedRoles array:",
+          allowedRole
+        );
         return false;
       }
       return false;
     });
 
     if (!hasPermission) {
-      const isApiRequest = req.path.startsWith('/api/') ||
-                           req.originalUrl.startsWith('/api/') ||
-                           req.url.startsWith('/api/');
+      const isApiRequest =
+        req.path.startsWith("/api/") ||
+        req.originalUrl.startsWith("/api/") ||
+        req.url.startsWith("/api/");
 
       if (isApiRequest) {
         return res.status(403).json({
           success: false,
-          error: 'Access denied. You do not have permission to access this resource.',
-          debug: process.env.NODE_ENV === 'development' ? {
-            userRole,
-            allowedRoles,
-            path: req.path
-          } : null
+          error:
+            "Access denied. You do not have permission to access this resource.",
+          debug:
+            process.env.NODE_ENV === "development"
+              ? {
+                  userRole,
+                  allowedRoles,
+                  path: req.path,
+                }
+              : null,
         });
       }
-      return res.redirect(`/login?message=${encodeURIComponent('Access denied. You do not have permission to access this resource.')}&type=error`);
+      return res.redirect(
+        `/login?message=${encodeURIComponent(
+          "Access denied. You do not have permission to access this resource."
+        )}&type=error`
+      );
     }
 
     next();
@@ -173,5 +297,6 @@ const requireRole = (allowedRoles) => {
 
 module.exports = {
   authenticateUser,
-  requireRole
+  requireRole,
+  redirectIfAuthenticated,
 };

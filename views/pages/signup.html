@@ -176,576 +176,515 @@
                     </button>
                   </div>
 
-                  <!-- First Name Field -->
-                  <div class="form-group form-half">
-                    <label
-                      for="firstName"
-                      class="form-label form-label-required"
-                      >First Name</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input form-control"
-                        type="text"
-                        id="firstName"
-                        name="firstName"
-                        placeholder="Enter your first name"
-                        required
-                        autocomplete="given-name"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <circle
-                            cx="12"
-                            cy="7"
-                            r="4"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Last Name Field -->
-                  <div class="form-group form-half">
-                    <label for="lastName" class="form-label">Last Name</label>
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="lastName"
-                        name="lastName"
-                        placeholder="Enter your last name"
-                        required
-                        autocomplete="family-name"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <circle
-                            cx="12"
-                            cy="7"
-                            r="4"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Address Line 1 -->
-                  <div class="form-group form-full">
-                    <label for="addressLine1" class="form-label"
-                      >Address Line 1 *</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="addressLine1"
-                        name="addressLine1"
-                        placeholder="House no., street"
-                        autocomplete="address-line1"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <circle
-                            cx="12"
-                            cy="10"
-                            r="3"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Address Line 2 -->
-                  <div class="form-group form-full">
-                    <label for="addressLine2" class="form-label"
-                      >Address Line 2 (Optional)</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="addressLine2"
-                        name="addressLine2"
-                        placeholder="Unit, building, subdivision"
-                        autocomplete="address-line2"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- City and Province -->
-                  <div class="form-group form-half">
-                    <label for="city" class="form-label">City *</label>
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="city"
-                        name="city"
-                        placeholder="Enter city"
-                        autocomplete="address-level2"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="form-group form-half">
-                    <label for="province" class="form-label">Province *</label>
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="province"
-                        name="province"
-                        placeholder="Enter province"
-                        autocomplete="address-level1"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Postal Code and Barangay -->
-                  <div class="form-group form-half">
-                    <label for="postalCode" class="form-label"
-                      >Postal Code</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="postalCode"
-                        name="postalCode"
-                        placeholder="4 digits (e.g., 1234)"
-                        maxlength="4"
-                        pattern="[0-9]{4}"
-                        autocomplete="postal-code"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="form-group form-half">
-                    <label for="barangay" class="form-label">Barangay</label>
-                    <div class="input-wrapper">
-                      <input
-                        class="input"
-                        type="text"
-                        id="barangay"
-                        name="barangay"
-                        placeholder="Enter barangay"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Gender -->
-                  <div class="form-group form-half">
-                    <label for="gender" class="form-label">Gender</label>
-                    <div class="input-wrapper">
-                      <select id="gender" name="gender" class="input">
-                        <option value="" selected>Select gender</option>
-                        <option value="he">He</option>
-                        <option value="she">She</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Email Field -->
-                  <div class="form-group form-half">
-                    <label for="email" class="form-label form-label-required"
-                      >Email Address</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input form-control"
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        required
-                        autocomplete="email"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <polyline
-                            points="22,6 12,13 2,6"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Phone Field -->
-                  <div class="form-group form-half">
-                    <label for="mobile" class="form-label">Phone Number</label>
-                    <div class="phone-input-wrapper">
-                      <div class="phone-prefix">+63</div>
-                      <input
-                        class="input phone-input"
-                        type="tel"
-                        id="mobile"
-                        name="mobile"
-                        placeholder="9123456789"
-                        maxlength="10"
-                        pattern="[0-9]{10}"
-                        required
-                        autocomplete="tel"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Password Field -->
-                  <div class="form-group form-half">
-                    <label
-                      for="regPassword"
-                      class="form-label form-label-required"
-                      >Password</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input form-control"
-                        type="password"
-                        id="regPassword"
-                        name="password"
-                        placeholder="Create a strong password"
-                        required
-                        autocomplete="new-password"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="3"
-                            y="11"
-                            width="18"
-                            height="11"
-                            rx="2"
-                            ry="2"
-                            stroke="currentColor"
-                            stroke-width="2"
-                          />
-                          <circle cx="12" cy="16" r="1" fill="currentColor" />
-                          <path
-                            d="M7 11V7a5 5 0 0 1 10 0v4"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div class="password-strength">
-                      <div class="strength-bar">
-                        <div class="strength-fill" id="strength-fill"></div>
-                      </div>
-                      <span class="strength-text" id="strength-text"
-                        >Password strength</span
-                      >
-                    </div>
-                  </div>
-
-                  <!-- ID Verification -->
-                  <div class="id-verify-body">
-                    <!-- Upload mode -->
+                  <!-- Progress Bar -->
+                  <div class="signup-progress-container mb-6">
                     <div
-                      class="id-mode id-mode-upload"
-                      data-mode-panel="upload"
+                      class="signup-progress-bar"
+                      role="progressbar"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
                     >
-                      <label
-                        for="id-file-input"
-                        class="id-dropzone"
-                        tabindex="0"
-                      >
-                        <div class="dz-icon" aria-hidden="true">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                          >
-                            <path
-                              d="M12 16V7m0 0l-4 4m4-4l4 4"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                            <rect
-                              x="3"
-                              y="4"
-                              width="18"
-                              height="14"
-                              rx="2"
-                              ry="2"
-                              stroke="currentColor"
-                              stroke-width="2"
-                            />
-                          </svg>
-                        </div>
-                        <div class="dz-text">
-                          <strong>Click to upload</strong> or drag and drop
-                          <div class="dz-hint">
-                            Accepted: JPG, PNG, PDF (front side is enough)
-                          </div>
-                        </div>
-                        <input
-                          id="id-file-input"
-                          name="id-file"
-                          type="file"
-                          accept="image/*,application/pdf"
-                          hidden
-                        />
-                      </label>
-                      <div class="id-preview" id="id-preview" hidden>
-                        <img id="id-preview-img" alt="Uploaded ID preview" />
-                        <button
-                          type="button"
-                          class="btn btn-secondary btn-sm"
-                          id="id-clear-btn"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Camera mode -->
-                    <div
-                      class="id-mode id-mode-camera"
-                      data-mode-panel="camera"
-                      hidden
-                    >
-                      <div class="camera-wrap">
-                        <video
-                          id="id-camera"
-                          playsinline
-                          autoplay
-                          muted
-                        ></video>
-                        <canvas id="id-canvas" hidden></canvas>
-                      </div>
-                      <div class="camera-actions">
-                        <button
-                          type="button"
-                          class="btn btn-secondary"
-                          id="camera-start-btn"
-                        >
-                          Enable camera
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-primary"
-                          id="camera-capture-btn"
-                          disabled
-                        >
-                          Capture
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-secondary"
-                          id="camera-stop-btn"
-                          disabled
-                        >
-                          Stop
-                        </button>
-                      </div>
-                      <div class="id-preview" id="id-camera-preview" hidden>
-                        <img id="id-captured-img" alt="Captured ID preview" />
-                        <button
-                          type="button"
-                          class="btn btn-secondary btn-sm"
-                          id="camera-retake-btn"
-                        >
-                          Retake
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="id-verify-footer">
-                    <div class="id-verify-consent">
-                      <label class="checkbox-wrapper small">
-                        <input type="checkbox" id="id-consent-checkbox" />
-                        <span class="checkbox-custom"></span>
-                        <span
-                          >I consent to process my ID for verification as
-                          described in the Privacy Policy.</span
-                        >
-                      </label>
-                    </div>
-                    <div class="id-verify-actions-row">
-                      <button
-                        type="button"
-                        id="id-scan-btn"
-                        class="btn btn-primary"
-                        disabled
-                      >
-                        <span>Verify ID</span>
-                      </button>
                       <div
-                        class="id-verify-status"
-                        id="id-verify-status"
-                        aria-live="polite"
+                        class="signup-progress-fill"
+                        id="signup-progress-fill"
                       ></div>
                     </div>
-                    <details class="id-verify-review" id="id-review" disabled>
-                      <summary class="review-summary-disabled">
-                        Finished
-                      </summary>
-                      <div class="review-grid" id="id-review-grid"></div>
-                    </details>
+                    <div
+                      class="signup-progress-label"
+                      id="signup-progress-label"
+                    >
+                      Step 1 of 4 · 0% complete
+                    </div>
                   </div>
 
-                  <div
-                    id="register-captcha"
-                    class="captcha-container form-full"
-                  ></div>
+                  <div id="signup-steps">
+                    <!-- Step 1: Personal Details -->
+                    <div class="signup-step">
+                      <h3 class="step-title">Personal Details</h3>
 
-                  <!-- Confirm Password Field -->
-                  <div class="form-group form-half">
-                    <label
-                      for="reRegPassword"
-                      class="form-label form-label-required"
-                      >Confirm Password</label
-                    >
-                    <div class="input-wrapper">
-                      <input
-                        class="input form-control"
-                        type="password"
-                        id="reRegPassword"
-                        name="confirmPassword"
-                        placeholder="Confirm your password"
-                        required
-                        autocomplete="new-password"
-                      />
-                      <div class="input-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
+                      <!-- First Name Field -->
+                      <div class="form-group form-half">
+                        <label
+                          for="firstName"
+                          class="form-label form-label-required"
+                          >First Name</label
                         >
-                          <rect
-                            x="3"
-                            y="11"
-                            width="18"
-                            height="11"
-                            rx="2"
-                            ry="2"
-                            stroke="currentColor"
-                            stroke-width="2"
+                        <div class="input-wrapper">
+                          <input
+                            class="input form-control"
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            placeholder="Enter your first name"
+                            required
+                            autocomplete="given-name"
                           />
-                          <circle cx="12" cy="16" r="1" fill="currentColor" />
-                          <path
-                            d="M7 11V7a5 5 0 0 1 10 0v4"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                        </div>
+                      </div>
+
+                      <!-- Last Name Field -->
+                      <div class="form-group form-half">
+                        <label for="lastName" class="form-label"
+                          >Last Name</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            placeholder="Enter your last name"
+                            required
+                            autocomplete="family-name"
                           />
-                        </svg>
+                        </div>
+                      </div>
+
+                      <!-- Address Line 1 -->
+                      <div class="form-group form-full">
+                        <label for="addressLine1" class="form-label"
+                          >Address Line 1 *</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="addressLine1"
+                            name="addressLine1"
+                            placeholder="House no., street"
+                            autocomplete="address-line1"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Address Line 2 -->
+                      <div class="form-group form-full">
+                        <label for="addressLine2" class="form-label"
+                          >Address Line 2 (Optional)</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="addressLine2"
+                            name="addressLine2"
+                            placeholder="Unit, building, subdivision"
+                            autocomplete="address-line2"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- City and Province -->
+                      <div class="form-group form-half">
+                        <label for="city" class="form-label">City *</label>
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="city"
+                            name="city"
+                            placeholder="Enter city"
+                            autocomplete="address-level2"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div class="form-group form-half">
+                        <label for="province" class="form-label"
+                          >Province *</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="province"
+                            name="province"
+                            placeholder="Enter province"
+                            autocomplete="address-level1"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Postal Code and Barangay -->
+                      <div class="form-group form-half">
+                        <label for="postalCode" class="form-label"
+                          >Postal Code</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input"
+                            type="text"
+                            id="postalCode"
+                            name="postalCode"
+                            placeholder="4 digits (e.g., 1234)"
+                            maxlength="4"
+                            pattern="[0-9]{4}"
+                            autocomplete="postal-code"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="form-group form-half">
+                        <label for="barangay" class="form-label"
+                          >Barangay</label
+                        >
+                        <div class="input-wrapper">
+                          <select
+                            id="barangay"
+                            name="barangay"
+                            class="input"
+                            required
+                          ></select>
+                        </div>
+                      </div>
+
+                      <!-- Gender -->
+                      <div class="form-group form-half">
+                        <label for="gender" class="form-label">Gender</label>
+                        <div class="input-wrapper">
+                          <select id="gender" name="gender" class="input">
+                            <option value="" selected>Select gender</option>
+                            <option value="he">He</option>
+                            <option value="she">She</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Step 2: Account Info -->
+                    <div class="signup-step" hidden>
+                      <h3 class="step-title">Account Credentials</h3>
+
+                      <!-- Email Field -->
+                      <div class="form-group form-full">
+                        <label
+                          for="email"
+                          class="form-label form-label-required"
+                          >Email Address</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input form-control"
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            required
+                            autocomplete="email"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Phone Field -->
+                      <div class="form-group form-full">
+                        <label for="mobile" class="form-label"
+                          >Phone Number</label
+                        >
+                        <div class="phone-input-wrapper">
+                          <div class="phone-prefix">+63</div>
+                          <input
+                            class="input phone-input"
+                            type="tel"
+                            id="mobile"
+                            name="mobile"
+                            placeholder="9123456789"
+                            maxlength="10"
+                            pattern="[0-9]{10}"
+                            required
+                            autocomplete="tel"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Password Field -->
+                      <div class="form-group form-full">
+                        <label
+                          for="regPassword"
+                          class="form-label form-label-required"
+                          >Password</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input form-control"
+                            type="password"
+                            id="regPassword"
+                            name="password"
+                            placeholder="Create a strong password"
+                            required
+                            autocomplete="new-password"
+                          />
+                        </div>
+                        <div class="password-strength">
+                          <div class="strength-bar">
+                            <div class="strength-fill" id="strength-fill"></div>
+                          </div>
+                          <span class="strength-text" id="strength-text"
+                            >Password strength</span
+                          >
+                        </div>
+                      </div>
+
+                      <!-- Confirm Password Field -->
+                      <div class="form-group form-full">
+                        <label
+                          for="reRegPassword"
+                          class="form-label form-label-required"
+                          >Confirm Password</label
+                        >
+                        <div class="input-wrapper">
+                          <input
+                            class="input form-control"
+                            type="password"
+                            id="reRegPassword"
+                            name="confirmPassword"
+                            placeholder="Confirm your password"
+                            required
+                            autocomplete="new-password"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Step 3: ID Verification -->
+                    <div class="signup-step" hidden>
+                      <h3 class="step-title">Identity Verification</h3>
+                      <p class="text-sm text-gray-600 mb-4">
+                        Please upload a valid government ID to verify your
+                        identity.
+                      </p>
+
+                      <!-- ID Verification Body (Existing structure) -->
+                      <div class="id-verify-body">
+                        <!-- Upload mode -->
+                        <div
+                          class="id-mode id-mode-upload"
+                          data-mode-panel="upload"
+                        >
+                          <label
+                            for="id-file-input"
+                            class="id-dropzone"
+                            tabindex="0"
+                          >
+                            <div class="dz-icon" aria-hidden="true">
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <path
+                                  d="M12 16V7m0 0l-4 4m4-4l4 4"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                />
+                                <rect
+                                  x="3"
+                                  y="4"
+                                  width="18"
+                                  height="14"
+                                  rx="2"
+                                  ry="2"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                />
+                              </svg>
+                            </div>
+                            <div class="dz-text">
+                              <strong>Click to upload</strong> or drag and drop
+                              <div class="dz-hint">
+                                Accepted: JPG, PNG, PDF (front side is enough)
+                              </div>
+                            </div>
+                            <input
+                              id="id-file-input"
+                              name="id-file"
+                              type="file"
+                              accept="image/*,application/pdf"
+                              hidden
+                            />
+                          </label>
+                          <div class="id-preview" id="id-preview" hidden>
+                            <img
+                              id="id-preview-img"
+                              alt="Uploaded ID preview"
+                            />
+                            <button
+                              type="button"
+                              class="btn btn-secondary btn-sm"
+                              id="id-clear-btn"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Camera mode (Hidden by default) -->
+                        <div
+                          class="id-mode id-mode-camera"
+                          data-mode-panel="camera"
+                          hidden
+                        >
+                          <div class="camera-wrap">
+                            <video
+                              id="id-camera"
+                              playsinline
+                              autoplay
+                              muted
+                            ></video>
+                            <canvas id="id-canvas" hidden></canvas>
+                          </div>
+                          <div class="camera-actions">
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              id="camera-start-btn"
+                            >
+                              Enable camera
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-primary"
+                              id="camera-capture-btn"
+                              disabled
+                            >
+                              Capture
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              id="camera-stop-btn"
+                              disabled
+                            >
+                              Stop
+                            </button>
+                          </div>
+                          <div class="id-preview" id="id-camera-preview" hidden>
+                            <img
+                              id="id-captured-img"
+                              alt="Captured ID preview"
+                            />
+                            <button
+                              type="button"
+                              class="btn btn-secondary btn-sm"
+                              id="camera-retake-btn"
+                            >
+                              Retake
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="id-verify-footer">
+                        <div class="id-verify-consent">
+                          <label class="checkbox-wrapper small">
+                            <input type="checkbox" id="id-consent-checkbox" />
+                            <span class="checkbox-custom"></span>
+                            <span
+                              >I consent to process my ID for verification as
+                              described in the Privacy Policy.</span
+                            >
+                          </label>
+                        </div>
+                        <div class="id-verify-actions-row">
+                          <button
+                            type="button"
+                            id="id-scan-btn"
+                            class="btn btn-primary"
+                            disabled
+                          >
+                            <span>Verify ID</span>
+                          </button>
+                          <div
+                            class="id-verify-status"
+                            id="id-verify-status"
+                            aria-live="polite"
+                          ></div>
+                        </div>
+                        <details
+                          class="id-verify-review"
+                          id="id-review"
+                          disabled
+                        >
+                          <summary class="review-summary-disabled">
+                            Finished
+                          </summary>
+                          <div class="review-grid" id="id-review-grid"></div>
+                        </details>
+                      </div>
+
+                      <!-- Hidden ID placeholder for validation logic -->
+                      <input
+                        type="hidden"
+                        id="id-step-placeholder"
+                        value="true"
+                      />
+                    </div>
+
+                    <!-- Step 4: Final Review -->
+                    <div class="signup-step" hidden>
+                      <h3 class="step-title">Final Review</h3>
+                      <p class="text-sm text-gray-600 mb-4">
+                        Please review your information and complete the security
+                        check.
+                      </p>
+
+                      <div
+                        id="register-captcha"
+                        class="captcha-container form-full"
+                      ></div>
+
+                      <!-- Terms and Privacy -->
+                      <div class="form-group form-full mt-4">
+                        <label class="checkbox-wrapper terms-checkbox">
+                          <input type="checkbox" id="terms-checkbox" required />
+                          <span class="checkbox-custom"></span>
+                          <span class="checkbox-label">
+                            I agree to the
+                            <a href="#" class="terms-link" data-open-terms
+                              >Terms and Conditions</a
+                            >
+                            and
+                            <a href="#" class="terms-link" data-open-privacy
+                              >Privacy Policy</a
+                            >
+                          </span>
+                        </label>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Terms and Privacy -->
-                  <div class="form-group form-full">
-                    <label class="checkbox-wrapper terms-checkbox">
-                      <input type="checkbox" id="terms-checkbox" required />
-                      <span class="checkbox-custom"></span>
-                      <span class="checkbox-label">
-                        I agree to the
-                        <a href="#" class="terms-link" data-open-terms
-                          >Terms and Conditions</a
-                        >
-                        and
-                        <a href="#" class="terms-link" data-open-privacy
-                          >Privacy Policy</a
-                        >
-                      </span>
-                    </label>
+                  <!-- Navigation Actions -->
+                  <div class="signup-actions mt-6 flex justify-between gap-3">
+                    <button
+                      type="button"
+                      id="signup-prev-btn"
+                      class="btn btn-secondary"
+                      hidden
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      id="signup-next-btn"
+                      class="btn btn-primary ml-auto"
+                    >
+                      Next
+                    </button>
+                    <button
+                      type="submit"
+                      id="signup-submit-btn"
+                      class="btn btn-primary ml-auto"
+                      hidden
+                    >
+                      <span>Create Account</span>
+                    </button>
                   </div>
-
-                  <!-- Submit Button -->
-                  <button
-                    class="btn btn-primary btn-lg w-full form-full"
-                    type="submit"
-                  >
-                    <span>Create Account</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M5 12h14M12 5l7 7-7 7"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </button>
                 </div>
               </form>
             </div>
@@ -774,7 +713,8 @@
       defer
     ></script>
     <script type="module" src="./js/auth/auth.js"></script>
-    <script type="module" src="./js/auth/signup-page.js"></script>
+    <script type="module" src="/js/pages/signup-id-verify.js"></script>
+    <script type="module" src="/js/auth/signup-progressive.js"></script>
     <script type="module" src="./js/auth/authChecker.js"></script>
 
     <!-- Simple Modal HTML -->

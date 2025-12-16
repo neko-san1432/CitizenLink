@@ -23,10 +23,14 @@ function extractUserMetadata(tokenUser) {
  * @returns {string} User display name
  */
 function extractUserName(combinedMetadata, email) {
-  return combinedMetadata.name ||
-    `${combinedMetadata.first_name || ''} ${combinedMetadata.last_name || ''}`.trim() ||
-    email?.split('@')[0] ||
-    'Unknown User';
+  return (
+    combinedMetadata.name ||
+    `${combinedMetadata.first_name || ""} ${
+      combinedMetadata.last_name || ""
+    }`.trim() ||
+    email?.split("@")[0] ||
+    "Unknown User"
+  );
 }
 
 /**
@@ -36,12 +40,14 @@ function extractUserName(combinedMetadata, email) {
  * @returns {string|null} Department code or null
  */
 function extractUserDepartment(combinedMetadata, departmentCode) {
-  return departmentCode ||
+  return (
+    departmentCode ||
     combinedMetadata.department ||
     combinedMetadata.dpt ||
     combinedMetadata.raw_user_meta_data?.department ||
     combinedMetadata.raw_user_meta_data?.dpt ||
-    null;
+    null
+  );
 }
 
 /**
@@ -52,10 +58,18 @@ function extractUserDepartment(combinedMetadata, departmentCode) {
  * @param {string|null} departmentCode - Department code from role
  * @returns {Object} Standardized user object
  */
-function buildUserObject(tokenUser, combinedMetadata, roleValidation, departmentCode) {
+function buildUserObject(
+  tokenUser,
+  combinedMetadata,
+  roleValidation,
+  departmentCode
+) {
   const userName = extractUserName(combinedMetadata, tokenUser.email);
-  const userDepartment = extractUserDepartment(combinedMetadata, departmentCode);
-  const userRole = combinedMetadata.role || 'citizen';
+  const userDepartment = extractUserDepartment(
+    combinedMetadata,
+    departmentCode
+  );
+  const userRole = combinedMetadata.role || "citizen";
 
   return {
     // Supabase auth fields
@@ -68,13 +82,15 @@ function buildUserObject(tokenUser, combinedMetadata, roleValidation, department
 
     // Easy access fields from combined metadata
     role: userRole,
-    normalized_role: combinedMetadata.normalized_role || combinedMetadata.role || 'citizen',
+    normalized_role:
+      combinedMetadata.normalized_role || combinedMetadata.role || "citizen",
     name: userName,
     fullName: userName,
-    firstName: combinedMetadata.first_name || '',
-    lastName: combinedMetadata.last_name || '',
-    mobileNumber: combinedMetadata.mobile_number || combinedMetadata.mobile || null,
-    status: combinedMetadata.status || 'active',
+    firstName: combinedMetadata.first_name || "",
+    lastName: combinedMetadata.last_name || "",
+    mobileNumber:
+      combinedMetadata.mobile_number || combinedMetadata.mobile || null,
+    status: combinedMetadata.status || "active",
     department: userDepartment,
     employeeId: combinedMetadata.employee_id || null,
 
@@ -90,7 +106,7 @@ function buildUserObject(tokenUser, combinedMetadata, roleValidation, department
     isBanned: combinedMetadata.isBanned === true,
     warningStrike: combinedMetadata.warningStrike || 0,
     banType: combinedMetadata.banType || null,
-    banExpiresAt: combinedMetadata.banExpiresAt || null
+    banExpiresAt: combinedMetadata.banExpiresAt || null,
   };
 }
 
@@ -100,17 +116,21 @@ function buildUserObject(tokenUser, combinedMetadata, roleValidation, department
  * @returns {Object} Cookie options object
  */
 function getCookieOptions(remember = false) {
-  const cookieMaxAge = remember
-    ? 30 * 24 * 60 * 60 * 1000  // 30 days for "remember me"
-    : 24 * 60 * 60 * 1000;      // 24 hours for regular sessions
-
-  return {
+  const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: cookieMaxAge
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
   };
+
+  if (remember) {
+    // Persistent cookie for "Trusted Device" - 10 years
+    options.maxAge = 10 * 365 * 24 * 60 * 60 * 1000;
+  }
+  // If remember is false, do not set maxAge or expires.
+  // This makes it a session cookie that expires when the browser is closed.
+
+  return options;
 }
 
 /**
@@ -123,10 +143,10 @@ function getCookieOptions(remember = false) {
 function createErrorResponse(message, statusCode = 500, details = null) {
   const response = {
     success: false,
-    error: message
+    error: message,
   };
 
-  if (details && process.env.NODE_ENV === 'development') {
+  if (details && process.env.NODE_ENV === "development") {
     response.details = details;
   }
 
@@ -140,21 +160,32 @@ function createErrorResponse(message, statusCode = 500, details = null) {
  * @param {Object} res - Express response object
  * @param {string} defaultMessage - Default error message
  */
-function handleAuthError(error, req, res, defaultMessage = 'Authentication failed') {
-  const isApiRequest = req.path?.startsWith('/api/') ||
-                       req.originalUrl?.startsWith('/api/') ||
-                       req.url?.startsWith('/api/');
+function handleAuthError(
+  error,
+  req,
+  res,
+  defaultMessage = "Authentication failed"
+) {
+  const isApiRequest =
+    req.path?.startsWith("/api/") ||
+    req.originalUrl?.startsWith("/api/") ||
+    req.url?.startsWith("/api/");
 
-  console.error(`[AUTH] ${new Date().toISOString()} Authentication error:`, error.message);
+  console.error(
+    `[AUTH] ${new Date().toISOString()} Authentication error:`,
+    error.message
+  );
 
   if (isApiRequest) {
     return res.status(401).json({
       success: false,
-      error: defaultMessage
+      error: defaultMessage,
     });
   }
 
-  return res.redirect(`/login?message=${encodeURIComponent(defaultMessage)}&type=error`);
+  return res.redirect(
+    `/login?message=${encodeURIComponent(defaultMessage)}&type=error`
+  );
 }
 
 /**
@@ -177,66 +208,78 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
     // $$ LANGUAGE plpgsql SECURITY DEFINER;
     try {
       // Try the simple RPC function first (in public schema)
-      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('delete_user_sessions', {
-        user_uuid: userId
-      });
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc(
+        "delete_user_sessions",
+        {
+          user_uuid: userId,
+        }
+      );
 
       if (!rpcError && rpcData !== null) {
         return {
           success: true,
           sessionsDeleted: rpcData,
-          method: 'rpc'
+          method: "rpc",
         };
       }
 
       // Try the logged version if simple one doesn't exist
       if (rpcError) {
-        const { data: logData, error: logError } = await supabaseAdmin.rpc('delete_user_sessions_with_log', {
-          user_uuid: userId
-        });
+        const { data: logData, error: logError } = await supabaseAdmin.rpc(
+          "delete_user_sessions_with_log",
+          {
+            user_uuid: userId,
+          }
+        );
 
         if (!logError && logData) {
           return {
             success: true,
             sessionsDeleted: logData.sessions_deleted || 0,
-            method: 'rpc_logged'
+            method: "rpc_logged",
           };
         }
       }
     } catch (rpcErr) {
-      console.warn('[AUTH] RPC function not available, trying direct SQL:', rpcErr.message);
+      console.warn(
+        "[AUTH] RPC function not available, trying direct SQL:",
+        rpcErr.message
+      );
     }
 
     // Method 2: Try direct table access (may not work due to RLS/policies)
     try {
       const { data, error } = await supabaseAdmin
-        .from('auth.sessions')
+        .from("auth.sessions")
         .delete()
-        .eq('user_id', userId)
+        .eq("user_id", userId)
         .select();
 
       if (!error) {
         return {
           success: true,
           sessionsDeleted: data?.length || 0,
-          method: 'direct_delete'
+          method: "direct_delete",
         };
       }
     } catch (directErr) {
-      console.warn('[AUTH] Direct table access failed:', directErr.message);
+      console.warn("[AUTH] Direct table access failed:", directErr.message);
     }
 
     // Method 3: Fallback - Force password update to invalidate all sessions
     // When password changes, Supabase automatically invalidates all refresh tokens
     // However, access tokens remain valid until expiration (~1 hour)
     // To force immediate invalidation, we need to change the password hash
-    console.warn('[AUTH] Using fallback method: Changing password hash to invalidate all sessions immediately');
+    console.warn(
+      "[AUTH] Using fallback method: Changing password hash to invalidate all sessions immediately"
+    );
 
     try {
       // Get current user to preserve password
-      const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const { data: userData, error: getUserError } =
+        await supabaseAdmin.auth.admin.getUserById(userId);
       if (getUserError || !userData?.user) {
-        throw new Error('Failed to get user data');
+        throw new Error("Failed to get user data");
       }
 
       // Update user metadata to mark sessions as invalidated
@@ -245,24 +288,24 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
         user_metadata: {
           ...(userData.user.user_metadata || {}),
           sessions_invalidated_at: new Date().toISOString(),
-          password_changed_at: new Date().toISOString()
-        }
+          password_changed_at: new Date().toISOString(),
+        },
       });
 
       // Note: Access tokens will still be valid until expiration
       // But refresh attempts will fail, causing clients to redirect to login
       return {
         success: true,
-        sessionsDeleted: 'all',
-        method: 'fallback_password_change',
-        note: 'All refresh tokens invalidated. Access tokens will be rejected on next API call due to password hash change.'
+        sessionsDeleted: "all",
+        method: "fallback_password_change",
+        note: "All refresh tokens invalidated. Access tokens will be rejected on next API call due to password hash change.",
       };
     } catch (fallbackErr) {
-      console.error('[AUTH] Fallback method failed:', fallbackErr);
+      console.error("[AUTH] Fallback method failed:", fallbackErr);
       throw fallbackErr;
     }
   } catch (error) {
-    console.error('[AUTH] Error invalidating user sessions:', error);
+    console.error("[AUTH] Error invalidating user sessions:", error);
     throw error;
   }
 }
@@ -275,6 +318,5 @@ module.exports = {
   getCookieOptions,
   createErrorResponse,
   handleAuthError,
-  invalidateAllUserSessions
+  invalidateAllUserSessions,
 };
-

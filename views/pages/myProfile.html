@@ -2,17 +2,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title id="profile">Profile</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/toast.css">
-    <link rel="stylesheet" href="../css/components/sidebar.css">
-    <link rel="stylesheet" href="../css/app.css">
-    <link rel="stylesheet" href="../css/components/clock.css">
-    <link rel="stylesheet" href="../css/header-redesign.css">
-    <link rel="stylesheet" href="../css/viewport-fix.css">
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/toast.css" />
+    <link rel="stylesheet" href="../css/components/sidebar.css" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" href="../css/components/clock.css" />
+    <link rel="stylesheet" href="../css/header-redesign.css" />
+    <link rel="stylesheet" href="../css/viewport-fix.css" />
     <style>
       /* Profile page layout - flex column to consume remaining space */
       .profile-page {
@@ -49,20 +52,20 @@
         align-content: flex-start;
         max-height: calc(100vh - 120px);
       }
-      
+
       .profile-sidebar::-webkit-scrollbar {
         width: 6px;
       }
-      
+
       .profile-sidebar::-webkit-scrollbar-track {
         background: transparent;
       }
-      
+
       .profile-sidebar::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.2);
         border-radius: 3px;
       }
-      
+
       .profile-sidebar::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 0, 0, 0.3);
       }
@@ -72,7 +75,7 @@
         background: white;
         border-radius: 10px;
         padding: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -170,8 +173,7 @@
         background: white;
         border-radius: 10px;
         padding: 0.875rem;
-        box-shadow: 
-          0px 2px 8px rgba(0, 0, 0, 0.08),
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08),
           0px 4px 12px rgba(0, 0, 0, 0.06);
         border: 1px solid var(--gray-200);
         border-left: 3px solid var(--primary-500);
@@ -232,43 +234,78 @@
         padding-right: 0.5rem;
       }
 
-      .complaint-card {
-        background: white;
-        padding: 1.25rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-        border: 1px solid #e5e7eb;
+      /* Table styles */
+      .complaints-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
       }
 
-      .complaint-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
-        border-color: #10b981;
+      .complaints-table th {
+        text-align: left;
+        padding: 0.75rem 1rem;
+        background-color: #f9fafb;
+        color: #6b7280;
+        font-weight: 600;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
-      .complaint-card-header {
+      .complaints-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+      }
+
+      .complaints-table tr:hover {
+        background-color: #f9fafb;
+      }
+
+      .complaints-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* Pagination controls */
+      .pagination-controls {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 0.75rem;
-      }
-
-      .complaint-title {
-        font-weight: 600;
-        color: #1f2937;
-        font-size: 1rem;
-        flex: 1;
-        margin-right: 1rem;
-      }
-
-      .complaint-meta {
-        display: flex;
         align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        margin-top: auto;
+      }
+
+      .pagination-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      .pagination-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .page-btn {
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .page-btn:hover:not(:disabled) {
+        background-color: #f3f4f6;
+        border-color: #9ca3af;
+      }
+
+      .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
 
       .status-badge {
@@ -279,14 +316,38 @@
         font-weight: 600;
       }
 
-      .status-new { background: #dbeafe; color: #1e40af; }
-      .status-assigned { background: #fef3c7; color: #92400e; }
-      .status-in_progress { background: #ddd6fe; color: #5b21b6; }
-      .status-pending_approval { background: #fde047; color: #713f12; }
-      .status-completed { background: #d1fae5; color: #065f46; }
-      .status-resolved { background: #d1fae5; color: #065f46; }
-      .status-cancelled { background: #fee2e2; color: #991b1b; }
-      .status-unknown { background: #e5e7eb; color: #374151; }
+      .status-new {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .status-assigned {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .status-in_progress {
+        background: #ddd6fe;
+        color: #5b21b6;
+      }
+      .status-pending_approval {
+        background: #fde047;
+        color: #713f12;
+      }
+      .status-completed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-resolved {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .status-unknown {
+        background: #e5e7eb;
+        color: #374151;
+      }
 
       .complaint-date {
         font-size: 0.875rem;
@@ -419,22 +480,19 @@
       html.dark .password-card {
         background: #1e293b;
         border-color: #334155;
-        box-shadow: 
-          0px 2px 8px rgba(0, 0, 0, 0.4),
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.4),
           0px 4px 12px rgba(0, 0, 0, 0.3);
       }
-      
+
       html.dark .complaint-card {
         background: #1e293b;
         border-color: #334155;
-        box-shadow: 
-          0px 2px 6px rgba(0, 0, 0, 0.4),
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.4),
           0px 1px 2px rgba(0, 0, 0, 0.3);
       }
-      
+
       html.dark .complaint-card:hover {
-        box-shadow: 
-          0px 4px 12px rgba(0, 0, 0, 0.5),
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5),
           0px 8px 16px rgba(0, 0, 0, 0.4);
         border-color: #10b981;
         background: rgba(30, 41, 59, 0.7);
@@ -466,11 +524,11 @@
       html.dark .profile-info-item {
         border-top-color: #334155;
       }
-      
+
       html.dark .profile-sidebar::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
       }
-      
+
       html.dark .profile-sidebar::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
       }
@@ -488,23 +546,47 @@
         border-bottom-color: #10b981;
       }
 
-      html.dark .complaint-card {
-        background: #1e293b;
-        border-color: #334155;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      html.dark .complaints-table th {
+        background-color: #1e293b;
+        color: #94a3b8;
+        border-bottom-color: #334155;
       }
 
-      html.dark .complaint-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        border-color: #10b981;
-      }
-
-      html.dark .complaint-title {
+      html.dark .complaints-table td {
+        border-bottom-color: #334155;
         color: #f1f5f9;
       }
 
-      html.dark .complaint-date {
+      html.dark .complaints-table tr:hover {
+        background-color: #1e293b;
+      }
+
+      html.dark .pagination-controls {
+        border-top-color: #334155;
+      }
+
+      html.dark .pagination-info {
         color: #94a3b8;
+      }
+
+      html.dark .page-btn {
+        background: #1e293b;
+        border-color: #334155;
+        color: #cbd5e1;
+      }
+
+      html.dark .page-btn:hover:not(:disabled) {
+        background-color: #334155;
+        border-color: #475569;
+      }
+
+      html.dark .page-btn:disabled {
+        opacity: 0.5;
+        background: #0f172a;
+      }
+
+      html.dark .complaint-title-text {
+        color: #f1f5f9 !important;
       }
 
       html.dark .complaints-empty {
@@ -687,183 +769,591 @@
       }
 
       /* Status badges dark mode */
-      html.dark .status-new { background: #1e3a8a; color: #93c5fd; }
-      html.dark .status-assigned { background: #78350f; color: #fbbf24; }
-      html.dark .status-in_progress { background: #581c87; color: #c4b5fd; }
-      html.dark .status-pending_approval { background: #78350f; color: #fde047; }
-      html.dark .status-completed { background: #064e3b; color: #34d399; }
-      html.dark .status-resolved { background: #064e3b; color: #34d399; }
-      html.dark .status-cancelled { background: #7f1d1d; color: #fca5a5; }
-      html.dark .status-unknown { background: #334155; color: #94a3b8; }
+      html.dark .status-new {
+        background: #1e3a8a;
+        color: #93c5fd;
+      }
+      html.dark .status-assigned {
+        background: #78350f;
+        color: #fbbf24;
+      }
+      html.dark .status-in_progress {
+        background: #581c87;
+        color: #c4b5fd;
+      }
+      html.dark .status-pending_approval {
+        background: #78350f;
+        color: #fde047;
+      }
+      html.dark .status-completed {
+        background: #064e3b;
+        color: #34d399;
+      }
+      html.dark .status-resolved {
+        background: #064e3b;
+        color: #34d399;
+      }
+      html.dark .status-cancelled {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      html.dark .status-unknown {
+        background: #334155;
+        color: #94a3b8;
+      }
     </style>
   </head>
   <body>
     <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
-        <div id="app" class="collapsible">
-          <div class="profile-page">
-            <div class="profile-content-wrapper">
-              <!-- Left Sidebar - Compact Profile -->
-              <div class="profile-sidebar">
-                <!-- Profile Card -->
-                <div class="profile-card">
-                  <div class="profile-avatar">
-                    <div id="profile-initial">—</div>
-                    <div class="profile-status-badge">Online</div>
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div
+        id="dashboard-clock"
+        class="dashboard-clock"
+        aria-live="polite"
+      ></div>
+      <div id="app" class="collapsible">
+        <div class="profile-page">
+          <div class="profile-content-wrapper">
+            <!-- Left Sidebar - Compact Profile -->
+            <div class="profile-sidebar">
+              <!-- Profile Card -->
+              <div class="profile-card">
+                <div class="profile-avatar">
+                  <div id="profile-initial">—</div>
+                  <div class="profile-status-badge">Online</div>
+                </div>
+                <div class="profile-name-section">
+                  <div class="profile-name">
+                    <span id="profile-name-display">Loading...</span>
+                    <span
+                      class="edit-icon"
+                      id="edit-name-icon"
+                      title="Edit name"
+                      >✏️</span
+                    >
+                    <div
+                      id="profile-name-edit"
+                      style="
+                        display: none;
+                        width: 100%;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        margin-top: 0.5rem;
+                      "
+                    >
+                      <input
+                        id="edit-first-name-input"
+                        class="input"
+                        type="text"
+                        placeholder="First Name"
+                        style="
+                          padding: 0.375rem;
+                          font-size: 0.8125rem;
+                          width: 100%;
+                        "
+                      />
+                      <input
+                        id="edit-middle-name-input"
+                        class="input"
+                        type="text"
+                        placeholder="Middle Name (optional)"
+                        style="
+                          padding: 0.375rem;
+                          font-size: 0.8125rem;
+                          width: 100%;
+                        "
+                      />
+                      <input
+                        id="edit-last-name-input"
+                        class="input"
+                        type="text"
+                        placeholder="Last Name"
+                        style="
+                          padding: 0.375rem;
+                          font-size: 0.8125rem;
+                          width: 100%;
+                        "
+                      />
+                      <div
+                        style="display: flex; gap: 0.25rem; margin-top: 0.25rem"
+                      >
+                        <button
+                          class="btn-secondary"
+                          id="save-name-btn"
+                          style="
+                            padding: 0.375rem 0.5rem;
+                            font-size: 0.75rem;
+                            flex: 1;
+                          "
+                        >
+                          Save
+                        </button>
+                        <button
+                          class="btn-secondary"
+                          id="cancel-name-btn"
+                          style="
+                            padding: 0.375rem 0.5rem;
+                            font-size: 0.75rem;
+                            flex: 1;
+                          "
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div class="profile-name-section">
-                    <div class="profile-name">
-                      <span id="profile-name-display">Loading...</span>
-                      <span class="edit-icon" id="edit-name-icon" title="Edit name">✏️</span>
-                      <div id="profile-name-edit" style="display: none; width: 100%; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
-                        <input id="edit-first-name-input" class="input" type="text" placeholder="First Name" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
-                        <input id="edit-middle-name-input" class="input" type="text" placeholder="Middle Name (optional)" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
-                        <input id="edit-last-name-input" class="input" type="text" placeholder="Last Name" style="padding: 0.375rem; font-size: 0.8125rem; width: 100%;">
-                        <div style="display: flex; gap: 0.25rem; margin-top: 0.25rem;">
-                          <button class="btn-secondary" id="save-name-btn" style="padding: 0.375rem 0.5rem; font-size: 0.75rem; flex: 1;">Save</button>
-                          <button class="btn-secondary" id="cancel-name-btn" style="padding: 0.375rem 0.5rem; font-size: 0.75rem; flex: 1;">Cancel</button>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="profile-username">
-                      <span id="profile-email-display">Loading...</span>
-                      <span class="edit-icon" id="edit-email-icon" title="Edit email">✏️</span>
-                    </div>
-                  </div>
-                  <div style="width: 100%;">
-                    <div class="profile-info-item">
-                      <span class="profile-info-label">👤 Member since</span>
-                      <span class="profile-info-value" id="member-since">—</span>
-                    </div>
-                    <div class="profile-info-item">
-                      <span class="profile-info-label">📱 Mobile</span>
-                      <span class="profile-info-value">
-                        <span id="profile-mobile-display">—</span>
-                        <span class="edit-icon" id="edit-mobile-icon" title="Edit mobile" style="margin-left: 0.5rem;">✏️</span>
-                        <div id="profile-mobile-edit" style="display: none; margin-top: 0.25rem;">
-                          <input id="edit-mobile-input" class="input" type="tel" style="padding: 0.25rem; font-size: 0.75rem; width: calc(100% - 4rem);">
-                          <button class="btn-secondary" id="save-mobile-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">Save</button>
-                          <button class="btn-secondary" id="cancel-mobile-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">Cancel</button>
-                        </div>
-                      </span>
-                    </div>
-                    <div class="profile-info-item">
-                      <span class="profile-info-label">👤 Role</span>
-                      <span class="profile-info-value" id="profile-role">—</span>
-                    </div>
-                    <div class="profile-info-item" id="profile-office-item" style="display: none;">
-                      <span class="profile-info-label">🏢 Office</span>
-                      <span class="profile-info-value" id="profile-office">—</span>
-                    </div>
-                    <div class="profile-info-item" id="profile-position-id-item" style="display: none;">
-                      <span class="profile-info-label">🆔 Position ID</span>
-                      <span class="profile-info-value" id="profile-position-id">—</span>
-                    </div>
-                    <div class="profile-info-item">
-                      <span class="profile-info-label">📅 Available</span>
-                      <span class="profile-info-value">Yes</span>
-                    </div>
-                  </div>
-                  <!-- Address Section -->
-                  <div id="address-section" style="width: 100%; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                      <span style="font-size: 0.875rem; font-weight: 600; color: #1f2937;">Address</span>
-                      <button id="edit-address-btn" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Edit Address</button>
-                    </div>
-                    <div id="address-display">
-                      <div style="font-size: 0.75rem; color: #374151; margin-bottom: 0.25rem;">
-                        <span id="address-line-1-display">—</span>
-                      </div>
-                      <div style="font-size: 0.75rem; color: #374151; margin-bottom: 0.25rem;">
-                        <span id="address-line-2-display" style="display: none;">—</span>
-                      </div>
-                      <div style="font-size: 0.75rem; color: #374151;">
-                        <span id="address-city-display">—</span>, <span id="address-province-display">—</span> <span id="address-postal-display">—</span>
-                      </div>
-                      <div style="font-size: 0.75rem; color: #374151; margin-top: 0.25rem;">
-                        <span id="address-barangay-display">—</span>
-                      </div>
-                    </div>
-                    <div id="address-edit" style="display: none; flex-direction: column; gap: 0.375rem;">
-                      <input id="edit-address-line-1" class="input" type="text" placeholder="Address Line 1" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-line-2" class="input" type="text" placeholder="Address Line 2 (optional)" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-city" class="input" type="text" placeholder="City *" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-province" class="input" type="text" placeholder="Province *" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-postal" class="input" type="text" placeholder="Postal Code (4 digits)" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <input id="edit-address-barangay" class="input" type="text" placeholder="Barangay" style="padding: 0.5rem; font-size: 0.8125rem;">
-                      <div style="display: flex; gap: 0.25rem;">
-                        <button class="btn-secondary" id="save-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Save</button>
-                        <button class="btn-secondary" id="cancel-address-btn" style="padding: 0.5rem; font-size: 0.8125rem; flex: 1;">Cancel</button>
-                      </div>
-                    </div>
+                  <div class="profile-username">
+                    <span id="profile-email-display">Loading...</span>
+                    <span
+                      class="edit-icon"
+                      id="edit-email-icon"
+                      title="Edit email"
+                      >✏️</span
+                    >
                   </div>
                 </div>
-
-                <!-- Change Password Card -->
-                <div class="password-card">
-                  <div class="password-card-title">Change Password</div>
-                  <div class="password-card-description">Update your account password. You'll receive a confirmation email.</div>
-                  <form id="change-password-form">
-                    <input id="current-password" class="input" type="password" placeholder="Current password" autocomplete="current-password" style="margin-bottom: 0.75rem;">
-                    <input id="new-password" class="input" type="password" placeholder="New password" autocomplete="new-password" style="margin-bottom: 0.75rem;">
-                    <input id="confirm-new-password" class="input" type="password" placeholder="Confirm new password" autocomplete="new-password" style="margin-bottom: 0.75rem;">
-                    <button class="btn-primary" type="submit" style="width: 100%;">Request Password Change</button>
-                    <div id="email-confirmation-message" class="email-confirmation-message hidden"></div>
-                  </form>
+                <div style="width: 100%">
+                  <div class="profile-info-item">
+                    <span class="profile-info-label">👤 Member since</span>
+                    <span class="profile-info-value" id="member-since">—</span>
+                  </div>
+                  <div class="profile-info-item">
+                    <span class="profile-info-label">📱 Mobile</span>
+                    <span class="profile-info-value">
+                      <span id="profile-mobile-display">—</span>
+                      <span
+                        class="edit-icon"
+                        id="edit-mobile-icon"
+                        title="Edit mobile"
+                        style="margin-left: 0.5rem"
+                        >✏️</span
+                      >
+                      <div
+                        id="profile-mobile-edit"
+                        style="display: none; margin-top: 0.25rem"
+                      >
+                        <input
+                          id="edit-mobile-input"
+                          class="input"
+                          type="tel"
+                          style="
+                            padding: 0.25rem;
+                            font-size: 0.75rem;
+                            width: calc(100% - 4rem);
+                          "
+                        />
+                        <button
+                          class="btn-secondary"
+                          id="save-mobile-btn"
+                          style="
+                            padding: 0.25rem 0.5rem;
+                            font-size: 0.75rem;
+                            margin-left: 0.25rem;
+                          "
+                        >
+                          Save
+                        </button>
+                        <button
+                          class="btn-secondary"
+                          id="cancel-mobile-btn"
+                          style="
+                            padding: 0.25rem 0.5rem;
+                            font-size: 0.75rem;
+                            margin-left: 0.25rem;
+                          "
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </span>
+                  </div>
+                  <div class="profile-info-item">
+                    <span class="profile-info-label">👤 Role</span>
+                    <span class="profile-info-value" id="profile-role">—</span>
+                  </div>
+                  <div
+                    class="profile-info-item"
+                    id="profile-office-item"
+                    style="display: none"
+                  >
+                    <span class="profile-info-label">🏢 Office</span>
+                    <span class="profile-info-value" id="profile-office"
+                      >—</span
+                    >
+                  </div>
+                  <div
+                    class="profile-info-item"
+                    id="profile-position-id-item"
+                    style="display: none"
+                  >
+                    <span class="profile-info-label">🆔 Position ID</span>
+                    <span class="profile-info-value" id="profile-position-id"
+                      >—</span
+                    >
+                  </div>
+                  <div class="profile-info-item">
+                    <span class="profile-info-label">📅 Available</span>
+                    <span class="profile-info-value">Yes</span>
+                  </div>
+                </div>
+                <!-- Address Section -->
+                <div
+                  id="address-section"
+                  style="
+                    width: 100%;
+                    margin-top: 0.5rem;
+                    padding-top: 0.5rem;
+                    border-top: 1px solid #e5e7eb;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 0.5rem;
+                    "
+                  >
+                    <span
+                      style="
+                        font-size: 0.875rem;
+                        font-weight: 600;
+                        color: #1f2937;
+                      "
+                      >Address</span
+                    >
+                    <button
+                      id="edit-address-btn"
+                      class="btn-secondary"
+                      style="padding: 0.25rem 0.5rem; font-size: 0.75rem"
+                    >
+                      Edit Address
+                    </button>
+                  </div>
+                  <div id="address-display">
+                    <div
+                      style="
+                        font-size: 0.75rem;
+                        color: #374151;
+                        margin-bottom: 0.25rem;
+                      "
+                    >
+                      <span id="address-line-1-display">—</span>
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.75rem;
+                        color: #374151;
+                        margin-bottom: 0.25rem;
+                      "
+                    >
+                      <span id="address-line-2-display" style="display: none"
+                        >—</span
+                      >
+                    </div>
+                    <div style="font-size: 0.75rem; color: #374151">
+                      <span id="address-city-display">—</span>,
+                      <span id="address-province-display">—</span>
+                      <span id="address-postal-display">—</span>
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.75rem;
+                        color: #374151;
+                        margin-top: 0.25rem;
+                      "
+                    >
+                      <span id="address-barangay-display">—</span>
+                    </div>
+                  </div>
+                  <div
+                    id="address-edit"
+                    style="display: none; flex-direction: column; gap: 0.375rem"
+                  >
+                    <input
+                      id="edit-address-line-1"
+                      class="input"
+                      type="text"
+                      placeholder="Address Line 1"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <input
+                      id="edit-address-line-2"
+                      class="input"
+                      type="text"
+                      placeholder="Address Line 2 (optional)"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <input
+                      id="edit-address-city"
+                      class="input"
+                      type="text"
+                      placeholder="City *"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <input
+                      id="edit-address-province"
+                      class="input"
+                      type="text"
+                      placeholder="Province *"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <input
+                      id="edit-address-postal"
+                      class="input"
+                      type="text"
+                      placeholder="Postal Code (4 digits)"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <input
+                      id="edit-address-barangay"
+                      class="input"
+                      type="text"
+                      placeholder="Barangay"
+                      style="padding: 0.5rem; font-size: 0.8125rem"
+                    />
+                    <div style="display: flex; gap: 0.25rem">
+                      <button
+                        class="btn-secondary"
+                        id="save-address-btn"
+                        style="padding: 0.5rem; font-size: 0.8125rem; flex: 1"
+                      >
+                        Save
+                      </button>
+                      <button
+                        class="btn-secondary"
+                        id="cancel-address-btn"
+                        style="padding: 0.5rem; font-size: 0.8125rem; flex: 1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Right Side - Complaints/Assignments Container -->
-              <div class="complaints-container">
-                <div class="complaints-header">
-                  <h2 class="complaints-title" id="content-title">Active Complaints</h2>
-                  <a href="/citizen/fileComplaint" class="btn-secondary" id="action-button" style="display: none;">File a complaint</a>
+              <!-- Change Password Card -->
+              <div class="password-card">
+                <div class="password-card-title">Change Password</div>
+                <div class="password-card-description">
+                  Update your account password. You'll receive a confirmation
+                  email.
                 </div>
-                <div class="complaints-scroll" id="complaints-scroll">
-                  <div id="my-complaints"></div>
-                  <div id="complaints-empty" class="complaints-empty hidden">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;" id="empty-title">No complaints yet</h3>
-                    <p style="margin-bottom: 1rem;" id="empty-message">You haven't filed any complaints yet. Click "File a complaint" to get started!</p>
-                  </div>
+                <form id="change-password-form">
+                  <input
+                    id="current-password"
+                    class="input"
+                    type="password"
+                    placeholder="Current password"
+                    autocomplete="current-password"
+                    style="margin-bottom: 0.75rem"
+                  />
+                  <input
+                    id="new-password"
+                    class="input"
+                    type="password"
+                    placeholder="New password"
+                    autocomplete="new-password"
+                    style="margin-bottom: 0.75rem"
+                  />
+                  <input
+                    id="confirm-new-password"
+                    class="input"
+                    type="password"
+                    placeholder="Confirm new password"
+                    autocomplete="new-password"
+                    style="margin-bottom: 0.75rem"
+                  />
+                  <button class="btn-primary" type="submit" style="width: 100%">
+                    Request Password Change
+                  </button>
+                  <div
+                    id="email-confirmation-message"
+                    class="email-confirmation-message hidden"
+                  ></div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Right Side - Complaints/Assignments Container -->
+            <div class="complaints-container">
+              <div class="complaints-header">
+                <h2 class="complaints-title" id="content-title">
+                  Active Complaints
+                </h2>
+                <a
+                  href="/citizen/fileComplaint"
+                  class="btn-secondary"
+                  id="action-button"
+                  style="display: none"
+                  >File a complaint</a
+                >
+              </div>
+              <div class="complaints-scroll" id="complaints-scroll">
+                <div id="my-complaints"></div>
+                <div id="complaints-empty" class="complaints-empty hidden">
+                  <div style="font-size: 3rem; margin-bottom: 1rem">📝</div>
+                  <h3
+                    style="
+                      font-size: 1.25rem;
+                      font-weight: 600;
+                      margin-bottom: 0.5rem;
+                      color: #1f2937;
+                    "
+                    id="empty-title"
+                  >
+                    No complaints yet
+                  </h3>
+                  <p style="margin-bottom: 1rem" id="empty-message">
+                    You haven't filed any complaints yet. Click "File a
+                    complaint" to get started!
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
-    
+
     <!-- Email Change Modal -->
-    <div id="email-change-modal" class="modal-overlay" style="display: none; visibility: hidden;">
-      <div class="modal-content" style="max-width: 500px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">Change Email Address</h2>
-          <button id="close-email-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">&times;</button>
+    <div
+      id="email-change-modal"
+      class="modal-overlay"
+      style="display: none; visibility: hidden"
+    >
+      <div class="modal-content" style="max-width: 500px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+          "
+        >
+          <h2
+            style="
+              margin: 0;
+              font-size: 1.25rem;
+              font-weight: 600;
+              color: #1f2937;
+            "
+          >
+            Change Email Address
+          </h2>
+          <button
+            id="close-email-modal"
+            style="
+              background: none;
+              border: none;
+              font-size: 1.5rem;
+              cursor: pointer;
+              color: #6b7280;
+            "
+          >
+            &times;
+          </button>
         </div>
-        <div style="margin-bottom: 1rem;">
-          <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #6b7280;">Current email:</p>
-          <p style="margin: 0; font-size: 0.9375rem; color: #1f2937; font-weight: 500;" id="current-email-display">—</p>
+        <div style="margin-bottom: 1rem">
+          <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #6b7280">
+            Current email:
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 0.9375rem;
+              color: #1f2937;
+              font-weight: 500;
+            "
+            id="current-email-display"
+          >
+            —
+          </p>
         </div>
         <form id="email-change-form">
-          <div style="margin-bottom: 1rem;">
-            <label for="new-email-input" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #374151; font-weight: 500;">New email address:</label>
-            <input id="new-email-input" class="input" type="email" placeholder="Enter new email" required style="width: 100%; padding: 0.5rem; font-size: 0.875rem;">
+          <div style="margin-bottom: 1rem">
+            <label
+              for="new-email-input"
+              style="
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                color: #374151;
+                font-weight: 500;
+              "
+              >New email address:</label
+            >
+            <input
+              id="new-email-input"
+              class="input"
+              type="email"
+              placeholder="Enter new email"
+              required
+              style="width: 100%; padding: 0.5rem; font-size: 0.875rem"
+            />
           </div>
-          <div style="margin-bottom: 1rem;">
-            <label for="current-password-email" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #374151; font-weight: 500;">Current password:</label>
-            <input id="current-password-email" class="input" type="password" placeholder="Enter your current password" required autocomplete="current-password" style="width: 100%; padding: 0.5rem; font-size: 0.875rem;">
+          <div style="margin-bottom: 1rem">
+            <label
+              for="current-password-email"
+              style="
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                color: #374151;
+                font-weight: 500;
+              "
+              >Current password:</label
+            >
+            <input
+              id="current-password-email"
+              class="input"
+              type="password"
+              placeholder="Enter your current password"
+              required
+              autocomplete="current-password"
+              style="width: 100%; padding: 0.5rem; font-size: 0.875rem"
+            />
           </div>
-          <div style="padding: 0.75rem; background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 1rem;">
-            <p style="margin: 0; font-size: 0.8125rem; color: #92400e; line-height: 1.5;">
-              <strong>Note:</strong> A verification email will be sent to your new email address to confirm this change. You must click the confirmation link in that email to complete the email change.
+          <div
+            style="
+              padding: 0.75rem;
+              background-color: #fffbeb;
+              border-left: 4px solid #f59e0b;
+              border-radius: 4px;
+              margin-bottom: 1rem;
+            "
+          >
+            <p
+              style="
+                margin: 0;
+                font-size: 0.8125rem;
+                color: #92400e;
+                line-height: 1.5;
+              "
+            >
+              <strong>Note:</strong> A verification email will be sent to your
+              new email address to confirm this change. You must click the
+              confirmation link in that email to complete the email change.
             </p>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">Request Email Change</button>
-            <button type="button" id="cancel-email-modal" class="btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">Cancel</button>
+          <div style="display: flex; gap: 0.5rem">
+            <button
+              type="submit"
+              class="btn-primary"
+              style="flex: 1; padding: 0.5rem; font-size: 0.875rem"
+            >
+              Request Email Change
+            </button>
+            <button
+              type="button"
+              id="cancel-email-modal"
+              class="btn-secondary"
+              style="flex: 1; padding: 0.5rem; font-size: 0.875rem"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
@@ -887,7 +1377,7 @@
         opacity: 1 !important;
         pointer-events: auto !important;
       }
-      
+
       .modal-overlay[style*="display: none"] {
         display: none !important;
         visibility: hidden !important;
@@ -898,7 +1388,8 @@
         background: white !important;
         border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+          0 8px 24px rgba(0, 0, 0, 0.2);
         width: 90%;
         max-width: 500px;
         position: relative;
@@ -909,7 +1400,7 @@
         transform: scale(1);
         animation: modalFadeIn 0.2s ease-out;
       }
-      
+
       @keyframes modalFadeIn {
         from {
           opacity: 0;
@@ -920,7 +1411,7 @@
           transform: scale(1);
         }
       }
-      
+
       .modal-content .input {
         background: white;
         border: 1px solid #d1d5db;
@@ -931,13 +1422,13 @@
         width: 100%;
         box-sizing: border-box;
       }
-      
+
       .modal-content .input:focus {
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
-      
+
       .modal-content button {
         cursor: pointer;
       }
