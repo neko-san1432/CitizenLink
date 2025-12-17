@@ -562,6 +562,8 @@ import { supabase } from "../config/config.js";
           extractedIdData[key] = val;
         }
       });
+      // CRITICAL FIX: Ensure idType is part of the extracted data for validation
+      extractedIdData.idType = data.idType;
 
       // Store verification data in backend (only if authenticated)
       try {
@@ -581,6 +583,15 @@ import { supabase } from "../config/config.js";
             "cl_verification_id",
             `local_verified_${Date.now()}`
           );
+
+          // Secure Signup: Store verification token if returned by OCR
+          if (data.verificationToken) {
+            sessionStorage.setItem(
+              "cl_verification_token",
+              data.verificationToken
+            );
+          }
+
           sessionStorage.setItem("cl_verification_complete", "true");
 
           // Immediate success for anonymous users
@@ -664,6 +675,14 @@ import { supabase } from "../config/config.js";
             compareWithFormData(extractedIdData);
           }
           return;
+        }
+
+        // Store verification token if present (for secure signup)
+        if (storeResult.data.verificationToken) {
+          sessionStorage.setItem(
+            "cl_verification_token",
+            storeResult.data.verificationToken
+          );
         }
 
         // Store verification ID for signup
@@ -876,14 +895,14 @@ import { supabase } from "../config/config.js";
         required: false,
       },
       {
-        idField: "addressLine1",
+        idField: "address", // Use full address from OCR
         formField: "addressLine1",
         displayName: "Address",
         type: "address",
         required: false,
       },
       {
-        idField: "barangay",
+        idField: "address", // Use full address from OCR to check barangay
         formField: "barangay",
         displayName: "Barangay",
         type: "address",
@@ -970,16 +989,61 @@ import { supabase } from "../config/config.js";
           match = !formValue || idGender === formGender; // Optional field
           score = match ? 100 : 0;
         } else {
-          // For names and addresses
-          score = calculateSimilarity(idValue, formValue);
+          // Special handling for address: Use token-based matching and normalization
+          if (mapping.type === "address") {
+            // 1. Advanced Normalization
+            const normalizeAddr = (str) => {
+              if (!str) return "";
+              return str
+                .toUpperCase()
+                .replace(/[.,\-#]/g, " ") // Remove punctuation
+                .replace(/\bPRK\b/g, "PUROK") // Expand abbreviations
+                .replace(/\bBRGY\b/g, "BARANGAY")
+                .replace(/\bSTR\b|\bST\b/g, "STREET")
+                .replace(/\bAVE\b/g, "AVENUE")
+                .replace(/CITY OF (\w+)/g, "$1 CITY") // CITY OF DIGOS -> DIGOS CITY
+                .replace(/\s+/g, " ")
+                .trim();
+            };
 
-          if (!formValue && !mapping.required) {
-            // Optional field not entered - consider it a match
-            match = true;
-            score = 100;
+            const s1 = normalizeAddr(idValue);
+            const s2 = normalizeAddr(formValue);
+
+            // 2. Compute similarity on normalized strings
+            score = calculateSimilarity(s1, s2);
+
+            // 3. Token Check: If sufficient keywords match, boost score
+            const tokens1 = s1.split(" ");
+            const tokens2 = s2.split(" ");
+            const matchingTokens = tokens1.filter(
+              (t) => t.length > 2 && tokens2.includes(t)
+            );
+
+            // If > 60% of significant words match, force success (common for address reordering)
+            if (
+              matchingTokens.length >=
+              Math.ceil(Math.min(tokens1.length, tokens2.length) * 0.6)
+            ) {
+              score = Math.max(score, 85);
+            }
+
+            // Lower strict threshold for addresses due to formatting variance
+            // If field is empty in form, consider it a match (optional field logic)
+            if (!formValue) {
+              match = true;
+              score = 100;
+            } else {
+              match = score >= 60;
+            }
           } else {
-            // Enforce 80% threshold
-            match = score >= 80;
+            // Standard logic for other fields
+            score = calculateSimilarity(idValue, formValue);
+            if (!formValue && !mapping.required) {
+              match = true;
+              score = 100;
+            } else {
+              match = score >= 80;
+            }
           }
         }
 
@@ -1069,18 +1133,21 @@ import { supabase } from "../config/config.js";
           <div style="color: var(--success-600); font-size: 0.9rem;">Your ID matches your profile information.</div>
         </div>
       `;
-      sessionStorage.setItem("cl_verification_passed", "true");
+      sessionStorage.setItem("cl_verification_complete", "true");
       status("✓ Identity Confirmed.", "success");
     } else if (!isPhilId) {
       statusHtml = `
         <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
           <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">ID Not Valid</div>
           <div style="color: var(--error-600); font-size: 0.9rem;">
-            Please use only a valid <strong>PhilSys ID</strong> (National ID). Other ID types are not recommended for this verification.
+            Please use only a valid <strong>PhilSys ID</strong> (National ID).<br>
+            <span style="font-size: 0.8em; color: #666; display:inline-block; margin-top:4px;">(Debug: Detected Type '${
+              extractedIdData?.idType || "Unknown"
+            }')</span>
           </div>
         </div>
       `;
-      sessionStorage.removeItem("cl_verification_passed");
+      sessionStorage.removeItem("cl_verification_complete");
       status("ID Not Valid. Please use PhilSys ID.", "error");
     } else if (failedRequired.length > 0) {
       // Identity didn't match (mismatches in required fields)
@@ -1095,7 +1162,7 @@ import { supabase } from "../config/config.js";
           </div>
         </div>
       `;
-      sessionStorage.removeItem("cl_verification_passed");
+      sessionStorage.removeItem("cl_verification_complete");
       status("Identity Didn't Match. Please review your details.", "error");
     } else {
       // Fallback for unclear cases (e.g. low confidence but technically matched optional fields?)

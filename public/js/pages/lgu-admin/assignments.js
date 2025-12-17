@@ -338,7 +338,7 @@ class LguAdminAssignments {
   getPaginatedData() {
     // Deprecated for slicing, just passes thru data
     return { paginatedData: this.assignments, totalItems: this.totalItems };
-  }
+  } 
 
   async loadMore() {
     const btn = document.getElementById("load-more-btn");

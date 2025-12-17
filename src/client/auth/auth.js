@@ -141,7 +141,7 @@ function saveRegFormData() {
   }
 
   try {
-    localStorage.setItem(REG_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+    sessionStorage.setItem(REG_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
     console.warn("Failed to save registration form data:", e);
   }
@@ -151,7 +151,7 @@ function loadRegFormData() {
   if (!regFormEl) return;
 
   try {
-    const savedData = localStorage.getItem(REG_FORM_STORAGE_KEY);
+    const savedData = sessionStorage.getItem(REG_FORM_STORAGE_KEY);
     if (!savedData) return;
 
     const parsedData = JSON.parse(savedData);
@@ -172,8 +172,8 @@ function loadRegFormData() {
 
 function clearRegFormData() {
   try {
-    localStorage.removeItem(REG_FORM_STORAGE_KEY);
-    localStorage.removeItem("cl_signup_step_index"); // Clear step index too
+    sessionStorage.removeItem(REG_FORM_STORAGE_KEY);
+    sessionStorage.removeItem("cl_signup_step_index"); // Clear step index too
   } catch (e) {
     console.warn("Failed to clear registration form data:", e);
   }
@@ -277,6 +277,7 @@ if (regFormEl) {
         // role: 'citizen', // backend defaults to citizen
         agreedToTerms: true,
         isOAuth: false, // Regular signup
+        verificationToken: sessionStorage.getItem("cl_verification_token"), // Send proof of ID verification
       };
       // Submit via API instead of direct Supabase call
       const response = await fetch("/api/auth/signup", {
