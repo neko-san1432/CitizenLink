@@ -45,7 +45,7 @@
               href="/myProfile#complaints"
             >
               <div class="quick-action-icon">📋</div>
-              <div class="quick-action-text">Complaints</div>
+              <div class="quick-action-text">View All</div>
             </a>
             <button
               class="quick-action-btn quick-action-btn--sm"
@@ -67,6 +67,53 @@
             </a>
           </div>
         </div>
+        <!-- Complaint Summary Stats -->
+        <div
+          class="stats-grid mb-6 animate-fade-in"
+          id="complaint-summary-stats"
+        >
+          <div class="stat-card glass-panel p-4 text-center">
+            <div class="stat-icon text-2xl mb-1">📋</div>
+            <div class="stat-label text-sm text-gray-500">Total Submitted</div>
+            <div
+              class="stat-value text-2xl font-bold"
+              id="stat-total-submitted"
+            >
+              -
+            </div>
+          </div>
+          <div class="stat-card glass-panel p-4 text-center">
+            <div class="stat-icon text-2xl mb-1">⏳</div>
+            <div class="stat-label text-sm text-gray-500">Pending</div>
+            <div
+              class="stat-value text-2xl font-bold text-warning"
+              id="stat-pending"
+            >
+              -
+            </div>
+          </div>
+          <div class="stat-card glass-panel p-4 text-center">
+            <div class="stat-icon text-2xl mb-1">🚀</div>
+            <div class="stat-label text-sm text-gray-500">In Progress</div>
+            <div
+              class="stat-value text-2xl font-bold text-primary"
+              id="stat-in-progress"
+            >
+              -
+            </div>
+          </div>
+          <div class="stat-card glass-panel p-4 text-center">
+            <div class="stat-icon text-2xl mb-1">✅</div>
+            <div class="stat-label text-sm text-gray-500">Resolved</div>
+            <div
+              class="stat-value text-2xl font-bold text-success"
+              id="stat-resolved"
+            >
+              -
+            </div>
+          </div>
+        </div>
+
         <!-- Dynamic Content Banner -->
         <div id="content-banner" class="content-banner">
           <div class="content-banner-inner">
@@ -136,6 +183,23 @@
                   </p>
                 </div>
               </div>
+            </div>
+          <!-- Feedback Section (Hidden by default) -->
+          <div id="feedback-section" class="dashboard-section glass-panel rounded-xl p-6 hidden">
+            <div class="section-header mb-4">
+              <h2 class="section-title text-xl font-bold">⭐ Share Your Feedback</h2>
+            </div>
+            <div class="feedback-container card p-4">
+              <p class="mb-4 text-gray-600">Your recent complaint has been resolved. How satisfied are you with the outcome?</p>
+              <div class="rating-group flex gap-4 mb-4 justify-center">
+                <button class="rating-btn text-2xl hover:scale-120 transition-transform" data-rating="1">😠</button>
+                <button class="rating-btn text-2xl hover:scale-120 transition-transform" data-rating="2">🙁</button>
+                <button class="rating-btn text-2xl hover:scale-120 transition-transform" data-rating="3">😐</button>
+                <button class="rating-btn text-2xl hover:scale-120 transition-transform" data-rating="4">😊</button>
+                <button class="rating-btn text-2xl hover:scale-120 transition-transform" data-rating="5">😍</button>
+              </div>
+              <textarea id="feedback-comment" class="form-control w-full p-3 border rounded-lg mb-4" placeholder="Optional: Tell us more about your experience..."></textarea>
+              <button id="submit-feedback-btn" class="btn btn-primary w-full">Submit Feedback</button>
             </div>
           </div>
         </div>

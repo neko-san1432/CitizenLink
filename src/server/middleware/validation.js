@@ -1,22 +1,24 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
 /**
  * Middleware factory for Joi validation
  * @param {Object} schema - Joi schema to validate against
  * @param {string} property - Request property to validate (body, query, params)
  */
-const validate = (schema, property = 'body') => {
+const validate = (schema, property = "body") => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
       abortEarly: false,
-      stripUnknown: true // Remove unknown fields
+      stripUnknown: true, // Remove unknown fields
     });
 
     if (error) {
-      const errorDetails = error.details.map(detail => detail.message).join(', ');
+      const errorDetails = error.details
+        .map((detail) => detail.message)
+        .join(", ");
       return res.status(400).json({
         success: false,
-        error: `Validation failed: ${errorDetails}`
+        error: `Validation failed: ${errorDetails}`,
       });
     }
 
@@ -27,7 +29,9 @@ const validate = (schema, property = 'body') => {
 };
 
 // Common schemas
-const idSchema = Joi.string().guid({ version: ['uuidv4'] }).required();
+const idSchema = Joi.string()
+  .guid({ version: ["uuidv4"] })
+  .required();
 const reasonSchema = Joi.string().trim().min(5).max(500).required();
 
 const schemas = {
@@ -38,35 +42,42 @@ const schemas = {
     type: Joi.string().trim().required(), // Category/Type
     category: Joi.string().trim().optional(),
     subcategory: Joi.string().trim().optional(),
-    preferred_departments: Joi.alternatives().try(
-      Joi.array().items(Joi.string()),
-      Joi.string()
-    ).optional(),
-    location: Joi.string().allow('', null).optional(),
+    preferred_departments: Joi.alternatives()
+      .try(Joi.array().items(Joi.string()), Joi.string())
+      .optional(),
+    location: Joi.string().allow("", null).optional(),
     latitude: Joi.number().min(-90).max(90).allow(null).optional(),
     longitude: Joi.number().min(-180).max(180).allow(null).optional(),
-    is_anonymous: Joi.boolean().default(false)
+    urgency_level: Joi.string()
+      .valid("low", "medium", "high", "urgent")
+      .default("low"),
+    is_anonymous: Joi.boolean().default(false),
   }),
 
   // Status Update
   updateStatus: Joi.object({
-    status: Joi.string().valid('new', 'assigned', 'in_progress', 'completed', 'cancelled').required(),
-    notes: Joi.string().trim().allow('', null).optional()
-  }),
+    status: Joi.string()
+      .valid("new", "assigned", "in_progress", "completed", "cancelled")
+      .optional(),
+    priority: Joi.string().valid("low", "medium", "high", "urgent").optional(),
+    category: Joi.string().trim().optional(),
+    subcategory: Joi.string().trim().optional(),
+    notes: Joi.string().trim().allow("", null).optional(),
+  }).min(1),
 
   // Mark as False
   markAsFalse: Joi.object({
-    reason: reasonSchema
+    reason: reasonSchema,
   }),
 
   // Mark as Duplicate
   markAsDuplicate: Joi.object({
-    master_complaint_id: idSchema
+    master_complaint_id: idSchema,
   }),
 
   // Cancel Complaint
   cancelComplaint: Joi.object({
-    reason: reasonSchema
+    reason: reasonSchema,
   }),
 
   // Add Evidence (Metadata only, files handled by multer)
@@ -77,18 +88,18 @@ const schemas = {
   // Confirm Resolution
   confirmResolution: Joi.object({
     confirmed: Joi.boolean().required(),
-    feedback: Joi.string().trim().max(1000).allow('', null).optional()
+    feedback: Joi.string().trim().max(1000).allow("", null).optional(),
   }),
 
   // Transfer Complaint
   transferComplaint: Joi.object({
     to_dept: Joi.string().required(),
-    reason: reasonSchema
+    reason: reasonSchema,
   }),
 
   // Assign Coordinator
   assignCoordinator: Joi.object({
-    coordinator_id: idSchema
+    coordinator_id: idSchema,
   }),
 
   // Send Reminder
@@ -98,11 +109,11 @@ const schemas = {
 
   // Params validation (e.g. for /:id)
   paramsId: Joi.object({
-    id: idSchema
-  })
+    id: idSchema,
+  }),
 };
 
 module.exports = {
   validate,
-  schemas
+  schemas,
 };

@@ -3,7 +3,6 @@
  * Handles API calls and dashboard functionality
  */
 class CoordinatorDashboard {
-
   constructor() {
     this.statsInterval = null;
     this.queueInterval = null;
@@ -26,7 +25,7 @@ class CoordinatorDashboard {
 
   async checkCoordinatorStatus() {
     try {
-      const response = await fetch('/api/coordinator/status');
+      const response = await fetch("/api/coordinator/status");
       if (!response.ok) {
         return;
       }
@@ -49,38 +48,47 @@ class CoordinatorDashboard {
       await this.loadActivity();
       // Fallback: Update stats with default values if API fails
       setTimeout(() => {
-        this.updateStatCard('stat-pending', 0);
-        this.updateStatCard('stat-reviews', 0);
-        this.updateStatCard('stat-duplicates', 0);
-        this.updateStatCard('stat-assignments', 0);
+        this.updateStatCard("stat-pending", 0);
+        this.updateStatCard("stat-reviews", 0);
+        this.updateStatCard("stat-duplicates", 0);
+        this.updateStatCard("stat-assignments", 0);
       }, 5000);
     } catch (error) {
-      console.error('[COORDINATOR DASHBOARD] Failed to load dashboard data:', error);
+      console.error(
+        "[COORDINATOR DASHBOARD] Failed to load dashboard data:",
+        error
+      );
     }
   }
 
   async loadStats() {
     try {
       // Check if we're authenticated first
-      const authResponse = await fetch('/api/coordinator/status');
+      const authResponse = await fetch("/api/coordinator/status");
       if (!authResponse.ok) {
         this.setDefaultStats();
         return;
       }
-      const response = await fetch('/api/coordinator/dashboard');
+      const response = await fetch("/api/coordinator/dashboard");
       if (!response.ok) {
         this.setDefaultStats();
         return;
       }
       const result = await response.json();
       if (result.success) {
-        const {data} = result;
+        const { data } = result;
         // Update statistics cards only - don't update queue or clusters here
         // Queue and clusters are handled by separate methods to avoid conflicts
-        this.updateStatCard('stat-pending', data.pending_reviews || 0);
-        this.updateStatCard('stat-reviews', data.stats?.total_reviews || 0);
-        this.updateStatCard('stat-duplicates', data.stats?.duplicates_merged || 0);
-        this.updateStatCard('stat-assignments', data.stats?.assignments_made || 0);
+        this.updateStatCard("stat-pending", data.pending_reviews || 0);
+        this.updateStatCard("stat-reviews", data.stats?.total_reviews || 0);
+        this.updateStatCard(
+          "stat-duplicates",
+          data.stats?.duplicates_merged || 0
+        );
+        this.updateStatCard(
+          "stat-assignments",
+          data.stats?.assignments_made || 0
+        );
       } else {
         this.setDefaultStats();
       }
@@ -90,15 +98,15 @@ class CoordinatorDashboard {
   }
 
   setDefaultStats() {
-    this.updateStatCard('stat-pending', 0);
-    this.updateStatCard('stat-reviews', 0);
-    this.updateStatCard('stat-duplicates', 0);
-    this.updateStatCard('stat-assignments', 0);
+    this.updateStatCard("stat-pending", 0);
+    this.updateStatCard("stat-reviews", 0);
+    this.updateStatCard("stat-duplicates", 0);
+    this.updateStatCard("stat-assignments", 0);
   }
 
   async loadRecentQueue() {
     try {
-      const response = await fetch('/api/coordinator/review-queue?limit=5');
+      const response = await fetch("/api/coordinator/review-queue?limit=5");
       const result = await response.json();
       if (result.success) {
         this.updateRecentQueuePreview(result.data);
@@ -110,10 +118,9 @@ class CoordinatorDashboard {
     }
   }
 
-
   async loadActivity() {
     try {
-      const response = await fetch('/api/coordinator/dashboard');
+      const response = await fetch("/api/coordinator/dashboard");
       const result = await response.json();
       if (result.success) {
         // Get recent activity from dashboard data or generate from stats
@@ -123,7 +130,7 @@ class CoordinatorDashboard {
         this.updateActivityPreview([]);
       }
     } catch (error) {
-      console.error('[COORDINATOR DASHBOARD] Failed to load activity:', error);
+      console.error("[COORDINATOR DASHBOARD] Failed to load activity:", error);
       this.updateActivityPreview([]);
     }
   }
@@ -135,51 +142,58 @@ class CoordinatorDashboard {
     // Add activity for pending reviews
     if (data.pending_reviews > 0) {
       activities.push({
-        icon: '⏰',
-        text: `${data.pending_reviews} complaint${data.pending_reviews !== 1 ? 's' : ''} pending review`,
-        time: 'Just now',
-        type: 'pending'
+        icon: "⏰",
+        text: `${data.pending_reviews} complaint${
+          data.pending_reviews !== 1 ? "s" : ""
+        } pending review`,
+        time: "Just now",
+        type: "pending",
       });
     }
 
     // Add activity for recent reviews
     if (data.stats?.total_reviews > 0) {
       activities.push({
-        icon: '📊',
-        text: `${data.stats.total_reviews} review${data.stats.total_reviews !== 1 ? 's' : ''} completed in last 7 days`,
-        time: 'This week',
-        type: 'review'
+        icon: "📊",
+        text: `${data.stats.total_reviews} review${
+          data.stats.total_reviews !== 1 ? "s" : ""
+        } completed in last 7 days`,
+        time: "This week",
+        type: "review",
       });
     }
 
     // Add activity for assignments
     if (data.stats?.assignments_made > 0) {
       activities.push({
-        icon: '📤',
-        text: `${data.stats.assignments_made} assignment${data.stats.assignments_made !== 1 ? 's' : ''} made this week`,
-        time: 'This week',
-        type: 'assignment'
+        icon: "📤",
+        text: `${data.stats.assignments_made} assignment${
+          data.stats.assignments_made !== 1 ? "s" : ""
+        } made this week`,
+        time: "This week",
+        type: "assignment",
       });
     }
 
     // Add activity for duplicates merged
     if (data.stats?.duplicates_merged > 0) {
       activities.push({
-        icon: '🔗',
-        text: `${data.stats.duplicates_merged} duplicate${data.stats.duplicates_merged !== 1 ? 's' : ''} merged this week`,
-        time: 'This week',
-        type: 'duplicate'
+        icon: "🔗",
+        text: `${data.stats.duplicates_merged} duplicate${
+          data.stats.duplicates_merged !== 1 ? "s" : ""
+        } merged this week`,
+        time: "This week",
+        type: "duplicate",
       });
     }
-
 
     // If no activities, add a default message
     if (activities.length === 0) {
       activities.push({
-        icon: '📋',
-        text: 'No recent activity',
-        time: '—',
-        type: 'empty'
+        icon: "📋",
+        text: "No recent activity",
+        time: "—",
+        type: "empty",
       });
     }
 
@@ -187,7 +201,7 @@ class CoordinatorDashboard {
   }
 
   updateActivityPreview(activities) {
-    const container = document.getElementById('activity-container');
+    const container = document.getElementById("activity-container");
     if (!container) return;
 
     if (!activities || activities.length === 0) {
@@ -203,7 +217,9 @@ class CoordinatorDashboard {
       return;
     }
 
-    const activitiesList = activities.map(activity => `
+    const activitiesList = activities
+      .map(
+        (activity) => `
       <div class="activity-item" data-type="${activity.type}">
         <div class="activity-icon">${activity.icon}</div>
         <div class="activity-content">
@@ -211,7 +227,9 @@ class CoordinatorDashboard {
           <div class="activity-time">${activity.time}</div>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
     container.innerHTML = `
       <div class="activity-list">
@@ -224,16 +242,18 @@ class CoordinatorDashboard {
     const element = document.getElementById(elementId);
     if (element) {
       element.textContent = value;
-      element.classList.add('loaded');
+      element.classList.add("loaded");
     } else {
-      console.error(`[COORDINATOR DASHBOARD] Element ${elementId} not found in DOM`);
+      console.error(
+        `[COORDINATOR DASHBOARD] Element ${elementId} not found in DOM`
+      );
     }
   }
 
   updateRecentQueuePreview(complaints) {
-    const container = document.getElementById('review-queue-container');
+    const container = document.getElementById("review-queue-container");
     if (!container) {
-      console.warn('[COORDINATOR DASHBOARD] review-queue-container not found');
+      console.warn("[COORDINATOR DASHBOARD] review-queue-container not found");
       return;
     }
     if (!complaints || complaints.length === 0) {
@@ -248,31 +268,59 @@ class CoordinatorDashboard {
     }
     // Always limit to 5 complaints for preview
     const displayedComplaints = complaints.slice(0, 5);
-    const complaintsList = displayedComplaints.map(complaint => `
+    const complaintsList = displayedComplaints
+      .map(
+        (complaint) => `
             <div class="queue-item">
                 <div class="queue-item-icon">
-                    ${complaint.priority === 'urgent' ? '🚨' :
-    complaint.priority === 'high' ? '⚠️' : '📋'}
+                    ${
+                      complaint.priority === "urgent"
+                        ? "🚨"
+                        : complaint.priority === "high"
+                        ? "⚠️"
+                        : "📋"
+                    }
                 </div>
                 <div class="queue-item-content">
                     <div class="queue-item-title">${complaint.title}</div>
                     <div class="queue-item-details">
-                        <span class="priority-${complaint.priority}">${complaint.priority}</span>
+                        <span class="priority-${
+                          complaint.urgency_level || "medium"
+                        } urgency-badge">${
+          complaint.urgency_level || "medium"
+        }</span>
                         <span class="separator">•</span>
-                        <span class="category">${complaint.category || 'General'}</span>
-                        ${complaint.submitted_by_profile ?
-    `<span class="separator">•</span>
-                             <span class="submitter">${complaint.submitted_by_profile.name || 'Unknown'}</span>` :
-    ''}
+                        <span class="category">${
+                          complaint.category || "General"
+                        }</span>
+                        ${
+                          complaint.submitted_by_profile
+                            ? `<span class="separator">•</span>
+                             <span class="submitter">${
+                               complaint.submitted_by_profile.name || "Unknown"
+                             }</span>`
+                            : ""
+                        }
                     </div>
                 </div>
                 <div class="queue-item-actions">
-                    <button class="btn btn-sm btn-primary js-review-btn" data-complaint-id="${complaint.id}">
+                    <button class="btn btn-sm btn-secondary js-quick-action-btn" data-complaint-id="${
+                      complaint.id
+                    }" data-citizen-urgency="${
+          complaint.urgency_level || "medium"
+        }">
+                        ⚡ Quick
+                    </button>
+                    <button class="btn btn-sm btn-primary js-review-btn" data-complaint-id="${
+                      complaint.id
+                    }">
                         Review
                     </button>
                 </div>
             </div>
-        `).join('');
+        `
+      )
+      .join("");
 
     container.innerHTML = `
             <div class="queue-header">
@@ -287,89 +335,204 @@ class CoordinatorDashboard {
         `;
 
     // Attach event listeners instead of inline handlers (CSP compliant)
-    const reviewButtons = container.querySelectorAll('.js-review-btn');
-    reviewButtons.forEach(btn => {
-      const id = btn.getAttribute('data-complaint-id');
-      btn.addEventListener('click', () => {
+    const reviewButtons = container.querySelectorAll(".js-review-btn");
+    reviewButtons.forEach((btn) => {
+      const id = btn.getAttribute("data-complaint-id");
+      btn.addEventListener("click", () => {
         if (id) window.location.href = `/coordinator/review/${id}`;
       });
     });
 
-    const viewAllBtn = container.querySelector('#js-view-all-queue');
+    const viewAllBtn = container.querySelector("#js-view-all-queue");
     if (viewAllBtn) {
-      viewAllBtn.addEventListener('click', () => {
-        window.location.href = '/coordinator/review-queue';
+      viewAllBtn.addEventListener("click", () => {
+        window.location.href = "/coordinator/review-queue";
       });
     }
-  }
 
+    // Attach event listeners to Quick Action buttons
+    const quickActionBtns = container.querySelectorAll(".js-quick-action-btn");
+    quickActionBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.complaintId;
+        const citizenUrgency = btn.dataset.citizenUrgency;
+        this.openQuickActionModal(id, citizenUrgency);
+      });
+    });
+  }
 
   setupEventListeners() {
     // Quick action buttons
-    const reviewQueueBtn = document.getElementById('review-queue-btn');
+    const reviewQueueBtn = document.getElementById("review-queue-btn");
     if (reviewQueueBtn) {
-      reviewQueueBtn.addEventListener('click', () => {
-        window.location.href = '/review-queue';
+      reviewQueueBtn.addEventListener("click", () => {
+        window.location.href = "/review-queue";
       });
     }
 
-    const bulkAssignBtn = document.getElementById('bulk-assign-btn');
+    const bulkAssignBtn = document.getElementById("bulk-assign-btn");
     if (bulkAssignBtn) {
-      bulkAssignBtn.addEventListener('click', () => this.bulkAssignComplaints());
+      bulkAssignBtn.addEventListener("click", () =>
+        this.bulkAssignComplaints()
+      );
     }
 
-
-    const generateReportBtn = document.getElementById('generate-report-btn');
+    const generateReportBtn = document.getElementById("generate-report-btn");
     if (generateReportBtn) {
-      generateReportBtn.addEventListener('click', () => this.generateReport());
+      generateReportBtn.addEventListener("click", () => this.generateReport());
     }
 
-    const manageDepartmentsBtn = document.getElementById('manage-departments-btn');
+    const manageDepartmentsBtn = document.getElementById(
+      "manage-departments-btn"
+    );
     if (manageDepartmentsBtn) {
-      manageDepartmentsBtn.addEventListener('click', () => this.manageDepartments());
+      manageDepartmentsBtn.addEventListener("click", () =>
+        this.manageDepartments()
+      );
     }
 
-
-    const viewFullQueueBtn = document.getElementById('view-full-queue-btn');
+    const viewFullQueueBtn = document.getElementById("view-full-queue-btn");
     if (viewFullQueueBtn) {
-      viewFullQueueBtn.addEventListener('click', () => {
-        window.location.href = '/review-queue';
+      viewFullQueueBtn.addEventListener("click", () => {
+        window.location.href = "/review-queue";
       });
     }
 
-    const refreshActivityBtn = document.getElementById('refresh-activity-btn');
+    const refreshActivityBtn = document.getElementById("refresh-activity-btn");
     if (refreshActivityBtn) {
-      refreshActivityBtn.addEventListener('click', () => this.loadActivity());
+      refreshActivityBtn.addEventListener("click", () => this.loadActivity());
     }
 
     // Queue filter selector
-    const queueFilter = document.getElementById('queue-filter');
+    const queueFilter = document.getElementById("queue-filter");
     if (queueFilter) {
-      queueFilter.addEventListener('change', (e) => {
+      queueFilter.addEventListener("change", (e) => {
         this.filterQueue(e.target.value);
       });
+    }
+
+    // Modal listeners
+    const closeModalBtn = document.getElementById("close-modal-btn");
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener("click", () =>
+        this.closeQuickActionModal()
+      );
+    }
+
+    const quickActionForm = document.getElementById("quick-action-form");
+    if (quickActionForm) {
+      quickActionForm.addEventListener("submit", (e) =>
+        this.handleQuickActionSubmit(e)
+      );
+    }
+  }
+
+  async openQuickActionModal(complaintId, citizenUrgency = "medium") {
+    const modal = document.getElementById("quick-action-modal");
+    const idInput = document.getElementById("modal-complaint-id");
+    const urgencyDisplay = document.getElementById("modal-citizen-urgency");
+    if (!modal || !idInput) return;
+
+    idInput.value = complaintId;
+    if (urgencyDisplay) {
+      urgencyDisplay.textContent = citizenUrgency;
+      urgencyDisplay.className = `text-lg font-bold capitalize priority-${citizenUrgency}`;
+    }
+    modal.classList.remove("hidden");
+
+    // Load departments/officers if not already loaded
+    await this.loadAssignmentTargets();
+  }
+
+  closeQuickActionModal() {
+    const modal = document.getElementById("quick-action-modal");
+    if (modal) modal.classList.add("hidden");
+  }
+
+  async loadAssignmentTargets() {
+    const select = document.getElementById("modal-assignment");
+    if (!select || select.options.length > 1) return;
+
+    try {
+      const response = await fetch("/api/departments");
+      const result = await response.json();
+      if (result.success) {
+        result.data.forEach((dept) => {
+          const option = document.createElement("option");
+          option.value = dept.code;
+          option.textContent = dept.name;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load departments:", error);
+    }
+  }
+
+  async handleQuickActionSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("modal-complaint-id").value;
+    const category = document.getElementById("modal-category").value;
+    const urgency = document.querySelector(
+      'input[name="urgency"]:checked'
+    ).value;
+    const department = document.getElementById("modal-assignment").value;
+    const deadline = document.getElementById("modal-deadline").value;
+    const remarks = document.getElementById("modal-remarks").value;
+
+    try {
+      // 1. Update Classification & Priority
+      const updateResponse = await fetch(`/api/complaints/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, priority: urgency, notes: remarks }),
+      });
+
+      // 2. Assign to Department
+      const assignResponse = await fetch(
+        `/api/complaints/${id}/assign-coordinator`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ coordinator_id: department, deadline }), // Assuming coordinator_id can be a dept code for routing
+        }
+      );
+
+      if (updateResponse.ok && assignResponse.ok) {
+        if (window.showMessage) {
+          window.showMessage("success", "Complaint classified and assigned!");
+        } else {
+          const { default: showMsg } = await import("../components/toast.js");
+          showMsg("success", "Complaint classified and assigned!");
+        }
+        this.closeQuickActionModal();
+        this.loadDashboardData();
+      }
+    } catch (error) {
+      console.error("Quick action failed:", error);
     }
   }
 
   async bulkAssignComplaints() {
     // Implementation for bulk assignment
     // This would open a modal or redirect to bulk assign page
-    window.location.href = '/coordinator/review-queue?bulk=true';
+    window.location.href = "/coordinator/review-queue?bulk=true";
   }
 
   async generateReport() {
     // Implementation for report generation
-    window.location.href = '/coordinator/review-queue?report=true';
+    window.location.href = "/coordinator/review-queue?report=true";
   }
 
   async manageDepartments() {
     // Implementation for department management
-    window.location.href = '/departments';
+    window.location.href = "/departments";
   }
 
   async getHelp() {
     // Implementation for help
-    alert('Help documentation coming soon!');
+    alert("Help documentation coming soon!");
   }
 
   async filterQueue(filter) {
@@ -409,7 +572,6 @@ async function bulkAssignComplaints() {
   window.coordinatorDashboard?.bulkAssignComplaints();
 }
 
-
 async function refreshActivity() {
   window.coordinatorDashboard?.loadRecentQueue();
 }
@@ -417,38 +579,42 @@ async function refreshActivity() {
 async function testCoordinatorStats() {
   try {
     // Test authentication
-    const authResponse = await fetch('/api/coordinator/status');
+    const authResponse = await fetch("/api/coordinator/status");
     // Test dashboard API
-    const dashboardResponse = await fetch('/api/coordinator/dashboard');
+    const dashboardResponse = await fetch("/api/coordinator/dashboard");
     const dashboardData = await dashboardResponse.json();
     // Manually update stats
     if (dashboardData.success) {
-      const {data} = dashboardData;
+      const { data } = dashboardData;
       const updateStatCard = (id, value) => {
         const element = document.getElementById(id);
         if (element) {
           element.textContent = value;
-          element.classList.add('loaded');
+          element.classList.add("loaded");
         } else {
           console.error(`[COORDINATOR TEST] Element ${id} not found`);
         }
       };
-      updateStatCard('stat-pending', data.pending_reviews || 0);
-      updateStatCard('stat-reviews', data.stats?.total_reviews || 0);
-      updateStatCard('stat-duplicates', data.stats?.duplicates_merged || 0);
-      updateStatCard('stat-assignments', data.stats?.assignments_made || 0);
+      updateStatCard("stat-pending", data.pending_reviews || 0);
+      updateStatCard("stat-reviews", data.stats?.total_reviews || 0);
+      updateStatCard("stat-duplicates", data.stats?.duplicates_merged || 0);
+      updateStatCard("stat-assignments", data.stats?.assignments_made || 0);
     }
   } catch (error) {
-    console.error('[COORDINATOR TEST] Manual test failed:', error);
+    console.error("[COORDINATOR TEST] Manual test failed:", error);
   }
 }
 // Make test function globally available
 window.testCoordinatorStats = testCoordinatorStats;
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   // Check if required elements exist
-  const requiredElements = ['stat-pending', 'stat-reviews', 'review-queue-container'];
-  requiredElements.forEach(id => {
+  const requiredElements = [
+    "stat-pending",
+    "stat-reviews",
+    "review-queue-container",
+  ];
+  requiredElements.forEach((id) => {
     const element = document.getElementById(id);
   });
   // Immediate fallback: Set stats to 0 so user sees dashboard is working
@@ -457,13 +623,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const element = document.getElementById(id);
       if (element) {
         element.textContent = value;
-        element.classList.add('loaded');
+        element.classList.add("loaded");
       }
     };
-    fallbackUpdate('stat-pending', '0');
-    fallbackUpdate('stat-reviews', '0');
-    fallbackUpdate('stat-duplicates', '0');
-    fallbackUpdate('stat-assignments', '0');
+    fallbackUpdate("stat-pending", "0");
+    fallbackUpdate("stat-reviews", "0");
+    fallbackUpdate("stat-duplicates", "0");
+    fallbackUpdate("stat-assignments", "0");
   }, 1000);
   try {
     window.coordinatorDashboard = new CoordinatorDashboard();
@@ -474,18 +640,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const element = document.getElementById(id);
         if (element) {
           element.textContent = value;
-          element.classList.add('loaded');
+          element.classList.add("loaded");
         }
       };
-      fallbackUpdate('stat-pending', '0');
-      fallbackUpdate('stat-reviews', '0');
-      fallbackUpdate('stat-duplicates', '0');
-      fallbackUpdate('stat-assignments', '0');
+      fallbackUpdate("stat-pending", "0");
+      fallbackUpdate("stat-reviews", "0");
+      fallbackUpdate("stat-duplicates", "0");
+      fallbackUpdate("stat-assignments", "0");
     }, 2000);
   }
 });
 // Clean up on page unload
-window.addEventListener('beforeunload', () => {
+window.addEventListener("beforeunload", () => {
   if (window.coordinatorDashboard) {
     window.coordinatorDashboard.destroy();
   }

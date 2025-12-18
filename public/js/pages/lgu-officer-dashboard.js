@@ -2,18 +2,18 @@
  * LGU Officer Dashboard
  * Field operations and task management for local government officers
  */
-import showMessage from '../components/toast.js';
-import { escapeHtml } from '../utils/string.js';
-import { formatDate } from '../utils/date.js';
-import { getStatusText } from '../utils/complaint.js';
-import { getActivityIcon, getUpdateIcon } from '../utils/icons.js';
+import showMessage from "../components/toast.js";
+import { escapeHtml } from "../utils/string.js";
+import { formatDate } from "../utils/date.js";
+import { getStatusText } from "../utils/complaint.js";
+import { getActivityIcon, getUpdateIcon } from "../utils/icons.js";
 
 // Dashboard state
 const dashboardData = null;
 /**
  * Initialize dashboard
  */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   await loadDashboardData();
   await loadMyTasks();
   await loadStatistics();
@@ -27,14 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDashboardData() {
   try {
     // Load all dashboard components
-    await Promise.all([
-      loadStatistics(),
-      loadActivity(),
-      loadUpdates()
-    ]);
+    await Promise.all([loadStatistics(), loadActivity(), loadUpdates()]);
   } catch (error) {
-    console.error('[LGU_OFFICER] Load dashboard error:', error);
-    showMessage('error', 'Failed to load dashboard data');
+    console.error("[LGU_OFFICER] Load dashboard error:", error);
+    showMessage("error", "Failed to load dashboard data");
   }
 }
 /**
@@ -42,7 +38,7 @@ async function loadDashboardData() {
  */
 async function loadMyTasks() {
   try {
-    const response = await fetch('/api/lgu/tasks?limit=5');
+    const response = await fetch("/api/lgu/tasks?limit=5");
     const result = await response.json();
     if (result.success) {
       renderMyTasks(result.data || []);
@@ -50,7 +46,7 @@ async function loadMyTasks() {
       renderMyTasks([]);
     }
   } catch (error) {
-    console.error('[LGU_OFFICER] Load tasks error:', error);
+    console.error("[LGU_OFFICER] Load tasks error:", error);
     renderMyTasks([]);
   }
 }
@@ -59,7 +55,7 @@ async function loadMyTasks() {
  */
 async function loadStatistics() {
   try {
-    const response = await fetch('/api/lgu/statistics');
+    const response = await fetch("/api/lgu/statistics");
     const result = await response.json();
     if (result.success) {
       renderStatistics(result.data);
@@ -67,7 +63,7 @@ async function loadStatistics() {
       renderStatistics({});
     }
   } catch (error) {
-    console.error('[LGU_OFFICER] Load statistics error:', error);
+    console.error("[LGU_OFFICER] Load statistics error:", error);
     renderStatistics({});
   }
 }
@@ -76,13 +72,13 @@ async function loadStatistics() {
  */
 async function loadActivity() {
   try {
-    const response = await fetch('/api/lgu/activities?limit=5');
+    const response = await fetch("/api/lgu/activities?limit=5");
     const result = await response.json();
     if (result.success) {
       renderActivity(result.data || []);
     }
   } catch (error) {
-    console.error('[LGU_OFFICER] Load activity error:', error);
+    console.error("[LGU_OFFICER] Load activity error:", error);
   }
 }
 /**
@@ -90,26 +86,30 @@ async function loadActivity() {
  */
 async function loadUpdates() {
   try {
-    const response = await fetch('/api/lgu/updates?limit=5');
+    const response = await fetch("/api/lgu/updates?limit=5");
     const result = await response.json();
     if (result.success) {
       renderUpdates(result.data || []);
     }
   } catch (error) {
-    console.error('[LGU_OFFICER] Load updates error:', error);
+    console.error("[LGU_OFFICER] Load updates error:", error);
   }
 }
 /**
  * Render my tasks
  */
 function renderMyTasks(tasks) {
-  const container = document.getElementById('tasks-container');
+  const container = document.getElementById("tasks-container");
   if (!container) return;
   // Client-side deduplication by complaint_id (keep the most recent one)
   const uniqueTasks = tasks.reduce((acc, task) => {
-    const existing = acc.find(t => t.complaint_id === task.complaint_id);
-    if (!existing || new Date(task.updated_at || task.created_at) > new Date(existing.updated_at || existing.created_at)) {
-      const filtered = acc.filter(t => t.complaint_id !== task.complaint_id);
+    const existing = acc.find((t) => t.complaint_id === task.complaint_id);
+    if (
+      !existing ||
+      new Date(task.updated_at || task.created_at) >
+        new Date(existing.updated_at || existing.created_at)
+    ) {
+      const filtered = acc.filter((t) => t.complaint_id !== task.complaint_id);
       return [...filtered, task];
     }
     return acc;
@@ -125,58 +125,95 @@ function renderMyTasks(tasks) {
     `;
     return;
   }
-  const html = uniqueTasks.map(task => `
+  const html = uniqueTasks
+    .map(
+      (task) => `
     <div class="task-item" onclick="viewTaskDetail('${task.complaint_id}')">
       <div class="task-header">
         <h4 class="task-title">${escapeHtml(getTaskTitle(task))}</h4>
-        <span class="task-priority priority-${task.priority || 'medium'}">${task.priority || 'MEDIUM'}</span>
+        <span class="task-priority priority-${(
+          task.urgency_level ||
+          task.priority ||
+          "medium"
+        ).toLowerCase()}">${(
+        task.urgency_level ||
+        task.priority ||
+        "MEDIUM"
+      ).toUpperCase()}</span>
       </div>
       <div class="task-meta">
-        <span class="task-type">${escapeHtml(task.complaint?.category || 'General')}</span>
+        <span class="task-type">${escapeHtml(
+          task.complaint?.category || "General"
+        )}</span>
         <span class="task-deadline">Due: ${formatDate(task.deadline)}</span>
+        ${
+          task.complaint?.urgency_level
+            ? `<span class="citizen-urgency" title="Citizen Reported Urgency">Citizen: ${task.complaint.urgency_level}</span>`
+            : ""
+        }
       </div>
       <div class="task-progress">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: ${getTaskProgress(task.status)}%"></div>
+          <div class="progress-fill" style="width: ${getTaskProgress(
+            task.status
+          )}%"></div>
         </div>
         <span class="progress-text">${getStatusText(task.status)}</span>
       </div>
       <div class="task-actions">
-        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${task.complaint_id}')">Update</button>
-        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${task.complaint_id}')">Add Note</button>
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${
+          task.complaint_id
+        }')">Update</button>
+        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${
+          task.complaint_id
+        }')">Add Note</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); escalateTask('${
+          task.complaint_id
+        }')">Return</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join("");
   container.innerHTML = html;
 }
 /**
  * Render statistics
  */
 function renderStatistics(stats) {
-  document.getElementById('stat-total-assigned').textContent = stats.total_tasks || 0;
-  document.getElementById('stat-in-progress').textContent = stats.in_progress_tasks || 0;
-  document.getElementById('stat-completed').textContent = stats.completed_tasks || 0;
-  document.getElementById('stat-overdue').textContent = stats.overdue_tasks || 0;
+  document.getElementById("stat-total-assigned").textContent =
+    stats.total_tasks || 0;
+  document.getElementById("stat-in-progress").textContent =
+    stats.in_progress_tasks || 0;
+  document.getElementById("stat-completed").textContent =
+    stats.completed_tasks || 0;
+  document.getElementById("stat-overdue").textContent =
+    stats.overdue_tasks || 0;
 }
 /**
  * Render activity
  */
 function renderActivity(activities) {
-  const container = document.getElementById('activity-container');
+  const container = document.getElementById("activity-container");
   if (!container) return;
   // Client-side deduplication by complaint_id (keep the most recent one)
   const uniqueActivities = activities.reduce((acc, activity) => {
-    const existing = acc.find(a => a.complaint_id === activity.complaint_id);
-    if (!existing || new Date(activity.created_at) > new Date(existing.created_at)) {
-      const filtered = acc.filter(a => a.complaint_id !== activity.complaint_id);
+    const existing = acc.find((a) => a.complaint_id === activity.complaint_id);
+    if (
+      !existing ||
+      new Date(activity.created_at) > new Date(existing.created_at)
+    ) {
+      const filtered = acc.filter(
+        (a) => a.complaint_id !== activity.complaint_id
+      );
       return [...filtered, activity];
     }
     return acc;
   }, []);
-  console.log('[LGU_OFFICER_DASHBOARD] Activity deduplication:', {
+  console.log("[LGU_OFFICER_DASHBOARD] Activity deduplication:", {
     originalCount: activities.length,
     uniqueCount: uniqueActivities.length,
-    removedDuplicates: activities.length - uniqueActivities.length
+    removedDuplicates: activities.length - uniqueActivities.length,
   });
   if (uniqueActivities.length === 0) {
     container.innerHTML = `
@@ -187,7 +224,9 @@ function renderActivity(activities) {
     `;
     return;
   }
-  const html = uniqueActivities.map(activity => `
+  const html = uniqueActivities
+    .map(
+      (activity) => `
     <div class="activity-item" data-type="${activity.type}">
       <div class="activity-icon">${getActivityIcon(activity.type)}</div>
       <div class="activity-content">
@@ -195,14 +234,16 @@ function renderActivity(activities) {
         <div class="activity-time">${formatDate(activity.created_at)}</div>
       </div>
     </div>
-  `).join('');
-  container.querySelector('.activity-list').innerHTML = html;
+  `
+    )
+    .join("");
+  container.querySelector(".activity-list").innerHTML = html;
 }
 /**
  * Render updates
  */
 function renderUpdates(updates) {
-  const container = document.getElementById('updates-container');
+  const container = document.getElementById("updates-container");
   if (!container) return;
   if (updates.length === 0) {
     container.innerHTML = `
@@ -213,33 +254,38 @@ function renderUpdates(updates) {
     `;
     return;
   }
-  const html = updates.map(update => `
+  const html = updates
+    .map(
+      (update) => `
     <div class="update-item">
       <div class="update-icon">${getUpdateIcon(update.type)}</div>
       <div class="update-content">
         <div class="update-title">${escapeHtml(update.title)}</div>
-        <div class="update-text">${escapeHtml(`${update.content?.substring(0, 80)  }...`)}</div>
+        <div class="update-text">${escapeHtml(
+          `${update.content?.substring(0, 80)}...`
+        )}</div>
         <div class="update-time">${formatDate(update.created_at)}</div>
       </div>
     </div>
-  `).join('');
-  container.querySelector('.updates-list').innerHTML = html;
+  `
+    )
+    .join("");
+  container.querySelector(".updates-list").innerHTML = html;
 }
 /**
  * Setup event listeners
  */
-function setupEventListeners() {
-}
+function setupEventListeners() {}
 /**
  * Helper functions
  */
 function getTaskProgress(status) {
   const progressMap = {
-    'assigned': 25,
-    'in_progress': 50,
-    'review': 75,
-    'completed': 100,
-    'cancelled': 0
+    assigned: 25,
+    in_progress: 50,
+    review: 75,
+    completed: 100,
+    cancelled: 0,
   };
   return progressMap[status] || 0;
 }
@@ -248,69 +294,93 @@ function getTaskProgress(status) {
 // Title fallback helper to avoid blank titles
 function getTaskTitle(task) {
   const complaint = task?.complaint || {};
-  const byPriority = (task?.priority || '').toString().toUpperCase();
+  const byPriority = (task?.priority || "").toString().toUpperCase();
 
-  const result = (
+  const result =
     complaint.title ||
     complaint.category ||
-    `Complaint ${task?.complaint_id ? `#${  String(task.complaint_id).substring(0, 8)}` : ''} ${byPriority ? `(${  byPriority  })` : ''}`.trim()
-  );
+    `Complaint ${
+      task?.complaint_id ? `#${String(task.complaint_id).substring(0, 8)}` : ""
+    } ${byPriority ? `(${byPriority})` : ""}`.trim();
   return result;
 }
 /**
  * Global functions for onclick handlers
  */
-window.viewAssignedTasks = function() {
-  window.location.href = '/taskAssigned';
+window.viewAssignedTasks = function () {
+  window.location.href = "/taskAssigned";
 };
-window.updateTaskStatus = function() {
-  showMessage('info', 'Task status update feature coming soon');
+window.updateTaskStatus = function () {
+  showMessage("info", "Task status update feature coming soon");
   // TODO: Implement task status update modal
 };
-window.addProgressNote = function() {
-  showMessage('info', 'Add progress note feature coming soon');
+window.addProgressNote = function () {
+  showMessage("info", "Add progress note feature coming soon");
   // TODO: Implement add note modal
 };
-window.uploadEvidence = function() {
-  showMessage('info', 'Upload evidence feature coming soon');
+window.uploadEvidence = function () {
+  showMessage("info", "Upload evidence feature coming soon");
   // TODO: Implement evidence upload modal
 };
-window.requestSupport = function() {
-  showMessage('info', 'Request support feature coming soon');
+window.requestSupport = function () {
+  showMessage("info", "Request support feature coming soon");
   // TODO: Implement support request modal
 };
-window.viewMap = function() {
-  window.location.href = '/heatmap';
+window.viewMap = function () {
+  window.location.href = "/heatmap";
 };
-window.viewTaskDetail = function(taskId) {
-  showMessage('info', `Viewing task ${taskId}...`);
+window.escalateTask = function (taskId) {
+  if (!taskId) {
+    showMessage("warning", "Please select a task to escalate");
+    return;
+  }
+  const reason = prompt("Please enter the reason for return/escalation:");
+  if (reason) {
+    fetch(`/api/lgu/tasks/${taskId}/escalate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          showMessage("success", "Task escalated successfully");
+          loadMyTasks();
+        } else {
+          showMessage("error", result.message || "Failed to escalate task");
+        }
+      });
+  }
+};
+window.viewTaskDetail = function (taskId) {
+  showMessage("info", `Viewing task ${taskId}...`);
   // TODO: Implement task detail view
 };
-window.updateTask = function(taskId) {
-  showMessage('info', `Updating task ${taskId}...`);
+window.updateTask = function (taskId) {
+  showMessage("info", `Updating task ${taskId}...`);
   // TODO: Implement task update modal
 };
-window.addNote = function(taskId) {
-  showMessage('info', `Adding note to task ${taskId}...`);
+window.addNote = function (taskId) {
+  showMessage("info", `Adding note to task ${taskId}...`);
   // TODO: Implement add note modal
 };
-window.refreshStats = async function() {
-  showMessage('info', 'Refreshing statistics...');
+window.refreshStats = async function () {
+  showMessage("info", "Refreshing statistics...");
   await loadStatistics();
-  showMessage('success', 'Statistics refreshed');
+  showMessage("success", "Statistics refreshed");
 };
-window.refreshActivity = async function() {
-  showMessage('info', 'Refreshing activity...');
+window.refreshActivity = async function () {
+  showMessage("info", "Refreshing activity...");
   await loadActivity();
-  showMessage('success', 'Activity refreshed');
+  showMessage("success", "Activity refreshed");
 };
-window.refreshUpdates = async function() {
-  showMessage('info', 'Refreshing updates...');
+window.refreshUpdates = async function () {
+  showMessage("info", "Refreshing updates...");
   await loadUpdates();
-  showMessage('success', 'Updates refreshed');
+  showMessage("success", "Updates refreshed");
 };
-window.refreshTasks = async function() {
-  showMessage('info', 'Refreshing tasks...');
+window.refreshTasks = async function () {
+  showMessage("info", "Refreshing tasks...");
   await loadMyTasks();
-  showMessage('success', 'Tasks refreshed');
+  showMessage("success", "Tasks refreshed");
 };

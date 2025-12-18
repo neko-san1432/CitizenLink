@@ -782,9 +782,103 @@ class OCRController {
       });
     }
   }
+  /**
+   * Process Secondary Residency Document (Bill, Certificate, Cedula)
+   * Validates: "DIGOS" keyword AND User's Last Name
+   */
+  async processResidencyDoc(req, res) {
+    const intermediateFiles = [];
+    try {
+      const { file } = req;
+      const { lastName } = req.body;
+
+      if (!file || !lastName) {
+        return res
+          .status(400)
+          .json({ success: false, error: "File and Last Name are required" });
+      }
+
+      console.log(`[OCR-RESIDENCY] Processing doc for user: ${lastName}`);
+
+      // 1. Preprocess (Reuse existing logic)
+      let processedImagePath = file.path;
+      // Simple preprocessing if sharp is available
+      if (sharp) {
+        const ext = path.extname(file.originalname) || ".jpg";
+        processedImagePath = path.join(
+          path.dirname(file.path),
+          `residency_${Date.now()}${ext}`
+        );
+        await sharp(file.path)
+          .greyscale()
+          .normalize()
+          .toFile(processedImagePath);
+        intermediateFiles.push(processedImagePath);
+      }
+
+      // 2. Run Generic OCR (Get ALL text)
+      const ocrResult = await this.runPythonOCR(processedImagePath);
+      const text = ocrResult.text.toUpperCase();
+
+      console.log(`[OCR-RESIDENCY] Extracted Text Length: ${text.length}`);
+
+      // 3. Keyword Validation
+      // Helper: Check if word exists in text (fuzzy allowed for name)
+      const hasKeyword = (keyword) => {
+        if (text.includes(keyword)) return true;
+        // Split text into tokens for fuzzy check
+        const tokens = text.split(/\s+/);
+        for (const token of tokens) {
+          if (token.length > 3 && this.levenshteinDistance(token, keyword) <= 1)
+            return true;
+        }
+        return false;
+      };
+
+      const hasLocation = hasKeyword("DIGOS");
+      const hasName = hasKeyword(lastName.toUpperCase());
+
+      // Cleanup
+      try {
+        if (file.path) fsPromises.unlink(file.path).catch(() => {});
+        for (const p of intermediateFiles) fsPromises.unlink(p).catch(() => {});
+      } catch (e) {}
+
+      if (hasLocation && hasName) {
+        // Generate token for this specific residency check
+        const { generateVerificationToken } = require("../utils/token");
+        const residencyToken = generateVerificationToken("residency_secondary");
+
+        return res.json({
+          success: true,
+          verified: true,
+          message: "Residency verified: Digos address and Name match found.",
+          residencyToken,
+        });
+      } else {
+        let errorMsg = "Verification Failed. ";
+        if (!hasLocation) errorMsg += "Document does not mention 'Digos'. ";
+        if (!hasName)
+          errorMsg += `Document does not mention surname '${lastName}'.`;
+
+        return res.json({
+          success: true,
+          verified: false,
+          error: errorMsg,
+        });
+      }
+    } catch (error) {
+      console.error("[OCR-RESIDENCY] Error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to process residency document",
+      });
+    }
+  }
 }
 
 const ocrController = new OCRController();
 module.exports = {
   processId: ocrController.processId.bind(ocrController),
+  processResidencyDoc: ocrController.processResidencyDoc.bind(ocrController),
 };

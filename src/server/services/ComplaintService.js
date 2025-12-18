@@ -565,37 +565,58 @@ class ComplaintService {
   async getAllComplaints(options = {}) {
     return this.complaintRepo.findAll(options);
   }
-  async updateComplaintStatus(id, workflowStatus, notes = null, userId = null) {
+  async updateComplaintStatus(id, updateData, userId = null) {
     const complaint = await this.getComplaintById(id);
-    const validStatuses = [
-      "new",
-      "assigned",
-      "in_progress",
-      "completed",
-      "cancelled",
-    ];
-    if (!validStatuses.includes(workflowStatus)) {
-      throw new Error("Invalid workflow status");
+    const {
+      status: workflowStatus,
+      priority,
+      category,
+      subcategory,
+      notes,
+    } = typeof updateData === "string"
+      ? { status: updateData, notes: userId } // Handle legacy signature if needed
+      : updateData;
+
+    const dataToUpdate = { updated_at: new Date().toISOString() };
+
+    if (workflowStatus) {
+      const validStatuses = [
+        "new",
+        "assigned",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ];
+      if (!validStatuses.includes(workflowStatus)) {
+        throw new Error("Invalid workflow status");
+      }
+      dataToUpdate.workflow_status = workflowStatus;
     }
-    const updatedComplaint = await this.complaintRepo.updateStatus(
-      id,
-      workflowStatus,
-      notes
-    );
+
+    if (priority) dataToUpdate.priority = priority;
+    if (category) dataToUpdate.category = category;
+    if (subcategory) dataToUpdate.subcategory = subcategory;
+    if (notes) dataToUpdate.coordinator_notes = notes;
+
+    const updatedComplaint = await this.complaintRepo.update(id, dataToUpdate);
+
     try {
       await this.complaintRepo.logAction(id, "status_updated", {
-        reason: `Workflow status changed to ${workflowStatus}`,
+        reason: `Complaint updated by coordinator/admin`,
         details: {
           old_status: complaint.workflow_status,
-          new_status: workflowStatus,
+          new_status: workflowStatus || complaint.workflow_status,
+          old_priority: complaint.priority,
+          new_priority: priority || complaint.priority,
           notes,
         },
       });
     } catch (error) {
       console.warn("[AUDIT] Status update logging failed:", error.message);
     }
+
     // Send notification to citizen if status changed
-    if (complaint.workflow_status !== workflowStatus) {
+    if (workflowStatus && complaint.workflow_status !== workflowStatus) {
       try {
         await this.notificationService.notifyComplaintStatusChanged(
           complaint.submitted_by,

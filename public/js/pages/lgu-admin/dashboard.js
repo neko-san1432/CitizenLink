@@ -25,6 +25,8 @@ class LguAdminDashboard {
   }
   async loadDashboardData() {
     try {
+      await this.loadAdminStats();
+      await this.loadDeptPerformance();
       await this.loadAssignments();
       await this.loadActivities();
       await this.loadAlerts();
@@ -33,7 +35,82 @@ class LguAdminDashboard {
       showMessage("error", "Failed to load dashboard data");
     }
   }
-  // Statistics loading removed - no longer needed
+  async loadAdminStats() {
+    try {
+      const response = await apiClient.get("/api/lgu-admin/statistics");
+      if (response && response.success) {
+        document.getElementById("admin-stat-total").textContent =
+          response.data.total || 0;
+        document.getElementById("admin-stat-active").textContent =
+          (response.data.pending || 0) + (response.data.in_progress || 0);
+        document.getElementById("admin-stat-resolved").textContent =
+          response.data.completed || 0;
+      }
+    } catch (error) {
+      console.error("[LGU_ADMIN_DASHBOARD] Load stats error:", error);
+    }
+  }
+
+  async loadDeptPerformance() {
+    try {
+      const response = await apiClient.get(
+        "/api/lgu-admin/department-performance"
+      );
+      if (response && response.success) {
+        this.renderDeptPerformance(response.data);
+      }
+    } catch (error) {
+      console.error(
+        "[LGU_ADMIN_DASHBOARD] Load dept performance error:",
+        error
+      );
+    }
+  }
+
+  renderDeptPerformance(data) {
+    const container = document.getElementById("dept-performance-container");
+    if (!container) return;
+    if (!data.length) {
+      container.innerHTML =
+        "<p class='p-4 text-center text-gray-500'>No performance data available.</p>";
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="performance-list grid gap-4">
+        ${data
+          .map(
+            (dept) => `
+          <div class="performance-item p-4 border rounded-lg bg-gray-50">
+            <div class="flex justify-between items-center mb-2">
+              <strong class="text-blue-700">${escapeHtml(dept.name)}</strong>
+              <span class="text-xs font-bold px-2 py-1 bg-blue-100 text-blue-800 rounded">Efficiency: ${
+                dept.efficiency
+              }%</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="text-gray-600">Backlog: <span class="font-bold text-red-600">${
+                dept.backlog
+              }</span></div>
+              <div class="text-gray-600">Resolved: <span class="font-bold text-green-600">${
+                dept.resolved
+              }</span></div>
+            </div>
+            <div class="mt-3 flex gap-2">
+              <button class="btn btn-sm btn-outline-primary" onclick="window.reassignTasks('${
+                dept.name
+              }')">Reassign</button>
+              <button class="btn btn-sm btn-outline-warning" onclick="window.overrideDecision('${
+                dept.name
+              }')">Override</button>
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+  }
   async loadAssignments() {
     try {
       const response = await apiClient.get(
@@ -110,6 +187,13 @@ class LguAdminDashboard {
             <span class="priority-badge ${priorityClass}">${
       assignment.priority
     }</span>
+            ${
+              assignment.urgency_level
+                ? `<span class="priority-badge priority-${assignment.urgency_level.toLowerCase()}" title="Citizen Reported Urgency">Citizen: ${
+                    assignment.urgency_level
+                  }</span>`
+                : ""
+            }
           </div>
         </div>
         <div class="task-content">
@@ -319,6 +403,17 @@ class LguAdminDashboard {
     }
   }
 }
+
+// Global scope helpers for LGU Admin
+window.refreshDeptPerformance = () => window.dashboard?.loadDeptPerformance();
+window.reassignTasks = (dept) => {
+  showMessage("info", `Reassigning tasks for ${dept}...`);
+  // Redirect or open modal
+};
+window.overrideDecision = (dept) => {
+  showMessage("warning", `Overriding decisions for ${dept}...`);
+  // Logic here
+};
 
 // Initialize the dashboard
 // Initialize the dashboard

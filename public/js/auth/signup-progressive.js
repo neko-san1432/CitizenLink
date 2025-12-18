@@ -112,7 +112,7 @@ if (stepsRoot) {
 
     // Save current step
     try {
-      localStorage.setItem(STEP_STORAGE_KEY, String(current));
+      sessionStorage.setItem(STEP_STORAGE_KEY, String(current));
     } catch (e) {}
   }
 
@@ -244,7 +244,19 @@ if (stepsRoot) {
   // initialize
   let initialStep = 0;
   try {
-    const saved = localStorage.getItem(STEP_STORAGE_KEY);
+    // Check if we should reset (e.g. came from a different page)
+    const referrer = document.referrer;
+    const isInternal = referrer && referrer.includes(window.location.hostname);
+    const isSignupUrl = referrer && referrer.includes("/signup");
+
+    if (!isInternal || (!isSignupUrl && referrer !== "")) {
+      // Fresh arrival from outside or different internal page - reset
+      sessionStorage.removeItem(STEP_STORAGE_KEY);
+      sessionStorage.removeItem(FORM_DATA_KEY);
+      sessionStorage.removeItem("cl_verification_complete");
+    }
+
+    const saved = sessionStorage.getItem(STEP_STORAGE_KEY);
     if (saved !== null) {
       initialStep = parseInt(saved, 10);
       if (
@@ -260,21 +272,42 @@ if (stepsRoot) {
   // Restore data before showing step
   restoreFormData();
 
-  // Ensure we don't start on a step that requires previous data if that data is missing?
-  // For now, trust the user/persistence.
+  // If resuming from a saved step, ensure the email flow is visible
+  if (initialStep > 0) {
+    const methodSection = document.getElementById("signup-method-section");
+    const emailFlow = document.getElementById("signup-email-flow");
+    if (methodSection && emailFlow) {
+      methodSection.hidden = true;
+      emailFlow.hidden = false;
+    }
+  }
+
   showStep(initialStep);
 
   // Listen for reset event from other scripts
   document.addEventListener("signup-reset", () => {
     showStep(0);
     try {
-      localStorage.removeItem(STEP_STORAGE_KEY);
+      sessionStorage.removeItem(STEP_STORAGE_KEY);
       sessionStorage.removeItem(FORM_DATA_KEY);
+      sessionStorage.removeItem("cl_verification_complete");
       // Clear inputs
-      stepsRoot
-        .querySelectorAll("input, select, textarea")
-        .forEach((i) => (i.value = ""));
+      stepsRoot.querySelectorAll("input, select, textarea").forEach((i) => {
+        if (i.type === "checkbox" || i.type === "radio") i.checked = false;
+        else i.value = "";
+      });
     } catch {}
+  });
+
+  // Global click listener for Sign Up buttons to trigger reset if already on page
+  document.addEventListener("click", (e) => {
+    const signupBtn = e.target.closest("#signup-btn");
+    if (signupBtn) {
+      // If clicking "Sign up" while already on signup page, reset flow
+      if (window.location.pathname.includes("/signup")) {
+        document.dispatchEvent(new CustomEvent("signup-reset"));
+      }
+    }
   });
 }
 

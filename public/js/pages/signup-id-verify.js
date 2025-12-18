@@ -604,8 +604,28 @@ import { supabase } from "../config/config.js";
             });
           }
 
-          status("ID Verified successfully.", "success");
-          compareWithFormData(extractedIdData);
+          // ** MIGRANT DETECTION LOGIC **
+          const address = (extractedIdData.address || "").toUpperCase();
+          const isDigos = address.includes("DIGOS");
+
+          if (isDigos) {
+            // Standard Flow: Digos ID -> Verify Address Match
+            status("ID Verified successfully.", "success");
+            compareWithFormData(extractedIdData);
+          } else {
+            // Migrant Flow: Non-Digos ID -> Require Secondary Proof
+            console.log(
+              "[ID_VERIFY] Non-Digos Address detected. Triggering Secondary Verification."
+            );
+            status("ID Valid. Non-Digos Address detected.", "warning");
+
+            // Unhide Secondary Section
+            const secSection = document.getElementById("secondary-doc-section");
+            if (secSection) secSection.hidden = false;
+
+            // Setup Secondary Upload Logic
+            setupSecondaryVerification(extractedIdData.lastName);
+          }
           return;
         }
 
@@ -978,6 +998,22 @@ import { supabase } from "../config/config.js";
       if (idHasField && formHasField) {
         const idValue = String(idFields[mapping.idField]).trim();
         const formValue = formData[mapping.formField] || "";
+
+        // MIGRANT EXCEPTION: If verified by secondary doc, skip strict address checks
+        // We assume the Form Address is correct (self-declared) and the Secondary Doc proved it.
+        if (
+          idFields.isMigrantVerified &&
+          (mapping.idField === "address" || mapping.idField === "barangay")
+        ) {
+          comparisonResults.push({
+            field: mapping.label,
+            match: true,
+            score: 100, // Auto-pass
+            idValue: idValue + " (Migrant Verified)",
+            formValue: formValue,
+          });
+          return; // Skip standard comparison
+        }
 
         let match = false;
         let score = 0;
@@ -1408,5 +1444,106 @@ import { supabase } from "../config/config.js";
 
   // Initialize
   setMode("upload");
+
+  // Helper: Setup Secondary Doc Verification
+  function setupSecondaryVerification(lastName) {
+    const fileInput = document.getElementById("secondary-file-input");
+    const verifyBtn = document.getElementById("verify-residency-btn");
+    const removeBtn = document.getElementById("secondary-remove-btn");
+    const previewBox = document.getElementById("secondary-file-preview");
+    const filenameSpan = document.getElementById("secondary-filename");
+    const statusDiv = document.getElementById("residency-status");
+
+    if (!fileInput || !verifyBtn) return;
+
+    // Reset UI
+    fileInput.value = "";
+    verifyBtn.disabled = true;
+    previewBox.classList.add("hidden");
+    statusDiv.innerHTML = "";
+    statusDiv.className = "mt-2 text-center text-sm";
+
+    // File Select Handler
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        filenameSpan.textContent = file.name;
+        previewBox.classList.remove("hidden");
+        verifyBtn.disabled = false;
+        statusDiv.innerHTML = "";
+      }
+    };
+
+    // Remove Handler
+    removeBtn.onclick = () => {
+      fileInput.value = "";
+      previewBox.classList.add("hidden");
+      verifyBtn.disabled = true;
+      statusDiv.innerHTML = "";
+    };
+
+    // Verify Handler
+    verifyBtn.onclick = async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = "Verifying...";
+      statusDiv.textContent = "Scanning document for 'Digos' and Name...";
+      statusDiv.className = "mt-2 text-center text-sm text-blue-600";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("lastName", lastName);
+
+        const res = await fetch("/api/ocr/verify-residency", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await res.json();
+
+        if (result.success && result.verified) {
+          // Success!
+          statusDiv.textContent = "✅ " + result.message;
+          statusDiv.className =
+            "mt-2 text-center text-sm text-green-600 font-bold";
+
+          // Store secondary token if present
+          if (result.residencyToken) {
+            sessionStorage.setItem(
+              "cl_verification_token",
+              result.residencyToken
+            );
+          }
+
+          setTimeout(() => {
+            document.getElementById("secondary-doc-section").hidden = true;
+            status("Residency Verified! Proceeding...", "success");
+            // Proceed to form comparison (skipping address mismatch check effectively)
+            if (typeof extractedIdData === "object") {
+              extractedIdData.isMigrantVerified = true;
+            }
+            compareWithFormData(extractedIdData);
+          }, 1500);
+        } else {
+          // Failure
+          statusDiv.textContent =
+            "❌ " + (result.error || "Verification failed");
+          statusDiv.className =
+            "mt-2 text-center text-sm text-red-600 font-bold";
+          verifyBtn.disabled = false;
+          verifyBtn.textContent = "Verify Residency";
+        }
+      } catch (e) {
+        console.error("Secondary Verify Error:", e);
+        statusDiv.textContent = "❌ System Error. Please try again.";
+        statusDiv.className = "mt-2 text-center text-sm text-red-600";
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify Residency";
+      }
+    };
+  }
+
   updateScanEnabled();
 })();

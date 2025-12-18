@@ -73,7 +73,49 @@
 
         <!-- Main Content Grid -->
         <div class="dashboard-grid">
-          <!-- Statistics section removed -->
+          <!-- System-wide Complaint Statistics -->
+          <div class="stats-grid mb-6" id="admin-stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Total Complaints</div>
+                <div class="stat-value" id="admin-stat-total">-</div>
+              </div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-content">
+                <div class="stat-label">Pending / In Progress</div>
+                <div class="stat-value" id="admin-stat-active">-</div>
+              </div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-icon">✅</div>
+              <div class="stat-content">
+                <div class="stat-label">Resolved</div>
+                <div class="stat-value" id="admin-stat-resolved">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Department Performance Overview -->
+          <div class="dashboard-section mb-6">
+            <div class="section-header">
+              <h2 class="section-title">🏢 Department Performance Overview</h2>
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="refreshDeptPerformance()"
+              >
+                Refresh
+              </button>
+            </div>
+            <div id="dept-performance-container" class="content-container">
+              <div class="loading">
+                <div class="loader-ring"></div>
+                <p>Loading performance metrics...</p>
+              </div>
+            </div>
+          </div>
 
           <!-- Recent Assignments -->
           <div class="dashboard-section">

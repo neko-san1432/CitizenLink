@@ -171,13 +171,12 @@ class ComplaintController {
 
   async updateComplaintStatus(req, res) {
     const { id } = req.params;
-    const { status, notes } = req.body;
+    const { status, priority, category, subcategory, notes } = req.body;
     const { user } = req;
 
     const complaint = await this.complaintService.updateComplaintStatus(
       id,
-      status,
-      notes,
+      { status, priority, category, subcategory, notes },
       user.id
     );
 

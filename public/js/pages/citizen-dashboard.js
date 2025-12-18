@@ -454,6 +454,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   bannerManager = new ContentBannerManager();
   // Load complaints
   await loadMyComplaints();
+  // Setup feedback listeners
+  setupFeedbackListeners();
   // Initialize role switcher for staff members
   try {
     await initializeRoleToggle();
@@ -588,6 +590,108 @@ async function loadMyComplaints() {
   }
 }
 /**
+ * Update summary statistics
+ */
+function updateSummaryStats(complaints) {
+  const stats = {
+    total: complaints.length,
+    pending: 0,
+    inProgress: 0,
+    resolved: 0,
+  };
+
+  complaints.forEach((c) => {
+    const status = (c.workflow_status || c.status || "new").toLowerCase();
+    if (status === "new" || status === "submitted") stats.pending++;
+    else if (status === "assigned" || status === "in_progress")
+      stats.inProgress++;
+    else if (
+      status === "resolved" ||
+      status === "completed" ||
+      status === "confirmed" ||
+      status === "closed"
+    )
+      stats.resolved++;
+  });
+
+  document.getElementById("stat-total-submitted").textContent = stats.total;
+  document.getElementById("stat-pending").textContent = stats.pending;
+  document.getElementById("stat-in-progress").textContent = stats.inProgress;
+  document.getElementById("stat-resolved").textContent = stats.resolved;
+
+  // Check for recently resolved complaints to show feedback section
+  checkForRecentlyResolved(complaints);
+}
+
+/**
+ * Check for recently resolved complaints to show feedback section
+ */
+function checkForRecentlyResolved(complaints) {
+  const recentlyResolved = complaints.find((c) => {
+    const status = (c.workflow_status || c.status || "").toLowerCase();
+    // Assuming we want to show feedback for 'completed' or 'resolved' that hasn't been feedback-ed yet
+    // For now, we'll just show it if there's any resolved complaint
+    return status === "completed" || status === "resolved";
+  });
+
+  const feedbackSection = document.getElementById("feedback-section");
+  if (recentlyResolved && feedbackSection) {
+    feedbackSection.classList.remove("hidden");
+    feedbackSection.dataset.complaintId = recentlyResolved.id;
+  }
+}
+
+/**
+ * Setup feedback listeners
+ */
+function setupFeedbackListeners() {
+  const ratingBtns = document.querySelectorAll(".rating-btn");
+  let selectedRating = 0;
+
+  ratingBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedRating = btn.dataset.rating;
+      ratingBtns.forEach((b) => (b.style.transform = "scale(1)"));
+      btn.style.transform = "scale(1.4)";
+    });
+  });
+
+  const submitBtn = document.getElementById("submit-feedback-btn");
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async () => {
+      const complaintId =
+        document.getElementById("feedback-section").dataset.complaintId;
+      const comment = document.getElementById("feedback-comment").value;
+
+      if (!selectedRating) {
+        showMessage("warning", "Please select a rating");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/complaints/${complaintId}/feedback`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rating: selectedRating, comment }),
+          }
+        );
+
+        if (response.ok) {
+          showMessage("success", "Thank you for your feedback!");
+          document.getElementById("feedback-section").classList.add("hidden");
+        } else {
+          throw new Error("Failed to submit feedback");
+        }
+      } catch (error) {
+        console.error("Feedback error:", error);
+        showMessage("error", "Failed to submit feedback");
+      }
+    });
+  }
+}
+/**
  * Render my complaints
  */
 function renderMyComplaints(complaints, totalCount = null) {
@@ -681,11 +785,26 @@ function renderMyComplaints(complaints, totalCount = null) {
         ${renderCompactStepper(status, complaint.confirmed_by_citizen)}
         <span class="progress-text">${getProgressText(status)}</span>
       </div>
+      ${
+        complaint.coordinator_notes
+          ? `
+      <div class="complaint-remarks animate-fade-in" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.05); border-left: 3px solid #3b82f6; border-radius: 4px;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; margin-bottom: 0.25rem;">OFFICER REMARKS</div>
+        <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">${escapeHtml(
+          complaint.coordinator_notes
+        )}</p>
+      </div>
+      `
+          : ""
+      }
     </div>
   `;
     })
     .join("");
   container.innerHTML = countInfo + html;
+
+  // Update summary stats
+  updateSummaryStats(complaints);
 
   // Attach event listeners to complaint items using event delegation
   container.querySelectorAll(".complaint-item").forEach((item) => {

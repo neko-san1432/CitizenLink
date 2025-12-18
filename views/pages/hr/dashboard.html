@@ -126,7 +126,49 @@
                 </div>
             </div>
 
-            <!-- HR action cards removed by request -->
+            <!-- Officer Performance Summary -->
+            <div class="dashboard-section glass-panel rounded-xl p-6 mb-6">
+                <div class="section-header mb-4">
+                    <h2 class="section-title text-xl font-bold">📈 Officer Performance Summary</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="refreshPerformance()">Refresh</button>
+                </div>
+                <div class="stats-grid grid grid-cols-1 md:grid-cols-3 gap-4" id="performance-summary">
+                    <div class="stat-card p-4 border rounded-lg bg-blue-50">
+                        <div class="stat-label text-sm text-blue-600 font-semibold">Total Handled</div>
+                        <div class="stat-value text-3xl font-bold" id="hr-total-handled">-</div>
+                    </div>
+                    <div class="stat-card p-4 border rounded-lg bg-green-50">
+                        <div class="stat-label text-sm text-green-600 font-semibold">Resolution Rate</div>
+                        <div class="stat-value text-3xl font-bold" id="hr-resolution-rate">-</div>
+                    </div>
+                    <div class="stat-card p-4 border rounded-lg bg-purple-50">
+                        <div class="stat-label text-sm text-purple-600 font-semibold">Avg. Resolution Time</div>
+                        <div class="stat-value text-3xl font-bold" id="hr-avg-time">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workload Distribution -->
+            <div class="dashboard-section glass-panel rounded-xl p-6 mb-6">
+                <div class="section-header mb-4">
+                    <h2 class="section-title text-xl font-bold">⚖️ Workload Distribution</h2>
+                </div>
+                <div class="content-container">
+                    <canvas id="workload-chart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Delay & Bottleneck Alerts -->
+            <div class="dashboard-section glass-panel rounded-xl p-6 mb-6">
+                <div class="section-header mb-4 text-warning">
+                    <h2 class="section-title text-xl font-bold">⚠️ Delay & Bottleneck Alerts</h2>
+                </div>
+                <div id="bottleneck-alerts" class="alerts-container grid gap-2">
+                    <div class="loading-placeholder">
+                        <p style="color: #7f8c8d; text-align: center; padding: 20px;">Checking for delays...</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- User Management -->
             <div class="section-header">

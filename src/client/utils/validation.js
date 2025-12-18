@@ -6,19 +6,17 @@
  */
 
 export const sanitizeString = (input) => {
-  if (typeof input !== 'string') return '';
-  return input
-    .trim()
-    .replace(/[<>\"'&]/g, (match) => {
-      const entityMap = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        '\'': '&#x27;',
-        '&': '&amp;'
-      };
-      return entityMap[match];
-    });
+  if (typeof input !== "string") return "";
+  return input.trim().replace(/[<>\"'&]/g, (match) => {
+    const entityMap = {
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#x27;",
+      "&": "&amp;",
+    };
+    return entityMap[match];
+  });
 };
 /**
  * Validate email format
@@ -38,7 +36,7 @@ export const isValidEmail = (email) => {
 
 export const isValidPhilippineMobile = (mobile) => {
   // Remove +63 prefix if present
-  const cleanMobile = mobile.replace(/^\+63/, '');
+  const cleanMobile = mobile.replace(/^\+63/, "");
   // Should be 10 digits starting with 9
   const mobileRegex = /^9\d{9}$/;
   return mobileRegex.test(cleanMobile);
@@ -53,8 +51,8 @@ export const validatePassword = (password) => {
   const errors = [];
   const minLength = 8;
   const maxLength = 128;
-  if (typeof password !== 'string') {
-    return { isValid: false, errors: ['Password is required'] };
+  if (typeof password !== "string") {
+    return { isValid: false, errors: ["Password is required"] };
   }
   if (password.length < minLength) {
     errors.push(`Password must be at least ${minLength} characters long`);
@@ -63,16 +61,16 @@ export const validatePassword = (password) => {
     errors.push(`Password must not exceed ${maxLength} characters`);
   }
   if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
+    errors.push("Password must contain at least one uppercase letter");
   }
   if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
+    errors.push("Password must contain at least one lowercase letter");
   }
   if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
+    errors.push("Password must contain at least one number");
   }
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push('Password must contain at least one special character');
+    errors.push("Password must contain at least one special character");
   }
   return { isValid: errors.length === 0, errors };
 };
@@ -94,42 +92,57 @@ export const validateAndSanitizeForm = (formData, rules) => {
       continue;
     }
     // Check required fields
-    if (rule.required && (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === void 0)) {
+    if (
+      rule.required &&
+      (!value ||
+        (typeof value === "string" && value.trim() === "") ||
+        value === null ||
+        value === void 0)
+    ) {
       errors.push(`${field} is required`);
       continue;
     }
     // Skip validation if field is empty and not required
-    if (!value || (typeof value === 'string' && value.trim() === '') || value === null || value === void 0) {
-      sanitizedData[field] = '';
+    if (
+      !value ||
+      (typeof value === "string" && value.trim() === "") ||
+      value === null ||
+      value === void 0
+    ) {
+      sanitizedData[field] = "";
       continue;
     }
     // Apply sanitization
     const sanitizedValue = sanitizeString(value);
     // Apply specific validations
-    if (rule.type === 'email' && !isValidEmail(sanitizedValue)) {
+    if (rule.type === "email" && !isValidEmail(sanitizedValue)) {
       errors.push(`Invalid email format for ${field}`);
     }
-    if (rule.type === 'mobile' && !isValidPhilippineMobile(sanitizedValue)) {
+    if (rule.type === "mobile" && !isValidPhilippineMobile(sanitizedValue)) {
       errors.push(`Invalid Philippine mobile number for ${field}`);
     }
-    if (rule.type === 'password') {
+    if (rule.type === "password") {
       const passwordValidation = validatePassword(sanitizedValue);
       if (!passwordValidation.isValid) {
-        errors.push(...passwordValidation.errors.map(error => `${field}: ${error}`));
+        errors.push(
+          ...passwordValidation.errors.map((error) => `${field}: ${error}`)
+        );
       }
     }
     if (rule.maxLength && sanitizedValue.length > rule.maxLength) {
       errors.push(`${field} must not exceed ${rule.maxLength} characters`);
     }
     if (rule.minLength && sanitizedValue.length < rule.minLength) {
-      errors.push(`${field} must be at least ${rule.minLength} characters long`);
+      errors.push(
+        `${field} must be at least ${rule.minLength} characters long`
+      );
     }
     sanitizedData[field] = sanitizedValue;
   }
   return {
     isValid: errors.length === 0,
     sanitizedData,
-    errors
+    errors,
   };
 };
 /**
@@ -143,7 +156,13 @@ export const validateFileUpload = (files, options = {}) => {
   const {
     maxSize = 10 * 1024 * 1024, // 10MB default
     maxFiles = 5,
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4']
+    allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "video/mp4",
+    ],
   } = options;
   const errors = [];
   if (files.length > maxFiles) {
@@ -152,15 +171,23 @@ export const validateFileUpload = (files, options = {}) => {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     if (file.size > maxSize) {
-      errors.push(`File ${file.name} exceeds maximum size of ${Math.round(maxSize / 1024 / 1024)}MB`);
+      errors.push(
+        `File ${file.name} exceeds maximum size of ${Math.round(
+          maxSize / 1024 / 1024
+        )}MB`
+      );
     }
     if (!allowedTypes.includes(file.type)) {
-      errors.push(`File ${file.name} has unsupported type. Allowed types: ${allowedTypes.join(', ')}`);
+      errors.push(
+        `File ${
+          file.name
+        } has unsupported type. Allowed types: ${allowedTypes.join(", ")}`
+      );
     }
   }
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 /**
@@ -178,7 +205,13 @@ export const validateFileUpload = (files, options = {}) => {
 export const validateFiles = (newFiles, existingFiles = [], options = {}) => {
   const maxSize = options.maxSize ?? 10 * 1024 * 1024;
   const maxFiles = options.maxFiles ?? 5;
-  const allowedTypes = options.allowedTypes ?? ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+  const allowedTypes = options.allowedTypes ?? [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+    "video/mp4",
+  ];
   const errors = [];
   const validFiles = [];
   if (!newFiles || newFiles.length === 0) {
@@ -207,7 +240,10 @@ export const validateFiles = (newFiles, existingFiles = [], options = {}) => {
     }
     // Duplicate check
     const key = existingKey(file);
-    if (existingSet.has(key) || validFiles.some((f) => existingKey(f) === key)) {
+    if (
+      existingSet.has(key) ||
+      validFiles.some((f) => existingKey(f) === key)
+    ) {
       errors.push(`File ${file.name} is already selected`);
       continue;
     }
@@ -224,40 +260,43 @@ export const setupRealtimeValidation = (form) => {
   if (!form) return;
   const setError = (input, message) => {
     if (!input) return;
-    input.setCustomValidity(message || '');
+    input.setCustomValidity(message || "");
     // Do not spam reportValidity on each keystroke; only clear silently
     if (!message) return;
-    try { input.reportValidity(); } catch {}
+    try {
+      input.reportValidity();
+    } catch {}
   };
   const rules = {
-    '#complaintTitle': { required: true, minLength: 3 },
-    '#description': { required: true, minLength: 10 },
-    '#location': { required: true },
-    '#complaintCategory': { required: true },
-    '#complaintSubcategory': { required: true },
+    "#complaintTitle": { required: true, minLength: 3 },
+    "#description": { required: true, minLength: 10 },
+    "#location": { required: true },
+    "#complaintCategory": { required: true },
+    "#complaintSubcategory": { required: true },
+    "#urgencyLevel": { required: true },
   };
   const validateTarget = (selector) => {
     const input = form.querySelector(selector);
     if (!input) return;
-    const value = (input.value || '').trim();
+    const value = (input.value || "").trim();
     const rule = rules[selector] || {};
     if (rule.required && !value) {
-      return setError(input, 'This field is required');
+      return setError(input, "This field is required");
     }
     if (rule.minLength && value.length < rule.minLength) {
       return setError(input, `Must be at least ${rule.minLength} characters`);
     }
-    setError(input, '');
+    setError(input, "");
   };
   // Wire inputs
   Object.keys(rules).forEach((selector) => {
     const input = form.querySelector(selector);
     if (!input) return;
-    const formGroup = input.closest('.form-group');
-    ['input', 'change', 'blur'].forEach((evt) => {
+    const formGroup = input.closest(".form-group");
+    ["input", "change", "blur"].forEach((evt) => {
       input.addEventListener(evt, () => {
         // Add touched class when user interacts with the field
-        if (formGroup) formGroup.classList.add('touched');
+        if (formGroup) formGroup.classList.add("touched");
         validateTarget(selector);
       });
     });
@@ -275,29 +314,32 @@ export const extractComplaintFormData = (formElement) => {
   if (!formElement) return {};
   const getVal = (selector) => {
     const el = formElement.querySelector(selector);
-    return el ? el.value.trim() : '';
+    return el ? el.value.trim() : "";
   };
   const parseNum = (selector) => {
     const v = getVal(selector);
-    if (v === '') return null;
+    if (v === "") return null;
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   };
   // Collect selected departments (checkboxes inside #departmentCheckboxes)
   const departments = Array.from(
-    formElement.querySelectorAll('#departmentCheckboxes input[type="checkbox"]:checked')
+    formElement.querySelectorAll(
+      '#departmentCheckboxes input[type="checkbox"]:checked'
+    )
   ).map((cb) => cb.value);
   return {
-    title: getVal('#complaintTitle'),
+    title: getVal("#complaintTitle"),
     // type field removed - not in current schema
     // subtype field removed - not in current schema
-    category: getVal('#complaintCategory'),
-    subcategory: getVal('#complaintSubcategory'),
-    description: getVal('#description'),
-    location_text: getVal('#location'),
-    latitude: parseNum('#latitude'),
-    longitude: parseNum('#longitude'),
-    departments
+    category: getVal("#complaintCategory"),
+    subcategory: getVal("#complaintSubcategory"),
+    description: getVal("#description"),
+    location_text: getVal("#location"),
+    latitude: parseNum("#latitude"),
+    longitude: parseNum("#longitude"),
+    urgency_level: getVal("#urgencyLevel"),
+    departments,
   };
 };
 
@@ -310,16 +352,16 @@ export const extractComplaintFormData = (formElement) => {
  */
 export const isWithinCityBoundary = async (latitude, longitude) => {
   try {
-    const { isWithinDigosBoundary } = await import('./boundaryValidator.js');
+    const { isWithinDigosBoundary } = await import("./boundaryValidator.js");
     return await isWithinDigosBoundary(latitude, longitude);
   } catch (error) {
-    console.warn('[VALIDATION] Boundary check failed:', error);
+    console.warn("[VALIDATION] Boundary check failed:", error);
     // Fallback: Simple bounding box check for Digos City
     // Based on actual bounds from boundary file
     const minLat = 6.723539;
     const maxLat = 6.985025;
     const minLng = 125.245633;
-    const maxLng = 125.391290;
+    const maxLng = 125.39129;
     return (
       latitude >= minLat &&
       latitude <= maxLat &&
@@ -337,35 +379,41 @@ export const isWithinCityBoundary = async (latitude, longitude) => {
 export const validateComplaintForm = (data) => {
   const errors = [];
   if (!data) {
-    return { valid: false, errors: ['Invalid form data'] };
+    return { valid: false, errors: ["Invalid form data"] };
   }
-  const title = sanitizeString(data.title || '');
-  const description = sanitizeString(data.description || '');
-  const locationText = sanitizeString(data.location_text || '');
-  const category = sanitizeString(data.category || '');
-  const subcategory = sanitizeString(data.subcategory || '');
-  if (!title || title.trim().length === 0) errors.push('Title is required');
-  if (title && title.length < 3) errors.push('Title must be at least 3 characters');
-  if (!description || description.trim().length === 0) errors.push('Description is required');
-  if (description && description.length < 10) errors.push('Description must be at least 10 characters');
-  if (!locationText) errors.push('Location is required');
+  const title = sanitizeString(data.title || "");
+  const description = sanitizeString(data.description || "");
+  const locationText = sanitizeString(data.location_text || "");
+  const category = sanitizeString(data.category || "");
+  const subcategory = sanitizeString(data.subcategory || "");
+  if (!title || title.trim().length === 0) errors.push("Title is required");
+  if (title && title.length < 3)
+    errors.push("Title must be at least 3 characters");
+  if (!description || description.trim().length === 0)
+    errors.push("Description is required");
+  if (description && description.length < 10)
+    errors.push("Description must be at least 10 characters");
+  if (!locationText) errors.push("Location is required");
   // Validate hierarchical form fields
-  if (!category) errors.push('Category is required');
-  if (!subcategory) errors.push('Subcategory is required');
+  if (!category) errors.push("Category is required");
+  if (!subcategory) errors.push("Subcategory is required");
+  if (!data.urgency_level) errors.push("Urgency level is required");
   // Validate departments
   if (!data.departments || data.departments.length === 0) {
-    errors.push('At least one department must be selected');
+    errors.push("At least one department must be selected");
   }
   // If one coordinate is provided, both should be valid numbers
   const hasLat = data.latitude !== null && data.latitude !== void 0;
   const hasLng = data.longitude !== null && data.longitude !== void 0;
   if ((hasLat && !hasLng) || (!hasLat && hasLng)) {
-    errors.push('Both latitude and longitude must be provided');
+    errors.push("Both latitude and longitude must be provided");
   }
   if (hasLat && hasLng) {
-
-    if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
-      errors.push('Coordinates must be numeric');
+    if (
+      typeof data.latitude !== "number" ||
+      typeof data.longitude !== "number"
+    ) {
+      errors.push("Coordinates must be numeric");
     }
     // Note: Boundary check is async, so it should be done separately before form submission
     // This validation function is synchronous, so boundary check happens in the form handler
@@ -380,17 +428,20 @@ export const validateComplaintForm = (data) => {
  * @returns {Promise<{valid: boolean, error?: string}>}
  */
 export const validateComplaintCoordinates = async (latitude, longitude) => {
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-    return { valid: false, error: 'Coordinates must be numeric' };
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return { valid: false, error: "Coordinates must be numeric" };
   }
 
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-    return { valid: false, error: 'Invalid coordinate values' };
+    return { valid: false, error: "Invalid coordinate values" };
   }
 
   const withinBoundary = await isWithinCityBoundary(latitude, longitude);
   if (!withinBoundary) {
-    return { valid: false, error: 'Complaint location must be within Digos City boundaries' };
+    return {
+      valid: false,
+      error: "Complaint location must be within Digos City boundaries",
+    };
   }
 
   return { valid: true };
