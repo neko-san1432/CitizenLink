@@ -242,8 +242,7 @@ function renderProfile(profile) {
       addressLine2Display.style.display = "none";
     }
   }
-  if (cityDisplay) cityDisplay.textContent = city;
-  if (provinceDisplay) provinceDisplay.textContent = province;
+
   if (postalDisplay) postalDisplay.textContent = postalCode || "—";
   if (barangayDisplay) barangayDisplay.textContent = barangay || "—";
 }
@@ -969,16 +968,7 @@ function wireAddressEdit() {
     if (line2El && line2Display)
       line2El.value =
         line2Display.textContent === "—" ? "" : line2Display.textContent;
-    if (cityEl && cityDisplay)
-      cityEl.value =
-        cityDisplay.textContent === "—"
-          ? "Digos City"
-          : cityDisplay.textContent;
-    if (provinceEl && provinceDisplay)
-      provinceEl.value =
-        provinceDisplay.textContent === "—"
-          ? "Davao del Sur"
-          : provinceDisplay.textContent;
+
     if (postalEl && postalDisplay)
       postalEl.value =
         postalDisplay.textContent === "—" ? "" : postalDisplay.textContent;
@@ -1000,12 +990,8 @@ function wireAddressEdit() {
       document.getElementById("edit-address-line-1")?.value.trim() || "";
     const line2 =
       document.getElementById("edit-address-line-2")?.value.trim() || "";
-    const city =
-      document.getElementById("edit-address-city")?.value.trim() ||
-      "Digos City";
-    const province =
-      document.getElementById("edit-address-province")?.value.trim() ||
-      "Davao del Sur";
+    const city = "Digos City";
+    const province = "Davao del Sur";
     const postalCode =
       document.getElementById("edit-address-postal")?.value.trim() || "";
     const barangay =
