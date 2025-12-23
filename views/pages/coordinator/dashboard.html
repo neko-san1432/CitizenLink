@@ -32,122 +32,8 @@
 
       <div id="app" class="collapsible coordinator-dashboard">
         <!-- Standard Dashboard Header -->
-        <div class="dashboard-header">
-          <div class="dashboard-title-group">
-            <h1>📋 Complaint Coordinator Dashboard</h1>
-            <p class="dashboard-subtitle">
-              Intelligent complaint review and management system
-            </p>
-          </div>
-          <div class="header-quick-actions">
-            <a
-              class="quick-action-btn quick-action-btn--sm"
-              href="/review-queue"
-            >
-              <div class="quick-action-icon">📋</div>
-              <div class="quick-action-text">Review</div>
-            </a>
-            <a class="quick-action-btn quick-action-btn--sm" href="/heatmap">
-              <div class="quick-action-icon">🗺️</div>
-              <div class="quick-action-text">Heatmap</div>
-            </a>
-            <a class="quick-action-btn quick-action-btn--sm" href="/myProfile">
-              <div class="quick-action-icon">👤</div>
-              <div class="quick-action-text">Profile</div>
-            </a>
-            <a
-              class="quick-action-btn quick-action-btn--sm"
-              href="/departments"
-            >
-              <div class="quick-action-icon">🏢</div>
-              <div class="quick-action-text">Depts</div>
-            </a>
-          </div>
-        </div>
 
-        <!-- Statistics Grid -->
-        <div class="stats-grid" id="stats-grid">
-          <div class="stat-card urgent">
-            <div class="stat-icon">⏰</div>
-            <div class="stat-content">
-              <div class="stat-label">Pending Reviews</div>
-              <div class="stat-value" id="stat-pending">-</div>
-              <div class="stat-trend" id="pending-trend"></div>
-            </div>
-          </div>
-          <div class="stat-card warning">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <div class="stat-label">Reviews (7 days)</div>
-              <div class="stat-value" id="stat-reviews">-</div>
-              <div class="stat-trend" id="reviews-trend"></div>
-            </div>
-          </div>
-          <div class="stat-card success">
-            <div class="stat-icon">🔗</div>
-            <div class="stat-content">
-              <div class="stat-label">Duplicates Merged</div>
-              <div class="stat-value" id="stat-duplicates">-</div>
-              <div class="stat-trend" id="duplicates-trend"></div>
-            </div>
-          </div>
-          <div class="stat-card info">
-            <div class="stat-icon">📤</div>
-            <div class="stat-content">
-              <div class="stat-label">Assignments Made</div>
-              <div class="stat-value" id="stat-assignments">-</div>
-              <div class="stat-trend" id="assignments-trend"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Main Content Grid -->
-        <div class="dashboard-grid">
-          <!-- Review Queue Section -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">📋 Review Queue</h2>
-              <div class="section-controls">
-                <select id="queue-filter" class="filter-select">
-                  <option value="all">All Complaints</option>
-                  <option value="urgent">Urgent Only</option>
-                  <option value="high">High Priority</option>
-                  <option value="duplicates">Potential Duplicates</option>
-                </select>
-                <button class="btn btn-primary" id="view-full-queue-btn">
-                  View Full Queue
-                </button>
-              </div>
-            </div>
-            <div id="review-queue-container" class="content-container">
-              <div class="loading">
-                <div class="spinner"></div>
-                <p>Loading review queue...</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Activity -->
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">🕒 Recent Activity</h2>
-              <div class="section-controls">
-                <button class="btn btn-secondary" id="refresh-activity-btn">
-                  Refresh
-                </button>
-              </div>
-            </div>
-            <div id="activity-container" class="content-container">
-              <div class="activity-list">
-                <div class="loading">
-                  <div class="spinner"></div>
-                  <p>Loading recent activity...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <!-- Content removed -->
     </div>
 
     <div id="toast-container" class="toast-container"></div>
@@ -162,7 +48,7 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/coordinator/dashboard.js"></script>
+    <!-- <script type="module" src="../../js/coordinator/dashboard.js"></script> -->
 
     <script type="module">
       // Initialize toast notification service
