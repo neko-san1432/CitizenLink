@@ -1,7 +1,8 @@
 /* Viewport Fix - Ensures all dashboard components fit within 100% viewport */
 
 /* Global viewport constraints */
-html, body {
+html,
+body {
   height: 100%;
   max-height: 100vh;
   overflow: hidden;
@@ -37,7 +38,7 @@ html, body {
 /* Ensure dashboard content sits below fixed header on all viewports */
 #app.citizen-dashboard {
   margin-top: 0;
-  max-height: calc(100vh - 64px);
+  max-height: 100%;
 }
 
 /* Dashboard containers - fit within available space */
@@ -85,9 +86,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 16px; 
-    padding-right: 16px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
@@ -97,9 +98,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 24px; 
-    padding-right: 24px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 24px;
+    padding-right: 24px;
   }
 }
 
@@ -109,9 +110,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 32px; 
-    padding-right: 32px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }
 
@@ -121,9 +122,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 80px; 
-    padding-right: 80px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 80px;
+    padding-right: 80px;
   }
 }
 
@@ -133,9 +134,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 120px; 
-    padding-right: 120px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 120px;
+    padding-right: 120px;
   }
 }
 
@@ -146,9 +147,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 16px; 
-    padding-right: 16px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
@@ -158,9 +159,9 @@ html, body {
   .hr-dashboard:not(.heatmap-page),
   .lgu-admin-dashboard:not(.heatmap-page),
   .superadmin-dashboard:not(.heatmap-page),
-  .lgu-officer-dashboard:not(.heatmap-page) { 
-    padding-left: 120px; 
-    padding-right: 120px; 
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 120px;
+    padding-right: 120px;
   }
 }
 
@@ -212,22 +213,22 @@ html, body {
   .dashboard-container {
     padding: 0 var(--space-2);
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
-  
+
   .quick-actions-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-2);
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-2);
   }
-  
+
   /* Ensure proper header spacing on mobile (already handled globally) */
 }
 
@@ -235,33 +236,33 @@ html, body {
   .dashboard-container {
     padding: 0 var(--space-1);
   }
-  
+
   .quick-actions-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   /* Extra small screens */
   .dashboard-header h1 {
     font-size: 1.5rem;
   }
-  
+
   .dashboard-subtitle {
     font-size: 0.9rem;
   }
-  
+
   .quick-action-btn {
     min-height: 60px;
     padding: var(--space-2);
   }
-  
+
   .quick-action-icon {
     font-size: 1.2rem;
   }
-  
+
   .quick-action-text {
     font-size: 0.8rem;
   }

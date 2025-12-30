@@ -17,7 +17,6 @@ class LguAdminAssignments {
   constructor() {
     this.assignments = [];
     this.officers = [];
-    this.complaints = [];
     this.currentComplaintId = null;
     this.selectedComplaint = null;
     this.currentAssignmentFilter = "all"; // For client-side filtering (all, unassigned, assigned)
@@ -25,18 +24,21 @@ class LguAdminAssignments {
       status: "all",
       priority: "all",
       sub_type: "all",
+      date_start: "",
+      date_end: "",
     };
     this.currentPage = 1;
     this.itemsPerPage = 10;
     this.totalItems = 0;
     this.stats = { unassigned: 0, urgent: 0, high: 0 };
+    this.uniqueSubcategories = new Set();
     this.initialize();
   }
   async initialize() {
     // Show loading state initially
     this.showLoadingState();
     try {
-      await this.loadComplaints();
+      // Load officers and assignments (paginated)
       await this.loadOfficers();
       await this.loadAssignments();
       this.renderAssignments();
@@ -44,21 +46,6 @@ class LguAdminAssignments {
       console.error("[LGU_ADMIN_ASSIGNMENTS] Initialization error:", error);
       this.hideLoadingState();
       showMessage("error", "Failed to initialize assignments page");
-    }
-  }
-  async loadComplaints() {
-    try {
-      const response = await apiClient.get("/api/lgu-admin/department-queue");
-      if (response && response.success) {
-        this.complaints = response.data || [];
-      } else {
-        throw new Error(response?.error || "Failed to load complaints");
-      }
-    } catch (error) {
-      console.error("[LGU_ADMIN_ASSIGNMENTS] Load complaints error:", error);
-      this.hideLoadingState();
-      showMessage("error", "Failed to load complaints");
-      this.complaints = [];
     }
   }
   async loadAssignments() {
@@ -70,6 +57,10 @@ class LguAdminAssignments {
         queryParams.append("priority", this.filters.priority);
       if (this.filters.sub_type !== "all")
         queryParams.append("sub_type", this.filters.sub_type);
+      if (this.filters.date_start)
+        queryParams.append("date_start", this.filters.date_start);
+      if (this.filters.date_end)
+        queryParams.append("date_end", this.filters.date_end);
 
       // Add pagination params
       queryParams.append("page", this.currentPage);
@@ -87,6 +78,14 @@ class LguAdminAssignments {
         const newAssignments = response.data || [];
         this.totalItems = response.pagination?.total || 0;
         this.stats = response.stats || { unassigned: 0, urgent: 0, high: 0 };
+
+        // Populate dynamic subcategories from metadata if available, or accumulate from data
+        if (response.unique_subcategories) {
+          this.updateSubcategoryFilter(response.unique_subcategories);
+        } else {
+          // Fallback: extract from current page (less ideal but functional)
+          this.extractSubcategories(newAssignments);
+        }
 
         // Append or Replace
         if (this.currentPage === 1) {
@@ -111,6 +110,48 @@ class LguAdminAssignments {
       }
     }
   }
+
+  extractSubcategories(assignments) {
+    let hasNew = false;
+    assignments.forEach((a) => {
+      // Assuming 'subcategory' or 'complaint_type' field exists
+      const subtype = a.subcategory || a.complaint_type;
+      if (subtype && !this.uniqueSubcategories.has(subtype)) {
+        this.uniqueSubcategories.add(subtype);
+        hasNew = true;
+      }
+    });
+
+    if (hasNew) {
+      this.updateSubcategoryFilter(Array.from(this.uniqueSubcategories));
+    }
+  }
+
+  updateSubcategoryFilter(subtypes) {
+    const select = document.getElementById("subtype-filter");
+    if (!select) return;
+
+    // Keep "All" option
+    const currentVal = select.value;
+
+    // Clear current options except "All"
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    subtypes.sort().forEach((subtype) => {
+      const option = document.createElement("option");
+      option.value = subtype;
+      option.textContent = subtype;
+      select.appendChild(option);
+    });
+
+    // Restore selection if valid
+    if (subtypes.includes(currentVal)) {
+      select.value = currentVal;
+    }
+  }
+
   async loadOfficers() {
     try {
       const response = await apiClient.get(
@@ -131,9 +172,16 @@ class LguAdminAssignments {
   showLoadingState() {
     const loadingState = document.getElementById("loading-state");
     const assignmentsList = document.getElementById("assignments-list");
+    const assignmentsTable = document.getElementById(
+      "assignments-table-container"
+    );
+    const tableBody = document.getElementById("assignments-table-body");
     const emptyState = document.getElementById("empty-state");
+
     if (loadingState) loadingState.style.display = "block";
     if (assignmentsList) assignmentsList.style.display = "none";
+    if (assignmentsTable) assignmentsTable.classList.add("hidden");
+    if (tableBody) tableBody.innerHTML = ""; // Clear potential duplicate spinner
     if (emptyState) emptyState.style.display = "none";
   }
   hideLoadingState() {
@@ -187,6 +235,8 @@ class LguAdminAssignments {
     const subTypeFilter =
       document.getElementById("subtype-filter") ||
       document.getElementById("sub-type-filter");
+    const dateStart = document.getElementById("date-start");
+    const dateEnd = document.getElementById("date-end");
     const refreshBtn = document.getElementById("refresh-btn");
 
     if (statusFilter) {
@@ -204,6 +254,18 @@ class LguAdminAssignments {
     if (subTypeFilter) {
       subTypeFilter.addEventListener("change", (e) => {
         this.filters.sub_type = e.target.value;
+        this.applyFilters();
+      });
+    }
+    if (dateStart) {
+      dateStart.addEventListener("change", (e) => {
+        this.filters.date_start = e.target.value;
+        this.applyFilters();
+      });
+    }
+    if (dateEnd) {
+      dateEnd.addEventListener("change", (e) => {
+        this.filters.date_end = e.target.value;
         this.applyFilters();
       });
     }
@@ -281,6 +343,10 @@ class LguAdminAssignments {
     const tableBody = document.getElementById("assignments-table-body");
     const paginationControls = document.getElementById("pagination-controls");
 
+    if (tableContainer) {
+      tableContainer.classList.remove("hidden");
+    }
+
     // Legacy support (if elements missing)
     const assignmentsList = document.getElementById("assignments-list");
 
@@ -311,7 +377,7 @@ class LguAdminAssignments {
         </tr>
       `;
       tableContainer.style.display = "block";
-      this.updateLoadMoreControls(totalItems);
+      this.updatePaginationControls();
       this.updateStats();
       return;
     }
@@ -323,22 +389,19 @@ class LguAdminAssignments {
     tableContainer.style.display = "block";
 
     // Update controls
-    this.updateLoadMoreControls(totalItems);
+    this.updatePaginationControls();
 
     // Update stats
     this.updateStats();
 
     // Add event listeners
     this.setupAssignmentActionListeners();
-
-    // Setup Infinite Scroll
-    this.setupInfiniteScroll();
   }
 
   getPaginatedData() {
     // Deprecated for slicing, just passes thru data
     return { paginatedData: this.assignments, totalItems: this.totalItems };
-  } 
+  }
 
   async loadMore() {
     const btn = document.getElementById("load-more-btn");
@@ -383,42 +446,85 @@ class LguAdminAssignments {
     this.observer.observe(loadMoreBtn);
   }
 
-  updateLoadMoreControls(totalItems) {
-    const container = document.getElementById("load-more-container");
-    const loadMoreBtn = document.getElementById("load-more-btn");
-    const currentCountEl = document.getElementById("current-count");
-    const totalItemsEl = document.getElementById("total-items");
-
+  updatePaginationControls() {
+    const container = document.getElementById("pagination-controls");
     if (!container) return;
 
-    if (currentCountEl) currentCountEl.textContent = this.assignments.length;
+    // Show container if we have items or filters are active (to show 0 results)
+    container.classList.remove("hidden");
+    container.style.display = "flex";
+
+    const totalItems = this.totalItems;
+    const currentPage = this.currentPage;
+    const limit = this.itemsPerPage;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Calculate start and end
+    const start = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
+    const end = Math.min(currentPage * limit, totalItems);
+
+    // Update text
+    const pageStartEl = document.getElementById("page-start");
+    const pageEndEl = document.getElementById("page-end");
+    const totalItemsEl = document.getElementById("total-items");
+    const currentPageDisplay = document.getElementById("current-page-display");
+
+    if (pageStartEl) pageStartEl.textContent = start;
+    if (pageEndEl) pageEndEl.textContent = end;
     if (totalItemsEl) totalItemsEl.textContent = totalItems;
+    if (currentPageDisplay)
+      currentPageDisplay.textContent = `Page ${currentPage} of ${
+        totalPages || 1
+      }`;
 
-    // Show container if we have items
-    container.style.display = this.assignments.length > 0 ? "flex" : "none";
+    // Update buttons
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const prevBtnMobile = document.getElementById("prev-btn-mobile");
+    const nextBtnMobile = document.getElementById("next-btn-mobile");
 
-    // Show/Hide Load More Button
-    if (loadMoreBtn) {
-      if (this.assignments.length >= totalItems) {
-        loadMoreBtn.style.display = "none";
-      } else {
-        loadMoreBtn.style.display = "flex";
-        // Ensure listener is not duplicated
-        const newBtn = loadMoreBtn.cloneNode(true);
-        loadMoreBtn.parentNode.replaceChild(newBtn, loadMoreBtn);
-        newBtn.onclick = () => this.loadMore();
+    this.setupPaginationButton(prevBtn, currentPage > 1, currentPage - 1);
+    this.setupPaginationButton(
+      nextBtn,
+      currentPage < totalPages,
+      currentPage + 1
+    );
+    this.setupPaginationButton(prevBtnMobile, currentPage > 1, currentPage - 1);
+    this.setupPaginationButton(
+      nextBtnMobile,
+      currentPage < totalPages,
+      currentPage + 1
+    );
+  }
+
+  setupPaginationButton(btn, isEnabled, targetPage) {
+    if (!btn) return;
+
+    btn.disabled = !isEnabled;
+    if (isEnabled) {
+      // Remove old listeners to prevent duplicates
+      const newBtn = btn.cloneNode(true);
+      if (btn.parentNode) {
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.onclick = () => this.changePage(targetPage);
       }
     }
   }
 
-  // Legacy/Deprecated
-  updatePaginationControls(totalItems) {}
+  // Legacy Loop/Load More - Removed
+  updateLoadMoreControls() {}
 
   async changePage(newPage) {
-    // Used for reset filters
+    if (newPage < 1) return;
     this.currentPage = newPage;
-    this.assignments = []; // Clear
-    this.showLoadingState();
+    this.assignments = []; // Clear current list
+
+    // Show spinner in table
+    const tableBody = document.getElementById("assignments-table-body");
+    if (tableBody) {
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8"><div class="loading-spinner"></div></td></tr>`;
+    }
+
     await this.loadAssignments();
     this.renderAssignments();
   }
@@ -447,7 +553,10 @@ class LguAdminAssignments {
       <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
         <td style="padding: 1rem; color: #718096; font-size: 0.875rem;">
           #${
-            assignment.complaint_id ? assignment.complaint_id.slice(-8) : "N/A"
+            assignment.display_id ||
+            (assignment.complaint_id
+              ? assignment.complaint_id.slice(-8)
+              : "N/A")
           }
         </td>
         <td style="padding: 1rem;">

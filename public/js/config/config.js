@@ -39,12 +39,10 @@ async function initializeSupabase() {
 
       // Ensure Supabase library is loaded
       if (!window.supabase || !window.supabase.createClient) {
-        console.error("[Config] Supabase library check failed:", {
-          windowSupabase: window.supabase,
-          hasCreateClient: window.supabase && !!window.supabase.createClient,
-          typeofSupabase: typeof window.supabase,
-          keys: window.supabase ? Object.keys(window.supabase) : [],
-        });
+        console.error(
+          "[Config] Supabase library check failed. window.supabase:",
+          typeof window.supabase
+        );
         throw new Error("Supabase library not loaded. Check script inclusion.");
       }
       const { createClient } = window.supabase;
@@ -152,3 +150,8 @@ class SecureDatabaseClient {
 }
 
 export const db = new SecureDatabaseClient();
+
+export const brandConfig = {
+  name: "CitizenLink",
+  dashboardUrl: "/dashboard",
+};

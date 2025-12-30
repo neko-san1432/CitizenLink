@@ -21,6 +21,173 @@ const NOTIFICATION_PRIORITY = {
 };
 class LguAdminController {
   /**
+   * Get dashboard statistics
+   * Returns aggregated metrics for the dashboard
+   */
+  async getDashboardStats(req, res) {
+    try {
+      const userRole = req.user.role;
+      // Extract department from user metadata
+      const departmentCode =
+        req.user.department ||
+        req.user.metadata?.department ||
+        req.user.raw_user_meta_data?.department ||
+        req.user.raw_user_meta_data?.dpt;
+
+      if (!departmentCode) {
+        return res.status(400).json({
+          success: false,
+          error: "Department not specified in user metadata.",
+        });
+      }
+
+      // Get department details
+      const { data: department, error: deptError } = await supabase
+        .from("departments")
+        .select("id, name, code")
+        .eq("code", departmentCode)
+        .single();
+
+      if (deptError || !department) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Department not found" });
+      }
+
+      // 1. Parallel Count Queries (Case Insensitive)
+      const [totalActive, unassigned, urgent, high, medium, low] =
+        await Promise.all([
+          // Total Active
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .neq("workflow_status", "completed")
+            .neq("workflow_status", "Completed")
+            .neq("workflow_status", "COMPLETED")
+            .then((res) => res.count || 0),
+
+          // Unassigned
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("workflow_status", [
+              "new",
+              "pending",
+              "unassigned",
+              "New",
+              "Pending",
+              "Unassigned",
+              "NEW",
+              "PENDING",
+              "UNASSIGNED",
+            ])
+            .then((res) => res.count || 0),
+
+          // Priority Counts (Active Only)
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["urgent", "Urgent", "URGENT"])
+            .neq("workflow_status", "completed")
+            .then((res) => res.count || 0),
+
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["high", "High", "HIGH"])
+            .neq("workflow_status", "completed")
+            .then((res) => res.count || 0),
+
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["medium", "Medium", "MEDIUM"])
+            .neq("workflow_status", "completed")
+            .then((res) => res.count || 0),
+
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["low", "Low", "LOW"])
+            .neq("workflow_status", "completed")
+            .then((res) => res.count || 0),
+        ]);
+
+      // 2. Recent Unassigned (Limit 5)
+      const { data: recentUnassigned } = await supabase
+        .from("complaints")
+        .select("id, title, submitted_at, location_text, priority")
+        .contains("department_r", [departmentCode])
+        .in("workflow_status", [
+          "new",
+          "pending",
+          "unassigned",
+          "New",
+          "Pending",
+          "Unassigned",
+          "NEW",
+          "PENDING",
+          "UNASSIGNED",
+        ])
+        .order("submitted_at", { ascending: false })
+        .limit(5);
+
+      // 3. Trend Data (Last 7 Days)
+      // Approximate by fetching submission dates
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data: trendData } = await supabase
+        .from("complaints")
+        .select("submitted_at")
+        .contains("department_r", [departmentCode])
+        .gte("submitted_at", sevenDaysAgo.toISOString());
+
+      // Aggregate trend in JS
+      const dailyCounts = {};
+      if (trendData) {
+        trendData.forEach((c) => {
+          const date = new Date(c.submitted_at).toISOString().split("T")[0];
+          dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+        });
+      }
+
+      res.json({
+        success: true,
+        stats: {
+          total_active: totalActive,
+          unassigned: unassigned,
+          priority: {
+            urgent,
+            high,
+            medium,
+            low,
+          },
+        },
+        charts: {
+          trend: dailyCounts,
+        },
+        lists: {
+          recent_unassigned: recentUnassigned || [],
+        },
+      });
+    } catch (error) {
+      console.error("[LGU_ADMIN] Get dashboard stats error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch dashboard stats",
+        details: error.message,
+      });
+    }
+  }
+
+  /**
    * Get department queue
    * Returns complaints assigned to the admin's department
    */
@@ -495,116 +662,154 @@ class LguAdminController {
   /**
    * Get department assignments
    * Returns complaints assigned to the admin's department that need officer assignment
+   * OPTIMIZED: Uses server-side pagination on the complaints table
    */
   async getDepartmentAssignments(req, res) {
     try {
-      const userId = req.user.id;
       const userRole = req.user.role;
-      const metadata = req.user.metadata || {};
       const {
         status,
-        sub_type,
         priority,
         page = 1,
         limit = 10,
         assignment_filter,
-      } = req.query; // Get filters and pagination from query params
+        sub_type,
+        date_start,
+        date_end,
+      } = req.query;
 
-      // Enhanced debug logging
+      // Calculate pagination range
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const from = (pageNum - 1) * limitNum;
+      const to = from + limitNum - 1;
 
-      // Extract department from user metadata (check multiple possible field names)
+      // Extract department from user metadata
       const departmentCode =
         req.user.department ||
         req.user.metadata?.department ||
         req.user.raw_user_meta_data?.department ||
         req.user.raw_user_meta_data?.dpt;
 
-      // console.log removed for security
-
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-
       if (!departmentCode) {
-        console.error("[LGU_ADMIN] No department found in user metadata:", {
-          userRole,
-          department: req.user.department,
-          metadata: req.user.metadata,
-          rawMetadata: req.user.raw_user_meta_data,
+        // Fallback for testing environment if needed, otherwise error
+        console.error("[LGU_ADMIN] No department found in user metadata");
+        return res.status(400).json({
+          success: false,
+          error: "Department not specified in user metadata.",
         });
-        // For debugging, let's try to find any department and use it temporarily
-        // console.log removed for security
-        const { data: defaultDept } = await supabase
-          .from("departments")
-          .select("id, name, code")
-          .eq("is_active", true)
-          .eq("level", "LGU")
-          .limit(1)
-          .single();
-        if (defaultDept) {
-          // console.log removed for security
-          // Continue with the default department for testing
-        } else {
-          return res.status(400).json({
-            success: false,
-            error:
-              "Department not specified in user metadata. Please contact administrator to set your department.",
-            details: {
-              userRole,
-              hasMetadata: Boolean(req.user.metadata),
-              hasRawMetadata: Boolean(req.user.raw_user_meta_data),
-              metadataKeys: Object.keys(req.user.metadata || {}),
-              rawMetadataKeys: Object.keys(req.user.raw_user_meta_data || {}),
-            },
-          });
-        }
       }
-      // Get the department ID
+
+      // Get department ID
       const { data: department, error: deptError } = await supabase
         .from("departments")
         .select("id, name")
         .eq("code", departmentCode)
         .single();
+
       if (deptError || !department) {
-        console.error("[LGU_ADMIN] Department not found:", {
-          departmentCode,
-          error: deptError,
-        });
         return res.status(404).json({
           success: false,
           error: "Department not found",
         });
       }
-      // Step 1: Get all complaints for this department with filters
-      let query = supabase
+
+      // ---------------------------------------------------------
+      // Step 1: Build the Optimized Complaints Query
+      // ---------------------------------------------------------
+
+      // Start with base query on complaints table
+      let baseQuery = supabase
         .from("complaints")
         .select(
-          "id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority"
+          "id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority, category, subcategory",
+          { count: "exact" } // Request exact count for pagination
         )
-        .contains("department_r", [departmentCode])
-        .order("submitted_at", { ascending: false });
-      // Apply status filter
+        .contains("department_r", [departmentCode]);
+
+      // Apply Filters
+
+      // 1. Assignment Filter (Unassigned vs Assigned)
+      // We map this to workflow_status to allow DB-level filtering
+      if (assignment_filter === "unassigned") {
+        // Unassigned usually means 'new' or 'pending'
+        baseQuery = baseQuery.in("workflow_status", [
+          "new",
+          "pending",
+          "New",
+          "Pending",
+          "NEW",
+          "PENDING",
+          "unassigned",
+          "Unassigned",
+          "UNASSIGNED",
+        ]);
+      } else if (assignment_filter === "assigned") {
+        // Assigned means someone is working on it
+        baseQuery = baseQuery.in("workflow_status", [
+          "assigned",
+          "in_progress",
+          "assigned to officer",
+          "Assigned",
+          "In Progress",
+          "In_Progress",
+          "ASSIGNED",
+          "IN_PROGRESS",
+        ]);
+      }
+
+      // 2. Status Filter (Specific status)
       if (status && status !== "all") {
         if (status === "completed") {
-          // For completed, show both completed workflow_status and completed assignments
-          query = query.in("workflow_status", ["completed"]);
+          baseQuery = baseQuery.eq("workflow_status", "completed");
         } else {
-          query = query.eq("workflow_status", status);
+          baseQuery = baseQuery.eq("workflow_status", status);
         }
       } else {
-        // Default: show new, in progress, and assigned complaints (exclude completed)
-        query = query.in("workflow_status", ["new", "in_progress", "assigned"]);
+        // Default: If no specific status is requested, exclude completed/cancelled
+        // UNLESS assignment_filter is set (since we handled it above)
+        if (!assignment_filter || assignment_filter === "all") {
+          baseQuery = baseQuery
+            .neq("workflow_status", "completed")
+            .neq("workflow_status", "cancelled");
+        }
       }
-      // Apply other filters
-      // Note: subtype filter removed as column doesn't exist
-      // if (sub_type && sub_type !== 'all') {
-      //   query = query.eq('subtype', sub_type);
-      // }
+
+      // 3. Priority Filter
       if (priority && priority !== "all") {
-        query = query.eq("priority", priority);
+        baseQuery = baseQuery.eq("priority", priority);
       }
-      const { data: departmentComplaints, error: complaintsError } =
-        await query;
+
+      // 4. Subcategory Filter
+      if (sub_type && sub_type !== "all") {
+        // Try checking both fields or prioritise one
+        baseQuery = baseQuery.or(
+          `category.eq.${sub_type},subcategory.eq.${sub_type}`
+        );
+      }
+
+      // 5. Date Range Filter
+      if (date_start) {
+        // Assuming submitted_at covers the creation time
+        baseQuery = baseQuery.gte("submitted_at", `${date_start}T00:00:00`);
+      }
+      if (date_end) {
+        baseQuery = baseQuery.lte("submitted_at", `${date_end}T23:59:59`);
+      }
+
+      // Apply Pagination and Sort
+      // Sorting by submitted_at DESC ensures consistent pagination
+      baseQuery = baseQuery
+        .order("submitted_at", { ascending: false })
+        .range(from, to);
+
+      // Execute Primary Query
+      const {
+        data: complaints,
+        error: complaintsError,
+        count,
+      } = await baseQuery;
+
       if (complaintsError) {
         console.error(
           "[LGU_ADMIN] Error fetching complaints:",
@@ -613,349 +818,221 @@ class LguAdminController {
         return res.status(500).json({
           success: false,
           error: "Failed to fetch complaints",
-          details: complaintsError.message,
         });
       }
-      // Ensure departmentComplaints is an array
-      const complaints = departmentComplaints || [];
-      // Step 2: Get assignments for this department (two approaches):
-      // a) Assignments linked through complaints with this department in department_r
-      // b) Assignments directly linked by department_id (newly assigned ones)
+
+      const totalItems = count || 0;
+      const totalPages = Math.ceil(totalItems / limitNum);
       const complaintIds = complaints.map((c) => c.id);
-      // console.log removed for security
-      // First, get assignments by department_id (PRIMARY QUERY)
-      // Include completed assignments if status filter is 'completed'
-      let deptAssignmentsQuery = supabase
-        .from("complaint_assignments")
-        .select(
-          "id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id"
-        )
-        .eq("department_id", department.id);
 
-      // Apply status filter for assignments
-      if (status === "completed") {
-        deptAssignmentsQuery = deptAssignmentsQuery.eq("status", "completed");
-      } else if (status && status !== "all") {
-        deptAssignmentsQuery = deptAssignmentsQuery.eq("status", status);
-      } else {
-        // Default: exclude cancelled and completed (show active assignments)
-        deptAssignmentsQuery = deptAssignmentsQuery
-          .neq("status", "cancelled")
-          .neq("status", "completed");
-      }
+      // ---------------------------------------------------------
+      // Step 2a: Fetch Assignments for these SPECIFIC complaints
+      // ---------------------------------------------------------
 
-      deptAssignmentsQuery = deptAssignmentsQuery.order("created_at", {
-        ascending: false,
-      });
-      // Removed limit here to allow manual pagination after merge
-      const { data: deptAssignments, error: deptAssignError } =
-        await deptAssignmentsQuery;
-      // console.log removed for security
-      if (deptAssignError) {
-        console.error(
-          "[LGU_ADMIN] Error fetching assignments by department_id:",
-          deptAssignError
-        );
-      }
-      // Then, get assignments by complaint_id (if any complaints found) - SECONDARY QUERY
-      let assignmentsByComplaint = [];
+      let assignmentsMap = {};
+
       if (complaintIds.length > 0) {
-        let complaintAssignmentsQuery = supabase
+        // Fetch assignments only for the displayed complaints
+        // And only for THIS department
+        const { data: assignments, error: assignError } = await supabase
           .from("complaint_assignments")
           .select(
-            "id, complaint_id, assigned_to, assigned_by, status, priority, assignment_type, assignment_group_id, officer_order, created_at, updated_at, department_id"
+            "id, complaint_id, assigned_to, assigned_by, status, priority, deadline, notes, created_at, updated_at, department_id, assigned_to_user:assigned_to(first_name, last_name)"
           )
-          .in("complaint_id", complaintIds);
+          .in("complaint_id", complaintIds)
+          .eq("department_id", department.id)
+          .order("created_at", { ascending: false }); // Get latest
 
-        // Apply same status filter for complaint assignments
-        if (status === "completed") {
-          complaintAssignmentsQuery = complaintAssignmentsQuery.eq(
-            "status",
-            "completed"
-          );
-        } else if (status && status !== "all") {
-          complaintAssignmentsQuery = complaintAssignmentsQuery.eq(
-            "status",
-            status
-          );
-        } else {
-          // Default: exclude cancelled and completed
-          complaintAssignmentsQuery = complaintAssignmentsQuery
-            .neq("status", "cancelled")
-            .neq("status", "completed");
+        if (!assignError && assignments) {
+          // Map assignments by complaint_id
+          // Since we ordered by created_at DESC, the first one we see is the latest
+          assignments.forEach((a) => {
+            if (!assignmentsMap[a.complaint_id]) {
+              assignmentsMap[a.complaint_id] = a;
+            }
+          });
         }
-
-        complaintAssignmentsQuery = complaintAssignmentsQuery.order(
-          "created_at",
-          { ascending: false }
-        );
-        // Removed limit here to allow manual pagination after merge
-        const { data: complaintAssignments, error: complaintAssignError } =
-          await complaintAssignmentsQuery;
-        // console.log removed for security
-        assignmentsByComplaint = complaintAssignments || [];
       }
-      // Merge and deduplicate assignments (keep most recent if duplicate complaint_id)
-      const allAssignments = [
-        ...assignmentsByComplaint,
-        ...(deptAssignments || []),
+
+      // ---------------------------------------------------------
+      // Step 2b: Fetch User Profiles (Manual Join)
+      // ---------------------------------------------------------
+      const userIds = [
+        ...new Set(complaints.map((c) => c.submitted_by).filter(Boolean)),
       ];
-      // console.log removed for security
-      const assignmentsMap = {};
-      allAssignments.forEach((assignment) => {
-        const existing = assignmentsMap[assignment.complaint_id];
-        if (
-          !existing ||
-          new Date(assignment.created_at) > new Date(existing.created_at)
-        ) {
-          assignmentsMap[assignment.complaint_id] = assignment;
+      const usersMap = {};
+
+      if (userIds.length > 0) {
+        try {
+          // Attempt to fetch users using auth admin API
+          const { data: authUsers, error: usersError } =
+            await supabase.auth.admin.listUsers();
+
+          if (!usersError && authUsers && authUsers.users) {
+            authUsers.users.forEach((u) => {
+              if (userIds.includes(u.id)) {
+                const metadata = u.user_metadata || {};
+                const firstName =
+                  metadata.first_name || metadata.name || "Citizen";
+                const lastName = metadata.last_name || "";
+                usersMap[u.id] = {
+                  name: lastName ? `${firstName} ${lastName}` : firstName,
+                  email: u.email,
+                };
+              }
+            });
+          }
+        } catch (err) {
+          console.warn(
+            "[LGU_ADMIN] Failed to fetch user details:",
+            err.message
+          );
         }
+      }
+
+      // ---------------------------------------------------------
+      // Step 3: Construct Response
+      // ---------------------------------------------------------
+
+      const finalData = complaints.map((complaint) => {
+        // ... (assignment mapping logic) ...
+        const assignment = assignmentsMap[complaint.id];
+        const userProfile = usersMap[complaint.submitted_by];
+
+        // Basic fields from complaint
+        const result = {
+          id: assignment ? assignment.id : null,
+          complaint_id: complaint.id, // Internal UUID
+
+          // Use sliced UUID as Display ID since no readable ID exists
+          display_id: complaint.id.slice(0, 8),
+
+          title: complaint.title,
+          description: complaint.descriptive_su, // Mapped from descriptive_su
+          location_text: complaint.location_text,
+          citizen_name: userProfile
+            ? userProfile.name
+            : complaint.submitted_by
+            ? "Citizen"
+            : "Anonymous",
+
+          assigned_to: assignment?.assigned_to || null,
+          assigned_by: assignment?.assigned_by || null,
+          // officer_name logic could be added here if needed using assignment.assigned_to_user
+
+          status: assignment
+            ? assignment.status
+            : complaint.workflow_status === "new"
+            ? "unassigned"
+            : complaint.workflow_status,
+          priority: assignment?.priority || complaint.priority || "medium",
+
+          deadline: assignment?.deadline || null,
+          notes: assignment?.notes || null,
+
+          created_at: assignment?.created_at || complaint.submitted_at,
+          updated_at:
+            assignment?.updated_at ||
+            complaint.updated_at ||
+            complaint.submitted_at,
+
+          submitted_at: complaint.submitted_at,
+
+          // Raw complaint object for fallback
+          complaints: complaint,
+          complaint_type: complaint.category,
+          subcategory: complaint.subcategory,
+        };
+
+        return result;
       });
-      const existingAssignments = Object.values(assignmentsMap);
-      // console.log removed for security
-      // Get all unique complaint IDs from assignments
-      const assignmentComplaintIds = [
-        ...new Set(
-          existingAssignments.map((a) => a.complaint_id).filter(Boolean)
-        ),
-      ];
-      // Fetch complaint details for assignments that weren't in the initial complaints list
-      const existingComplaintIds = new Set(complaints.map((c) => c.id));
-      const missingComplaintIds = assignmentComplaintIds.filter(
-        (id) => !existingComplaintIds.has(id)
-      );
 
-      let allComplaints = [...complaints];
-      if (missingComplaintIds.length > 0) {
-        const { data: missingComplaints, error: missingError } = await supabase
-          .from("complaints")
-          .select(
-            "id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority"
-          )
-          .in("id", missingComplaintIds);
-        if (!missingError && missingComplaints) {
-          allComplaints = [...complaints, ...missingComplaints];
-        }
+      // Calculate Stats (efficiently)
+      const [unassignedCount, urgentCount, highCount, uniqueTypesData] =
+        await Promise.all([
+          // Count Unassigned (approximated by workflow_status for speed)
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("workflow_status", [
+              "new",
+              "pending",
+              "New",
+              "Pending",
+              "NEW",
+              "PENDING",
+              "unassigned",
+              "Unassigned",
+              "UNASSIGNED",
+            ])
+            .then((res) => res.count || 0),
+
+          // Count Urgent
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["urgent", "Urgent", "URGENT"])
+            .neq("workflow_status", "completed")
+            .neq("workflow_status", "Completed")
+            .neq("workflow_status", "COMPLETED")
+            .then((res) => res.count || 0),
+
+          // Count High
+          supabase
+            .from("complaints")
+            .select("id", { count: "exact", head: true })
+            .contains("department_r", [departmentCode])
+            .in("priority", ["high", "High", "HIGH"])
+            .neq("workflow_status", "completed")
+            .neq("workflow_status", "Completed")
+            .neq("workflow_status", "COMPLETED")
+            .then((res) => res.count || 0),
+
+          // Fetch Dictionary of Types (Scan all)
+          supabase
+            .from("complaints")
+            .select("category, subcategory")
+            .contains("department_r", [departmentCode])
+            .then((res) => res.data || []),
+        ]);
+
+      // Process unique types
+      const typeSet = new Set();
+      if (uniqueTypesData) {
+        uniqueTypesData.forEach((item) => {
+          if (item.category) typeSet.add(item.category);
+          if (item.subcategory) typeSet.add(item.subcategory);
+        });
       }
-      // Combine complaints with their assignments
-      // IMPORTANT: Include ALL assignments found, even if complaint not in department_r
-      const departmentAssignments = allComplaints
-        .map((complaint) => {
-          const assignment = assignmentsMap[complaint.id];
-          // Include if there's an assignment for this complaint
-          if (assignment) {
-            return {
-              id: assignment.id,
-              complaint_id: complaint.id,
-              assigned_to: assignment.assigned_to || null,
-              assigned_by: assignment.assigned_by || null,
-              status: assignment.status,
-              priority: assignment.priority || complaint.priority || "medium",
-              deadline: assignment.deadline || null,
-              notes: assignment.notes || null,
-              created_at: assignment.created_at || complaint.submitted_at,
-              updated_at: assignment.updated_at || complaint.submitted_at,
-              complaints: complaint,
-            };
-          }
-          // Also include complaints from department_r even if no assignment yet
-          if (complaints.find((c) => c.id === complaint.id)) {
-            return {
-              id: null,
-              complaint_id: complaint.id,
-              assigned_to: null,
-              assigned_by: null,
-              status: "unassigned",
-              priority: complaint.priority || "medium",
-              deadline: null,
-              notes: null,
-              created_at: complaint.submitted_at,
-              updated_at: complaint.submitted_at,
-              complaints: complaint,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean); // Remove null entries
+      const uniqueSubcategories = Array.from(typeSet).sort();
 
-      // Filter by assignment_filter (tabs) if present
-      let filteredAssignments = departmentAssignments;
-      if (assignment_filter === "unassigned") {
-        filteredAssignments = filteredAssignments.filter(
-          (a) => !a.assigned_to || a.status === "unassigned"
-        );
-      } else if (assignment_filter === "assigned") {
-        filteredAssignments = filteredAssignments.filter(
-          (a) => a.assigned_to && a.status !== "unassigned"
-        );
-      }
-
-      // Calculate Stat Counts (from full dataset)
-      const stats = {
-        unassigned: filteredAssignments.filter((a) => a.status === "unassigned")
-          .length,
-        urgent: filteredAssignments.filter((a) => a.priority === "urgent")
-          .length,
-        high: filteredAssignments.filter((a) => a.priority === "high").length,
-      };
-
-      // Sort by date (newest first)
-      filteredAssignments.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-
-      // Pagination Logic
-      const totalItems = filteredAssignments.length;
-      const pageNum = parseInt(page);
-      const limitNum = parseInt(limit);
-      const startIndex = (pageNum - 1) * limitNum;
-      const endIndex = startIndex + limitNum;
-
-      const paginatedItems = filteredAssignments.slice(startIndex, endIndex);
-      // console.log removed for security
-      // console.log removed for security
-      // Get officer information for assigned complaints (ONLY for paginated items)
-      const assignedOfficerIds = [
-        ...new Set(
-          paginatedItems.filter((a) => a.assigned_to).map((a) => a.assigned_to)
-        ),
-      ];
-      let officersMap = {};
-      if (assignedOfficerIds && assignedOfficerIds.length > 0) {
-        try {
-          // Fetch users by ID individually to avoid pagination issues with listUsers()
-          // This is more efficient and reliable than fetching all users
-          const userPromises = assignedOfficerIds.map(async (officerId) => {
-            try {
-              const { data: userData, error: userError } =
-                await supabase.auth.admin.getUserById(officerId);
-              if (!userError && userData?.user) {
-                const { user } = userData;
-                return {
-                  id: user.id,
-                  name:
-                    user.user_metadata?.name ||
-                    user.raw_user_meta_data?.name ||
-                    user.email,
-                  email: user.email,
-                };
-              }
-              return null;
-            } catch (err) {
-              console.warn(
-                `[LGU_ADMIN] Error fetching officer ${officerId}:`,
-                err.message
-              );
-              return null;
-            }
-          });
-
-          const userResults = await Promise.allSettled(userPromises);
-          officersMap = userResults
-            .filter(
-              (result) => result.status === "fulfilled" && result.value !== null
-            )
-            .reduce((acc, result) => {
-              const user = result.value;
-              acc[user.id] = {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-              };
-              return acc;
-            }, {});
-        } catch (authErr) {
-          console.error("[LGU_ADMIN] Auth API error for officers:", authErr);
-        }
-      }
-      // Get citizen information (ONLY for paginated items)
-      const citizenIds = [
-        ...new Set(
-          paginatedItems.map((a) => a.complaints?.submitted_by).filter(Boolean)
-        ),
-      ];
-      let citizensMap = {};
-      if (citizenIds && citizenIds.length > 0) {
-        try {
-          // Fetch users by ID individually to avoid pagination issues with listUsers()
-          // This is more efficient and reliable than fetching all users
-          const userPromises = citizenIds.map(async (citizenId) => {
-            try {
-              const { data: userData, error: userError } =
-                await supabase.auth.admin.getUserById(citizenId);
-              if (!userError && userData?.user) {
-                const { user } = userData;
-                return {
-                  id: user.id,
-                  name:
-                    user.user_metadata?.name ||
-                    user.raw_user_meta_data?.name ||
-                    user.email,
-                };
-              }
-              return null;
-            } catch (err) {
-              console.warn(
-                `[LGU_ADMIN] Error fetching citizen ${citizenId}:`,
-                err.message
-              );
-              return null;
-            }
-          });
-
-          const userResults = await Promise.allSettled(userPromises);
-          citizensMap = userResults
-            .filter(
-              (result) => result.status === "fulfilled" && result.value !== null
-            )
-            .reduce((acc, result) => {
-              const user = result.value;
-              acc[user.id] = { name: user.name };
-              return acc;
-            }, {});
-        } catch (authErr) {
-          console.error("[LGU_ADMIN] Auth API error for citizens:", authErr);
-        }
-      }
-      // Format response (use paginatedItems)
-      const formattedAssignments = paginatedItems.map((assignment) => ({
-        id: assignment.id,
-        complaint_id: assignment.complaint_id,
-        title: assignment.complaints?.title,
-        description: assignment.complaints?.descriptive_su,
-        location_text: assignment.complaints?.location_text,
-        submitted_at: assignment.complaints?.submitted_at,
-        assigned_to: assignment.assigned_to,
-        assigned_at: assignment.updated_at, // Use updated_at as assignment time
-        officer_name: assignment.assigned_to
-          ? officersMap[assignment.assigned_to]?.name
-          : null,
-        officer_email: assignment.assigned_to
-          ? officersMap[assignment.assigned_to]?.email
-          : null,
-        citizen_name: citizensMap[assignment.complaints?.submitted_by]?.name,
-        priority: assignment.priority,
-        deadline: assignment.deadline,
-        status: assignment.status,
-        notes: assignment.notes,
-      }));
-      // console.log removed for security
-      return res.json({
+      res.json({
         success: true,
-        data: formattedAssignments,
-        stats: stats,
+        data: finalData,
         pagination: {
-          total: totalItems,
           page: pageNum,
           limit: limitNum,
-          totalPages: Math.ceil(totalItems / limitNum),
+          total: totalItems,
+          pages: totalPages,
+        },
+        unique_subcategories: uniqueSubcategories,
+        stats: {
+          unassigned: unassignedCount,
+          urgent: urgentCount,
+          high: highCount,
         },
       });
     } catch (error) {
-      console.error("[LGU_ADMIN] Get assignments error:", error);
-      return res.status(500).json({
+      console.error(
+        "[LGU_ADMIN] Get department assignments error with pagination:",
+        error
+      );
+      res.status(500).json({
         success: false,
-        error: error.message || "Failed to get department assignments",
+        error: "Failed to fetch assignments",
+        details: error.message,
       });
     }
   }

@@ -63,6 +63,7 @@
                 type="text"
                 id="complaintTitle"
                 name="complaintTitle"
+                class="form-control"
                 placeholder="Enter a descriptive title for your complaint"
               />
             </div>
@@ -70,14 +71,22 @@
             <div class="form-row">
               <div class="form-group form-col">
                 <label for="complaintCategory">Category *</label>
-                <select id="complaintCategory" name="complaintCategory">
+                <select
+                  id="complaintCategory"
+                  name="complaintCategory"
+                  class="form-control"
+                >
                   <option value="">Select a category...</option>
                 </select>
               </div>
 
               <div class="form-group form-col">
                 <label for="complaintSubcategory">Subcategory *</label>
-                <select id="complaintSubcategory" name="complaintSubcategory">
+                <select
+                  id="complaintSubcategory"
+                  name="complaintSubcategory"
+                  class="form-control"
+                >
                   <option value="">Select a subcategory...</option>
                 </select>
               </div>
@@ -85,7 +94,12 @@
 
             <div class="form-group">
               <label for="urgencyLevel">Urgency Level *</label>
-              <select id="urgencyLevel" name="urgencyLevel" required>
+              <select
+                id="urgencyLevel"
+                name="urgencyLevel"
+                class="form-control"
+                required
+              >
                 <option value="low" selected>
                   Low - Routine issue, no immediate threat
                 </option>
@@ -124,6 +138,7 @@
               <textarea
                 id="description"
                 name="description"
+                class="form-control"
                 placeholder="Please provide a detailed description of your complaint..."
                 rows="5"
               ></textarea>

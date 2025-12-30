@@ -19,6 +19,8 @@ const cspConfig = {
       "https://www.gstatic.com",
       "https://unpkg.com",
       "https://esm.sh",
+      "https://cdn.jsdelivr.net",
+      "https://cdn.tailwindcss.com",
     ],
     // Disallow inline event handlers (onclick, etc.) — move logic to JS modules
     imgSrc: [

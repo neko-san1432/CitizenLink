@@ -1177,19 +1177,7 @@ class ComplaintService {
         })
         .filter(Boolean); // Remove null entries
 
-      // Debug: Log transformed data
-      if (transformedData.length > 0) {
-        const transformedSample = transformedData.slice(0, 3).map((c) => ({
-          id: c.id,
-          title: c.title,
-          departments: c.departments,
-          department_r: c.department_r,
-        }));
-        console.log(
-          "[COMPLAINT-SERVICE] Sample complaints after transformation:",
-          transformedSample
-        );
-      }
+      // Debug log removed
       // console.log removed for security
       // console.log removed for security
       // console.log removed for security

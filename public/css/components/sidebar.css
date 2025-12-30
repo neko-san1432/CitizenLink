@@ -36,7 +36,6 @@ html.dark {
   --z-sidebar: 1200;
 }
 
-
 /* Sidebar Backdrop */
 .sidebar-backdrop {
   position: fixed;
@@ -63,7 +62,7 @@ html.dark {
   top: 0;
   bottom: 0;
   width: 260px;
-  z-index: var(--z-sidebar, 1200);
+  z-index: 2000 !important; /* Ensure sidebar is above header (1030) */
   overflow-y: auto;
   overflow-x: hidden;
   display: flex !important;
@@ -72,7 +71,8 @@ html.dark {
   border-right: 1px solid var(--sidebar-border, #e5e7eb) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
   transition: all 0.3s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
 }
 
 #sidebar.open {
@@ -308,7 +308,7 @@ html.dark {
 }
 
 .toggle-switch::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;
@@ -363,7 +363,7 @@ html.dark {
     width: 100%;
     left: -100%;
   }
-  
+
   #sidebar.open {
     left: 0;
   }
@@ -376,63 +376,68 @@ html.dark {
 }
 
 /* Dark mode specific adjustments */
+/* Dark mode specific adjustments - Using custom variables defined in :root */
 html.dark #sidebar {
-  background: var(--gray-800) !important;
-  border-right-color: var(--gray-700) !important;
+  background: var(--sidebar-bg) !important;
+  border-right-color: var(--sidebar-border) !important;
 }
 
 html.dark .sidebar-brand {
-  background: var(--gray-900) !important;
-  border-bottom-color: var(--gray-700) !important;
+  background: var(--sidebar-brand-bg) !important;
+  border-bottom-color: var(--sidebar-border) !important;
 }
 
 html.dark .sidebar-menu a {
-  color: var(--gray-200) !important;
+  color: var(--sidebar-text) !important;
 }
 
 html.dark .sidebar-menu a:hover {
-  background: var(--gray-700) !important;
-  color: white !important;
+  background: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
 }
 
 html.dark .sidebar-menu a.active {
-  background: var(--primary-600) !important;
+  background: var(--sidebar-active) !important;
   color: white !important;
 }
 
 html.dark .sidebar-bottom {
-  background: var(--gray-900) !important;
-  border-top-color: var(--gray-700) !important;
+  background: var(--sidebar-footer-bg) !important;
+  border-top-color: var(--sidebar-border) !important;
 }
 
 html.dark .theme-toggle {
-  background: var(--gray-800) !important;
-  border-color: var(--gray-700) !important;
+  background: var(--sidebar-bg) !important;
+  border-color: var(--sidebar-border) !important;
+  color: var(--sidebar-text) !important;
 }
 
 html.dark .theme-toggle:hover {
-  background: var(--gray-700) !important;
+  background: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
 }
 
 html.dark .theme-toggle-label {
-  color: var(--gray-200) !important;
+  color: var(--sidebar-text) !important;
 }
 
 html.dark .toggle-switch {
-  background: var(--gray-600) !important;
+  background: var(--sidebar-border) !important;
 }
 
 html.dark .toggle-switch.active {
-  background: var(--primary-600) !important;
+  background: var(--sidebar-active) !important;
 }
 
 html.dark .logout-link {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
 }
 
 html.dark .logout-link:hover {
-  background: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #dc2626 !important;
 }
 
 /* Sidebar Error State */

@@ -360,8 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
     }
-    // Test if buttons were created
-    const testNotificationBtn = document.getElementById("notification-btn");
     // Initialize header components
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector(

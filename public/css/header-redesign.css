@@ -1,8 +1,5 @@
 .header-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: var(--z-fixed);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -48,9 +45,9 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
   color: var(--gray-700);
   cursor: pointer;
   overflow: hidden;
@@ -140,15 +137,15 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
   color: var(--gray-700);
   cursor: pointer;
   position: relative;
   box-sizing: border-box;
   transition: all var(--transition-sm, 150ms);
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 /* ... existing styles ... */
@@ -159,17 +156,17 @@
   justify-content: center;
   gap: var(--space-2);
   padding: 0 var(--space-4);
-  background: var(--gray-50);
+  background: transparent;
   border-radius: var(--radius-lg);
   font-weight: 500;
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   min-width: 100px;
-  max-width: 180px;
+  width: auto; /* Allow automatic width */
+  max-width: none; /* Remove maximum restriction */
   height: 40px; /* Match button height */
   font-size: 0.875rem;
-  flex-shrink: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0; /* Prevent shrinking */
+  overflow: visible;
   white-space: nowrap;
   box-sizing: border-box;
   border: 1px solid transparent; /* Maintain box model consistency */
@@ -202,9 +199,9 @@
 
 .notification-btn {
   position: relative;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
   padding: 0;
   width: 40px;
   height: 40px;
@@ -214,8 +211,8 @@
   color: #64748b;
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 4px rgba(0, 0, 0, 0.05);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+  box-shadow: none;
   cursor: pointer;
   box-sizing: border-box;
   transition: all var(--transition-sm, 150ms) cubic-bezier(0.4, 0, 0.2, 1);
@@ -256,12 +253,12 @@
 }
 
 .profile-btn {
-  background: var(--primary-50);
-  border-color: var(--primary-200);
+  background: transparent;
+  border-color: transparent;
   color: var(--primary-700);
   box-sizing: border-box;
   transition: all var(--transition-sm, 150ms);
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .profile-btn:hover {
@@ -286,12 +283,12 @@
 }
 
 .theme-toggle {
-  background: var(--warning-50);
-  border-color: var(--warning-200);
+  background: transparent;
+  border-color: transparent;
   color: var(--warning-700);
   transition: all var(--transition-sm, 150ms);
   box-sizing: border-box; /* Ensure border is included in width/height */
-  border: 1px solid var(--warning-200); /* Restate border explicitly */
+  border: 1px solid transparent; /* Restate border explicitly */
   display: flex !important; /* Force flex display to center content */
 }
 
@@ -723,15 +720,11 @@
   }
 
   .dashboard-clock {
-    min-width: 80px;
-    max-width: 140px;
-    font-size: 0.75rem;
-    padding: var(--space-1) var(--space-2);
-    flex-shrink: 1;
+    display: none !important;
   }
 
   .brand-text {
-    display: none;
+    display: none !important;
   }
 
   .notification-btn {
@@ -780,11 +773,7 @@
   }
 
   .dashboard-clock {
-    min-width: 70px;
-    max-width: 110px;
-    font-size: 0.7rem;
-    padding: 4px 6px;
-    gap: 4px;
+    display: none !important;
   }
 
   .dashboard-clock .date {
@@ -827,8 +816,8 @@
 
 .dark .menu-toggle,
 .dark .header-action {
-  background: var(--gray-700);
-  border-color: var(--gray-600);
+  background: transparent;
+  border-color: transparent;
   color: var(--gray-300);
 }
 
@@ -873,7 +862,7 @@ html.dark .brand-text:hover {
 }
 
 .dark .dashboard-clock {
-  background: var(--gray-800);
+  background: transparent;
   color: var(--gray-300);
 }
 
@@ -943,8 +932,8 @@ html.dark .header-container.scrolled {
 
 html.dark .menu-toggle,
 html.dark .header-action {
-  background: var(--gray-800);
-  border-color: var(--gray-700);
+  background: transparent;
+  border-color: transparent;
   color: var(--gray-300);
 }
 
@@ -1039,17 +1028,17 @@ html.dark .notification-time {
 /* Dark mode for notification button */
 .dark .notification-btn,
 html.dark .notification-btn {
-  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-  border-color: #4b5563;
-  color: #d1d5db;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: transparent;
+  border-color: transparent;
+  color: var(--gray-300);
+  box-shadow: none;
 }
 
 .dark .notification-btn:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-color: #3b82f6;
-  color: white;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--gray-100);
+  box-shadow: none;
 }
 
 .dark .notification-panel {
@@ -1115,5 +1104,82 @@ html.dark .notification-btn {
   .header-action,
   .menu-toggle {
     border-width: 2px;
+  }
+}
+
+/* Role Toggle Button Styles */
+.role-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Space between icon and text */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px; /* Smoother radius */
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 10px;
+  transition: all 0.2s ease;
+  height: 40px; /* Consistent height with other header actions */
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+}
+
+.role-toggle-btn.btn-staff-mode {
+  background: #007bff; /* Primary Blue */
+}
+
+.role-toggle-btn.btn-staff-mode:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.role-toggle-btn.btn-citizen-mode {
+  background: #28a745; /* Success Green */
+}
+
+.role-toggle-btn.btn-citizen-mode:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.role-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Mobile Responsiveness for Role Button */
+@media (max-width: 768px) {
+  .role-toggle-btn {
+    padding: 0;
+    width: 40px; /* Make it square/circle on mobile */
+    height: 40px;
+    margin-left: 8px;
+    border-radius: 12px; /* Match header-action radius */
+    justify-content: center;
+  }
+
+  .role-text {
+    display: none; /* Hide text on mobile */
+  }
+
+  .role-icon {
+    font-size: 20px; /* Larger icon for touch target */
+    margin: 0;
+  }
+
+  /* Force menu toggle visibility */
+  .menu-toggle {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-shrink: 0;
+    z-index: 20;
   }
 }

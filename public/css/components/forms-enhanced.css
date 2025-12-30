@@ -3,48 +3,68 @@
    ============================================================================ */
 
 /* Form Control */
-.form-control {
+/* Form Control - Premium Glassmorphism */
+.form-control,
+.input,
+.select,
+.textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--gray-300);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg); /* Larger radius for modern feel */
   font-family: inherit;
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--gray-900);
-  background-color: white;
-  transition: all var(--transition-sm);
+
+  /* Glass Effect Base */
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  transition: all var(--transition-normal);
   box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
 }
 
 .form-control:hover {
   border-color: var(--gray-400);
+  background-color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .form-control:focus {
   outline: none;
+  background-color: #ffffff;
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .form-control:disabled {
   background-color: var(--gray-100);
   color: var(--gray-500);
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  backdrop-filter: none;
 }
 
 .form-control::placeholder {
   color: var(--gray-400);
+  opacity: 0.8;
 }
 
-/* Form Control */
-.form-control:invalid:not(:focus) {
-  /* Prevent aggressive validation on load - strict validation handled by JS or .was-validated */
-  border-color: var(--gray-300);
+/* Validation States with Premium Feel */
+.form-control:invalid:not(:focus):not(:placeholder-shown) {
+  border-color: var(--error-300);
+  background-color: rgba(254, 242, 242, 0.5); /* error-50 with opacity */
 }
 
 .was-validated .form-control:invalid:not(:focus) {
   border-color: var(--error-500);
+  box-shadow: 0 0 0 1px var(--error-500);
 }
 
 /* Form Group */

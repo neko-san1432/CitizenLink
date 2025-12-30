@@ -10,6 +10,8 @@ let currentFilters = {
   department: "",
   includeResolved: true,
 };
+let isInitialLoad = true;
+window.isInitialLoad = true;
 
 // Simple initialization - map with heatmap and controls
 (async function () {
@@ -38,6 +40,41 @@ let currentFilters = {
 
     // Store map globally for boundaryGenerator
     window.simpleMap = map;
+
+    // --- Dark Mode Handler ---
+    // Function to check and update map theme
+    const updateMapTheme = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      if (typeof window.switchTileLayer === "function") {
+        if (isDark) {
+          window.switchTileLayer("Standard Dark");
+        } else {
+          // Switch back to default (OpenStreetMap or Standard Light)
+          // Check what was previous or default. usually OSM.
+          window.switchTileLayer("OpenStreetMap");
+        }
+      }
+    };
+
+    // Initial check (delay slightly to ensure layers are init)
+    setTimeout(updateMapTheme, 100);
+
+    // Watch for theme changes
+    const themeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "class"
+        ) {
+          updateMapTheme();
+        }
+      });
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    // -------------------------
 
     // Ensure layer control (tile changer) stays below zoom controls
     // It should remain in its default Leaflet position (.leaflet-top.leaflet-left)
@@ -321,9 +358,9 @@ async function loadComplaintData() {
 }
 
 // Track if this is the initial load (show only heatmap regardless of zoom)
-let isInitialLoad = true;
+// Moved to top of file
 // Make it globally accessible so heatmapVisualization can check it
-window.isInitialLoad = true;
+// Moved to top of file
 
 // Function to update visibility based on zoom level (must be global for zoom events)
 function updateZoomBasedVisibility(zoom) {
@@ -454,123 +491,62 @@ function positionResetViewButton() {
   // below the zoom controls - don't move it to the row
 }
 
-// Function to position gear button below control panel
-function positionGearButton(disableTransition = false) {
-  const panel = document.getElementById("map-controls-panel");
-  const gearButton = document.getElementById("toggle-controls-btn");
-
-  if (!panel || !gearButton) return;
-
-  // Use position absolute and calculate based on panel position
-  // Ensure parent container has position relative
-  const mapContainer = document.getElementById("map");
-  if (mapContainer && mapContainer.parentElement) {
-    const parent = mapContainer.parentElement;
-    if (getComputedStyle(parent).position === "static") {
-      parent.style.position = "relative";
-    }
-  }
-
-  gearButton.style.position = "absolute";
-  gearButton.style.right = "20px";
-
-  // Temporarily disable transition if requested (e.g., when panel is closing)
-  if (disableTransition) {
-    gearButton.style.transition = "none";
-  }
-
-  if (panel.classList.contains("hidden")) {
-    // Panel is hidden, show gear button at default position
-    gearButton.style.top = "20px";
-  } else {
-    // Panel is visible, position gear button below it
-    const panelRect = panel.getBoundingClientRect();
-    const panelTop = panelRect.top;
-    const panelHeight = panelRect.height;
-    const spacing = 10; // 10px spacing below panel
-    // Calculate position relative to viewport (panel top + height + spacing)
-    gearButton.style.top = `${panelTop + panelHeight + spacing}px`;
-  }
-
-  // Re-enable transition after a brief delay if it was disabled
-  if (disableTransition) {
-    setTimeout(() => {
-      gearButton.style.transition = "top 0.3s ease";
-    }, 50);
-  }
-
-  // Also position reset view button
-  positionResetViewButton();
-}
-
 // Setup control panel event handlers
 function setupControlPanel() {
-  const panel = document.getElementById("map-controls-panel");
-  const toolbarBtns = document.querySelectorAll(".toolbar-btn");
-  const sections = document.querySelectorAll(".control-section");
-  const panelTitle = document.getElementById("panel-title");
+  // New Dropdown Logic for Horizontal Toolbar
+  const dropdowns = [
+    { btnId: "toolbar-display-btn", dropdownId: "toolbar-display-dropdown" },
+    { btnId: "toolbar-date-btn", dropdownId: "toolbar-date-dropdown" },
+    { btnId: "toolbar-status-btn", dropdownId: "toolbar-status-dropdown" },
+    { btnId: "toolbar-category-btn", dropdownId: "toolbar-category-dropdown" },
+    { btnId: "toolbar-office-btn", dropdownId: "toolbar-office-dropdown" },
+    { btnId: "toolbar-stats-btn", dropdownId: "toolbar-stats-dropdown" },
+  ];
 
-  // Map section IDs to titles
-  const sectionTitles = {
-    display: "Display Options",
-    date: "Date Range",
-    status: "Status Filter",
-    office: "Type & Office",
-    stats: "Statistics",
-  };
+  function closeAllDropdowns() {
+    dropdowns.forEach(({ dropdownId }) => {
+      const el = document.getElementById(dropdownId);
+      if (el) el.classList.add("hidden");
+    });
+  }
 
-  toolbarBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.target;
+  dropdowns.forEach(({ btnId, dropdownId }) => {
+    const btn = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
 
-      // Update active state of buttons
-      toolbarBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      // Show panel if hidden
-      if (panel.classList.contains("hidden")) {
-        panel.classList.remove("hidden");
-      }
-
-      // Show target section, hide others
-      sections.forEach((section) => {
-        section.classList.remove("active");
-        if (section.id === `section-${target}`) {
-          section.classList.add("active");
+    if (btn && dropdown) {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isHidden = dropdown.classList.contains("hidden");
+        // Close others first
+        closeAllDropdowns();
+        // Toggle current
+        if (isHidden) {
+          dropdown.classList.remove("hidden");
         }
       });
 
-      // Update panel title
-      if (panelTitle && sectionTitles[target]) {
-        panelTitle.textContent = sectionTitles[target];
-      }
-    });
+      // Prevent closing when clicking inside dropdown
+      dropdown.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    }
   });
 
-  document
-    .getElementById("close-controls-btn")
-    .addEventListener("click", () => {
-      panel.classList.add("hidden");
-      // Remove active state from all toolbar buttons
-      toolbarBtns.forEach((b) => b.classList.remove("active"));
-    });
-
-  // Reposition logic for gear button is REMOVED as gear button no longer exists
-
-  const observer = new MutationObserver(() => {
-    // No-op for now, kept structure if needed later
+  // Close on outside click
+  document.addEventListener("click", () => {
+    closeAllDropdowns();
   });
-
-  if (panel) {
-    observer.observe(panel, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-  }
 
   // Initial positioning - REMOVED
+
+  // Setup Back Button
+  const backBtn = document.getElementById("back-btn");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      history.back();
+    });
+  }
 
   // Also reposition on window resize - REMOVED
 
@@ -898,10 +874,13 @@ function setupControlPanel() {
     });
   }
 
-  // Fit to bounds
-  document.getElementById("fit-bounds-btn").addEventListener("click", () => {
-    fitToAllMarkers();
-  });
+  // Fit to bounds - check if button exists (might have been removed in redesign)
+  const fitBoundsBtn = document.getElementById("fit-bounds-btn");
+  if (fitBoundsBtn) {
+    fitBoundsBtn.addEventListener("click", () => {
+      fitToAllMarkers();
+    });
+  }
 
   // Reset view button
   const resetViewBtn = document.getElementById("reset-view-btn");
@@ -936,9 +915,6 @@ function setupControlPanel() {
       }
 
       // Reposition gear button after animation
-      setTimeout(() => {
-        positionGearButton();
-      }, 300);
     });
   });
 
@@ -951,14 +927,60 @@ function setupControlPanel() {
   // Initial icon setup is no longer needed as CSS handles rotation
   // but we ensure only one section is open initially (handled by HTML class="active")
 
-  // Load categories and departments
+  // Load categories, departments, and status filters
+  loadStatusFilters();
   loadCategories();
   loadDepartments();
 
-  // Setup auto-filtering immediately (checkboxes are already in HTML for status)
+  // Setup auto-filtering immediately
   setupAutoFiltering();
 }
 
+// Load status filters
+function loadStatusFilters() {
+  const group = document.getElementById("status-filters");
+  if (!group) return;
+
+  const statuses = [
+    { label: "New / Pending", value: "new,pending", color: "#6B7280" }, // gray-500
+    { label: "Assigned", value: "assigned", color: "#FBBF24" }, // yellow-400
+    { label: "In Progress", value: "in_progress", color: "#3B82F6" }, // blue-500
+    { label: "Completed", value: "resolved,closed", color: "#10B981" }, // green-500
+  ];
+
+  statuses.forEach((status) => {
+    const label = document.createElement("label");
+    // Use Tailwind classes used for better dark mode support
+    label.className =
+      "flex items-center gap-1.5 font-normal py-0.5 cursor-pointer text-gray-700 dark:text-gray-300";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "status-checkbox";
+    checkbox.value = status.value;
+    checkbox.checked = true; // Default to checked
+
+    // Add color indicator
+    const indicator = document.createElement("span");
+    indicator.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background-color: ${status.color}; display: inline-block;`;
+
+    const text = document.createTextNode(status.label);
+
+    label.appendChild(checkbox);
+    label.appendChild(indicator);
+    label.appendChild(text);
+    group.appendChild(label);
+
+    // Add listener
+    checkbox.addEventListener("change", () => {
+      if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
+        window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
+      }
+    });
+  });
+}
+
+// Load categories
 // Load categories
 async function loadCategories() {
   try {
@@ -973,15 +995,56 @@ async function loadCategories() {
     if (loading) loading.remove();
 
     if (data && data.length > 0) {
-      data.forEach((category) => {
+      // Prioritization Logic for LGU Admins
+      let sortedData = [...data];
+      const userDepartmentCode = await getUserDepartment();
+      const isLguAdmin = heatmapViz?.userRole === "lgu-admin";
+
+      if (isLguAdmin && userDepartmentCode) {
+        // Mark categories as relevant if they map to the user's department
+        sortedData = sortedData.map((category) => {
+          const isRelevant = category.subcategories?.some((sub) =>
+            sub.departments?.some(
+              (dept) => (dept.code || "").toUpperCase() === userDepartmentCode
+            )
+          );
+          return { ...category, isRelevant };
+        });
+
+        // Sort: Relevant first
+        sortedData.sort((a, b) => {
+          if (a.isRelevant && !b.isRelevant) return -1;
+          if (!a.isRelevant && b.isRelevant) return 1;
+          return 0; // Maintain original order otherwise
+        });
+      }
+
+      sortedData.forEach((category) => {
         const label = document.createElement("label");
-        label.style.cssText =
-          "display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0;";
+        // Use Tailwind classes for styling instead of inline styles where possible for easier dark mode support
+        label.className =
+          "flex items-center gap-1.5 font-normal py-0.5 cursor-pointer text-gray-700 dark:text-gray-300";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.className = "category-checkbox";
         checkbox.value = category.id;
+
+        // Auto-check relevant categories for LGU Admins
+        if (category.isRelevant) {
+          checkbox.checked = true;
+          // Use classes for bold/color instead of inline
+          label.classList.remove(
+            "font-normal",
+            "text-gray-700",
+            "dark:text-gray-300"
+          );
+          label.classList.add(
+            "font-semibold",
+            "text-gray-900",
+            "dark:text-white"
+          );
+        }
 
         // Add change listener for auto-filtering
         checkbox.addEventListener("change", () => {
@@ -995,14 +1058,26 @@ async function loadCategories() {
         );
         label.appendChild(checkbox);
         label.appendChild(text);
+
+        // Visual indicator for relevant categories
+        if (category.isRelevant) {
+          const badge = document.createElement("span");
+          badge.style.cssText =
+            "width: 6px; height: 6px; background-color: #3B82F6; border-radius: 50%; margin-left: auto;";
+          label.appendChild(badge);
+        }
+
         group.appendChild(label);
       });
+
+      console.log(
+        `[HEATMAP] Loaded ${sortedData.length} categories (Prioritized for ${userDepartmentCode})`
+      );
     }
   } catch (error) {
     console.error("[HEATMAP] Failed to load categories:", error);
   } finally {
     // Reposition gear button after categories load (panel height might change)
-    positionGearButton();
   }
 }
 
@@ -1124,8 +1199,9 @@ async function loadDepartments() {
     if (departments && departments.length > 0) {
       departments.forEach((dept) => {
         const label = document.createElement("label");
-        label.style.cssText =
-          "display: flex; align-items: center; gap: 6px; font-weight: normal; padding: 2px 0;";
+        // Use Tailwind classes
+        label.className =
+          "flex items-center gap-1.5 font-normal py-0.5 text-gray-700 dark:text-gray-300";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -1149,7 +1225,12 @@ async function loadDepartments() {
         label.appendChild(checkbox);
         label.appendChild(text);
         if (isUserDept) {
-          label.style.fontWeight = "bold";
+          label.classList.remove(
+            "font-normal",
+            "text-gray-700",
+            "dark:text-gray-300"
+          );
+          label.classList.add("font-bold", "text-gray-900", "dark:text-white");
         }
         group.appendChild(label);
       });
@@ -1163,8 +1244,7 @@ async function loadDepartments() {
     } else {
       const noDeptMsg = document.createElement("div");
       noDeptMsg.textContent = "No departments available";
-      noDeptMsg.style.cssText =
-        "color: #999; font-style: italic; padding: 8px;";
+      noDeptMsg.className = "text-gray-400 italic p-2 text-xs";
       group.appendChild(noDeptMsg);
       console.warn("[HEATMAP] No departments loaded");
     }
@@ -1177,7 +1257,6 @@ async function loadDepartments() {
     group.appendChild(errorMsg);
   } finally {
     // Reposition gear button after departments load (panel height might change)
-    positionGearButton();
   }
 }
 
@@ -1194,7 +1273,6 @@ function updateStatistics() {
   document.getElementById("visible-markers-stat").textContent = visible;
 
   // Reposition gear button after stats update (panel height might change)
-  positionGearButton();
 }
 
 // Reset map view to original center and zoom

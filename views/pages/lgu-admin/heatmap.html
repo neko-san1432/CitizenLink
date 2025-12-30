@@ -10,1040 +10,633 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
-
-    <!-- Leaflet Heat CSS -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css"
     />
 
+    <!-- Fonts & Tailwind -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
+
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html,
       body {
-        height: 100%;
-        overflow: hidden;
+        font-family: "Inter", sans-serif;
       }
-
-      /* Ensure sidebar styles are not overridden */
-      #sidebar {
-        display: flex !important;
-        flex-direction: column !important;
-        background: var(--sidebar-bg, #ffffff) !important;
-        color: var(--sidebar-text, #1f2937) !important;
-      }
-
-      #sidebar * {
-        box-sizing: border-box;
-      }
-
       #map {
-        width: 100%;
-        height: 100vh;
+        z-index: 0;
       }
-
-      /* Control Panel Styles */
-      .map-controls-panel {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 320px;
-        max-height: calc(100vh - 40px);
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        padding: 20px;
-        z-index: 1000;
-        overflow-y: auto;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(229, 231, 235, 0.5);
       }
-
-      .controls-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #e5e7eb;
+      /* Custom Scrollbar for controls */
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
       }
-
-      .controls-header h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #1f2937;
-      }
-
-      .btn-close {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #6b7280;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-      }
-
-      .btn-close:hover {
-        background: #f3f4f6;
-        color: #1f2937;
-      }
-
-      .control-group {
-        margin-bottom: 16px;
-      }
-
-      .control-group label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 6px;
-      }
-
-      .control-group select,
-      .control-group input[type="range"] {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 13px;
-      }
-
-      .control-group input[type="range"] {
-        padding: 0;
-        height: 6px;
-      }
-
-      .slider-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .slider-container input[type="range"] {
-        flex: 1;
-      }
-
-      .slider-value {
-        font-size: 12px;
-        font-weight: 600;
-        color: #667eea;
-        min-width: 40px;
-      }
-
-      .action-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .btn-primary,
-      .btn-secondary {
-        padding: 10px 16px;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .btn-primary {
-        background: #667eea;
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background: #5568d3;
-      }
-
-      .btn-secondary {
-        background: #f3f4f6;
-        color: #374151;
-      }
-
-      .btn-secondary:hover {
-        background: #e5e7eb;
-      }
-
-      .stats-display {
-        padding: 12px;
-        background: #f9fafb;
-        border-radius: 8px;
-        font-size: 12px;
-      }
-
-      .stats-display p {
-        margin: 4px 0;
-        color: #374151;
-      }
-
-      .stats-display span {
-        font-weight: 600;
-        color: #667eea;
-      }
-
-      .toggle-controls-btn {
-        position: absolute;
-        top: 20px; /* Default position when panel is hidden */
-        right: 20px;
-        width: 48px;
-        height: 48px;
-        background: white;
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        font-size: 20px;
-        cursor: pointer;
-        z-index: 999; /* Below control panel to avoid animation interference */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: top 0.3s ease;
-      }
-
-      .toggle-controls-btn:hover {
-        background: #f9fafb;
-      }
-
-      .reset-view-btn {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        bottom: auto !important;
-        width: 34px !important;
-        height: 34px !important;
-        background: white !important;
-        border: 2px solid rgba(0, 0, 0, 0.2) !important;
-        border-radius: 4px !important;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4) !important;
-        font-size: 18px;
-        cursor: pointer;
-        z-index: 1 !important;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s ease;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
-      }
-
-      .reset-view-btn:hover {
-        background: #f9fafb;
-        transform: scale(1.05);
-      }
-
-      .map-legend {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
-        font-size: 13px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        max-width: 240px;
-        overflow: hidden;
-        transition: max-height 0.3s ease, padding 0.3s ease;
-      }
-
-      .map-legend.collapsed {
-        max-height: 50px;
-        padding: 0;
-      }
-
-      .map-legend.expanded {
-        max-height: 500px;
-        padding: 14px;
-      }
-
-      .legend-header {
-        font-size: 15px;
-        font-weight: 600;
-        padding: 14px;
-        cursor: pointer;
-        user-select: none;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: #1f2937;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f9fafb;
-        transition: background 0.2s ease;
-      }
-
-      .legend-header:hover {
-        background: #f3f4f6;
-      }
-
-      .legend-toggle-icon {
-        transition: transform 0.3s ease;
-        font-size: 12px;
-        color: #6b7280;
-        margin-left: 10px;
-      }
-
-      .map-legend.expanded .legend-toggle-icon {
-        transform: rotate(180deg);
-      }
-
-      .legend-content {
-        padding: 14px;
-        max-height: 400px;
-        overflow-y: auto;
-      }
-
-      .map-legend.collapsed .legend-content {
-        display: none;
-      }
-
-      .legend-section {
-        margin-bottom: 12px;
-      }
-
-      .legend-section:last-child {
-        margin-bottom: 0;
-      }
-
-      .legend-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #4b5563;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
-        font-size: 13px;
-        color: #374151;
-        line-height: 1.4;
-      }
-
-      .legend-item:last-child {
-        margin-bottom: 0;
-      }
-
-      .legend-marker {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      }
-
-      /* Custom controls container - horizontal row */
-      .map-custom-controls-row {
-        position: absolute !important;
-        top: 20px !important;
-        left: 20px !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 10px !important;
-        z-index: 1000 !important;
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-      }
-
-      /* Adjust Leaflet controls to sit below our custom row */
-      .leaflet-top.leaflet-left {
-        top: 80px !important;
-        left: 20px !important;
-      }
-
-      .leaflet-control-zoom {
-        margin-top: 0 !important;
-      }
-
-      /* Menu toggle button - in horizontal row */
-      .menu-toggle-btn {
-        width: 44px !important;
-        height: 44px !important;
-        background: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-        font-size: 20px !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
-        transition: all 0.2s ease !important;
-      }
-
-      .menu-toggle-btn:hover {
-        background: #f9fafb !important;
-      }
-
-      /* Reset View Button */
-      .reset-view-btn {
-        width: 44px !important;
-        height: 44px !important;
-        background: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-        font-size: 18px !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
-        transition: all 0.2s ease !important;
-      }
-
-      .reset-view-btn:hover {
-        background: #f9fafb !important;
-      }
-
-      /* Side Toolbar Styles */
-      .side-toolbar {
-        position: fixed;
-        top: 60px;
-        right: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        z-index: 1100;
+      .custom-scroll::-webkit-scrollbar-track {
         background: transparent;
       }
-      .toolbar-btn {
-        width: 44px;
-        height: 44px;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease;
-        position: relative;
-      }
-      .toolbar-btn:hover {
-        background: #f9fafb;
-        transform: translateX(-2px);
-      }
-      .toolbar-btn.active {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-      }
-      .toolbar-icon {
-        font-size: 20px;
-      }
-      .toolbar-tooltip {
-        position: absolute;
-        right: 52px;
-        background: #1f2937;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.2s;
-        pointer-events: none;
-      }
-      .toolbar-btn:hover .toolbar-tooltip {
-        opacity: 1;
-        visibility: visible;
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
       }
 
-      /* Updated Control Panel Styles */
-      .map-controls-panel {
-        position: fixed;
-        top: 60px;
-        right: 70px; /* Positioned to the left of the toolbar */
-        width: 320px;
-        max-height: calc(100vh - 80px); /* Leave room at bottom */
-        display: flex; /* Changed to flex for proper layout */
-        flex-direction: column;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        padding: 20px;
-        z-index: 1000;
-        overflow-y: hidden; /* Hide main scroll, scroll content instead */
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        transition: opacity 0.3s ease, transform 0.3s ease;
+      /* Leaflet overrides */
+      .leaflet-control-zoom {
+        border: none !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+      }
+      .leaflet-control-zoom a {
+        border-radius: 8px !important;
+        margin-bottom: 4px !important;
+        border: 1px solid #f1f5f9 !important;
       }
 
-      .map-controls-panel.hidden {
-        display: none;
-        opacity: 0;
-        pointer-events: none;
-        transform: translateX(20px);
+      /* Dark mode overrides */
+      html.dark .glass-panel {
+        background: rgba(31, 41, 55, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(55, 65, 81, 0.5);
       }
 
-      .controls-content {
-        overflow-y: auto; /* Scroll ONLY the content part */
-        flex: 1;
+      html.dark .leaflet-control-zoom a {
+        background-color: #1f2937 !important;
+        color: #e5e7eb !important;
+        border-color: #374151 !important;
       }
 
-      /* Section Styles */
-      .control-section {
-        display: none;
-        animation: fadeIn 0.3s ease;
+      html.dark .leaflet-control-zoom a:hover {
+        background-color: #374151 !important;
       }
-      .control-section.active {
-        display: block;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(5px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      /* Dark mode overrides */
+      html.dark .glass-panel {
+        background: rgba(31, 41, 55, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(55, 65, 81, 0.5);
       }
 
-      /* Filter Styles */
-      .filter-subtitle {
-        font-weight: 600;
-        font-size: 11px;
-        color: #9ca3af;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-        margin-top: 4px;
+      html.dark .leaflet-control-zoom a {
+        background-color: #1f2937 !important;
+        color: #e5e7eb !important;
+        border-color: #374151 !important;
       }
-      .checkbox-label {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        font-size: 13px;
-        line-height: 1.4;
-        color: #374151;
-        margin-bottom: 4px;
-        cursor: pointer;
-        transition: all 0.15s;
-        padding: 6px 8px;
-        border-radius: 6px;
-      }
-      .checkbox-label:hover {
-        color: #111827;
-        background-color: #e5e7eb;
-      }
-      .status-checkbox {
-        width: 16px;
-        height: 16px;
-        margin-top: 2px;
-        cursor: pointer;
-        border-radius: 4px;
-        border: 1px solid #d1d5db;
-        flex-shrink: 0;
-        accent-color: #667eea;
+
+      html.dark .leaflet-control-zoom a:hover {
+        background-color: #374151 !important;
       }
     </style>
 
     <!-- Sidebar CSS - Load after inline styles to ensure proper cascade -->
     <link rel="stylesheet" href="/css/components/sidebar.css" />
   </head>
-  <body>
+  <body
+    class="h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-900 flex"
+  >
     <!-- Sidebar -->
-    <div id="sidebar" class="collapsible"></div>
+    <div id="sidebar" class="collapsible z-[9999]"></div>
 
-    <!-- Custom Controls Row (Menu, Reset View) -->
-    <div class="map-custom-controls-row">
-      <!-- Menu Toggle Button (for sidebar) -->
-      <button id="menu-toggle" class="menu-toggle-btn" title="Toggle Sidebar">
-        ☰
-      </button>
-
-      <!-- Reset View Button -->
-      <button
-        id="reset-view-btn"
-        class="reset-view-btn"
-        title="Reset View to Default"
+    <!-- Main Content -->
+    <div class="flex-1 relative h-full w-full">
+      <!-- Top Bar Overlay -->
+      <div
+        class="absolute top-4 left-4 right-4 z-[50] flex flex-col md:flex-row justify-between items-start gap-3 pointer-events-none"
       >
-        🏠
-      </button>
-
-      <!-- Reset Filters Button -->
-      <button
-        id="reset-filters-btn"
-        class="menu-toggle-btn"
-        title="Reset All Filters"
-        style="margin-left: 0 !important; font-size: 18px !important"
-      >
-        🔄
-      </button>
-    </div>
-
-    <!-- Toggle Controls Button REMOVED -->
-
-    <!-- Map Legend -->
-    <div id="map-legend" class="map-legend collapsed">
-      <div class="legend-header" id="legend-toggle">
-        <strong>Legend</strong>
-        <span class="legend-toggle-icon">▼</span>
-      </div>
-      <div class="legend-content">
-        <div class="legend-section">
-          <div class="legend-title">Status</div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #6c757d; border: 2px solid #ffffff"
-            ></div>
-            <span>New / Pending</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #ffc107; border: 2px solid #ffffff"
-            ></div>
-            <span>Assigned</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #17a2b8; border: 2px solid #ffffff"
-            ></div>
-            <span>In Progress</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #fd7e14; border: 2px solid #ffffff"
-            ></div>
-            <span>Pending Approval</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #28a745; border: 2px solid #ffffff"
-            ></div>
-            <span>Completed / Confirmed</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #dc3545; border: 2px solid #ffffff"
-            ></div>
-            <span>Rejected / Disputed</span>
-          </div>
-        </div>
-        <div class="legend-section">
-          <div class="legend-title">Priority (Border)</div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #6c757d; border: 3px solid #28a745"
-            ></div>
-            <span>Low</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #6c757d; border: 3px solid #ffc107"
-            ></div>
-            <span>Medium</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #6c757d; border: 3px solid #fd7e14"
-            ></div>
-            <span>High</span>
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-marker"
-              style="background-color: #6c757d; border: 3px solid #dc3545"
-            ></div>
-            <span>Urgent</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Control Panel -->
-    <!-- Side Toolbar -->
-    <div class="side-toolbar">
-      <button class="toolbar-btn active" data-target="display">
-        <span class="toolbar-icon">👁️</span>
-        <span class="toolbar-tooltip">Display</span>
-      </button>
-      <button class="toolbar-btn" data-target="date">
-        <span class="toolbar-icon">📅</span>
-        <span class="toolbar-tooltip">Date</span>
-      </button>
-      <button class="toolbar-btn" data-target="status">
-        <span class="toolbar-icon">☑️</span>
-        <span class="toolbar-tooltip">Status</span>
-      </button>
-      <button class="toolbar-btn" data-target="office">
-        <span class="toolbar-icon">🏢</span>
-        <span class="toolbar-tooltip">Office</span>
-      </button>
-      <button class="toolbar-btn" data-target="stats">
-        <span class="toolbar-icon">📊</span>
-        <span class="toolbar-tooltip">Stats</span>
-      </button>
-    </div>
-
-    <!-- Control Panel -->
-    <div id="map-controls-panel" class="map-controls-panel hidden">
-      <div class="controls-header">
-        <h3 id="panel-title">Display Options</h3>
-        <button class="btn-close" id="close-controls-btn">×</button>
-      </div>
-
-      <div class="controls-content">
-        <!-- Section: Display Options -->
-        <div id="section-display" class="control-section active">
-          <div class="control-group">
-            <button
-              id="toggle-heatmap-btn"
-              class="btn-secondary"
-              style="width: 100%"
+        <!-- Left: Title & Menu PC -->
+        <div
+          class="pointer-events-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-100 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"
+        >
+          <button
+            id="menu-toggle"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors md:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              Toggle Heatmap
-            </button>
-            <button
-              id="toggle-markers-btn"
-              class="btn-secondary"
-              style="width: 100%; margin-top: 8px"
-            >
-              Toggle Markers
-            </button>
-          </div>
-
-          <div class="control-group">
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                cursor: pointer;
-              "
-            >
-              <input
-                type="checkbox"
-                id="include-resolved"
-                checked
-                style="width: 18px; height: 18px; cursor: pointer"
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
               />
-              Include Resolved Complaints
-            </label>
-          </div>
-
-          <div class="control-group">
-            <button
-              id="fit-bounds-btn"
-              class="btn-secondary"
-              style="width: 100%"
+            </svg>
+          </button>
+          <button
+            id="back-btn"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors hidden md:block"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              Fit to All Markers
-            </button>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+          </button>
+          <div>
+            <h1
+              class="font-bold text-gray-900 dark:text-gray-100 leading-tight"
+            >
+              Complaint Heatmap
+            </h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Geospatial analysis of reports
+            </p>
           </div>
         </div>
 
-        <!-- Section: Date Range -->
-        <div id="section-date" class="control-section">
-          <div class="control-group">
-            <div style="display: flex; flex-direction: column; gap: 8px">
-              <input
-                type="date"
-                id="date-range-start"
-                style="
-                  padding: 8px;
-                  border: 1px solid #ddd;
-                  border-radius: 6px;
-                  font-size: 13px;
-                  width: 100%;
-                  box-sizing: border-box;
-                "
-                placeholder="Start Date"
+        <!-- Right: Map Controls Toolbar -->
+        <div
+          class="pointer-events-auto flex flex-wrap gap-2 justify-end items-start text-left"
+        >
+          <!-- Reset View -->
+          <button
+            id="reset-view-btn"
+            class="bg-white dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all font-medium flex items-center gap-2"
+            title="Reset View"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
-              <input
-                type="date"
-                id="date-range-end"
-                style="
-                  padding: 8px;
-                  border: 1px solid #ddd;
-                  border-radius: 6px;
-                  font-size: 13px;
-                  width: 100%;
-                  box-sizing: border-box;
-                "
-                placeholder="End Date"
-              />
-              <div style="display: flex; gap: 5px">
+            </svg>
+          </button>
+
+          <!-- Separator -->
+          <div
+            class="hidden md:block w-px h-8 bg-gray-300 dark:bg-gray-600 mx-1 self-center"
+          ></div>
+
+          <!-- Toolbar: Display -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-display-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <span>Display</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              id="toolbar-display-dropdown"
+              class="absolute top-full right-0 mt-2 w-56 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+            >
+              <div class="space-y-2">
                 <button
-                  id="clear-date-range"
-                  style="
-                    padding: 6px 12px;
-                    background: #f0f0f0;
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    flex: 1;
-                  "
+                  id="toggle-heatmap-btn"
+                  class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg text-left flex justify-between items-center group"
                 >
-                  Clear
+                  Toggle Heatmap
+                  <span
+                    class="w-2 h-2 rounded-full bg-gray-400 group-hover:bg-blue-500 transition-colors"
+                  ></span>
                 </button>
-                <!-- Today button will be inserted here dynamically -->
+                <button
+                  id="toggle-markers-btn"
+                  class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg text-left flex justify-between items-center group"
+                >
+                  Toggle Markers
+                  <span
+                    class="w-2 h-2 rounded-full bg-gray-400 group-hover:bg-blue-500 transition-colors"
+                  ></span>
+                </button>
+                <label
+                  class="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    id="include-resolved"
+                    checked
+                    class="w-4 h-4 text-blue-600 rounded border-gray-300"
+                  />
+                  <span
+                    class="text-xs text-gray-700 dark:text-gray-300 font-medium"
+                    >Include Resolved</span
+                  >
+                </label>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Section: Status Filter -->
-        <div id="section-status" class="control-section">
-          <div class="control-group">
-            <div
-              id="status-filter-group"
-              style="
-                max-height: 200px;
-                overflow-y: auto;
-                padding: 8px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                background: #fafafa;
-              "
+          <!-- Toolbar: Date -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-date-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
             >
-              <!-- Existing Status Checkboxes -->
-              <div style="margin-bottom: 12px">
-                <div class="filter-subtitle">Standard Status</div>
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="new"
-                    id="status-new"
-                  />New</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="pending"
-                    id="status-pending"
-                  />Pending</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="in progress"
-                    id="status-in-progress"
-                  />In Progress</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="resolved"
-                    id="status-resolved"
-                  />Resolved</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="completed"
-                    id="status-completed"
-                  />Completed</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="closed"
-                    id="status-closed"
-                  />Closed</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="rejected"
-                    id="status-rejected"
-                  />Rejected</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="cancelled"
-                    id="status-cancelled"
-                  />Cancelled</label
-                >
-              </div>
-              <div style="margin-bottom: 12px">
-                <div class="filter-subtitle">Workflow Status</div>
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="assigned"
-                    id="status-assigned"
-                  />Assigned</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="in_progress"
-                    id="status-in-progress-wf"
-                  />In Progress (Workflow)</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="pending_approval"
-                    id="status-pending-approval"
-                  />Pending Approval</label
-                >
-              </div>
-              <div>
-                <div class="filter-subtitle">Confirmation Status</div>
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="waiting_for_responders"
-                    id="status-waiting-responders"
-                  />Waiting for Responders</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="waiting_for_complainant"
-                    id="status-waiting-complainant"
-                  />Waiting for Complainant</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="confirmed"
-                    id="status-confirmed"
-                  />Confirmed</label
-                >
-                <label class="checkbox-label"
-                  ><input
-                    type="checkbox"
-                    class="status-checkbox"
-                    value="disputed"
-                    id="status-disputed"
-                  />Disputed</label
-                >
+              <span>Date</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              id="toolbar-date-dropdown"
+              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+            >
+              <div class="space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <span
+                      class="text-[10px] text-gray-500 dark:text-gray-400 block mb-1"
+                      >From</span
+                    >
+                    <input
+                      type="date"
+                      id="date-range-start"
+                      class="w-full text-xs border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <span
+                      class="text-[10px] text-gray-500 dark:text-gray-400 block mb-1"
+                      >To</span
+                    >
+                    <input
+                      type="date"
+                      id="date-range-end"
+                      class="w-full text-xs border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg py-1.5"
+                    />
+                  </div>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button
+                    id="apply-date-filter-btn"
+                    class="flex-1 py-1.5 px-3 bg-blue-600 text-white text-xs font-medium rounded-lg shadow-sm"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    id="clear-date-range"
+                    class="flex-1 py-1.5 px-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Section: Type & Office -->
-        <div id="section-office" class="control-section">
-          <!-- Category Filter -->
-          <div class="control-group">
-            <label>Category Filter:</label>
+          <!-- Toolbar: Status -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-status-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <span>Status</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
             <div
-              id="category-filter-group"
-              style="
-                max-height: 150px;
-                overflow-y: auto;
-                padding: 8px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                background: #fafafa;
-              "
+              id="toolbar-status-dropdown"
+              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div
-                id="category-loading"
-                style="
-                  padding: 16px;
-                  text-align: center;
-                  color: #6c757d;
-                  font-size: 13px;
-                "
+                id="status-filters"
+                class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll"
               >
-                Loading categories...
+                <!-- Populated by JS -->
               </div>
             </div>
           </div>
 
-          <!-- Office Filter -->
-          <div class="control-group">
-            <label>Office Filter:</label>
+          <!-- Toolbar: Category -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-category-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <span>Category</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
             <div
-              id="department-filter-group"
-              style="
-                max-height: 150px;
-                overflow-y: auto;
-                padding: 8px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                background: #fafafa;
-              "
+              id="toolbar-category-dropdown"
+              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div
-                id="department-loading"
-                style="
-                  padding: 16px;
-                  text-align: center;
-                  color: #6c757d;
-                  font-size: 13px;
-                "
+                id="category-filter-group"
+                class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll"
               >
-                Loading departments...
+                <p id="category-loading" class="text-xs text-gray-400 italic">
+                  Loading...
+                </p>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Section: Statistics -->
-        <div id="section-stats" class="control-section">
-          <div class="control-group">
-            <div class="stats-display">
-              <p>Total Complaints: <span id="total-complaints-stat">0</span></p>
-              <p>Visible Markers: <span id="visible-markers-stat">0</span></p>
+          <!-- Toolbar: Office -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-office-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <span>Office</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              id="toolbar-office-dropdown"
+              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+            >
+              <div
+                id="department-filter-group"
+                class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll"
+              >
+                <p id="department-loading" class="text-xs text-gray-400 italic">
+                  Loading...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Toolbar: Stats -->
+          <div class="relative group-dropdown">
+            <button
+              id="toolbar-stats-btn"
+              class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <span>Stats</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              id="toolbar-stats-dropdown"
+              class="absolute top-full right-0 mt-2 w-56 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+            >
+              <div class="grid grid-cols-2 gap-2">
+                <div
+                  class="bg-gray-50 p-2 rounded-lg border border-gray-100 text-center"
+                >
+                  <span
+                    id="total-complaints-stat"
+                    class="block font-bold text-gray-900 dark:text-white text-lg"
+                    >0</span
+                  >
+                  <span
+                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase"
+                    >Total</span
+                  >
+                </div>
+                <div
+                  class="bg-gray-50 p-2 rounded-lg border border-gray-100 text-center"
+                >
+                  <span
+                    id="visible-markers-stat"
+                    class="block font-bold text-gray-900 dark:text-white text-lg text-blue-600 dark:text-blue-400"
+                    >0</span
+                  >
+                  <span
+                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase"
+                    >Visible</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reset Filter -->
+          <button
+            id="reset-filters-btn"
+            class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-sm font-medium"
+            title="Reset Filters"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Legend Overlay (Bottom Left) -->
+      <div
+        id="map-legend"
+        class="absolute bottom-6 left-6 z-[50] w-64 glass-panel rounded-xl shadow-lg transition-all duration-300 transform translate-y-0"
+      >
+        <div
+          class="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center cursor-pointer bg-gray-50/50 dark:bg-gray-800/50 rounded-t-xl"
+          id="legend-toggle"
+        >
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >Legend</span
+          >
+          <svg
+            id="legend-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 text-gray-400 transform transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+        <div class="legend-content p-3 max-h-60 overflow-y-auto custom-scroll">
+          <div class="space-y-3">
+            <!-- Status -->
+            <div>
+              <p
+                class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2"
+              >
+                Status
+              </p>
+              <div class="space-y-1">
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full bg-gray-500 border border-white shadow-sm"
+                  ></div>
+                  New/Pending
+                </div>
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full bg-yellow-400 border border-white shadow-sm"
+                  ></div>
+                  Assigned
+                </div>
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full bg-blue-500 border border-white shadow-sm"
+                  ></div>
+                  In Progress
+                </div>
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full bg-green-500 border border-white shadow-sm"
+                  ></div>
+                  Completed
+                </div>
+              </div>
+            </div>
+            <!-- Priority -->
+            <div>
+              <p
+                class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2"
+              >
+                Priority (Border)
+              </p>
+              <div class="space-y-1">
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full border-2 border-red-500 bg-gray-200 dark:bg-gray-600"
+                  ></div>
+                  Urgent
+                </div>
+                <div
+                  class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full border-2 border-orange-400 bg-gray-200 dark:bg-gray-600"
+                  ></div>
+                  High
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Filters Panel (Floating Right) -->
+
+      <!-- Map Container -->
+      <div
+        id="map"
+        class="h-full w-full bg-gray-100 dark:bg-gray-800 absolute inset-0 z-0"
+      ></div>
     </div>
 
-    <!-- Map Container -->
-    <div id="map"></div>
+    <!-- Hidden Elements needed by JS logic but not shown directly -->
+    <div class="hidden">
+      <button class="toolbar-btn" data-target="display"></button>
+      <button class="toolbar-btn" data-target="date"></button>
+      <button class="toolbar-btn" data-target="status"></button>
+      <button class="toolbar-btn" data-target="office"></button>
+      <button class="toolbar-btn" data-target="stats"></button>
+    </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
