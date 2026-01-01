@@ -1,5 +1,5 @@
-import { getUserRole } from "../auth/authChecker.js";
-import { brandConfig } from "../config/config.js";
+import { getUserRole, getUserMeta } from "../auth/authChecker.js";
+import { brandConfig, supabase } from "../config/config.js";
 import { getMenuIcon, getIcon } from "../utils/icons.js";
 
 const _sidebarEl = document.getElementById("sidebar");
@@ -105,7 +105,6 @@ async function setSidebarRole() {
       console.error("Failed to get user role:", error);
       // Try to get role from session as fallback
       try {
-        const { supabase } = await import("../config/config.js");
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -121,7 +120,6 @@ async function setSidebarRole() {
     // If still no role, try to get it from localStorage
     if (!role) {
       try {
-        const { getUserMeta } = await import("../auth/authChecker.js");
         const userMeta = getUserMeta();
         role = userMeta?.role;
       } catch (error) {
@@ -140,12 +138,17 @@ async function setSidebarRole() {
     const menuItems = getMenuItemsForRole(roleLower);
     // Build sidebar HTML
     if (_sidebarEl) {
+      const { dashboardUrl, name: brandName } = brandConfig;
+
+      const menuHtml = menuItems.map(createMenuItemHtml).join("");
+
+      /* eslint-disable indent */
       _sidebarEl.innerHTML = `
         <div class="sidebar-brand">
           <div class="brand-logo">
             <div class="brand-icon">CL</div>
             <div class="brand-text">
-              <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name}</a>
+              <a href="${dashboardUrl}" class="brand-link">${brandName}</a>
               <div class="brand-subtitle">Citizen Link</div>
             </div>
           </div>
@@ -153,30 +156,28 @@ async function setSidebarRole() {
         </div>
 
         <div class="sidebar-menu">
-          ${menuItems.map((item) => `
-            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label}">
-              <span class="menu-icon">${getMenuIcon(item.icon, { size: 20 })}</span>
-              <span>${item.label}</span>
-            </a>
-          `).join("")}
+          ${menuHtml}
         </div>
 
         <div class="sidebar-bottom">
           <div class="theme-toggle" id="sidebar-theme-toggle">
             <div class="theme-toggle-label">
-              <span class="menu-icon">${getIcon("darkMode", { size: 20 })}</span>
+              <span class="menu-icon">${getIcon("darkMode", {
+                size: 20,
+              })}</span>
               <span>Dark Mode</span>
             </div>
             <div class="toggle-switch" id="sidebar-toggle-switch"></div>
           </div>
           <div class="sidebar-footer">
             <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
-              <span class="menu-icon">${getMenuIcon("signout", { size: 20 })}</span>
+              <span class="menu-icon">${getIcon("signout", { size: 20 })}</span>
               <span>Sign Out</span>
             </a>
           </div>
         </div>
       `;
+      /* eslint-enable indent */
 
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
@@ -197,14 +198,13 @@ async function setSidebarRole() {
             <p>Failed to load sidebar. Please refresh the page.</p>
             <button onclick="window.location.reload()" class="retry-btn">Retry</button>
           </div>
-</div>
-`;
+        </div>
+      `;
     }
   }
 }
 function getMenuItemsForRole(role) {
   // Normalize role using general normalization function
-  const _originalRole = role;
   role = normalizeRoleForClient(role);
   // Role normalization happens silently
 
@@ -395,7 +395,6 @@ function initializeLogout() {
         // Clear server session
         await fetch("/auth/session", { method: "DELETE" });
         // Clear Supabase session
-        const { supabase } = await import("../config/config.js");
         await supabase.auth.signOut();
         // Clear local storage
         localStorage.clear();
@@ -430,5 +429,18 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(savedTheme);
   updateToggleSwitch(savedTheme === "dark");
 });
+
+/* eslint-disable indent */
+function createMenuItemHtml(item) {
+  return `
+    <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${
+    item.label
+  }">
+      <span class="menu-icon">${getMenuIcon(item.icon, { size: 20 })}</span>
+      <span>${item.label}</span>
+    </a>
+  `;
+}
+/* eslint-enable indent */
 
 export { initializeSidebar, setActiveMenuItem, openSidebar, closeSidebar };

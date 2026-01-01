@@ -23,6 +23,15 @@
   justify-content: center;
 }
 
+.auth-page .header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1030;
+}
+
 .auth-background {
   position: absolute;
   top: 0;

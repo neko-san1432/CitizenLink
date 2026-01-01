@@ -833,23 +833,20 @@ class LguAdminController {
 
       if (complaintIds.length > 0) {
         // Fetch assignments only for the displayed complaints
-        // And only for THIS department
         const { data: assignments, error: assignError } = await supabase
           .from("complaint_assignments")
           .select(
             "id, complaint_id, assigned_to, assigned_by, status, priority, deadline, notes, created_at, updated_at, department_id, assigned_to_user:assigned_to(first_name, last_name)"
           )
           .in("complaint_id", complaintIds)
-          .eq("department_id", department.id)
-          .order("created_at", { ascending: false }); // Get latest
+          .order("created_at", { ascending: false });
 
         if (!assignError && assignments) {
-          // Map assignments by complaint_id
-          // Since we ordered by created_at DESC, the first one we see is the latest
           assignments.forEach((a) => {
             if (!assignmentsMap[a.complaint_id]) {
-              assignmentsMap[a.complaint_id] = a;
+              assignmentsMap[a.complaint_id] = [];
             }
+            assignmentsMap[a.complaint_id].push(a);
           });
         }
       }
@@ -895,13 +892,20 @@ class LguAdminController {
       // ---------------------------------------------------------
 
       const finalData = complaints.map((complaint) => {
-        // ... (assignment mapping logic) ...
-        const assignment = assignmentsMap[complaint.id];
+        const allAssignments = assignmentsMap[complaint.id] || [];
+        const assignment = allAssignments.find(
+          (a) => a.department_id === department.id
+        );
+        const hasOtherAssignments = allAssignments.some(
+          (a) => a.department_id !== department.id
+        );
+
         const userProfile = usersMap[complaint.submitted_by];
 
         // Basic fields from complaint
         const result = {
           id: assignment ? assignment.id : null,
+          has_other_assignments: hasOtherAssignments,
           complaint_id: complaint.id, // Internal UUID
 
           // Use sliced UUID as Display ID since no readable ID exists

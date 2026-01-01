@@ -35,6 +35,7 @@ class LguAdminAssignments {
     this.initialize();
   }
   async initialize() {
+    this.setupEventListeners();
     // Show loading state initially
     this.showLoadingState();
     try {
@@ -214,16 +215,23 @@ class LguAdminAssignments {
     // Filter button toggles (All, Unassigned, Assigned)
     document.querySelectorAll(".filter-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
+        const target = e.target.closest(".filter-btn");
+        if (!target) return;
+
         // Remove active class from all filter buttons
         document
           .querySelectorAll(".filter-btn")
           .forEach((b) => b.classList.remove("active"));
+
         // Add active class to clicked button
-        e.target.classList.add("active");
+        target.classList.add("active");
+
         // Get filter value
-        const filterValue = e.target.dataset.filter;
+        const filterValue = target.dataset.filter;
+
         // Apply client-side filter for assignment status
         this.currentAssignmentFilter = filterValue;
+
         // Reload data from server (reset to page 1)
         this.changePage(1);
       });
@@ -367,11 +375,11 @@ class LguAdminAssignments {
     if (totalItems === 0 && paginatedData.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 3rem;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                <div style="font-size: 2rem;">📋</div>
-                <div style="color: #4a5568; font-weight: 600;">No assignments found</div>
-                <div style="color: #718096; font-size: 0.875rem;">Try adjusting your filters</div>
+          <td colspan="7" class="text-center py-12">
+            <div class="flex flex-col items-center gap-4">
+                <div class="text-4xl">📋</div>
+                <div class="text-gray-600 dark:text-gray-300 font-semibold">No assignments found</div>
+                <div class="text-gray-500 dark:text-gray-400 text-sm">Try adjusting your filters</div>
             </div>
           </td>
         </tr>
@@ -549,9 +557,15 @@ class LguAdminAssignments {
       ? new Date(assignment.assigned_at).toLocaleDateString()
       : new Date(assignment.submitted_at).toLocaleDateString();
 
+    const isCompleted = ["completed", "cancelled"].includes(
+      assignment.status?.toLowerCase()
+    );
+    const disabledAttr = isCompleted ? "disabled" : "";
+    const disabledClass = isCompleted ? "opacity-50 cursor-not-allowed" : "";
+
     return `
-      <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
-        <td style="padding: 1rem; color: #718096; font-size: 0.875rem;">
+      <tr class="border-b border-gray-100 dark:border-gray-700 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+        <td class="p-4 text-sm text-gray-500 dark:text-gray-400">
           #${
             assignment.display_id ||
             (assignment.complaint_id
@@ -559,60 +573,67 @@ class LguAdminAssignments {
               : "N/A")
           }
         </td>
-        <td style="padding: 1rem;">
-          <div style="font-weight: 600; color: #2d3748; margin-bottom: 0.25rem;">${escapeHtml(
+        <td class="p-4">
+          <div class="font-semibold text-gray-800 dark:text-gray-200 mb-1">${escapeHtml(
             assignment.title || "Untitled"
           )}</div>
-          <div style="color: #718096; font-size: 0.8rem; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          <div class="text-gray-500 dark:text-gray-400 text-xs max-w-[250px] truncate">
             ${escapeHtml(assignment.description || "No description")}
           </div>
         </td>
-        <td style="padding: 1rem;">
-           <div style="color: #4a5568;">${escapeHtml(
+        <td class="p-4">
+           <div class="text-gray-700 dark:text-gray-300 text-sm">${escapeHtml(
              assignment.citizen_name || "Unknown"
            )}</div>
-           <div style="color: #a0aec0; font-size: 0.8rem;">${escapeHtml(
+           <div class="text-gray-400 dark:text-gray-500 text-xs">${escapeHtml(
              assignment.location_text || "No location"
            )}</div>
         </td>
-        <td style="padding: 1rem;">
+        <td class="p-4">
            ${
              assignment.officer_name
-               ? `<div style="display:flex;align-items:center;gap:0.5rem;"><div style="width:24px;height:24px;border-radius:50%;background:#3182ce;color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">${assignment.officer_name.charAt(
-                   0
-                 )}</div><div>${escapeHtml(
-                   assignment.officer_name
-                 )}</div></div>`
-               : '<span style="color: #a0aec0; font-style: italic;">Unassigned</span>'
+               ? `<div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-gray-700">
+                        ${assignment.officer_name.charAt(0)}
+                    </div>
+                    <div class="text-sm text-gray-700 dark:text-gray-300">${escapeHtml(
+                      assignment.officer_name
+                    )}</div>
+                  </div>`
+               : '<span class="text-gray-400 dark:text-gray-500 italic text-sm">Unassigned</span>'
            }
         </td>
-        <td style="padding: 1rem;">
-          <span class="priority-badge ${priorityClass}">${
+        <td class="p-4">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase ${priorityClass}">${
       assignment.priority
     }</span>
         </td>
-        <td style="padding: 1rem;">
-          <span class="status-badge ${statusClass}">${getStatusText(
+        <td class="p-4">
+          <div class="flex flex-col items-start gap-1">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${getStatusText(
       assignment.status
     )}</span>
-        </td>
-        <td style="padding: 1rem; text-align: center;">
-          <div style="display: flex; gap: 0.5rem; justify-content: center;">
-            <button class="btn-secondary view-details-btn" data-complaint-id="${
-              assignment.complaint_id
-            }" title="View Details" style="padding: 0.25rem 0.5rem;">
-              👁️
-            </button>
             ${
-              assignment.status === "unassigned" || !assignment.assigned_to
-                ? `<button class="btn-primary assign-btn" data-complaint-id="${assignment.complaint_id}" title="Assign" style="padding: 0.25rem 0.5rem;">
-                  👤
-                 </button>`
-                : `<button class="btn-secondary reassign-btn" data-complaint-id="${assignment.complaint_id}" title="Reassign" style="padding: 0.25rem 0.5rem;">
-                  🔄
-                 </button>`
+              assignment.has_other_assignments && !assignment.assigned_to
+                ? `<span class="text-[10px] text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded border border-orange-100 dark:border-orange-800 whitespace-nowrap">
+                     Assigned by others
+                   </span>`
+                : ""
             }
           </div>
+        </td>
+        <td class="p-4 text-center">
+          ${
+            assignment.status === "unassigned" || !assignment.assigned_to
+              ? `<button class="btn btn-primary btn-sm assign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
+                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                   Assign
+                 </button>`
+              : `<button class="btn btn-secondary btn-sm reassign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
+                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                   Manage
+                 </button>`
+          }
         </td>
       </tr>
     `;
@@ -674,19 +695,19 @@ class LguAdminAssignments {
     if (complaint && complaintSummary) {
       complaintSummary.dataset.complaintId = complaintId;
       complaintSummary.innerHTML = `
-        <div class="complaint-summary-title">${escapeHtml(
+        <div class="complaint-summary-title font-semibold text-gray-900 dark:text-white mb-2">${escapeHtml(
           complaint.title || "Untitled Complaint"
         )}</div>
-        <div class="complaint-summary-detail"><strong>ID:</strong> #${complaint.complaint_id.slice(
+        <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>ID:</strong> #${complaint.complaint_id.slice(
           -8
         )}</div>
-        <div class="complaint-summary-detail"><strong>Description:</strong> ${escapeHtml(
+        <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Description:</strong> ${escapeHtml(
           complaint.description || "No description"
         )}</div>
-        <div class="complaint-summary-detail"><strong>Location:</strong> ${escapeHtml(
+        <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Location:</strong> ${escapeHtml(
           complaint.location_text || "Not specified"
         )}</div>
-        <div class="complaint-summary-detail"><strong>Citizen:</strong> ${escapeHtml(
+        <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Citizen:</strong> ${escapeHtml(
           complaint.citizen_name || "Unknown"
         )}</div>
       `;
@@ -697,21 +718,26 @@ class LguAdminAssignments {
       officerCheckboxes.innerHTML = "";
       if (this.officers.length === 0) {
         officerCheckboxes.innerHTML =
-          '<div class="no-officers">No officers available</div>';
+          '<div class="no-officers text-center text-gray-400 dark:text-gray-500 italic p-4">No officers available</div>';
       } else {
         this.officers.forEach((officer, index) => {
           const checkboxItem = document.createElement("div");
-          checkboxItem.className = "officer-checkbox-item";
+          checkboxItem.className =
+            "officer-checkbox-item flex items-center p-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer";
           checkboxItem.innerHTML = `
             <input type="checkbox" id="officer-${officer.id}" value="${
             officer.id
-          }" name="officers">
-            <label for="officer-${officer.id}">
-              <div class="officer-info">
-                <div class="officer-name">${escapeHtml(officer.name)}</div>
-                <div class="officer-details">${escapeHtml(officer.email)} • ${
-            officer.employee_id || "No ID"
-          }</div>
+          }" name="officers" class="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            <label for="officer-${
+              officer.id
+            }" class="flex-1 cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-300">
+              <div class="officer-info flex flex-col gap-1">
+                <div class="officer-name font-medium text-gray-800 dark:text-gray-200">${escapeHtml(
+                  officer.name
+                )}</div>
+                <div class="officer-details text-xs text-gray-500 dark:text-gray-400">${escapeHtml(
+                  officer.email
+                )} • ${officer.employee_id || "No ID"}</div>
               </div>
             </label>
           `;
@@ -720,16 +746,21 @@ class LguAdminAssignments {
       }
     }
     // Show modal
-    modal.style.display = "flex";
-    modal.style.visibility = "visible";
-    modal.style.opacity = "1";
-    modal.style.zIndex = "9999";
+    // Show modal
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    modal.style.display = ""; // cleared
+    modal.style.visibility = "";
+    modal.style.opacity = "";
+    modal.style.zIndex = "";
     document.body.style.overflow = "hidden";
   }
   closeAssignmentModal() {
     const modal = document.getElementById("assignment-modal");
     if (modal) {
-      modal.style.display = "none";
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      modal.style.display = "";
       document.body.style.overflow = "";
     }
   }
@@ -985,20 +1016,20 @@ class LguAdminAssignments {
 
   generateComplaintDetailsFooter(complaint) {
     return `
-      <div class="details-footer-actions">
-        <button type="button" class="btn-secondary" id="close-details-panel">Close</button>
+      <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 justify-end">
+        <button type="button" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm" id="close-details-panel">Close</button>
         ${
           complaint.status === "unassigned"
             ? `
-          <button type="button" class="btn-primary" id="assign-from-details">
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors font-medium text-sm shadow-sm" id="assign-from-details">
             Assign to Officer
           </button>
         `
             : `
-          <button type="button" class="btn-secondary" id="view-assignment">
+          <button type="button" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm" id="view-assignment">
             View Assignment
           </button>
-          <button type="button" class="btn-outline" id="reassign-from-details">
+          <button type="button" class="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium text-sm ml-2" id="reassign-from-details">
             Reassign
           </button>
         `
@@ -1075,13 +1106,13 @@ class LguAdminAssignments {
               ${
                 isImage
                   ? `
-                <button class="btn-sm btn-outline" onclick="this.previewEvidence('${file.name}', '${file.url}')">
+                <button class="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" onclick="this.previewEvidence('${file.name}', '${file.url}')">
                   Preview
                 </button>
               `
                   : ""
               }
-              <button class="btn-sm btn-primary" onclick="this.downloadEvidence('${
+              <button class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors ml-1" onclick="this.downloadEvidence('${
                 file.name
               }', '${file.url}')">
                 Download
