@@ -1,4 +1,4 @@
-describe('ComplaintService - Management Features', () => {
+describe("ComplaintService - Management Features", () => {
   let ComplaintService;
   let complaintService;
   let mockSupabase;
@@ -28,21 +28,21 @@ describe('ComplaintService - Management Features', () => {
       createNotification: jest.fn().mockResolvedValue(true)
     };
 
-    ComplaintService = require('../../src/server/services/ComplaintService');
+    ComplaintService = require("../../src/server/services/ComplaintService");
     // Inject mocks via constructor
     complaintService = new ComplaintService(mockComplaintRepo, null, null, mockNotificationService);
   });
 
-  describe('markAsFalseComplaint', () => {
-    test('should mark complaint as false and update status', async () => {
-      const complaintId = 'comp-123';
-      const userId = 'officer-123';
-      const reason = 'Prank call';
+  describe("markAsFalseComplaint", () => {
+    test("should mark complaint as false and update status", async () => {
+      const complaintId = "comp-123";
+      const userId = "officer-123";
+      const reason = "Prank call";
 
       // Mock getComplaintById
       mockComplaintRepo.getComplaintById.mockResolvedValue({
         id: complaintId,
-        submitted_by: 'citizen-1'
+        submitted_by: "citizen-1"
       });
 
       // Mock logAction
@@ -54,7 +54,7 @@ describe('ComplaintService - Management Features', () => {
           id: complaintId,
           is_false_complaint: true,
           false_complaint_reason: reason,
-          workflow_status: 'rejected'
+          workflow_status: "rejected"
         },
         error: null
       });
@@ -63,23 +63,23 @@ describe('ComplaintService - Management Features', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.is_false_complaint).toBe(true);
-      expect(result.data.workflow_status).toBe('rejected');
+      expect(result.data.workflow_status).toBe("rejected");
 
       // Verify update call
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
         is_false_complaint: true,
         false_complaint_reason: reason,
-        workflow_status: 'rejected',
+        workflow_status: "rejected",
         marked_false_by: userId
       }));
     });
   });
 
-  describe('markAsDuplicate', () => {
-    test('should mark complaint as duplicate of master complaint', async () => {
-      const complaintId = 'comp-duplicate';
-      const masterId = 'comp-master';
-      const userId = 'officer-123';
+  describe("markAsDuplicate", () => {
+    test("should mark complaint as duplicate of master complaint", async () => {
+      const complaintId = "comp-duplicate";
+      const masterId = "comp-master";
+      const userId = "officer-123";
 
       // Mock getComplaintById for both calls
       mockComplaintRepo.getComplaintById
@@ -95,7 +95,7 @@ describe('ComplaintService - Management Features', () => {
           id: complaintId,
           is_duplicate: true,
           master_complaint_id: masterId,
-          workflow_status: 'closed'
+          workflow_status: "closed"
         },
         error: null
       });
@@ -109,18 +109,18 @@ describe('ComplaintService - Management Features', () => {
     });
   });
 
-  describe('cancelComplaint', () => {
-    test('should cancel complaint and notify user', async () => {
-      const complaintId = 'comp-cancel';
-      const userId = 'citizen-1';
-      const reason = 'Mistake';
+  describe("cancelComplaint", () => {
+    test("should cancel complaint and notify user", async () => {
+      const complaintId = "comp-cancel";
+      const userId = "citizen-1";
+      const reason = "Mistake";
 
       // Mock getComplaintById
       mockComplaintRepo.getComplaintById.mockResolvedValue({
         id: complaintId,
         submitted_by: userId,
-        workflow_status: 'new',
-        title: 'Test Complaint'
+        workflow_status: "new",
+        title: "Test Complaint"
       });
 
       // Mock logAction
@@ -130,7 +130,7 @@ describe('ComplaintService - Management Features', () => {
       mockSupabase.single.mockResolvedValueOnce({
         data: {
           id: complaintId,
-          workflow_status: 'cancelled',
+          workflow_status: "cancelled",
           cancellation_reason: reason,
           cancelled_by: userId
         },
@@ -139,12 +139,12 @@ describe('ComplaintService - Management Features', () => {
 
       const result = await complaintService.cancelComplaint(complaintId, userId, reason);
 
-      expect(result.workflow_status).toBe('cancelled');
+      expect(result.workflow_status).toBe("cancelled");
       expect(result.cancellation_reason).toBe(reason);
 
       // Verify update call
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
-        workflow_status: 'cancelled',
+        workflow_status: "cancelled",
         cancellation_reason: reason,
         cancelled_by: userId
       }));

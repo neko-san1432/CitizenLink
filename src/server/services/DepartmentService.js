@@ -1,6 +1,6 @@
-const DepartmentRepository = require('../repositories/DepartmentRepository');
-const { getDepartmentsByCategory } = require('../utils/departmentMapping');
-const Department = require('../models/Department');
+const DepartmentRepository = require("../repositories/DepartmentRepository");
+const { getDepartmentsByCategory } = require("../utils/departmentMapping");
+const Department = require("../models/Department");
 
 class DepartmentService {
 
@@ -16,18 +16,18 @@ class DepartmentService {
   async getDepartmentById(id) {
     const department = await this.departmentRepo.findById(id);
     if (!department) {
-      throw new Error('Department not found');
+      throw new Error("Department not found");
     }
     return department;
   }
   async createDepartment(departmentData) {
     const validation = Department.validate(departmentData);
     if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const codeExists = await this.departmentRepo.checkCodeExists(departmentData.code);
     if (codeExists) {
-      throw new Error('Department code already exists');
+      throw new Error("Department code already exists");
     }
     const sanitizedData = {
       name: departmentData.name.trim(),
@@ -41,12 +41,12 @@ class DepartmentService {
     const existingDepartment = await this.getDepartmentById(id);
     const validation = Department.validate(departmentData);
     if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     if (departmentData.code && departmentData.code !== existingDepartment.code) {
       const codeExists = await this.departmentRepo.checkCodeExists(departmentData.code, id);
       if (codeExists) {
-        throw new Error('Department code already exists');
+        throw new Error("Department code already exists");
       }
     }
     const sanitizedData = {
@@ -69,12 +69,12 @@ class DepartmentService {
     try {
       // Map complaint types to department structure categories
       const typeToCategoryMapping = {
-        'infrastructure': 'Infrastructure & Public Works',
-        'health': 'Health & Social Services',
-        'security': 'Law Enforcement & Legal Affairs',
-        'environment': 'Environment & Sanitation',
-        'social': 'Health & Social Services',
-        'utilities': 'Infrastructure & Public Works'
+        "infrastructure": "Infrastructure & Public Works",
+        "health": "Health & Social Services",
+        "security": "Law Enforcement & Legal Affairs",
+        "environment": "Environment & Sanitation",
+        "social": "Health & Social Services",
+        "utilities": "Infrastructure & Public Works"
       };
       const categoryName = typeToCategoryMapping[type];
       if (!categoryName) {
@@ -87,11 +87,11 @@ class DepartmentService {
         id: dept.id,
         name: dept.name,
         code: dept.code,
-        description: dept.description || '',
+        description: dept.description || "",
         is_active: true
       }));
     } catch (error) {
-      console.error('Error getting departments by type:', error);
+      console.error("Error getting departments by type:", error);
       // Fallback to all departments
       return await this.getActiveDepartments();
     }
@@ -100,18 +100,18 @@ class DepartmentService {
     // First get the department to get its code
     const department = await this.getDepartmentById(departmentId);
     if (!department) {
-      throw new Error('Department not found');
+      throw new Error("Department not found");
     }
     // Get all users from auth.users
     const { data: allUsers, error } = await this.departmentRepo.supabase.auth.admin.listUsers();
     if (error) {
-      throw new Error('Failed to fetch users');
+      throw new Error("Failed to fetch users");
     }
     // Filter users who are officers for this department
     const officers = allUsers.users
       .filter(user => {
         const metadata = user.user_metadata || {};
-        const role = metadata.role || '';
+        const role = metadata.role || "";
         // Match lgu-* but exclude lgu-admin-* and lgu-hr-*
         const isOfficer = /^lgu-(?!admin|hr)/.test(role);
         // Check if the role contains the department code (e.g., lgu-wst for wst department)
@@ -143,11 +143,11 @@ class DepartmentService {
     return diffInMinutes <= 10;
   }
   getLastSeenText(lastSignInAt) {
-    if (!lastSignInAt) return 'Never';
+    if (!lastSignInAt) return "Never";
     const lastSignIn = new Date(lastSignInAt);
     const now = new Date();
     const diffInMinutes = Math.floor((now - lastSignIn) / (1000 * 60));
-    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
@@ -159,20 +159,20 @@ class DepartmentService {
    * Get all departments with their subcategory mappings
    */
   async getDepartmentsWithMappings() {
-    const Database = require('../config/database');
+    const Database = require("../config/database");
 
     const supabase = Database.getClient();
     try {
       // Get all departments
       const { data: departments, error: deptError } = await supabase
-        .from('departments')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+        .from("departments")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
       if (deptError) throw deptError;
       // Get department-subcategory mappings
       const { data: mappings, error: mapError } = await supabase
-        .from('department_subcategory_mapping')
+        .from("department_subcategory_mapping")
         .select(`
           department_id,
           subcategory_id,
@@ -186,7 +186,7 @@ class DepartmentService {
         mappings
       };
     } catch (error) {
-      console.error('Error getting departments with mappings:', error);
+      console.error("Error getting departments with mappings:", error);
       throw error;
     }
   }
@@ -194,12 +194,12 @@ class DepartmentService {
    * Get departments by subcategory
    */
   async getDepartmentsBySubcategory(subcategoryId) {
-    const Database = require('../config/database');
+    const Database = require("../config/database");
 
     const supabase = Database.getClient();
     try {
       const { data, error } = await supabase
-        .from('department_subcategory_mapping')
+        .from("department_subcategory_mapping")
         .select(`
           department_id,
           response_priority,
@@ -212,8 +212,8 @@ class DepartmentService {
             level
           )
         `)
-        .eq('subcategory_id', subcategoryId)
-        .order('response_priority');
+        .eq("subcategory_id", subcategoryId)
+        .order("response_priority");
       if (error) throw error;
       // Flatten the structure
       return data.map(item => ({
@@ -225,7 +225,7 @@ class DepartmentService {
         level: item.departments.level
       }));
     } catch (error) {
-      console.error('Error getting departments by subcategory:', error);
+      console.error("Error getting departments by subcategory:", error);
       throw error;
     }
   }

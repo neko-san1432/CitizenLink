@@ -1,4 +1,4 @@
-const DepartmentService = require('../services/DepartmentService');
+const DepartmentService = require("../services/DepartmentService");
 
 class DepartmentController {
 
@@ -13,10 +13,10 @@ class DepartmentController {
         data: departments
       });
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      console.error("Error fetching departments:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch departments'
+        error: "Failed to fetch departments"
       });
     }
   }
@@ -28,10 +28,10 @@ class DepartmentController {
         data: departments
       });
     } catch (error) {
-      console.error('Error fetching active departments:', error);
+      console.error("Error fetching active departments:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch active departments'
+        error: "Failed to fetch active departments"
       });
     }
   }
@@ -44,8 +44,8 @@ class DepartmentController {
         data: department
       });
     } catch (error) {
-      console.error('Error fetching department:', error);
-      const status = error.message === 'Department not found' ? 404 : 500;
+      console.error("Error fetching department:", error);
+      const status = error.message === "Department not found" ? 404 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -58,12 +58,12 @@ class DepartmentController {
       res.status(201).json({
         success: true,
         data: department,
-        message: 'Department created successfully'
+        message: "Department created successfully"
       });
     } catch (error) {
-      console.error('Error creating department:', error);
-      const status = error.message.includes('Validation failed') ||
-                     error.message.includes('already exists') ? 400 : 500;
+      console.error("Error creating department:", error);
+      const status = error.message.includes("Validation failed") ||
+                     error.message.includes("already exists") ? 400 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -77,13 +77,13 @@ class DepartmentController {
       res.json({
         success: true,
         data: department,
-        message: 'Department updated successfully'
+        message: "Department updated successfully"
       });
     } catch (error) {
-      console.error('Error updating department:', error);
-      const status = error.message === 'Department not found' ? 404 :
-        error.message.includes('Validation failed') ||
-                     error.message.includes('already exists') ? 400 : 500;
+      console.error("Error updating department:", error);
+      const status = error.message === "Department not found" ? 404 :
+        error.message.includes("Validation failed") ||
+                     error.message.includes("already exists") ? 400 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -96,11 +96,11 @@ class DepartmentController {
       await this.departmentService.deleteDepartment(id);
       res.json({
         success: true,
-        message: 'Department deactivated successfully'
+        message: "Department deactivated successfully"
       });
     } catch (error) {
-      console.error('Error deleting department:', error);
-      const status = error.message === 'Department not found' ? 404 : 500;
+      console.error("Error deleting department:", error);
+      const status = error.message === "Department not found" ? 404 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -116,10 +116,10 @@ class DepartmentController {
         data: departments
       });
     } catch (error) {
-      console.error('Error fetching departments by type:', error);
+      console.error("Error fetching departments by type:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch departments'
+        error: "Failed to fetch departments"
       });
     }
   }
@@ -132,10 +132,10 @@ class DepartmentController {
         data: officers
       });
     } catch (error) {
-      console.error('Error fetching department officers:', error);
+      console.error("Error fetching department officers:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch department officers'
+        error: "Failed to fetch department officers"
       });
     }
   }
@@ -150,10 +150,10 @@ class DepartmentController {
         data: result
       });
     } catch (error) {
-      console.error('Error fetching departments with mappings:', error);
+      console.error("Error fetching departments with mappings:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch departments with mappings'
+        error: "Failed to fetch departments with mappings"
       });
     }
   }
@@ -169,10 +169,10 @@ class DepartmentController {
         data: departments
       });
     } catch (error) {
-      console.error('Error fetching departments by subcategory:', error);
+      console.error("Error fetching departments by subcategory:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch departments by subcategory'
+        error: "Failed to fetch departments by subcategory"
       });
     }
   }

@@ -4,8 +4,8 @@ class Setting {
     this.id = data.id;
     this.key = data.key;
     this.value = data.value;
-    this.type = data.type || 'text';
-    this.category = data.category || 'general';
+    this.type = data.type || "text";
+    this.category = data.category || "general";
     this.description = data.description;
     this.is_public = data.is_public !== void 0 ? data.is_public : false;
     this.created_at = data.created_at;
@@ -14,17 +14,17 @@ class Setting {
   static validate(data) {
     const errors = [];
     if (!data.key || data.key.trim().length < 2) {
-      errors.push('Setting key must be at least 2 characters');
+      errors.push("Setting key must be at least 2 characters");
     }
     if (data.key && !/^[a-z0-9_]+$/.test(data.key.trim())) {
-      errors.push('Setting key must contain only lowercase letters, numbers, and underscores');
+      errors.push("Setting key must contain only lowercase letters, numbers, and underscores");
     }
-    if (!data.value && data.value !== '') {
-      errors.push('Setting value is required');
+    if (!data.value && data.value !== "") {
+      errors.push("Setting value is required");
     }
-    const validTypes = ['text', 'textarea', 'html', 'boolean', 'number', 'json'];
+    const validTypes = ["text", "textarea", "html", "boolean", "number", "json"];
     if (data.type && !validTypes.includes(data.type)) {
-      errors.push('Invalid setting type');
+      errors.push("Invalid setting type");
     }
     return {
       isValid: errors.length === 0,
@@ -34,11 +34,11 @@ class Setting {
   getParsedValue() {
 
     switch (this.type) {
-      case 'boolean':
-        return this.value === 'true' || this.value === true;
-      case 'number':
+      case "boolean":
+        return this.value === "true" || this.value === true;
+      case "number":
         return parseFloat(this.value);
-      case 'json':
+      case "json":
         try {
           return JSON.parse(this.value);
         } catch {

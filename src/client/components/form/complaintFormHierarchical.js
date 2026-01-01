@@ -2,22 +2,22 @@
  * Hierarchical Complaint Form Controller
  * Handles category -> subcategory -> department selection
  */
-import { handleComplaintSubmit, resetComplaintForm } from './formSubmission.js';
-import { setupRealtimeValidation } from '../../utils/validation.js';
-import { createComplaintFileHandler, setupDragAndDrop } from '../../utils/fileHandler.js';
-import showMessage from '../toast.js';
-import apiClient from '../../config/apiClient.js';
-import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/roleToggle.js';
-import { getUserRole } from '../../auth/authChecker.js';
+import { handleComplaintSubmit, resetComplaintForm } from "./formSubmission.js";
+import { setupRealtimeValidation } from "../../utils/validation.js";
+import { createComplaintFileHandler, setupDragAndDrop } from "../../utils/fileHandler.js";
+import showMessage from "../toast.js";
+import apiClient from "../../config/apiClient.js";
+import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from "../../auth/roleToggle.js";
+import { getUserRole } from "../../auth/authChecker.js";
 
 /**
  * Initialize hierarchical complaint form
  */
 
 export async function initializeComplaintForm() {
-  const form = document.getElementById('complaintForm');
+  const form = document.getElementById("complaintForm");
   if (!form) {
-    console.error('[COMPLAINT FORM] Form element not found');
+    console.error("[COMPLAINT FORM] Form element not found");
     return;
   }
   // Check if user is citizen or in citizen mode
@@ -26,36 +26,36 @@ export async function initializeComplaintForm() {
   try {
     activeRole = await getUserRole({ refresh: true });
   } catch (error) {
-    console.warn('[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:', error);
+    console.warn("[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:", error);
     activeRole = getActiveRole();
   }
   const inCitizenMode = isInCitizenMode();
-  if (activeRole !== 'citizen' && !inCitizenMode) {
+  if (activeRole !== "citizen" && !inCitizenMode) {
     const canSwitch = await canSwitchToCitizen();
     if (canSwitch) {
       showRoleSwitchRequired(form);
       return;
     }
-    showMessage('error', 'Only citizens can file complaints');
-    form.style.display = 'none';
+    showMessage("error", "Only citizens can file complaints");
+    form.style.display = "none";
     return;
   }
   // Get form elements
   const elements = {
     form,
-    categorySelect: form.querySelector('#complaintCategory'),
-    subcategorySelect: form.querySelector('#complaintSubcategory'),
-    departmentCheckboxes: form.querySelector('#departmentCheckboxes'),
-    fileDropZone: form.querySelector('#fileDropZone'),
-    fileInput: form.querySelector('#evidenceFiles'),
-    filePreview: form.querySelector('#filePreview')
+    categorySelect: form.querySelector("#complaintCategory"),
+    subcategorySelect: form.querySelector("#complaintSubcategory"),
+    departmentCheckboxes: form.querySelector("#departmentCheckboxes"),
+    fileDropZone: form.querySelector("#fileDropZone"),
+    fileInput: form.querySelector("#evidenceFiles"),
+    filePreview: form.querySelector("#filePreview")
   };
   // Validate required elements
   const missingElements = Object.entries(elements)
-    .filter(([key, element]) => !element && key !== 'filePreview')
+    .filter(([key, element]) => !element && key !== "filePreview")
     .map(([key]) => key);
   if (missingElements.length > 0) {
-    console.error('[COMPLAINT FORM] Missing required elements:', missingElements);
+    console.error("[COMPLAINT FORM] Missing required elements:", missingElements);
     return;
   }
   // Initialize file handler with upload state callback
@@ -66,8 +66,8 @@ export async function initializeComplaintForm() {
     },
     onUploadStateChange: (isUploading) => {
       // Disable/enable buttons based on upload state
-      const submitBtn = elements.form.querySelector('.submit-btn');
-      const cancelBtn = elements.form.querySelector('.cancel-btn') || document.querySelector('.cancel-btn');
+      const submitBtn = elements.form.querySelector(".submit-btn");
+      const cancelBtn = elements.form.querySelector(".cancel-btn") || document.querySelector(".cancel-btn");
       if (submitBtn) {
         submitBtn.disabled = isUploading;
       }
@@ -86,7 +86,7 @@ export async function initializeComplaintForm() {
   loadCategories();
   // Prevent any auto-focus behavior
   setTimeout(() => {
-    if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+    if (document.activeElement && document.activeElement.tagName !== "BODY") {
       document.activeElement.blur();
     }
   }, 50);
@@ -98,14 +98,14 @@ function setupHierarchicalSelection(elements) {
   const { categorySelect, subcategorySelect, departmentCheckboxes } = elements;
   if (!categorySelect || !subcategorySelect || !departmentCheckboxes) return;
   // Category selection handler
-  categorySelect.addEventListener('change', async (e) => {
+  categorySelect.addEventListener("change", async (e) => {
     const categoryId = e.target.value;
     await loadSubcategories(categoryId, subcategorySelect);
     // Clear departments when category changes
     departmentCheckboxes.innerHTML = '<div class="loading-placeholder">Select a subcategory to see relevant departments</div>';
   });
   // Subcategory selection handler
-  subcategorySelect.addEventListener('change', async (e) => {
+  subcategorySelect.addEventListener("change", async (e) => {
     const subcategoryId = e.target.value;
     if (subcategoryId) {
       // First load all departments, then auto-select appropriate ones
@@ -121,24 +121,24 @@ function setupHierarchicalSelection(elements) {
  * Load categories from API
  */
 async function loadCategories() {
-  const categorySelect = document.getElementById('complaintCategory');
+  const categorySelect = document.getElementById("complaintCategory");
   if (!categorySelect) return;
   try {
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
-    const { data, error } = await apiClient.get('/api/department-structure/categories');
+    const { data, error } = await apiClient.get("/api/department-structure/categories");
     if (error) throw error;
     categorySelect.innerHTML = '<option value="">Select a category</option>';
     if (data && data.length > 0) {
       data.forEach(category => {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = category.id;
         option.textContent = category.name;
         categorySelect.appendChild(option);
       });
     }
   } catch (error) {
-    console.error('Error loading categories:', error);
-    showMessage('error', 'Failed to load categories');
+    console.error("Error loading categories:", error);
+    showMessage("error", "Failed to load categories");
     categorySelect.innerHTML = '<option value="">Error loading categories</option>';
   }
 }
@@ -155,7 +155,7 @@ async function loadSubcategories(categoryId, subcategorySelect) {
     subcategorySelect.innerHTML = '<option value="">Select a subcategory</option>';
     if (data && data.length > 0) {
       data.forEach(subcategory => {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = subcategory.id;
         option.textContent = subcategory.name;
         subcategorySelect.appendChild(option);
@@ -165,8 +165,8 @@ async function loadSubcategories(categoryId, subcategorySelect) {
       subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
     }
   } catch (error) {
-    console.error('Error loading subcategories:', error);
-    showMessage('error', 'Failed to load subcategories');
+    console.error("Error loading subcategories:", error);
+    showMessage("error", "Failed to load subcategories");
     subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
   }
 }
@@ -190,21 +190,21 @@ async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckbo
         const checkbox = document.querySelector(`input[value="${dept.code}"]`);
         if (checkbox) {
           checkbox.checked = true;
-          checkbox.setAttribute('data-auto-selected', 'true');
+          checkbox.setAttribute("data-auto-selected", "true");
         }
       });
       // console.log removed for security
       // Show helpful message
       if (mappedDepartments.length > 0) {
-        const suggestionMessage = document.createElement('div');
-        suggestionMessage.className = 'suggestion-message';
+        const suggestionMessage = document.createElement("div");
+        suggestionMessage.className = "suggestion-message";
         suggestionMessage.innerHTML = `
           <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 6px; padding: 12px; margin: 10px 0; color: #155724;">
             <strong>💡 Suggested Departments:</strong> We've pre-selected departments that typically handle this type of complaint. You can uncheck any that don't apply to your specific situation.
           </div>
         `;
         // Remove existing suggestion message if any
-        const existingMessage = departmentCheckboxes.querySelector('.suggestion-message');
+        const existingMessage = departmentCheckboxes.querySelector(".suggestion-message");
         if (existingMessage) {
           existingMessage.remove();
         }
@@ -212,7 +212,7 @@ async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckbo
       }
     }
   } catch (error) {
-    console.error('Error auto-selecting departments:', error);
+    console.error("Error auto-selecting departments:", error);
   }
 }
 /**
@@ -225,11 +225,11 @@ async function loadAllDepartments(departmentCheckboxes) {
     // Always get ALL departments, regardless of subcategory
     const { data, error } = await apiClient.get(`/api/department-structure/departments/all`);
     if (error) throw error;
-    departmentCheckboxes.innerHTML = '';
+    departmentCheckboxes.innerHTML = "";
     if (data && data.length > 0) {
       // Add search input
-      const searchContainer = document.createElement('div');
-      searchContainer.className = 'department-search-container';
+      const searchContainer = document.createElement("div");
+      searchContainer.className = "department-search-container";
       searchContainer.innerHTML = `
         <div class="search-input-wrapper">
           <input type="text" id="department-search" placeholder="Search departments..." class="department-search-input">
@@ -241,13 +241,13 @@ async function loadAllDepartments(departmentCheckboxes) {
       `;
       departmentCheckboxes.appendChild(searchContainer);
       // Group departments by level
-      const lguDepartments = data.filter(dept => dept.level === 'LGU');
-      const ngaDepartments = data.filter(dept => dept.level === 'NGA');
+      const lguDepartments = data.filter(dept => dept.level === "LGU");
+      const ngaDepartments = data.filter(dept => dept.level === "NGA");
       // Create LGU section
       if (lguDepartments.length > 0) {
-        const lguSection = document.createElement('div');
-        lguSection.className = 'department-section';
-        lguSection.innerHTML = '<h4>Local Government Units (LGU)</h4>';
+        const lguSection = document.createElement("div");
+        lguSection.className = "department-section";
+        lguSection.innerHTML = "<h4>Local Government Units (LGU)</h4>";
         lguDepartments.forEach(dept => {
           const checkbox = createDepartmentCheckbox(dept);
           lguSection.appendChild(checkbox);
@@ -256,9 +256,9 @@ async function loadAllDepartments(departmentCheckboxes) {
       }
       // Create NGA section
       if (ngaDepartments.length > 0) {
-        const ngaSection = document.createElement('div');
-        ngaSection.className = 'department-section';
-        ngaSection.innerHTML = '<h4>National Government Agencies (NGA)</h4>';
+        const ngaSection = document.createElement("div");
+        ngaSection.className = "department-section";
+        ngaSection.innerHTML = "<h4>National Government Agencies (NGA)</h4>";
         ngaDepartments.forEach(dept => {
           const checkbox = createDepartmentCheckbox(dept);
           ngaSection.appendChild(checkbox);
@@ -269,8 +269,8 @@ async function loadAllDepartments(departmentCheckboxes) {
       // console.log removed for security
 
       // Show helpful message to user about optional selection
-      const suggestionMessage = document.createElement('div');
-      suggestionMessage.className = 'suggestion-message';
+      const suggestionMessage = document.createElement("div");
+      suggestionMessage.className = "suggestion-message";
       suggestionMessage.innerHTML = `
         <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 6px; padding: 12px; margin: 10px 0; color: #155724;">
           <strong>💡 Department Selection (Optional):</strong> You can select departments that should handle your complaint. If none are selected, the system will route your complaint to appropriate departments automatically.
@@ -284,8 +284,8 @@ async function loadAllDepartments(departmentCheckboxes) {
       departmentCheckboxes.innerHTML = '<div class="no-departments">No departments available for this subcategory</div>';
     }
   } catch (error) {
-    console.error('Error loading departments:', error);
-    showMessage('error', 'Failed to load departments');
+    console.error("Error loading departments:", error);
+    showMessage("error", "Failed to load departments");
     departmentCheckboxes.innerHTML = '<div class="error-message">Error loading departments</div>';
   }
 }
@@ -293,24 +293,24 @@ async function loadAllDepartments(departmentCheckboxes) {
  * Create department checkbox element
  */
 function createDepartmentCheckbox(department) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'checkbox-wrapper';
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
+  const wrapper = document.createElement("div");
+  wrapper.className = "checkbox-wrapper";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
   checkbox.id = `dept-${department.id}`;
-  checkbox.name = 'departments';
+  checkbox.name = "departments";
   checkbox.value = department.code;
-  checkbox.setAttribute('data-dept-code', department.code);
-  const label = document.createElement('label');
+  checkbox.setAttribute("data-dept-code", department.code);
+  const label = document.createElement("label");
   label.htmlFor = `dept-${department.id}`;
-  label.className = 'checkbox-label';
-  const labelText = document.createElement('span');
+  label.className = "checkbox-label";
+  const labelText = document.createElement("span");
   labelText.textContent = department.name;
-  const codeSpan = document.createElement('span');
-  codeSpan.className = 'dept-code';
+  const codeSpan = document.createElement("span");
+  codeSpan.className = "dept-code";
   codeSpan.textContent = ` (${department.code})`;
-  const responseTimeSpan = document.createElement('span');
-  responseTimeSpan.className = 'response-time';
+  const responseTimeSpan = document.createElement("span");
+  responseTimeSpan.className = "response-time";
   responseTimeSpan.textContent = ` - ${department.response_time_hours}h response`;
   // All departments are shown equally - no special indicators
   labelText.appendChild(codeSpan);
@@ -332,8 +332,8 @@ function setupFileHandling(dropZone, fileInput, fileHandler) {
  * Show role switch required message
  */
 function showRoleSwitchRequired(form) {
-  const message = document.createElement('div');
-  message.className = 'role-switch-required';
+  const message = document.createElement("div");
+  message.className = "role-switch-required";
   message.innerHTML = `
     <div class="role-switch-content">
       <h3>Switch to Citizen Mode Required</h3>
@@ -343,7 +343,7 @@ function showRoleSwitchRequired(form) {
       </button>
     </div>
   `;
-  form.innerHTML = '';
+  form.innerHTML = "";
   form.appendChild(message);
 }
 /**
@@ -358,7 +358,7 @@ function setupFormValidation(form) {
  */
 function setupFormSubmission(form, fileHandler) {
   if (!form) return;
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     // Get selected departments (optional)
     const selectedDepartments = Array.from(form.querySelectorAll('input[name="departments"]:checked'))
@@ -369,35 +369,35 @@ function setupFormSubmission(form, fileHandler) {
     if (selectedDepartments.length > 0) {
       // Send array of selected department codes
       selectedDepartments.forEach(deptCode => {
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'preferred_departments';
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "preferred_departments";
         hiddenInput.value = deptCode;
         form.appendChild(hiddenInput);
       });
     } else {
       // Send empty array when no departments are selected
-      const emptyInput = document.createElement('input');
-      emptyInput.type = 'hidden';
-      emptyInput.name = 'preferred_departments';
-      emptyInput.value = '[]';
+      const emptyInput = document.createElement("input");
+      emptyInput.type = "hidden";
+      emptyInput.name = "preferred_departments";
+      emptyInput.value = "[]";
       form.appendChild(emptyInput);
     }
     // Add category and subcategory info as hidden inputs
     // Note: These are UUIDs that reference the categories and subcategories tables
-    const categoryId = form.querySelector('#complaintCategory').value;
-    const subcategoryId = form.querySelector('#complaintSubcategory').value;
+    const categoryId = form.querySelector("#complaintCategory").value;
+    const subcategoryId = form.querySelector("#complaintSubcategory").value;
     if (categoryId) {
-      const categoryInput = document.createElement('input');
-      categoryInput.type = 'hidden';
-      categoryInput.name = 'category';
+      const categoryInput = document.createElement("input");
+      categoryInput.type = "hidden";
+      categoryInput.name = "category";
       categoryInput.value = categoryId; // UUID from categories table
       form.appendChild(categoryInput);
     }
     if (subcategoryId) {
-      const subcategoryInput = document.createElement('input');
-      subcategoryInput.type = 'hidden';
-      subcategoryInput.name = 'subcategory';
+      const subcategoryInput = document.createElement("input");
+      subcategoryInput.type = "hidden";
+      subcategoryInput.name = "subcategory";
       subcategoryInput.value = subcategoryId; // UUID from subcategories table
       form.appendChild(subcategoryInput);
     }
@@ -410,10 +410,10 @@ function setupFormSubmission(form, fileHandler) {
       resetComplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 2000);
     } catch (error) {
-      console.error('Error submitting complaint:', error);
+      console.error("Error submitting complaint:", error);
       // Error message is already shown in handleComplaintSubmit
     }
   });
@@ -422,13 +422,13 @@ function setupFormSubmission(form, fileHandler) {
  * Setup department search functionality
  */
 function setupDepartmentSearch(allDepartments) {
-  const searchInput = document.getElementById('department-search');
-  const searchResultsInfo = document.getElementById('search-results-info');
-  const searchResultsCount = document.getElementById('search-results-count');
+  const searchInput = document.getElementById("department-search");
+  const searchResultsInfo = document.getElementById("search-results-info");
+  const searchResultsCount = document.getElementById("search-results-count");
   if (!searchInput) return;
   // Debounce search to avoid too many calls
   let searchTimeout;
-  searchInput.addEventListener('input', (e) => {
+  searchInput.addEventListener("input", (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const query = e.target.value.toLowerCase().trim();
@@ -436,10 +436,10 @@ function setupDepartmentSearch(allDepartments) {
     }, 300);
   });
   // Clear search on escape
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      e.target.value = '';
-      filterDepartments('', allDepartments, searchResultsInfo, searchResultsCount);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.target.value = "";
+      filterDepartments("", allDepartments, searchResultsInfo, searchResultsCount);
     }
   });
 }
@@ -447,53 +447,53 @@ function setupDepartmentSearch(allDepartments) {
  * Filter departments based on search query
  */
 function filterDepartments(query, allDepartments, searchResultsInfo, searchResultsCount) {
-  const departmentSections = document.querySelectorAll('.department-section');
-  const departmentCheckboxes = document.querySelectorAll('.checkbox-wrapper');
+  const departmentSections = document.querySelectorAll(".department-section");
+  const departmentCheckboxes = document.querySelectorAll(".checkbox-wrapper");
   let visibleCount = 0;
   if (!query) {
     // Show all departments
     departmentSections.forEach(section => {
-      section.style.display = 'block';
-      const checkboxes = section.querySelectorAll('.checkbox-wrapper');
+      section.style.display = "block";
+      const checkboxes = section.querySelectorAll(".checkbox-wrapper");
       checkboxes.forEach(checkbox => {
-        checkbox.style.display = 'block';
+        checkbox.style.display = "block";
         visibleCount++;
       });
     });
-    searchResultsInfo.style.display = 'none';
+    searchResultsInfo.style.display = "none";
     return;
   }
   // Filter departments
   departmentSections.forEach(section => {
-    const checkboxes = section.querySelectorAll('.checkbox-wrapper');
+    const checkboxes = section.querySelectorAll(".checkbox-wrapper");
     let sectionHasVisible = false;
     checkboxes.forEach(checkbox => {
-      const label = checkbox.querySelector('label');
-      const departmentName = label ? label.textContent.toLowerCase() : '';
-      const departmentCode = checkbox.querySelector('input')?.value?.toLowerCase() || '';
+      const label = checkbox.querySelector("label");
+      const departmentName = label ? label.textContent.toLowerCase() : "";
+      const departmentCode = checkbox.querySelector("input")?.value?.toLowerCase() || "";
       const matches = departmentName.includes(query) || departmentCode.includes(query);
       if (matches) {
-        checkbox.style.display = 'block';
+        checkbox.style.display = "block";
         sectionHasVisible = true;
         visibleCount++;
       } else {
-        checkbox.style.display = 'none';
+        checkbox.style.display = "none";
       }
     });
     // Show/hide section based on whether it has visible items
-    section.style.display = sectionHasVisible ? 'block' : 'none';
+    section.style.display = sectionHasVisible ? "block" : "none";
   });
   // Update search results info
   if (query) {
     searchResultsCount.textContent = visibleCount;
-    searchResultsInfo.style.display = visibleCount > 0 ? 'block' : 'none';
+    searchResultsInfo.style.display = visibleCount > 0 ? "block" : "none";
   } else {
-    searchResultsInfo.style.display = 'none';
+    searchResultsInfo.style.display = "none";
   }
 }
 // Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeComplaintForm);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeComplaintForm);
 } else {
   initializeComplaintForm();
 }

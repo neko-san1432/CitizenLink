@@ -1,10 +1,10 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 const {
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITY,
   NOTIFICATION_ICONS
-} = require('../../shared/constants');
+} = require("../../shared/constants");
 /**
 * NotificationService
 * Handles all notification-related operations
@@ -22,13 +22,13 @@ class NotificationService {
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
       // Use RPC for efficient lookup (O(1) instead of O(N))
-      const { data: admins, error } = await this.supabase.rpc('get_users_by_role', {
-        p_role: 'lgu-admin',
+      const { data: admins, error } = await this.supabase.rpc("get_users_by_role", {
+        p_role: "lgu-admin",
         p_department: departmentCode
       });
 
       if (error) {
-        console.warn('[NOTIFICATION] Failed to fetch admins via RPC:', error.message);
+        console.warn("[NOTIFICATION] Failed to fetch admins via RPC:", error.message);
         return { success: false, error: error.message };
       }
       // console.log removed for security
@@ -39,7 +39,7 @@ class NotificationService {
       const notifications = admins.map((admin) => ({
         userId: admin.id,
         type: NOTIFICATION_TYPES.APPROVAL_REQUIRED,
-        title: 'New Complaint Assigned to Your Department',
+        title: "New Complaint Assigned to Your Department",
         message: `"${complaintTitle}" has been assigned to ${departmentCode}. Please review and assign to an officer.`,
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/lgu-admin/assignments`,
@@ -51,7 +51,7 @@ class NotificationService {
       }));
       return this.createBulkNotifications(notifications);
     } catch (error) {
-      console.error('[NOTIFICATION] notifyDepartmentAdminsByCode error:', error);
+      console.error("[NOTIFICATION] notifyDepartmentAdminsByCode error:", error);
       return { success: false, error: error.message };
     }
   }
@@ -69,7 +69,7 @@ class NotificationService {
     try {
       // Support both calling patterns
       let userId, notifType, notifTitle, notifMessage, notifOptions;
-      if (typeof userIdOrOptions === 'object' && !type) {
+      if (typeof userIdOrOptions === "object" && !type) {
         // Object syntax: createNotification({ userId, type, title, message, ... })
         const opts = userIdOrOptions;
         userId = opts.userId;
@@ -95,7 +95,7 @@ class NotificationService {
         priority = NOTIFICATION_PRIORITY.INFO,
         link = null,
         metadata = {},
-        icon = NOTIFICATION_ICONS[notifType] || '📢',
+        icon = NOTIFICATION_ICONS[notifType] || "📢",
         deduplicate = true
       } = notifOptions;
       // Check for duplicates if deduplication is enabled
@@ -116,7 +116,7 @@ class NotificationService {
         }
       }
       const { data, error } = await this.supabase
-        .from('notification')
+        .from("notification")
         .insert([{
           user_id: userId,
           type: notifType,
@@ -137,7 +137,7 @@ class NotificationService {
         duplicate: false
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Create error:', error);
+      console.error("[NOTIFICATION] Create error:", error);
       throw error;
     }
   }
@@ -153,17 +153,17 @@ class NotificationService {
     try {
       // console.log removed for security
       const { data, error } = await this.supabase
-        .from('notification')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('type', type)
-        .eq('title', title)
-        .eq('read', false) // Only check unread notifications
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Within last 24 hours
-        .order('created_at', { ascending: false })
+        .from("notification")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("type", type)
+        .eq("title", title)
+        .eq("read", false) // Only check unread notifications
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Within last 24 hours
+        .order("created_at", { ascending: false })
         .limit(1);
       if (error) {
-        console.warn('[NOTIFICATION] Duplicate check error:', error.message);
+        console.warn("[NOTIFICATION] Duplicate check error:", error.message);
         return { exists: false };
       }
       const exists = data && data.length > 0;
@@ -173,7 +173,7 @@ class NotificationService {
         notification: data && data.length > 0 ? data[0] : null
       };
     } catch (error) {
-      console.warn('[NOTIFICATION] Duplicate check error:', error.message);
+      console.warn("[NOTIFICATION] Duplicate check error:", error.message);
       return { exists: false };
     }
   }
@@ -192,12 +192,12 @@ class NotificationService {
           priority: notif.priority || NOTIFICATION_PRIORITY.INFO,
           title: notif.title,
           message: notif.message,
-          icon: notif.icon || NOTIFICATION_ICONS[notif.type] || '📢',
+          icon: notif.icon || NOTIFICATION_ICONS[notif.type] || "📢",
           link: notif.link || null,
           metadata: notif.metadata || {}
         }));
         const { data, error } = await this.supabase
-          .from('notification')
+          .from("notification")
           .insert(notificationsData)
           .select();
         if (error) throw error;
@@ -242,7 +242,7 @@ class NotificationService {
       // console.log removed for security
       return results;
     } catch (error) {
-      console.error('[NOTIFICATION] Bulk create error:', error);
+      console.error("[NOTIFICATION] Bulk create error:", error);
       throw error;
     }
   }
@@ -267,7 +267,7 @@ class NotificationService {
       }));
       return await this.createBulkNotifications(notifications, true);
     } catch (error) {
-      console.error('[NOTIFICATION] Notify multiple users error:', error);
+      console.error("[NOTIFICATION] Notify multiple users error:", error);
       throw error;
     }
   }
@@ -283,10 +283,10 @@ class NotificationService {
       const offset = page * limit;
       // Get notifications
       const { data, error, count } = await this.supabase
-        .from('notification')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("notification")
+        .select("*", { count: "exact" })
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
       if (error) throw error;
       const hasMore = (offset + limit) < count;
@@ -302,7 +302,7 @@ class NotificationService {
         }
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Get notifications error:', error);
+      console.error("[NOTIFICATION] Get notifications error:", error);
       throw error;
     }
   }
@@ -314,17 +314,17 @@ class NotificationService {
   async getUnreadCount(userId) {
     try {
       const { count, error } = await this.supabase
-        .from('notification')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('read', false);
+        .from("notification")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("read", false);
       if (error) throw error;
       return {
         success: true,
         count: count || 0
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Get unread count error:', error);
+      console.error("[NOTIFICATION] Get unread count error:", error);
       throw error;
     }
   }
@@ -337,13 +337,13 @@ class NotificationService {
   async markAsRead(notificationId, userId) {
     try {
       const { data, error } = await this.supabase
-        .from('notification')
+        .from("notification")
         .update({
           read: true,
           read_at: new Date().toISOString()
         })
-        .eq('id', notificationId)
-        .eq('user_id', userId)
+        .eq("id", notificationId)
+        .eq("user_id", userId)
         .select()
         .single();
       if (error) throw error;
@@ -352,7 +352,7 @@ class NotificationService {
         notification: data
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Mark as read error:', error);
+      console.error("[NOTIFICATION] Mark as read error:", error);
       throw error;
     }
   }
@@ -364,13 +364,13 @@ class NotificationService {
   async markAllAsRead(userId) {
     try {
       const { data, error } = await this.supabase
-        .from('notification')
+        .from("notification")
         .update({
           read: true,
           read_at: new Date().toISOString()
         })
-        .eq('user_id', userId)
-        .eq('read', false)
+        .eq("user_id", userId)
+        .eq("read", false)
         .select();
       if (error) throw error;
       // console.log removed for security
@@ -379,7 +379,7 @@ class NotificationService {
         count: data.length
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Mark all as read error:', error);
+      console.error("[NOTIFICATION] Mark all as read error:", error);
       throw error;
     }
   }
@@ -391,16 +391,16 @@ class NotificationService {
   async deleteNotification(notificationId, userId) {
     try {
       const { error } = await this.supabase
-        .from('notification')
+        .from("notification")
         .delete()
-        .eq('id', notificationId)
-        .eq('user_id', userId);
+        .eq("id", notificationId)
+        .eq("user_id", userId);
       if (error) throw error;
       return {
         success: true
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Delete error:', error);
+      console.error("[NOTIFICATION] Delete error:", error);
       throw error;
     }
   }
@@ -411,9 +411,9 @@ class NotificationService {
   async deleteExpiredNotifications() {
     try {
       const { data, error } = await this.supabase
-        .from('notification')
+        .from("notification")
         .delete()
-        .lt('expires_at', new Date().toISOString())
+        .lt("expires_at", new Date().toISOString())
         .select();
       if (error) throw error;
       // console.log removed for security
@@ -422,7 +422,7 @@ class NotificationService {
         deleted: data?.length || 0
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Delete expired error:', error);
+      console.error("[NOTIFICATION] Delete expired error:", error);
       throw error;
     }
   }
@@ -435,10 +435,10 @@ class NotificationService {
   async getNotificationSummary(userId) {
     try {
       const { data, error } = await this.supabase
-        .from('notification')
-        .select('priority, type')
-        .eq('user_id', userId)
-        .eq('read', false);
+        .from("notification")
+        .select("priority, type")
+        .eq("user_id", userId)
+        .eq("read", false);
       if (error) throw error;
       const summary = {
         total: data.length,
@@ -451,7 +451,7 @@ class NotificationService {
         summary
       };
     } catch (error) {
-      console.error('[NOTIFICATION] Get summary error:', error);
+      console.error("[NOTIFICATION] Get summary error:", error);
       throw error;
     }
   }
@@ -463,7 +463,7 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_SUBMITTED,
-      'Complaint Submitted',
+      "Complaint Submitted",
       `Your complaint "${complaintTitle}" has been received and is being reviewed.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -477,18 +477,18 @@ class NotificationService {
   */
   async notifyComplaintStatusChanged(citizenId, complaintId, complaintTitle, newStatus, oldStatus) {
     const statusMessages = {
-      'in progress': 'is now being worked on',
-      'resolved': 'has been resolved',
-      'rejected': 'has been rejected',
-      'closed': 'has been closed'
+      "in progress": "is now being worked on",
+      "resolved": "has been resolved",
+      "rejected": "has been rejected",
+      "closed": "has been closed"
     };
-    const priority = newStatus === 'resolved' ? NOTIFICATION_PRIORITY.INFO :
-      newStatus === 'rejected' ? NOTIFICATION_PRIORITY.WARNING :
+    const priority = newStatus === "resolved" ? NOTIFICATION_PRIORITY.INFO :
+      newStatus === "rejected" ? NOTIFICATION_PRIORITY.WARNING :
         NOTIFICATION_PRIORITY.INFO;
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_STATUS_CHANGED,
-      'Complaint Status Updated',
+      "Complaint Status Updated",
       `Your complaint "${complaintTitle}" ${statusMessages[newStatus] || `status changed to ${newStatus}`}.`,
       {
         priority,
@@ -502,14 +502,14 @@ class NotificationService {
   */
   async notifyTaskAssigned(officerId, complaintId, complaintTitle, priority, deadline) {
     // console.log removed for security
-    const notifPriority = priority === 'urgent' ? NOTIFICATION_PRIORITY.URGENT :
-      priority === 'high' ? NOTIFICATION_PRIORITY.WARNING :
+    const notifPriority = priority === "urgent" ? NOTIFICATION_PRIORITY.URGENT :
+      priority === "high" ? NOTIFICATION_PRIORITY.WARNING :
         NOTIFICATION_PRIORITY.INFO;
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.TASK_ASSIGNED,
-      'New Task Assigned',
-      `You've been assigned: "${complaintTitle}"${deadline ? ` - Due: ${new Date(deadline).toLocaleDateString()}` : ''}`,
+      "New Task Assigned",
+      `You've been assigned: "${complaintTitle}"${deadline ? ` - Due: ${new Date(deadline).toLocaleDateString()}` : ""}`,
       {
         priority: notifPriority,
         link: `/lgu/tasks/${complaintId}`,
@@ -525,7 +525,7 @@ class NotificationService {
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.TASK_DEADLINE_APPROACHING,
-      'Deadline Approaching',
+      "Deadline Approaching",
       `"${complaintTitle}" is due in ${hoursRemaining} hours!`,
       {
         priority: hoursRemaining <= 12 ? NOTIFICATION_PRIORITY.URGENT : NOTIFICATION_PRIORITY.WARNING,
@@ -541,7 +541,7 @@ class NotificationService {
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.TASK_OVERDUE,
-      '⚠️ Task Overdue',
+      "⚠️ Task Overdue",
       `"${complaintTitle}" is now overdue! Please update status immediately.`,
       {
         priority: NOTIFICATION_PRIORITY.URGENT,
@@ -557,7 +557,7 @@ class NotificationService {
     return this.createNotification(
       coordinatorId,
       NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW,
-      'New Complaint for Review',
+      "New Complaint for Review",
       `"${complaintTitle}" needs your review and assignment.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -573,7 +573,7 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_DUPLICATE,
-      'Complaint Linked to Existing Issue',
+      "Complaint Linked to Existing Issue",
       `Your complaint "${complaintTitle}" has been linked to an existing similar complaint. Updates will be shared.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -589,7 +589,7 @@ class NotificationService {
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
-      'Assignment Completed',
+      "Assignment Completed",
       `Your assignment for "${complaintTitle}" has been completed by another officer.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -605,12 +605,12 @@ class NotificationService {
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.ADMIN_REMINDER,
-      'Reminder from Admin',
+      "Reminder from Admin",
       `Admin reminder: ${reminderMessage} - "${complaintTitle}"`,
       {
         priority: NOTIFICATION_PRIORITY.WARNING,
         link: `/lgu/tasks/${complaintId}`,
-        metadata: { complaint_id: complaintId, reminder_type: 'admin_reminder' }
+        metadata: { complaint_id: complaintId, reminder_type: "admin_reminder" }
       }
     );
   }
@@ -621,7 +621,7 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.WORKFLOW_STEP_COMPLETED,
-      'Progress Update',
+      "Progress Update",
       `Progress on "${complaintTitle}": ${stepDescription}`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -637,12 +637,12 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.LGU_WORK_COMPLETED,
-      'Work Completed - Please Review',
+      "Work Completed - Please Review",
       `The assigned LGU departments have completed their work on "${complaintTitle}". Please review and confirm resolution.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/citizen/complaints/${complaintId}`,
-        metadata: { complaint_id: complaintId, action_required: 'review_resolution' }
+        metadata: { complaint_id: complaintId, action_required: "review_resolution" }
       }
     );
   }
@@ -653,12 +653,12 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.RESOLUTION_REVIEW_NEEDED,
-      'Review Required',
+      "Review Required",
       `Please review the completed work for "${complaintTitle}" and mark as resolved if satisfied.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/citizen/complaints/${complaintId}`,
-        metadata: { complaint_id: complaintId, action_required: 'mark_resolved' }
+        metadata: { complaint_id: complaintId, action_required: "mark_resolved" }
       }
     );
   }
@@ -674,7 +674,7 @@ class NotificationService {
     return this.createNotification(
       adminId,
       NOTIFICATION_TYPES.OFFICER_REMINDER,
-      'Officer Reminder Needed',
+      "Officer Reminder Needed",
       reminderMessages[reminderType] || `Action needed from ${officerName}`,
       {
         priority: NOTIFICATION_PRIORITY.WARNING,
@@ -694,7 +694,7 @@ class NotificationService {
     return this.createNotification(
       officerId,
       NOTIFICATION_TYPES.PENDING_TASK_REMINDER,
-      'Task Reminder',
+      "Task Reminder",
       `Admin reminder: ${adminMessage} - "${complaintTitle}"`,
       {
         priority: NOTIFICATION_PRIORITY.WARNING,
@@ -710,7 +710,7 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_ASSIGNED,
-      'Complaint Assigned to Officer',
+      "Complaint Assigned to Officer",
       `Your complaint "${complaintTitle}" has been assigned to an officer and work will begin soon.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -729,12 +729,12 @@ class NotificationService {
   async notifyAllCoordinators(complaintId, complaintTitle) {
     try {
       // Use RPC for efficient lookup
-      const { data: coordinators, error } = await this.supabase.rpc('get_users_by_role', {
-        p_role: 'complaint-coordinator'
+      const { data: coordinators, error } = await this.supabase.rpc("get_users_by_role", {
+        p_role: "complaint-coordinator"
       });
 
       if (error) {
-        console.error('[NOTIFICATION] Failed to fetch coordinators via RPC:', error.message);
+        console.error("[NOTIFICATION] Failed to fetch coordinators via RPC:", error.message);
         return { success: false, error: error.message };
       }
       // console.log removed for security
@@ -746,7 +746,7 @@ class NotificationService {
       const notifications = coordinators.map((coordinator) => ({
         userId: coordinator.id,
         type: NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW,
-        title: 'New Complaint for Review',
+        title: "New Complaint for Review",
         message: `"${complaintTitle}" needs your review and assignment.`,
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/coordinator/review/${complaintId}`,
@@ -759,7 +759,7 @@ class NotificationService {
       // console.log removed for security
       return result;
     } catch (error) {
-      console.error('[NOTIFICATION] notifyAllCoordinators error:', error);
+      console.error("[NOTIFICATION] notifyAllCoordinators error:", error);
       return { success: false, error: error.message };
     }
   }

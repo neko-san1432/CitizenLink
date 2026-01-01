@@ -25,7 +25,7 @@ async function loadDigosBoundary() {
       // Try to fetch from API endpoint first (if it exists)
       let response;
       try {
-        response = await fetch('/api/digos-boundary');
+        response = await fetch("/api/digos-boundary");
         if (response.ok) {
           const boundary = await response.json();
           boundaryCache = boundary;
@@ -39,20 +39,20 @@ async function loadDigosBoundary() {
       // Fallback: try to use barangay boundaries from /api/boundaries
       // and construct city boundary from them
       try {
-        response = await fetch('/api/boundaries');
+        response = await fetch("/api/boundaries");
         if (response.ok) {
           const brgyData = await response.json();
           if (Array.isArray(brgyData) && brgyData.length > 0) {
             // Store barangay data for point-in-polygon checks
             boundaryCache = {
-              type: 'barangay_boundaries',
+              type: "barangay_boundaries",
               barangays: brgyData,
               // Create a simple bounding box from all barangays
               bounds: calculateBoundsFromBarangays(brgyData)
             };
             // Log that we're using barangay boundaries fallback (only once)
             if (!boundaryCache._logged) {
-              console.log('[BOUNDARY_VALIDATOR] Using barangay boundaries for validation');
+              console.log("[BOUNDARY_VALIDATOR] Using barangay boundaries for validation");
               boundaryCache._logged = true;
             }
             return boundaryCache;
@@ -64,7 +64,7 @@ async function loadDigosBoundary() {
 
       // Final fallback: try direct file path (may not work in production)
       try {
-        response = await fetch('/src/client/assets/digos-city-boundary.json');
+        response = await fetch("/src/client/assets/digos-city-boundary.json");
         if (response.ok) {
           const boundary = await response.json();
           boundaryCache = boundary;
@@ -96,14 +96,14 @@ function calculateBoundsFromBarangays(brgyData) {
   brgyData.forEach(barangay => {
     if (barangay.geojson && barangay.geojson.geometry) {
       const coords = barangay.geojson.geometry.coordinates;
-      if (barangay.geojson.geometry.type === 'Polygon') {
+      if (barangay.geojson.geometry.type === "Polygon") {
         coords[0].forEach(([lng, lat]) => {
           minLng = Math.min(minLng, lng);
           maxLng = Math.max(maxLng, lng);
           minLat = Math.min(minLat, lat);
           maxLat = Math.max(maxLat, lat);
         });
-      } else if (barangay.geojson.geometry.type === 'MultiPolygon') {
+      } else if (barangay.geojson.geometry.type === "MultiPolygon") {
         coords.forEach(polygon => {
           polygon[0].forEach(([lng, lat]) => {
             minLng = Math.min(minLng, lng);
@@ -181,7 +181,7 @@ function isPointInPolygon(point, coordinates) {
  */
 async function isWithinDigosBoundary(latitude, longitude) {
   // Validate input
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
     return false;
   }
 
@@ -208,16 +208,16 @@ async function isWithinDigosBoundary(latitude, longitude) {
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
 
   // Handle barangay boundaries format (from /api/boundaries)
-  if (boundary.type === 'barangay_boundaries' && boundary.barangays) {
+  if (boundary.type === "barangay_boundaries" && boundary.barangays) {
     // Check if point is within any barangay boundary
     for (const barangay of boundary.barangays) {
       if (barangay.geojson && barangay.geojson.geometry) {
         const coords = barangay.geojson.geometry.coordinates;
-        if (barangay.geojson.geometry.type === 'Polygon') {
+        if (barangay.geojson.geometry.type === "Polygon") {
           if (isPointInPolygon(point, coords)) {
             return true;
           }
-        } else if (barangay.geojson.geometry.type === 'MultiPolygon') {
+        } else if (barangay.geojson.geometry.type === "MultiPolygon") {
           for (const polygon of coords) {
             if (isPointInPolygon(point, polygon)) {
               return true;
@@ -243,12 +243,12 @@ async function isWithinDigosBoundary(latitude, longitude) {
     const {coordinates} = boundary.geometry;
 
     // Handle Polygon geometry type
-    if (boundary.geometry.type === 'Polygon') {
+    if (boundary.geometry.type === "Polygon") {
       return isPointInPolygon(point, coordinates);
     }
 
     // Handle MultiPolygon geometry type
-    if (boundary.geometry.type === 'MultiPolygon') {
+    if (boundary.geometry.type === "MultiPolygon") {
       // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
       for (const polygon of coordinates) {
         if (isPointInPolygon(point, polygon)) {
@@ -258,11 +258,11 @@ async function isWithinDigosBoundary(latitude, longitude) {
       return false;
     }
 
-    console.warn('[BOUNDARY_VALIDATOR] Unsupported geometry type:', boundary.geometry.type);
+    console.warn("[BOUNDARY_VALIDATOR] Unsupported geometry type:", boundary.geometry.type);
     return true; // Fail open if geometry type not supported
   }
 
-  console.warn('[BOUNDARY_VALIDATOR] Invalid boundary format');
+  console.warn("[BOUNDARY_VALIDATOR] Invalid boundary format");
   return true; // Fail open if boundary format invalid
 }
 
@@ -290,11 +290,11 @@ async function getDigosBounds() {
     }
   }
 
-  if (boundary.geometry.type === 'Polygon') {
+  if (boundary.geometry.type === "Polygon") {
     for (const ring of coordinates) {
       processRing(ring);
     }
-  } else if (boundary.geometry.type === 'MultiPolygon') {
+  } else if (boundary.geometry.type === "MultiPolygon") {
     for (const polygon of coordinates) {
       for (const ring of polygon) {
         processRing(ring);

@@ -1,7 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const goBackButton = document.getElementById('go-back');
+document.addEventListener("DOMContentLoaded", () => {
+  const goBackButton = document.getElementById("go-back");
   if (goBackButton) {
-    goBackButton.addEventListener('click', () => {
+    goBackButton.addEventListener("click", () => {
       history.back();
     });
   }

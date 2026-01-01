@@ -1,21 +1,21 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const IDVerificationService = require('../services/IDVerificationService');
-const { authenticateUser } = require('../middleware/auth');
+const IDVerificationService = require("../services/IDVerificationService");
+const { authenticateUser } = require("../middleware/auth");
 
 /**
  * Store ID verification data after OCR processing
  * POST /api/verification/store
  * Body: { idType, fields, confidence }
  */
-router.post('/store', authenticateUser, async (req, res) => {
+router.post("/store", authenticateUser, async (req, res) => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
-        error: 'User not authenticated'
+        error: "User not authenticated"
       });
     }
 
@@ -25,7 +25,7 @@ router.post('/store', authenticateUser, async (req, res) => {
     if (!fields || !fields.idNumber) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required field: idNumber'
+        error: "Missing required field: idNumber"
       });
     }
 
@@ -34,8 +34,8 @@ router.post('/store', authenticateUser, async (req, res) => {
     if (exists) {
       return res.status(409).json({
         success: false,
-        error: 'ID_NUMBER_ALREADY_REGISTERED',
-        message: 'This ID number is already registered in the system. Each ID can only be used once.'
+        error: "ID_NUMBER_ALREADY_REGISTERED",
+        message: "This ID number is already registered in the system. Each ID can only be used once."
       });
     }
 
@@ -53,23 +53,23 @@ router.post('/store', authenticateUser, async (req, res) => {
         status: verification.verification_status,
         createdAt: verification.created_at
       },
-      message: 'ID verification stored successfully'
+      message: "ID verification stored successfully"
     });
   } catch (error) {
-    console.error('[VERIFICATION] Store error:', error);
+    console.error("[VERIFICATION] Store error:", error);
 
     // Handle specific error cases
-    if (error.message === 'ID_NUMBER_ALREADY_REGISTERED') {
+    if (error.message === "ID_NUMBER_ALREADY_REGISTERED") {
       return res.status(409).json({
         success: false,
-        error: 'ID_NUMBER_ALREADY_REGISTERED',
-        message: 'This ID number is already registered in the system.'
+        error: "ID_NUMBER_ALREADY_REGISTERED",
+        message: "This ID number is already registered in the system."
       });
     }
 
     return res.status(500).json({
       success: false,
-      error: 'Failed to store verification',
+      error: "Failed to store verification",
       message: error.message
     });
   }
@@ -79,14 +79,14 @@ router.post('/store', authenticateUser, async (req, res) => {
  * Get current user's verification status
  * GET /api/verification/status
  */
-router.get('/status', authenticateUser, async (req, res) => {
+router.get("/status", authenticateUser, async (req, res) => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
-        error: 'User not authenticated'
+        error: "User not authenticated"
       });
     }
 
@@ -114,10 +114,10 @@ router.get('/status', authenticateUser, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[VERIFICATION] Get status error:', error);
+    console.error("[VERIFICATION] Get status error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to get verification status',
+      error: "Failed to get verification status",
       message: error.message
     });
   }
@@ -128,14 +128,14 @@ router.get('/status', authenticateUser, async (req, res) => {
  * POST /api/verification/check-id
  * Body: { idNumber }
  */
-router.post('/check-id', async (req, res) => {
+router.post("/check-id", async (req, res) => {
   try {
     const { idNumber } = req.body;
 
     if (!idNumber) {
       return res.status(400).json({
         success: false,
-        error: 'ID number is required'
+        error: "ID number is required"
       });
     }
 
@@ -149,10 +149,10 @@ router.post('/check-id', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[VERIFICATION] Check ID error:', error);
+    console.error("[VERIFICATION] Check ID error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to check ID number',
+      error: "Failed to check ID number",
       message: error.message
     });
   }

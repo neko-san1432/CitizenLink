@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const Department = require('../models/Department');
+const Database = require("../config/database");
+const Department = require("../models/Department");
 
 class DepartmentRepository {
 
@@ -9,48 +9,48 @@ class DepartmentRepository {
   }
   async findAll() {
     const { data, error } = await this.supabase
-      .from('departments')
-      .select('*')
-      .order('name');
+      .from("departments")
+      .select("*")
+      .order("name");
     if (error) throw error;
     return data.map(dept => new Department(dept));
   }
   async findActive() {
     const { data, error } = await this.supabase
-      .from('departments')
-      .select('*')
-      .eq('is_active', true)
-      .order('name');
+      .from("departments")
+      .select("*")
+      .eq("is_active", true)
+      .order("name");
     if (error) throw error;
     return data.map(dept => new Department(dept));
   }
   async findById(id) {
     const { data, error } = await this.supabase
-      .from('departments')
-      .select('*')
-      .eq('id', id)
+      .from("departments")
+      .select("*")
+      .eq("id", id)
       .single();
     if (error) {
-      if (error.code === 'PGRST116') return null;
+      if (error.code === "PGRST116") return null;
       throw error;
     }
     return new Department(data);
   }
   async findByCode(code) {
     const { data, error } = await this.supabase
-      .from('departments')
-      .select('*')
-      .eq('code', code)
+      .from("departments")
+      .select("*")
+      .eq("code", code)
       .single();
     if (error) {
-      if (error.code === 'PGRST116') return null;
+      if (error.code === "PGRST116") return null;
       throw error;
     }
     return new Department(data);
   }
   async create(departmentData) {
     const { data, error } = await this.supabase
-      .from('departments')
+      .from("departments")
       .insert(departmentData)
       .select()
       .single();
@@ -59,12 +59,12 @@ class DepartmentRepository {
   }
   async update(id, departmentData) {
     const { data, error } = await this.supabase
-      .from('departments')
+      .from("departments")
       .update({
         ...departmentData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
     if (error) throw error;
@@ -72,9 +72,9 @@ class DepartmentRepository {
   }
   async delete(id) {
     const { error } = await this.supabase
-      .from('departments')
+      .from("departments")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
     if (error) throw error;
     return true;
   }
@@ -83,11 +83,11 @@ class DepartmentRepository {
   }
   async checkCodeExists(code, excludeId = null) {
     let query = this.supabase
-      .from('departments')
-      .select('id')
-      .eq('code', code);
+      .from("departments")
+      .select("id")
+      .eq("code", code);
     if (excludeId) {
-      query = query.neq('id', excludeId);
+      query = query.neq("id", excludeId);
     }
     const { data, error } = await query;
     if (error) throw error;

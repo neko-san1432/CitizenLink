@@ -1,6 +1,6 @@
 // SECURITY: Environment variables are now handled securely
 // Auth operations use a limited client, database operations go through server API
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Fetch Supabase configuration securely from server
 let supabaseConfig = null;
@@ -11,16 +11,16 @@ async function initializeSupabase() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     try {
-      const response = await fetch('/api/supabase/config');
+      const response = await fetch("/api/supabase/config");
       const config = await response.json();
       if (!config || !config.url || !config.anonKey) {
-        throw new Error('Missing Supabase client configuration');
+        throw new Error("Missing Supabase client configuration");
       }
       supabaseConfig = config;
       supabase = createClient(config.url, config.anonKey);
       return supabase;
     } catch (error) {
-      console.error('Failed to initialize Supabase:', error);
+      console.error("Failed to initialize Supabase:", error);
       throw error;
     } finally {
       // Keep initPromise so late callers can await the same promise
@@ -38,7 +38,7 @@ const supabaseProxy = new Proxy({}, {
     // Kick off initialization (single flight)
     initializeSupabase().catch(() => {});
     // Return a promise-based method for async operations
-    if (prop === 'auth') {
+    if (prop === "auth") {
       return new Proxy({}, {
         get(authTarget, authProp) {
           return (...args) => {
@@ -60,34 +60,34 @@ export { supabaseProxy as supabase, initializeSupabase };
 // Database operations class for secure server-side operations
 class SecureDatabaseClient {
   async select(table, filters = {}) {
-    const response = await fetch('/api/supabase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operation: 'select', table, filters })
+    const response = await fetch("/api/supabase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation: "select", table, filters })
     });
     return response.json();
   }
   async insert(table, data) {
-    const response = await fetch('/api/supabase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operation: 'insert', table, data })
+    const response = await fetch("/api/supabase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation: "insert", table, data })
     });
     return response.json();
   }
   async update(table, data, filters = {}) {
-    const response = await fetch('/api/supabase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operation: 'update', table, data, filters })
+    const response = await fetch("/api/supabase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation: "update", table, data, filters })
     });
     return response.json();
   }
   async delete(table, filters = {}) {
-    const response = await fetch('/api/supabase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operation: 'delete', table, filters })
+    const response = await fetch("/api/supabase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation: "delete", table, filters })
     });
     return response.json();
   }

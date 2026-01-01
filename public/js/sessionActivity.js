@@ -1,8 +1,8 @@
-document.addEventListener('mousemove', updateSessionActivity);
-document.addEventListener('keypress', updateSessionActivity);
+document.addEventListener("mousemove", updateSessionActivity);
+document.addEventListener("keypress", updateSessionActivity);
 
 export function updateSessionActivity() {
-  localStorage.setItem('lastActive', Date.now().toString());
+  localStorage.setItem("lastActive", Date.now().toString());
 }
 // Initialize session tracking
 updateSessionActivity();

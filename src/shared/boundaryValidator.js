@@ -4,8 +4,8 @@
  * Uses the actual polygon boundary from digos-city-boundary.json
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Cache for boundary data
 let boundaryCache = null;
@@ -19,13 +19,13 @@ function loadDigosBoundary() {
   }
 
   try {
-    const boundaryPath = path.join(__dirname, '../client/assets/digos-city-boundary.json');
-    const boundaryData = fs.readFileSync(boundaryPath, 'utf8');
+    const boundaryPath = path.join(__dirname, "../client/assets/digos-city-boundary.json");
+    const boundaryData = fs.readFileSync(boundaryPath, "utf8");
     const boundary = JSON.parse(boundaryData);
     boundaryCache = boundary;
     return boundary;
   } catch (error) {
-    console.error('[BOUNDARY_VALIDATOR] Failed to load Digos boundary:', error.message);
+    console.error("[BOUNDARY_VALIDATOR] Failed to load Digos boundary:", error.message);
     // Return null to indicate boundary not available
     return null;
   }
@@ -93,7 +93,7 @@ function isPointInPolygon(point, coordinates) {
  */
 function isWithinDigosBoundary(latitude, longitude) {
   // Validate input
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
     return false;
   }
 
@@ -104,7 +104,7 @@ function isWithinDigosBoundary(latitude, longitude) {
   // Load boundary
   const boundary = loadDigosBoundary();
   if (!boundary || !boundary.geometry || !boundary.geometry.coordinates) {
-    console.warn('[BOUNDARY_VALIDATOR] Digos boundary not available, using bounding box fallback');
+    console.warn("[BOUNDARY_VALIDATOR] Digos boundary not available, using bounding box fallback");
     // Fallback to bounding box check if boundary file not available
     // Updated to match actual bounds from digos-city-boundary.json
     const minLat = 6.723538983841018;
@@ -123,7 +123,7 @@ function isWithinDigosBoundary(latitude, longitude) {
   const {coordinates} = boundary.geometry;
 
   // Handle Polygon geometry type
-  if (boundary.geometry.type === 'Polygon') {
+  if (boundary.geometry.type === "Polygon") {
     const result = isPointInPolygon(point, coordinates);
     // If polygon check fails, fallback to bounding box check
     if (!result) {
@@ -136,9 +136,9 @@ function isWithinDigosBoundary(latitude, longitude) {
           longitude <= bounds.maxLng
         );
         if (inBounds) {
-          console.log('[BOUNDARY_VALIDATOR] Polygon check failed but coordinates within bounding box, allowing:', { lat: '[REDACTED]', lng: '[REDACTED]' });
+          console.log("[BOUNDARY_VALIDATOR] Polygon check failed but coordinates within bounding box, allowing:", { lat: "[REDACTED]", lng: "[REDACTED]" });
         } else {
-          console.log('[BOUNDARY_VALIDATOR] Coordinates outside boundary:', { lat: '[REDACTED]', lng: '[REDACTED]', bounds });
+          console.log("[BOUNDARY_VALIDATOR] Coordinates outside boundary:", { lat: "[REDACTED]", lng: "[REDACTED]", bounds });
         }
         return inBounds;
       }
@@ -147,7 +147,7 @@ function isWithinDigosBoundary(latitude, longitude) {
   }
 
   // Handle MultiPolygon geometry type
-  if (boundary.geometry.type === 'MultiPolygon') {
+  if (boundary.geometry.type === "MultiPolygon") {
     // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
     for (const polygon of coordinates) {
       if (isPointInPolygon(point, polygon)) {
@@ -167,7 +167,7 @@ function isWithinDigosBoundary(latitude, longitude) {
     return false;
   }
 
-  console.warn('[BOUNDARY_VALIDATOR] Unsupported geometry type:', boundary.geometry.type);
+  console.warn("[BOUNDARY_VALIDATOR] Unsupported geometry type:", boundary.geometry.type);
   // Fallback to bounding box check
   const bounds = getDigosBounds();
   if (bounds) {
@@ -205,11 +205,11 @@ function getDigosBounds() {
     }
   }
 
-  if (boundary.geometry.type === 'Polygon') {
+  if (boundary.geometry.type === "Polygon") {
     for (const ring of coordinates) {
       processRing(ring);
     }
-  } else if (boundary.geometry.type === 'MultiPolygon') {
+  } else if (boundary.geometry.type === "MultiPolygon") {
     for (const polygon of coordinates) {
       for (const ring of polygon) {
         processRing(ring);

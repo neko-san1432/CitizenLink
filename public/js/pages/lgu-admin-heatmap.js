@@ -1,38 +1,38 @@
 // LGU Admin Heatmap Page Script
 let heatmapController = null;
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     // Initialize heatmap controller
     heatmapController = new HeatmapController();
-    await heatmapController.initialize('map');
+    await heatmapController.initialize("map");
   } catch (error) {
-    console.error('Error initializing heatmap:', error);
-    const statusDiv = document.getElementById('status');
+    console.error("Error initializing heatmap:", error);
+    const statusDiv = document.getElementById("status");
     if (statusDiv) {
-      statusDiv.textContent = 'Error loading heatmap';
-      statusDiv.classList.add('error');
+      statusDiv.textContent = "Error loading heatmap";
+      statusDiv.classList.add("error");
     }
   }
   // Menu button functionality with mutual exclusivity
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  const heatmapControls = document.getElementById('heatmap-controls');
+  const menuToggle = document.getElementById("menu-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const heatmapControls = document.getElementById("heatmap-controls");
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => {
-      const isOpening = !sidebar.classList.contains('open');
-      sidebar.classList.toggle('open');
+    menuToggle.addEventListener("click", () => {
+      const isOpening = !sidebar.classList.contains("open");
+      sidebar.classList.toggle("open");
       // If sidebar is opening, hide heatmap controls
       if (isOpening && heatmapControls) {
-        heatmapControls.classList.add('collapsed');
+        heatmapControls.classList.add("collapsed");
       }
     });
   }
   // Listen for sidebar close button
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('sidebar-close')) {
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("sidebar-close")) {
       // When sidebar closes, show heatmap controls
       if (heatmapControls) {
-        heatmapControls.classList.remove('collapsed');
+        heatmapControls.classList.remove("collapsed");
       }
     }
   });
@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (heatmapControls) {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.target.id === 'heatmap-controls' &&
-            mutation.attributeName === 'class') {
-          const isControlsVisible = !heatmapControls.classList.contains('collapsed');
+        if (mutation.target.id === "heatmap-controls" &&
+            mutation.attributeName === "class") {
+          const isControlsVisible = !heatmapControls.classList.contains("collapsed");
           // If controls are being shown and sidebar is open, close sidebar
-          if (isControlsVisible && sidebar && sidebar.classList.contains('open')) {
-            sidebar.classList.remove('open');
+          if (isControlsVisible && sidebar && sidebar.classList.contains("open")) {
+            sidebar.classList.remove("open");
           }
         }
       });

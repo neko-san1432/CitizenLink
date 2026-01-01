@@ -1,44 +1,44 @@
-const express = require('express');
-const SettingController = require('../controllers/SettingController');
-const { authenticateUser, requireRole } = require('../middleware/auth');
+const express = require("express");
+const SettingController = require("../controllers/SettingController");
+const { authenticateUser, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 const settingController = new SettingController();
-router.get('/public',
+router.get("/public",
   (req, res) => settingController.getPublicSettings(req, res)
 );
-router.get('/category/:category',
+router.get("/category/:category",
   authenticateUser,
   (req, res) => settingController.getSettingsByCategory(req, res)
 );
-router.post('/initialize',
+router.post("/initialize",
   authenticateUser,
-  requireRole(['super-admin']),
+  requireRole(["super-admin"]),
   (req, res) => settingController.initializeDefaults(req, res)
 );
-router.get('/',
+router.get("/",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
+  requireRole(["lgu-admin", "super-admin"]),
   (req, res) => settingController.getAllSettings(req, res)
 );
-router.get('/:key',
+router.get("/:key",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
+  requireRole(["lgu-admin", "super-admin"]),
   (req, res) => settingController.getSettingByKey(req, res)
 );
-router.post('/',
+router.post("/",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
+  requireRole(["lgu-admin", "super-admin"]),
   (req, res) => settingController.createSetting(req, res)
 );
-router.put('/:key',
+router.put("/:key",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
+  requireRole(["lgu-admin", "super-admin"]),
   (req, res) => settingController.updateSetting(req, res)
 );
-router.delete('/:key',
+router.delete("/:key",
   authenticateUser,
-  requireRole(['super-admin']),
+  requireRole(["super-admin"]),
   (req, res) => settingController.deleteSetting(req, res)
 );
 

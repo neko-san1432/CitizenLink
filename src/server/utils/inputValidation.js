@@ -9,7 +9,7 @@
  * @returns {boolean} True if valid
  */
 function isValidEmail(email) {
-  if (!email || typeof email !== 'string') return false;
+  if (!email || typeof email !== "string") return false;
   const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email.trim());
 }
@@ -20,9 +20,9 @@ function isValidEmail(email) {
  * @returns {boolean} True if valid
  */
 function isValidPhoneNumber(phoneNumber) {
-  if (!phoneNumber || typeof phoneNumber !== 'string') return false;
+  if (!phoneNumber || typeof phoneNumber !== "string") return false;
   // Remove spaces, dashes, and parentheses
-  const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
+  const cleaned = phoneNumber.replace(/[\s\-()]/g, "");
   // Check for Philippines format: +63XXXXXXXXXX or 09XXXXXXXXX or 9XXXXXXXXX
   const phRegex = /^(\+63|0)?9\d{9}$/;
   return phRegex.test(cleaned);
@@ -34,7 +34,7 @@ function isValidPhoneNumber(phoneNumber) {
  * @returns {boolean} True if valid
  */
 function isValidPostalCode(postalCode) {
-  if (!postalCode || typeof postalCode !== 'string') return false;
+  if (!postalCode || typeof postalCode !== "string") return false;
   const postalCodeRegex = /^\d{4}$/;
   return postalCodeRegex.test(postalCode.trim());
 }
@@ -48,11 +48,11 @@ function isValidPostalCode(postalCode) {
 function validateRequiredFields(body, requiredFields) {
   const missingFields = requiredFields.filter(field => {
     // Validate field is a safe property name
-    if (typeof field !== 'string' || field === '__proto__' || field === 'constructor' || field === 'prototype') {
+    if (typeof field !== "string" || field === "__proto__" || field === "constructor" || field === "prototype") {
       return true; // Treat invalid field names as missing
     }
     const value = body[field];
-    return value === void 0 || value === null || value === '';
+    return value === void 0 || value === null || value === "";
   });
 
   return {
@@ -67,7 +67,7 @@ function validateRequiredFields(body, requiredFields) {
  * @returns {string} Sanitized string
  */
 function sanitizeString(input) {
-  if (typeof input !== 'string') return input;
+  if (typeof input !== "string") return input;
   return input.trim();
 }
 
@@ -83,7 +83,7 @@ function validateEmail(email) {
     return {
       isValid: false,
       value: sanitized,
-      error: 'Email is required'
+      error: "Email is required"
     };
   }
 
@@ -91,7 +91,7 @@ function validateEmail(email) {
     return {
       isValid: false,
       value: sanitized,
-      error: 'Invalid email format'
+      error: "Invalid email format"
     };
   }
 
@@ -112,7 +112,7 @@ function validatePasswordMatch(password, confirmPassword) {
   if (!password || !confirmPassword) {
     return {
       isValid: false,
-      error: 'Both password fields are required'
+      error: "Both password fields are required"
     };
   }
 
@@ -122,7 +122,7 @@ function validatePasswordMatch(password, confirmPassword) {
   if (password !== confirmPassword) {
     return {
       isValid: false,
-      error: 'Passwords do not match'
+      error: "Passwords do not match"
     };
   }
 
@@ -139,7 +139,7 @@ function validatePasswordMatch(password, confirmPassword) {
  * @returns {Object} { isValid: boolean, error: string|null }
  */
 function validateAddress(address) {
-  if (!address || typeof address !== 'object') {
+  if (!address || typeof address !== "object") {
     return {
       isValid: true, // Address is optional
       error: null

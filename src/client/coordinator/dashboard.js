@@ -2,34 +2,34 @@
  * Enhanced Coordinator Dashboard
  * Comprehensive complaint review and management system
  */
-import showMessage from '../components/toast.js';
+import showMessage from "../components/toast.js";
 
 // Check for OAuth success message
-const oauthSuccessMessage = sessionStorage.getItem('oauth_success_message');
+const oauthSuccessMessage = sessionStorage.getItem("oauth_success_message");
 if (oauthSuccessMessage) {
-  sessionStorage.removeItem('oauth_success_message');
-  showMessage('success', oauthSuccessMessage, 5000);
+  sessionStorage.removeItem("oauth_success_message");
+  showMessage("success", oauthSuccessMessage, 5000);
 }
-import apiClient from '../config/apiClient.js';
+import apiClient from "../config/apiClient.js";
 
 // Dashboard state
 let dashboardData = null;
 let filteredQueue = [];
-let currentFilter = 'all';
+let currentFilter = "all";
 /**
  * Initialize dashboard
  */
 async function initializeDashboard() {
   try {
     // Fetch dashboard data
-    const response = await fetch('/api/coordinator/dashboard', {
+    const response = await fetch("/api/coordinator/dashboard", {
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       }
     });
     const result = await response.json();
     if (!result.success) {
-      showMessage('error', result.error || 'Failed to load dashboard');
+      showMessage("error", result.error || "Failed to load dashboard");
       return;
     }
     dashboardData = result.data;
@@ -42,8 +42,8 @@ async function initializeDashboard() {
     renderActivity(dashboardData);
     setupEventListeners();
   } catch (error) {
-    console.error('[COORDINATOR] Dashboard init error:', error);
-    showMessage('error', 'Failed to load dashboard data');
+    console.error("[COORDINATOR] Dashboard init error:", error);
+    showMessage("error", "Failed to load dashboard data");
   }
 }
 /**
@@ -51,20 +51,20 @@ async function initializeDashboard() {
  */
 function renderStatistics(data) {
   // Basic stats
-  document.getElementById('stat-pending').textContent = data.pending_reviews || 0;
-  document.getElementById('stat-reviews').textContent = data.stats.total_reviews || 0;
-  document.getElementById('stat-duplicates').textContent = data.stats.duplicates_merged || 0;
-  document.getElementById('stat-assignments').textContent = data.stats.assignments_made || 0;
+  document.getElementById("stat-pending").textContent = data.pending_reviews || 0;
+  document.getElementById("stat-reviews").textContent = data.stats.total_reviews || 0;
+  document.getElementById("stat-duplicates").textContent = data.stats.duplicates_merged || 0;
+  document.getElementById("stat-assignments").textContent = data.stats.assignments_made || 0;
   // Enhanced stats
-  document.getElementById('stat-response-time').textContent = data.stats.avg_response_time || '2.5h';
-  document.getElementById('stat-accuracy').textContent = data.stats.accuracy_rate || '94%';
+  document.getElementById("stat-response-time").textContent = data.stats.avg_response_time || "2.5h";
+  document.getElementById("stat-accuracy").textContent = data.stats.accuracy_rate || "94%";
   // Trends
-  updateTrend('pending-trend', data.trends?.pending_change || 0);
-  updateTrend('reviews-trend', data.trends?.reviews_change || 0);
-  updateTrend('duplicates-trend', data.trends?.duplicates_change || 0);
-  updateTrend('assignments-trend', data.trends?.assignments_change || 0);
-  updateTrend('response-time-trend', data.trends?.response_time_change || 0);
-  updateTrend('accuracy-trend', data.trends?.accuracy_change || 0);
+  updateTrend("pending-trend", data.trends?.pending_change || 0);
+  updateTrend("reviews-trend", data.trends?.reviews_change || 0);
+  updateTrend("duplicates-trend", data.trends?.duplicates_change || 0);
+  updateTrend("assignments-trend", data.trends?.assignments_change || 0);
+  updateTrend("response-time-trend", data.trends?.response_time_change || 0);
+  updateTrend("accuracy-trend", data.trends?.accuracy_change || 0);
 }
 /**
  * Update trend indicators
@@ -74,20 +74,20 @@ function updateTrend(elementId, change) {
   if (!element) return;
   if (change > 0) {
     element.innerHTML = `↗️ +${change}%`;
-    element.className = 'stat-trend positive';
+    element.className = "stat-trend positive";
   } else if (change < 0) {
     element.innerHTML = `↘️ ${change}%`;
-    element.className = 'stat-trend negative';
+    element.className = "stat-trend negative";
   } else {
-    element.innerHTML = '→ 0%';
-    element.className = 'stat-trend neutral';
+    element.innerHTML = "→ 0%";
+    element.className = "stat-trend neutral";
   }
 }
 /**
  * Render review queue
  */
 function renderReviewQueue(queue) {
-  const container = document.getElementById('review-queue-container');
+  const container = document.getElementById("review-queue-container");
   if (!queue || queue.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -98,7 +98,7 @@ function renderReviewQueue(queue) {
     `;
     return;
   }
-  const html = queue.map(complaint => createComplaintCard(complaint)).join('');
+  const html = queue.map(complaint => createComplaintCard(complaint)).join("");
   container.innerHTML = html;
 }
 /**
@@ -107,7 +107,7 @@ function renderReviewQueue(queue) {
 function createComplaintCard(complaint) {
   const priorityBadge = getPriorityBadgeClass(complaint.priority);
   const algorithmFlags = complaint.algorithm_flags || {};
-  let flagHTML = '';
+  let flagHTML = "";
   if (algorithmFlags.high_confidence_duplicate) {
     flagHTML = `
       <div class="algorithm-flag high-confidence">
@@ -148,7 +148,7 @@ function createComplaintCard(complaint) {
  * Render clusters
  */
 function renderClusters(clusters) {
-  const container = document.getElementById('clusters-container');
+  const container = document.getElementById("clusters-container");
   if (!clusters || clusters.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -159,7 +159,7 @@ function renderClusters(clusters) {
     `;
     return;
   }
-  const html = clusters.map(cluster => createClusterCard(cluster)).join('');
+  const html = clusters.map(cluster => createClusterCard(cluster)).join("");
   container.innerHTML = `<div class="cluster-list">${html}</div>`;
 }
 /**
@@ -172,7 +172,7 @@ function createClusterCard(cluster) {
     <div class="cluster-card">
       <div class="cluster-header">
         <div>
-          <strong>${escapeHtml(cluster.cluster_name || 'Unnamed Cluster')}</strong>
+          <strong>${escapeHtml(cluster.cluster_name || "Unnamed Cluster")}</strong>
           <div style="color: #7f8c8d; font-size: 0.85rem; margin-top: 5px;">
             ${complaintCount} complaints • ${Math.round(cluster.radius_meters)}m radius
           </div>
@@ -197,7 +197,7 @@ window.viewComplaintDetail = async function(complaintId) {
  * View cluster detail
  */
 window.viewClusterDetail = async function(clusterId) {
-  showMessage('info', 'Cluster detail view coming soon');
+  showMessage("info", "Cluster detail view coming soon");
   // TODO: Implement cluster detail view
 };
 /**
@@ -205,11 +205,11 @@ window.viewClusterDetail = async function(clusterId) {
  */
 window.detectNewClusters = async function() {
   try {
-    showMessage('info', 'Detecting clusters...');
-    const response = await fetch('/api/coordinator/detect-clusters', {
-      method: 'POST',
+    showMessage("info", "Detecting clusters...");
+    const response = await fetch("/api/coordinator/detect-clusters", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         radius_km: 0.5,
@@ -218,15 +218,15 @@ window.detectNewClusters = async function() {
     });
     const result = await response.json();
     if (!result.success) {
-      showMessage('error', result.error || 'Failed to detect clusters');
+      showMessage("error", result.error || "Failed to detect clusters");
       return;
     }
-    showMessage('success', `Detected ${result.count} cluster(s)`);
+    showMessage("success", `Detected ${result.count} cluster(s)`);
     // Reload dashboard
     initializeDashboard();
   } catch (error) {
-    console.error('[COORDINATOR] Detect clusters error:', error);
-    showMessage('error', 'Failed to detect clusters');
+    console.error("[COORDINATOR] Detect clusters error:", error);
+    showMessage("error", "Failed to detect clusters");
   }
 };
 /**
@@ -234,12 +234,12 @@ window.detectNewClusters = async function() {
  */
 function getPriorityBadgeClass(priority) {
   const map = {
-    'urgent': 'badge-urgent',
-    'high': 'badge-high',
-    'medium': 'badge-medium',
-    'low': 'badge-low'
+    "urgent": "badge-urgent",
+    "high": "badge-high",
+    "medium": "badge-medium",
+    "low": "badge-low"
   };
-  return map[priority] || 'badge-medium';
+  return map[priority] || "badge-medium";
 }
 /**
  * Helper: Format time ago
@@ -248,7 +248,7 @@ function formatTimeAgo(dateString) {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
-  if (seconds < 60) return 'Just now';
+  if (seconds < 60) return "Just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
@@ -258,7 +258,7 @@ function formatTimeAgo(dateString) {
  * Helper: Escape HTML
  */
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -267,17 +267,17 @@ function escapeHtml(text) {
  */
 function setupEventListeners() {
   // Queue filter
-  const queueFilter = document.getElementById('queue-filter');
+  const queueFilter = document.getElementById("queue-filter");
   if (queueFilter) {
-    queueFilter.addEventListener('change', (e) => {
+    queueFilter.addEventListener("change", (e) => {
       currentFilter = e.target.value;
       filterReviewQueue();
     });
   }
   // Analytics period
-  const analyticsPeriod = document.getElementById('analytics-period');
+  const analyticsPeriod = document.getElementById("analytics-period");
   if (analyticsPeriod) {
-    analyticsPeriod.addEventListener('change', (e) => {
+    analyticsPeriod.addEventListener("change", (e) => {
       loadAnalytics(e.target.value);
     });
   }
@@ -289,13 +289,13 @@ function filterReviewQueue() {
   if (!dashboardData?.recent_queue) return;
   const queue = dashboardData.recent_queue;
   switch (currentFilter) {
-    case 'urgent':
-      filteredQueue = queue.filter(c => c.priority === 'urgent');
+    case "urgent":
+      filteredQueue = queue.filter(c => c.priority === "urgent");
       break;
-    case 'high':
-      filteredQueue = queue.filter(c => c.priority === 'high' || c.priority === 'urgent');
+    case "high":
+      filteredQueue = queue.filter(c => c.priority === "high" || c.priority === "urgent");
       break;
-    case 'duplicates':
+    case "duplicates":
       filteredQueue = queue.filter(c => c.algorithm_flags?.has_duplicates);
       break;
     default:
@@ -324,7 +324,7 @@ function renderAnalytics(data) {
  * Render review trends chart
  */
 function renderReviewTrendsChart(data) {
-  const container = document.getElementById('review-trends-chart');
+  const container = document.getElementById("review-trends-chart");
   if (!container) return;
   // Simple chart implementation
   const maxReviews = Math.max(...data.map(d => d.reviews));
@@ -336,9 +336,9 @@ function renderReviewTrendsChart(data) {
           <div class="chart-bar-group">
             <div class="chart-bar reviews" style="height: ${(d.reviews / maxReviews) * 100}%"></div>
             <div class="chart-bar assignments" style="height: ${(d.assignments / maxAssignments) * 100}%"></div>
-            <div class="chart-label">${new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+            <div class="chart-label">${new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
           </div>
-        `).join('')}
+        `).join("")}
       </div>
       <div class="chart-legend">
         <div class="legend-item">
@@ -358,7 +358,7 @@ function renderReviewTrendsChart(data) {
  * Render department performance chart
  */
 function renderDepartmentPerformanceChart(data) {
-  const container = document.getElementById('department-performance-chart');
+  const container = document.getElementById("department-performance-chart");
   if (!container) return;
   container.innerHTML = `
     <div class="performance-list">
@@ -375,7 +375,7 @@ function renderDepartmentPerformanceChart(data) {
             <span>Response Time: ${dept.responseTime}</span>
           </div>
         </div>
-      `).join('')}
+      `).join("")}
     </div>
   `;
 }
@@ -384,18 +384,18 @@ function renderDepartmentPerformanceChart(data) {
  * Render activity feed
  */
 function renderActivity(data) {
-  const container = document.getElementById('activity-container');
+  const container = document.getElementById("activity-container");
   if (!container) return;
   // Use real data from API
   if (!data || !data.activities || data.activities.length === 0) {
-    const activityList = container.querySelector('.activity-list');
+    const activityList = container.querySelector(".activity-list");
     if (activityList) {
       activityList.innerHTML = '<div class="no-activities">No recent activities</div>';
     }
     return;
   }
   const {activities} = data;
-  const activityList = container.querySelector('.activity-list');
+  const activityList = container.querySelector(".activity-list");
   if (activityList) {
     activityList.innerHTML = activities.map(activity => `
       <div class="activity-item" data-type="${activity.type}">
@@ -405,7 +405,7 @@ function renderActivity(data) {
           <div class="activity-time">${activity.time}</div>
         </div>
       </div>
-    `).join('');
+    `).join("");
   }
 }
 /**
@@ -413,12 +413,12 @@ function renderActivity(data) {
  */
 async function loadAnalytics(period) {
   try {
-    showMessage('info', `Loading analytics for ${period}...`);
+    showMessage("info", `Loading analytics for ${period}...`);
     // Implement analytics loading based on period
     // This would call the appropriate API endpoint
   } catch (error) {
-    console.error('[COORDINATOR] Load analytics error:', error);
-    showMessage('error', 'Failed to load analytics');
+    console.error("[COORDINATOR] Load analytics error:", error);
+    showMessage("error", "Failed to load analytics");
   }
 }
 /**
@@ -426,20 +426,20 @@ async function loadAnalytics(period) {
  */
 async function refreshActivity() {
   try {
-    showMessage('info', 'Refreshing activity...');
+    showMessage("info", "Refreshing activity...");
     // Reload activity data
     await initializeDashboard();
-    showMessage('success', 'Activity refreshed');
+    showMessage("success", "Activity refreshed");
   } catch (error) {
-    console.error('[COORDINATOR] Refresh activity error:', error);
-    showMessage('error', 'Failed to refresh activity');
+    console.error("[COORDINATOR] Refresh activity error:", error);
+    showMessage("error", "Failed to refresh activity");
   }
 }
 /**
  * Bulk assign complaints
  */
 window.bulkAssignComplaints = async function() {
-  showMessage('info', 'Bulk assignment feature coming soon');
+  showMessage("info", "Bulk assignment feature coming soon");
   // TODO: Implement bulk assignment modal
 };
 /**
@@ -447,26 +447,26 @@ window.bulkAssignComplaints = async function() {
  */
 window.generateReport = async function() {
   try {
-    showMessage('info', 'Generating report...');
+    showMessage("info", "Generating report...");
     // Implement report generation
-    showMessage('success', 'Report generated successfully');
+    showMessage("success", "Report generated successfully");
   } catch (error) {
-    console.error('[COORDINATOR] Generate report error:', error);
-    showMessage('error', 'Failed to generate report');
+    console.error("[COORDINATOR] Generate report error:", error);
+    showMessage("error", "Failed to generate report");
   }
 };
 /**
  * View analytics
  */
 window.viewAnalytics = function() {
-  showMessage('info', 'Advanced analytics view coming soon');
+  showMessage("info", "Advanced analytics view coming soon");
   // TODO: Implement full analytics page
 };
 /**
  * Manage departments
  */
 window.manageDepartments = function() {
-  window.location.href = '/admin/departments';
+  window.location.href = "/admin/departments";
 };
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initializeDashboard);
+document.addEventListener("DOMContentLoaded", initializeDashboard);

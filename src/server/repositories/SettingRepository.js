@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const Setting = require('../models/Setting');
+const Database = require("../config/database");
+const Setting = require("../models/Setting");
 
 class SettingRepository {
 
@@ -9,45 +9,45 @@ class SettingRepository {
   }
   async findAll() {
     const { data, error } = await this.supabase
-      .from('settings')
-      .select('*')
-      .order('category, key');
+      .from("settings")
+      .select("*")
+      .order("category, key");
     if (error) throw error;
     return data.map(setting => new Setting(setting));
   }
   async findByCategory(category) {
     const { data, error } = await this.supabase
-      .from('settings')
-      .select('*')
-      .eq('category', category)
-      .order('key');
+      .from("settings")
+      .select("*")
+      .eq("category", category)
+      .order("key");
     if (error) throw error;
     return data.map(setting => new Setting(setting));
   }
   async findPublic() {
     const { data, error } = await this.supabase
-      .from('settings')
-      .select('*')
-      .eq('is_public', true)
-      .order('category, key');
+      .from("settings")
+      .select("*")
+      .eq("is_public", true)
+      .order("category, key");
     if (error) throw error;
     return data.map(setting => new Setting(setting));
   }
   async findByKey(key) {
     const { data, error } = await this.supabase
-      .from('settings')
-      .select('*')
-      .eq('key', key)
+      .from("settings")
+      .select("*")
+      .eq("key", key)
       .single();
     if (error) {
-      if (error.code === 'PGRST116') return null;
+      if (error.code === "PGRST116") return null;
       throw error;
     }
     return new Setting(data);
   }
   async create(settingData) {
     const { data, error } = await this.supabase
-      .from('settings')
+      .from("settings")
       .insert(settingData)
       .select()
       .single();
@@ -56,12 +56,12 @@ class SettingRepository {
   }
   async update(key, settingData) {
     const { data, error } = await this.supabase
-      .from('settings')
+      .from("settings")
       .update({
         ...settingData,
         updated_at: new Date().toISOString()
       })
-      .eq('key', key)
+      .eq("key", key)
       .select()
       .single();
     if (error) throw error;
@@ -69,16 +69,16 @@ class SettingRepository {
   }
   async delete(key) {
     const { error } = await this.supabase
-      .from('settings')
+      .from("settings")
       .delete()
-      .eq('key', key);
+      .eq("key", key);
     if (error) throw error;
     return true;
   }
   async upsert(settingData) {
     const { data, error } = await this.supabase
-      .from('settings')
-      .upsert(settingData, { onConflict: 'key' })
+      .from("settings")
+      .upsert(settingData, { onConflict: "key" })
       .select()
       .single();
     if (error) throw error;

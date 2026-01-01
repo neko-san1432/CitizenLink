@@ -2,7 +2,7 @@
  * Toast Notification Service
  * Handles real-time toast notifications using Server-Sent Events
  */
-import showToast from '../components/toast.js';
+import showToast from "../components/toast.js";
 
 class ToastNotificationService {
 
@@ -23,7 +23,7 @@ class ToastNotificationService {
       return;
     }
     try {
-      this.eventSource = new EventSource('/api/notifications/stream', {
+      this.eventSource = new EventSource("/api/notifications/stream", {
         withCredentials: true
       });
       this.eventSource.onopen = () => {
@@ -36,29 +36,29 @@ class ToastNotificationService {
           const data = JSON.parse(event.data);
           this.handleNotification(data);
         } catch (error) {
-          console.error('[TOAST_NOTIFICATION] Error parsing notification data:', error);
+          console.error("[TOAST_NOTIFICATION] Error parsing notification data:", error);
         }
       };
-      this.eventSource.addEventListener('notification', (event) => {
+      this.eventSource.addEventListener("notification", (event) => {
         try {
           const data = JSON.parse(event.data);
           this.handleNotification(data);
         } catch (error) {
-          console.error('[TOAST_NOTIFICATION] Error parsing notification event:', error);
+          console.error("[TOAST_NOTIFICATION] Error parsing notification event:", error);
         }
       });
       this.eventSource.onerror = (error) => {
-        console.error('[TOAST_NOTIFICATION] EventSource error:', error);
+        console.error("[TOAST_NOTIFICATION] EventSource error:", error);
         this.isConnected = false;
         this.handleReconnect();
       };
-      this.eventSource.addEventListener('error', (error) => {
-        console.error('[TOAST_NOTIFICATION] EventSource error event:', error);
+      this.eventSource.addEventListener("error", (error) => {
+        console.error("[TOAST_NOTIFICATION] EventSource error event:", error);
         this.isConnected = false;
         this.handleReconnect();
       });
     } catch (error) {
-      console.error('[TOAST_NOTIFICATION] Failed to start notification stream:', error);
+      console.error("[TOAST_NOTIFICATION] Failed to start notification stream:", error);
       this.handleReconnect();
     }
   }
@@ -67,17 +67,17 @@ class ToastNotificationService {
    */
   handleNotification(data) {
     // Skip ping messages
-    if (data.type === 'ping') {
+    if (data.type === "ping") {
       return;
     }
     // Skip connection messages
-    if (data.type === 'connected') {
+    if (data.type === "connected") {
       return;
     }
     // Show toast notification
     if (data.title && data.message) {
-      const priority = data.priority || 'info';
-      const duration = priority === 'urgent' ? 8000 : 5000;
+      const priority = data.priority || "info";
+      const duration = priority === "urgent" ? 8000 : 5000;
       showToast(data.message, priority, duration, {
         title: data.title,
         link: data.link,
@@ -91,7 +91,7 @@ class ToastNotificationService {
   handleReconnect() {
 
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[TOAST_NOTIFICATION] Max reconnection attempts reached');
+      console.error("[TOAST_NOTIFICATION] Max reconnection attempts reached");
       return;
     }
     this.reconnectAttempts++;

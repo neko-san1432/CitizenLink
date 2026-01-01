@@ -2,9 +2,9 @@
  * HR Controller
  * Handles HR-specific operations including signup link generation
  */
-const HRService = require('../services/HRService');
-const UserService = require('../services/UserService');
-const ComplaintService = require('../services/ComplaintService');
+const HRService = require("../services/HRService");
+const UserService = require("../services/UserService");
+const ComplaintService = require("../services/ComplaintService");
 
 class HRController {
 
@@ -23,7 +23,7 @@ class HRController {
       if (!role) {
         return res.status(400).json({
           success: false,
-          error: 'Role is required'
+          error: "Role is required"
         });
       }
       const result = await this.hrService.generateSignupLink(
@@ -34,10 +34,10 @@ class HRController {
       );
       res.json(result);
     } catch (error) {
-      console.error('Generate signup link error:', error);
+      console.error("Generate signup link error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to generate signup link'
+        error: error.message || "Failed to generate signup link"
       });
     }
   }
@@ -50,15 +50,15 @@ class HRController {
       const filters = {
         role: req.query.role,
         department_code: req.query.department_code,
-        is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined
+        is_active: req.query.is_active !== undefined ? req.query.is_active === "true" : undefined
       };
       const result = await this.hrService.getSignupLinks(hrId, filters);
       res.json(result);
     } catch (error) {
-      console.error('Get signup links error:', error);
+      console.error("Get signup links error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get signup links'
+        error: error.message || "Failed to get signup links"
       });
     }
   }
@@ -75,10 +75,10 @@ class HRController {
       // console.log removed for security
       res.json(result);
     } catch (error) {
-      console.error('[HR-CONTROLLER] Deactivate signup link error:', error);
+      console.error("[HR-CONTROLLER] Deactivate signup link error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to deactivate signup link'
+        error: error.message || "Failed to deactivate signup link"
       });
     }
   }
@@ -93,7 +93,7 @@ class HRController {
         // console.log removed for security
         return res.status(400).json({
           success: false,
-          error: 'Code is required'
+          error: "Code is required"
         });
       }
       // console.log removed for security
@@ -101,10 +101,10 @@ class HRController {
       // console.log removed for security
       res.json(result);
     } catch (error) {
-      console.error('[HR] Validate signup code error:', error);
+      console.error("[HR] Validate signup code error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to validate signup code'
+        error: error.message || "Failed to validate signup code"
       });
     }
   }
@@ -120,10 +120,10 @@ class HRController {
         data: result
       });
     } catch (error) {
-      console.error('Get HR dashboard error:', error);
+      console.error("Get HR dashboard error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get HR dashboard'
+        error: error.message || "Failed to get HR dashboard"
       });
     }
   }
@@ -135,13 +135,13 @@ class HRController {
       const hrId = req.user.id;
       const { user_id, department, reason } = req.body;
       if (!user_id) {
-        return res.status(400).json({ success: false, error: 'user_id is required' });
+        return res.status(400).json({ success: false, error: "user_id is required" });
       }
       const result = await this.hrService.promoteToOfficer(user_id, hrId, { department, reason });
       return res.json(result);
     } catch (error) {
-      console.error('[HR] promoteToOfficer error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to promote user' });
+      console.error("[HR] promoteToOfficer error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to promote user" });
     }
   }
   /**
@@ -152,13 +152,13 @@ class HRController {
       const hrId = req.user.id;
       const { user_id, department, reason } = req.body;
       if (!user_id) {
-        return res.status(400).json({ success: false, error: 'user_id is required' });
+        return res.status(400).json({ success: false, error: "user_id is required" });
       }
       const result = await this.hrService.promoteToAdmin(user_id, hrId, { department, reason });
       return res.json(result);
     } catch (error) {
-      console.error('[HR] promoteToAdmin error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to promote user' });
+      console.error("[HR] promoteToAdmin error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to promote user" });
     }
   }
   /**
@@ -169,13 +169,13 @@ class HRController {
       const hrId = req.user.id;
       const { user_id, reason } = req.body;
       if (!user_id) {
-        return res.status(400).json({ success: false, error: 'user_id is required' });
+        return res.status(400).json({ success: false, error: "user_id is required" });
       }
       const result = await this.hrService.demoteAdminToOfficer(user_id, hrId, { reason });
       return res.json(result);
     } catch (error) {
-      console.error('[HR] demoteToOfficer error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to demote user' });
+      console.error("[HR] demoteToOfficer error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to demote user" });
     }
   }
   /**
@@ -186,16 +186,16 @@ class HRController {
       const hrId = req.user.id;
       const { user_id, reason } = req.body;
       if (!user_id) {
-        return res.status(400).json({ success: false, error: 'user_id is required' });
+        return res.status(400).json({ success: false, error: "user_id is required" });
       }
       if (!reason) {
-        return res.status(400).json({ success: false, error: 'reason is required' });
+        return res.status(400).json({ success: false, error: "reason is required" });
       }
       const result = await this.hrService.stripTitles(user_id, hrId, reason);
       return res.json(result);
     } catch (error) {
-      console.error('[HR] stripTitles error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to strip titles' });
+      console.error("[HR] stripTitles error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to strip titles" });
     }
   }
   /**
@@ -206,13 +206,13 @@ class HRController {
       const hrId = req.user.id;
       const { user_id, department_id } = req.body;
       if (!user_id || !department_id) {
-        return res.status(400).json({ success: false, error: 'user_id and department_id are required' });
+        return res.status(400).json({ success: false, error: "user_id and department_id are required" });
       }
       const result = await this.hrService.assignOfficerToDepartment(user_id, department_id, hrId);
       return res.json(result);
     } catch (error) {
-      console.error('[HR] assignDepartment error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to assign department' });
+      console.error("[HR] assignDepartment error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to assign department" });
     }
   }
   /**
@@ -227,7 +227,7 @@ class HRController {
       const result = await this.userService.getUsers(filters, pagination);
       // Apply barangay filter client-side since admin.listUsers lacks server filters
       const filteredUsers = barangay
-        ? (result.users || []).filter(u => (u.address?.barangay || '').toLowerCase() === String(barangay).toLowerCase())
+        ? (result.users || []).filter(u => (u.address?.barangay || "").toLowerCase() === String(barangay).toLowerCase())
         : result.users;
       return res.json({
         success: true,
@@ -235,8 +235,8 @@ class HRController {
         pagination: result.pagination
       });
     } catch (error) {
-      console.error('[HR] getUsers error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to fetch users' });
+      console.error("[HR] getUsers error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to fetch users" });
     }
   }
   /**
@@ -251,7 +251,7 @@ class HRController {
       const hrDept = req.user?.department || req.user?.raw_user_meta_data?.department || req.user?.raw_user_meta_data?.dpt || null;
 
       // Get list of users who used signup codes (check signup_links table)
-      const Database = require('../config/database');
+      const Database = require("../config/database");
       const db = Database.getInstance();
       const supabase = db.getClient();
 
@@ -259,9 +259,9 @@ class HRController {
       const usersWithSignupCodes = new Map();
       try {
         const { data: usedLinks, error: linksError } = await supabase
-          .from('signup_links')
-          .select('used_by, role, department_code')
-          .not('used_by', 'is', null);
+          .from("signup_links")
+          .select("used_by, role, department_code")
+          .not("used_by", "is", null);
 
         if (!linksError && usedLinks) {
           usedLinks.forEach(link => {
@@ -272,18 +272,18 @@ class HRController {
               });
             }
           });
-          console.log('[HR] Found', usersWithSignupCodes.size, 'users who used signup codes');
+          console.log("[HR] Found", usersWithSignupCodes.size, "users who used signup codes");
         } else if (linksError) {
-          console.error('[HR] Error fetching signup links:', linksError);
+          console.error("[HR] Error fetching signup links:", linksError);
         }
       } catch (linksErr) {
-        console.error('[HR] Error fetching signup links:', linksErr);
+        console.error("[HR] Error fetching signup links:", linksErr);
       }
 
       // Debug: Log all users to see what we're working with
-      console.log('[HR] getPendingSignups - Total users fetched:', result.users?.length || 0);
-      console.log('[HR] Sample users (first 5):', result.users?.slice(0, 5).map(u => ({
-        email: '[REDACTED]',
+      console.log("[HR] getPendingSignups - Total users fetched:", result.users?.length || 0);
+      console.log("[HR] Sample users (first 5):", result.users?.slice(0, 5).map(u => ({
+        email: "[REDACTED]",
         status: u.status,
         raw_status: u.raw_user_meta_data?.status,
         meta_status: u.user_metadata?.status,
@@ -335,10 +335,10 @@ class HRController {
         // 2. has pending_role (from metadata or signup_links) OR
         // 3. has pending_signup_code OR
         // 4. has status 'pending_verification' AND used a signup code (metadata update failed) AND is citizen
-        const isPending = status === 'pending_approval' ||
+        const isPending = status === "pending_approval" ||
                          pendingRole ||
                          hasPendingCode ||
-                         (status === 'pending_verification' && usedSignupCode && u.role === 'citizen');
+                         (status === "pending_verification" && usedSignupCode && u.role === "citizen");
 
         if (!isPending) {
           return false;
@@ -347,7 +347,7 @@ class HRController {
         // Department filtering:
         // - Super-admin can see ALL pending signups across all offices (no filter)
         // - HR users can only see pending signups within their own office
-        const isSuperAdmin = req.user?.normalized_role === 'super-admin' || req.user?.role === 'super-admin';
+        const isSuperAdmin = req.user?.normalized_role === "super-admin" || req.user?.role === "super-admin";
 
         if (!isSuperAdmin && hrDept) {
           // HR user: only show pending signups for their department
@@ -379,10 +379,10 @@ class HRController {
         return u;
       });
 
-      console.log('[HR] getPendingSignups - Found', enhancedPending.length, 'pending signups for HR:', hrId, 'department:', hrDept);
-      console.log('[HR] Sample pending users:', enhancedPending.slice(0, 3).map(u => ({
+      console.log("[HR] getPendingSignups - Found", enhancedPending.length, "pending signups for HR:", hrId, "department:", hrDept);
+      console.log("[HR] Sample pending users:", enhancedPending.slice(0, 3).map(u => ({
         id: u.id,
-        email: '[REDACTED]',
+        email: "[REDACTED]",
         status: u.status,
         pending_role: u.raw_user_meta_data?.pending_role || u.user_metadata?.pending_role,
         pending_department: u.raw_user_meta_data?.pending_department || u.user_metadata?.pending_department,
@@ -391,8 +391,8 @@ class HRController {
 
       return res.json({ success: true, data: enhancedPending });
     } catch (error) {
-      console.error('[HR] getPendingSignups error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to fetch pending signups' });
+      console.error("[HR] getPendingSignups error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to fetch pending signups" });
     }
   }
   /**
@@ -404,7 +404,7 @@ class HRController {
       const hrId = req.user.id;
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
-      if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+      if (!user) return res.status(404).json({ success: false, error: "User not found" });
 
       // Get pending role and department from metadata first
       let pendingRole = user?.raw_user_meta_data?.pending_role || user?.user_metadata?.pending_role;
@@ -412,17 +412,17 @@ class HRController {
 
       // If not in metadata, check signup_links table (metadata update may have failed)
       if (!pendingRole || !pendingDept) {
-        const Database = require('../config/database');
+        const Database = require("../config/database");
         const db = Database.getInstance();
         const supabase = db.getClient();
 
         try {
           const { data: signupLinks, error: linkError } = await supabase
-            .from('signup_links')
-            .select('role, department_code')
-            .eq('used_by', userId)
-            .not('used_by', 'is', null)
-            .order('used_at', { ascending: false })
+            .from("signup_links")
+            .select("role, department_code")
+            .eq("used_by", userId)
+            .not("used_by", "is", null)
+            .order("used_at", { ascending: false })
             .limit(1);
 
           const signupLink = signupLinks && signupLinks.length > 0 ? signupLinks[0] : null;
@@ -434,44 +434,44 @@ class HRController {
             if (!pendingDept && signupLink.department_code) {
               pendingDept = signupLink.department_code;
             }
-            console.log('[HR] Got pending role/dept from signup_links:', {
+            console.log("[HR] Got pending role/dept from signup_links:", {
               userId,
               pendingRole,
               pendingDept,
               fromTable: true
             });
           } else if (linkError) {
-            console.error('[HR] Error fetching signup link:', linkError);
+            console.error("[HR] Error fetching signup link:", linkError);
           }
         } catch (linkErr) {
-          console.error('[HR] Error fetching signup link:', linkErr);
+          console.error("[HR] Error fetching signup link:", linkErr);
         }
       }
 
       if (!pendingRole) {
-        console.error('[HR] No pending role found for user:', userId);
-        return res.status(400).json({ success: false, error: 'No pending role to approve. User may not have registered with a signup code.' });
+        console.error("[HR] No pending role found for user:", userId);
+        return res.status(400).json({ success: false, error: "No pending role to approve. User may not have registered with a signup code." });
       }
 
       // Normalize role using general normalization function
-      const { normalizeRole } = require('../utils/roleValidation');
+      const { normalizeRole } = require("../utils/roleValidation");
       const normalizedRole = normalizeRole(pendingRole);
 
       if (pendingRole !== normalizedRole) {
-        console.log('[HR] Normalizing role from', pendingRole, 'to', normalizedRole, 'for user:', userId);
+        console.log("[HR] Normalizing role from", pendingRole, "to", normalizedRole, "for user:", userId);
       }
 
       // Ensure we're using the normalized role consistently
-      console.log('[HR] Approval role mapping:', {
+      console.log("[HR] Approval role mapping:", {
         pendingRole,
         normalizedRole,
         userId
       });
 
       // HR department scope enforcement (super-admin bypasses)
-      const isSuper = (req.user?.normalized_role === 'super-admin' || req.user?.role === 'super-admin');
+      const isSuper = (req.user?.normalized_role === "super-admin" || req.user?.role === "super-admin");
       if (!isSuper && req.user?.department && pendingDept && String(req.user.department) !== String(pendingDept)) {
-        return res.status(403).json({ success: false, error: 'You can only approve for your own office' });
+        return res.status(403).json({ success: false, error: "You can only approve for your own office" });
       }
 
       // Apply role/department and clear pending flags
@@ -482,22 +482,22 @@ class HRController {
         base_role: normalizedRole, // Store base role for reference
         department: pendingDept,
         dpt: pendingDept, // Also set dpt field for consistency
-        status: 'active',
+        status: "active",
         pending_role: null,
         pending_department: null,
         pending_signup_code: null
       }, hrId);
 
-      console.log('[HR] Approved signup:', {
+      console.log("[HR] Approved signup:", {
         userId,
         role: normalizedRole,
         department: pendingDept,
         originalPendingRole: pendingRole
       });
-      return res.json({ success: true, message: 'Signup approved', data: updated });
+      return res.json({ success: true, message: "Signup approved", data: updated });
     } catch (error) {
-      console.error('[HR] approvePendingSignup error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to approve signup' });
+      console.error("[HR] approvePendingSignup error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to approve signup" });
     }
   }
   /**
@@ -509,24 +509,24 @@ class HRController {
       const hrId = req.user.id;
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
-      if (!user) return res.status(404).json({ success: false, error: 'User not found' });
-      const isSuper = (req.user?.normalized_role === 'super-admin' || req.user?.role === 'super-admin');
+      if (!user) return res.status(404).json({ success: false, error: "User not found" });
+      const isSuper = (req.user?.normalized_role === "super-admin" || req.user?.role === "super-admin");
       const pendingDept = user?.raw_user_meta_data?.pending_department || user?.user_metadata?.pending_department;
       if (!isSuper && req.user?.department && pendingDept && String(req.user.department) !== String(pendingDept)) {
-        return res.status(403).json({ success: false, error: 'You can only reject for your own office' });
+        return res.status(403).json({ success: false, error: "You can only reject for your own office" });
       }
       const updated = await this.userService.updateUser(userId, {
-        role: 'citizen',
-        normalized_role: 'citizen',
-        status: 'rejected',
+        role: "citizen",
+        normalized_role: "citizen",
+        status: "rejected",
         pending_role: null,
         pending_department: null,
         pending_signup_code: null
       }, hrId);
-      return res.json({ success: true, message: 'Signup rejected', data: updated });
+      return res.json({ success: true, message: "Signup rejected", data: updated });
     } catch (error) {
-      console.error('[HR] rejectPendingSignup error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to reject signup' });
+      console.error("[HR] rejectPendingSignup error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to reject signup" });
     }
   }
   /**
@@ -537,12 +537,12 @@ class HRController {
       const { id } = req.params;
       const user = await this.userService.getUserById(id);
       if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({ success: false, error: "User not found" });
       }
       return res.json({ success: true, data: user });
     } catch (error) {
-      console.error('[HR] getUserDetails error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to fetch user' });
+      console.error("[HR] getUserDetails error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to fetch user" });
     }
   }
   /**
@@ -569,8 +569,8 @@ class HRController {
         }
       });
     } catch (error) {
-      console.error('[HR] getUserComplaints error:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to fetch complaints' });
+      console.error("[HR] getUserComplaints error:", error);
+      return res.status(500).json({ success: false, error: error.message || "Failed to fetch complaints" });
     }
   }
 }

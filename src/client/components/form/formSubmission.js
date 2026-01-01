@@ -2,9 +2,9 @@
  * Complaint Form Submission Handler
  * Handles the actual submission of complaint forms to the API
  */
-import apiClient from '../../config/apiClient.js';
-import { extractComplaintFormData, validateComplaintForm } from '../../utils/validation.js';
-import showMessage from '../toast.js';
+import apiClient from "../../config/apiClient.js";
+import { extractComplaintFormData, validateComplaintForm } from "../../utils/validation.js";
+import showMessage from "../toast.js";
 
 /**
  * Calculate total size of files
@@ -23,14 +23,14 @@ function getTotalFileSize(files) {
  * @returns {Promise<Object>} - Submission result
  */
 export async function handleComplaintSubmit(formElement, selectedFiles = [], fileHandler = null) {
-  const submitBtn = formElement.querySelector('.submit-btn');
-  const cancelBtn = formElement.querySelector('.cancel-btn') || document.querySelector('.cancel-btn');
-  const originalSubmitText = submitBtn?.textContent || 'Submit Complaint';
+  const submitBtn = formElement.querySelector(".submit-btn");
+  const cancelBtn = formElement.querySelector(".cancel-btn") || document.querySelector(".cancel-btn");
+  const originalSubmitText = submitBtn?.textContent || "Submit Complaint";
 
   try {
     // Disable buttons
     if (submitBtn) {
-      submitBtn.textContent = 'Preparing...';
+      submitBtn.textContent = "Preparing...";
       submitBtn.disabled = true;
     }
     if (cancelBtn) {
@@ -41,15 +41,15 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     const formData = extractComplaintFormData(formElement);
     const validation = validateComplaintForm(formData);
     if (!validation.valid) {
-      throw new Error(validation.errors.join('. '));
+      throw new Error(validation.errors.join(". "));
     }
 
     // Validate coordinates against Digos boundary (if coordinates are provided)
     if (formData.latitude !== null && formData.longitude !== null) {
-      const { validateComplaintCoordinates } = await import('../../utils/validation.js');
+      const { validateComplaintCoordinates } = await import("../../utils/validation.js");
       const coordValidation = await validateComplaintCoordinates(formData.latitude, formData.longitude);
       if (!coordValidation.valid) {
-        throw new Error(coordValidation.error || 'Invalid complaint location');
+        throw new Error(coordValidation.error || "Invalid complaint location");
       }
     }
 
@@ -58,14 +58,14 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
 
     // Add basic fields
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== void 0 && value !== '') {
-        if (key === 'departments' && Array.isArray(value)) {
+      if (value !== null && value !== void 0 && value !== "") {
+        if (key === "departments" && Array.isArray(value)) {
           value.forEach(deptId => {
-            apiFormData.append('preferred_departments', deptId);
+            apiFormData.append("preferred_departments", deptId);
           });
-        } else if (key === 'preferred_departments' && Array.isArray(value)) {
+        } else if (key === "preferred_departments" && Array.isArray(value)) {
           value.forEach(deptId => {
-            apiFormData.append('preferred_departments', deptId);
+            apiFormData.append("preferred_departments", deptId);
           });
         } else {
           apiFormData.append(key, String(value));
@@ -75,12 +75,12 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
 
     // Add files
     selectedFiles.forEach(file => {
-      apiFormData.append('evidenceFiles', file);
+      apiFormData.append("evidenceFiles", file);
     });
 
     // Submit form with progress tracking using XMLHttpRequest
     if (submitBtn) {
-      submitBtn.textContent = selectedFiles.length > 0 ? 'Uploading files...' : 'Submitting complaint...';
+      submitBtn.textContent = selectedFiles.length > 0 ? "Uploading files..." : "Submitting complaint...";
     }
 
     // Use XMLHttpRequest for progress tracking
@@ -97,7 +97,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
       });
 
       // Track upload progress
-      xhr.upload.addEventListener('progress', (e) => {
+      xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable && fileHandler && selectedFiles.length > 0) {
           uploadedBytes = e.loaded;
           const totalSize = e.total;
@@ -115,7 +115,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
               fileProgress = Math.round(((uploadedBytes - fileStart) / fileSize) * 100);
             }
 
-            fileHandler.setUploadStatus(file, 'uploading', fileProgress);
+            fileHandler.setUploadStatus(file, "uploading", fileProgress);
           });
 
           // Update button text
@@ -127,31 +127,31 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
       });
 
       // Handle completion
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
             // Mark all files as completed
             if (fileHandler && selectedFiles.length > 0) {
               selectedFiles.forEach(file => {
-                fileHandler.setUploadStatus(file, 'completed', 100);
+                fileHandler.setUploadStatus(file, "completed", 100);
               });
             }
             resolve(response);
           } catch (parseError) {
-            reject(new Error('Invalid response from server'));
+            reject(new Error("Invalid response from server"));
           }
         } else {
           // Mark files as error and remove them
           if (fileHandler && selectedFiles.length > 0) {
             selectedFiles.forEach(file => {
-              fileHandler.setUploadStatus(file, 'error', 0);
+              fileHandler.setUploadStatus(file, "error", 0);
             });
             // Remove failed uploads after a short delay to show error state
             setTimeout(() => {
               const removedCount = fileHandler.removeFailedUploads();
               if (removedCount > 0) {
-                showMessage('warning', `${removedCount} file(s) removed due to upload failure`);
+                showMessage("warning", `${removedCount} file(s) removed due to upload failure`);
               }
             }, 2000);
           }
@@ -176,110 +176,110 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
       });
 
       // Handle errors
-      xhr.addEventListener('error', () => {
+      xhr.addEventListener("error", () => {
         if (fileHandler && selectedFiles.length > 0) {
           selectedFiles.forEach(file => {
-            fileHandler.setUploadStatus(file, 'error', 0);
+            fileHandler.setUploadStatus(file, "error", 0);
           });
           // Remove failed uploads after a short delay to show error state
           setTimeout(() => {
             const removedCount = fileHandler.removeFailedUploads();
             if (removedCount > 0) {
-              showMessage('warning', `${removedCount} file(s) removed due to connection error`);
+              showMessage("warning", `${removedCount} file(s) removed due to connection error`);
             }
           }, 2000);
         }
-        reject(new Error('Connection error: Failed to submit complaint. Please check your internet connection.'));
+        reject(new Error("Connection error: Failed to submit complaint. Please check your internet connection."));
       });
 
-      xhr.addEventListener('abort', () => {
+      xhr.addEventListener("abort", () => {
         if (fileHandler && selectedFiles.length > 0) {
           selectedFiles.forEach(file => {
-            fileHandler.setUploadStatus(file, 'error', 0);
+            fileHandler.setUploadStatus(file, "error", 0);
           });
           // Remove failed uploads after a short delay to show error state
           setTimeout(() => {
             const removedCount = fileHandler.removeFailedUploads();
             if (removedCount > 0) {
-              showMessage('warning', `${removedCount} file(s) removed due to cancellation`);
+              showMessage("warning", `${removedCount} file(s) removed due to cancellation`);
             }
           }, 2000);
         }
-        reject(new Error('Submission cancelled'));
+        reject(new Error("Submission cancelled"));
       });
 
       // Handle timeout (60 seconds for entire submission)
       xhr.timeout = 60000;
-      xhr.addEventListener('timeout', () => {
+      xhr.addEventListener("timeout", () => {
         if (fileHandler && selectedFiles.length > 0) {
           selectedFiles.forEach(file => {
-            fileHandler.setUploadStatus(file, 'error', 0);
+            fileHandler.setUploadStatus(file, "error", 0);
           });
           // Remove failed uploads after a short delay to show error state
           setTimeout(() => {
             const removedCount = fileHandler.removeFailedUploads();
             if (removedCount > 0) {
-              showMessage('warning', `${removedCount} file(s) removed due to upload timeout`);
+              showMessage("warning", `${removedCount} file(s) removed due to upload timeout`);
             }
           }, 2000);
         }
-        reject(new Error('Upload timeout: Connection is too slow or interrupted. Please try again.'));
+        reject(new Error("Upload timeout: Connection is too slow or interrupted. Please try again."));
       });
 
       // Get CSRF token and auth headers, then send request
       Promise.all([
-        fetch('/api/auth/csrf-token').then(r => r.json()),
+        fetch("/api/auth/csrf-token").then(r => r.json()),
         apiClient.getAuthHeaders()
       ]).then(([csrfData, headers]) => {
         if (!csrfData.success) {
-          reject(new Error('Failed to get CSRF token'));
+          reject(new Error("Failed to get CSRF token"));
           return;
         }
 
-        apiFormData.append('_csrf', csrfData.csrfToken);
+        apiFormData.append("_csrf", csrfData.csrfToken);
 
-        xhr.open('POST', '/api/complaints', true);
+        xhr.open("POST", "/api/complaints", true);
         if (headers.Authorization) {
-          xhr.setRequestHeader('Authorization', headers.Authorization);
+          xhr.setRequestHeader("Authorization", headers.Authorization);
         }
         xhr.send(apiFormData);
       }).catch(err => {
-        reject(new Error('Failed to prepare submission'));
+        reject(new Error("Failed to prepare submission"));
       });
     });
 
     if (!result.success) {
-      throw new Error(result.error || 'Submission failed');
+      throw new Error(result.error || "Submission failed");
     }
-    showMessage('success', result.message || 'Complaint submitted successfully');
+    showMessage("success", result.message || "Complaint submitted successfully");
     return result.data;
   } catch (error) {
-    console.error('[COMPLAINT] Submission error:', error);
+    console.error("[COMPLAINT] Submission error:", error);
 
     // Remove failed uploads if fileHandler is available
     if (fileHandler && selectedFiles.length > 0) {
       // Mark all files as error first
       selectedFiles.forEach(file => {
-        fileHandler.setUploadStatus(file, 'error', 0);
+        fileHandler.setUploadStatus(file, "error", 0);
       });
       // Remove failed uploads after a short delay to show error state
       setTimeout(() => {
         const removedCount = fileHandler.removeFailedUploads();
         if (removedCount > 0) {
-          showMessage('warning', `${removedCount} file(s) removed due to upload failure`);
+          showMessage("warning", `${removedCount} file(s) removed due to upload failure`);
         }
       }, 2000);
     }
 
     // Determine error message
-    let errorMessage = error.message || 'Failed to submit complaint';
-    if (errorMessage.includes('Connection') || errorMessage.includes('timeout') || errorMessage.includes('network')) {
-      errorMessage = 'Connection error: Please check your internet connection and try again.';
-    } else if (errorMessage.includes('Failed to upload')) {
-      errorMessage = 'File upload failed. Please check your connection and try again.';
+    let errorMessage = error.message || "Failed to submit complaint";
+    if (errorMessage.includes("Connection") || errorMessage.includes("timeout") || errorMessage.includes("network")) {
+      errorMessage = "Connection error: Please check your internet connection and try again.";
+    } else if (errorMessage.includes("Failed to upload")) {
+      errorMessage = "File upload failed. Please check your connection and try again.";
     }
 
-    showMessage('error', errorMessage);
+    showMessage("error", errorMessage);
     throw error;
   } finally {
     // Re-enable buttons
@@ -303,13 +303,13 @@ export function resetComplaintForm(formElement, clearFiles) {
   // Reset form fields
   formElement.reset();
   // Clear custom validations
-  const inputs = formElement.querySelectorAll('input, textarea, select');
+  const inputs = formElement.querySelectorAll("input, textarea, select");
   inputs.forEach(input => {
-    input.setCustomValidity('');
+    input.setCustomValidity("");
   });
   // Subtype field removed - not needed in current schema
   // Clear files if function provided
-  if (typeof clearFiles === 'function') {
+  if (typeof clearFiles === "function") {
     clearFiles();
   }
   // console.log removed for security

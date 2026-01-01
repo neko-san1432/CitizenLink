@@ -8,39 +8,39 @@
  * @param {HTMLInputElement} passwordInput - The password input element
  */
 function initPasswordToggle(passwordInput) {
-  if (!passwordInput || passwordInput.type !== 'password') {
+  if (!passwordInput || passwordInput.type !== "password") {
     return;
   }
 
   // Check if toggle already exists
-  if (passwordInput.dataset.toggleInitialized === 'true') {
+  if (passwordInput.dataset.toggleInitialized === "true") {
     return;
   }
 
   // Mark as initialized
-  passwordInput.dataset.toggleInitialized = 'true';
+  passwordInput.dataset.toggleInitialized = "true";
 
   // Find the input wrapper or create one
   let wrapper = passwordInput.parentElement;
-  if (!wrapper || !wrapper.classList.contains('input-wrapper')) {
+  if (!wrapper || !wrapper.classList.contains("input-wrapper")) {
     // If no wrapper, wrap the input
-    wrapper = document.createElement('div');
-    wrapper.className = 'input-wrapper';
-    wrapper.style.position = 'relative'; // Ensure relative positioning
+    wrapper = document.createElement("div");
+    wrapper.className = "input-wrapper";
+    wrapper.style.position = "relative"; // Ensure relative positioning
     passwordInput.parentNode.insertBefore(wrapper, passwordInput);
     wrapper.appendChild(passwordInput);
   } else {
     // Ensure wrapper has relative positioning
-    if (getComputedStyle(wrapper).position === 'static') {
-      wrapper.style.position = 'relative';
+    if (getComputedStyle(wrapper).position === "static") {
+      wrapper.style.position = "relative";
     }
   }
 
   // Create toggle button
-  const toggleBtn = document.createElement('button');
-  toggleBtn.type = 'button';
-  toggleBtn.className = 'password-toggle';
-  toggleBtn.setAttribute('aria-label', 'Toggle password visibility');
+  const toggleBtn = document.createElement("button");
+  toggleBtn.type = "button";
+  toggleBtn.className = "password-toggle";
+  toggleBtn.setAttribute("aria-label", "Toggle password visibility");
   toggleBtn.innerHTML = `
     <svg class="eye-icon eye-show" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -53,27 +53,27 @@ function initPasswordToggle(passwordInput) {
   `;
 
   // Add toggle functionality
-  toggleBtn.addEventListener('click', (e) => {
+  toggleBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
 
     // Toggle icon visibility
-    const showIcon = toggleBtn.querySelector('.eye-show');
-    const hideIcon = toggleBtn.querySelector('.eye-hide');
+    const showIcon = toggleBtn.querySelector(".eye-show");
+    const hideIcon = toggleBtn.querySelector(".eye-hide");
 
     if (isPassword) {
       // Show password - show hide icon
-      showIcon.style.display = 'none';
-      hideIcon.style.display = 'block';
-      toggleBtn.setAttribute('aria-label', 'Hide password');
+      showIcon.style.display = "none";
+      hideIcon.style.display = "block";
+      toggleBtn.setAttribute("aria-label", "Hide password");
     } else {
       // Hide password - show show icon
-      showIcon.style.display = 'block';
-      hideIcon.style.display = 'none';
-      toggleBtn.setAttribute('aria-label', 'Show password');
+      showIcon.style.display = "block";
+      hideIcon.style.display = "none";
+      toggleBtn.setAttribute("aria-label", "Show password");
     }
   });
 
@@ -97,7 +97,7 @@ export function initAllPasswordToggles() {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === 1) { // Element node
-          if (node.tagName === 'INPUT' && node.type === 'password') {
+          if (node.tagName === "INPUT" && node.type === "password") {
             initPasswordToggle(node);
           }
           // Check children
@@ -117,8 +117,8 @@ export function initAllPasswordToggles() {
 }
 
 // Auto-initialize on DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAllPasswordToggles);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAllPasswordToggles);
 } else {
   initAllPasswordToggles();
 }

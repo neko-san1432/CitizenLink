@@ -5,14 +5,14 @@
 class BarangayPrioritization {
   constructor(containerId, options = {}) {
     this.containerId = containerId;
-    this.currentSortOrder = options.sortOrder || 'desc';
-    this.currentPeriod = options.period || 'weekly';
+    this.currentSortOrder = options.sortOrder || "desc";
+    this.currentPeriod = options.period || "weekly";
     this.insightsData = null;
     this.onBarangayClick = options.onBarangayClick || null;
     this.filters = {
-      priority: '',
-      frequency: '',
-      search: ''
+      priority: "",
+      frequency: "",
+      search: ""
     };
   }
 
@@ -22,15 +22,15 @@ class BarangayPrioritization {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to load insights');
+        throw new Error(result.error || "Failed to load insights");
       }
 
       this.insightsData = result.data;
       this.render();
       return this.insightsData;
     } catch (error) {
-      console.error('[BARANGAY_PRIORITIZATION] Load error:', error);
-      this.showError(error.message || 'Failed to load barangay prioritization');
+      console.error("[BARANGAY_PRIORITIZATION] Load error:", error);
+      this.showError(error.message || "Failed to load barangay prioritization");
       return null;
     }
   }
@@ -47,7 +47,7 @@ class BarangayPrioritization {
     barangays = this.applyFilters(barangays);
 
     // Sort based on current sort order
-    if (this.currentSortOrder === 'asc') {
+    if (this.currentSortOrder === "asc") {
       barangays.sort((a, b) => a.prioritizationScore - b.prioritizationScore);
     } else {
       barangays.sort((a, b) => b.prioritizationScore - a.prioritizationScore);
@@ -73,33 +73,33 @@ class BarangayPrioritization {
             <label for="prioritization-priority-${this.containerId}">Priority:</label>
             <select id="prioritization-priority-${this.containerId}" class="filter-select">
               <option value="">All Priorities</option>
-              <option value="critical" ${this.filters.priority === 'critical' ? 'selected' : ''}>Critical</option>
-              <option value="high" ${this.filters.priority === 'high' ? 'selected' : ''}>High</option>
-              <option value="medium" ${this.filters.priority === 'medium' ? 'selected' : ''}>Medium</option>
-              <option value="low" ${this.filters.priority === 'low' ? 'selected' : ''}>Low</option>
+              <option value="critical" ${this.filters.priority === "critical" ? "selected" : ""}>Critical</option>
+              <option value="high" ${this.filters.priority === "high" ? "selected" : ""}>High</option>
+              <option value="medium" ${this.filters.priority === "medium" ? "selected" : ""}>Medium</option>
+              <option value="low" ${this.filters.priority === "low" ? "selected" : ""}>Low</option>
             </select>
           </div>
           <div class="filter-group">
             <label for="prioritization-frequency-${this.containerId}">Frequency:</label>
             <select id="prioritization-frequency-${this.containerId}" class="filter-select">
               <option value="">All Frequencies</option>
-              <option value="high" ${this.filters.frequency === 'high' ? 'selected' : ''}>High</option>
-              <option value="medium" ${this.filters.frequency === 'medium' ? 'selected' : ''}>Medium</option>
-              <option value="low" ${this.filters.frequency === 'low' ? 'selected' : ''}>Low</option>
+              <option value="high" ${this.filters.frequency === "high" ? "selected" : ""}>High</option>
+              <option value="medium" ${this.filters.frequency === "medium" ? "selected" : ""}>Medium</option>
+              <option value="low" ${this.filters.frequency === "low" ? "selected" : ""}>Low</option>
             </select>
           </div>
           <div class="filter-group">
             <label for="prioritization-sort-${this.containerId}">Sort:</label>
             <select id="prioritization-sort-${this.containerId}" class="filter-select">
-              <option value="desc" ${this.currentSortOrder === 'desc' ? 'selected' : ''}>Highest First</option>
-              <option value="asc" ${this.currentSortOrder === 'asc' ? 'selected' : ''}>Lowest First</option>
+              <option value="desc" ${this.currentSortOrder === "desc" ? "selected" : ""}>Highest First</option>
+              <option value="asc" ${this.currentSortOrder === "asc" ? "selected" : ""}>Lowest First</option>
             </select>
           </div>
         </div>
       </div>
       <div class="barangay-ranking-list">
         ${barangays.length > 0
-    ? barangays.map((barangay, index) => this.renderBarangayCard(barangay, index + 1)).join('')
+    ? barangays.map((barangay, index) => this.renderBarangayCard(barangay, index + 1)).join("")
     : '<div class="no-results">No barangays match the current filters.</div>'
 }
       </div>
@@ -142,7 +142,7 @@ class BarangayPrioritization {
     // Search filter
     const searchInput = document.getElementById(`prioritization-search-${this.containerId}`);
     if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
+      searchInput.addEventListener("input", (e) => {
         this.filters.search = e.target.value;
         this.render();
       });
@@ -151,7 +151,7 @@ class BarangayPrioritization {
     // Priority filter
     const prioritySelect = document.getElementById(`prioritization-priority-${this.containerId}`);
     if (prioritySelect) {
-      prioritySelect.addEventListener('change', (e) => {
+      prioritySelect.addEventListener("change", (e) => {
         this.filters.priority = e.target.value;
         this.render();
       });
@@ -160,7 +160,7 @@ class BarangayPrioritization {
     // Frequency filter
     const frequencySelect = document.getElementById(`prioritization-frequency-${this.containerId}`);
     if (frequencySelect) {
-      frequencySelect.addEventListener('change', (e) => {
+      frequencySelect.addEventListener("change", (e) => {
         this.filters.frequency = e.target.value;
         this.render();
       });
@@ -169,7 +169,7 @@ class BarangayPrioritization {
     // Sort order change
     const sortSelect = document.getElementById(`prioritization-sort-${this.containerId}`);
     if (sortSelect) {
-      sortSelect.addEventListener('change', (e) => {
+      sortSelect.addEventListener("change", (e) => {
         this.currentSortOrder = e.target.value;
         this.render();
       });
@@ -177,17 +177,17 @@ class BarangayPrioritization {
 
     // Collapsible details toggle
     document.querySelectorAll(`#${this.containerId} .barangay-card-toggle`).forEach(toggle => {
-      toggle.addEventListener('click', (e) => {
+      toggle.addEventListener("click", (e) => {
         e.stopPropagation();
-        const card = toggle.closest('.barangay-card');
-        const details = card.querySelector('.barangay-card-details');
-        const isExpanded = card.classList.contains('expanded');
+        const card = toggle.closest(".barangay-card");
+        const details = card.querySelector(".barangay-card-details");
+        const isExpanded = card.classList.contains("expanded");
 
         if (isExpanded) {
-          card.classList.remove('expanded');
-          details.style.maxHeight = '0';
+          card.classList.remove("expanded");
+          details.style.maxHeight = "0";
         } else {
-          card.classList.add('expanded');
+          card.classList.add("expanded");
           details.style.maxHeight = `${details.scrollHeight  }px`;
         }
       });
@@ -247,8 +247,8 @@ class BarangayPrioritization {
                 <div class="criterion-value">${stats.averageComplaints || 0}</div>
                 <div class="criterion-barangay">
                   <span class="barangay-count">${barangay.complaintCount}</span>
-                  <span class="barangay-status ${barangay.complaintCount >= stats.averageComplaints ? 'above' : 'below'}">
-                    ${barangay.complaintCount >= stats.averageComplaints ? 'Above Average' : 'Below Average'}
+                  <span class="barangay-status ${barangay.complaintCount >= stats.averageComplaints ? "above" : "below"}">
+                    ${barangay.complaintCount >= stats.averageComplaints ? "Above Average" : "Below Average"}
                   </span>
                 </div>
               </div>
@@ -257,8 +257,8 @@ class BarangayPrioritization {
                 <div class="criterion-value">${thresholds.low || 0}</div>
                 <div class="criterion-barangay">
                   <span class="barangay-count">${barangay.complaintCount}</span>
-                  <span class="barangay-status ${barangay.complaintCount <= thresholds.low ? 'low-freq' : ''}">
-                    ${barangay.complaintCount <= thresholds.low ? 'Low Frequency' : 'Above Low Threshold'}
+                  <span class="barangay-status ${barangay.complaintCount <= thresholds.low ? "low-freq" : ""}">
+                    ${barangay.complaintCount <= thresholds.low ? "Low Frequency" : "Above Low Threshold"}
                   </span>
                 </div>
               </div>
@@ -267,8 +267,8 @@ class BarangayPrioritization {
                 <div class="criterion-value">${thresholds.medium || 0}</div>
                 <div class="criterion-barangay">
                   <span class="barangay-count">${barangay.complaintCount}</span>
-                  <span class="barangay-status ${barangay.complaintCount > thresholds.low && barangay.complaintCount <= thresholds.medium ? 'medium-freq' : ''}">
-                    ${barangay.complaintCount > thresholds.low && barangay.complaintCount <= thresholds.medium ? 'Medium Frequency' : barangay.complaintCount > thresholds.medium ? 'Above Medium' : 'Below Medium'}
+                  <span class="barangay-status ${barangay.complaintCount > thresholds.low && barangay.complaintCount <= thresholds.medium ? "medium-freq" : ""}">
+                    ${barangay.complaintCount > thresholds.low && barangay.complaintCount <= thresholds.medium ? "Medium Frequency" : barangay.complaintCount > thresholds.medium ? "Above Medium" : "Below Medium"}
                   </span>
                 </div>
               </div>
@@ -277,8 +277,8 @@ class BarangayPrioritization {
                 <div class="criterion-value">${thresholds.high || 0}</div>
                 <div class="criterion-barangay">
                   <span class="barangay-count">${barangay.complaintCount}</span>
-                  <span class="barangay-status ${barangay.complaintCount >= thresholds.high ? 'high-freq' : ''}">
-                    ${barangay.complaintCount >= thresholds.high ? 'High Frequency' : 'Below High Threshold'}
+                  <span class="barangay-status ${barangay.complaintCount >= thresholds.high ? "high-freq" : ""}">
+                    ${barangay.complaintCount >= thresholds.high ? "High Frequency" : "Below High Threshold"}
                   </span>
                 </div>
               </div>
@@ -305,7 +305,7 @@ class BarangayPrioritization {
               </div>
               <div class="data-item">
                 <span class="data-label">Frequency Level:</span>
-                <span class="data-value frequency-${barangay.frequencyLevel || 'low'}">${(barangay.frequencyLevel || 'low').toUpperCase()}</span>
+                <span class="data-value frequency-${barangay.frequencyLevel || "low"}">${(barangay.frequencyLevel || "low").toUpperCase()}</span>
               </div>
               <div class="data-item">
                 <span class="data-label">Prioritization Score:</span>
@@ -344,20 +344,20 @@ class BarangayPrioritization {
   }
 
   getPriorityLevel(score) {
-    if (score >= 50) return 'critical';
-    if (score >= 30) return 'high';
-    if (score >= 15) return 'medium';
-    return 'low';
+    if (score >= 50) return "critical";
+    if (score >= 30) return "high";
+    if (score >= 15) return "medium";
+    return "low";
   }
 
   getPeriodLabel(period) {
     const labels = {
-      daily: 'Daily',
-      weekly: 'Weekly',
-      monthly: 'Monthly',
-      yearly: 'Yearly'
+      daily: "Daily",
+      weekly: "Weekly",
+      monthly: "Monthly",
+      yearly: "Yearly"
     };
-    return labels[period] || 'Weekly';
+    return labels[period] || "Weekly";
   }
 
   showError(message) {
@@ -372,7 +372,7 @@ class BarangayPrioritization {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }

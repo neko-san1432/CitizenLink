@@ -1,6 +1,6 @@
 // legacy block removed
 (function() {
-  const MAP_ID = 'digos-map';
+  const MAP_ID = "digos-map";
   const DEFAULT_CENTER = [6.7497, 125.3570]; // Approx Digos City
   const DEFAULT_ZOOM = 12;
   function ensureLeafletLoaded() {
@@ -14,13 +14,13 @@
       }, 50);
       setTimeout(() => {
         clearInterval(check);
-        if (!window.L) reject(new Error('Leaflet failed to load'));
+        if (!window.L) reject(new Error("Leaflet failed to load"));
       }, 5000);
     });
   }
   async function fetchBoundaries() {
-    const res = await fetch('/api/boundaries', { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to load boundaries');
+    const res = await fetch("/api/boundaries", { credentials: "include" });
+    if (!res.ok) throw new Error("Failed to load boundaries");
     return res.json();
   }
   function styleForBarangay(index) {
@@ -45,10 +45,10 @@
           coordsToLatLng(coords) {
             return new L.LatLng(coords[1], coords[0]);
           }
-        }).bindPopup(`<strong>${item.name || 'Barangay'}</strong>`);
+        }).bindPopup(`<strong>${item.name || "Barangay"}</strong>`);
         group.addLayer(layer);
       } catch (e) {
-        console.warn('Failed to render polygon for', item.name, e);
+        console.warn("Failed to render polygon for", item.name, e);
       }
     });
     group.addTo(map);
@@ -65,8 +65,8 @@
     try {
       await ensureLeafletLoaded();
       const map = L.map(MAP_ID).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
         maxZoom: 19
       }).addTo(map);
       const data = await fetchBoundaries();
@@ -74,12 +74,12 @@
         addBarangayPolygons(map, data);
       }
     } catch (error) {
-      console.error('[Digos Map] Initialization failed:', error);
+      console.error("[Digos Map] Initialization failed:", error);
       container.innerHTML = '<div style="padding:1rem;color:#e74c3c;">Failed to load map. Please try again later.</div>';
     }
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
   }

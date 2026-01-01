@@ -1,7 +1,7 @@
 // Notification component with lazy loading functionality
-import { brandConfig } from '../config/index.js';
-import apiClient from '../config/apiClient.js';
-import { getNotificationIcon } from '../utils/icons.js';
+import { brandConfig } from "../config/index.js";
+import apiClient from "../config/apiClient.js";
+import { getNotificationIcon } from "../utils/icons.js";
 
 // Notification state management
 const notificationState = {
@@ -20,90 +20,90 @@ const POLLING_INTERVAL_MS = 30000;
 
 export function initializeNotificationButton() {
   // console.log removed for security
-  const notificationBtn = document.getElementById('notification-btn');
-  const notificationPanel = document.getElementById('notification-panel');
-  const closeBtn = document.getElementById('close-notifications');
-  const markAllReadBtn = document.getElementById('mark-all-read');
-  const showMoreBtn = document.getElementById('show-more-notifications');
-  const retryBtn = document.getElementById('retry-notifications');
+  const notificationBtn = document.getElementById("notification-btn");
+  const notificationPanel = document.getElementById("notification-panel");
+  const closeBtn = document.getElementById("close-notifications");
+  const markAllReadBtn = document.getElementById("mark-all-read");
+  const showMoreBtn = document.getElementById("show-more-notifications");
+  const retryBtn = document.getElementById("retry-notifications");
   if (notificationBtn && notificationPanel) {
     // console.log removed for security
     // console.log removed for security
     // console.log removed for security
     // Toggle notification panel with smooth animations
-    notificationBtn.addEventListener('click', (e) => {
+    notificationBtn.addEventListener("click", (e) => {
       // console.log removed for security
       e.stopPropagation();
       // Close profile panel if open
-      const profilePanel = document.getElementById('profile-panel');
-      if (profilePanel && profilePanel.classList.contains('show')) {
-        profilePanel.classList.remove('show');
-        profilePanel.style.opacity = '0';
-        profilePanel.style.transform = 'translateY(-10px)';
+      const profilePanel = document.getElementById("profile-panel");
+      if (profilePanel && profilePanel.classList.contains("show")) {
+        profilePanel.classList.remove("show");
+        profilePanel.style.opacity = "0";
+        profilePanel.style.transform = "translateY(-10px)";
         setTimeout(() => {
-          profilePanel.style.display = 'none';
+          profilePanel.style.display = "none";
         }, 300);
       }
       // Toggle notification panel with smooth animation
-      if (notificationPanel.classList.contains('show')) {
+      if (notificationPanel.classList.contains("show")) {
         // Close
-        notificationPanel.classList.remove('show');
-        notificationPanel.style.opacity = '0';
-        notificationPanel.style.transform = 'translateY(-10px)';
+        notificationPanel.classList.remove("show");
+        notificationPanel.style.opacity = "0";
+        notificationPanel.style.transform = "translateY(-10px)";
         setTimeout(() => {
-          notificationPanel.style.display = 'none';
+          notificationPanel.style.display = "none";
         }, 300);
       } else {
         // Open
-        notificationPanel.classList.add('show');
-        notificationPanel.style.display = 'block';
+        notificationPanel.classList.add("show");
+        notificationPanel.style.display = "block";
         setTimeout(() => {
-          notificationPanel.style.opacity = '1';
-          notificationPanel.style.transform = 'translateY(0)';
+          notificationPanel.style.opacity = "1";
+          notificationPanel.style.transform = "translateY(0)";
         }, 10);
       }
       // console.log removed for security
       // console.log removed for security
       // Debug positioning
-      if (notificationPanel.classList.contains('show')) {
+      if (notificationPanel.classList.contains("show")) {
         const rect = notificationPanel.getBoundingClientRect();
         // console.log removed for security
       }
       // Load notifications when panel is opened (only show loading on first load)
-      if (notificationPanel.classList.contains('show')) {
+      if (notificationPanel.classList.contains("show")) {
         loadNotifications(true, notificationState.isFirstLoad);
       }
     });
     // Close panel when close button is clicked
     if (closeBtn) {
-      closeBtn.addEventListener('click', (e) => {
+      closeBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        notificationPanel.classList.remove('show');
+        notificationPanel.classList.remove("show");
       });
     }
     // Mark all as read functionality
     if (markAllReadBtn) {
-      markAllReadBtn.addEventListener('click', () => {
+      markAllReadBtn.addEventListener("click", () => {
         markAllNotificationsAsRead();
       });
     }
     // Show more notifications
     if (showMoreBtn) {
-      showMoreBtn.addEventListener('click', () => {
+      showMoreBtn.addEventListener("click", () => {
         loadNotifications(false, false); // Don't show loading for "Show More"
       });
     }
 
     // Retry loading notifications
     if (retryBtn) {
-      retryBtn.addEventListener('click', () => {
+      retryBtn.addEventListener("click", () => {
         loadNotifications(true, true); // Show loading for retry
       });
     }
     // Close panel when clicking outside
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
-        notificationPanel.classList.remove('show');
+        notificationPanel.classList.remove("show");
       }
     });
     // Initial notification count load
@@ -115,9 +115,9 @@ export function initializeNotificationButton() {
 // Close notification panel (exported for use by other components)
 
 export function closeNotificationPanel() {
-  const notificationPanel = document.getElementById('notification-panel');
-  if (notificationPanel && notificationPanel.classList.contains('show')) {
-    notificationPanel.classList.remove('show');
+  const notificationPanel = document.getElementById("notification-panel");
+  if (notificationPanel && notificationPanel.classList.contains("show")) {
+    notificationPanel.classList.remove("show");
   }
 }
 // Start real-time polling
@@ -147,7 +147,7 @@ let connectionErrorCount = 0;
 // Load unread count
 async function loadUnreadCount() {
   try {
-    const response = await apiClient.get('/api/notifications/count');
+    const response = await apiClient.get("/api/notifications/count");
     if (response?.success) {
       updateNotificationCount(response.count);
       // Reset connection error state on success
@@ -157,11 +157,11 @@ async function loadUnreadCount() {
       connectionErrorCount++;
       // If we've had multiple connection errors, stop polling temporarily
       if (connectionErrorCount >= 3) {
-        console.warn('[NOTIFICATION] Multiple connection errors detected. Stopping polling.');
+        console.warn("[NOTIFICATION] Multiple connection errors detected. Stopping polling.");
         stopPolling();
         // Try to restart polling after a longer delay (5 minutes)
         setTimeout(() => {
-          console.log('[NOTIFICATION] Attempting to restart polling...');
+          console.log("[NOTIFICATION] Attempting to restart polling...");
           connectionErrorCount = 0;
           startPolling();
         }, 5 * 60 * 1000);
@@ -169,9 +169,9 @@ async function loadUnreadCount() {
     }
   } catch (error) {
     // Only log non-connection errors
-    if (!error.message?.includes('Failed to fetch') &&
-        !error.message?.includes('ERR_CONNECTION_REFUSED')) {
-      console.error('[NOTIFICATION] Failed to load unread count:', error);
+    if (!error.message?.includes("Failed to fetch") &&
+        !error.message?.includes("ERR_CONNECTION_REFUSED")) {
+      console.error("[NOTIFICATION] Failed to load unread count:", error);
     }
   }
 }
@@ -183,7 +183,7 @@ async function checkForNewNotifications() {
       return;
     }
     // Fetch only the latest notification to check if there are new ones
-    const response = await apiClient.get('/api/notifications/latest?limit=1');
+    const response = await apiClient.get("/api/notifications/latest?limit=1");
     if (response.success && response.notifications && response.notifications.length > 0) {
       const latestNotification = response.notifications[0];
       // If this is a new notification (different ID than our last one)
@@ -201,17 +201,17 @@ async function checkForNewNotifications() {
       }
     }
   } catch (error) {
-    console.error('[NOTIFICATION] Failed to check for new notifications:', error);
+    console.error("[NOTIFICATION] Failed to check for new notifications:", error);
   }
 }
 // Show a subtle indicator that new notifications were added
 function showNewNotificationIndicator() {
-  const notificationPanel = document.getElementById('notification-panel');
+  const notificationPanel = document.getElementById("notification-panel");
   if (!notificationPanel) return;
   // Add a subtle animation to indicate new content
-  notificationPanel.style.transform = 'scale(1.02)';
+  notificationPanel.style.transform = "scale(1.02)";
   setTimeout(() => {
-    notificationPanel.style.transform = 'scale(1)';
+    notificationPanel.style.transform = "scale(1)";
   }, 200);
 }
 // Load notifications with lazy loading
@@ -259,7 +259,7 @@ async function loadNotifications(reset = false, showLoading = true) {
       showErrorState();
     }
   } catch (error) {
-    console.error('Error loading notifications:', error);
+    console.error("Error loading notifications:", error);
     showErrorState();
   } finally {
     notificationState.loading = false;
@@ -273,7 +273,7 @@ async function fetchNotifications(page, limit) {
   try {
     const response = await apiClient.get(`/api/notifications/unread?limit=${limit}&offset=${page * limit}`);
     if (!response.success) {
-      throw new Error('Failed to fetch notifications');
+      throw new Error("Failed to fetch notifications");
     }
     // Format created_at to relative time
     const formattedNotifications = response.notifications.map(notif => ({
@@ -289,7 +289,7 @@ async function fetchNotifications(page, limit) {
       }
     };
   } catch (error) {
-    console.error('[NOTIFICATION] Fetch error:', error);
+    console.error("[NOTIFICATION] Fetch error:", error);
     throw error;
   }
 }
@@ -302,33 +302,33 @@ function formatRelativeTime(timestamp) {
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
-  if (diffSecs < 60) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+  if (diffSecs < 60) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? "s" : ""} ago`;
   return time.toLocaleDateString();
 }
 // Render notifications in the UI
 function renderNotifications() {
-  const content = document.getElementById('notification-content');
+  const content = document.getElementById("notification-content");
   if (!content) return;
   if (notificationState.notifications.length === 0) {
     content.innerHTML = '<div class="no-notifications">No notifications yet</div>';
     return;
   }
   const html = notificationState.notifications.map((notification, index) => {
-    const priorityClass = notification.priority === 'urgent' ? 'notification-urgent' :
-      notification.priority === 'warning' ? 'notification-warning' : '';
-    const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
+    const priorityClass = notification.priority === "urgent" ? "notification-urgent" :
+      notification.priority === "warning" ? "notification-warning" : "";
+    const linkAttr = notification.link ? `data-link="${notification.link}"` : "";
     // Add "new" indicator for recent notifications (first 3 items)
     const isNew = index < 3 && !notification.read;
-    const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : '';
+    const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : "";
     return `
-      <div class="notification-item ${notification.read ? 'read' : ''} ${priorityClass} ${isNew ? 'new-notification' : ''}" 
+      <div class="notification-item ${notification.read ? "read" : ""} ${priorityClass} ${isNew ? "new-notification" : ""}" 
            data-id="${notification.id}" 
            ${linkAttr}
-           style="cursor: ${notification.link ? 'pointer' : 'default'}">
+           style="cursor: ${notification.link ? "pointer" : "default"}">
         <div class="notification-icon">${getNotificationIcon(notification.type, { size: 20 })}</div>
         <div class="notification-text">
           <div class="notification-title">${escapeHtml(notification.title)} ${newIndicator}</div>
@@ -337,20 +337,20 @@ function renderNotifications() {
         </div>
       </div>
     `;
-  }).join('');
+  }).join("");
   content.innerHTML = html;
   // Add click handlers for notifications with links
-  content.querySelectorAll('.notification-item[data-link]').forEach(item => {
-    item.addEventListener('click', async function() {
+  content.querySelectorAll(".notification-item[data-link]").forEach(item => {
+    item.addEventListener("click", async function() {
       const notifId = this.dataset.id;
       const {link} = this.dataset;
       // Mark as read
       try {
         await apiClient.post(`/api/notifications/${notifId}/mark-read`);
-        this.classList.add('read');
+        this.classList.add("read");
         loadUnreadCount();
       } catch (error) {
-        console.warn('[NOTIFICATION] Failed to mark as read:', error);
+        console.warn("[NOTIFICATION] Failed to mark as read:", error);
       }
       // Navigate to link
       if (link) {
@@ -362,46 +362,46 @@ function renderNotifications() {
 }
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 // Update show more button state
 function updateShowMoreButton() {
-  const showMoreBtn = document.getElementById('show-more-notifications');
+  const showMoreBtn = document.getElementById("show-more-notifications");
   if (!showMoreBtn) return;
   if (!notificationState.hasMore) {
-    showMoreBtn.style.display = 'none';
+    showMoreBtn.style.display = "none";
   } else {
-    showMoreBtn.style.display = 'block';
-    showMoreBtn.textContent = notificationState.loading ? 'Loading...' : 'Show More';
+    showMoreBtn.style.display = "block";
+    showMoreBtn.textContent = notificationState.loading ? "Loading..." : "Show More";
     showMoreBtn.disabled = notificationState.loading;
   }
 }
 // Show/hide loading state
 function showLoadingState(show) {
-  const loading = document.getElementById('notification-loading');
+  const loading = document.getElementById("notification-loading");
   if (loading) {
-    loading.classList.toggle('hidden', !show);
+    loading.classList.toggle("hidden", !show);
   }
 }
 // Show/hide error state
 function showErrorState() {
-  const error = document.getElementById('notification-error');
+  const error = document.getElementById("notification-error");
   if (error) {
-    error.classList.remove('hidden');
+    error.classList.remove("hidden");
   }
 }
 function hideErrorState() {
-  const error = document.getElementById('notification-error');
+  const error = document.getElementById("notification-error");
   if (error) {
-    error.classList.add('hidden');
+    error.classList.add("hidden");
   }
 }
 // Mark all notifications as read
 async function markAllNotificationsAsRead() {
   try {
-    const response = await apiClient.post('/api/notifications/mark-all-read');
+    const response = await apiClient.post("/api/notifications/mark-all-read");
     if (response.success) {
       // Update local state
       notificationState.notifications.forEach(notification => {
@@ -410,26 +410,26 @@ async function markAllNotificationsAsRead() {
       renderNotifications();
       updateNotificationCount(0);
       // Close panel
-      const notificationPanel = document.getElementById('notification-panel');
+      const notificationPanel = document.getElementById("notification-panel");
       if (notificationPanel) {
-        notificationPanel.classList.remove('show');
+        notificationPanel.classList.remove("show");
       }
     }
   } catch (error) {
-    console.error('[NOTIFICATION] Failed to mark all as read:', error);
+    console.error("[NOTIFICATION] Failed to mark all as read:", error);
   }
 }
 // Function to update notification count
 
 export function updateNotificationCount(count) {
-  const notificationBadge = document.getElementById('notification-badge');
+  const notificationBadge = document.getElementById("notification-badge");
   if (notificationBadge) {
 
     if (count > 0) {
-      notificationBadge.textContent = count > 99 ? '99+' : count;
-      notificationBadge.classList.remove('hidden');
+      notificationBadge.textContent = count > 99 ? "99+" : count;
+      notificationBadge.classList.remove("hidden");
     } else {
-      notificationBadge.classList.add('hidden');
+      notificationBadge.classList.add("hidden");
     }
   }
 }

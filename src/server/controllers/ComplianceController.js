@@ -1,5 +1,5 @@
-const ComplianceService = require('../services/ComplianceService');
-const { ErrorHandler } = require('../middleware/errorHandler');
+const ComplianceService = require("../services/ComplianceService");
+const { ErrorHandler } = require("../middleware/errorHandler");
 
 class ComplianceController {
   constructor() {
@@ -17,20 +17,20 @@ class ComplianceController {
       const requestedUserId = req.query.userId || userId;
 
       // Users can only export their own data unless they're admin
-      const isAdmin = req.user.role === 'super-admin' || req.user.role === 'lgu-admin';
+      const isAdmin = req.user.role === "super-admin" || req.user.role === "lgu-admin";
       if (requestedUserId !== userId && !isAdmin) {
         return res.status(403).json({
           success: false,
-          error: 'You can only export your own data'
+          error: "You can only export your own data"
         });
       }
 
       // Log export request
       const ipAddress = req.ip || req.connection.remoteAddress;
-      const userAgent = req.get('user-agent');
+      const userAgent = req.get("user-agent");
 
-      await this.complianceService.auditLog.log('data_export_requested', userId, {
-        targetType: 'user',
+      await this.complianceService.auditLog.log("data_export_requested", userId, {
+        targetType: "user",
         targetId: requestedUserId,
         details: { requestedBy: userId },
         ipAddress,
@@ -41,8 +41,8 @@ class ComplianceController {
       const exportData = await this.complianceService.exportUserData(requestedUserId);
 
       // Log successful export
-      await this.complianceService.auditLog.log('data_export_completed', userId, {
-        targetType: 'user',
+      await this.complianceService.auditLog.log("data_export_completed", userId, {
+        targetType: "user",
         targetId: requestedUserId,
         details: { exportDate: exportData.exportDate },
         ipAddress,
@@ -53,10 +53,10 @@ class ComplianceController {
       res.json({
         success: true,
         data: exportData,
-        message: 'User data exported successfully'
+        message: "User data exported successfully"
       });
     } catch (error) {
-      console.error('[COMPLIANCE] Export error:', error);
+      console.error("[COMPLIANCE] Export error:", error);
       return ErrorHandler.handleApiError(error, req, res);
     }
   }
@@ -70,14 +70,14 @@ class ComplianceController {
     try {
       const userId = req.user.id;
       const requestedUserId = req.body.userId || userId;
-      const reason = req.body.reason || 'User requested data deletion';
+      const reason = req.body.reason || "User requested data deletion";
 
       // Users can only delete their own data unless they're admin
-      const isAdmin = req.user.role === 'super-admin';
+      const isAdmin = req.user.role === "super-admin";
       if (requestedUserId !== userId && !isAdmin) {
         return res.status(403).json({
           success: false,
-          error: 'You can only delete your own data'
+          error: "You can only delete your own data"
         });
       }
 
@@ -85,12 +85,12 @@ class ComplianceController {
       if (requestedUserId === userId && !req.body.confirm) {
         return res.status(400).json({
           success: false,
-          error: 'Confirmation required. Set confirm: true in request body'
+          error: "Confirmation required. Set confirm: true in request body"
         });
       }
 
       const ipAddress = req.ip || req.connection.remoteAddress;
-      const userAgent = req.get('user-agent');
+      const userAgent = req.get("user-agent");
 
       // Delete user data
       const result = await this.complianceService.deleteUserData(
@@ -101,20 +101,20 @@ class ComplianceController {
 
       // If user deleted themselves, logout
       if (requestedUserId === userId) {
-        res.clearCookie('access_token', {
+        res.clearCookie("access_token", {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax"
         });
       }
 
       res.json({
         success: true,
-        message: 'User data deleted successfully',
+        message: "User data deleted successfully",
         data: result
       });
     } catch (error) {
-      console.error('[COMPLIANCE] Delete error:', error);
+      console.error("[COMPLIANCE] Delete error:", error);
       return ErrorHandler.handleApiError(error, req, res);
     }
   }
@@ -134,7 +134,7 @@ class ComplianceController {
         data: requests
       });
     } catch (error) {
-      console.error('[COMPLIANCE] Get requests error:', error);
+      console.error("[COMPLIANCE] Get requests error:", error);
       return ErrorHandler.handleApiError(error, req, res);
     }
   }

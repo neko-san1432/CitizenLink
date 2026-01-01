@@ -10,7 +10,7 @@ window.complaintMap = null;
  * @param {Object} options - Map configuration options
  * @returns {L.Map} - Leaflet map instance
  */
-async function initializeComplaintLocationPicker(containerId = 'complaint-map', options = {}) {
+async function initializeComplaintLocationPicker(containerId = "complaint-map", options = {}) {
   try {
     // Check if map already exists
     if (window.complaintMap) {
@@ -70,28 +70,28 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
     // Set initial view
     map.setView(mapOptions.center, mapOptions.zoom);
     // Add OpenStreetMap tile layer
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
       maxZoom: 18
     });
     osmLayer.addTo(map);
     // Add satellite layer option
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '© Esri',
+    const satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      attribution: "© Esri",
       maxZoom: 18
     });
     // Add layer control
     const baseLayers = {
-      'Street Map': osmLayer,
-      'Satellite': satelliteLayer
+      "Street Map": osmLayer,
+      "Satellite": satelliteLayer
     };
     const layerControl = L.control.layers(baseLayers, {}, {
-      position: 'topright'
+      position: "topright"
     }).addTo(map);
 
     // Load and display Digos City boundaries
     try {
-      const boundaryResponse = await fetch('/api/boundaries');
+      const boundaryResponse = await fetch("/api/boundaries");
       if (boundaryResponse.ok) {
         const brgyData = await boundaryResponse.json();
         if (Array.isArray(brgyData)) {
@@ -103,11 +103,11 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
             if (barangay.geojson) {
               const geojsonLayer = L.geoJSON(barangay.geojson, {
                 style: {
-                  color: '#3388ff',
+                  color: "#3388ff",
                   weight: 2,
                   opacity: 0.8,
                   fillOpacity: 0.1,
-                  fillColor: '#3388ff'
+                  fillColor: "#3388ff"
                 }
               });
               geojsonLayer.addTo(map);
@@ -127,7 +127,7 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
         }
       }
     } catch (error) {
-      console.warn('[COMPLAINT_MAP] Failed to load boundaries:', error);
+      console.warn("[COMPLAINT_MAP] Failed to load boundaries:", error);
     }
     // console.log removed for security
     // console.log removed for security
@@ -145,7 +145,7 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
     }
     return map;
   } catch (error) {
-    console.error('Failed to initialize complaint location picker:', error);
+    console.error("Failed to initialize complaint location picker:", error);
     return null;
   }
 }
@@ -156,16 +156,16 @@ async function initializeComplaintLocationPicker(containerId = 'complaint-map', 
 function setupLocationPicker(map) {
   if (!map) return;
   // Get hidden input fields
-  const latInput = document.getElementById('latitude');
-  const lngInput = document.getElementById('longitude');
-  const locationInput = document.getElementById('location');
+  const latInput = document.getElementById("latitude");
+  const lngInput = document.getElementById("longitude");
+  const locationInput = document.getElementById("location");
   if (locationInput) {
     locationInput.readOnly = true;
-    locationInput.setAttribute('aria-live', 'polite');
-    locationInput.setAttribute('title', 'Move the map or drag the pin to change the address.');
+    locationInput.setAttribute("aria-live", "polite");
+    locationInput.setAttribute("title", "Move the map or drag the pin to change the address.");
   }
   if (!latInput || !lngInput) {
-    console.error('Latitude/longitude input fields not found');
+    console.error("Latitude/longitude input fields not found");
     return;
   }
   let marker = null;
@@ -189,7 +189,7 @@ function setupLocationPicker(map) {
         font-size: 18px;
         font-weight: bold;
       ">📍</div>`,
-      className: 'valid-location-marker',
+      className: "valid-location-marker",
       iconSize: [30, 30],
       iconAnchor: [15, 15]
     })
@@ -199,15 +199,15 @@ function setupLocationPicker(map) {
   async function validateCoordinates(lat, lng) {
     try {
       // Import boundary validator directly
-      const boundaryValidator = await import('../../utils/boundaryValidator.js');
+      const boundaryValidator = await import("../../utils/boundaryValidator.js");
       if (boundaryValidator && boundaryValidator.isWithinDigosBoundary) {
         return await boundaryValidator.isWithinDigosBoundary(lat, lng);
       }
       // Fallback: use validation utility
-      const { isWithinCityBoundary } = await import('../../utils/validation.js');
+      const { isWithinCityBoundary } = await import("../../utils/validation.js");
       return await isWithinCityBoundary(lat, lng);
     } catch (error) {
-      console.warn('[COMPLAINT_MAP] Boundary validation failed:', error);
+      console.warn("[COMPLAINT_MAP] Boundary validation failed:", error);
       // Fallback to bounding box check
       const minLat = 6.723539;
       const maxLat = 6.985025;
@@ -219,11 +219,11 @@ function setupLocationPicker(map) {
 
   // Show boundary warning
   function showBoundaryWarning() {
-    const existingWarning = document.getElementById('boundary-warning');
+    const existingWarning = document.getElementById("boundary-warning");
     if (existingWarning) return;
 
-    const warning = document.createElement('div');
-    warning.id = 'boundary-warning';
+    const warning = document.createElement("div");
+    warning.id = "boundary-warning";
     warning.style.cssText = `
       position: absolute;
       top: 10px;
@@ -240,16 +240,16 @@ function setupLocationPicker(map) {
       max-width: 90%;
       text-align: center;
     `;
-    warning.textContent = '⚠️ Location must be within Digos City boundaries. Submission is disabled.';
+    warning.textContent = "⚠️ Location must be within Digos City boundaries. Submission is disabled.";
     const mapContainer = map.getContainer();
-    mapContainer.style.position = 'relative';
+    mapContainer.style.position = "relative";
     mapContainer.appendChild(warning);
 
     // Auto-hide after 5 seconds
     setTimeout(() => {
       if (warning.parentNode) {
-        warning.style.transition = 'opacity 0.3s';
-        warning.style.opacity = '0';
+        warning.style.transition = "opacity 0.3s";
+        warning.style.opacity = "0";
         setTimeout(() => warning.remove(), 300);
       }
     }, 5000);
@@ -257,10 +257,10 @@ function setupLocationPicker(map) {
 
   // Hide boundary warning
   function hideBoundaryWarning() {
-    const warning = document.getElementById('boundary-warning');
+    const warning = document.getElementById("boundary-warning");
     if (warning) {
-      warning.style.transition = 'opacity 0.3s';
-      warning.style.opacity = '0';
+      warning.style.transition = "opacity 0.3s";
+      warning.style.opacity = "0";
       setTimeout(() => warning.remove(), 300);
     }
   }
@@ -302,7 +302,7 @@ function setupLocationPicker(map) {
             font-size: 18px;
             font-weight: bold;
           ">⚠️</div>`,
-          className: 'invalid-location-marker',
+          className: "invalid-location-marker",
           iconSize: [30, 30],
           iconAnchor: [15, 15]
         }));
@@ -326,7 +326,7 @@ function setupLocationPicker(map) {
             font-size: 18px;
             font-weight: bold;
           ">📍</div>`,
-          className: 'valid-location-marker',
+          className: "valid-location-marker",
           iconSize: [30, 30],
           iconAnchor: [15, 15]
         }));
@@ -340,14 +340,14 @@ function setupLocationPicker(map) {
     if (submitBtn) {
       if (!coordinatesValid) {
         submitBtn.disabled = true;
-        submitBtn.title = 'Please select a location within Digos City boundaries';
-        submitBtn.style.opacity = '0.6';
-        submitBtn.style.cursor = 'not-allowed';
+        submitBtn.title = "Please select a location within Digos City boundaries";
+        submitBtn.style.opacity = "0.6";
+        submitBtn.style.cursor = "not-allowed";
       } else {
         submitBtn.disabled = false;
-        submitBtn.title = '';
-        submitBtn.style.opacity = '1';
-        submitBtn.style.cursor = 'pointer';
+        submitBtn.title = "";
+        submitBtn.style.opacity = "1";
+        submitBtn.style.cursor = "pointer";
       }
     }
   }
@@ -389,11 +389,11 @@ function setupLocationPicker(map) {
   });
   // Marker drag events with boundary validation
   // Only update coordinates on dragend to ensure exact final position is captured
-  marker.on('drag', async (e) => {
+  marker.on("drag", async (e) => {
     // Don't update coordinates during drag - wait for dragend to get exact final position
     // This prevents intermediate positions from being saved
   });
-  marker.on('dragend', async (e) => {
+  marker.on("dragend", async (e) => {
     // Get the exact final position of the marker
     const latlng = e.target.getLatLng();
     const finalLat = latlng.lat;
@@ -415,7 +415,7 @@ function setupLocationPicker(map) {
     }
   });
   // Map click events with boundary validation
-  map.on('click', async (e) => {
+  map.on("click", async (e) => {
     if (isUserInteracting) return;
     const { lat, lng } = e.latlng;
     // Set marker position first, then get exact position from marker
@@ -426,10 +426,10 @@ function setupLocationPicker(map) {
     updateLocationText(markerPos.lat, markerPos.lng);
   });
   // Map move events (when user drags the map) with boundary validation
-  map.on('movestart', () => {
+  map.on("movestart", () => {
     isUserInteracting = true;
   });
-  map.on('moveend', async () => {
+  map.on("moveend", async () => {
     if (!isUserInteracting) return;
     const center = map.getCenter();
     // Set marker position first, then get exact position from marker
@@ -441,18 +441,18 @@ function setupLocationPicker(map) {
     isUserInteracting = false;
   });
   // Geolocation button
-  const geolocationButton = L.control({ position: 'topleft' });
+  const geolocationButton = L.control({ position: "topleft" });
   geolocationButton.onAdd = function(map) {
-    const div = L.DomUtil.create('div', 'geolocation-control');
+    const div = L.DomUtil.create("div", "geolocation-control");
     div.innerHTML = '<button type="button" title="Use my location">📍</button>';
-    div.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px;';
+    div.style.cssText = "background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px;";
     div.onclick = function() {
       // console.log removed for security
       if (navigator.geolocation) {
         // console.log removed for security
         // Check geolocation permissions
         if (navigator.permissions) {
-          navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+          navigator.permissions.query({ name: "geolocation" }).then((result) => {
             // console.log removed for security
           });
         }
@@ -490,7 +490,7 @@ function setupLocationPicker(map) {
             // Validate geolocation coordinates against boundary
             const isValid = await validateCoordinates(lat, lng);
             if (!isValid) {
-              alert('Your current location is outside Digos City boundaries. Please select a location within the city on the map.');
+              alert("Your current location is outside Digos City boundaries. Please select a location within the city on the map.");
               return;
             }
             map.setView([lat, lng], 16);
@@ -505,32 +505,32 @@ function setupLocationPicker(map) {
             // console.log removed for security
           },
           (error) => {
-            console.error('❌ Geolocation error:', error);
+            console.error("❌ Geolocation error:", error);
             // console.log removed for security
             switch(error.code) {
               case error.PERMISSION_DENIED:
               // console.log removed for security
-                alert('Location access denied. Please allow location access or select manually on the map.');
+                alert("Location access denied. Please allow location access or select manually on the map.");
                 break;
               case error.POSITION_UNAVAILABLE:
               // console.log removed for security
-                alert('Location information unavailable. Please select manually on the map.');
+                alert("Location information unavailable. Please select manually on the map.");
                 break;
               case error.TIMEOUT:
               // console.log removed for security
-                alert('Location request timed out. Please try again or select manually on the map.');
+                alert("Location request timed out. Please try again or select manually on the map.");
                 break;
               default:
               // console.log removed for security
-                alert('Unable to get your location. Please select manually on the map.');
+                alert("Unable to get your location. Please select manually on the map.");
                 break;
             }
           },
           options
         );
       } else {
-        console.error('❌ Geolocation is not supported by this browser');
-        alert('Geolocation is not supported by this browser. Please select manually on the map.');
+        console.error("❌ Geolocation is not supported by this browser");
+        alert("Geolocation is not supported by this browser. Please select manually on the map.");
       }
     };
     return div;
@@ -548,11 +548,11 @@ async function initializeComplaintLocationPickerComplete() {
       setupLocationPicker(map);
     }
   } catch (error) {
-    console.error('Failed to initialize complaint location picker:', error);
+    console.error("Failed to initialize complaint location picker:", error);
   }
 }
 // Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeComplaintLocationPickerComplete);
+document.addEventListener("DOMContentLoaded", initializeComplaintLocationPickerComplete);
 // Export functions for manual use
 window.initializeComplaintLocationPicker = initializeComplaintLocationPicker;
 window.setupLocationPicker = setupLocationPicker;

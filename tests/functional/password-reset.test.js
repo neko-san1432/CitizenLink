@@ -4,22 +4,22 @@
  * Tests password reset scenarios including edge cases
  */
 
-const { createMockRequest, createMockResponse, createTestUser } = require('../utils/testHelpers');
-const SupabaseMock = require('../utils/supabaseMock');
+const { createMockRequest, createMockResponse, createTestUser } = require("../utils/testHelpers");
+const SupabaseMock = require("../utils/supabaseMock");
 
-describe('Password Reset Flow', () => {
+describe("Password Reset Flow", () => {
   let mockSupabase;
   let req, res;
 
   beforeEach(() => {
     mockSupabase = new SupabaseMock();
-    jest.mock('../../src/server/config/database', () => ({
+    jest.mock("../../src/server/config/database", () => ({
       getClient: () => mockSupabase,
     }));
 
     req = createMockRequest({
-      method: 'POST',
-      path: '/api/auth/forgot-password',
+      method: "POST",
+      path: "/api/auth/forgot-password",
       body: {},
     });
     res = createMockResponse();
@@ -30,8 +30,8 @@ describe('Password Reset Flow', () => {
     mockSupabase.reset();
   });
 
-  describe('Request Password Reset', () => {
-    it('should send reset email for valid email', async () => {
+  describe("Request Password Reset", () => {
+    it("should send reset email for valid email", async () => {
       const user = createTestUser();
       await mockSupabase.auth.signUp({
         email: user.email,
@@ -46,7 +46,7 @@ describe('Password Reset Flow', () => {
         if (!email) {
           return res.status(400).json({
             success: false,
-            error: 'Email is required',
+            error: "Email is required",
           });
         }
 
@@ -60,7 +60,7 @@ describe('Password Reset Flow', () => {
 
         res.json({
           success: true,
-          message: 'If an account exists with this email, a password reset link has been sent.',
+          message: "If an account exists with this email, a password reset link has been sent.",
         });
       };
 
@@ -74,8 +74,8 @@ describe('Password Reset Flow', () => {
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(user.email);
     });
 
-    it('should not reveal if email exists (security)', async () => {
-      req.body = { email: 'nonexistent@example.com' };
+    it("should not reveal if email exists (security)", async () => {
+      req.body = { email: "nonexistent@example.com" };
 
       const handler = async (req, res) => {
         const { email } = req.body;
@@ -83,7 +83,7 @@ describe('Password Reset Flow', () => {
         // Always return success to prevent email enumeration
         res.json({
           success: true,
-          message: 'If an account exists with this email, a password reset link has been sent.',
+          message: "If an account exists with this email, a password reset link has been sent.",
         });
       };
 
@@ -97,7 +97,7 @@ describe('Password Reset Flow', () => {
       );
     });
 
-    it('should reject request without email', async () => {
+    it("should reject request without email", async () => {
       req.body = {};
 
       const handler = async (req, res) => {
@@ -105,7 +105,7 @@ describe('Password Reset Flow', () => {
         if (!email) {
           return res.status(400).json({
             success: false,
-            error: 'Email is required',
+            error: "Email is required",
           });
         }
       };
@@ -116,13 +116,13 @@ describe('Password Reset Flow', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: 'Email is required',
+          error: "Email is required",
         })
       );
     });
 
-    it('should validate email format', async () => {
-      req.body = { email: 'invalid-email' };
+    it("should validate email format", async () => {
+      req.body = { email: "invalid-email" };
 
       const handler = async (req, res) => {
         const { email } = req.body;
@@ -130,7 +130,7 @@ describe('Password Reset Flow', () => {
         if (!emailRegex.test(email)) {
           return res.status(400).json({
             success: false,
-            error: 'Invalid email format',
+            error: "Invalid email format",
           });
         }
       };
@@ -141,20 +141,20 @@ describe('Password Reset Flow', () => {
     });
   });
 
-  describe('Reset Password with Token', () => {
-    it('should reset password with valid token', async () => {
+  describe("Reset Password with Token", () => {
+    it("should reset password with valid token", async () => {
       const user = createTestUser();
       await mockSupabase.auth.signUp({
         email: user.email,
         password: user.password,
       });
 
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
-        token: 'valid_token',
-        password: 'NewPassword123!@#',
-        confirmPassword: 'NewPassword123!@#',
+        token: "valid_token",
+        password: "NewPassword123!@#",
+        confirmPassword: "NewPassword123!@#",
       };
 
       const handler = async (req, res) => {
@@ -163,19 +163,19 @@ describe('Password Reset Flow', () => {
         if (password !== confirmPassword) {
           return res.status(400).json({
             success: false,
-            error: 'Passwords do not match',
+            error: "Passwords do not match",
           });
         }
 
         const { data, error } = await mockSupabase.auth.verifyOtp({
           token_hash: token,
-          type: 'recovery',
+          type: "recovery",
         });
 
         if (error || !data?.user) {
           return res.status(400).json({
             success: false,
-            error: 'Invalid or expired reset token',
+            error: "Invalid or expired reset token",
           });
         }
 
@@ -187,20 +187,20 @@ describe('Password Reset Flow', () => {
         if (updateError) {
           return res.status(500).json({
             success: false,
-            error: 'Failed to reset password',
+            error: "Failed to reset password",
           });
         }
 
         res.json({
           success: true,
-          message: 'Password reset successfully',
+          message: "Password reset successfully",
         });
       };
 
       mockSupabase.auth.verifyOtp.mockResolvedValue({
         data: {
           user: {
-            id: 'user_123',
+            id: "user_123",
             email: user.email,
           },
         },
@@ -212,18 +212,18 @@ describe('Password Reset Flow', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
-          message: 'Password reset successfully',
+          message: "Password reset successfully",
         })
       );
     });
 
-    it('should reject mismatched passwords', async () => {
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+    it("should reject mismatched passwords", async () => {
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
-        token: 'valid_token',
-        password: 'NewPassword123!@#',
-        confirmPassword: 'DifferentPassword123!@#',
+        token: "valid_token",
+        password: "NewPassword123!@#",
+        confirmPassword: "DifferentPassword123!@#",
       };
 
       const handler = async (req, res) => {
@@ -231,7 +231,7 @@ describe('Password Reset Flow', () => {
         if (password !== confirmPassword) {
           return res.status(400).json({
             success: false,
-            error: 'Passwords do not match',
+            error: "Passwords do not match",
           });
         }
       };
@@ -242,38 +242,38 @@ describe('Password Reset Flow', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: 'Passwords do not match',
+          error: "Passwords do not match",
         })
       );
     });
 
-    it('should reject invalid reset token', async () => {
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+    it("should reject invalid reset token", async () => {
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
-        token: 'invalid_token',
-        password: 'NewPassword123!@#',
-        confirmPassword: 'NewPassword123!@#',
+        token: "invalid_token",
+        password: "NewPassword123!@#",
+        confirmPassword: "NewPassword123!@#",
       };
 
       const handler = async (req, res) => {
         const { token } = req.body;
         const { error } = await mockSupabase.auth.verifyOtp({
           token_hash: token,
-          type: 'recovery',
+          type: "recovery",
         });
 
         if (error) {
           return res.status(400).json({
             success: false,
-            error: 'Invalid or expired reset token',
+            error: "Invalid or expired reset token",
           });
         }
       };
 
       mockSupabase.auth.verifyOtp.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Invalid token' },
+        error: { message: "Invalid token" },
       });
 
       await handler(req, res);
@@ -281,31 +281,31 @@ describe('Password Reset Flow', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('should reject expired reset token', async () => {
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+    it("should reject expired reset token", async () => {
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
-        token: 'expired_token',
-        password: 'NewPassword123!@#',
-        confirmPassword: 'NewPassword123!@#',
+        token: "expired_token",
+        password: "NewPassword123!@#",
+        confirmPassword: "NewPassword123!@#",
       };
 
       mockSupabase.auth.verifyOtp.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Token expired' },
+        error: { message: "Token expired" },
       });
 
       const handler = async (req, res) => {
         const { token } = req.body;
         const { error } = await mockSupabase.auth.verifyOtp({
           token_hash: token,
-          type: 'recovery',
+          type: "recovery",
         });
 
         if (error) {
           return res.status(400).json({
             success: false,
-            error: 'Invalid or expired reset token',
+            error: "Invalid or expired reset token",
           });
         }
       };
@@ -315,13 +315,13 @@ describe('Password Reset Flow', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('should validate password strength', async () => {
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+    it("should validate password strength", async () => {
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
-        token: 'valid_token',
-        password: 'weak',
-        confirmPassword: 'weak',
+        token: "valid_token",
+        password: "weak",
+        confirmPassword: "weak",
       };
 
       const handler = async (req, res) => {
@@ -329,7 +329,7 @@ describe('Password Reset Flow', () => {
         if (password.length < 8) {
           return res.status(400).json({
             success: false,
-            error: 'Password must be at least 8 characters',
+            error: "Password must be at least 8 characters",
           });
         }
       };
@@ -340,17 +340,17 @@ describe('Password Reset Flow', () => {
     });
   });
 
-  describe('Token Reuse Prevention', () => {
-    it('should prevent token reuse after successful reset', async () => {
+  describe("Token Reuse Prevention", () => {
+    it("should prevent token reuse after successful reset", async () => {
       const user = createTestUser();
-      const token = 'single_use_token';
+      const token = "single_use_token";
 
-      req.method = 'POST';
-      req.path = '/api/auth/reset-password';
+      req.method = "POST";
+      req.path = "/api/auth/reset-password";
       req.body = {
         token,
-        password: 'NewPassword123!@#',
-        confirmPassword: 'NewPassword123!@#',
+        password: "NewPassword123!@#",
+        confirmPassword: "NewPassword123!@#",
       };
 
       let tokenUsed = false;
@@ -359,19 +359,19 @@ describe('Password Reset Flow', () => {
         if (tokenUsed) {
           return res.status(400).json({
             success: false,
-            error: 'Token has already been used',
+            error: "Token has already been used",
           });
         }
 
         const { data, error } = await mockSupabase.auth.verifyOtp({
           token_hash: token,
-          type: 'recovery',
+          type: "recovery",
         });
 
         if (error || !data?.user) {
           return res.status(400).json({
             success: false,
-            error: 'Invalid or expired reset token',
+            error: "Invalid or expired reset token",
           });
         }
 
@@ -380,7 +380,7 @@ describe('Password Reset Flow', () => {
       };
 
       mockSupabase.auth.verifyOtp.mockResolvedValue({
-        data: { user: { id: 'user_123' } },
+        data: { user: { id: "user_123" } },
         error: null,
       });
 
@@ -398,8 +398,8 @@ describe('Password Reset Flow', () => {
     });
   });
 
-  describe('Rate Limiting', () => {
-    it('should limit password reset requests', async () => {
+  describe("Rate Limiting", () => {
+    it("should limit password reset requests", async () => {
       // Password reset should have stricter rate limits
       // This is tested in rate-limiting.test.js
       expect(true).toBe(true);

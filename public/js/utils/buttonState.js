@@ -1,5 +1,5 @@
 // Simple button state helper for consistent UX across forms
-export function setButtonLoading(button, loadingText = 'Please wait...') {
+export function setButtonLoading(button, loadingText = "Please wait...") {
   if (!button) return () => {};
   const original = {
     html: button.innerHTML,
@@ -8,7 +8,7 @@ export function setButtonLoading(button, loadingText = 'Please wait...') {
   };
   button.disabled = true;
   // Prefer textContent to avoid SVG churn unless button has rich content
-  if (button.querySelector('svg')) {
+  if (button.querySelector("svg")) {
     button.innerHTML = `<span class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,.2);border-top-color:currentColor;border-radius:50%;vertical-align:-2px;margin-right:8px;animation:spin 0.8s linear infinite"></span>${loadingText}`;
   } else {
     button.textContent = loadingText;
@@ -58,11 +58,11 @@ export function temporarilyMark(button, text, className, durationMs = 1200) {
 
 // Optional: keyframes if not already present
 try {
-  const id = 'btn-spinner-style';
+  const id = "btn-spinner-style";
   if (!document.getElementById(id)) {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.id = id;
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    style.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(style);
   }
 } catch {}

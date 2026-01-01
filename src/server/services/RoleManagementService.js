@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require('../../shared/constants');
+const Database = require("../config/database");
+const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require("../../shared/constants");
 
 /**
 * RoleManagementService
@@ -24,10 +24,10 @@ class RoleManagementService {
       // Roles should NOT include department suffixes (department is stored in metadata)
       const validRoles = Object.values(USER_ROLES);
       // Also allow 'lgu-officer' as an alias for 'lgu'
-      const normalizedRole = newRole === 'lgu-officer' ? 'lgu' : newRole;
+      const normalizedRole = newRole === "lgu-officer" ? "lgu" : newRole;
 
       if (!validRoles.includes(normalizedRole)) {
-        throw new Error(`Invalid role: ${newRole}. Valid roles are: ${validRoles.join(', ')}, or 'lgu-officer'`);
+        throw new Error(`Invalid role: ${newRole}. Valid roles are: ${validRoles.join(", ")}, or 'lgu-officer'`);
       }
 
       // Use normalized role for consistency
@@ -36,16 +36,16 @@ class RoleManagementService {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
       const {user} = currentUser;
       // Check both raw_user_meta_data and user_metadata for current role
       const rawMetadata = user.raw_user_meta_data || {};
       const userMetadata = user.user_metadata || {};
       const currentMetadata = { ...userMetadata, ...rawMetadata }; // raw_user_meta_data takes priority
-      const currentRole = currentMetadata.role || 'citizen';
+      const currentRole = currentMetadata.role || "citizen";
 
-      console.log('[ROLE] Current user metadata:', {
+      console.log("[ROLE] Current user metadata:", {
         userId,
         raw_user_meta_data_role: rawMetadata.role,
         user_metadata_role: userMetadata.role,
@@ -62,7 +62,7 @@ class RoleManagementService {
       };
 
       // Handle department assignment or clearing
-      if (metadata.clear_department || (metadata.department === null && newRole === 'citizen')) {
+      if (metadata.clear_department || (metadata.department === null && newRole === "citizen")) {
         // Remove department when demoting to citizen
         delete updatedMetadata.department;
       } else if (metadata.department) {
@@ -71,7 +71,7 @@ class RoleManagementService {
       }
       // Update user metadata using Supabase Admin API
       // Update both raw_user_meta_data and user_metadata for consistency
-      console.log('[ROLE] Updating user metadata:', {
+      console.log("[ROLE] Updating user metadata:", {
         userId,
         newRole,
         updatedMetadata: {
@@ -90,22 +90,22 @@ class RoleManagementService {
       );
 
       if (updateError) {
-        console.error('[ROLE] Update user error:', updateError);
+        console.error("[ROLE] Update user error:", updateError);
         throw updateError;
       }
 
       // Verify the update was successful
       if (!updatedUser || !updatedUser.user) {
-        throw new Error('User update returned no data');
+        throw new Error("User update returned no data");
       }
 
       // Double-check by fetching the user again
       const { data: verifyUser, error: verifyError } = await this.supabase.auth.admin.getUserById(userId);
       if (verifyError) {
-        console.warn('[ROLE] Could not verify update:', verifyError);
+        console.warn("[ROLE] Could not verify update:", verifyError);
       } else {
         const verifiedRole = verifyUser.user.raw_user_meta_data?.role || verifyUser.user.user_metadata?.role;
-        console.log('[ROLE] Role updated and verified:', {
+        console.log("[ROLE] Role updated and verified:", {
           userId,
           oldRole: currentRole,
           newRole: finalRole,
@@ -115,7 +115,7 @@ class RoleManagementService {
         });
 
         if (verifiedRole !== finalRole) {
-          console.error('[ROLE] WARNING: Role mismatch after update!', {
+          console.error("[ROLE] WARNING: Role mismatch after update!", {
             expected: finalRole,
             got: verifiedRole,
             raw_meta: verifyUser.user.raw_user_meta_data?.role,
@@ -132,7 +132,7 @@ class RoleManagementService {
         new_role: finalRole
       };
     } catch (error) {
-      console.error('[ROLE] Update role error:', error);
+      console.error("[ROLE] Update role error:", error);
       throw error;
     }
   }
@@ -144,13 +144,13 @@ class RoleManagementService {
       const { data, error } = await this.supabase.auth.admin.getUserById(userId);
 
       if (error) throw error;
-      if (!data || !data.user) throw new Error('User not found');
+      if (!data || !data.user) throw new Error("User not found");
       const serverMeta = data.user.raw_user_meta_data || {};
       const publicMeta = data.user.user_metadata || {};
-      const role = serverMeta.role || publicMeta.role || 'citizen';
+      const role = serverMeta.role || publicMeta.role || "citizen";
       return role;
     } catch (error) {
-      console.error('[ROLE] Get user role error:', error);
+      console.error("[ROLE] Get user role error:", error);
       throw error;
     }
   }
@@ -169,8 +169,8 @@ class RoleManagementService {
     return {
       user_id: userId,
       actual_role: actualRole,
-      active_role: 'citizen',
-      mode: 'citizen_mode',
+      active_role: "citizen",
+      mode: "citizen_mode",
       switched_at: new Date().toISOString()
     };
   }
@@ -192,13 +192,13 @@ class RoleManagementService {
       // For now, we'll use the business users table
       // TODO: Implement proper user listing
       // This is a placeholder that would need enhancement
-      console.warn('[ROLE] getUsersByRole needs custom RPC implementation');
+      console.warn("[ROLE] getUsersByRole needs custom RPC implementation");
       return {
         users: [],
-        message: 'User listing requires custom Supabase RPC function'
+        message: "User listing requires custom Supabase RPC function"
       };
     } catch (error) {
-      console.error('[ROLE] Get users by role error:', error);
+      console.error("[ROLE] Get users by role error:", error);
       throw error;
     }
   }
@@ -222,15 +222,15 @@ class RoleManagementService {
       };
       // Insert into role_changes table
       const { error } = await this.supabase
-        .from('role_changes')
+        .from("role_changes")
         .insert(logEntry);
       if (error) {
-        console.warn('[ROLE] Failed to log role change:', error);
+        console.warn("[ROLE] Failed to log role change:", error);
         // Don't throw - logging failure shouldn't break role change
       }
       return true;
     } catch (error) {
-      console.error('[ROLE] Log role change error:', error);
+      console.error("[ROLE] Log role change error:", error);
       return false;
     }
   }
@@ -262,7 +262,7 @@ class RoleManagementService {
         user: updatedUser.user
       };
     } catch (error) {
-      console.error('[ROLE] Assign department error:', error);
+      console.error("[ROLE] Assign department error:", error);
       throw error;
     }
   }
@@ -300,7 +300,7 @@ class RoleManagementService {
         to_department: toDepartment
       };
     } catch (error) {
-      console.error('[ROLE] Transfer department error:', error);
+      console.error("[ROLE] Transfer department error:", error);
       throw error;
     }
   }
@@ -318,14 +318,14 @@ class RoleManagementService {
         created_at: new Date().toISOString()
       };
       const { error } = await this.supabase
-        .from('department_transfers')
+        .from("department_transfers")
         .insert(logEntry);
       if (error) {
-        console.warn('[ROLE] Failed to log department transfer:', error);
+        console.warn("[ROLE] Failed to log department transfer:", error);
       }
       return true;
     } catch (error) {
-      console.error('[ROLE] Log department transfer error:', error);
+      console.error("[ROLE] Log department transfer error:", error);
       return false;
     }
   }
@@ -335,22 +335,22 @@ class RoleManagementService {
   validateRoleChangePermission(performerRole, targetCurrentRole, targetNewRole) {
     const errors = [];
     // HR can manage: lgu-* officers, lgu-admin
-    if (performerRole === 'lgu-hr' || /^lgu-hr-/.test(performerRole)) {
+    if (performerRole === "lgu-hr" || /^lgu-hr-/.test(performerRole)) {
       // HR can assign LGU officer roles (lgu-wst, lgu-engineering, etc.) and lgu-admin
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(targetNewRole);
       const isLguAdmin = /^lgu-admin/.test(targetNewRole);
       if (!isLguOfficer && !isLguAdmin) {
-        errors.push('HR can only assign LGU officer (lgu-*) and lgu-admin roles');
+        errors.push("HR can only assign LGU officer (lgu-*) and lgu-admin roles");
       }
     }
     // Super Admin can manage all roles
-    if (performerRole === 'super-admin') {
+    if (performerRole === "super-admin") {
       // No restrictions
     }
     // No one else can change roles
-    const isHR = performerRole === 'lgu-hr' || /^lgu-hr-/.test(performerRole);
-    if (!isHR && performerRole !== 'super-admin') {
-      errors.push('Only HR and Super Admin can change roles');
+    const isHR = performerRole === "lgu-hr" || /^lgu-hr-/.test(performerRole);
+    if (!isHR && performerRole !== "super-admin") {
+      errors.push("Only HR and Super Admin can change roles");
     }
     // Can't demote yourself
     // (This check would be done at controller level with req.user.id)

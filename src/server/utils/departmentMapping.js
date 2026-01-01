@@ -3,7 +3,7 @@
  * Provides dynamic department mapping for server-side services
  * // Touched to force restart
  */
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 const db = new Database();
 const supabase = db.getClient();
@@ -22,16 +22,16 @@ async function getDepartments() {
   }
   try {
     const { data, error } = await supabase
-      .from('departments')
+      .from("departments")
       .select(`
         id,
         name,
         code,
         level
       `)
-      .eq('is_active', true);
+      .eq("is_active", true);
     if (error) {
-      console.error('[DEPARTMENT_MAPPING] Database error:', error);
+      console.error("[DEPARTMENT_MAPPING] Database error:", error);
       throw error;
     }
     // console.log removed for security
@@ -53,7 +53,7 @@ async function getDepartments() {
     cacheTimestamp = now;
     return departments;
   } catch (error) {
-    console.error('Error fetching departments:', error);
+    console.error("Error fetching departments:", error);
     // Return empty array on error
     return [];
   }
@@ -101,34 +101,34 @@ async function getLegacyDepartmentMapping() {
     // Map common legacy codes to new names
     const legacyCode = dept.code.toLowerCase();
     // Validate input to prevent object injection
-    if (legacyCode && typeof legacyCode === 'string' && legacyCode.length < 100) {
+    if (legacyCode && typeof legacyCode === "string" && legacyCode.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       mapping[legacyCode] = dept.name;
     }
     // Also map by partial name matching for common patterns
-    if (legacyCode.includes('wst') || dept.name.toLowerCase().includes('water')) {
-      mapping['wst'] = dept.name;
+    if (legacyCode.includes("wst") || dept.name.toLowerCase().includes("water")) {
+      mapping["wst"] = dept.name;
     }
-    if (legacyCode.includes('eng') || dept.name.toLowerCase().includes('engineering')) {
-      mapping['engineering'] = dept.name;
+    if (legacyCode.includes("eng") || dept.name.toLowerCase().includes("engineering")) {
+      mapping["engineering"] = dept.name;
     }
-    if (legacyCode.includes('health') || dept.name.toLowerCase().includes('health')) {
-      mapping['health'] = dept.name;
+    if (legacyCode.includes("health") || dept.name.toLowerCase().includes("health")) {
+      mapping["health"] = dept.name;
     }
-    if (legacyCode.includes('social') || dept.name.toLowerCase().includes('social')) {
-      mapping['social-welfare'] = dept.name;
+    if (legacyCode.includes("social") || dept.name.toLowerCase().includes("social")) {
+      mapping["social-welfare"] = dept.name;
     }
-    if (legacyCode.includes('safety') || dept.name.toLowerCase().includes('safety')) {
-      mapping['public-safety'] = dept.name;
+    if (legacyCode.includes("safety") || dept.name.toLowerCase().includes("safety")) {
+      mapping["public-safety"] = dept.name;
     }
-    if (legacyCode.includes('env') || dept.name.toLowerCase().includes('environment')) {
-      mapping['environmental'] = dept.name;
+    if (legacyCode.includes("env") || dept.name.toLowerCase().includes("environment")) {
+      mapping["environmental"] = dept.name;
     }
-    if (legacyCode.includes('transport') || dept.name.toLowerCase().includes('transport')) {
-      mapping['transportation'] = dept.name;
+    if (legacyCode.includes("transport") || dept.name.toLowerCase().includes("transport")) {
+      mapping["transportation"] = dept.name;
     }
-    if (legacyCode.includes('works') || dept.name.toLowerCase().includes('works')) {
-      mapping['public-works'] = dept.name;
+    if (legacyCode.includes("works") || dept.name.toLowerCase().includes("works")) {
+      mapping["public-works"] = dept.name;
     }
   });
   return mapping;
@@ -176,10 +176,10 @@ async function getKeywordBasedSuggestions() {
     keywords.forEach(keyword => {
       if (keyword.length > 2 && keyword.length < 50) { // Only meaningful keywords with length limit
         // Escape special regex characters to prevent ReDoS
-        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         // Use a whitelist approach: only create regex for safe keywords
         // eslint-disable-next-line security/detect-non-literal-regexp
-        const pattern = new RegExp(`\\b${escapedKeyword}\\b`, 'i');
+        const pattern = new RegExp(`\\b${escapedKeyword}\\b`, "i");
         suggestions.push({
           pattern,
           departments: [dept.code],

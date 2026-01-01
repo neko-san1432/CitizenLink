@@ -1,5 +1,5 @@
-const LguOfficerService = require('../services/LguOfficerService');
-const { ErrorHandler } = require('../middleware/errorHandler');
+const LguOfficerService = require("../services/LguOfficerService");
+const { ErrorHandler } = require("../middleware/errorHandler");
 
 class LguOfficerController {
   constructor() {
@@ -21,8 +21,8 @@ class LguOfficerController {
         data: tasks
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Get assigned tasks error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Get assigned tasks error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -38,12 +38,12 @@ class LguOfficerController {
 
       return res.json({
         success: true,
-        message: 'Complaint marked as resolved successfully',
+        message: "Complaint marked as resolved successfully",
         complaint
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Mark as resolved error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Mark as resolved error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -59,8 +59,8 @@ class LguOfficerController {
         data: tasks
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Get tasks error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Get tasks error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -76,11 +76,11 @@ class LguOfficerController {
 
       return res.json({
         success: true,
-        message: 'Task status updated successfully'
+        message: "Task status updated successfully"
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Update task status error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Update task status error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -96,11 +96,11 @@ class LguOfficerController {
 
       return res.json({
         success: true,
-        message: 'Progress update added successfully'
+        message: "Progress update added successfully"
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Add progress update error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Add progress update error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -116,8 +116,8 @@ class LguOfficerController {
         data: statistics
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Get statistics error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Get statistics error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -135,8 +135,8 @@ class LguOfficerController {
         data: activities
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Get activities error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Get activities error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
   /**
@@ -154,8 +154,8 @@ class LguOfficerController {
         data: updates
       });
     } catch (error) {
-      console.error('[LGU_OFFICER] Get updates error:', error);
-      return ErrorHandler.handleApiError(error, req, res, 'LGU_OFFICER');
+      console.error("[LGU_OFFICER] Get updates error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
 }

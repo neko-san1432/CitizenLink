@@ -3,14 +3,14 @@
  * Verifies that the controller enforces department filtering based on user roles
  */
 
-const ComplaintController = require('../../src/server/controllers/ComplaintController');
-const ComplaintService = require('../../src/server/services/ComplaintService');
-const { createMockRequest, createMockResponse } = require('../utils/testHelpers');
+const ComplaintController = require("../../src/server/controllers/ComplaintController");
+const ComplaintService = require("../../src/server/services/ComplaintService");
+const { createMockRequest, createMockResponse } = require("../utils/testHelpers");
 
 // Mock ComplaintService
-jest.mock('../../src/server/services/ComplaintService');
+jest.mock("../../src/server/services/ComplaintService");
 
-describe('Heatmap Role-Based Filtering', () => {
+describe("Heatmap Role-Based Filtering", () => {
   let complaintController;
   let mockServiceInstance;
 
@@ -28,14 +28,14 @@ describe('Heatmap Role-Based Filtering', () => {
     complaintController = new ComplaintController();
   });
 
-  describe('Complaint Coordinator Access', () => {
-    it('should allow coordinator to see all departments', async () => {
+  describe("Complaint Coordinator Access", () => {
+    it("should allow coordinator to see all departments", async () => {
       const req = createMockRequest({
-        method: 'GET',
+        method: "GET",
         user: {
-          id: 'coord_1',
-          role: 'complaint-coordinator',
-          department: 'DILG' // Even if they have a dept, they see all
+          id: "coord_1",
+          role: "complaint-coordinator",
+          department: "DILG" // Even if they have a dept, they see all
         },
         query: {}
       });
@@ -54,15 +54,15 @@ describe('Heatmap Role-Based Filtering', () => {
       expect(callArgs.department).toBeUndefined();
     });
 
-    it('should allow coordinator to filter by specific department via query', async () => {
+    it("should allow coordinator to filter by specific department via query", async () => {
       const req = createMockRequest({
-        method: 'GET',
+        method: "GET",
         user: {
-          id: 'coord_1',
-          role: 'complaint-coordinator'
+          id: "coord_1",
+          role: "complaint-coordinator"
         },
         query: {
-          department: 'DPWH'
+          department: "DPWH"
         }
       });
       const res = createMockResponse();
@@ -72,20 +72,20 @@ describe('Heatmap Role-Based Filtering', () => {
       // Should respect the query param
       expect(mockServiceInstance.getComplaintLocations).toHaveBeenCalledWith(
         expect.objectContaining({
-          department: ['DPWH']
+          department: ["DPWH"]
         })
       );
     });
   });
 
-  describe('LGU Admin Access', () => {
-    it('should restrict LGU admin to their own department', async () => {
+  describe("LGU Admin Access", () => {
+    it("should restrict LGU admin to their own department", async () => {
       const req = createMockRequest({
-        method: 'GET',
+        method: "GET",
         user: {
-          id: 'admin_1',
-          role: 'lgu-admin',
-          department: 'DPWH'
+          id: "admin_1",
+          role: "lgu-admin",
+          department: "DPWH"
         },
         query: {}
       });
@@ -96,21 +96,21 @@ describe('Heatmap Role-Based Filtering', () => {
       // Should force department filter
       expect(mockServiceInstance.getComplaintLocations).toHaveBeenCalledWith(
         expect.objectContaining({
-          department: ['DPWH']
+          department: ["DPWH"]
         })
       );
     });
 
-    it('should ignore query param if it differs from assigned department', async () => {
+    it("should ignore query param if it differs from assigned department", async () => {
       const req = createMockRequest({
-        method: 'GET',
+        method: "GET",
         user: {
-          id: 'admin_1',
-          role: 'lgu-admin',
-          department: 'DPWH'
+          id: "admin_1",
+          role: "lgu-admin",
+          department: "DPWH"
         },
         query: {
-          department: 'DOH' // Trying to access another dept
+          department: "DOH" // Trying to access another dept
         }
       });
       const res = createMockResponse();
@@ -120,20 +120,20 @@ describe('Heatmap Role-Based Filtering', () => {
       // Should STILL use assigned department
       expect(mockServiceInstance.getComplaintLocations).toHaveBeenCalledWith(
         expect.objectContaining({
-          department: ['DPWH']
+          department: ["DPWH"]
         })
       );
     });
   });
 
-  describe('LGU Officer Access', () => {
-    it('should restrict LGU officer to their own department', async () => {
+  describe("LGU Officer Access", () => {
+    it("should restrict LGU officer to their own department", async () => {
       const req = createMockRequest({
-        method: 'GET',
+        method: "GET",
         user: {
-          id: 'officer_1',
-          role: 'lgu-officer',
-          department: 'BFP'
+          id: "officer_1",
+          role: "lgu-officer",
+          department: "BFP"
         },
         query: {}
       });
@@ -143,7 +143,7 @@ describe('Heatmap Role-Based Filtering', () => {
 
       expect(mockServiceInstance.getComplaintLocations).toHaveBeenCalledWith(
         expect.objectContaining({
-          department: ['BFP']
+          department: ["BFP"]
         })
       );
     });

@@ -1152,8 +1152,8 @@ class ComplaintService {
           const departmentR = Array.isArray(complaint.department_r)
             ? complaint.department_r
             : complaint.department_r
-            ? [complaint.department_r]
-            : [];
+              ? [complaint.department_r]
+              : [];
 
           return {
             id: complaint.id,

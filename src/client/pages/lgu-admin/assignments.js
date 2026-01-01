@@ -220,15 +220,15 @@ function createAssignmentHTML(assignment) {
     ? `
     <div class="assigned-officer">
       <div class="officer-avatar">${getInitials(
-        assignment.officer_name || "Unknown"
-      )}</div>
+    assignment.officer_name || "Unknown"
+  )}</div>
       <div>
         <div style="font-weight: 500;">${escapeHtml(
-          assignment.officer_name || "Unknown Officer"
-        )}</div>
+    assignment.officer_name || "Unknown Officer"
+  )}</div>
         <div style="font-size: 0.75rem; color: #a0aec0;">Assigned ${formatRelativeTime(
-          assignment.assigned_at
-        )}</div>
+    assignment.assigned_at
+  )}</div>
       </div>
     </div>
   `
@@ -243,31 +243,31 @@ function createAssignmentHTML(assignment) {
       <div class="assignment-header">
         <div class="assignment-title-section">
           <div class="assignment-id">#${assignment.complaint_id.slice(
-            0,
-            8
-          )}</div>
+    0,
+    8
+  )}</div>
           <div class="assignment-title">${escapeHtml(assignment.title)}</div>
           <div class="assignment-meta">
             <span>📍 ${escapeHtml(
-              assignment.location_text || "No location"
-            )}</span>
+    assignment.location_text || "No location"
+  )}</span>
             <span>📅 Submitted ${formatRelativeTime(
-              assignment.submitted_at
-            )}</span>
+    assignment.submitted_at
+  )}</span>
             <span>👤 ${escapeHtml(assignment.citizen_name || "Unknown")}</span>
           </div>
         </div>
         <div class="assignment-actions">
           <span class="priority-badge ${priorityClass}">${
-    assignment.priority || "medium"
-  }</span>
+  assignment.priority || "medium"
+}</span>
           <span class="status-badge ${statusClass}">${statusText}</span>
         </div>
       </div>
       <div class="assignment-details">
         ${escapeHtml(
-          assignment.description || "No description provided"
-        ).substring(0, 200)}${assignment.description?.length > 200 ? "..." : ""}
+    assignment.description || "No description provided"
+  ).substring(0, 200)}${assignment.description?.length > 200 ? "..." : ""}
       </div>
       <div class="assignment-footer">
         ${assignedInfo}
@@ -293,18 +293,18 @@ function openAssignmentModal(assignment) {
   summaryEl.innerHTML = `
     <div class="complaint-summary-title">${escapeHtml(assignment.title)}</div>
     <div class="complaint-summary-detail"><strong>ID:</strong> ${assignment.complaint_id.slice(
-      0,
-      8
-    )}</div>
+    0,
+    8
+  )}</div>
     <div class="complaint-summary-detail"><strong>Location:</strong> ${escapeHtml(
-      assignment.location_text || "N/A"
-    )}</div>
+    assignment.location_text || "N/A"
+  )}</div>
     <div class="complaint-summary-detail"><strong>Submitted:</strong> ${new Date(
-      assignment.submitted_at
-    ).toLocaleString()}</div>
+    assignment.submitted_at
+  ).toLocaleString()}</div>
     <div class="complaint-summary-detail"><strong>Priority:</strong> ${
-      assignment.priority || "medium"
-    }</div>
+  assignment.priority || "medium"
+}</div>
   `;
 
   // Set default deadline (3 days from now)
@@ -409,8 +409,8 @@ function populateOfficerSelect() {
     .map(
       (officer) => `
       <option value="${officer.id}">${escapeHtml(officer.name)} ${
-        officer.employee_id ? `(${officer.employee_id})` : ""
-      }</option>
+  officer.employee_id ? `(${officer.employee_id})` : ""
+}</option>
     `
     )
     .join("")}`;

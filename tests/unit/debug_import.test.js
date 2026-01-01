@@ -1,10 +1,10 @@
 const modules = [
-  '../../src/server/repositories/CoordinatorRepository',
-  '../../src/server/services/DuplicationDetectionService',
-  '../../src/server/services/SimilarityCalculatorService',
-  '../../src/server/services/RuleBasedSuggestionService',
-  '../../src/server/utils/barangayClassifier',
-  '../../src/server/services/CoordinatorService'
+  "../../src/server/repositories/CoordinatorRepository",
+  "../../src/server/services/DuplicationDetectionService",
+  "../../src/server/services/SimilarityCalculatorService",
+  "../../src/server/services/RuleBasedSuggestionService",
+  "../../src/server/utils/barangayClassifier",
+  "../../src/server/services/CoordinatorService"
 ];
 
 async function run() {

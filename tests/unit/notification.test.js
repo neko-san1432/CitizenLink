@@ -1,6 +1,6 @@
-const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITY } = require('../../src/shared/constants');
+const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITY } = require("../../src/shared/constants");
 
-describe('Notification System', () => {
+describe("Notification System", () => {
   let NotificationService;
   let NotificationController;
   let notificationService;
@@ -59,19 +59,19 @@ describe('Notification System', () => {
       getInstance: jest.fn().mockReturnThis()
     };
 
-    jest.doMock('../../src/server/config/database', () => ({
+    jest.doMock("../../src/server/config/database", () => ({
       getInstance: () => mockDatabase,
       getClient: () => mockSupabase
     }));
 
-    NotificationService = require('../../src/server/services/NotificationService');
-    NotificationController = require('../../src/server/controllers/NotificationController');
+    NotificationService = require("../../src/server/services/NotificationService");
+    NotificationController = require("../../src/server/controllers/NotificationController");
 
     notificationService = new NotificationService();
     notificationController = new NotificationController();
 
     mockReq = {
-      user: { id: 'user-123' },
+      user: { id: "user-123" },
       query: {},
       params: {},
       on: jest.fn()
@@ -87,40 +87,40 @@ describe('Notification System', () => {
     };
   });
 
-  describe('NotificationService', () => {
-    describe('createNotification', () => {
-      it('should create a notification successfully', async () => {
-        const mockData = { id: 'notif-1', title: 'Test' };
+  describe("NotificationService", () => {
+    describe("createNotification", () => {
+      it("should create a notification successfully", async () => {
+        const mockData = { id: "notif-1", title: "Test" };
         mockSupabase.single.mockResolvedValue({ data: mockData, error: null });
         // Mock duplicate check to return false
         // select() returns this, so we mock .then() to return empty data
         mockSupabase.then.mockImplementationOnce((resolve) => resolve({ data: [], error: null }));
 
         const result = await notificationService.createNotification(
-          'user-123',
+          "user-123",
           NOTIFICATION_TYPES.INFO,
-          'Test Title',
-          'Test Message'
+          "Test Title",
+          "Test Message"
         );
 
         expect(result.success).toBe(true);
         expect(result.notification).toEqual(mockData);
-        expect(mockSupabase.from).toHaveBeenCalledWith('notification');
+        expect(mockSupabase.from).toHaveBeenCalledWith("notification");
         expect(mockSupabase.insert).toHaveBeenCalled();
       });
 
-      it('should handle duplicates when deduplication is enabled', async () => {
-        const existingNotif = { id: 'existing-1', title: 'Test' };
+      it("should handle duplicates when deduplication is enabled", async () => {
+        const existingNotif = { id: "existing-1", title: "Test" };
         // Mock duplicate check to return existing notification
         // The first await is checkDuplicateNotification which calls select...limit(1)
         // limit(1) returns this, so we mock then()
         mockSupabase.then.mockImplementationOnce((resolve) => resolve({ data: [existingNotif], error: null }));
 
         const result = await notificationService.createNotification(
-          'user-123',
+          "user-123",
           NOTIFICATION_TYPES.INFO,
-          'Test Title',
-          'Test Message',
+          "Test Title",
+          "Test Message",
           { deduplicate: true }
         );
 
@@ -131,8 +131,8 @@ describe('Notification System', () => {
       });
     });
 
-    describe('getUserNotifications', () => {
-      it('should return paginated notifications', async () => {
+    describe("getUserNotifications", () => {
+      it("should return paginated notifications", async () => {
         const mockData = [{ id: 1 }, { id: 2 }];
         // range() returns this, so we mock then()
         // But wait, range() is usually terminal in Supabase js?
@@ -140,7 +140,7 @@ describe('Notification System', () => {
         // So we mock then()
         mockSupabase.then.mockImplementation((resolve) => resolve({ data: mockData, error: null, count: 10 }));
 
-        const result = await notificationService.getUserNotifications('user-123', 0, 10);
+        const result = await notificationService.getUserNotifications("user-123", 0, 10);
 
         expect(result.success).toBe(true);
         expect(result.data.notifications).toEqual(mockData);
@@ -148,12 +148,12 @@ describe('Notification System', () => {
       });
     });
 
-    describe('markAsRead', () => {
-      it('should mark notification as read', async () => {
-        const mockData = { id: 'notif-1', read: true };
+    describe("markAsRead", () => {
+      it("should mark notification as read", async () => {
+        const mockData = { id: "notif-1", read: true };
         mockSupabase.single.mockResolvedValue({ data: mockData, error: null });
 
-        const result = await notificationService.markAsRead('notif-1', 'user-123');
+        const result = await notificationService.markAsRead("notif-1", "user-123");
 
         expect(result.success).toBe(true);
         expect(result.notification).toEqual(mockData);
@@ -162,15 +162,15 @@ describe('Notification System', () => {
     });
   });
 
-  describe('NotificationController', () => {
-    describe('getUnreadNotifications', () => {
-      it('should return enriched notifications with links', async () => {
+  describe("NotificationController", () => {
+    describe("getUnreadNotifications", () => {
+      it("should return enriched notifications with links", async () => {
         const mockNotifs = [
           {
-            id: 'n1',
-            type: 'workflow_update',
-            title: 'Progress Update',
-            metadata: { complaint_id: 'c1' },
+            id: "n1",
+            type: "workflow_update",
+            title: "Progress Update",
+            metadata: { complaint_id: "c1" },
             created_at: new Date().toISOString()
           }
         ];
@@ -183,14 +183,14 @@ describe('Notification System', () => {
           success: true,
           notifications: expect.arrayContaining([
             expect.objectContaining({
-              link: '/complaint-details/c1'
+              link: "/complaint-details/c1"
             })
           ])
         }));
       });
 
-      it('should handle errors gracefully', async () => {
-        mockSupabase.then.mockImplementation((resolve) => resolve({ data: null, error: { message: 'DB Error' } }));
+      it("should handle errors gracefully", async () => {
+        mockSupabase.then.mockImplementation((resolve) => resolve({ data: null, error: { message: "DB Error" } }));
 
         await notificationController.getUnreadNotifications(mockReq, mockRes);
 
@@ -201,8 +201,8 @@ describe('Notification System', () => {
       });
     });
 
-    describe('markAllAsRead', () => {
-      it('should mark all notifications as read', async () => {
+    describe("markAllAsRead", () => {
+      it("should mark all notifications as read", async () => {
         // update().eq().eq() returns this. mock then()
         mockSupabase.then.mockImplementation((resolve) => resolve({ data: [], error: null }));
 
@@ -210,21 +210,21 @@ describe('Notification System', () => {
 
         expect(mockRes.json).toHaveBeenCalledWith({
           success: true,
-          message: 'All notifications marked as read'
+          message: "All notifications marked as read"
         });
       });
     });
 
-    describe('getNotificationStream', () => {
-      it('should set up SSE headers and subscription', async () => {
+    describe("getNotificationStream", () => {
+      it("should set up SSE headers and subscription", async () => {
         await notificationController.getNotificationStream(mockReq, mockRes);
 
         expect(mockRes.writeHead).toHaveBeenCalledWith(200, expect.objectContaining({
-          'Content-Type': 'text/event-stream',
-          'Connection': 'keep-alive'
+          "Content-Type": "text/event-stream",
+          "Connection": "keep-alive"
         }));
-        expect(mockRes.write).toHaveBeenCalledWith(expect.stringContaining('connected'));
-        expect(mockSupabase.channel).toHaveBeenCalledWith('notifications');
+        expect(mockRes.write).toHaveBeenCalledWith(expect.stringContaining("connected"));
+        expect(mockSupabase.channel).toHaveBeenCalledWith("notifications");
       });
     });
   });

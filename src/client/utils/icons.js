@@ -10,8 +10,8 @@
 export function getIcon(iconName, options = {}) {
   const {
     size = 20,
-    color = 'currentColor',
-    className = '',
+    color = "currentColor",
+    className = "",
     strokeWidth = 2
   } = options;
 
@@ -247,29 +247,29 @@ export function getIcon(iconName, options = {}) {
  */
 export function getMenuIcon(iconName, options = {}) {
   const iconMap = {
-    'dashboard': 'dashboard',
-    'fileComplaint': 'fileComplaint',
-    'myProfile': 'myProfile',
-    'appointAdmins': 'appointAdmins',
-    'departments': 'departments',
-    'role-changer': 'roleChanger',
-    'link-generator': 'linkGenerator',
-    'review-queue': 'reviewQueue',
-    'server-logs': 'scroll',
-    'assignments': 'assignments',
-    'heatmap': 'heatmap',
-    'publish': 'publish',
-    'taskAssigned': 'taskAssigned',
-    'signout': 'signout',
-    'settings': 'settings',
-    'hr-dashboard': 'hrDashboard',
-    'coordinator-dashboard': 'coordinatorDashboard',
-    'lgu-admin-dashboard': 'lguAdminDashboard',
-    'lgu-officer-dashboard': 'lguOfficerDashboard',
-    'super-admin-dashboard': 'superAdminDashboard'
+    "dashboard": "dashboard",
+    "fileComplaint": "fileComplaint",
+    "myProfile": "myProfile",
+    "appointAdmins": "appointAdmins",
+    "departments": "departments",
+    "role-changer": "roleChanger",
+    "link-generator": "linkGenerator",
+    "review-queue": "reviewQueue",
+    "server-logs": "scroll",
+    "assignments": "assignments",
+    "heatmap": "heatmap",
+    "publish": "publish",
+    "taskAssigned": "taskAssigned",
+    "signout": "signout",
+    "settings": "settings",
+    "hr-dashboard": "hrDashboard",
+    "coordinator-dashboard": "coordinatorDashboard",
+    "lgu-admin-dashboard": "lguAdminDashboard",
+    "lgu-officer-dashboard": "lguOfficerDashboard",
+    "super-admin-dashboard": "superAdminDashboard"
   };
 
-  const mappedName = iconMap[iconName] || 'file';
+  const mappedName = iconMap[iconName] || "file";
   return getIcon(mappedName, { size: 20, ...options });
 }
 
@@ -278,40 +278,40 @@ export function getMenuIcon(iconName, options = {}) {
  */
 export function getNotificationIcon(notificationType, options = {}) {
   const iconMap = {
-    'complaint_submitted': 'check',
-    'complaint_status_changed': 'refresh',
-    'complaint_assigned_to_officer': 'worker',
-    'complaint_marked_duplicate': 'link',
-    'complaint_resolved': 'check',
-    'complaint_rejected': 'x',
-    'officer_added_update': 'message',
-    'workflow_step_completed': 'trendingUp',
-    'lgu_work_completed': 'target',
-    'resolution_review_needed': 'search',
-    'task_assigned': 'file',
-    'task_deadline_approaching': 'clock',
-    'task_overdue': 'alert',
-    'task_priority_changed': 'alert',
-    'coordinator_added_note': 'note',
-    'assignment_completed': 'check',
-    'admin_reminder_to_complete': 'bell',
-    'new_complaint_needs_review': 'search',
-    'duplicate_detected': 'link',
-    'similar_complaints_found': 'chart',
-    'resolution_pending_approval': 'hand',
-    'approval_required': 'appointAdmins',
-    'officer_assigned_to_department': 'briefcase',
-    'complaint_escalated': 'arrowUp',
-    'officer_reminder': 'message',
-    'pending_task_reminder': 'clock',
-    'staff_member_added': 'users',
-    'role_change_completed': 'refresh',
-    'department_transfer_completed': 'departments',
-    'system_alert': 'bell',
-    'welcome': 'welcome'
+    "complaint_submitted": "check",
+    "complaint_status_changed": "refresh",
+    "complaint_assigned_to_officer": "worker",
+    "complaint_marked_duplicate": "link",
+    "complaint_resolved": "check",
+    "complaint_rejected": "x",
+    "officer_added_update": "message",
+    "workflow_step_completed": "trendingUp",
+    "lgu_work_completed": "target",
+    "resolution_review_needed": "search",
+    "task_assigned": "file",
+    "task_deadline_approaching": "clock",
+    "task_overdue": "alert",
+    "task_priority_changed": "alert",
+    "coordinator_added_note": "note",
+    "assignment_completed": "check",
+    "admin_reminder_to_complete": "bell",
+    "new_complaint_needs_review": "search",
+    "duplicate_detected": "link",
+    "similar_complaints_found": "chart",
+    "resolution_pending_approval": "hand",
+    "approval_required": "appointAdmins",
+    "officer_assigned_to_department": "briefcase",
+    "complaint_escalated": "arrowUp",
+    "officer_reminder": "message",
+    "pending_task_reminder": "clock",
+    "staff_member_added": "users",
+    "role_change_completed": "refresh",
+    "department_transfer_completed": "departments",
+    "system_alert": "bell",
+    "welcome": "welcome"
   };
 
-  const iconName = iconMap[notificationType] || 'bell';
+  const iconName = iconMap[notificationType] || "bell";
   return getIcon(iconName, { size: 18, ...options });
 }
 
@@ -320,18 +320,18 @@ export function getNotificationIcon(notificationType, options = {}) {
  */
 export function getActivityIcon(activityType, options = {}) {
   const iconMap = {
-    'task_assigned': 'file',
-    'task_completed': 'check',
-    'task_updated': 'note',
-    'note_added': 'note',
-    'evidence_uploaded': 'camera',
-    'status_updated': 'refresh',
-    'status_changed': 'refresh',
-    'deadline_approaching': 'clock',
-    'general': 'megaphone'
+    "task_assigned": "file",
+    "task_completed": "check",
+    "task_updated": "note",
+    "note_added": "note",
+    "evidence_uploaded": "camera",
+    "status_updated": "refresh",
+    "status_changed": "refresh",
+    "deadline_approaching": "clock",
+    "general": "megaphone"
   };
 
-  const iconName = iconMap[activityType] || 'file';
+  const iconName = iconMap[activityType] || "file";
   return getIcon(iconName, { size: 18, ...options });
 }
 
@@ -340,14 +340,14 @@ export function getActivityIcon(activityType, options = {}) {
  */
 export function getUpdateIcon(updateType, options = {}) {
   const iconMap = {
-    'announcement': 'megaphone',
-    'guideline': 'file',
-    'meeting': 'calendar',
-    'target': 'target',
-    'policy': 'scroll'
+    "announcement": "megaphone",
+    "guideline": "file",
+    "meeting": "calendar",
+    "target": "target",
+    "policy": "scroll"
   };
 
-  const iconName = iconMap[updateType] || 'megaphone';
+  const iconName = iconMap[updateType] || "megaphone";
   return getIcon(iconName, { size: 18, ...options });
 }
 

@@ -1,11 +1,11 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 class ComplaintHistoryRepository {
 
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
-    this.table = 'complaint_history';
+    this.table = "complaint_history";
   }
   async addEntry(complaintId, action, actorId = null, notes = null) {
     const { error } = await this.supabase
@@ -24,9 +24,9 @@ class ComplaintHistoryRepository {
     const { limit = 50, offset = 0 } = options;
     const { data, error } = await this.supabase
       .from(this.table)
-      .select('*')
-      .eq('complaint_id', complaintId)
-      .order('created_at', { ascending: false })
+      .select("*")
+      .eq("complaint_id", complaintId)
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (error) throw error;
     return data || [];

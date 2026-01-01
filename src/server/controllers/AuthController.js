@@ -1257,8 +1257,8 @@ class AuthController {
           (role || "") === "lgu-admin"
             ? "lgu-admin"
             : (role || "") === "lgu"
-            ? "lgu"
-            : role || "citizen",
+              ? "lgu"
+              : role || "citizen",
         department: department_code || null,
         // Flags
         is_oauth: true,

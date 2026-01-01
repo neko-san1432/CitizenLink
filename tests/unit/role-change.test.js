@@ -1,4 +1,4 @@
-describe('RoleManagementService - Role Changes', () => {
+describe("RoleManagementService - Role Changes", () => {
   let RoleManagementService;
   let roleService;
   let mockSupabase;
@@ -27,67 +27,67 @@ describe('RoleManagementService - Role Changes', () => {
     const MockDatabaseClass = jest.fn().mockImplementation(() => mockDatabase);
 
     // Use jest.doMock for dependencies
-    jest.doMock('../../src/server/config/database', () => MockDatabaseClass);
-    jest.doMock('../../src/shared/constants', () => ({
+    jest.doMock("../../src/server/config/database", () => MockDatabaseClass);
+    jest.doMock("../../src/shared/constants", () => ({
       USER_ROLES: {
-        CITIZEN: 'citizen',
-        LGU_OFFICER: 'lgu',
-        LGU_ADMIN: 'lgu-admin',
-        SUPER_ADMIN: 'super-admin',
-        LGU_HR: 'lgu-hr'
+        CITIZEN: "citizen",
+        LGU_OFFICER: "lgu",
+        LGU_ADMIN: "lgu-admin",
+        SUPER_ADMIN: "super-admin",
+        LGU_HR: "lgu-hr"
       },
       ROLE_HIERARCHY: {
-        'super-admin': 100,
-        'lgu-hr': 50,
-        'lgu-admin': 40,
-        'lgu-officer': 30,
-        'citizen': 10
+        "super-admin": 100,
+        "lgu-hr": 50,
+        "lgu-admin": 40,
+        "lgu-officer": 30,
+        "citizen": 10
       },
-      SWITCHABLE_ROLES: ['lgu-admin', 'lgu-officer', 'lgu-hr', 'super-admin']
+      SWITCHABLE_ROLES: ["lgu-admin", "lgu-officer", "lgu-hr", "super-admin"]
     }));
 
     // Require the service AFTER mocking
-    RoleManagementService = require('../../src/server/services/RoleManagementService');
+    RoleManagementService = require("../../src/server/services/RoleManagementService");
     roleService = new RoleManagementService();
   });
 
-  describe('validateRoleChangePermission', () => {
-    test('LGU HR can assign LGU officer roles', () => {
-      const result = roleService.validateRoleChangePermission('lgu-hr', 'citizen', 'lgu-officer');
+  describe("validateRoleChangePermission", () => {
+    test("LGU HR can assign LGU officer roles", () => {
+      const result = roleService.validateRoleChangePermission("lgu-hr", "citizen", "lgu-officer");
       expect(result.isValid).toBe(true);
     });
 
-    test('LGU HR can assign LGU admin roles', () => {
-      const result = roleService.validateRoleChangePermission('lgu-hr', 'citizen', 'lgu-admin');
+    test("LGU HR can assign LGU admin roles", () => {
+      const result = roleService.validateRoleChangePermission("lgu-hr", "citizen", "lgu-admin");
       expect(result.isValid).toBe(true);
     });
 
-    test('LGU HR cannot assign super-admin role', () => {
-      const result = roleService.validateRoleChangePermission('lgu-hr', 'citizen', 'super-admin');
+    test("LGU HR cannot assign super-admin role", () => {
+      const result = roleService.validateRoleChangePermission("lgu-hr", "citizen", "super-admin");
       expect(result.isValid).toBe(false);
-      expect(result.errors[0]).toContain('HR can only assign LGU officer');
+      expect(result.errors[0]).toContain("HR can only assign LGU officer");
     });
 
-    test('Super Admin can assign any role', () => {
-      const result = roleService.validateRoleChangePermission('super-admin', 'citizen', 'super-admin');
+    test("Super Admin can assign any role", () => {
+      const result = roleService.validateRoleChangePermission("super-admin", "citizen", "super-admin");
       expect(result.isValid).toBe(true);
     });
 
-    test('Citizen cannot change roles', () => {
-      const result = roleService.validateRoleChangePermission('citizen', 'citizen', 'lgu-officer');
+    test("Citizen cannot change roles", () => {
+      const result = roleService.validateRoleChangePermission("citizen", "citizen", "lgu-officer");
       expect(result.isValid).toBe(false);
-      expect(result.errors[0]).toContain('Only HR and Super Admin can change roles');
+      expect(result.errors[0]).toContain("Only HR and Super Admin can change roles");
     });
   });
 
-  describe('updateUserRole', () => {
-    const userId = 'user-123';
-    const performedBy = 'admin-456';
+  describe("updateUserRole", () => {
+    const userId = "user-123";
+    const performedBy = "admin-456";
 
-    test('Promote Citizen to LGU Officer with Department', async () => {
-      const currentRole = 'citizen';
-      const newRole = 'lgu-officer';
-      const department = 'ENG';
+    test("Promote Citizen to LGU Officer with Department", async () => {
+      const currentRole = "citizen";
+      const newRole = "lgu-officer";
+      const department = "ENG";
 
       // Mock getUserById
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
@@ -121,12 +121,12 @@ describe('RoleManagementService - Role Changes', () => {
       const result = await roleService.updateUserRole(userId, newRole, performedBy, { department });
 
       expect(result.success).toBe(true);
-      expect(result.new_role).toBe('lgu'); // Service normalizes lgu-officer to lgu
+      expect(result.new_role).toBe("lgu"); // Service normalizes lgu-officer to lgu
       expect(mockSupabase.auth.admin.updateUserById).toHaveBeenCalledWith(
         userId,
         expect.objectContaining({
           user_metadata: expect.objectContaining({
-            role: 'lgu', // Service normalizes lgu-officer to lgu
+            role: "lgu", // Service normalizes lgu-officer to lgu
             department,
             previous_role: currentRole
           })
@@ -134,10 +134,10 @@ describe('RoleManagementService - Role Changes', () => {
       );
     });
 
-    test('Demote LGU Officer to Citizen (clears department)', async () => {
-      const currentRole = 'lgu-officer';
-      const newRole = 'citizen';
-      const department = 'ENG';
+    test("Demote LGU Officer to Citizen (clears department)", async () => {
+      const currentRole = "lgu-officer";
+      const newRole = "citizen";
+      const department = "ENG";
 
       // Mock getUserById
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
@@ -180,10 +180,10 @@ describe('RoleManagementService - Role Changes', () => {
       expect(updateCall.user_metadata.role).toBe(newRole);
     });
 
-    test('Super Admin promoting to LGU Admin', async () => {
-      const currentRole = 'citizen';
-      const newRole = 'lgu-admin';
-      const department = 'HR';
+    test("Super Admin promoting to LGU Admin", async () => {
+      const currentRole = "citizen";
+      const newRole = "lgu-admin";
+      const department = "HR";
 
       mockSupabase.auth.admin.getUserById.mockResolvedValue({
         data: {

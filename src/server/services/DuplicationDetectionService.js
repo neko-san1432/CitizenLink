@@ -1,5 +1,5 @@
-const ComplaintRepository = require('../repositories/ComplaintRepository');
-const Database = require('../config/database');
+const ComplaintRepository = require("../repositories/ComplaintRepository");
+const Database = require("../config/database");
 
 /**
 * DuplicationDetectionService
@@ -20,7 +20,7 @@ class DuplicationDetectionService {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error('Complaint not found');
+        throw new Error("Complaint not found");
       }
       // Convert Complaint model to plain object for similarity algorithms
       const complaintData = complaint.toJSON ? complaint.toJSON() : complaint;
@@ -41,7 +41,7 @@ class DuplicationDetectionService {
       await this.saveSimilarityResults(complaintId, merged);
       return merged;
     } catch (error) {
-      console.error('[DUPLICATION] Detection error:', error);
+      console.error("[DUPLICATION] Detection error:", error);
       throw error;
     }
   }
@@ -51,14 +51,14 @@ class DuplicationDetectionService {
   */
   async findTextSimilarity(complaint) {
     const { data: candidates, error } = await this.supabase
-      .from('complaints')
-      .select('*')
-      .neq('id', complaint.id)
-      .eq('category', complaint.category) // Same category
-      .gte('submitted_at', this.getTimeThreshold(30)) // Last 30 days
+      .from("complaints")
+      .select("*")
+      .neq("id", complaint.id)
+      .eq("category", complaint.category) // Same category
+      .gte("submitted_at", this.getTimeThreshold(30)) // Last 30 days
       .limit(50);
     if (error) {
-      console.error('[DUPLICATION] Text similarity error:', error);
+      console.error("[DUPLICATION] Text similarity error:", error);
       return [];
     }
     return candidates.map(candidate => {
@@ -84,7 +84,7 @@ class DuplicationDetectionService {
           descriptionSimilarity: descScore,
           keywordOverlap: keywordScore
         },
-        method: 'text'
+        method: "text"
       };
     }).filter(result => result.score > 0.5); // Only return significant matches
   }
@@ -98,15 +98,15 @@ class DuplicationDetectionService {
     // Search within 1km radius
     const radiusKm = 1.0;
     const { data: candidates, error } = await this.supabase
-      .from('complaints')
-      .select('*')
-      .neq('id', complaint.id)
-      .not('latitude', 'is', null)
-      .not('longitude', 'is', null)
-      .gte('submitted_at', this.getTimeThreshold(90)) // Last 90 days
+      .from("complaints")
+      .select("*")
+      .neq("id", complaint.id)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .gte("submitted_at", this.getTimeThreshold(90)) // Last 90 days
       .limit(100);
     if (error) {
-      console.error('[DUPLICATION] Location similarity error:', error);
+      console.error("[DUPLICATION] Location similarity error:", error);
       return [];
     }
     return candidates.map(candidate => {
@@ -131,7 +131,7 @@ class DuplicationDetectionService {
           distanceKm: distance,
           sameStreet: this.isSameStreet(complaint.location_text, candidate.location_text)
         },
-        method: 'location'
+        method: "location"
       };
     }).filter(result => result !== null);
   }
@@ -145,15 +145,15 @@ class DuplicationDetectionService {
     const afterDate = new Date(complaint.submitted_at);
     afterDate.setDate(afterDate.getDate() + 7);
     const { data: candidates, error } = await this.supabase
-      .from('complaints')
-      .select('*')
-      .neq('id', complaint.id)
-      .eq('category', complaint.category)
-      .gte('submitted_at', beforeDate.toISOString())
-      .lte('submitted_at', afterDate.toISOString())
+      .from("complaints")
+      .select("*")
+      .neq("id", complaint.id)
+      .eq("category", complaint.category)
+      .gte("submitted_at", beforeDate.toISOString())
+      .lte("submitted_at", afterDate.toISOString())
       .limit(50);
     if (error) {
-      console.error('[DUPLICATION] Temporal similarity error:', error);
+      console.error("[DUPLICATION] Temporal similarity error:", error);
       return [];
     }
     return candidates.map(candidate => {
@@ -172,7 +172,7 @@ class DuplicationDetectionService {
         factors: {
           daysDifference: timeDiff
         },
-        method: 'temporal'
+        method: "temporal"
       };
     }).filter(result => result !== null);
   }
@@ -202,10 +202,10 @@ class DuplicationDetectionService {
         match.scores.location * 0.4 +
         match.scores.temporal * 0.2;
       // Determine confidence level
-      let confidence = 'low';
-      if (finalScore >= 0.85) confidence = 'very_high';
-      else if (finalScore >= 0.75) confidence = 'high';
-      else if (finalScore >= 0.60) confidence = 'medium';
+      let confidence = "low";
+      if (finalScore >= 0.85) confidence = "very_high";
+      else if (finalScore >= 0.75) confidence = "high";
+      else if (finalScore >= 0.60) confidence = "medium";
       return {
         similar_complaint_id: match.complaint_id,
         similarity_score: finalScore,
@@ -234,13 +234,13 @@ class DuplicationDetectionService {
     }));
     if (records.length === 0) return;
     const { error } = await this.supabase
-      .from('complaint_similarities')
+      .from("complaint_similarities")
       .upsert(records, {
-        onConflict: 'complaint_id,similar_complaint_id',
+        onConflict: "complaint_id,similar_complaint_id",
         ignoreDuplicates: false
       });
     if (error) {
-      console.error('[DUPLICATION] Save error:', error);
+      console.error("[DUPLICATION] Save error:", error);
     }
   }
   /**
@@ -284,7 +284,7 @@ class DuplicationDetectionService {
   * Calculate keyword overlap between two texts
   */
   calculateKeywordOverlap(text1, text2) {
-    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were']);
+    const stopWords = new Set(["the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from", "is", "are", "was", "were"]);
     const words1 = text1.toLowerCase().split(/\W+/)
       .filter(word => word.length > 3 && !stopWords.has(word));
     const words2 = text2.toLowerCase().split(/\W+/)
@@ -324,7 +324,7 @@ class DuplicationDetectionService {
     if (!location1 || !location2) return false;
 
     const normalize = str => str.toLowerCase()
-      .replace(/street|st\.|road|rd\.|avenue|ave\./gi, '')
+      .replace(/street|st\.|road|rd\.|avenue|ave\./gi, "")
       .trim();
     const loc1 = normalize(location1);
     const loc2 = normalize(location2);

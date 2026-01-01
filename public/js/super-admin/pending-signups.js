@@ -2,10 +2,10 @@
  * Super Admin Pending Signups Page
  * Display and manage pending signup requests
  */
-import showMessage from '../components/toast.js';
+import showMessage from "../components/toast.js";
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   await loadPendingSignups();
 });
 
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 window.loadPendingSignups = async function() {
   try {
-    const container = document.getElementById('pending-signups-container');
+    const container = document.getElementById("pending-signups-container");
     if (!container) return;
 
     // Show loading state
@@ -25,21 +25,21 @@ window.loadPendingSignups = async function() {
       </div>
     `;
 
-    const response = await fetch('/api/hr/pending-signups');
+    const response = await fetch("/api/hr/pending-signups");
     const result = await response.json();
 
     if (result.success && result.data) {
       displayPendingSignups(result.data);
     } else {
-      container.innerHTML = `<p class="empty-state" style="color: #ef4444;">Failed to load pending signups: ${  result.error || 'Unknown error'  }</p>`;
+      container.innerHTML = `<p class="empty-state" style="color: #ef4444;">Failed to load pending signups: ${  result.error || "Unknown error"  }</p>`;
     }
   } catch (error) {
-    console.error('[SUPERADMIN] Load pending signups error:', error);
-    const container = document.getElementById('pending-signups-container');
+    console.error("[SUPERADMIN] Load pending signups error:", error);
+    const container = document.getElementById("pending-signups-container");
     if (container) {
       container.innerHTML = '<p class="empty-state" style="color: #ef4444;">Failed to load pending signups</p>';
     }
-    showMessage('Failed to load pending signups', 'error');
+    showMessage("Failed to load pending signups", "error");
   }
 };
 
@@ -47,7 +47,7 @@ window.loadPendingSignups = async function() {
  * Display pending signups
  */
 function displayPendingSignups(users) {
-  const container = document.getElementById('pending-signups-container');
+  const container = document.getElementById("pending-signups-container");
   if (!container) return;
 
   if (users.length === 0) {
@@ -59,10 +59,10 @@ function displayPendingSignups(users) {
     <div class="pending-signups-list">
       ${users.map(user => {
     const name = user.name || user.fullName || user.email || user.id;
-    const dept = user?.raw_user_meta_data?.pending_department || user?.user_metadata?.pending_department || '-';
-    const role = user?.raw_user_meta_data?.pending_role || user?.user_metadata?.pending_role || '-';
-    const email = user.email || 'No email';
-    const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : 'Unknown';
+    const dept = user?.raw_user_meta_data?.pending_department || user?.user_metadata?.pending_department || "-";
+    const role = user?.raw_user_meta_data?.pending_role || user?.user_metadata?.pending_role || "-";
+    const email = user.email || "No email";
+    const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : "Unknown";
 
     return `
           <div class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 1rem; background: white;">
@@ -92,7 +92,7 @@ function displayPendingSignups(users) {
             </div>
           </div>
         `;
-  }).join('')}
+  }).join("")}
     </div>
   `;
 
@@ -103,29 +103,29 @@ function displayPendingSignups(users) {
  * Approve pending signup
  */
 window.approvePending = async function(userId) {
-  if (!confirm('Are you sure you want to approve this signup request?')) {
+  if (!confirm("Are you sure you want to approve this signup request?")) {
     return;
   }
 
   try {
     const response = await fetch(`/api/hr/pending-signups/${userId}/approve`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       }
     });
 
     const result = await response.json();
 
     if (result.success) {
-      showMessage('Signup approved successfully', 'success');
+      showMessage("Signup approved successfully", "success");
       await loadPendingSignups();
     } else {
-      showMessage(result.error || 'Failed to approve signup', 'error');
+      showMessage(result.error || "Failed to approve signup", "error");
     }
   } catch (error) {
-    console.error('[SUPERADMIN] Approve pending signup error:', error);
-    showMessage('Failed to approve signup', 'error');
+    console.error("[SUPERADMIN] Approve pending signup error:", error);
+    showMessage("Failed to approve signup", "error");
   }
 };
 
@@ -133,29 +133,29 @@ window.approvePending = async function(userId) {
  * Reject pending signup
  */
 window.rejectPending = async function(userId) {
-  if (!confirm('Are you sure you want to reject this signup request?')) {
+  if (!confirm("Are you sure you want to reject this signup request?")) {
     return;
   }
 
   try {
     const response = await fetch(`/api/hr/pending-signups/${userId}/reject`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       }
     });
 
     const result = await response.json();
 
     if (result.success) {
-      showMessage('Signup rejected successfully', 'success');
+      showMessage("Signup rejected successfully", "success");
       await loadPendingSignups();
     } else {
-      showMessage(result.error || 'Failed to reject signup', 'error');
+      showMessage(result.error || "Failed to reject signup", "error");
     }
   } catch (error) {
-    console.error('[SUPERADMIN] Reject pending signup error:', error);
-    showMessage('Failed to reject signup', 'error');
+    console.error("[SUPERADMIN] Reject pending signup error:", error);
+    showMessage("Failed to reject signup", "error");
   }
 };
 
@@ -163,8 +163,8 @@ window.rejectPending = async function(userId) {
  * Escape HTML to prevent XSS
  */
 function escapeHtml(text) {
-  if (text == null) return '';
-  const div = document.createElement('div');
+  if (text == null) return "";
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }

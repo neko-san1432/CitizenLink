@@ -2,63 +2,63 @@
  * Complaint Form Controller
  * Main form initialization and event handling
  */
-import { handleComplaintSubmit, resetComplaintForm } from './formSubmission.js';
-import { setupRealtimeValidation } from '../../utils/validation.js';
-import { createComplaintFileHandler, setupDragAndDrop } from '../../utils/fileHandler.js';
-import showMessage from '../toast.js';
-import apiClient from '../../config/apiClient.js';
-import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from '../../auth/roleToggle.js';
-import { getUserRole } from '../../auth/authChecker.js';
+import { handleComplaintSubmit, resetComplaintForm } from "./formSubmission.js";
+import { setupRealtimeValidation } from "../../utils/validation.js";
+import { createComplaintFileHandler, setupDragAndDrop } from "../../utils/fileHandler.js";
+import showMessage from "../toast.js";
+import apiClient from "../../config/apiClient.js";
+import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from "../../auth/roleToggle.js";
+import { getUserRole } from "../../auth/authChecker.js";
 
 // Complaint type and subtype mapping
 const COMPLAINT_SUBTYPES = {
-  'infrastructure': [
-    'Roads & Bridges',
-    'Street Lighting',
-    'Water Supply',
-    'Drainage System',
-    'Public Buildings',
-    'Other'
+  "infrastructure": [
+    "Roads & Bridges",
+    "Street Lighting",
+    "Water Supply",
+    "Drainage System",
+    "Public Buildings",
+    "Other"
   ],
-  'public-safety': [
-    'Crime & Security',
-    'Emergency Services',
-    'Fire Safety',
-    'Traffic Safety',
-    'Other'
+  "public-safety": [
+    "Crime & Security",
+    "Emergency Services",
+    "Fire Safety",
+    "Traffic Safety",
+    "Other"
   ],
-  'environmental': [
-    'Waste Management',
-    'Air Quality',
-    'Water Pollution',
-    'Noise Pollution',
-    'Green Spaces',
-    'Other'
+  "environmental": [
+    "Waste Management",
+    "Air Quality",
+    "Water Pollution",
+    "Noise Pollution",
+    "Green Spaces",
+    "Other"
   ],
-  'health': [
-    'Sanitation',
-    'Public Health',
-    'Medical Services',
-    'Food Safety',
-    'Other'
+  "health": [
+    "Sanitation",
+    "Public Health",
+    "Medical Services",
+    "Food Safety",
+    "Other"
   ],
-  'traffic': [
-    'Road Conditions',
-    'Traffic Flow',
-    'Parking Issues',
-    'Public Transportation',
-    'Other'
+  "traffic": [
+    "Road Conditions",
+    "Traffic Flow",
+    "Parking Issues",
+    "Public Transportation",
+    "Other"
   ],
-  'noise': [
-    'Construction Noise',
-    'Vehicle Noise',
-    'Commercial Noise',
-    'Residential Noise',
-    'Other'
+  "noise": [
+    "Construction Noise",
+    "Vehicle Noise",
+    "Commercial Noise",
+    "Residential Noise",
+    "Other"
   ],
-  'other': [
-    'General Complaint',
-    'Other'
+  "other": [
+    "General Complaint",
+    "Other"
   ]
 };
 /**
@@ -66,9 +66,9 @@ const COMPLAINT_SUBTYPES = {
  */
 
 export async function initializeComplaintForm() {
-  const form = document.getElementById('complaintForm');
+  const form = document.getElementById("complaintForm");
   if (!form) {
-    console.error('[COMPLAINT FORM] Form element not found');
+    console.error("[COMPLAINT FORM] Form element not found");
     return;
   }
   // console.log removed for security
@@ -78,12 +78,12 @@ export async function initializeComplaintForm() {
   try {
     activeRole = await getUserRole({ refresh: true });
   } catch (error) {
-    console.warn('[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:', error);
+    console.warn("[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:", error);
     activeRole = getActiveRole();
   }
   const inCitizenMode = isInCitizenMode();
   // console.log removed for security
-  if (activeRole !== 'citizen' && !inCitizenMode) {
+  if (activeRole !== "citizen" && !inCitizenMode) {
     // User is not a citizen and not in citizen mode
     const canSwitch = await canSwitchToCitizen();
     if (canSwitch) {
@@ -92,25 +92,25 @@ export async function initializeComplaintForm() {
       return;
     }
     // Shouldn't happen, but handle it
-    showMessage('error', 'Only citizens can file complaints');
-    form.style.display = 'none';
+    showMessage("error", "Only citizens can file complaints");
+    form.style.display = "none";
     return;
   }
   // Get form elements
   const elements = {
     form,
-    typeSelect: form.querySelector('#complaintType'),
-    subtypeSelect: form.querySelector('#complaintSubtype'),
-    fileDropZone: form.querySelector('#fileDropZone'),
-    fileInput: form.querySelector('#evidenceFiles'),
-    filePreview: form.querySelector('#filePreview')
+    typeSelect: form.querySelector("#complaintType"),
+    subtypeSelect: form.querySelector("#complaintSubtype"),
+    fileDropZone: form.querySelector("#fileDropZone"),
+    fileInput: form.querySelector("#evidenceFiles"),
+    filePreview: form.querySelector("#filePreview")
   };
   // Validate required elements
   const missingElements = Object.entries(elements)
-    .filter(([key, element]) => !element && key !== 'filePreview')
+    .filter(([key, element]) => !element && key !== "filePreview")
     .map(([key]) => key);
   if (missingElements.length > 0) {
-    console.error('[COMPLAINT FORM] Missing required elements:', missingElements);
+    console.error("[COMPLAINT FORM] Missing required elements:", missingElements);
     return;
   }
   // Initialize file handler with upload state callback
@@ -121,8 +121,8 @@ export async function initializeComplaintForm() {
     },
     onUploadStateChange: (isUploading) => {
       // Disable/enable buttons based on upload state
-      const submitBtn = elements.form.querySelector('.submit-btn');
-      const cancelBtn = elements.form.querySelector('.cancel-btn') || document.querySelector('.cancel-btn');
+      const submitBtn = elements.form.querySelector(".submit-btn");
+      const cancelBtn = elements.form.querySelector(".cancel-btn") || document.querySelector(".cancel-btn");
       if (submitBtn) {
         submitBtn.disabled = isUploading;
       }
@@ -140,7 +140,7 @@ export async function initializeComplaintForm() {
   // Prevent any auto-focus behavior (browser default or otherwise)
   setTimeout(() => {
     // Remove focus from any form field
-    if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+    if (document.activeElement && document.activeElement.tagName !== "BODY") {
       document.activeElement.blur();
       // console.log removed for security
     }
@@ -152,7 +152,7 @@ export async function initializeComplaintForm() {
  */
 function setupSubtypeSelection(typeSelect, subtypeSelect) {
   if (!typeSelect || !subtypeSelect) return;
-  typeSelect.addEventListener('change', (e) => {
+  typeSelect.addEventListener("change", (e) => {
     populateSubtypes(e.target.value, subtypeSelect);
   });
 }
@@ -166,8 +166,8 @@ function populateSubtypes(selectedType, subtypeSelect) {
   if (!selectedType || !COMPLAINT_SUBTYPES[selectedType]) return;
   // Add new options
   COMPLAINT_SUBTYPES[selectedType].forEach(subtype => {
-    const option = document.createElement('option');
-    option.value = subtype.toLowerCase().replace(/\s+/g, '-');
+    const option = document.createElement("option");
+    option.value = subtype.toLowerCase().replace(/\s+/g, "-");
     option.textContent = subtype;
     subtypeSelect.appendChild(option);
   });
@@ -188,8 +188,8 @@ function setupFileHandling(dropZone, fileInput, fileHandler) {
  * Show role switch required message
  */
 function showRoleSwitchRequired(form) {
-  const message = document.createElement('div');
-  message.className = 'role-switch-required';
+  const message = document.createElement("div");
+  message.className = "role-switch-required";
   message.innerHTML = `
     <div style="
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -212,7 +212,7 @@ function showRoleSwitchRequired(form) {
       </p>
     </div>
   `;
-  form.style.display = 'none';
+  form.style.display = "none";
   form.parentNode.insertBefore(message, form);
 }
 /**
@@ -229,7 +229,7 @@ function setupFormValidation(form) {
  */
 function setupFormSubmission(form, fileHandler) {
   if (!form || !fileHandler) return;
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     // console.log removed for security
     try {
@@ -242,10 +242,10 @@ function setupFormSubmission(form, fileHandler) {
       resetComplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 2000);
     } catch (error) {
-      console.error('[COMPLAINT FORM] Submission failed:', error);
+      console.error("[COMPLAINT FORM] Submission failed:", error);
       // Error is already handled in handleComplaintSubmit
     }
   });
@@ -255,7 +255,7 @@ function setupFormSubmission(form, fileHandler) {
  * Load and render departments dynamically
  */
 async function loadDepartments() {
-  const container = document.getElementById('departmentCheckboxes');
+  const container = document.getElementById("departmentCheckboxes");
   if (!container) return;
   try {
     // console.log removed for security
@@ -273,12 +273,12 @@ async function loadDepartments() {
           />
           <label for="dept-${dept.code.toLowerCase()}">${dept.name}</label>
         </div>
-      `).join('');
+      `).join("");
     } else {
-      throw new Error('Failed to load departments');
+      throw new Error("Failed to load departments");
     }
   } catch (error) {
-    console.error('[DEPARTMENTS] Failed to load departments:', error);
+    console.error("[DEPARTMENTS] Failed to load departments:", error);
     container.innerHTML = `
       <div class="error-placeholder">
         <p>Failed to load departments. You can still submit your complaint.</p>
@@ -292,7 +292,7 @@ async function loadDepartments() {
 // Make retry function globally available
 window.retryLoadDepartments = loadDepartments;
 // Auto-initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeComplaintForm);
+document.addEventListener("DOMContentLoaded", initializeComplaintForm);
 // Export for manual initialization
 
 export { COMPLAINT_SUBTYPES };

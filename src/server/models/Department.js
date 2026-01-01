@@ -12,13 +12,13 @@ class Department {
   static validate(data) {
     const errors = [];
     if (!data.name || data.name.trim().length < 2) {
-      errors.push('Department name must be at least 2 characters');
+      errors.push("Department name must be at least 2 characters");
     }
     if (!data.code || data.code.trim().length < 2) {
-      errors.push('Department code must be at least 2 characters');
+      errors.push("Department code must be at least 2 characters");
     }
     if (data.code && !/^[A-Z0-9_]+$/.test(data.code.trim())) {
-      errors.push('Department code must contain only uppercase letters, numbers, and underscores');
+      errors.push("Department code must contain only uppercase letters, numbers, and underscores");
     }
     return {
       isValid: errors.length === 0,

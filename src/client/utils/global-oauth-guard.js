@@ -1,17 +1,17 @@
-import { supabase } from '../config/config.js';
+import { supabase } from "../config/config.js";
 
 // Configuration
 const OAUTH_FLOW_PAGES = [
-  '/oauth-continuation',
-  '/oauthcontinuation',
-  '/complete-position-signup',
-  '/oauth-callback',
-  '/oauthcallback'
+  "/oauth-continuation",
+  "/oauthcontinuation",
+  "/complete-position-signup",
+  "/oauth-callback",
+  "/oauthcallback"
 ];
 
 const STORAGE_KEYS = {
-  CONTEXT: 'cl_oauth_context',
-  USER_META: 'cl_user_meta'
+  CONTEXT: "cl_oauth_context",
+  USER_META: "cl_user_meta"
 };
 
 /**
@@ -52,9 +52,9 @@ export const initGlobalOAuthGuard = async () => {
 
     // 3. Check for 'pending' or 'handoff' status
     // If status is 'pending', the user abandoned the flow
-    if (ctx && (ctx.status === 'pending' || ctx.status === 'handoff')) {
-      console.log('[OAUTH GUARD] Detected abandoned OAuth flow on non-OAuth page:', path);
-      console.log('[OAUTH GUARD] running cleanup...');
+    if (ctx && (ctx.status === "pending" || ctx.status === "handoff")) {
+      console.log("[OAUTH GUARD] Detected abandoned OAuth flow on non-OAuth page:", path);
+      console.log("[OAUTH GUARD] running cleanup...");
 
       // Prevent auto-redirect loops by clearing immediate triggers
 
@@ -62,21 +62,21 @@ export const initGlobalOAuthGuard = async () => {
       const keysToClear = [
         STORAGE_KEYS.CONTEXT,
         STORAGE_KEYS.USER_META,
-        'cl_oauth_form_data',
-        'cl_reg_form_data',
-        'cl_signup_form_data',
-        'cl_signup_method',
-        'cl_signup_step_index'
+        "cl_oauth_form_data",
+        "cl_reg_form_data",
+        "cl_signup_form_data",
+        "cl_signup_method",
+        "cl_signup_step_index"
       ];
 
       keysToClear.forEach(key => localStorage.removeItem(key));
 
       // Clear SessionStorage temporary markers
       const sessionKeysToClear = [
-        'cl_pending_deletion_user_id',
-        'cl_oauth_cleanup',
-        'oauth_success_message',
-        'authErrorSuppressKey'
+        "cl_pending_deletion_user_id",
+        "cl_oauth_cleanup",
+        "oauth_success_message",
+        "authErrorSuppressKey"
       ];
       sessionKeysToClear.forEach(key => sessionStorage.removeItem(key));
 
@@ -89,15 +89,15 @@ export const initGlobalOAuthGuard = async () => {
 
       // D. Clear Server Session Cookie
       try {
-        await fetch('/auth/session', { method: 'DELETE' });
+        await fetch("/auth/session", { method: "DELETE" });
       } catch (e) {
         // Ignore network errors
       }
 
-      console.log('[OAUTH GUARD] Cleanup complete. User reset to guest state.');
+      console.log("[OAUTH GUARD] Cleanup complete. User reset to guest state.");
     }
 
   } catch (error) {
-    console.warn('[OAUTH GUARD] Error during guard check:', error);
+    console.warn("[OAUTH GUARD] Error during guard check:", error);
   }
 };

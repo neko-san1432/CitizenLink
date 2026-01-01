@@ -11,9 +11,9 @@ const PASSWORD_REQUIREMENTS = {
 };
 // Common weak passwords to reject
 const COMMON_PASSWORDS = [
-  'password', '123456', 'password123', 'admin', 'qwerty', 'letmein',
-  'welcome', 'monkey', 'dragon', 'password1', 'abc123', 'password12',
-  'qwerty123', 'admin123', 'root', 'user', 'guest', 'test', 'demo'
+  "password", "123456", "password123", "admin", "qwerty", "letmein",
+  "welcome", "monkey", "dragon", "password1", "abc123", "password12",
+  "qwerty123", "admin123", "root", "user", "guest", "test", "demo"
 ];
 function validatePasswordStrength(password) {
   const errors = [];
@@ -26,34 +26,34 @@ function validatePasswordStrength(password) {
   }
   // Check for uppercase letters
   if (PASSWORD_REQUIREMENTS.requireUppercase && !/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
+    errors.push("Password must contain at least one uppercase letter");
   }
   // Check for lowercase letters
   if (PASSWORD_REQUIREMENTS.requireLowercase && !/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
+    errors.push("Password must contain at least one lowercase letter");
   }
   // Check for numbers
   if (PASSWORD_REQUIREMENTS.requireNumbers && !/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
+    errors.push("Password must contain at least one number");
   }
   // Check for special characters
   if (PASSWORD_REQUIREMENTS.requireSpecialChars && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    errors.push('Password must contain at least one special character');
+    errors.push("Password must contain at least one special character");
   }
   // Check for common passwords
   if (PASSWORD_REQUIREMENTS.preventCommonPasswords && COMMON_PASSWORDS.includes(password.toLowerCase())) {
-    errors.push('Password is too common and easily guessable');
+    errors.push("Password is too common and easily guessable");
   }
   // Check for sequential characters
   if (PASSWORD_REQUIREMENTS.preventSequential) {
-    const sequences = ['123456', 'abcdef', 'qwerty', 'asdfgh', 'zxcvbn'];
+    const sequences = ["123456", "abcdef", "qwerty", "asdfgh", "zxcvbn"];
     if (sequences.some(seq => password.toLowerCase().includes(seq))) {
-      errors.push('Password contains sequential characters that make it easily guessable');
+      errors.push("Password contains sequential characters that make it easily guessable");
     }
   }
   // Check for repeated characters (more than 3 in a row)
   if (/(.)\1{3,}/.test(password)) {
-    errors.push('Password contains too many repeated characters');
+    errors.push("Password contains too many repeated characters");
   }
   return {
     isValid: errors.length === 0,
@@ -86,12 +86,12 @@ function generatePasswordPolicy() {
     description: `Password must be ${PASSWORD_REQUIREMENTS.minLength}-${PASSWORD_REQUIREMENTS.maxLength} characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.`,
     commonPasswordsBlocked: COMMON_PASSWORDS.length,
     strengthLevels: {
-      0: 'Very Weak',
-      1: 'Weak',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Strong',
-      5: 'Very Strong'
+      0: "Very Weak",
+      1: "Weak",
+      2: "Fair",
+      3: "Good",
+      4: "Strong",
+      5: "Very Strong"
     }
   };
 }

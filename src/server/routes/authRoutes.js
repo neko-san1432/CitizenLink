@@ -215,11 +215,11 @@ router.post(
           details:
             process.env.NODE_ENV === "development"
               ? {
-                  message: error.message,
-                  code: error.code,
-                  status: error.status,
-                  note: "This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email",
-                }
+                message: error.message,
+                code: error.code,
+                status: error.status,
+                note: "This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email",
+              }
               : null,
         });
       }

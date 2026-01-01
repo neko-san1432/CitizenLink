@@ -6,14 +6,14 @@
 
 function enforceHTTPS(req, res, next) {
   // Only enforce in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     return next();
   }
 
   // Check if request is already secure (HTTPS)
   const isSecure = req.secure ||
-                   req.headers['x-forwarded-proto'] === 'https' ||
-                   req.headers['x-forwarded-ssl'] === 'on';
+                   req.headers["x-forwarded-proto"] === "https" ||
+                   req.headers["x-forwarded-ssl"] === "on";
 
   if (!isSecure) {
     // Redirect to HTTPS version
@@ -22,7 +22,7 @@ function enforceHTTPS(req, res, next) {
   }
 
   // Set security headers
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
   next();
 }
@@ -34,8 +34,8 @@ function enforceHTTPS(req, res, next) {
 function trustProxy(app) {
   // Trust first proxy (for load balancers, reverse proxies)
   // Adjust based on your infrastructure
-  if (process.env.TRUST_PROXY === 'true' || process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
+  if (process.env.TRUST_PROXY === "true" || process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
   }
 }
 

@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const Profile = require('../models/Profile');
+const Database = require("../config/database");
+const Profile = require("../models/Profile");
 
 class ProfileRepository {
   constructor() {
@@ -11,18 +11,18 @@ class ProfileRepository {
    */
   async findByRole(role, department = null) {
     let query = this.supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', role);
+      .from("profiles")
+      .select("*")
+      .eq("role", role);
 
     if (department) {
-      query = query.eq('department', department);
+      query = query.eq("department", department);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('[PROFILE_REPO] Error finding profiles by role:', error);
+      console.error("[PROFILE_REPO] Error finding profiles by role:", error);
       return [];
     }
 
@@ -44,11 +44,11 @@ class ProfileRepository {
     };
 
     const { error } = await this.supabase
-      .from('profiles')
+      .from("profiles")
       .upsert(profileData);
 
     if (error) {
-      console.error('[PROFILE_REPO] Error syncing profile:', error);
+      console.error("[PROFILE_REPO] Error syncing profile:", error);
       throw error;
     }
   }

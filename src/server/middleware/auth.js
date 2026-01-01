@@ -277,10 +277,10 @@ const requireRole = (allowedRoles) => {
           debug:
             process.env.NODE_ENV === "development"
               ? {
-                  userRole,
-                  allowedRoles,
-                  path: req.path,
-                }
+                userRole,
+                allowedRoles,
+                path: req.path,
+              }
               : null,
         });
       }

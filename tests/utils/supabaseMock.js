@@ -39,7 +39,7 @@ class SupabaseMock {
       if (!user || user.password !== password) {
         return {
           data: { user: null, session: null },
-          error: { message: 'Invalid login credentials', status: 400 },
+          error: { message: "Invalid login credentials", status: 400 },
         };
       }
       const session = {
@@ -64,7 +64,7 @@ class SupabaseMock {
       if (!session) {
         return {
           data: { user: null },
-          error: { message: 'Invalid token', status: 401 },
+          error: { message: "Invalid token", status: 401 },
         };
       }
       const user = this.users.get(session.user.id);
@@ -90,12 +90,12 @@ class SupabaseMock {
 
     verifyOtp: jest.fn(async ({ token_hash, type: _type }) => {
       // Mock token verification
-      if (token_hash === 'valid_token') {
+      if (token_hash === "valid_token") {
         return {
           data: {
             user: {
-              id: 'user_123',
-              email: 'test@example.com',
+              id: "user_123",
+              email: "test@example.com",
             },
           },
           error: null,
@@ -103,13 +103,13 @@ class SupabaseMock {
       }
       return {
         data: { user: null },
-        error: { message: 'Invalid or expired token', status: 400 },
+        error: { message: "Invalid or expired token", status: 400 },
       };
     }),
 
     updateUser: jest.fn(async ({ password: _password }) => {
       return {
-        data: { user: { id: 'user_123' } },
+        data: { user: { id: "user_123" } },
         error: null,
       };
     }),

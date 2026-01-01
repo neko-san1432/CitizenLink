@@ -2,7 +2,7 @@
  * Role Validation Utilities
  * Validates user roles against department codes from database
  */
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 // Lazy initialization of Supabase client
 let supabaseInstance = null;
@@ -30,9 +30,9 @@ async function getValidDepartmentCodes() {
   try {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('departments')
-      .select('code, name, is_active')
-      .eq('is_active', true);
+      .from("departments")
+      .select("code, name, is_active")
+      .eq("is_active", true);
     if (error) throw error;
     const codes = data ? data.map(dept => dept.code) : [];
     // Cache the result
@@ -40,7 +40,7 @@ async function getValidDepartmentCodes() {
     cacheTimestamp = now;
     return codes;
   } catch (error) {
-    console.error('Error fetching department codes:', error);
+    console.error("Error fetching department codes:", error);
     // Return empty array on error
     return [];
   }
@@ -51,7 +51,7 @@ async function getValidDepartmentCodes() {
  * @returns {Promise<boolean>} True if valid
  */
 async function isValidDepartmentCode(code) {
-  if (!code || typeof code !== 'string') return false;
+  if (!code || typeof code !== "string") return false;
   const validCodes = await getValidDepartmentCodes();
   return validCodes.includes(code.toUpperCase());
 }
@@ -62,12 +62,12 @@ async function isValidDepartmentCode(code) {
  */
 async function validateUserRole(role) {
 
-  if (!role || typeof role !== 'string') {
+  if (!role || typeof role !== "string") {
     return {
       isValid: false,
       roleType: null,
       departmentCode: null,
-      error: 'Role is required and must be a string'
+      error: "Role is required and must be a string"
     };
   }
   const roleLower = role.toLowerCase().trim();
@@ -75,21 +75,21 @@ async function validateUserRole(role) {
   let roleType = null;
   let departmentCode = null;
   // Simplified LGU roles
-  if (roleLower === 'lgu-admin') {
-    roleType = 'lgu-admin';
+  if (roleLower === "lgu-admin") {
+    roleType = "lgu-admin";
     departmentCode = null; // Department stored separately in metadata
   }
-  else if (roleLower === 'lgu-hr') {
-    roleType = 'lgu-hr';
+  else if (roleLower === "lgu-hr") {
+    roleType = "lgu-hr";
     departmentCode = null; // Department stored separately in metadata
   }
-  else if (roleLower === 'lgu' || roleLower === 'lgu-officer') {
+  else if (roleLower === "lgu" || roleLower === "lgu-officer") {
     // Accept both 'lgu' and 'lgu-officer' for backward compatibility
-    roleType = 'lgu-officer';
+    roleType = "lgu-officer";
     departmentCode = null; // Department stored separately in metadata
   }
   // Other valid roles (citizen, complaint-coordinator, super-admin)
-  else if (['citizen', 'complaint-coordinator', 'super-admin'].includes(roleLower)) {
+  else if (["citizen", "complaint-coordinator", "super-admin"].includes(roleLower)) {
     return {
       isValid: true,
       roleType: roleLower,
@@ -102,7 +102,7 @@ async function validateUserRole(role) {
       isValid: false,
       roleType: null,
       departmentCode: null,
-      error: 'Invalid role format. Must be lgu-admin-{dept}, lgu-hr-{dept}, lgu-{dept}, or system role'
+      error: "Invalid role format. Must be lgu-admin-{dept}, lgu-hr-{dept}, lgu-{dept}, or system role"
     };
   }
   // Validate department code for LGU roles
@@ -134,30 +134,30 @@ async function validateUserRole(role) {
  * @returns {string} Normalized role
  */
 function normalizeRole(role) {
-  if (!role || typeof role !== 'string') return 'citizen';
+  if (!role || typeof role !== "string") return "citizen";
 
   const roleLower = role.toLowerCase().trim();
 
   // Standard roles that don't need normalization
-  if (['citizen', 'super-admin', 'complaint-coordinator'].includes(roleLower)) {
+  if (["citizen", "super-admin", "complaint-coordinator"].includes(roleLower)) {
     return roleLower;
   }
 
   // Handle simplified LGU roles
-  if (roleLower === 'lgu-admin') return 'lgu-admin';
-  if (roleLower === 'lgu-hr') return 'lgu-hr';
-  if (roleLower === 'lgu') return 'lgu';
+  if (roleLower === "lgu-admin") return "lgu-admin";
+  if (roleLower === "lgu-hr") return "lgu-hr";
+  if (roleLower === "lgu") return "lgu";
 
   // Normalize any role ending with -officer to base role
   // e.g., lgu-officer → lgu, anyrole-officer → anyrole
-  if (roleLower.endsWith('-officer')) {
-    const baseRole = roleLower.replace(/-officer$/, '');
+  if (roleLower.endsWith("-officer")) {
+    const baseRole = roleLower.replace(/-officer$/, "");
     // If base role is valid, return it; otherwise keep original
-    if (['lgu', 'lgu-admin', 'lgu-hr'].includes(baseRole)) {
+    if (["lgu", "lgu-admin", "lgu-hr"].includes(baseRole)) {
       return baseRole;
     }
     // For other roles ending in -officer, remove the suffix
-    return baseRole || 'citizen';
+    return baseRole || "citizen";
   }
 
   // Handle legacy department-scoped roles (optional normalization)
@@ -167,7 +167,7 @@ function normalizeRole(role) {
   // if (roleLower.startsWith('lgu-hr-')) return 'lgu-hr';
 
   // Default: return as-is or citizen
-  return roleLower || 'citizen';
+  return roleLower || "citizen";
 }
 
 /**
@@ -176,7 +176,7 @@ function normalizeRole(role) {
  * @returns {string|null} Department code or null
  */
 function extractDepartmentCode(role) {
-  if (!role || typeof role !== 'string') return null;
+  if (!role || typeof role !== "string") return null;
   // With simplified roles, department is stored separately in metadata
   // This function now returns null as department is not extracted from role
   return null;
@@ -191,15 +191,15 @@ async function getDepartmentByCode(code) {
   try {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('departments')
-      .select('id, name, code, description, level, is_active')
-      .eq('code', code.toUpperCase())
-      .eq('is_active', true)
+      .from("departments")
+      .select("id, name, code, description, level, is_active")
+      .eq("code", code.toUpperCase())
+      .eq("is_active", true)
       .single();
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching department by code:', error);
+    console.error("Error fetching department by code:", error);
     return null;
   }
 }
@@ -218,14 +218,14 @@ async function getValidDepartments() {
   try {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('departments')
-      .select('code, name, level')
-      .eq('is_active', true)
-      .order('name');
+      .from("departments")
+      .select("code, name, level")
+      .eq("is_active", true)
+      .order("name");
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching valid departments:', error);
+    console.error("Error fetching valid departments:", error);
     return [];
   }
 }

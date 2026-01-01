@@ -1,27 +1,27 @@
-const ComplaintService = require('../../src/server/services/ComplaintService');
-const CoordinatorService = require('../../src/server/services/CoordinatorService');
-const NotificationService = require('../../src/server/services/NotificationService');
+const ComplaintService = require("../../src/server/services/ComplaintService");
+const CoordinatorService = require("../../src/server/services/CoordinatorService");
+const NotificationService = require("../../src/server/services/NotificationService");
 
 // Mock Repositories
-const ComplaintRepository = require('../../src/server/repositories/ComplaintRepository');
-const CoordinatorRepository = require('../../src/server/repositories/CoordinatorRepository');
-const ComplaintAssignmentRepository = require('../../src/server/repositories/ComplaintAssignmentRepository');
-const DepartmentRepository = require('../../src/server/repositories/DepartmentRepository');
+const ComplaintRepository = require("../../src/server/repositories/ComplaintRepository");
+const CoordinatorRepository = require("../../src/server/repositories/CoordinatorRepository");
+const ComplaintAssignmentRepository = require("../../src/server/repositories/ComplaintAssignmentRepository");
+const DepartmentRepository = require("../../src/server/repositories/DepartmentRepository");
 
-jest.mock('../../src/server/repositories/ComplaintRepository');
-jest.mock('../../src/server/repositories/CoordinatorRepository');
-jest.mock('../../src/server/repositories/ComplaintAssignmentRepository');
-jest.mock('../../src/server/repositories/DepartmentRepository');
-jest.mock('../../src/server/services/DuplicationDetectionService');
-jest.mock('../../src/server/services/SimilarityCalculatorService');
-jest.mock('../../src/server/services/RuleBasedSuggestionService');
-jest.mock('../../src/server/utils/departmentMapping', () => ({
+jest.mock("../../src/server/repositories/ComplaintRepository");
+jest.mock("../../src/server/repositories/CoordinatorRepository");
+jest.mock("../../src/server/repositories/ComplaintAssignmentRepository");
+jest.mock("../../src/server/repositories/DepartmentRepository");
+jest.mock("../../src/server/services/DuplicationDetectionService");
+jest.mock("../../src/server/services/SimilarityCalculatorService");
+jest.mock("../../src/server/services/RuleBasedSuggestionService");
+jest.mock("../../src/server/utils/departmentMapping", () => ({
   validateDepartmentCodes: jest.fn().mockResolvedValue({ validCodes: [], invalidCodes: [] }),
   getCategoryToDepartmentMapping: jest.fn().mockResolvedValue({}),
   getKeywordBasedSuggestions: jest.fn().mockResolvedValue([])
 }));
 
-jest.mock('../../src/server/models/Complaint', () => {
+jest.mock("../../src/server/models/Complaint", () => {
   return class MockComplaint {
     constructor(data) {
       Object.assign(this, data);
@@ -35,7 +35,7 @@ jest.mock('../../src/server/models/Complaint', () => {
   };
 });
 
-describe('Notification Scenarios (Role-Based)', () => {
+describe("Notification Scenarios (Role-Based)", () => {
   let complaintService;
   let coordinatorService;
   let mockNotificationService;
@@ -85,10 +85,10 @@ describe('Notification Scenarios (Role-Based)', () => {
       assignToDepartment: jest.fn(),
       markAsDuplicate: jest.fn(),
       supabase: mockSupabase,
-      myRepoId: 'created-in-beforeEach',
+      myRepoId: "created-in-beforeEach",
       randomId: Math.random()
     };
-    console.log('TEST DEBUG: BeforeEach Repo Random ID:', mockCoordinatorRepo.randomId);
+    console.log("TEST DEBUG: BeforeEach Repo Random ID:", mockCoordinatorRepo.randomId);
 
     mockAssignmentRepo = new ComplaintAssignmentRepository();
     mockAssignmentRepo.assign = jest.fn();
@@ -99,8 +99,8 @@ describe('Notification Scenarios (Role-Based)', () => {
     mockDepartmentRepo.supabase = mockSupabase;
 
     // 4. Initialize Services with Mocks
-    console.log('DEBUG: mockNotificationService:', mockNotificationService);
-    console.log('DEBUG: mockDepartmentRepo:', mockDepartmentRepo);
+    console.log("DEBUG: mockNotificationService:", mockNotificationService);
+    console.log("DEBUG: mockDepartmentRepo:", mockDepartmentRepo);
 
     complaintService = new ComplaintService(
       mockComplaintRepo,
@@ -116,19 +116,19 @@ describe('Notification Scenarios (Role-Based)', () => {
     );
   });
 
-  describe('Citizen Role Notifications', () => {
-    test('should notify citizen when complaint status changes', async () => {
+  describe("Citizen Role Notifications", () => {
+    test("should notify citizen when complaint status changes", async () => {
       // Arrange
-      const complaintId = 'comp-456';
-      const userId = 'user-citizen-1';
-      const newStatus = 'in_progress';
-      const coordId = 'user-coord-1';
+      const complaintId = "comp-456";
+      const userId = "user-citizen-1";
+      const newStatus = "in_progress";
+      const coordId = "user-coord-1";
 
       const mockComplaint = {
         id: complaintId,
-        title: 'Broken Streetlight',
+        title: "Broken Streetlight",
         submitted_by: userId,
-        status: 'pending'
+        status: "pending"
       };
 
       // Mock Supabase chain for markAsFalse/update
@@ -143,33 +143,33 @@ describe('Notification Scenarios (Role-Based)', () => {
         })
       });
 
-      mockSingle.mockResolvedValue({ data: { ...mockComplaint, status: 'false', submitted_by: userId }, error: null });
+      mockSingle.mockResolvedValue({ data: { ...mockComplaint, status: "false", submitted_by: userId }, error: null });
       mockCoordinatorRepo.logAction.mockResolvedValue(true);
 
       // Act
       // We use markAsFalse as a proxy for status change notification logic in CoordinatorService
-      await coordinatorService.markAsFalse(complaintId, coordId, 'False report');
+      await coordinatorService.markAsFalse(complaintId, coordId, "False report");
 
       // Assert
       expect(mockNotificationService.notifyComplaintStatusChange).toHaveBeenCalledWith(
         userId,
         complaintId,
-        'false',
-        expect.stringContaining('marked as false'),
+        "false",
+        expect.stringContaining("marked as false"),
         expect.anything()
       );
     });
 
-    test('should notify citizen when complaint is marked as duplicate', async () => {
+    test("should notify citizen when complaint is marked as duplicate", async () => {
       // Arrange
-      const complaintId = 'comp-dup';
-      const masterId = 'comp-master';
-      const userId = 'user-citizen-1';
-      const coordinatorId = 'user-coord-1';
+      const complaintId = "comp-dup";
+      const masterId = "comp-master";
+      const userId = "user-citizen-1";
+      const coordinatorId = "user-coord-1";
 
       const mockComplaint = {
         id: complaintId,
-        title: 'Duplicate Issue',
+        title: "Duplicate Issue",
         submitted_by: userId
       };
 
@@ -190,12 +190,12 @@ describe('Notification Scenarios (Role-Based)', () => {
     });
   });
 
-  describe('Coordinator Role Notifications', () => {
-    test('should notify all coordinators when a new complaint is submitted', async () => {
+  describe("Coordinator Role Notifications", () => {
+    test("should notify all coordinators when a new complaint is submitted", async () => {
       // Arrange
-      const userId = 'user-citizen-1';
-      const complaintData = { title: 'New Issue', category: 'Roads' };
-      const createdComplaint = { id: 'comp-new', ...complaintData, submitted_by: userId };
+      const userId = "user-citizen-1";
+      const complaintData = { title: "New Issue", category: "Roads" };
+      const createdComplaint = { id: "comp-new", ...complaintData, submitted_by: userId };
 
       mockComplaintRepo.create.mockResolvedValue(createdComplaint);
       mockDepartmentRepo.findByCode.mockResolvedValue(null); // No auto-assign
@@ -217,24 +217,24 @@ describe('Notification Scenarios (Role-Based)', () => {
     });
   });
 
-  describe('Officer/Department Role Notifications', () => {
-    test('should notify department admins when assigned to department', async () => {
+  describe("Officer/Department Role Notifications", () => {
+    test("should notify department admins when assigned to department", async () => {
       // Arrange
-      const complaintId = 'comp-123';
-      const department = 'ENG';
-      const coordinatorId = 'user-coord-1';
+      const complaintId = "comp-123";
+      const department = "ENG";
+      const coordinatorId = "user-coord-1";
 
-      const mockComplaint = { id: complaintId, title: 'Engineering Issue' };
+      const mockComplaint = { id: complaintId, title: "Engineering Issue" };
 
-      mockAssignmentRepo.assign.mockResolvedValue({ id: 'assign-1' });
+      mockAssignmentRepo.assign.mockResolvedValue({ id: "assign-1" });
       mockCoordinatorRepo.getComplaintForReview.mockResolvedValue(mockComplaint);
       mockCoordinatorRepo.logAction.mockResolvedValue(true);
       mockComplaintRepo.updateStatus.mockResolvedValue(true);
-      mockDepartmentRepo.findByCode.mockResolvedValue({ id: 'dept-1', code: 'ENG' });
+      mockDepartmentRepo.findByCode.mockResolvedValue({ id: "dept-1", code: "ENG" });
       mockCoordinatorRepo.assignToDepartment.mockResolvedValue({
         id: complaintId,
         title: mockComplaint.title,
-        priority: 'medium',
+        priority: "medium",
         response_deadline: new Date()
       });
 
@@ -263,9 +263,9 @@ describe('Notification Scenarios (Role-Based)', () => {
       };
 
       mockFrom.mockImplementation((table) => {
-        if (table === 'departments') return departmentsChain;
-        if (table === 'complaints') return complaintsChain;
-        if (table === 'complaint_assignments') return assignmentsChain;
+        if (table === "departments") return departmentsChain;
+        if (table === "complaints") return complaintsChain;
+        if (table === "complaint_assignments") return assignmentsChain;
         return { select: jest.fn().mockReturnThis() };
       });
 
@@ -273,8 +273,8 @@ describe('Notification Scenarios (Role-Based)', () => {
 
       // Mock the single() call sequences
       mockSingle
-        .mockResolvedValueOnce({ data: { id: 'dept-1' }, error: null }) // 1. Department lookup
-        .mockResolvedValueOnce({ data: { id: 'assign-1', title: 'Engineering Issue', priority: 'medium', response_deadline: null }, error: null }); // 2. Assignment creation
+        .mockResolvedValueOnce({ data: { id: "dept-1" }, error: null }) // 1. Department lookup
+        .mockResolvedValueOnce({ data: { id: "assign-1", title: "Engineering Issue", priority: "medium", response_deadline: null }, error: null }); // 2. Assignment creation
 
       // Act
       await coordinatorService.assignToDepartment(complaintId, department, coordinatorId, {});
@@ -287,24 +287,24 @@ describe('Notification Scenarios (Role-Based)', () => {
       );
     });
 
-    test('should notify specific officer when directly assigned', async () => {
+    test("should notify specific officer when directly assigned", async () => {
       // Arrange
-      const complaintId = 'comp-123';
-      const department = 'ENG';
-      const coordinatorId = 'user-coord-1';
-      const officerId = 'user-officer-1';
+      const complaintId = "comp-123";
+      const department = "ENG";
+      const coordinatorId = "user-coord-1";
+      const officerId = "user-officer-1";
 
-      const mockComplaint = { id: complaintId, title: 'Officer Task' };
+      const mockComplaint = { id: complaintId, title: "Officer Task" };
 
-      mockAssignmentRepo.assign.mockResolvedValue({ id: 'assign-1' });
+      mockAssignmentRepo.assign.mockResolvedValue({ id: "assign-1" });
       mockCoordinatorRepo.getComplaintForReview.mockResolvedValue(mockComplaint);
       mockCoordinatorRepo.logAction.mockResolvedValue(true);
       mockComplaintRepo.updateStatus.mockResolvedValue(true);
-      mockDepartmentRepo.findByCode.mockResolvedValue({ id: 'dept-1', code: 'ENG' });
+      mockDepartmentRepo.findByCode.mockResolvedValue({ id: "dept-1", code: "ENG" });
       mockCoordinatorRepo.assignToDepartment.mockResolvedValue({
         id: complaintId,
         title: mockComplaint.title,
-        priority: 'info',
+        priority: "info",
         response_deadline: null
       });
 
@@ -334,17 +334,17 @@ describe('Notification Scenarios (Role-Based)', () => {
       };
 
       mockFrom.mockImplementation((table) => {
-        if (table === 'departments') return departmentsChain;
-        if (table === 'complaints') return complaintsChain;
-        if (table === 'complaint_assignments') return assignmentsChain;
+        if (table === "departments") return departmentsChain;
+        if (table === "complaints") return complaintsChain;
+        if (table === "complaint_assignments") return assignmentsChain;
         return { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), single: jest.fn() };
       });
 
       mockCoordinatorRepo.supabase.from = mockFrom;
 
       mockSingle
-        .mockResolvedValueOnce({ data: { id: 'dept-1' }, error: null }) // Department lookup
-        .mockResolvedValueOnce({ data: { id: 'assign-1', title: 'Officer Task' }, error: null }); // Assignment creation
+        .mockResolvedValueOnce({ data: { id: "dept-1" }, error: null }) // Department lookup
+        .mockResolvedValueOnce({ data: { id: "assign-1", title: "Officer Task" }, error: null }); // Assignment creation
 
       // Act
       await coordinatorService.assignToDepartment(complaintId, department, coordinatorId, {
@@ -356,7 +356,7 @@ describe('Notification Scenarios (Role-Based)', () => {
         officerId,
         complaintId,
         mockComplaint.title,
-        'info', // transformed priority
+        "info", // transformed priority
         null // default deadline
       );
     });

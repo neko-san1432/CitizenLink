@@ -14,7 +14,7 @@ class EnhancedHeatmapController {
     this.isFullscreen = false;
     this.isControlsVisible = true;
     this.autoRefreshInterval = null;
-    this.exportFormats = ['PNG', 'SVG', 'PDF', 'CSV'];
+    this.exportFormats = ["PNG", "SVG", "PDF", "CSV"];
     // Enhanced statistics
     this.statistics = {
       totalComplaints: 0,
@@ -35,22 +35,22 @@ class EnhancedHeatmapController {
       // Initialize map
       this.map = await this.initializeMap();
       if (!this.map) {
-        throw new Error('Failed to initialize map');
+        throw new Error("Failed to initialize map");
       }
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
       // Initialize enhanced controls (optional)
       try {
-        if (typeof window.EnhancedHeatmapControls === 'function') {
+        if (typeof window.EnhancedHeatmapControls === "function") {
           this.controls = new window.EnhancedHeatmapControls(this);
-          if (this.controls && typeof this.controls.attach === 'function') {
+          if (this.controls && typeof this.controls.attach === "function") {
             this.controls.attach();
           }
         } else {
-          console.warn('[ENHANCED-HEATMAP] Controls not found; continuing without controls');
+          console.warn("[ENHANCED-HEATMAP] Controls not found; continuing without controls");
         }
       } catch (e) {
-        console.warn('[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls', e);
+        console.warn("[ENHANCED-HEATMAP] Controls failed to initialize; continuing without controls", e);
       }
       // Load initial data
       await this.loadData();
@@ -61,8 +61,8 @@ class EnhancedHeatmapController {
       this.isInitialized = true;
       this.showLoading(false);
     } catch (error) {
-      console.error('[ENHANCED-HEATMAP] Initialization failed:', error);
-      this.showError('Failed to initialize heatmap');
+      console.error("[ENHANCED-HEATMAP] Initialization failed:", error);
+      this.showError("Failed to initialize heatmap");
       this.showLoading(false);
     }
   }
@@ -71,7 +71,7 @@ class EnhancedHeatmapController {
    */
   async initializeMap() {
     try {
-      const map = L.map('map', {
+      const map = L.map("map", {
         center: [6.7492, 125.3571], // Digos City, Philippines
         zoom: 12,
         zoomControl: false, // We'll add custom controls
@@ -79,8 +79,8 @@ class EnhancedHeatmapController {
       });
 
       // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
         maxZoom: 19
       }).addTo(map);
       // Add custom zoom controls
@@ -89,7 +89,7 @@ class EnhancedHeatmapController {
       this.addMapEventListeners(map);
       return map;
     } catch (error) {
-      console.error('[ENHANCED-HEATMAP] Map initialization failed:', error);
+      console.error("[ENHANCED-HEATMAP] Map initialization failed:", error);
       throw error;
     }
   }
@@ -98,19 +98,19 @@ class EnhancedHeatmapController {
    */
   addCustomZoomControls(map) {
     // Zoom in
-    document.getElementById('zoom-in')?.addEventListener('click', () => {
+    document.getElementById("zoom-in")?.addEventListener("click", () => {
       map.zoomIn();
     });
     // Zoom out
-    document.getElementById('zoom-out')?.addEventListener('click', () => {
+    document.getElementById("zoom-out")?.addEventListener("click", () => {
       map.zoomOut();
     });
     // Fit to bounds
-    document.getElementById('fit-bounds')?.addEventListener('click', () => {
+    document.getElementById("fit-bounds")?.addEventListener("click", () => {
       this.fitToComplaints();
     });
     // Reset view to Digos City
-    document.getElementById('reset-view')?.addEventListener('click', () => {
+    document.getElementById("reset-view")?.addEventListener("click", () => {
       this.resetToDigosCity();
     });
   }
@@ -119,7 +119,7 @@ class EnhancedHeatmapController {
    */
   addMapEventListeners(map) {
     // Update statistics and markers on zoom change
-    map.on('zoomend', () => {
+    map.on("zoomend", () => {
       this.updateStatistics();
       // Refresh markers visibility based on new zoom level
       if (this.heatmapViz && this.heatmapViz.markerLayer) {
@@ -135,7 +135,7 @@ class EnhancedHeatmapController {
       this.refreshVisualization();
     });
     // Update statistics on move
-    map.on('moveend', () => {
+    map.on("moveend", () => {
       this.updateStatistics();
     });
   }
@@ -144,47 +144,47 @@ class EnhancedHeatmapController {
    */
   setupEventListeners() {
     // Toggle controls visibility
-    document.getElementById('toggle-controls')?.addEventListener('click', () => {
+    document.getElementById("toggle-controls")?.addEventListener("click", () => {
       this.toggleControls();
     });
     // Close controls
-    document.getElementById('close-controls')?.addEventListener('click', () => {
+    document.getElementById("close-controls")?.addEventListener("click", () => {
       this.toggleControls();
     });
     // Fullscreen toggle
-    document.getElementById('fullscreen-toggle')?.addEventListener('click', () => {
+    document.getElementById("fullscreen-toggle")?.addEventListener("click", () => {
       this.toggleFullscreen();
     });
     // Export heatmap
-    document.getElementById('export-heatmap')?.addEventListener('click', () => {
+    document.getElementById("export-heatmap")?.addEventListener("click", () => {
       this.showExportModal();
     });
     // Recreate/rebuild map and layers (if a button exists in the UI)
-    document.getElementById('recreate-map')?.addEventListener('click', async () => {
+    document.getElementById("recreate-map")?.addEventListener("click", async () => {
       await this.rebuildMap();
     });
     // Reset view button in controls
-    document.getElementById('reset-view-btn')?.addEventListener('click', () => {
+    document.getElementById("reset-view-btn")?.addEventListener("click", () => {
       this.resetToDigosCity();
     });
     // Layer toggles
-    document.getElementById('toggle-heatmap')?.addEventListener('click', () => {
+    document.getElementById("toggle-heatmap")?.addEventListener("click", () => {
       this.toggleHeatmap();
     });
-    document.getElementById('toggle-markers')?.addEventListener('click', () => {
+    document.getElementById("toggle-markers")?.addEventListener("click", () => {
       this.toggleMarkers();
     });
-    document.getElementById('toggle-clusters')?.addEventListener('click', () => {
+    document.getElementById("toggle-clusters")?.addEventListener("click", () => {
       this.toggleClusters();
     });
     // Quick filter chips
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
+    document.querySelectorAll(".filter-chip").forEach(chip => {
+      chip.addEventListener("click", (e) => {
         this.handleQuickFilter(e.target.dataset.filter);
       });
     });
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       this.handleKeyboardShortcuts(e);
     });
   }
@@ -215,10 +215,10 @@ class EnhancedHeatmapController {
       // Reload data and refresh layers
       await this.loadData();
       this.refreshVisualization();
-      this.showMessage('success', 'Map and layers recreated');
+      this.showMessage("success", "Map and layers recreated");
     } catch (error) {
-      console.error('[ENHANCED-HEATMAP] Rebuild failed:', error);
-      this.showError('Failed to recreate map');
+      console.error("[ENHANCED-HEATMAP] Rebuild failed:", error);
+      this.showError("Failed to recreate map");
     } finally {
       this.showLoading(false);
     }
@@ -248,8 +248,8 @@ class EnhancedHeatmapController {
         this.fitToComplaints();
       }
     } catch (error) {
-      console.error('[ENHANCED-HEATMAP] Failed to load data:', error);
-      this.showError('Failed to load complaint data');
+      console.error("[ENHANCED-HEATMAP] Failed to load data:", error);
+      this.showError("Failed to load complaint data");
     }
   }
   /**
@@ -261,7 +261,7 @@ class EnhancedHeatmapController {
     this.heatmapViz.clearAllLayers();
     // Only create layers if we have data
     if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
-      console.warn('[ENHANCED-HEATMAP] No complaint data available for visualization');
+      console.warn("[ENHANCED-HEATMAP] No complaint data available for visualization");
       this.updateLayerButtonStates();
       return;
     }
@@ -291,27 +291,27 @@ class EnhancedHeatmapController {
    * Update layer button states
    */
   updateLayerButtonStates() {
-    const heatmapBtn = document.getElementById('toggle-heatmap');
-    const markersBtn = document.getElementById('toggle-markers');
-    const clustersBtn = document.getElementById('toggle-clusters');
+    const heatmapBtn = document.getElementById("toggle-heatmap");
+    const markersBtn = document.getElementById("toggle-markers");
+    const clustersBtn = document.getElementById("toggle-clusters");
     if (heatmapBtn) {
-      heatmapBtn.classList.toggle('active', this.heatmapViz.heatmapLayer !== null);
+      heatmapBtn.classList.toggle("active", this.heatmapViz.heatmapLayer !== null);
     }
     if (markersBtn) {
-      markersBtn.classList.toggle('active', this.heatmapViz.markerLayer !== null);
+      markersBtn.classList.toggle("active", this.heatmapViz.markerLayer !== null);
     }
     if (clustersBtn) {
-      clustersBtn.classList.toggle('active', this.heatmapViz.clusterLayer !== null);
+      clustersBtn.classList.toggle("active", this.heatmapViz.clusterLayer !== null);
     }
   }
   /**
    * Toggle controls visibility
    */
   toggleControls() {
-    const controls = document.getElementById('heatmap-controls');
+    const controls = document.getElementById("heatmap-controls");
     if (controls) {
       this.isControlsVisible = !this.isControlsVisible;
-      controls.classList.toggle('collapsed', !this.isControlsVisible);
+      controls.classList.toggle("collapsed", !this.isControlsVisible);
     }
   }
   /**
@@ -377,10 +377,10 @@ class EnhancedHeatmapController {
    */
   handleQuickFilter(filter) {
     // Update active chip
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.classList.remove('active');
+    document.querySelectorAll(".filter-chip").forEach(chip => {
+      chip.classList.remove("active");
     });
-    document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
+    document.querySelector(`[data-filter="${filter}"]`)?.classList.add("active");
     // Apply filter
     this.applyQuickFilter(filter);
   }
@@ -390,26 +390,26 @@ class EnhancedHeatmapController {
   applyQuickFilter(filter) {
     const filters = this.controls ? this.controls.getCurrentFilters() : {};
     switch (filter) {
-      case 'urgent':
-        filters.status = 'urgent';
+      case "urgent":
+        filters.status = "urgent";
         break;
-      case 'pending':
-        filters.status = 'pending review';
+      case "pending":
+        filters.status = "pending review";
         break;
-      case 'resolved':
-        filters.status = 'resolved';
+      case "resolved":
+        filters.status = "resolved";
         break;
-      case 'today':
-        filters.timeRange = 'today';
+      case "today":
+        filters.timeRange = "today";
         break;
-      case 'week':
-        filters.timeRange = 'last7days';
+      case "week":
+        filters.timeRange = "last7days";
         break;
-      case 'all':
+      case "all":
       default:
         // Reset all filters
         Object.keys(filters).forEach(key => {
-          filters[key] = '';
+          filters[key] = "";
         });
         break;
     }
@@ -424,23 +424,23 @@ class EnhancedHeatmapController {
     if (e.ctrlKey || e.metaKey) {
 
       switch (e.key) {
-        case 'h':
+        case "h":
           e.preventDefault();
           this.toggleControls();
           break;
-        case 'f':
+        case "f":
           e.preventDefault();
           this.toggleFullscreen();
           break;
-        case 'r':
+        case "r":
           e.preventDefault();
           this.loadData();
           break;
-        case 'e':
+        case "e":
           e.preventDefault();
           this.showExportModal();
           break;
-        case 'd':
+        case "d":
           e.preventDefault();
           this.resetToDigosCity();
           break;
@@ -452,8 +452,8 @@ class EnhancedHeatmapController {
    */
   showExportModal() {
     // Create export modal
-    const modal = document.createElement('div');
-    modal.className = 'export-modal';
+    const modal = document.createElement("div");
+    modal.className = "export-modal";
     modal.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
@@ -466,10 +466,10 @@ class EnhancedHeatmapController {
             <div class="format-options">
               ${this.exportFormats.map(format => `
                 <label class="format-option">
-                  <input type="radio" name="export-format" value="${format.toLowerCase()}" ${format === 'PNG' ? 'checked' : ''}>
+                  <input type="radio" name="export-format" value="${format.toLowerCase()}" ${format === "PNG" ? "checked" : ""}>
                   <span>${format}</span>
                 </label>
-              `).join('')}
+              `).join("")}
             </div>
             <h4>Export Options:</h4>
             <div class="export-settings">
@@ -501,18 +501,18 @@ class EnhancedHeatmapController {
     document.body.appendChild(modal);
 
     // Add event listeners
-    modal.querySelector('.modal-close').addEventListener('click', () => {
+    modal.querySelector(".modal-close").addEventListener("click", () => {
       document.body.removeChild(modal);
     });
-    modal.querySelector('.modal-cancel').addEventListener('click', () => {
+    modal.querySelector(".modal-cancel").addEventListener("click", () => {
       document.body.removeChild(modal);
     });
-    modal.querySelector('.modal-export').addEventListener('click', () => {
+    modal.querySelector(".modal-export").addEventListener("click", () => {
       this.performExport(modal);
       document.body.removeChild(modal);
     });
     // Close on backdrop click
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
       }
@@ -523,21 +523,21 @@ class EnhancedHeatmapController {
    */
   performExport(modal) {
     const format = modal.querySelector('input[name="export-format"]:checked').value;
-    const includeLegend = modal.querySelector('#include-legend').checked;
-    const includeStats = modal.querySelector('#include-stats').checked;
-    const highQuality = modal.querySelector('#high-quality').checked;
+    const includeLegend = modal.querySelector("#include-legend").checked;
+    const includeStats = modal.querySelector("#include-stats").checked;
+    const highQuality = modal.querySelector("#high-quality").checked;
     // Implement export functionality based on format
     switch (format) {
-      case 'png':
+      case "png":
         this.exportAsPNG(includeLegend, includeStats, highQuality);
         break;
-      case 'svg':
+      case "svg":
         this.exportAsSVG(includeLegend, includeStats);
         break;
-      case 'pdf':
+      case "pdf":
         this.exportAsPDF(includeLegend, includeStats);
         break;
-      case 'csv':
+      case "csv":
         this.exportAsCSV();
         break;
     }
@@ -547,21 +547,21 @@ class EnhancedHeatmapController {
    */
   exportAsPNG(includeLegend, includeStats, highQuality) {
     // Implementation for PNG export
-    this.showMessage('info', 'PNG export feature coming soon');
+    this.showMessage("info", "PNG export feature coming soon");
   }
   /**
    * Export as SVG
    */
   exportAsSVG(includeLegend, includeStats) {
     // Implementation for SVG export
-    this.showMessage('info', 'SVG export feature coming soon');
+    this.showMessage("info", "SVG export feature coming soon");
   }
   /**
    * Export as PDF
    */
   exportAsPDF(includeLegend, includeStats) {
     // Implementation for PDF export
-    this.showMessage('info', 'PDF export feature coming soon');
+    this.showMessage("info", "PDF export feature coming soon");
   }
   /**
    * Export as CSV
@@ -569,7 +569,7 @@ class EnhancedHeatmapController {
   exportAsCSV() {
     try {
       if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
-        this.showMessage('warning', 'No data to export');
+        this.showMessage("warning", "No data to export");
         return;
       }
       const csvData = this.heatmapViz.complaintData.map(complaint => ({
@@ -584,28 +584,28 @@ class EnhancedHeatmapController {
         priority: complaint.priority
       }));
       const csv = this.convertToCSV(csvData);
-      this.downloadFile(csv, 'complaints-export.csv', 'text/csv');
-      this.showMessage('success', 'CSV exported successfully');
+      this.downloadFile(csv, "complaints-export.csv", "text/csv");
+      this.showMessage("success", "CSV exported successfully");
     } catch (error) {
-      console.error('[ENHANCED-HEATMAP] CSV export failed:', error);
-      this.showMessage('error', 'Failed to export CSV');
+      console.error("[ENHANCED-HEATMAP] CSV export failed:", error);
+      this.showMessage("error", "Failed to export CSV");
     }
   }
   /**
    * Convert data to CSV format
    */
   convertToCSV(data) {
-    if (!data || data.length === 0) return '';
+    if (!data || data.length === 0) return "";
     const headers = Object.keys(data[0]);
-    const csvRows = [headers.join(',')];
+    const csvRows = [headers.join(",")];
     data.forEach(row => {
       const values = headers.map(header => {
         const value = row[header];
-        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        return typeof value === "string" && value.includes(",") ? `"${value}"` : value;
       });
-      csvRows.push(values.join(','));
+      csvRows.push(values.join(","));
     });
-    return csvRows.join('\n');
+    return csvRows.join("\n");
   }
   /**
    * Download file
@@ -613,7 +613,7 @@ class EnhancedHeatmapController {
   downloadFile(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -627,7 +627,7 @@ class EnhancedHeatmapController {
   fitToComplaints() {
 
     if (!this.heatmapViz.complaintData || this.heatmapViz.complaintData.length === 0) {
-      this.showMessage('warning', 'No complaint data to fit to');
+      this.showMessage("warning", "No complaint data to fit to");
       return;
     }
     const bounds = L.latLngBounds();
@@ -653,7 +653,7 @@ class EnhancedHeatmapController {
       easeLinearity: 0.25
     });
     // Show confirmation message
-    this.showMessage('success', 'Map reset to Digos City center');
+    this.showMessage("success", "Map reset to Digos City center");
     // Update statistics after reset
     setTimeout(() => {
       this.updateStatistics();
@@ -669,7 +669,7 @@ class EnhancedHeatmapController {
     }
     // Create a pulsing marker at the center
     const centerIcon = L.divIcon({
-      className: 'temp-center-marker',
+      className: "temp-center-marker",
       html: '<div class="center-pulse"></div>',
       iconSize: [20, 20],
       iconAnchor: [10, 10]
@@ -718,7 +718,7 @@ class EnhancedHeatmapController {
    * Calculate average response time
    */
   calculateAvgResponseTime(data) {
-    const resolvedComplaints = data.filter(c => c.status === 'resolved' && c.resolved_at);
+    const resolvedComplaints = data.filter(c => c.status === "resolved" && c.resolved_at);
     if (resolvedComplaints.length === 0) return 0;
     const totalTime = resolvedComplaints.reduce((sum, complaint) => {
       const submitted = new Date(complaint.submitted_at);
@@ -732,31 +732,31 @@ class EnhancedHeatmapController {
    */
   calculateResolutionRate(data) {
     if (data.length === 0) return 0;
-    const resolved = data.filter(c => c.status === 'resolved').length;
+    const resolved = data.filter(c => c.status === "resolved").length;
     return Math.round((resolved / data.length) * 100);
   }
   /**
    * Update header statistics
    */
   updateHeaderStats() {
-    document.getElementById('header-total-complaints').textContent = this.statistics.totalComplaints;
-    document.getElementById('header-clusters').textContent = this.statistics.clusters;
-    document.getElementById('header-density').textContent = this.statistics.densityScore;
+    document.getElementById("header-total-complaints").textContent = this.statistics.totalComplaints;
+    document.getElementById("header-clusters").textContent = this.statistics.clusters;
+    document.getElementById("header-density").textContent = this.statistics.densityScore;
   }
   /**
    * Show/hide loading indicator
    */
   showLoading(show) {
-    const loading = document.getElementById('map-loading');
+    const loading = document.getElementById("map-loading");
     if (loading) {
-      loading.style.display = show ? 'block' : 'none';
+      loading.style.display = show ? "block" : "none";
     }
   }
   /**
    * Show error message
    */
   showError(message) {
-    this.showMessage('error', message);
+    this.showMessage("error", message);
   }
   /**
    * Show message
@@ -783,7 +783,7 @@ class EnhancedHeatmapController {
   }
 }
 // Initialize enhanced heatmap when DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     const enhancedController = new EnhancedHeatmapController();
     await enhancedController.initialize();
@@ -796,6 +796,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
   } catch (error) {
-    console.error('[ENHANCED-HEATMAP] Failed to initialize:', error);
+    console.error("[ENHANCED-HEATMAP] Failed to initialize:", error);
   }
 });

@@ -345,19 +345,19 @@ function renderPage(page, role) {
 
     const dateStr = date
       ? new Date(date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
       : "";
 
     tr.innerHTML = `
       <td>
         <div style="font-weight: 500; color: #1f2937;" class="complaint-title-text">${title}</div>
         <div style="font-size: 0.75rem; color: #6b7280;">ID: ${complaintId.substring(
-          0,
-          8
-        )}...</div>
+    0,
+    8
+  )}...</div>
       </td>
       <td>
         <span class="status-badge status-${status}">${statusLabel}</span>
@@ -379,11 +379,11 @@ function renderPage(page, role) {
     </div>
     <div class="pagination-buttons">
       <button class="page-btn" ${
-        currentPage === 1 ? "disabled" : ""
-      } id="prev-btn">Previous</button>
+  currentPage === 1 ? "disabled" : ""
+} id="prev-btn">Previous</button>
       <button class="page-btn" ${
-        currentPage === totalPages ? "disabled" : ""
-      } id="next-btn">Next</button>
+  currentPage === totalPages ? "disabled" : ""
+} id="next-btn">Next</button>
     </div>
   `;
 

@@ -2,7 +2,7 @@
  * Test helper utilities for authentication testing
  */
 
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 /**
  * Generate a test user object
@@ -11,11 +11,11 @@ function createTestUser(overrides = {}) {
   return {
     id: crypto.randomUUID(),
     email: `test${Date.now()}@example.com`,
-    password: 'Test123!@#',
-    firstName: 'Test',
-    lastName: 'User',
-    mobileNumber: '+1234567890',
-    role: 'citizen',
+    password: "Test123!@#",
+    firstName: "Test",
+    lastName: "User",
+    mobileNumber: "+1234567890",
+    role: "citizen",
     ...overrides,
   };
 }
@@ -23,14 +23,14 @@ function createTestUser(overrides = {}) {
 /**
  * Generate a test JWT token (mock)
  */
-function generateMockToken(userId, _expiresIn = '1h') {
-  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+function generateMockToken(userId, _expiresIn = "1h") {
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const payload = Buffer.from(JSON.stringify({
     sub: userId,
     exp: Math.floor(Date.now() / 1000) + 3600,
     iat: Math.floor(Date.now() / 1000),
     jti: crypto.randomUUID(),
-  })).toString('base64url');
+  })).toString("base64url");
   return `${header}.${payload}.signature`;
 }
 
@@ -39,15 +39,15 @@ function generateMockToken(userId, _expiresIn = '1h') {
  */
 function createMockRequest(overrides = {}) {
   return {
-    method: 'GET',
-    path: '/api/test',
-    originalUrl: overrides.path || '/api/test',
+    method: "GET",
+    path: "/api/test",
+    originalUrl: overrides.path || "/api/test",
     headers: {},
     cookies: {},
     body: {},
     query: {},
-    ip: '127.0.0.1',
-    hostname: 'localhost',
+    ip: "127.0.0.1",
+    hostname: "localhost",
     get: jest.fn((header) => overrides.headers?.[header.toLowerCase()]),
     ...overrides,
   };
@@ -100,7 +100,7 @@ async function makeConcurrentRequests(count, requestFn) {
  */
 function extractCookie(cookieString, name) {
   // Escape special regex characters in name
-  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // eslint-disable-next-line security/detect-non-literal-regexp
   const match = cookieString.match(new RegExp(`${escapedName}=([^;]+)`));
   return match ? match[1] : null;

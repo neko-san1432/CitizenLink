@@ -15,7 +15,7 @@ class HeatmapController {
    * Initialize the heatmap controller
    * @param {string} mapContainerId - ID of the map container element
    */
-  async initialize(mapContainerId = 'map') {
+  async initialize(mapContainerId = "map") {
     try {
       // console.log removed for security
       // Initialize map
@@ -24,13 +24,13 @@ class HeatmapController {
         zoom: 12
       });
       if (!this.map) {
-        throw new Error('Failed to initialize map');
+        throw new Error("Failed to initialize map");
       }
       // Initialize heatmap visualization
       this.heatmapViz = new HeatmapVisualization(this.map);
       // Initialize controls (skip if enhanced controls exist on the page)
-      const existingControls = document.getElementById('heatmap-controls');
-      const hasEnhancedControls = existingControls && existingControls.classList.contains('enhanced-controls');
+      const existingControls = document.getElementById("heatmap-controls");
+      const hasEnhancedControls = existingControls && existingControls.classList.contains("enhanced-controls");
       if (!hasEnhancedControls && !window.enhancedHeatmapController) {
         this.controls = new HeatmapControls(this);
       } else {
@@ -44,7 +44,7 @@ class HeatmapController {
       this.isInitialized = true;
       // console.log removed for security
     } catch (error) {
-      console.error('[HEATMAP-CONTROLLER] Initialization failed:', error);
+      console.error("[HEATMAP-CONTROLLER] Initialization failed:", error);
       throw error;
     }
   }
@@ -57,8 +57,8 @@ class HeatmapController {
       await this.heatmapViz.loadComplaintData(filters);
       this.refreshVisualization();
     } catch (error) {
-      console.error('[HEATMAP-CONTROLLER] Failed to load data:', error);
-      this.showError('Failed to load complaint data');
+      console.error("[HEATMAP-CONTROLLER] Failed to load data:", error);
+      this.showError("Failed to load complaint data");
     }
   }
   /**
@@ -111,8 +111,8 @@ class HeatmapController {
       await this.heatmapViz.loadComplaintData(filters);
       this.refreshVisualization();
     } catch (error) {
-      console.error('[HEATMAP-CONTROLLER] Failed to apply filters:', error);
-      this.showError('Failed to apply filters');
+      console.error("[HEATMAP-CONTROLLER] Failed to apply filters:", error);
+      this.showError("Failed to apply filters");
     }
   }
   /**
@@ -135,7 +135,7 @@ class HeatmapController {
     if (this.controls) {
       this.controls.showError(message);
     } else {
-      console.error('[HEATMAP-CONTROLLER] Error:', message);
+      console.error("[HEATMAP-CONTROLLER] Error:", message);
     }
   }
   /**
@@ -144,11 +144,11 @@ class HeatmapController {
   setupEventListeners() {
     // Map events
     if (this.map) {
-      this.map.on('zoomend', () => {
+      this.map.on("zoomend", () => {
         this.updateHeatmapIntensity();
         this.updateViewBasedOnZoom();
       });
-      this.map.on('zoomstart', () => {
+      this.map.on("zoomstart", () => {
         this.handleZoomStart();
       });
     }
@@ -176,7 +176,7 @@ class HeatmapController {
    */
   handleZoomStart() {
     // Store current state before zoom changes
-    this.preZoomView = this.map.getZoom() >= this.zoomThreshold ? 'markers' : 'heatmap';
+    this.preZoomView = this.map.getZoom() >= this.zoomThreshold ? "markers" : "heatmap";
   }
   /**
    * Update view based on zoom level
@@ -190,12 +190,12 @@ class HeatmapController {
       // console.log removed for security
       this.heatmapViz.createMarkerLayer();
       this.heatmapViz.showMarkers();
-      this.showZoomNotification('📍 Markers visible (zoomed in)');
+      this.showZoomNotification("📍 Markers visible (zoomed in)");
     } else {
       // Zoomed out - hide markers, show only heatmap
       // console.log removed for security
       this.heatmapViz.hideMarkers();
-      this.showZoomNotification('🗺️ Heatmap only (zoomed out)');
+      this.showZoomNotification("🗺️ Heatmap only (zoomed out)");
     }
   }
   /**
@@ -203,23 +203,23 @@ class HeatmapController {
    */
   showZoomNotification(message) {
     // Create or update notification element
-    let notification = document.getElementById('zoom-notification');
+    let notification = document.getElementById("zoom-notification");
     if (!notification) {
-      notification = document.createElement('div');
-      notification.id = 'zoom-notification';
-      notification.className = 'zoom-notification';
+      notification = document.createElement("div");
+      notification.id = "zoom-notification";
+      notification.className = "zoom-notification";
       // Insert after the map container
-      const mapContainer = document.getElementById('map');
+      const mapContainer = document.getElementById("map");
       if (mapContainer && mapContainer.parentNode) {
         mapContainer.parentNode.appendChild(notification);
       }
     }
     notification.textContent = message;
-    notification.style.display = 'block';
+    notification.style.display = "block";
     // Auto-hide after 2 seconds
     setTimeout(() => {
       if (notification) {
-        notification.style.display = 'none';
+        notification.style.display = "none";
       }
     }, 2000);
   }
@@ -252,20 +252,20 @@ class HeatmapController {
     if (!this.map) return null;
     return new Promise((resolve) => {
       // Use leaflet-image plugin if available, otherwise fallback
-      if (typeof L.Util.extend === 'function' && this.map.getContainer) {
+      if (typeof L.Util.extend === "function" && this.map.getContainer) {
         // Simple canvas export (basic implementation)
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
         const container = this.map.getContainer();
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
         // This is a basic implementation - in production, use a proper map export library
-        ctx.fillStyle = '#f0f0f0';
+        ctx.fillStyle = "#f0f0f0";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#333';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Map Export', canvas.width / 2, canvas.height / 2);
+        ctx.fillStyle = "#333";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Map Export", canvas.width / 2, canvas.height / 2);
         resolve(canvas.toDataURL());
       } else {
         resolve(null);
@@ -312,7 +312,7 @@ class HeatmapController {
   }
 }
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
 
   module.exports = HeatmapController;
 } else {

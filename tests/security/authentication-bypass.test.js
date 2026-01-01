@@ -4,9 +4,9 @@
  * Tests various methods attackers might use to bypass authentication
  */
 
-const { createMockRequest, createMockResponse, createMockNext } = require('../utils/testHelpers');
+const { createMockRequest, createMockResponse, createMockNext } = require("../utils/testHelpers");
 
-describe('Authentication Bypass Protection', () => {
+describe("Authentication Bypass Protection", () => {
   let mockSupabase;
   let authenticateUser;
 
@@ -21,7 +21,7 @@ describe('Authentication Bypass Protection', () => {
     };
 
     // Mock Database class
-    jest.doMock('../../src/server/config/database', () => {
+    jest.doMock("../../src/server/config/database", () => {
       return class Database {
         static getClient() {
           return mockSupabase;
@@ -33,7 +33,7 @@ describe('Authentication Bypass Protection', () => {
     });
 
     // Re-require auth middleware to use the mock
-    const authMiddleware = require('../../src/server/middleware/auth');
+    const authMiddleware = require("../../src/server/middleware/auth");
     authenticateUser = authMiddleware.authenticateUser;
   });
 
@@ -41,10 +41,10 @@ describe('Authentication Bypass Protection', () => {
     jest.clearAllMocks();
   });
 
-  describe('Missing Token', () => {
-    it('should reject requests without authentication token', async () => {
+  describe("Missing Token", () => {
+    it("should reject requests without authentication token", async () => {
       const req = createMockRequest({
-        path: '/api/test',
+        path: "/api/test",
         cookies: {},
         headers: {},
       });
@@ -56,15 +56,15 @@ describe('Authentication Bypass Protection', () => {
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        error: 'No authentication token',
+        error: "No authentication token",
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject requests with empty token string', async () => {
+    it("should reject requests with empty token string", async () => {
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { sb_access_token: '' },
+        path: "/api/test",
+        cookies: { sb_access_token: "" },
         headers: {},
       });
       const res = createMockResponse();
@@ -77,18 +77,18 @@ describe('Authentication Bypass Protection', () => {
     });
   });
 
-  describe('Invalid Token Formats', () => {
-    it('should reject malformed JWT tokens', async () => {
+  describe("Invalid Token Formats", () => {
+    it("should reject malformed JWT tokens", async () => {
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { sb_access_token: 'not.a.valid.jwt' },
+        path: "/api/test",
+        cookies: { sb_access_token: "not.a.valid.jwt" },
       });
       const res = createMockResponse();
       const next = createMockNext();
 
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Invalid token' },
+        error: { message: "Invalid token" },
       });
 
       await authenticateUser(req, res, next);
@@ -96,14 +96,14 @@ describe('Authentication Bypass Protection', () => {
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Invalid token',
+        error: "Invalid token",
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject SQL injection attempts in token', async () => {
+    it("should reject SQL injection attempts in token", async () => {
       const req = createMockRequest({
-        path: '/api/test',
+        path: "/api/test",
         cookies: { sb_access_token: "'; DROP TABLE users; --" },
       });
       const res = createMockResponse();
@@ -111,7 +111,7 @@ describe('Authentication Bypass Protection', () => {
 
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Invalid token' },
+        error: { message: "Invalid token" },
       });
 
       await authenticateUser(req, res, next);
@@ -120,9 +120,9 @@ describe('Authentication Bypass Protection', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject XSS attempts in token', async () => {
+    it("should reject XSS attempts in token", async () => {
       const req = createMockRequest({
-        path: '/api/test',
+        path: "/api/test",
         cookies: { sb_access_token: '<script>alert("xss")</script>' },
       });
       const res = createMockResponse();
@@ -130,7 +130,7 @@ describe('Authentication Bypass Protection', () => {
 
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Invalid token' },
+        error: { message: "Invalid token" },
       });
 
       await authenticateUser(req, res, next);
@@ -140,18 +140,18 @@ describe('Authentication Bypass Protection', () => {
     });
   });
 
-  describe('Token Manipulation', () => {
-    it('should reject expired tokens', async () => {
+  describe("Token Manipulation", () => {
+    it("should reject expired tokens", async () => {
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { sb_access_token: 'expired_token' },
+        path: "/api/test",
+        cookies: { sb_access_token: "expired_token" },
       });
       const res = createMockResponse();
       const next = createMockNext();
 
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
-        error: { message: 'Token expired' },
+        error: { message: "Token expired" },
       });
 
       await authenticateUser(req, res, next);
@@ -160,10 +160,10 @@ describe('Authentication Bypass Protection', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject tokens from different users', async () => {
+    it("should reject tokens from different users", async () => {
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { sb_access_token: 'user_a_token' },
+        path: "/api/test",
+        cookies: { sb_access_token: "user_a_token" },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -172,8 +172,8 @@ describe('Authentication Bypass Protection', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: {
           user: {
-            id: 'user_b',
-            email: 'userb@example.com',
+            id: "user_b",
+            email: "userb@example.com",
           },
         },
         error: null,
@@ -186,24 +186,24 @@ describe('Authentication Bypass Protection', () => {
     });
   });
 
-  describe('Header vs Cookie Token Priority', () => {
-    it('should prefer header token over cookie token', async () => {
+  describe("Header vs Cookie Token Priority", () => {
+    it("should prefer header token over cookie token", async () => {
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { sb_access_token: 'cookie_token' },
-        headers: { authorization: 'Bearer header_token' },
+        path: "/api/test",
+        cookies: { sb_access_token: "cookie_token" },
+        headers: { authorization: "Bearer header_token" },
       });
       const res = createMockResponse();
       const next = createMockNext();
 
       mockSupabase.auth.getUser.mockImplementation((token) => {
-        if (token === 'header_token') {
+        if (token === "header_token") {
           return Promise.resolve({
             data: {
               user: {
-                id: 'user_123',
-                email: 'test@example.com',
-                user_metadata: { role: 'citizen' },
+                id: "user_123",
+                email: "test@example.com",
+                user_metadata: { role: "citizen" },
               },
             },
             error: null,
@@ -211,23 +211,23 @@ describe('Authentication Bypass Protection', () => {
         }
         return Promise.resolve({
           data: { user: null },
-          error: { message: 'Invalid token' },
+          error: { message: "Invalid token" },
         });
       });
 
       await authenticateUser(req, res, next);
 
-      expect(mockSupabase.auth.getUser).toHaveBeenCalledWith('header_token');
+      expect(mockSupabase.auth.getUser).toHaveBeenCalledWith("header_token");
       expect(next).toHaveBeenCalled();
     });
   });
 
-  describe('Case Sensitivity', () => {
-    it('should handle case variations in cookie names', async () => {
+  describe("Case Sensitivity", () => {
+    it("should handle case variations in cookie names", async () => {
       // Test that cookie name matching is case-sensitive (as it should be)
       const req = createMockRequest({
-        path: '/api/test',
-        cookies: { SB_ACCESS_TOKEN: 'token_value' }, // Wrong case
+        path: "/api/test",
+        cookies: { SB_ACCESS_TOKEN: "token_value" }, // Wrong case
       });
       const res = createMockResponse();
       const next = createMockNext();

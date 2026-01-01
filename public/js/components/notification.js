@@ -1,12 +1,12 @@
-import apiClient from '../config/apiClient.js';
-import { getNotificationIcon } from '../utils/icons.js';
-import showMessage from './toast.js';
+import apiClient from "../config/apiClient.js";
+import { getNotificationIcon } from "../utils/icons.js";
+import showMessage from "./toast.js";
 
 class NotificationService {
   async fetchNotifications(page, limit) {
     const response = await apiClient.get(`/api/notifications?limit=${limit}&offset=${page * limit}`);
     if (!response.success) {
-      throw new Error('Failed to fetch notifications');
+      throw new Error("Failed to fetch notifications");
     }
     const notifications = (response.notifications || []).map(notification => ({
       ...notification,
@@ -20,7 +20,7 @@ class NotificationService {
   }
 
   async getUnreadCount() {
-    return apiClient.get('/api/notifications/count');
+    return apiClient.get("/api/notifications/count");
   }
 
   async markAsRead(notificationId) {
@@ -28,7 +28,7 @@ class NotificationService {
   }
 
   async markAllRead() {
-    return apiClient.post('/api/notifications/mark-all-read', {});
+    return apiClient.post("/api/notifications/mark-all-read", {});
   }
 }
 
@@ -80,25 +80,25 @@ class NotificationManager {
   }
 
   cacheDom() {
-    this.dom.button = document.getElementById('notification-btn');
-    this.dom.panel = document.getElementById('notification-panel');
-    this.dom.close = document.getElementById('close-notifications');
-    this.dom.markAll = document.getElementById('mark-all-read');
-    this.dom.showMore = document.getElementById('show-more-notifications');
-    this.dom.retry = document.getElementById('retry-notifications');
-    this.dom.content = document.getElementById('notification-content');
-    this.dom.loading = document.getElementById('notification-loading');
-    this.dom.error = document.getElementById('notification-error');
-    this.dom.badge = document.getElementById('notification-badge');
+    this.dom.button = document.getElementById("notification-btn");
+    this.dom.panel = document.getElementById("notification-panel");
+    this.dom.close = document.getElementById("close-notifications");
+    this.dom.markAll = document.getElementById("mark-all-read");
+    this.dom.showMore = document.getElementById("show-more-notifications");
+    this.dom.retry = document.getElementById("retry-notifications");
+    this.dom.content = document.getElementById("notification-content");
+    this.dom.loading = document.getElementById("notification-loading");
+    this.dom.error = document.getElementById("notification-error");
+    this.dom.badge = document.getElementById("notification-badge");
   }
 
   bindEvents() {
-    this.dom.button?.addEventListener('click', this.handleButtonClick);
-    this.dom.close?.addEventListener('click', this.handleCloseClick);
-    this.dom.showMore?.addEventListener('click', this.handleShowMoreClick);
-    this.dom.retry?.addEventListener('click', this.handleRetryClick);
-    this.dom.markAll?.addEventListener('click', this.handleMarkAllClick);
-    document.addEventListener('click', this.handleDocumentClick);
+    this.dom.button?.addEventListener("click", this.handleButtonClick);
+    this.dom.close?.addEventListener("click", this.handleCloseClick);
+    this.dom.showMore?.addEventListener("click", this.handleShowMoreClick);
+    this.dom.retry?.addEventListener("click", this.handleRetryClick);
+    this.dom.markAll?.addEventListener("click", this.handleMarkAllClick);
+    document.addEventListener("click", this.handleDocumentClick);
   }
 
   handleButtonClick(event) {
@@ -132,14 +132,14 @@ class NotificationManager {
 
   togglePanel() {
     if (!this.dom.panel) return;
-    const profilePanel = document.getElementById('profile-panel');
-    if (profilePanel?.classList.contains('show')) {
-      profilePanel.classList.remove('show');
+    const profilePanel = document.getElementById("profile-panel");
+    if (profilePanel?.classList.contains("show")) {
+      profilePanel.classList.remove("show");
       setTimeout(() => {
-        profilePanel.style.display = 'none';
+        profilePanel.style.display = "none";
       }, 300);
     }
-    if (this.dom.panel.classList.contains('show')) {
+    if (this.dom.panel.classList.contains("show")) {
       this.closePanel();
     } else {
       this.openPanel();
@@ -148,10 +148,10 @@ class NotificationManager {
 
   openPanel() {
     if (!this.dom.panel) return;
-    this.dom.panel.style.display = 'block';
+    this.dom.panel.style.display = "block";
     this.dom.panel.offsetHeight; // force reflow
     setTimeout(() => {
-      this.dom.panel?.classList.add('show');
+      this.dom.panel?.classList.add("show");
       // Always reload on open to ensure sync, but don't show full loading spinner if we have data
       const showLoading = this.state.notifications.length === 0;
       this.loadNotifications({ reset: true, showLoading });
@@ -159,11 +159,11 @@ class NotificationManager {
   }
 
   closePanel() {
-    if (!this.dom.panel?.classList.contains('show')) return;
-    this.dom.panel.classList.remove('show');
+    if (!this.dom.panel?.classList.contains("show")) return;
+    this.dom.panel.classList.remove("show");
     setTimeout(() => {
       if (this.dom.panel) {
-        this.dom.panel.style.display = 'none';
+        this.dom.panel.style.display = "none";
       }
     }, 300);
   }
@@ -174,10 +174,10 @@ class NotificationManager {
     }
 
     // Use relative URL - browser handles cookie automatically
-    this.eventSource = new EventSource('/api/notifications/stream');
+    this.eventSource = new EventSource("/api/notifications/stream");
 
     this.eventSource.onopen = () => {
-      console.log('[NOTIFICATION] Connected to real-time stream');
+      console.log("[NOTIFICATION] Connected to real-time stream");
       this.state.connected = true;
       this.reconnectAttempts = 0;
       this.updateConnectionStatus(true);
@@ -188,19 +188,19 @@ class NotificationManager {
         const data = JSON.parse(event.data);
 
         // Handle heartbeat/connection messages
-        if (data.type === 'connected' || data.type === 'ping') {
+        if (data.type === "connected" || data.type === "ping") {
           return;
         }
 
         // Handle new notification
         this.handleNewNotification(data);
       } catch (error) {
-        console.error('[NOTIFICATION] Error parsing event data:', error);
+        console.error("[NOTIFICATION] Error parsing event data:", error);
       }
     };
 
     this.eventSource.onerror = (error) => {
-      console.warn('[NOTIFICATION] Stream connection lost:', error);
+      console.warn("[NOTIFICATION] Stream connection lost:", error);
       this.state.connected = false;
       this.updateConnectionStatus(false);
       this.eventSource.close();
@@ -222,7 +222,7 @@ class NotificationManager {
   updateConnectionStatus(connected) {
     // Optional: Add visual indicator for connection status
     if (this.dom.button) {
-      this.dom.button.style.opacity = connected ? '1' : '0.7';
+      this.dom.button.style.opacity = connected ? "1" : "0.7";
     }
   }
 
@@ -241,12 +241,12 @@ class NotificationManager {
     this.renderNotifications();
 
     // Update badge count
-    const currentCount = parseInt(this.dom.badge?.textContent || '0') || 0;
+    const currentCount = parseInt(this.dom.badge?.textContent || "0") || 0;
     this.updateBadge(currentCount + 1);
 
     // Show toast if panel is closed
-    if (!this.dom.panel?.classList.contains('show')) {
-      showMessage('info', `New Notification: ${notification.title}`);
+    if (!this.dom.panel?.classList.contains("show")) {
+      showMessage("info", `New Notification: ${notification.title}`);
       this.showNewNotificationIndicator();
     }
   }
@@ -255,9 +255,9 @@ class NotificationManager {
     if (!this.dom.button) return;
 
     // Add a pulse animation or shake effect
-    this.dom.button.classList.add('notification-pulse');
+    this.dom.button.classList.add("notification-pulse");
     setTimeout(() => {
-      this.dom.button.classList.remove('notification-pulse');
+      this.dom.button.classList.remove("notification-pulse");
     }, 1000);
   }
 
@@ -268,7 +268,7 @@ class NotificationManager {
         this.updateBadge(response.count);
       }
     } catch (error) {
-      console.error('[NOTIFICATION] Failed to load unread count:', error);
+      console.error("[NOTIFICATION] Failed to load unread count:", error);
     }
   }
 
@@ -317,7 +317,7 @@ class NotificationManager {
 
       this.state.isFirstLoad = false;
     } catch (error) {
-      console.error('[NOTIFICATION] Error loading notifications:', error);
+      console.error("[NOTIFICATION] Error loading notifications:", error);
       this.showErrorState();
     } finally {
       this.state.loading = false;
@@ -352,32 +352,32 @@ class NotificationManager {
 
     this.dom.content.innerHTML = this.state.notifications
       .map((notification, index) => this.renderNotificationItem(notification, index))
-      .join('');
+      .join("");
 
     this.attachItemHandlers();
   }
 
   renderNotificationItem(notification, index) {
-    const priorityClass = notification.priority === 'urgent'
-      ? 'notification-urgent'
-      : notification.priority === 'warning'
-        ? 'notification-warning'
-        : '';
+    const priorityClass = notification.priority === "urgent"
+      ? "notification-urgent"
+      : notification.priority === "warning"
+        ? "notification-warning"
+        : "";
 
     // Highlight first few if unread
     const isNew = !notification.read && index < 3;
-    const linkAttr = notification.link ? `data-link="${notification.link}"` : '';
-    const readClass = notification.read ? 'read' : 'unread';
-    const clickableClass = notification.read ? '' : 'clickable';
-    const readIndicator = notification.read ? '<div class="read-indicator" title="Read">✓</div>' : '';
-    const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : '';
+    const linkAttr = notification.link ? `data-link="${notification.link}"` : "";
+    const readClass = notification.read ? "read" : "unread";
+    const clickableClass = notification.read ? "" : "clickable";
+    const readIndicator = notification.read ? '<div class="read-indicator" title="Read">✓</div>' : "";
+    const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : "";
 
     return `
-      <div class="notification-item ${readClass} ${priorityClass} ${isNew ? 'new-notification' : ''} ${clickableClass}"
+      <div class="notification-item ${readClass} ${priorityClass} ${isNew ? "new-notification" : ""} ${clickableClass}"
            data-id="${notification.id}"
            ${linkAttr}
            style="cursor: pointer;"
-           title="${notification.read ? 'Read notification' : 'Click to mark as read'}">
+           title="${notification.read ? "Read notification" : "Click to mark as read"}">
         <div class="notification-icon">${getNotificationIcon(notification.type, { size: 20 })}</div>
         <div class="notification-text">
           <div class="notification-title">${escapeHtml(notification.title)} ${newIndicator}</div>
@@ -390,8 +390,8 @@ class NotificationManager {
   }
 
   attachItemHandlers() {
-    this.dom.content?.querySelectorAll('.notification-item').forEach(item => {
-      item.addEventListener('click', (event) => this.handleNotificationClick(event, item));
+    this.dom.content?.querySelectorAll(".notification-item").forEach(item => {
+      item.addEventListener("click", (event) => this.handleNotificationClick(event, item));
     });
   }
 
@@ -403,21 +403,21 @@ class NotificationManager {
     if (!notificationId) return;
 
     const {link} = element.dataset;
-    const isRead = element.classList.contains('read');
+    const isRead = element.classList.contains("read");
 
     if (!isRead) {
       try {
         // Optimistic update
-        element.classList.remove('unread', 'clickable');
-        element.classList.add('read');
-        element.querySelector('.notification-mark-read')?.remove();
+        element.classList.remove("unread", "clickable");
+        element.classList.add("read");
+        element.querySelector(".notification-mark-read")?.remove();
 
         // Add read indicator
-        if (!element.querySelector('.read-indicator')) {
-          const readIndicator = document.createElement('div');
-          readIndicator.className = 'read-indicator';
-          readIndicator.title = 'Read';
-          readIndicator.textContent = '✓';
+        if (!element.querySelector(".read-indicator")) {
+          const readIndicator = document.createElement("div");
+          readIndicator.className = "read-indicator";
+          readIndicator.title = "Read";
+          readIndicator.textContent = "✓";
           element.appendChild(readIndicator);
         }
 
@@ -428,7 +428,7 @@ class NotificationManager {
         }
 
         // Update badge
-        const currentCount = parseInt(this.dom.badge?.textContent || '0') || 0;
+        const currentCount = parseInt(this.dom.badge?.textContent || "0") || 0;
         this.updateBadge(Math.max(0, currentCount - 1));
 
         // API call
@@ -441,7 +441,7 @@ class NotificationManager {
           }, 100);
         }
       } catch (error) {
-        console.error('[NOTIFICATION] Failed to mark as read:', error);
+        console.error("[NOTIFICATION] Failed to mark as read:", error);
         // Revert on error would go here
       }
     } else if (link) {
@@ -454,31 +454,31 @@ class NotificationManager {
     if (!this.dom.showMore) return;
 
     if (!this.state.hasMore) {
-      this.dom.showMore.style.display = 'none';
+      this.dom.showMore.style.display = "none";
     } else {
-      this.dom.showMore.style.display = 'block';
-      this.dom.showMore.textContent = this.state.loading ? 'Loading...' : 'Show More';
+      this.dom.showMore.style.display = "block";
+      this.dom.showMore.textContent = this.state.loading ? "Loading..." : "Show More";
       this.dom.showMore.disabled = this.state.loading;
     }
   }
 
   showLoadingState(show) {
-    this.dom.loading?.classList.toggle('hidden', !show);
+    this.dom.loading?.classList.toggle("hidden", !show);
   }
 
   showErrorState() {
-    this.dom.error?.classList.remove('hidden');
+    this.dom.error?.classList.remove("hidden");
   }
 
   hideErrorState() {
-    this.dom.error?.classList.add('hidden');
+    this.dom.error?.classList.add("hidden");
   }
 
   async markAllAsRead() {
     if (!this.dom.markAll) return;
 
     this.dom.markAll.disabled = true;
-    this.dom.markAll.style.opacity = '0.5';
+    this.dom.markAll.style.opacity = "0.5";
 
     try {
       const response = await this.service.markAllRead();
@@ -494,28 +494,28 @@ class NotificationManager {
           if (this.dom.markAll) {
             this.dom.markAll.innerHTML = originalText;
             this.dom.markAll.disabled = false;
-            this.dom.markAll.style.opacity = '1';
+            this.dom.markAll.style.opacity = "1";
           }
         }, 2000);
       }
     } catch (error) {
-      console.error('[NOTIFICATION] Failed to mark all as read:', error);
+      console.error("[NOTIFICATION] Failed to mark all as read:", error);
       this.dom.markAll.disabled = false;
-      this.dom.markAll.style.opacity = '1';
+      this.dom.markAll.style.opacity = "1";
     }
   }
 
   updateBadge(count = 0) {
     if (!this.dom.badge) {
-      this.dom.badge = document.getElementById('notification-badge');
+      this.dom.badge = document.getElementById("notification-badge");
     }
     if (!this.dom.badge) return;
 
     if (count > 0) {
-      this.dom.badge.textContent = count > 99 ? '99+' : count;
-      this.dom.badge.classList.remove('hidden');
+      this.dom.badge.textContent = count > 99 ? "99+" : count;
+      this.dom.badge.classList.remove("hidden");
     } else {
-      this.dom.badge.classList.add('hidden');
+      this.dom.badge.classList.add("hidden");
     }
   }
 }
@@ -543,17 +543,17 @@ function formatRelativeTime(timestamp) {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSecs < 60) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+  if (diffSecs < 60) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? "s" : ""} ago`;
 
   return time.toLocaleDateString();
 }
 
-function escapeHtml(text = '') {
-  const div = document.createElement('div');
+function escapeHtml(text = "") {
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }

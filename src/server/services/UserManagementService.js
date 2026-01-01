@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require('../../shared/constants');
+const Database = require("../config/database");
+const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require("../../shared/constants");
 
 /**
  * UserManagementService
@@ -19,13 +19,13 @@ class UserManagementService {
    */
   async banUser(userId, performedBy, banData = {}) {
     try {
-      const { type = 'temporary', duration, reason } = banData;
+      const { type = "temporary", duration, reason } = banData;
 
       // Get current user data
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       const { user } = currentUser;
@@ -35,14 +35,14 @@ class UserManagementService {
 
       // Calculate ban expiration
       let banExpiresAt = null;
-      if (type === 'temporary' && duration) {
+      if (type === "temporary" && duration) {
         // duration is in hours
         const expirationDate = new Date();
         expirationDate.setHours(expirationDate.getHours() + duration);
         banExpiresAt = expirationDate.toISOString();
-      } else if (type === 'permanent') {
+      } else if (type === "permanent") {
         // Permanent ban - set expiration to far future (year 2099)
-        banExpiresAt = new Date('2099-12-31T23:59:59Z').toISOString();
+        banExpiresAt = new Date("2099-12-31T23:59:59Z").toISOString();
       }
 
       // Update metadata
@@ -68,12 +68,12 @@ class UserManagementService {
       );
 
       if (updateError) {
-        console.error('[USER_MGMT] Ban user error:', updateError);
+        console.error("[USER_MGMT] Ban user error:", updateError);
         throw updateError;
       }
 
       // Log the ban action
-      await this.logBanAction(userId, 'ban', performedBy, banData);
+      await this.logBanAction(userId, "ban", performedBy, banData);
 
       return {
         success: true,
@@ -82,7 +82,7 @@ class UserManagementService {
         banExpiresAt
       };
     } catch (error) {
-      console.error('[USER_MGMT] Ban user error:', error);
+      console.error("[USER_MGMT] Ban user error:", error);
       throw error;
     }
   }
@@ -99,17 +99,17 @@ class UserManagementService {
       if (performerError) throw performerError;
 
       const performerRole = performerUser.user.raw_user_meta_data?.role ||
-                           performerUser.user.user_metadata?.role || 'citizen';
+                           performerUser.user.user_metadata?.role || "citizen";
 
-      if (performerRole !== 'super-admin') {
-        throw new Error('Only Super Admin can unban users');
+      if (performerRole !== "super-admin") {
+        throw new Error("Only Super Admin can unban users");
       }
 
       // Get current user data
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       const { user } = currentUser;
@@ -142,19 +142,19 @@ class UserManagementService {
       );
 
       if (updateError) {
-        console.error('[USER_MGMT] Unban user error:', updateError);
+        console.error("[USER_MGMT] Unban user error:", updateError);
         throw updateError;
       }
 
       // Log the unban action
-      await this.logBanAction(userId, 'unban', performedBy, {});
+      await this.logBanAction(userId, "unban", performedBy, {});
 
       return {
         success: true,
         user: updatedUser.user
       };
     } catch (error) {
-      console.error('[USER_MGMT] Unban user error:', error);
+      console.error("[USER_MGMT] Unban user error:", error);
       throw error;
     }
   }
@@ -168,7 +168,7 @@ class UserManagementService {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       const { user } = currentUser;
@@ -193,7 +193,7 @@ class UserManagementService {
             banType: null,
             banExpiresAt: null,
             unbannedAt: new Date().toISOString(),
-            unbannedBy: 'system'
+            unbannedBy: "system"
           };
 
           delete updatedMetadata.bannedAt;
@@ -221,7 +221,7 @@ class UserManagementService {
         warningStrike: combinedMetadata.warningStrike || 0
       };
     } catch (error) {
-      console.error('[USER_MGMT] Check ban status error:', error);
+      console.error("[USER_MGMT] Check ban status error:", error);
       throw error;
     }
   }
@@ -231,11 +231,11 @@ class UserManagementService {
    */
   async logBanAction(userId, action, performedBy, banData, ipAddress = null, userAgent = null) {
     try {
-      const AuditLogRepository = require('../repositories/AuditLogRepository');
+      const AuditLogRepository = require("../repositories/AuditLogRepository");
       const auditLog = new AuditLogRepository();
 
       await auditLog.log(`user_${action}`, performedBy, {
-        targetType: 'user',
+        targetType: "user",
         targetId: userId,
         details: {
           ...banData,
@@ -245,7 +245,7 @@ class UserManagementService {
         userAgent
       });
     } catch (error) {
-      console.warn('[USER_MGMT] Log ban action error:', error);
+      console.warn("[USER_MGMT] Log ban action error:", error);
       // Don't throw - logging failure shouldn't break the operation
     }
   }
@@ -258,7 +258,7 @@ class UserManagementService {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
       if (!currentUser || !currentUser.user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       const { user } = currentUser;
@@ -268,7 +268,7 @@ class UserManagementService {
 
       return combinedMetadata.warningStrike || 0;
     } catch (error) {
-      console.error('[USER_MGMT] Get warning strike error:', error);
+      console.error("[USER_MGMT] Get warning strike error:", error);
       throw error;
     }
   }

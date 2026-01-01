@@ -1,11 +1,11 @@
-import { renderPrivacyNotice } from '../utils/privacyContent.js';
+import { renderPrivacyNotice } from "../utils/privacyContent.js";
 
 const initializePrivacyNotice = () => {
-  renderPrivacyNotice('#privacy-notice-content', { headingTag: 'h2' });
+  renderPrivacyNotice("#privacy-notice-content", { headingTag: "h2" });
 };
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializePrivacyNotice);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePrivacyNotice);
 } else {
   initializePrivacyNotice();
 }

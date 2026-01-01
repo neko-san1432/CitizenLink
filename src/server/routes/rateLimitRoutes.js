@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 
 const router = express.Router();
 // In-memory rate limit tracking (in production, use Redis)
@@ -12,7 +12,7 @@ let rateLimitData = {
  * Rate limit status endpoint
  * GET /api/rate-limit/status
  */
-router.get('/status', (req, res) => {
+router.get("/status", (req, res) => {
   try {
     const now = Date.now();
     const windowDuration = 60 * 1000; // 1 minute window
@@ -48,7 +48,7 @@ router.get('/status', (req, res) => {
  * Reset rate limit (for testing)
  * POST /api/rate-limit/reset
  */
-router.post('/reset', (req, res) => {
+router.post("/reset", (req, res) => {
   try {
     rateLimitData = {
       requests: 0,
@@ -58,7 +58,7 @@ router.post('/reset', (req, res) => {
     };
     res.json({
       success: true,
-      message: 'Rate limit reset successfully'
+      message: "Rate limit reset successfully"
     });
   } catch (error) {
     res.status(500).json({

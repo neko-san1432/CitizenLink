@@ -2,20 +2,20 @@
  * Notification Controller
  * Handles notification-related HTTP requests
  */
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 const supabase = Database.getClient();
 class NotificationController {
   // Build a client link for a notification when applicable
   buildNotificationLink(notification) {
     try {
-      const type = (notification.type || '').toLowerCase();
+      const type = (notification.type || "").toLowerCase();
 
-      const title = (notification.title || '').toLowerCase();
+      const title = (notification.title || "").toLowerCase();
       const complaintId = notification.metadata?.complaint_id || notification.metadata?.complaintId || notification.complaint_id;
       if (complaintId) {
         // Progress/completion updates should open complaint details
-        if (type.includes('workflow') || type.includes('progress') || title.includes('progress update') || type === 'complaint_assigned_to_officer') {
+        if (type.includes("workflow") || type.includes("progress") || title.includes("progress update") || type === "complaint_assigned_to_officer") {
           return `/complaint-details/${complaintId}`;
         }
       }
@@ -33,17 +33,17 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 50, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from('notification')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('read', false)
-        .order('created_at', { ascending: false })
+        .from("notification")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("read", false)
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
       if (error) {
-        console.error('[NOTIFICATION] Error fetching unread notifications:', error);
+        console.error("[NOTIFICATION] Error fetching unread notifications:", error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to fetch notifications'
+          error: "Failed to fetch notifications"
         });
       }
       // Debug: summarize results and potential duplicates by (type,title,complaint_id)
@@ -54,7 +54,7 @@ class NotificationController {
         complaint_id: n.metadata?.complaint_id,
         created_at: n.created_at
       }));
-      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ''}`;
+      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ""}`;
       const dedupMap = new Map();
       for (const r of summaries) {
         const k = dedupKey(r);
@@ -91,10 +91,10 @@ class NotificationController {
         count: enriched.length
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Get unread notifications error:', error);
+      console.error("[NOTIFICATION] Get unread notifications error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch notifications'
+        error: "Failed to fetch notifications"
       });
     }
   }
@@ -106,16 +106,16 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 20, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from('notification')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("notification")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
       if (error) {
-        console.error('[NOTIFICATION] Error fetching all notifications:', error);
+        console.error("[NOTIFICATION] Error fetching all notifications:", error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to fetch notifications'
+          error: "Failed to fetch notifications"
         });
       }
       // Debug: summarize results and potential duplicates by (type,title,complaint_id)
@@ -126,7 +126,7 @@ class NotificationController {
         complaint_id: n.metadata?.complaint_id,
         created_at: n.created_at
       }));
-      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ''}`;
+      const dedupKey = r => `${r.type}|${r.title}|${r.complaint_id || ""}`;
       const dedupMap = new Map();
       for (const r of summaries) {
         const k = dedupKey(r);
@@ -163,10 +163,10 @@ class NotificationController {
         count: enriched.length
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Get all notifications error:', error);
+      console.error("[NOTIFICATION] Get all notifications error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch notifications'
+        error: "Failed to fetch notifications"
       });
     }
   }
@@ -179,25 +179,25 @@ class NotificationController {
       if (!req.user || !req.user.id) {
         return res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: "Authentication required"
         });
       }
       const userId = req.user.id;
       // Get all unread notifications to apply deduplication
       const { data: notifications, error } = await supabase
-        .from('notification')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('read', false);
+        .from("notification")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("read", false);
       if (error) {
-        console.error('[NOTIFICATION] Error fetching notification count:', error);
+        console.error("[NOTIFICATION] Error fetching notification count:", error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to fetch notification count'
+          error: "Failed to fetch notification count"
         });
       }
       // Apply same deduplication logic as getUnreadNotifications
-      const dedupKey = r => `${r.type}|${r.title}|${r.metadata?.complaint_id || ''}`;
+      const dedupKey = r => `${r.type}|${r.title}|${r.metadata?.complaint_id || ""}`;
       const seenKeys = new Set();
       // Sort by created_at descending to keep most recent
       const sortedNotifications = (notifications || []).sort((a, b) =>
@@ -219,10 +219,10 @@ class NotificationController {
         count: deduplicatedCount
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Get notification count error:', error);
+      console.error("[NOTIFICATION] Get notification count error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch notification count'
+        error: "Failed to fetch notification count"
       });
     }
   }
@@ -234,34 +234,34 @@ class NotificationController {
       const { id } = req.params;
       const userId = req.user.id;
       const { data, error } = await supabase
-        .from('notification')
+        .from("notification")
         .update({ read: true, read_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('user_id', userId)
+        .eq("id", id)
+        .eq("user_id", userId)
         .select()
         .single();
       if (error) {
-        console.error('[NOTIFICATION] Error marking notification as read:', error);
+        console.error("[NOTIFICATION] Error marking notification as read:", error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to mark notification as read'
+          error: "Failed to mark notification as read"
         });
       }
       if (!data) {
         return res.status(404).json({
           success: false,
-          error: 'Notification not found'
+          error: "Notification not found"
         });
       }
       res.json({
         success: true,
-        message: 'Notification marked as read'
+        message: "Notification marked as read"
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Mark as read error:', error);
+      console.error("[NOTIFICATION] Mark as read error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to mark notification as read'
+        error: "Failed to mark notification as read"
       });
     }
   }
@@ -272,26 +272,26 @@ class NotificationController {
     try {
       const userId = req.user.id;
       const { error } = await supabase
-        .from('notification')
+        .from("notification")
         .update({ read: true, read_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('read', false);
+        .eq("user_id", userId)
+        .eq("read", false);
       if (error) {
-        console.error('[NOTIFICATION] Error marking all notifications as read:', error);
+        console.error("[NOTIFICATION] Error marking all notifications as read:", error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to mark all notifications as read'
+          error: "Failed to mark all notifications as read"
         });
       }
       res.json({
         success: true,
-        message: 'All notifications marked as read'
+        message: "All notifications marked as read"
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Mark all as read error:', error);
+      console.error("[NOTIFICATION] Mark all as read error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to mark all notifications as read'
+        error: "Failed to mark all notifications as read"
       });
     }
   }
@@ -303,25 +303,25 @@ class NotificationController {
       const userId = req.user.id;
       // Set SSE headers
       res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Cache-Control"
       });
       // Send initial connection message
       res.write(`data: ${JSON.stringify({
-        type: 'connected',
-        message: 'Connected to notification stream',
+        type: "connected",
+        message: "Connected to notification stream",
         timestamp: new Date().toISOString()
       })}\n\n`);
       // Set up real-time subscription to notifications
       const subscription = supabase
-        .channel('notifications')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notification',
+        .channel("notifications")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "notification",
           filter: `user_id=eq.${userId}`
         }, (payload) => {
           // console.log removed for security
@@ -340,9 +340,9 @@ class NotificationController {
         })
         .subscribe();
       // Handle client disconnect
-      req.on('close', () => {
+      req.on("close", () => {
         // Only log in development mode to reduce production noise
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === "development") {
           // console.log removed for security
         }
         subscription.unsubscribe();
@@ -355,25 +355,25 @@ class NotificationController {
           return;
         }
         res.write(`data: ${JSON.stringify({
-          type: 'ping',
+          type: "ping",
           timestamp: new Date().toISOString()
         })}\n\n`);
       }, 30000); // Ping every 30 seconds
       // Clean up on error
-      req.on('error', (error) => {
+      req.on("error", (error) => {
         // Only log non-connection errors to reduce noise
-        if (error.code !== 'ECONNRESET' && error.code !== 'EPIPE') {
-          console.error('[NOTIFICATION] Stream error:', error);
+        if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
+          console.error("[NOTIFICATION] Stream error:", error);
         }
         clearInterval(keepAlive);
         subscription.unsubscribe();
         res.end();
       });
     } catch (error) {
-      console.error('[NOTIFICATION] Get notification stream error:', error);
+      console.error("[NOTIFICATION] Get notification stream error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to establish notification stream'
+        error: "Failed to establish notification stream"
       });
     }
   }

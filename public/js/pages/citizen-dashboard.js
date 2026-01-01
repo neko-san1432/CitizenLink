@@ -376,12 +376,12 @@ class ContentBannerManager {
       itemHTML += `
         <div class="${itemClass}">
           <span class="content-icon">${
-            CONTENT_TYPE_ICONS[item.content_type] || "📢"
-          }</span>
+  CONTENT_TYPE_ICONS[item.content_type] || "📢"
+}</span>
           ${badge}
           <span class="content-text">${this.escapeHtml(
-            item.display_title || item.title
-          )}</span>
+    item.display_title || item.title
+  )}</span>
         </div>
       `;
     });
@@ -659,8 +659,7 @@ function setupFeedbackListeners() {
   const submitBtn = document.getElementById("submit-feedback-btn");
   if (submitBtn) {
     submitBtn.addEventListener("click", async () => {
-      const complaintId =
-        document.getElementById("feedback-section").dataset.complaintId;
+      const {complaintId} = document.getElementById("feedback-section").dataset;
       const comment = document.getElementById("feedback-comment").value;
 
       if (!selectedRating) {
@@ -765,38 +764,38 @@ function renderMyComplaints(complaints, totalCount = null) {
     <div class="complaint-item" data-complaint-id="${escapeHtml(complaint.id)}">
       <div class="complaint-header">
         <h4 class="complaint-title">${escapeHtml(
-          complaint.title
-        )}${statusBadge}</h4>
+    complaint.title
+  )}${statusBadge}</h4>
         <span class="complaint-status status-${statusClass}">${statusLabel}</span>
       </div>
       <div class="complaint-meta">
         <span class="complaint-id" style="font-size: 0.75rem; color: #9ca3af;">${complaint.id.substring(
-          0,
-          8
-        )}...</span>
+    0,
+    8
+  )}...</span>
         <span class="complaint-type">${escapeHtml(
-          complaint.type || complaint.category || "N/A"
-        )}</span>
+    complaint.type || complaint.category || "N/A"
+  )}</span>
         <span class="complaint-date">${formatDate(
-          complaint.submitted_at
-        )}</span>
+    complaint.submitted_at
+  )}</span>
       </div>
       <div class="complaint-progress">
         ${renderCompactStepper(status, complaint.confirmed_by_citizen)}
         <span class="progress-text">${getProgressText(status)}</span>
       </div>
       ${
-        complaint.coordinator_notes
-          ? `
+  complaint.coordinator_notes
+    ? `
       <div class="complaint-remarks animate-fade-in" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.05); border-left: 3px solid #3b82f6; border-radius: 4px;">
         <div style="font-size: 0.75rem; font-weight: 600; color: #3b82f6; margin-bottom: 0.25rem;">OFFICER REMARKS</div>
         <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">${escapeHtml(
-          complaint.coordinator_notes
-        )}</p>
+    complaint.coordinator_notes
+  )}</p>
       </div>
       `
-          : ""
-      }
+    : ""
+}
     </div>
   `;
     })
@@ -849,8 +848,8 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
   let currentStep = isCancelled
     ? -1
     : statusStepMap[workflowStatus] !== void 0
-    ? statusStepMap[workflowStatus]
-    : 0;
+      ? statusStepMap[workflowStatus]
+      : 0;
 
   // If citizen has confirmed, show step 4 (all circles completed) even if status is still 'completed'
   if (
@@ -873,8 +872,8 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
     const nodeColor = isCancelled
       ? "#9ca3af"
       : isActive
-      ? nodeColors[i]
-      : "#9ca3af";
+        ? nodeColors[i]
+        : "#9ca3af";
     // Determine connector line style
     let connectorStyle = "";
     if (i < 4) {
@@ -894,12 +893,12 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
       <div class="compact-stepper-step ${isActive ? "active" : ""}">
         <div class="compact-stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
         ${
-          i < 4
-            ? `
+  i < 4
+    ? `
         <div class="compact-stepper-connector" style="background: ${connectorStyle};"></div>
         `
-            : ""
-        }
+    : ""
+}
       </div>
     `;
   }
@@ -917,8 +916,8 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
     const isActive = !isCancelled && i <= currentStep;
     stepperHTML += `
       <div class="compact-stepper-label-item ${isActive ? "active" : ""}">${
-      stepLabels[i]
-    }</div>
+  stepLabels[i]
+}</div>
     `;
   }
   stepperHTML += "</div>";
@@ -928,10 +927,10 @@ function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16),
-      ]
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16),
+    ]
     : [0, 0, 0];
 }
 function getProgressWidth(status) {

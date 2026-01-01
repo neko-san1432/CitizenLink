@@ -32,18 +32,18 @@ function getSecondaryDepartments(departmentR) {
 function getStatusFromWorkflow(workflowStatus) {
   // Use Map to prevent object injection vulnerabilities
   const statusMap = new Map([
-    ['new', 'pending review'],
-    ['assigned', 'in progress'],
-    ['in_progress', 'in progress'],
-    ['pending_approval', 'in progress'],
-    ['completed', 'resolved'],
-    ['cancelled', 'rejected']
+    ["new", "pending review"],
+    ["assigned", "in progress"],
+    ["in_progress", "in progress"],
+    ["pending_approval", "in progress"],
+    ["completed", "resolved"],
+    ["cancelled", "rejected"]
   ]);
   // Safe lookup with Map
-  if (workflowStatus && typeof workflowStatus === 'string') {
-    return statusMap.get(workflowStatus) || 'pending review';
+  if (workflowStatus && typeof workflowStatus === "string") {
+    return statusMap.get(workflowStatus) || "pending review";
   }
-  return 'pending review';
+  return "pending review";
 }
 /**
  * Get workflow status from legacy status
@@ -56,26 +56,26 @@ function getWorkflowFromStatus(status) {
   const statusLower = status.toLowerCase();
 
   // If it's already a workflow status, return it as-is
-  const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
+  const validWorkflowStatuses = ["new", "assigned", "in_progress", "pending_approval", "completed", "cancelled"];
   if (validWorkflowStatuses.includes(statusLower)) {
     return statusLower;
   }
 
   // Map legacy status values to workflow_status
   const workflowMap = {
-    'pending review': 'new',
-    'pending': 'new',
-    'in progress': 'in_progress',
-    'resolved': 'completed',
-    'completed': 'completed', // Also handle "completed" as a legacy status
-    'rejected': 'cancelled',
-    'closed': 'cancelled',
-    'cancelled': 'cancelled'
+    "pending review": "new",
+    "pending": "new",
+    "in progress": "in_progress",
+    "resolved": "completed",
+    "completed": "completed", // Also handle "completed" as a legacy status
+    "rejected": "cancelled",
+    "closed": "cancelled",
+    "cancelled": "cancelled"
   };
 
   // Check if it's a confirmation status - these don't map to workflow_status directly
   // but we can return undefined to indicate they need special handling
-  const confirmationStatuses = ['waiting_for_responders', 'waiting_for_complainant', 'confirmed', 'disputed'];
+  const confirmationStatuses = ["waiting_for_responders", "waiting_for_complainant", "confirmed", "disputed"];
   if (confirmationStatuses.includes(statusLower)) {
     // Confirmation statuses are stored in a different field
     // Return a special marker that the controller can handle
@@ -84,7 +84,7 @@ function getWorkflowFromStatus(status) {
 
   // Otherwise, try to map from legacy status
   // Validate input to prevent object injection
-  if (statusLower && typeof statusLower === 'string' && statusLower.length < 100) {
+  if (statusLower && typeof statusLower === "string" && statusLower.length < 100) {
     // eslint-disable-next-line security/detect-object-injection
     return workflowMap[statusLower] || null;
   }
@@ -104,7 +104,7 @@ function normalizeComplaintData(complaint) {
   // Derive status from workflow_status for frontend compatibility
   normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   // Include confirmation status for proper workflow display
-  normalized.confirmation_status = complaint.confirmation_status || 'pending';
+  normalized.confirmation_status = complaint.confirmation_status || "pending";
   // Add assignment progress information
   const progressInfo = getAssignmentProgress(complaint);
   normalized.assignment_progress = progressInfo;
@@ -132,19 +132,19 @@ function getAssignmentProgress(complaint) {
       totalAssignments: 0,
       completedAssignments: 0,
       progressPercentage: 0,
-      progressText: 'No assignments'
+      progressText: "No assignments"
     };
   }
   const totalAssignments = complaint.assignments.length;
-  const completedAssignments = complaint.assignments.filter(a => a.status === 'completed').length;
+  const completedAssignments = complaint.assignments.filter(a => a.status === "completed").length;
   const progressPercentage = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
-  let progressText = '';
+  let progressText = "";
   if (totalAssignments === 0) {
-    progressText = 'No assignments';
+    progressText = "No assignments";
   } else if (completedAssignments === 0) {
-    progressText = 'No officers have completed yet';
+    progressText = "No officers have completed yet";
   } else if (completedAssignments === totalAssignments) {
-    progressText = 'All officers completed';
+    progressText = "All officers completed";
   } else {
     progressText = `${completedAssignments}/${totalAssignments} officers completed`;
   }
@@ -202,32 +202,32 @@ function getComplaintStatistics(complaints) {
     const normalized = normalizeComplaintData(complaint);
     // Count by status - validate input to prevent injection
     const {status} = normalized;
-    if (status && typeof status === 'string' && status.length < 100) {
+    if (status && typeof status === "string" && status.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
     }
     // Count by workflow status
     const workflowStatus = complaint.workflow_status;
-    if (workflowStatus && typeof workflowStatus === 'string' && workflowStatus.length < 100) {
+    if (workflowStatus && typeof workflowStatus === "string" && workflowStatus.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byWorkflowStatus[workflowStatus] = (stats.byWorkflowStatus[workflowStatus] || 0) + 1;
     }
     // Count by priority
     const {priority} = complaint;
-    if (priority && typeof priority === 'string' && priority.length < 100) {
+    if (priority && typeof priority === "string" && priority.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
     }
     // Count by category (more meaningful than type)
-    const category = complaint.category || 'Uncategorized';
-    if (typeof category === 'string' && category.length < 100) {
+    const category = complaint.category || "Uncategorized";
+    if (typeof category === "string" && category.length < 100) {
       stats.byCategory = stats.byCategory || {};
       // eslint-disable-next-line security/detect-object-injection
       stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
     }
     // Count by primary department
     const primaryDept = normalized.primary_department;
-    if (primaryDept && typeof primaryDept === 'string' && primaryDept.length < 100) {
+    if (primaryDept && typeof primaryDept === "string" && primaryDept.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byDepartment[primaryDept] = (stats.byDepartment[primaryDept] || 0) + 1;
     }

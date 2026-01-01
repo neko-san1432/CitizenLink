@@ -15,7 +15,7 @@ class DepartmentSelectionModal {
     this.selectedDepartments = [...this.preferredDepartments]; // Pre-select preferred
     await this.createModal();
     this.attachEventListeners();
-    this.modal.style.display = 'flex';
+    this.modal.style.display = "flex";
   }
   async createModal() {
     // Remove existing modal if any
@@ -24,8 +24,8 @@ class DepartmentSelectionModal {
     }
     // Get departments from API
     const departments = await this.fetchDepartments();
-    this.modal = document.createElement('div');
-    this.modal.className = 'modal-overlay';
+    this.modal = document.createElement("div");
+    this.modal.className = "modal-overlay";
     this.modal.innerHTML = `
       <div class="modal-content department-selection-modal">
         <div class="modal-header">
@@ -36,18 +36,18 @@ class DepartmentSelectionModal {
           <p>Select the office(s) to assign this complaint to:</p>
           <div class="department-list">
             ${departments.map(dept => `
-              <label class="department-item ${this.preferredDepartments.includes(dept.code) ? 'preferred' : ''}">
+              <label class="department-item ${this.preferredDepartments.includes(dept.code) ? "preferred" : ""}">
                 <input type="checkbox" 
                        value="${dept.code}" 
-                       ${this.selectedDepartments.includes(dept.code) ? 'checked' : ''}
+                       ${this.selectedDepartments.includes(dept.code) ? "checked" : ""}
                        class="department-checkbox">
                 <div class="department-info">
                   <div class="department-name">${dept.name}</div>
                   <div class="department-code">${dept.code}</div>
-                  ${this.preferredDepartments.includes(dept.code) ? '<span class="preferred-badge">Citizen Preferred</span>' : ''}
+                  ${this.preferredDepartments.includes(dept.code) ? '<span class="preferred-badge">Citizen Preferred</span>' : ""}
                 </div>
               </label>
-            `).join('')}
+            `).join("")}
           </div>
           <div class="selected-summary">
             <strong>Selected: <span id="selected-count">${this.selectedDepartments.length}</span> office(s)</strong>
@@ -68,12 +68,12 @@ class DepartmentSelectionModal {
 
   async fetchDepartments() {
     try {
-      const response = await fetch('/api/departments', {
-        method: 'GET',
+      const response = await fetch("/api/departments", {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
-        credentials: 'include'
+        credentials: "include"
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -81,23 +81,23 @@ class DepartmentSelectionModal {
       const data = await response.json();
       return data.data || data.departments || [];
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      console.error("Error fetching departments:", error);
       return [];
     }
   }
   attachEventListeners() {
     // Close modal
-    this.modal.querySelector('.modal-close').addEventListener('click', () => this.hide());
-    this.modal.querySelector('#cancel-approval').addEventListener('click', () => this.hide());
+    this.modal.querySelector(".modal-close").addEventListener("click", () => this.hide());
+    this.modal.querySelector("#cancel-approval").addEventListener("click", () => this.hide());
     // Close on overlay click
-    this.modal.addEventListener('click', (e) => {
+    this.modal.addEventListener("click", (e) => {
       if (e.target === this.modal) {
         this.hide();
       }
     });
     // Department checkboxes
-    this.modal.querySelectorAll('.department-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
+    this.modal.querySelectorAll(".department-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", (e) => {
         const deptCode = e.target.value;
         if (e.target.checked) {
           if (!this.selectedDepartments.includes(deptCode)) {
@@ -111,43 +111,43 @@ class DepartmentSelectionModal {
       });
     });
     // Confirm approval
-    this.modal.querySelector('#confirm-approval').addEventListener('click', () => {
+    this.modal.querySelector("#confirm-approval").addEventListener("click", () => {
       this.confirmApproval();
     });
   }
   updateSelectedCount() {
-    const countElement = this.modal.querySelector('#selected-count');
+    const countElement = this.modal.querySelector("#selected-count");
     if (countElement) {
       countElement.textContent = this.selectedDepartments.length;
     }
   }
   updateConfirmButton() {
-    const confirmBtn = this.modal.querySelector('#confirm-approval');
+    const confirmBtn = this.modal.querySelector("#confirm-approval");
     if (confirmBtn) {
       confirmBtn.disabled = this.selectedDepartments.length === 0;
     }
   }
   async confirmApproval() {
     if (this.selectedDepartments.length === 0) {
-      alert('Please select at least one office');
+      alert("Please select at least one office");
       return;
     }
     try {
-      const confirmBtn = this.modal.querySelector('#confirm-approval');
+      const confirmBtn = this.modal.querySelector("#confirm-approval");
       confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Processing...';
+      confirmBtn.textContent = "Processing...";
       const response = await fetch(`/api/coordinator/review-queue/${this.complaintId}/decide`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({
-          decision: 'approve',
+          decision: "approve",
           data: {
             departments: this.selectedDepartments,
             options: {
-              notes: 'Approved by coordinator'
+              notes: "Approved by coordinator"
             }
           }
         })
@@ -158,8 +158,8 @@ class DepartmentSelectionModal {
       const result = await response.json();
       if (result.success) {
         // Show success message
-        if (typeof showToast === 'function') {
-          showToast('success', result.message || 'Complaint approved successfully');
+        if (typeof showToast === "function") {
+          showToast("success", result.message || "Complaint approved successfully");
         }
         // Call callback to refresh the queue
         if (this.callback) {
@@ -167,15 +167,15 @@ class DepartmentSelectionModal {
         }
         this.hide();
       } else {
-        throw new Error(result.error || 'Failed to approve complaint');
+        throw new Error(result.error || "Failed to approve complaint");
       }
     } catch (error) {
-      console.error('Error approving complaint:', error);
+      console.error("Error approving complaint:", error);
       alert(`Failed to approve complaint: ${  error.message}`);
       // Re-enable button
-      const confirmBtn = this.modal.querySelector('#confirm-approval');
+      const confirmBtn = this.modal.querySelector("#confirm-approval");
       confirmBtn.disabled = false;
-      confirmBtn.textContent = 'Approve & Assign';
+      confirmBtn.textContent = "Approve & Assign";
     }
   }
   hide() {

@@ -11,15 +11,15 @@ export const getCsrfToken = async () => {
     return csrfToken;
   }
   try {
-    const response = await fetch('/api/auth/csrf-token');
+    const response = await fetch("/api/auth/csrf-token");
     const data = await response.json();
     if (data.success) {
       csrfToken = data.csrfToken;
       return csrfToken;
     }
-    throw new Error('Failed to get CSRF token');
+    throw new Error("Failed to get CSRF token");
   } catch (error) {
-    console.error('CSRF token fetch failed:', error);
+    console.error("CSRF token fetch failed:", error);
     throw error;
   }
 };
@@ -30,7 +30,7 @@ export const getCsrfToken = async () => {
  */
 
 export const getCsrfTokenFromHeaders = (response) => {
-  return response.headers.get('X-CSRF-Token');
+  return response.headers.get("X-CSRF-Token");
 };
 /**
  * Add CSRF token to form data
@@ -40,9 +40,9 @@ export const getCsrfTokenFromHeaders = (response) => {
 export const addCsrfTokenToForm = async (formData) => {
   try {
     const token = await getCsrfToken();
-    formData.append('_csrf', token);
+    formData.append("_csrf", token);
   } catch (error) {
-    console.error('Failed to add CSRF token to form:', error);
+    console.error("Failed to add CSRF token to form:", error);
     throw error;
   }
 };
@@ -54,10 +54,10 @@ export const addCsrfTokenToForm = async (formData) => {
 export const addCsrfTokenToHeaders = async (headers = {}) => {
   try {
     const token = await getCsrfToken();
-    headers['X-CSRF-Token'] = token;
+    headers["X-CSRF-Token"] = token;
     return headers;
   } catch (error) {
-    console.error('Failed to add CSRF token to headers:', error);
+    console.error("Failed to add CSRF token to headers:", error);
     throw error;
   }
 };

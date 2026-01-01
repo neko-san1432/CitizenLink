@@ -153,7 +153,7 @@ class OCRController {
     }
 
     // Clean value
-    let cleaned = value.replace(/[^A-Z0-9\s.,-]/gi, "").trim();
+    const cleaned = value.replace(/[^A-Z0-9\s.,-]/gi, "").trim();
     return cleaned;
   }
 
@@ -855,18 +855,18 @@ class OCRController {
           message: "Residency verified: Digos address and Name match found.",
           residencyToken,
         });
-      } else {
-        let errorMsg = "Verification Failed. ";
-        if (!hasLocation) errorMsg += "Document does not mention 'Digos'. ";
-        if (!hasName)
-          errorMsg += `Document does not mention surname '${lastName}'.`;
-
-        return res.json({
-          success: true,
-          verified: false,
-          error: errorMsg,
-        });
       }
+      let errorMsg = "Verification Failed. ";
+      if (!hasLocation) errorMsg += "Document does not mention 'Digos'. ";
+      if (!hasName)
+        errorMsg += `Document does not mention surname '${lastName}'.`;
+
+      return res.json({
+        success: true,
+        verified: false,
+        error: errorMsg,
+      });
+
     } catch (error) {
       console.error("[OCR-RESIDENCY] Error:", error);
       return res.status(500).json({

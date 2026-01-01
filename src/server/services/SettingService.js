@@ -1,5 +1,5 @@
-const SettingRepository = require('../repositories/SettingRepository');
-const Setting = require('../models/Setting');
+const SettingRepository = require("../repositories/SettingRepository");
+const Setting = require("../models/Setting");
 
 class SettingService {
 
@@ -18,7 +18,7 @@ class SettingService {
   async getSettingByKey(key) {
     const setting = await this.settingRepo.findByKey(key);
     if (!setting) {
-      throw new Error('Setting not found');
+      throw new Error("Setting not found");
     }
     return setting;
   }
@@ -33,17 +33,17 @@ class SettingService {
   async createSetting(settingData) {
     const validation = Setting.validate(settingData);
     if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const existingSetting = await this.settingRepo.findByKey(settingData.key);
     if (existingSetting) {
-      throw new Error('Setting key already exists');
+      throw new Error("Setting key already exists");
     }
     const sanitizedData = {
       key: settingData.key.trim().toLowerCase(),
       value: settingData.value,
-      type: settingData.type || 'text',
-      category: settingData.category || 'general',
+      type: settingData.type || "text",
+      category: settingData.category || "general",
       description: settingData.description?.trim() || null,
       is_public: settingData.is_public !== void 0 ? settingData.is_public : false
     };
@@ -56,7 +56,7 @@ class SettingService {
       ...settingData
     });
     if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const sanitizedData = {
       value: settingData.value,
@@ -70,13 +70,13 @@ class SettingService {
   async upsertSetting(settingData) {
     const validation = Setting.validate(settingData);
     if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const sanitizedData = {
       key: settingData.key.trim().toLowerCase(),
       value: settingData.value,
-      type: settingData.type || 'text',
-      category: settingData.category || 'general',
+      type: settingData.type || "text",
+      category: settingData.category || "general",
       description: settingData.description?.trim() || null,
       is_public: settingData.is_public !== void 0 ? settingData.is_public : false
     };
@@ -89,7 +89,7 @@ class SettingService {
   async initializeDefaultSettings() {
     const defaultSettings = [
       {
-        key: 'terms_and_conditions',
+        key: "terms_and_conditions",
         value: `<h2>Terms and Conditions</h2>
         <p>By using CitizenLink, you agree to the following terms:</p>
         <ul>
@@ -99,13 +99,13 @@ class SettingService {
           <li>Do not submit false or malicious reports</li>
         </ul>
         <p>These terms may be updated periodically. Continued use constitutes acceptance of changes.</p>`,
-        type: 'html',
-        category: 'legal',
-        description: 'Platform terms and conditions',
+        type: "html",
+        category: "legal",
+        description: "Platform terms and conditions",
         is_public: true
       },
       {
-        key: 'privacy_policy',
+        key: "privacy_policy",
         value: `<h2>Privacy Policy</h2>
         <p>We are committed to protecting your privacy:</p>
         <ul>
@@ -115,17 +115,17 @@ class SettingService {
           <li>You may request data deletion subject to legal requirements</li>
         </ul>
         <p>Contact us for privacy-related concerns or data requests.</p>`,
-        type: 'html',
-        category: 'legal',
-        description: 'Platform privacy policy',
+        type: "html",
+        category: "legal",
+        description: "Platform privacy policy",
         is_public: true
       },
       {
-        key: 'complaint_disclaimer',
-        value: 'Filing a complaint does not guarantee immediate resolution. Response times may vary based on complexity and department workload. Emergency situations should be reported directly to appropriate authorities.',
-        type: 'text',
-        category: 'complaints',
-        description: 'Disclaimer shown during complaint submission',
+        key: "complaint_disclaimer",
+        value: "Filing a complaint does not guarantee immediate resolution. Response times may vary based on complexity and department workload. Emergency situations should be reported directly to appropriate authorities.",
+        type: "text",
+        category: "complaints",
+        description: "Disclaimer shown during complaint submission",
         is_public: true
       }
     ];

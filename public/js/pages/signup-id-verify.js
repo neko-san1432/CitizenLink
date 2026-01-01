@@ -1009,8 +1009,8 @@ import { supabase } from "../config/config.js";
             field: mapping.label,
             match: true,
             score: 100, // Auto-pass
-            idValue: idValue + " (Migrant Verified)",
-            formValue: formValue,
+            idValue: `${idValue  } (Migrant Verified)`,
+            formValue,
           });
           return; // Skip standard comparison
         }
@@ -1178,8 +1178,8 @@ import { supabase } from "../config/config.js";
           <div style="color: var(--error-600); font-size: 0.9rem;">
             Please use only a valid <strong>PhilSys ID</strong> (National ID).<br>
             <span style="font-size: 0.8em; color: #666; display:inline-block; margin-top:4px;">(Debug: Detected Type '${
-              extractedIdData?.idType || "Unknown"
-            }')</span>
+  extractedIdData?.idType || "Unknown"
+  }')</span>
           </div>
         </div>
       `;
@@ -1192,8 +1192,8 @@ import { supabase } from "../config/config.js";
           <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Didn't Match</div>
           <div style="color: var(--error-600); font-size: 0.9rem;">
             The information on your ID does not match the details you provided (${
-              failedRequired.length
-            } field${failedRequired.length !== 1 ? "s" : ""} mismatched).
+  failedRequired.length
+  } field${failedRequired.length !== 1 ? "s" : ""} mismatched).
             <br>Please review your inputs or ensure the ID belongs to you.
           </div>
         </div>
@@ -1232,10 +1232,10 @@ import { supabase } from "../config/config.js";
 
           return `
           <div class="comparison-item ${matchClass}" style="margin-bottom: 12px; padding: 12px; border-radius: 6px; background: ${
-            comp.match ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)"
-          }; border-left: 3px solid ${
-            comp.match ? "var(--success-600)" : "var(--error-600)"
-          };">
+    comp.match ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)"
+  }; border-left: 3px solid ${
+    comp.match ? "var(--success-600)" : "var(--error-600)"
+  };">
             <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
               ${matchIcon}
               <span>${safeField}</span>
@@ -1248,10 +1248,10 @@ import { supabase } from "../config/config.js";
               <span style="font-weight: 500;">Form:</span> ${safeFormValue}
             </div>
             ${
-              !comp.match && comp.type !== "gender"
-                ? '<div style="font-size: 0.8rem; color: var(--error-600); margin-top: 4px;">Score below 85% threshold</div>'
-                : ""
-            }
+  !comp.match && comp.type !== "gender"
+    ? '<div style="font-size: 0.8rem; color: var(--error-600); margin-top: 4px;">Score below 85% threshold</div>'
+    : ""
+  }
           </div>
         `;
         })
@@ -1405,8 +1405,8 @@ import { supabase } from "../config/config.js";
       kind === "error"
         ? "var(--error-600)"
         : kind === "success"
-        ? "var(--success-600)"
-        : "var(--gray-600)";
+          ? "var(--success-600)"
+          : "var(--gray-600)";
   }
 
   function escapeHtml(s) {
@@ -1505,7 +1505,7 @@ import { supabase } from "../config/config.js";
 
         if (result.success && result.verified) {
           // Success!
-          statusDiv.textContent = "✅ " + result.message;
+          statusDiv.textContent = `✅ ${  result.message}`;
           statusDiv.className =
             "mt-2 text-center text-sm text-green-600 font-bold";
 
@@ -1529,7 +1529,7 @@ import { supabase } from "../config/config.js";
         } else {
           // Failure
           statusDiv.textContent =
-            "❌ " + (result.error || "Verification failed");
+            `❌ ${  result.error || "Verification failed"}`;
           statusDiv.className =
             "mt-2 text-center text-sm text-red-600 font-bold";
           verifyBtn.disabled = false;

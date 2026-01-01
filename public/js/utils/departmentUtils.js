@@ -2,7 +2,7 @@
  * Department Utilities
  * Provides dynamic department name mapping and lookup functions
  */
-import apiClient from '../config/apiClient.js';
+import apiClient from "../config/apiClient.js";
 
 // Cache for department data
 let departmentCache = null;
@@ -19,7 +19,7 @@ export async function getDepartments() {
     return departmentCache;
   }
   try {
-    const { data, error } = await apiClient.get('/api/department-structure/categories');
+    const { data, error } = await apiClient.get("/api/department-structure/categories");
     if (error) throw error;
     // Flatten the hierarchical structure into a simple array
     const departments = [];
@@ -48,7 +48,7 @@ export async function getDepartments() {
     cacheTimestamp = now;
     return departments;
   } catch (error) {
-    console.error('Error fetching departments:', error);
+    console.error("Error fetching departments:", error);
     // Return empty array on error
     return [];
   }
@@ -72,7 +72,7 @@ export async function getDepartmentNameByIdOrCode(idOrCode) {
   const department = departments.find(dept =>
     String(dept.id) === String(idOrCode) || dept.code === idOrCode
   );
-  return department ? department.name : (typeof idOrCode === 'number' ? `Department ${idOrCode}` : idOrCode);
+  return department ? department.name : (typeof idOrCode === "number" ? `Department ${idOrCode}` : idOrCode);
 }
 
 /**
@@ -89,7 +89,7 @@ export async function getActiveDepartments() {
     return activeDepartmentsCache;
   }
   try {
-    const response = await fetch('/api/departments/active');
+    const response = await fetch("/api/departments/active");
     const result = await response.json();
     if (result.success && result.data) {
       activeDepartmentsCache = result.data;
@@ -98,7 +98,7 @@ export async function getActiveDepartments() {
     }
     return [];
   } catch (error) {
-    console.error('Error fetching active departments:', error);
+    console.error("Error fetching active departments:", error);
     return [];
   }
 }

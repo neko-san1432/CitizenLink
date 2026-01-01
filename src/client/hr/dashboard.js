@@ -393,15 +393,15 @@ async function loadPendingSignups() {
           <div class="user-item-name">${escapeHtml(name)}</div>
           <div class="user-item-email">${escapeHtml(u.email || "")}</div>
           <div class="user-item-role">Requested: ${escapeHtml(
-            role
-          )} @ ${escapeHtml(String(dept))}</div>
+    role
+  )} @ ${escapeHtml(String(dept))}</div>
           <div style="margin-top:8px; display:flex; gap:8px;">
             <button class="btn btn-success btn-sm" data-approve="${
-              u.id
-            }">Approve</button>
+  u.id
+}">Approve</button>
             <button class="btn btn-danger btn-sm" data-reject="${
-              u.id
-            }">Reject</button>
+  u.id
+}">Reject</button>
           </div>
         </div>`;
       })
@@ -514,8 +514,8 @@ function renderUserList(users) {
       <div><strong>${escapeHtml(u.fullName || u.name || u.email)}</strong></div>
       <div class="user-meta">${escapeHtml(u.email || "")}</div>
       <div class="user-meta">Role: ${escapeHtml(
-        u.role || ""
-      )} | Brgy: ${escapeHtml(u.address?.barangay || "-")}</div>
+    u.role || ""
+  )} | Brgy: ${escapeHtml(u.address?.barangay || "-")}</div>
     </div>`
     )
     .join("");
@@ -543,25 +543,25 @@ async function loadUserDetails(userId) {
           <div style="width:48px; height:48px; border-radius:50%; background:#eee;"></div>
           <div>
             <div style="font-weight:700; font-size:1.1rem;">${escapeHtml(
-              u.fullName || u.name || u.email
-            )}</div>
+    u.fullName || u.name || u.email
+  )}</div>
             <div class="user-meta">${escapeHtml(u.email || "")}</div>
           </div>
         </div>
         <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
           <div><strong>Role:</strong> ${escapeHtml(u.role || "")}</div>
           <div><strong>Department:</strong> ${escapeHtml(
-            u.department || "-"
-          )}</div>
+    u.department || "-"
+  )}</div>
           <div><strong>Barangay:</strong> ${escapeHtml(
-            u.address?.barangay || "-"
-          )}</div>
+    u.address?.barangay || "-"
+  )}</div>
           <div><strong>City:</strong> ${escapeHtml(
-            u.address?.city || "-"
-          )}</div>
+    u.address?.city || "-"
+  )}</div>
           <div><strong>Mobile:</strong> ${escapeHtml(
-            u.mobileNumber || "-"
-          )}</div>
+    u.mobileNumber || "-"
+  )}</div>
         </div>
       `;
     } else {
@@ -595,10 +595,10 @@ async function loadUserComplaints(userId) {
           </div>
           <div class="user-meta">Type: ${escapeHtml(c.type || "-")}</div>
           ${
-            c.location_text
-              ? `<div class="user-meta">${escapeHtml(c.location_text)}</div>`
-              : ""
-          }
+  c.location_text
+    ? `<div class="user-meta">${escapeHtml(c.location_text)}</div>`
+    : ""
+}
         </div>
       `
         )
@@ -780,24 +780,24 @@ async function viewRoleHistory(userId) {
           <h4>Role Change History</h4>
           <div style="max-height: 400px; overflow-y: auto;">
             ${result.history
-              .map(
-                (entry) => `
+    .map(
+      (entry) => `
               <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; background: #f9f9f9;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                   <strong>${entry.old_role} → ${entry.new_role}</strong>
                   <span style="color: #7f8c8d; font-size: 0.9rem;">${new Date(
-                    entry.created_at
-                  ).toLocaleString()}</span>
+    entry.created_at
+  ).toLocaleString()}</span>
                 </div>
                 ${
-                  entry.metadata && entry.metadata.reason
-                    ? `<div style="color: #555;">Reason: ${entry.metadata.reason}</div>`
-                    : ""
-                }
+  entry.metadata && entry.metadata.reason
+    ? `<div style="color: #555;">Reason: ${entry.metadata.reason}</div>`
+    : ""
+}
               </div>
             `
-              )
-              .join("")}
+    )
+    .join("")}
           </div>
         </div>
       `;
@@ -899,15 +899,15 @@ async function loadBottleneckAlerts() {
         <div class="alert-item p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded flex justify-between items-center animate-fade-in">
           <div>
             <div class="font-bold text-yellow-800">${escapeHtml(
-              alert.message
-            )}</div>
+    alert.message
+  )}</div>
             <div class="text-xs text-yellow-600">${escapeHtml(
-              alert.department
-            )} - ${alert.count} overdue tasks</div>
+    alert.department
+  )} - ${alert.count} overdue tasks</div>
           </div>
           <button class="btn btn-sm btn-outline-warning" onclick="escalateBottleneck('${
-            alert.department
-          }')">Escalate</button>
+  alert.department
+}')">Escalate</button>
         </div>
       `
         )

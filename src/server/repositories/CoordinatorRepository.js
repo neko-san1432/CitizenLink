@@ -1,4 +1,4 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 /**
  * CoordinatorRepository
@@ -22,19 +22,19 @@ class CoordinatorRepository {
       // 1. New complaints (workflow_status = 'new')
       // 2. Complaints assigned to this coordinator but not yet processed
       let query = this.supabase
-        .from('complaints')
+        .from("complaints")
         .select(`
           *,
           assigned_coordinator_id
         `)
-        .eq('workflow_status', 'new')
-        .order('submitted_at', { ascending: false });
+        .eq("workflow_status", "new")
+        .order("submitted_at", { ascending: false });
       // Apply filters
       if (filters.priority) {
-        query = query.eq('priority', filters.priority);
+        query = query.eq("priority", filters.priority);
       }
       if (filters.type) {
-        query = query.eq('type', filters.type);
+        query = query.eq("type", filters.type);
       }
       if (filters.hasAlgorithmResults !== void 0) {
         // Filter complaints with/without similarity results
@@ -63,10 +63,10 @@ class CoordinatorRepository {
                 };
               });
           } else {
-            console.warn('[COORDINATOR_REPO] Could not fetch user profiles:', usersError?.message);
+            console.warn("[COORDINATOR_REPO] Could not fetch user profiles:", usersError?.message);
           }
         } catch (userFetchError) {
-          console.warn('[COORDINATOR_REPO] Error fetching user profiles:', userFetchError.message);
+          console.warn("[COORDINATOR_REPO] Error fetching user profiles:", userFetchError.message);
           // Continue without user profiles - complaints will have null submitted_by_profile
         }
       }
@@ -76,7 +76,7 @@ class CoordinatorRepository {
         submitted_by_profile: usersMap[complaint.submitted_by] || null
       }));
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Get review queue error:', error);
+      console.error("[COORDINATOR_REPO] Get review queue error:", error);
       throw error;
     }
   }
@@ -86,9 +86,9 @@ class CoordinatorRepository {
   async getComplaintForReview(complaintId) {
     try {
       const { data: complaint, error: complaintError } = await this.supabase
-        .from('complaints')
-        .select('*')
-        .eq('id', complaintId)
+        .from("complaints")
+        .select("*")
+        .eq("id", complaintId)
         .single();
       if (complaintError) throw complaintError;
       // Fetch submitter info from auth.users
@@ -105,12 +105,12 @@ class CoordinatorRepository {
       }
       // Get evidence files
       const { data: evidence, error: evidenceError } = await this.supabase
-        .from('complaint_evidence')
-        .select('*')
-        .eq('complaint_id', complaintId)
-        .order('uploaded_at', { ascending: false });
+        .from("complaint_evidence")
+        .select("*")
+        .eq("complaint_id", complaintId)
+        .order("uploaded_at", { ascending: false });
       if (evidenceError) {
-        console.warn('[COORDINATOR_REPO] Could not fetch evidence:', evidenceError.message);
+        console.warn("[COORDINATOR_REPO] Could not fetch evidence:", evidenceError.message);
         complaint.evidence = [];
       } else {
         // Transform evidence data for frontend
@@ -120,13 +120,13 @@ class CoordinatorRepository {
           if (ev.file_path) {
             try {
               const { data: signedUrlData, error: signedUrlError } = await this.supabase.storage
-                .from('complaint-evidence')
+                .from("complaint-evidence")
                 .createSignedUrl(ev.file_path, 3600); // 1 hour expiry
               if (!signedUrlError && signedUrlData) {
                 signedUrl = signedUrlData.signedUrl;
               }
             } catch (urlError) {
-              console.warn('[COORDINATOR_REPO] Failed to generate signed URL for evidence:', urlError.message);
+              console.warn("[COORDINATOR_REPO] Failed to generate signed URL for evidence:", urlError.message);
             }
           }
           return {
@@ -145,19 +145,19 @@ class CoordinatorRepository {
       }
       // Get similarities
       const { data: similarities, error: simError } = await this.supabase
-        .from('complaint_similarities')
-        .select('*')
-        .eq('complaint_id', complaintId)
-        .order('similarity_score', { ascending: false });
+        .from("complaint_similarities")
+        .select("*")
+        .eq("complaint_id", complaintId)
+        .order("similarity_score", { ascending: false });
       if (simError) throw simError;
       // Fetch similar complaint details separately
       if (similarities && similarities.length > 0) {
         const similarComplaintIds = similarities.map(s => s.similar_complaint_id).filter(Boolean);
         if (similarComplaintIds.length > 0) {
           const { data: similarComplaints } = await this.supabase
-            .from('complaints')
-            .select('id, title, type, workflow_status, submitted_at, location_text, latitude, longitude')
-            .in('id', similarComplaintIds);
+            .from("complaints")
+            .select("id, title, type, workflow_status, submitted_at, location_text, latitude, longitude")
+            .in("id", similarComplaintIds);
           // Create a map for quick lookup
           const complaintsMap = {};
           (similarComplaints || []).forEach(c => {
@@ -171,10 +171,10 @@ class CoordinatorRepository {
       }
       // Get workflow logs
       const { data: logs, error: logsError } = await this.supabase
-        .from('complaint_workflow_logs')
-        .select('*')
-        .eq('complaint_id', complaintId)
-        .order('created_at', { ascending: false });
+        .from("complaint_workflow_logs")
+        .select("*")
+        .eq("complaint_id", complaintId)
+        .order("created_at", { ascending: false });
       if (logsError) throw logsError;
       return {
         ...complaint,
@@ -182,7 +182,7 @@ class CoordinatorRepository {
         workflow_logs: logs || []
       };
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Get complaint for review error:', error);
+      console.error("[COORDINATOR_REPO] Get complaint for review error:", error);
       throw error;
     }
   }
@@ -193,18 +193,18 @@ class CoordinatorRepository {
     try {
       // Update complaint
       const { error: updateError } = await this.supabase
-        .from('complaints')
+        .from("complaints")
         .update({
           is_duplicate: true,
           master_complaint_id: masterComplaintId,
-          status: 'closed',
+          status: "closed",
           updated_at: new Date().toISOString()
         })
-        .eq('id', complaintId);
+        .eq("id", complaintId);
       if (updateError) throw updateError;
       // Insert duplicate record
       const { error: insertError } = await this.supabase
-        .from('complaint_duplicates')
+        .from("complaint_duplicates")
         .insert({
           master_complaint_id: masterComplaintId,
           duplicate_complaint_id: complaintId,
@@ -214,13 +214,13 @@ class CoordinatorRepository {
         });
       if (insertError) throw insertError;
       // Log action
-      await this.logAction(complaintId, 'marked_duplicate', coordinatorId, {
+      await this.logAction(complaintId, "marked_duplicate", coordinatorId, {
         master_complaint_id: masterComplaintId,
         reason
       });
       return true;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Mark as duplicate error:', error);
+      console.error("[COORDINATOR_REPO] Mark as duplicate error:", error);
       throw error;
     }
   }
@@ -230,17 +230,17 @@ class CoordinatorRepository {
   async updateSimilarityDecision(similarityId, decision, coordinatorId) {
     try {
       const { error } = await this.supabase
-        .from('complaint_similarities')
+        .from("complaint_similarities")
         .update({
           coordinator_decision: decision,
           reviewed_by: coordinatorId,
           reviewed_at: new Date().toISOString()
         })
-        .eq('id', similarityId);
+        .eq("id", similarityId);
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Update similarity decision error:', error);
+      console.error("[COORDINATOR_REPO] Update similarity decision error:", error);
       throw error;
     }
   }
@@ -252,7 +252,7 @@ class CoordinatorRepository {
       const updateData = {
         // primary_department: departmentName, // Removed - derived from department_r
         // status: 'in progress', // Removed - derived from workflow_status
-        workflow_status: 'assigned',
+        workflow_status: "assigned",
         updated_at: new Date().toISOString()
       };
       if (options.priority) {
@@ -265,21 +265,21 @@ class CoordinatorRepository {
         updateData.coordinator_notes = options.notes;
       }
       const { data, error } = await this.supabase
-        .from('complaints')
+        .from("complaints")
         .update(updateData)
-        .eq('id', complaintId)
+        .eq("id", complaintId)
         .select()
         .single();
       if (error) throw error;
       // Log action
-      await this.logAction(complaintId, 'assigned_to_department', coordinatorId, {
+      await this.logAction(complaintId, "assigned_to_department", coordinatorId, {
         department: departmentName,
         priority: options.priority,
         deadline: options.deadline
       });
       return data;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Assign to department error:', error);
+      console.error("[COORDINATOR_REPO] Assign to department error:", error);
       throw error;
     }
   }
@@ -289,25 +289,25 @@ class CoordinatorRepository {
   async bulkAssign(complaintIds, departmentName, coordinatorId) {
     try {
       const { data, error } = await this.supabase
-        .from('complaints')
+        .from("complaints")
         .update({
           // primary_department: departmentName, // Removed - derived from department_r
           // status: 'in progress', // Removed - derived from workflow_status
-          workflow_status: 'assigned',
+          workflow_status: "assigned",
           updated_at: new Date().toISOString()
         })
-        .in('id', complaintIds)
+        .in("id", complaintIds)
         .select();
       if (error) throw error;
       // Log actions
       for (const complaintId of complaintIds) {
-        await this.logAction(complaintId, 'bulk_assigned', coordinatorId, {
+        await this.logAction(complaintId, "bulk_assigned", coordinatorId, {
           department: departmentName
         });
       }
       return data;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Bulk assign error:', error);
+      console.error("[COORDINATOR_REPO] Bulk assign error:", error);
       throw error;
     }
   }
@@ -317,25 +317,25 @@ class CoordinatorRepository {
   async getActiveClusters(filters = {}) {
     try {
       let query = this.supabase
-        .from('complaint_clusters')
-        .select('*')
-        .eq('status', 'active')
-        .order('identified_at', { ascending: false });
+        .from("complaint_clusters")
+        .select("*")
+        .eq("status", "active")
+        .order("identified_at", { ascending: false });
       if (filters.patternType) {
-        query = query.eq('pattern_type', filters.patternType);
+        query = query.eq("pattern_type", filters.patternType);
       }
       const { data, error } = await query.limit(filters.limit || 20);
       if (error) {
         // If table doesn't exist, return empty array instead of failing
-        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
-          console.warn('[COORDINATOR_REPO] Clusters table not available');
+        if (error.code === "PGRST116" || error.message.includes("does not exist")) {
+          console.warn("[COORDINATOR_REPO] Clusters table not available");
           return [];
         }
         throw error;
       }
       return data || [];
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Get clusters error:', error);
+      console.error("[COORDINATOR_REPO] Get clusters error:", error);
       // Return empty array instead of crashing the dashboard
       return [];
     }
@@ -346,7 +346,7 @@ class CoordinatorRepository {
   async logAction(complaintId, actionType, actionBy, details = {}) {
     try {
       const { error } = await this.supabase
-        .from('complaint_workflow_logs')
+        .from("complaint_workflow_logs")
         .insert({
           complaint_id: complaintId,
           action_type: actionType,
@@ -357,7 +357,7 @@ class CoordinatorRepository {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Log action error:', error);
+      console.error("[COORDINATOR_REPO] Log action error:", error);
       // Don't throw - logging shouldn't break main flow
       return false;
     }
@@ -368,17 +368,17 @@ class CoordinatorRepository {
   async isCoordinator(userId) {
     try {
       const { data, error } = await this.supabase
-        .from('complaint_coordinators')
-        .select('id, department')
-        .eq('user_id', userId)
-        .eq('is_active', true);
+        .from("complaint_coordinators")
+        .select("id, department")
+        .eq("user_id", userId)
+        .eq("is_active", true);
       if (error) throw error;
       return {
         isCoordinator: data && data.length > 0,
         departments: data ? data.map(d => d.department) : []
       };
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Check coordinator error:', error);
+      console.error("[COORDINATOR_REPO] Check coordinator error:", error);
       throw error;
     }
   }
@@ -389,17 +389,17 @@ class CoordinatorRepository {
     try {
       // console.log removed for security
       const { count, error } = await this.supabase
-        .from('complaints')
-        .select('*', { count: 'exact', head: true })
-        .eq('workflow_status', 'new');
+        .from("complaints")
+        .select("*", { count: "exact", head: true })
+        .eq("workflow_status", "new");
       if (error) {
-        console.error('[COORDINATOR_REPO] Pending count error:', error);
+        console.error("[COORDINATOR_REPO] Pending count error:", error);
         throw error;
       }
       // console.log removed for security
       return count || 0;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Get pending count error:', error);
+      console.error("[COORDINATOR_REPO] Get pending count error:", error);
       throw error;
     }
   }
@@ -412,45 +412,45 @@ class CoordinatorRepository {
       // console.log removed for security
       // Get complaints that this coordinator can review (new complaints)
       const { data: reviewableComplaints, error: reviewError } = await this.supabase
-        .from('complaints')
-        .select('*')
-        .eq('workflow_status', 'new')
-        .gte('submitted_at', startDate)
-        .lte('submitted_at', endDate);
+        .from("complaints")
+        .select("*")
+        .eq("workflow_status", "new")
+        .gte("submitted_at", startDate)
+        .lte("submitted_at", endDate);
       if (reviewError) {
-        console.error('[COORDINATOR_REPO] Reviewable complaints error:', reviewError);
+        console.error("[COORDINATOR_REPO] Reviewable complaints error:", reviewError);
         throw reviewError;
       }
       // console.log removed for security
       // Count by workflow status
       const statusCounts = (reviewableComplaints || []).reduce((acc, complaint) => {
-        const status = complaint.workflow_status || 'unknown';
+        const status = complaint.workflow_status || "unknown";
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {});
       // console.log removed for security
       // Get duplicate decisions made by this coordinator
       const { data: duplicates, error: dupError } = await this.supabase
-        .from('complaint_similarities')
-        .select('*')
-        .eq('reviewed_by', coordinatorId)
-        .eq('coordinator_decision', 'duplicate')
-        .gte('reviewed_at', startDate)
-        .lte('reviewed_at', endDate);
+        .from("complaint_similarities")
+        .select("*")
+        .eq("reviewed_by", coordinatorId)
+        .eq("coordinator_decision", "duplicate")
+        .gte("reviewed_at", startDate)
+        .lte("reviewed_at", endDate);
       if (dupError) {
-        console.error('[COORDINATOR_REPO] Duplicates error:', dupError);
+        console.error("[COORDINATOR_REPO] Duplicates error:", dupError);
         throw dupError;
       }
       // console.log removed for security
       // Get assignments made by this coordinator (from workflow logs or assignment records)
       const { data: assignments, error: assignError } = await this.supabase
-        .from('complaint_assignments')
-        .select('*')
-        .eq('assigned_by', coordinatorId)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate);
+        .from("complaint_assignments")
+        .select("*")
+        .eq("assigned_by", coordinatorId)
+        .gte("created_at", startDate)
+        .lte("created_at", endDate);
       if (assignError) {
-        console.error('[COORDINATOR_REPO] Assignments error:', assignError);
+        console.error("[COORDINATOR_REPO] Assignments error:", assignError);
         throw assignError;
       }
       // console.log removed for security
@@ -463,7 +463,7 @@ class CoordinatorRepository {
       // console.log removed for security
       return result;
     } catch (error) {
-      console.error('[COORDINATOR_REPO] Get stats error:', error);
+      console.error("[COORDINATOR_REPO] Get stats error:", error);
       throw error;
     }
   }

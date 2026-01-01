@@ -1,4 +1,4 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 /**
  * Service for managing ID verification records
@@ -21,7 +21,7 @@ class IDVerificationService {
 
       // Validate required fields
       if (!userId || !ocrData || !ocrData.fields || !ocrData.fields.idNumber) {
-        throw new Error('Missing required fields: userId, idNumber');
+        throw new Error("Missing required fields: userId, idNumber");
       }
 
       const { idType, fields, confidence } = ocrData;
@@ -30,32 +30,32 @@ class IDVerificationService {
       // Check if ID number already exists
       const exists = await this.checkIdNumberExists(idNumber);
       if (exists) {
-        throw new Error('ID_NUMBER_ALREADY_REGISTERED');
+        throw new Error("ID_NUMBER_ALREADY_REGISTERED");
       }
 
       // Prepare verification data
       const verificationData = {
         user_id: userId,
         id_number: idNumber,
-        id_type: idType || 'Unknown',
+        id_type: idType || "Unknown",
         extracted_data: fields,
-        verification_status: 'pending',
+        verification_status: "pending",
         confidence_score: confidence || null
       };
 
       // Insert verification record
       const { data, error } = await supabase
-        .from('id_verifications')
+        .from("id_verifications")
         .insert([verificationData])
         .select()
         .single();
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error storing verification:', error);
+        console.error("[ID_VERIFICATION] Error storing verification:", error);
         throw error;
       }
 
-      console.log('[ID_VERIFICATION] Verification stored successfully:', {
+      console.log("[ID_VERIFICATION] Verification stored successfully:", {
         verificationId: data.id,
         userId,
         idType: data.id_type
@@ -63,7 +63,7 @@ class IDVerificationService {
 
       return data;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Store verification error:', error);
+      console.error("[ID_VERIFICATION] Store verification error:", error);
       throw error;
     }
   }
@@ -77,22 +77,22 @@ class IDVerificationService {
     try {
       const supabase = Database.getClient();
 
-      if (!idNumber || typeof idNumber !== 'string') {
+      if (!idNumber || typeof idNumber !== "string") {
         return false;
       }
 
       // Use RPC function for efficient lookup
       const { data, error } = await supabase
-        .rpc('check_id_number_exists', { p_id_number: idNumber.trim() });
+        .rpc("check_id_number_exists", { p_id_number: idNumber.trim() });
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error checking ID number:', error);
+        console.error("[ID_VERIFICATION] Error checking ID number:", error);
         throw error;
       }
 
       return data === true;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Check ID number error:', error);
+      console.error("[ID_VERIFICATION] Check ID number error:", error);
       throw error;
     }
   }
@@ -107,25 +107,25 @@ class IDVerificationService {
       const supabase = Database.getClient();
 
       if (!userId) {
-        throw new Error('User ID is required');
+        throw new Error("User ID is required");
       }
 
       const { data, error } = await supabase
-        .from('id_verifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("id_verifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error getting verification status:', error);
+        console.error("[ID_VERIFICATION] Error getting verification status:", error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Get verification status error:', error);
+      console.error("[ID_VERIFICATION] Get verification status error:", error);
       throw error;
     }
   }
@@ -143,7 +143,7 @@ class IDVerificationService {
       const supabase = Database.getClient();
 
       // Validate status
-      const validStatuses = ['pending', 'verified', 'rejected', 'flagged'];
+      const validStatuses = ["pending", "verified", "rejected", "flagged"];
       if (!validStatuses.includes(status)) {
         throw new Error(`Invalid status: ${status}`);
       }
@@ -154,7 +154,7 @@ class IDVerificationService {
       };
 
       // Set verified_at timestamp if status is verified
-      if (status === 'verified') {
+      if (status === "verified") {
         updateData.verified_at = new Date().toISOString();
       }
 
@@ -164,18 +164,18 @@ class IDVerificationService {
       }
 
       const { data, error } = await supabase
-        .from('id_verifications')
+        .from("id_verifications")
         .update(updateData)
-        .eq('id', verificationId)
+        .eq("id", verificationId)
         .select()
         .single();
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error updating verification status:', error);
+        console.error("[ID_VERIFICATION] Error updating verification status:", error);
         throw error;
       }
 
-      console.log('[ID_VERIFICATION] Verification status updated:', {
+      console.log("[ID_VERIFICATION] Verification status updated:", {
         verificationId,
         status,
         adminId
@@ -183,7 +183,7 @@ class IDVerificationService {
 
       return data;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Update verification status error:', error);
+      console.error("[ID_VERIFICATION] Update verification status error:", error);
       throw error;
     }
   }
@@ -199,28 +199,28 @@ class IDVerificationService {
       const supabase = Database.getClient();
 
       const { data, error } = await supabase
-        .from('id_verifications')
+        .from("id_verifications")
         .update({
-          verification_status: 'flagged',
+          verification_status: "flagged",
           rejection_reason: reason
         })
-        .eq('user_id', userId)
+        .eq("user_id", userId)
         .select()
         .single();
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error flagging verification:', error);
+        console.error("[ID_VERIFICATION] Error flagging verification:", error);
         throw error;
       }
 
-      console.log('[ID_VERIFICATION] Verification flagged for review:', {
+      console.log("[ID_VERIFICATION] Verification flagged for review:", {
         userId,
         reason
       });
 
       return data;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Flag for review error:', error);
+      console.error("[ID_VERIFICATION] Flag for review error:", error);
       throw error;
     }
   }
@@ -237,25 +237,25 @@ class IDVerificationService {
       const supabase = Database.getClient();
 
       const query = supabase
-        .from('id_verifications')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from("id_verifications")
+        .select("*")
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (status) {
-        query.eq('verification_status', status);
+        query.eq("verification_status", status);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error getting verifications by status:', error);
+        console.error("[ID_VERIFICATION] Error getting verifications by status:", error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('[ID_VERIFICATION] Get verifications by status error:', error);
+      console.error("[ID_VERIFICATION] Get verifications by status error:", error);
       throw error;
     }
   }
@@ -270,19 +270,19 @@ class IDVerificationService {
       const supabase = Database.getClient();
 
       const { error } = await supabase
-        .from('id_verifications')
+        .from("id_verifications")
         .delete()
-        .eq('id', verificationId);
+        .eq("id", verificationId);
 
       if (error) {
-        console.error('[ID_VERIFICATION] Error deleting verification:', error);
+        console.error("[ID_VERIFICATION] Error deleting verification:", error);
         throw error;
       }
 
-      console.log('[ID_VERIFICATION] Verification deleted:', verificationId);
+      console.log("[ID_VERIFICATION] Verification deleted:", verificationId);
       return true;
     } catch (error) {
-      console.error('[ID_VERIFICATION] Delete verification error:', error);
+      console.error("[ID_VERIFICATION] Delete verification error:", error);
       throw error;
     }
   }

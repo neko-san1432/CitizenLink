@@ -1,6 +1,6 @@
 // Aggressive OAuth cleanup utility
-import { supabase } from '../config/config.js';
-import { getOAuthContext, clearOAuthContext } from '../auth/authChecker.js';
+import { supabase } from "../config/config.js";
+import { getOAuthContext, clearOAuthContext } from "../auth/authChecker.js";
 
 /**
  * Clears OAuth session and context (without deleting users)
@@ -16,7 +16,7 @@ import { getOAuthContext, clearOAuthContext } from '../auth/authChecker.js';
 export const shouldSkipAuthCheck = () => {
   try {
     const ctx = getOAuthContext();
-    return ctx && ctx.status === 'pending';
+    return ctx && ctx.status === "pending";
   } catch {
     return false;
   }

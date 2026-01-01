@@ -2,7 +2,7 @@
  * Department Utilities
  * Provides dynamic department name mapping and lookup functions
  */
-import apiClient from '../config/apiClient.js';
+import apiClient from "../config/apiClient.js";
 
 // Cache for department data
 let departmentCache = null;
@@ -19,7 +19,7 @@ export async function getDepartments() {
     return departmentCache;
   }
   try {
-    const { data, error } = await apiClient.get('/api/department-structure/categories');
+    const { data, error } = await apiClient.get("/api/department-structure/categories");
     if (error) throw error;
     // Flatten the hierarchical structure into a simple array
     const departments = [];
@@ -48,7 +48,7 @@ export async function getDepartments() {
     cacheTimestamp = now;
     return departments;
   } catch (error) {
-    console.error('Error fetching departments:', error);
+    console.error("Error fetching departments:", error);
     // Return empty array on error
     return [];
   }
@@ -102,56 +102,56 @@ export async function getLegacyDepartmentMapping() {
     const legacyCode = dept.code.toLowerCase();
     mapping[legacyCode] = dept.name;
     // Also map by partial name matching for common patterns - Updated for new department codes
-    if (legacyCode.includes('ceo') || dept.name.toLowerCase().includes('engineering')) {
-      mapping['ceo'] = dept.name;
+    if (legacyCode.includes("ceo") || dept.name.toLowerCase().includes("engineering")) {
+      mapping["ceo"] = dept.name;
     }
-    if (legacyCode.includes('gso') || dept.name.toLowerCase().includes('general services')) {
-      mapping['gso'] = dept.name;
+    if (legacyCode.includes("gso") || dept.name.toLowerCase().includes("general services")) {
+      mapping["gso"] = dept.name;
     }
-    if (legacyCode.includes('cpdc') || dept.name.toLowerCase().includes('planning')) {
-      mapping['cpdc'] = dept.name;
+    if (legacyCode.includes("cpdc") || dept.name.toLowerCase().includes("planning")) {
+      mapping["cpdc"] = dept.name;
     }
-    if (legacyCode.includes('cho') || dept.name.toLowerCase().includes('health')) {
-      mapping['cho'] = dept.name;
+    if (legacyCode.includes("cho") || dept.name.toLowerCase().includes("health")) {
+      mapping["cho"] = dept.name;
     }
-    if (legacyCode.includes('cswdo') || dept.name.toLowerCase().includes('social welfare')) {
-      mapping['cswdo'] = dept.name;
+    if (legacyCode.includes("cswdo") || dept.name.toLowerCase().includes("social welfare")) {
+      mapping["cswdo"] = dept.name;
     }
-    if (legacyCode.includes('cdrrmo') || dept.name.toLowerCase().includes('disaster')) {
-      mapping['cdrrmo'] = dept.name;
+    if (legacyCode.includes("cdrrmo") || dept.name.toLowerCase().includes("disaster")) {
+      mapping["cdrrmo"] = dept.name;
     }
-    if (legacyCode.includes('enro') || dept.name.toLowerCase().includes('environment')) {
-      mapping['enro'] = dept.name;
+    if (legacyCode.includes("enro") || dept.name.toLowerCase().includes("environment")) {
+      mapping["enro"] = dept.name;
     }
-    if (legacyCode.includes('cto') || dept.name.toLowerCase().includes('treasurer')) {
-      mapping['cto'] = dept.name;
+    if (legacyCode.includes("cto") || dept.name.toLowerCase().includes("treasurer")) {
+      mapping["cto"] = dept.name;
     }
-    if (legacyCode.includes('ceeo') || dept.name.toLowerCase().includes('economic enterprise')) {
-      mapping['ceeo'] = dept.name;
+    if (legacyCode.includes("ceeo") || dept.name.toLowerCase().includes("economic enterprise")) {
+      mapping["ceeo"] = dept.name;
     }
-    if (legacyCode.includes('hrmo') || dept.name.toLowerCase().includes('human resource')) {
-      mapping['hrmo'] = dept.name;
+    if (legacyCode.includes("hrmo") || dept.name.toLowerCase().includes("human resource")) {
+      mapping["hrmo"] = dept.name;
     }
-    if (legacyCode.includes('pnp') || dept.name.toLowerCase().includes('police')) {
-      mapping['pnp'] = dept.name;
+    if (legacyCode.includes("pnp") || dept.name.toLowerCase().includes("police")) {
+      mapping["pnp"] = dept.name;
     }
-    if (legacyCode.includes('clo') || dept.name.toLowerCase().includes('legal')) {
-      mapping['clo'] = dept.name;
+    if (legacyCode.includes("clo") || dept.name.toLowerCase().includes("legal")) {
+      mapping["clo"] = dept.name;
     }
-    if (legacyCode.includes('ocm') || dept.name.toLowerCase().includes('mayor')) {
-      mapping['ocm'] = dept.name;
+    if (legacyCode.includes("ocm") || dept.name.toLowerCase().includes("mayor")) {
+      mapping["ocm"] = dept.name;
     }
-    if (legacyCode.includes('pad') || dept.name.toLowerCase().includes('assistance desk')) {
-      mapping['pad'] = dept.name;
+    if (legacyCode.includes("pad") || dept.name.toLowerCase().includes("assistance desk")) {
+      mapping["pad"] = dept.name;
     }
-    if (legacyCode.includes('oca') || dept.name.toLowerCase().includes('administrator')) {
-      mapping['oca'] = dept.name;
+    if (legacyCode.includes("oca") || dept.name.toLowerCase().includes("administrator")) {
+      mapping["oca"] = dept.name;
     }
-    if (legacyCode.includes('cio') || dept.name.toLowerCase().includes('information')) {
-      mapping['cio'] = dept.name;
+    if (legacyCode.includes("cio") || dept.name.toLowerCase().includes("information")) {
+      mapping["cio"] = dept.name;
     }
-    if (legacyCode.includes('cao') || dept.name.toLowerCase().includes('accountant')) {
-      mapping['cao'] = dept.name;
+    if (legacyCode.includes("cao") || dept.name.toLowerCase().includes("accountant")) {
+      mapping["cao"] = dept.name;
     }
   });
   return mapping;

@@ -1,4 +1,4 @@
-const OfficeConfirmationService = require('../services/OfficeConfirmationService');
+const OfficeConfirmationService = require("../services/OfficeConfirmationService");
 
 class OfficeConfirmationController {
   constructor() {
@@ -19,10 +19,10 @@ class OfficeConfirmationController {
         count: pending.length
       });
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION_CONTROLLER] Get pending error:', error);
+      console.error("[OFFICE_CONFIRMATION_CONTROLLER] Get pending error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch pending confirmations'
+        error: "Failed to fetch pending confirmations"
       });
     }
   }
@@ -37,7 +37,7 @@ class OfficeConfirmationController {
       const { id } = req.params;
       const { status, notes } = req.body;
 
-      if (!['accepted', 'declined'].includes(status)) {
+      if (!["accepted", "declined"].includes(status)) {
         return res.status(400).json({
           success: false,
           error: 'Invalid status. Must be "accepted" or "declined".'
@@ -56,10 +56,10 @@ class OfficeConfirmationController {
         ...result
       });
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION_CONTROLLER] Confirm error:', error);
+      console.error("[OFFICE_CONFIRMATION_CONTROLLER] Confirm error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to process confirmation'
+        error: "Failed to process confirmation"
       });
     }
   }
@@ -77,10 +77,10 @@ class OfficeConfirmationController {
         data: details
       });
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION_CONTROLLER] Get details error:', error);
+      console.error("[OFFICE_CONFIRMATION_CONTROLLER] Get details error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch assignment details'
+        error: "Failed to fetch assignment details"
       });
     }
   }

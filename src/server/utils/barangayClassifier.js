@@ -2,8 +2,8 @@
  * Barangay Classifier
  * Classifies complaint coordinates into barangays based on boundary data
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Cache for barangay boundaries
 let barangayBoundariesCache = null;
@@ -17,13 +17,13 @@ function loadBarangayBoundaries() {
   }
 
   try {
-    const boundariesPath = path.join(__dirname, '../../client/assets/brgy_boundaries_location.json');
-    const boundariesData = fs.readFileSync(boundariesPath, 'utf8');
+    const boundariesPath = path.join(__dirname, "../../client/assets/brgy_boundaries_location.json");
+    const boundariesData = fs.readFileSync(boundariesPath, "utf8");
     const boundaries = JSON.parse(boundariesData);
     barangayBoundariesCache = boundaries;
     return boundaries;
   } catch (error) {
-    console.error('[BARANGAY_CLASSIFIER] Failed to load barangay boundaries:', error.message);
+    console.error("[BARANGAY_CLASSIFIER] Failed to load barangay boundaries:", error.message);
     return [];
   }
 }
@@ -92,19 +92,19 @@ function normalizeBarangayName(name) {
 
   // Map variations to standard names used in the system
   const nameMap = {
-    'Kapatagan': 'Kapatagan (Rizal)',
-    'Kapatagan (Rizal)': 'Kapatagan (Rizal)',
-    'Zone I': 'Zone 1 (Pob.)',
-    'Zone II': 'Zone 2 (Pob.)',
-    'Zone III': 'Zone 3 (Pob.)',
-    'Zone 1': 'Zone 1 (Pob.)',
-    'Zone 2': 'Zone 2 (Pob.)',
-    'Zone 3': 'Zone 3 (Pob.)',
-    'Zone 1 (Pob.)': 'Zone 1 (Pob.)',
-    'Zone 2 (Pob.)': 'Zone 2 (Pob.)',
-    'Zone 3 (Pob.)': 'Zone 3 (Pob.)',
-    'San Jose': 'San Jose (Balutakay)',
-    'San Miguel': 'San Miguel (Odaca)'
+    "Kapatagan": "Kapatagan (Rizal)",
+    "Kapatagan (Rizal)": "Kapatagan (Rizal)",
+    "Zone I": "Zone 1 (Pob.)",
+    "Zone II": "Zone 2 (Pob.)",
+    "Zone III": "Zone 3 (Pob.)",
+    "Zone 1": "Zone 1 (Pob.)",
+    "Zone 2": "Zone 2 (Pob.)",
+    "Zone 3": "Zone 3 (Pob.)",
+    "Zone 1 (Pob.)": "Zone 1 (Pob.)",
+    "Zone 2 (Pob.)": "Zone 2 (Pob.)",
+    "Zone 3 (Pob.)": "Zone 3 (Pob.)",
+    "San Jose": "San Jose (Balutakay)",
+    "San Miguel": "San Miguel (Odaca)"
   };
 
   return nameMap[name] || name;
@@ -118,7 +118,7 @@ function normalizeBarangayName(name) {
  */
 function classifyBarangay(latitude, longitude) {
   // Validate input
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
     return null;
   }
 
@@ -128,7 +128,7 @@ function classifyBarangay(latitude, longitude) {
 
   const boundaries = loadBarangayBoundaries();
   if (!boundaries || boundaries.length === 0) {
-    console.warn('[BARANGAY_CLASSIFIER] No barangay boundaries loaded');
+    console.warn("[BARANGAY_CLASSIFIER] No barangay boundaries loaded");
     return null;
   }
 
@@ -143,7 +143,7 @@ function classifyBarangay(latitude, longitude) {
     const {geojson} = barangay;
 
     // Handle Polygon geometry type
-    if (geojson.type === 'Polygon' && geojson.coordinates) {
+    if (geojson.type === "Polygon" && geojson.coordinates) {
       if (isPointInPolygon(point, geojson.coordinates)) {
         // Normalize barangay name to match expected format
         return normalizeBarangayName(barangay.name);
@@ -151,7 +151,7 @@ function classifyBarangay(latitude, longitude) {
     }
 
     // Handle MultiPolygon geometry type
-    if (geojson.type === 'MultiPolygon' && geojson.coordinates) {
+    if (geojson.type === "MultiPolygon" && geojson.coordinates) {
       // MultiPolygon: [[[ring1], [ring2]], [[ring3]]]
       for (const polygon of geojson.coordinates) {
         if (isPointInPolygon(point, polygon)) {

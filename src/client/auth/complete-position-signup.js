@@ -1,10 +1,10 @@
-import { supabase } from '../config/config.js';
-import showMessage from '../components/toast.js';
-import { renderPrivacyNotice } from '../utils/privacyContent.js';
+import { supabase } from "../config/config.js";
+import showMessage from "../components/toast.js";
+import { renderPrivacyNotice } from "../utils/privacyContent.js";
 
 // Get signup code from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
-const signupCode = urlParams.get('code');
+const signupCode = urlParams.get("code");
 // reCAPTCHA setup
 const positionSignupCaptchaWidgetId = 0;
 // Wait for captcha to be ready
@@ -31,34 +31,34 @@ async function verifyCaptchaOrFail(widgetId) {
   // console.log removed for security
   if (widgetId === null || widgetId === void 0) {
     // console.log removed for security
-    showMessage('error', 'Captcha not ready. Please wait and try again.');
+    showMessage("error", "Captcha not ready. Please wait and try again.");
     return { ok: false };
   }
   if (!window.grecaptcha) {
     // console.log removed for security
-    showMessage('error', 'reCAPTCHA not loaded. Please refresh the page.');
+    showMessage("error", "reCAPTCHA not loaded. Please refresh the page.");
     return { ok: false };
   }
   const token = window.grecaptcha.getResponse(widgetId);
   // console.log removed for security
   if (!token) {
-    showMessage('error', 'Please complete the captcha.');
+    showMessage("error", "Please complete the captcha.");
     return { ok: false };
   }
   try {
-    const res = await fetch('/api/captcha/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/captcha/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
     });
     const json = await res.json();
     if (json && json.success) {
       return { ok: true };
     }
-    showMessage('error', 'Captcha verification failed. Please try again.');
+    showMessage("error", "Captcha verification failed. Please try again.");
     return { ok: false };
   } catch (_err) {
-    showMessage('error', 'Captcha verification error. Please try again.');
+    showMessage("error", "Captcha verification error. Please try again.");
     return { ok: false };
   } finally {
     if (window.grecaptcha) {
@@ -78,11 +78,11 @@ const validateSignupCode = async (code) => {
         department: result.data?.department_code
       };
     }
-    showMessage('error', result.error || 'Invalid signup code');
+    showMessage("error", result.error || "Invalid signup code");
     return { valid: false };
   } catch (error) {
-    console.error('Code validation error:', error);
-    showMessage('error', 'Failed to validate signup code');
+    console.error("Code validation error:", error);
+    showMessage("error", "Failed to validate signup code");
     return { valid: false };
   }
 };
@@ -95,15 +95,15 @@ const prefillOAuthData = async () => {
       // Extract name from various OAuth provider sources
       const name = user.user_metadata?.name ||
                    (user.user_metadata?.first_name && user.user_metadata?.last_name ?
-                     `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : '') ||
-                   '';
+                     `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : "") ||
+                   "";
       // Prefill name (read-only)
-      const nameInput = document.getElementById('name');
+      const nameInput = document.getElementById("name");
       if (nameInput && name) {
         nameInput.value = name.trim();
       }
       // Prefill email (read-only)
-      const emailInput = document.getElementById('email');
+      const emailInput = document.getElementById("email");
       if (emailInput && user.email) {
         emailInput.value = user.email;
       }
@@ -112,14 +112,14 @@ const prefillOAuthData = async () => {
                         user.user_metadata?.phone ||
                         user.user_metadata?.mobile ||
                         null;
-      const mobileInput = document.getElementById('mobile');
+      const mobileInput = document.getElementById("mobile");
       if (mobileInput) {
 
         if (oauthPhone) {
           // Extract digits only
-          let digits = oauthPhone.replace(/\D/g, '');
+          let digits = oauthPhone.replace(/\D/g, "");
           // Handle Philippines mobile format
-          if (digits.startsWith('63') && digits.length >= 12) {
+          if (digits.startsWith("63") && digits.length >= 12) {
             digits = digits.substring(2, 12);
           } else if (digits.length === 10) {
             // Already 10 digits, use as is
@@ -128,38 +128,38 @@ const prefillOAuthData = async () => {
           }
           mobileInput.value = digits;
           mobileInput.readOnly = true;
-          mobileInput.style.background = '#f5f5f5';
-          mobileInput.style.cursor = 'not-allowed';
+          mobileInput.style.background = "#f5f5f5";
+          mobileInput.style.cursor = "not-allowed";
         } else {
           // No phone from OAuth - keep field editable
           mobileInput.readOnly = false;
-          mobileInput.style.background = '';
-          mobileInput.style.cursor = '';
+          mobileInput.style.background = "";
+          mobileInput.style.cursor = "";
           mobileInput.required = true;
         }
       }
     }
   } catch (error) {
-    console.error('Error prefilling OAuth data:', error);
+    console.error("Error prefilling OAuth data:", error);
   }
 };
 // Prefill signup code and role/department info
 const prefillSignupInfo = async () => {
 
   if (!signupCode) {
-    showMessage('error', 'No signup code provided');
+    showMessage("error", "No signup code provided");
     return;
   }
   // Prefill signup code
-  const codeInput = document.getElementById('signupCode');
+  const codeInput = document.getElementById("signupCode");
   if (codeInput) {
     codeInput.value = signupCode;
   }
   // Validate code and get role/department
   const validation = await validateSignupCode(signupCode);
   if (validation.valid) {
-    const roleInput = document.getElementById('role');
-    const departmentInput = document.getElementById('department');
+    const roleInput = document.getElementById("role");
+    const departmentInput = document.getElementById("department");
     if (roleInput) {
       roleInput.value = validation.role;
     }
@@ -169,10 +169,10 @@ const prefillSignupInfo = async () => {
   }
 };
 // Handle form submission
-const positionSignupForm = document.getElementById('positionSignupForm');
+const positionSignupForm = document.getElementById("positionSignupForm");
 
 // Form persistence logic for OAuth completion
-const OAUTH_FORM_STORAGE_KEY = 'cl_oauth_form_data';
+const OAUTH_FORM_STORAGE_KEY = "cl_oauth_form_data";
 
 function saveOAuthFormData() {
   if (!positionSignupForm) return;
@@ -189,7 +189,7 @@ function saveOAuthFormData() {
   try {
     localStorage.setItem(OAUTH_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
-    console.warn('Failed to save OAuth form data:', e);
+    console.warn("Failed to save OAuth form data:", e);
   }
 }
 
@@ -210,11 +210,11 @@ function loadOAuthFormData() {
       // Strategy: Restore everything, but maybe check if readOnly?
       if (input && !input.readOnly) {
         input.value = parsedData[key];
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event("input", { bubbles: true }));
       }
     });
   } catch (e) {
-    console.warn('Failed to load OAuth form data:', e);
+    console.warn("Failed to load OAuth form data:", e);
   }
 }
 
@@ -222,7 +222,7 @@ function clearOAuthFormData() {
   try {
     localStorage.removeItem(OAUTH_FORM_STORAGE_KEY);
   } catch (e) {
-    console.warn('Failed to clear OAuth form data:', e);
+    console.warn("Failed to clear OAuth form data:", e);
   }
 }
 
@@ -236,46 +236,46 @@ if (positionSignupForm) {
   setTimeout(loadOAuthFormData, 500);
 
   // Save data on input changes
-  positionSignupForm.addEventListener('input', () => {
+  positionSignupForm.addEventListener("input", () => {
     saveOAuthFormData();
   });
 
-  positionSignupForm.addEventListener('submit', async (e) => {
+  positionSignupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const mobile = document.getElementById('mobile').value.trim();
-    const code = document.getElementById('signupCode').value.trim();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const mobile = document.getElementById("mobile").value.trim();
+    const code = document.getElementById("signupCode").value.trim();
     if (!name) {
-      showMessage('error', 'Name is required');
+      showMessage("error", "Name is required");
       return;
     }
     if (!email) {
-      showMessage('error', 'Email is required');
+      showMessage("error", "Email is required");
       return;
     }
     if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
-      showMessage('error', 'Please enter a valid 10-digit mobile number');
+      showMessage("error", "Please enter a valid 10-digit mobile number");
       return;
     }
     if (!code) {
-      showMessage('error', 'Signup code is required');
+      showMessage("error", "Signup code is required");
       return;
     }
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
-    const buttonText = submitButton.querySelector('.button-text');
-    const buttonLoading = submitButton.querySelector('.button-loading');
-    buttonText.style.display = 'none';
-    buttonLoading.style.display = 'flex';
+    const buttonText = submitButton.querySelector(".button-text");
+    const buttonLoading = submitButton.querySelector(".button-loading");
+    buttonText.style.display = "none";
+    buttonLoading.style.display = "flex";
     submitButton.disabled = true;
     // Verify captcha (skip if not available)
     if (positionSignupCaptchaWidgetId !== null) {
       const captchaResult = await verifyCaptchaOrFail(positionSignupCaptchaWidgetId);
       if (!captchaResult.ok) {
         // Reset button state
-        buttonText.style.display = 'block';
-        buttonLoading.style.display = 'none';
+        buttonText.style.display = "block";
+        buttonLoading.style.display = "none";
         submitButton.disabled = false;
         return;
       }
@@ -284,10 +284,10 @@ if (positionSignupForm) {
     }
     // Complete OAuth registration with HR signup code
     try {
-      const response = await fetch('/api/auth/complete-oauth-hr', {
-        method: 'POST',
+      const response = await fetch("/api/auth/complete-oauth-hr", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           name,
@@ -297,28 +297,28 @@ if (positionSignupForm) {
       });
       const result = await response.json();
       if (!result.success) {
-        showMessage('error', result.error || 'Failed to complete registration');
+        showMessage("error", result.error || "Failed to complete registration");
         return;
       }
-      showMessage('success', 'Registration completed successfully! Redirecting to dashboard...');
+      showMessage("success", "Registration completed successfully! Redirecting to dashboard...");
       clearOAuthFormData(); // Clear saved data
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 2000);
     } catch (err) {
-      console.error('HR OAuth completion error:', err);
-      showMessage('error', 'Registration failed. Please try again.');
+      console.error("HR OAuth completion error:", err);
+      showMessage("error", "Registration failed. Please try again.");
     } finally {
       // Reset button state
-      buttonText.style.display = 'block';
-      buttonLoading.style.display = 'none';
+      buttonText.style.display = "block";
+      buttonLoading.style.display = "none";
       submitButton.disabled = false;
     }
   });
 }
 // Terms and Privacy handlers
-document.getElementById('toc')?.addEventListener('click', () => {
-  document.getElementById('terms').innerHTML = '<h3>Terms and Conditions</h3><p>Your terms content here...</p>';
+document.getElementById("toc")?.addEventListener("click", () => {
+  document.getElementById("terms").innerHTML = "<h3>Terms and Conditions</h3><p>Your terms content here...</p>";
 });
 // Privacy Notice link now opens in new tab - no modal needed
 // Privacy content is available at /privacy-notice

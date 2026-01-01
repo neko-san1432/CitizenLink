@@ -2,8 +2,8 @@
  * File Handling Utilities
  * Centralized file management for complaint forms
  */
-import { validateFiles } from './validation.js';
-import showMessage from '../components/toast.js';
+import { validateFiles } from "./validation.js";
+import showMessage from "../components/toast.js";
 
 /**
  * File Handler Class
@@ -32,7 +32,7 @@ export class FileHandler {
     if (validation.errors.length > 0) {
       // Show errors but still add valid files
       validation.errors.forEach(error => {
-        const type = error.includes('already selected') ? 'warning' : 'error';
+        const type = error.includes("already selected") ? "warning" : "error";
         showMessage(type, error);
       });
     }
@@ -40,11 +40,11 @@ export class FileHandler {
       validation.validFiles.forEach(file => {
         this.selectedFiles.push(file);
         // Initialize upload status as pending
-        this.uploadStatus.set(file, 'pending');
+        this.uploadStatus.set(file, "pending");
         this.uploadProgress.set(file, 0);
       });
       if (validation.errors.length === 0) {
-        showMessage('success', `${validation.validFiles.length} file(s) added successfully`);
+        showMessage("success", `${validation.validFiles.length} file(s) added successfully`);
       }
       this.onFilesChange(this.selectedFiles);
       this.renderPreviews();
@@ -96,7 +96,7 @@ export class FileHandler {
    */
   removeFailedUploads() {
     const failedFiles = this.selectedFiles.filter(file =>
-      this.uploadStatus.get(file) === 'error'
+      this.uploadStatus.get(file) === "error"
     );
 
     failedFiles.forEach(file => {
@@ -130,7 +130,7 @@ export class FileHandler {
    */
   updateUploadState() {
     const wasUploading = this.isUploading;
-    this.isUploading = Array.from(this.uploadStatus.values()).some(status => status === 'uploading');
+    this.isUploading = Array.from(this.uploadStatus.values()).some(status => status === "uploading");
     if (wasUploading !== this.isUploading) {
       this.onUploadStateChange(this.isUploading);
     }
@@ -155,7 +155,7 @@ export class FileHandler {
    * @returns {string} Upload status
    */
   getUploadStatus(file) {
-    return this.uploadStatus.get(file) || 'pending';
+    return this.uploadStatus.get(file) || "pending";
   }
 
   /**
@@ -181,7 +181,7 @@ export class FileHandler {
    */
   allFilesUploaded() {
     if (this.selectedFiles.length === 0) return true;
-    return this.selectedFiles.every(file => this.uploadStatus.get(file) === 'completed');
+    return this.selectedFiles.every(file => this.uploadStatus.get(file) === "completed");
   }
   /**
    * Get current files
@@ -195,7 +195,7 @@ export class FileHandler {
    */
   renderPreviews() {
     if (!this.previewContainer) return;
-    this.previewContainer.innerHTML = '';
+    this.previewContainer.innerHTML = "";
     // Hide/show drag zone based on files
     this.updateDragZoneVisibility();
     // Render file previews
@@ -213,12 +213,12 @@ export class FileHandler {
    * Update drag zone visibility
    */
   updateDragZoneVisibility() {
-    const dropZone = document.getElementById('fileDropZone');
+    const dropZone = document.getElementById("fileDropZone");
     if (!dropZone) return;
     if (this.selectedFiles.length > 0) {
-      dropZone.style.display = 'none';
+      dropZone.style.display = "none";
     } else {
-      dropZone.style.display = 'block';
+      dropZone.style.display = "block";
     }
   }
   /**
@@ -228,19 +228,19 @@ export class FileHandler {
    * @returns {HTMLElement} Preview element
    */
   createPreviewItem(file, index) {
-    const previewItem = document.createElement('div');
-    previewItem.className = 'file-preview-item';
+    const previewItem = document.createElement("div");
+    previewItem.className = "file-preview-item";
     const uploadStatus = this.getUploadStatus(file);
     const uploadProgress = this.getUploadProgress(file);
 
     // Determine border color based on status
-    let borderColor = '#dee2e6'; // default
-    if (uploadStatus === 'uploading') {
-      borderColor = '#007bff';
-    } else if (uploadStatus === 'completed') {
-      borderColor = '#28a745';
-    } else if (uploadStatus === 'error') {
-      borderColor = '#dc3545';
+    let borderColor = "#dee2e6"; // default
+    if (uploadStatus === "uploading") {
+      borderColor = "#007bff";
+    } else if (uploadStatus === "completed") {
+      borderColor = "#28a745";
+    } else if (uploadStatus === "error") {
+      borderColor = "#dc3545";
     }
 
     previewItem.style.cssText = `
@@ -256,8 +256,8 @@ export class FileHandler {
     `;
 
     // Create preview based on file type
-    if (file.type.startsWith('image/')) {
-      const img = document.createElement('img');
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
       // Get existing object URL or create new one
       let objectURL = this.objectURLs.get(file);
       if (!objectURL) {
@@ -269,12 +269,12 @@ export class FileHandler {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: ${uploadStatus === 'uploading' ? '0.6' : '1'};
+        opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
       `;
       previewItem.appendChild(img);
     } else {
       // For non-image files, show file icon
-      const fileIcon = document.createElement('div');
+      const fileIcon = document.createElement("div");
       fileIcon.style.cssText = `
         display: flex;
         flex-direction: column;
@@ -282,28 +282,28 @@ export class FileHandler {
         justify-content: center;
         height: 100%;
         color: #6c757d;
-        opacity: ${uploadStatus === 'uploading' ? '0.6' : '1'};
+        opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
       `;
-      const icon = document.createElement('div');
-      icon.style.cssText = 'font-size: 32px; margin-bottom: 4px;';
-      if (file.type.startsWith('video/')) {
-        icon.textContent = '🎥';
-      } else if (file.type.startsWith('audio/')) {
-        icon.textContent = '🎵';
+      const icon = document.createElement("div");
+      icon.style.cssText = "font-size: 32px; margin-bottom: 4px;";
+      if (file.type.startsWith("video/")) {
+        icon.textContent = "🎥";
+      } else if (file.type.startsWith("audio/")) {
+        icon.textContent = "🎵";
       } else {
-        icon.textContent = '📄';
+        icon.textContent = "📄";
       }
-      const fileName = document.createElement('div');
+      const fileName = document.createElement("div");
       fileName.textContent = file.name.length > 12 ? `${file.name.substring(0, 12)  }...` : file.name;
-      fileName.style.cssText = 'font-size: 10px; text-align: center; word-break: break-all;';
+      fileName.style.cssText = "font-size: 10px; text-align: center; word-break: break-all;";
       fileIcon.appendChild(icon);
       fileIcon.appendChild(fileName);
       previewItem.appendChild(fileIcon);
     }
 
     // Add upload progress overlay
-    if (uploadStatus === 'uploading' || uploadStatus === 'completed' || uploadStatus === 'error') {
-      const overlay = document.createElement('div');
+    if (uploadStatus === "uploading" || uploadStatus === "completed" || uploadStatus === "error") {
+      const overlay = document.createElement("div");
       overlay.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -316,7 +316,7 @@ export class FileHandler {
         text-align: center;
       `;
 
-      if (uploadStatus === 'uploading') {
+      if (uploadStatus === "uploading") {
         overlay.innerHTML = `
           <div style="margin-bottom: 2px;">Uploading...</div>
           <div style="background: rgba(255,255,255,0.3); height: 4px; border-radius: 2px; overflow: hidden;">
@@ -324,44 +324,44 @@ export class FileHandler {
           </div>
           <div style="margin-top: 2px;">${uploadProgress}%</div>
         `;
-      } else if (uploadStatus === 'completed') {
-        overlay.innerHTML = '✓ Uploaded';
-        overlay.style.background = 'rgba(40, 167, 69, 0.9)';
-      } else if (uploadStatus === 'error') {
-        overlay.innerHTML = '✗ Failed';
-        overlay.style.background = 'rgba(220, 53, 69, 0.9)';
+      } else if (uploadStatus === "completed") {
+        overlay.innerHTML = "✓ Uploaded";
+        overlay.style.background = "rgba(40, 167, 69, 0.9)";
+      } else if (uploadStatus === "error") {
+        overlay.innerHTML = "✗ Failed";
+        overlay.style.background = "rgba(220, 53, 69, 0.9)";
       }
 
       previewItem.appendChild(overlay);
     }
 
     // Add remove button (disabled during upload)
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'remove-file-btn';
-    removeBtn.textContent = '×';
-    removeBtn.disabled = uploadStatus === 'uploading';
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "remove-file-btn";
+    removeBtn.textContent = "×";
+    removeBtn.disabled = uploadStatus === "uploading";
     removeBtn.style.cssText = `
       position: absolute;
       top: 4px;
       right: 4px;
-      background: ${uploadStatus === 'uploading' ? '#6c757d' : '#dc3545'};
+      background: ${uploadStatus === "uploading" ? "#6c757d" : "#dc3545"};
       color: white;
       border: none;
       border-radius: 50%;
       width: 24px;
       height: 24px;
-      cursor: ${uploadStatus === 'uploading' ? 'not-allowed' : 'pointer'};
+      cursor: ${uploadStatus === "uploading" ? "not-allowed" : "pointer"};
       font-size: 16px;
       line-height: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      opacity: ${uploadStatus === 'uploading' ? '0.6' : '1'};
+      opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
     `;
-    if (uploadStatus !== 'uploading') {
-      removeBtn.addEventListener('click', () => this.removeFile(index));
+    if (uploadStatus !== "uploading") {
+      removeBtn.addEventListener("click", () => this.removeFile(index));
     }
     previewItem.appendChild(removeBtn);
     return previewItem;
@@ -371,8 +371,8 @@ export class FileHandler {
    * @returns {HTMLElement} Add button element
    */
   createAddButton() {
-    const addButton = document.createElement('div');
-    addButton.className = 'add-file-button';
+    const addButton = document.createElement("div");
+    addButton.className = "add-file-button";
     addButton.style.cssText = `
       display: inline-flex;
       flex-direction: column;
@@ -392,21 +392,21 @@ export class FileHandler {
       <div style="font-size: 32px; margin-bottom: 8px;">+</div>
       <div style="font-size: 12px; text-align: center;">Add More<br/>(${this.selectedFiles.length}/${this.maxFiles})</div>
     `;
-    addButton.addEventListener('click', () => {
-      const fileInput = document.getElementById('evidenceFiles');
+    addButton.addEventListener("click", () => {
+      const fileInput = document.getElementById("evidenceFiles");
       if (fileInput) {
         fileInput.click();
       }
     });
-    addButton.addEventListener('mouseenter', () => {
-      addButton.style.borderColor = '#007bff';
-      addButton.style.color = '#007bff';
-      addButton.style.backgroundColor = '#e3f2fd';
+    addButton.addEventListener("mouseenter", () => {
+      addButton.style.borderColor = "#007bff";
+      addButton.style.color = "#007bff";
+      addButton.style.backgroundColor = "#e3f2fd";
     });
-    addButton.addEventListener('mouseleave', () => {
-      addButton.style.borderColor = '#6c757d';
-      addButton.style.color = '#6c757d';
-      addButton.style.backgroundColor = '#f8f9fa';
+    addButton.addEventListener("mouseleave", () => {
+      addButton.style.borderColor = "#6c757d";
+      addButton.style.color = "#6c757d";
+      addButton.style.backgroundColor = "#f8f9fa";
     });
     return addButton;
   }
@@ -421,35 +421,35 @@ export class FileHandler {
 export function setupDragAndDrop(dropZone, fileHandler, fileInput) {
   if (!dropZone || !fileHandler) return;
   // Drag and drop events
-  dropZone.addEventListener('dragover', (e) => {
+  dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropZone.classList.add('dragover');
+    dropZone.classList.add("dragover");
   });
-  dropZone.addEventListener('dragleave', (e) => {
+  dropZone.addEventListener("dragleave", (e) => {
     e.preventDefault();
-    dropZone.classList.remove('dragover');
+    dropZone.classList.remove("dragover");
   });
-  dropZone.addEventListener('drop', (e) => {
+  dropZone.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropZone.classList.remove('dragover');
+    dropZone.classList.remove("dragover");
     const {files} = e.dataTransfer;
     if (files.length > 0) {
       fileHandler.addFiles(files);
     }
   });
   // Click to browse
-  dropZone.addEventListener('click', () => {
+  dropZone.addEventListener("click", () => {
     if (fileInput) {
       fileInput.click();
     }
   });
   // File input change
   if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener("change", (e) => {
       if (e.target.files.length > 0) {
         fileHandler.addFiles(e.target.files);
         // Clear the input so the same file can be selected again
-        e.target.value = '';
+        e.target.value = "";
       }
     });
   }

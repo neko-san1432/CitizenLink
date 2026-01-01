@@ -1,5 +1,5 @@
-const SuperAdminService = require('../services/SuperAdminService');
-const UserManagementService = require('../services/UserManagementService');
+const SuperAdminService = require("../services/SuperAdminService");
+const UserManagementService = require("../services/UserManagementService");
 
 /**
  * SuperAdminController
@@ -24,8 +24,8 @@ class SuperAdminController {
         ...data
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get dashboard error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Get dashboard error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -43,16 +43,16 @@ class SuperAdminController {
       if (!user_id) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required"
         });
       }
       if (!new_role) {
         return res.status(400).json({
           success: false,
-          error: 'New role is required'
+          error: "New role is required"
         });
       }
-      console.log('[SUPERADMIN_CONTROLLER] Role swap request:', {
+      console.log("[SUPERADMIN_CONTROLLER] Role swap request:", {
         userId: user_id,
         newRole: new_role,
         performedBy: user.id,
@@ -66,15 +66,15 @@ class SuperAdminController {
         reason
       );
 
-      console.log('[SUPERADMIN_CONTROLLER] Role swap result:', result);
+      console.log("[SUPERADMIN_CONTROLLER] Role swap result:", result);
 
       res.json({
         success: true,
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Role swap error:', error);
-      const status = error.message.includes('Only Super Admin') || error.message.includes('Cannot change') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Role swap error:", error);
+      const status = error.message.includes("Only Super Admin") || error.message.includes("Cannot change") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -92,19 +92,19 @@ class SuperAdminController {
       if (!user_id) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required"
         });
       }
       if (!from_department || !to_department) {
         return res.status(400).json({
           success: false,
-          error: 'From and to departments are required'
+          error: "From and to departments are required"
         });
       }
       if (!reason) {
         return res.status(400).json({
           success: false,
-          error: 'Reason is required for department transfer'
+          error: "Reason is required for department transfer"
         });
       }
       const result = await this.superAdminService.transferUserBetweenDepartments(
@@ -119,8 +119,8 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Transfer department error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Transfer department error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -138,22 +138,22 @@ class SuperAdminController {
       if (!user_id) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required"
         });
       }
       if (!role) {
         return res.status(400).json({
           success: false,
-          error: 'Role is required'
+          error: "Role is required"
         });
       }
       if (!department_id) {
         return res.status(400).json({
           success: false,
-          error: 'Department ID is required'
+          error: "Department ID is required"
         });
       }
-      console.log('[SUPERADMIN_CONTROLLER] Assign citizen request:', {
+      console.log("[SUPERADMIN_CONTROLLER] Assign citizen request:", {
         userId: user_id,
         role,
         departmentId: department_id,
@@ -169,20 +169,20 @@ class SuperAdminController {
         reason
       );
 
-      console.log('[SUPERADMIN_CONTROLLER] Assign citizen result:', result);
+      console.log("[SUPERADMIN_CONTROLLER] Assign citizen result:", result);
 
       res.json({
         success: true,
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Assign citizen error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 :
-        error.message.includes('Can only assign') ? 400 :
-          error.message.includes('Invalid department role') ? 400 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Assign citizen error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 :
+        error.message.includes("Can only assign") ? 400 :
+          error.message.includes("Invalid department role") ? 400 : 500;
       res.status(status).json({
         success: false,
-        error: error.message || 'Failed to assign citizen to department'
+        error: error.message || "Failed to assign citizen to department"
       });
     }
   }
@@ -194,7 +194,7 @@ class SuperAdminController {
     try {
       const { user } = req;
       const options = {
-        log_type: req.query.log_type || 'all',
+        log_type: req.query.log_type || "all",
         limit: req.query.limit ? parseInt(req.query.limit) : 100,
         offset: req.query.offset ? parseInt(req.query.offset) : 0,
         date_from: req.query.date_from,
@@ -203,11 +203,11 @@ class SuperAdminController {
       const result = await this.superAdminService.getSystemLogs(user.id, options);
 
       // Also include terminal logs if requested
-      const includeTerminal = req.query.include_terminal === 'true';
+      const includeTerminal = req.query.include_terminal === "true";
       if (includeTerminal) {
-        const consoleLogger = require('../utils/consoleLogger');
+        const consoleLogger = require("../utils/consoleLogger");
         const terminalLogs = consoleLogger.getLogs({
-          level: req.query.terminal_level || 'all',
+          level: req.query.terminal_level || "all",
           limit: req.query.terminal_limit ? parseInt(req.query.terminal_limit) : 500
         });
         result.terminal_logs = terminalLogs;
@@ -218,8 +218,8 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get logs error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Get logs error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -239,8 +239,8 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get role distribution error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Get role distribution error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -256,16 +256,16 @@ class SuperAdminController {
       const { user } = req;
       // Validate super admin
       const adminRole = await this.superAdminService.roleService.getUserRole(user.id);
-      if (adminRole !== 'super-admin') {
+      if (adminRole !== "super-admin") {
         return res.status(403).json({
           success: false,
-          error: 'Only Super Admin can view terminal logs'
+          error: "Only Super Admin can view terminal logs"
         });
       }
 
-      const consoleLogger = require('../utils/consoleLogger');
+      const consoleLogger = require("../utils/consoleLogger");
       const options = {
-        level: req.query.level || 'all',
+        level: req.query.level || "all",
         limit: req.query.limit ? parseInt(req.query.limit) : 500,
         since: req.query.since || null
       };
@@ -278,7 +278,7 @@ class SuperAdminController {
         total: consoleLogger.getLogCount()
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get terminal logs error:', error);
+      console.error("[SUPERADMIN_CONTROLLER] Get terminal logs error:", error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -298,8 +298,8 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get statistics error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Get statistics error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -320,8 +320,8 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Get latest users error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Get latest users error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -340,34 +340,34 @@ class SuperAdminController {
       if (!user_id) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required"
         });
       }
 
-      if (!type || !['temporary', 'permanent'].includes(type)) {
+      if (!type || !["temporary", "permanent"].includes(type)) {
         return res.status(400).json({
           success: false,
           error: 'Ban type must be "temporary" or "permanent"'
         });
       }
 
-      if (type === 'temporary' && (!duration || duration < 1)) {
+      if (type === "temporary" && (!duration || duration < 1)) {
         return res.status(400).json({
           success: false,
-          error: 'Duration (in hours) is required for temporary bans'
+          error: "Duration (in hours) is required for temporary bans"
         });
       }
 
       if (!reason || reason.trim().length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Reason is required for banning'
+          error: "Reason is required for banning"
         });
       }
 
       const result = await this.userManagementService.banUser(user_id, user.id, {
         type,
-        duration: type === 'temporary' ? parseInt(duration) : null,
+        duration: type === "temporary" ? parseInt(duration) : null,
         reason: reason.trim()
       });
 
@@ -376,10 +376,10 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Ban user error:', error);
+      console.error("[SUPERADMIN_CONTROLLER] Ban user error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to ban user'
+        error: error.message || "Failed to ban user"
       });
     }
   }
@@ -395,16 +395,16 @@ class SuperAdminController {
       if (!user_id) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required"
         });
       }
 
       // Verify user is Super Admin
       const adminRole = await this.superAdminService.roleService.getUserRole(user.id);
-      if (adminRole !== 'super-admin') {
+      if (adminRole !== "super-admin") {
         return res.status(403).json({
           success: false,
-          error: 'Only Super Admin can unban users'
+          error: "Only Super Admin can unban users"
         });
       }
 
@@ -415,11 +415,11 @@ class SuperAdminController {
         ...result
       });
     } catch (error) {
-      console.error('[SUPERADMIN_CONTROLLER] Unban user error:', error);
-      const status = error.message.includes('Only Super Admin') ? 403 : 500;
+      console.error("[SUPERADMIN_CONTROLLER] Unban user error:", error);
+      const status = error.message.includes("Only Super Admin") ? 403 : 500;
       res.status(status).json({
         success: false,
-        error: error.message || 'Failed to unban user'
+        error: error.message || "Failed to unban user"
       });
     }
   }

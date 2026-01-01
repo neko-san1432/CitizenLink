@@ -1,10 +1,10 @@
 // Email verification success page with countdown timer
 const COUNTDOWN_SECONDS = 5;
-const REDIRECT_URL = '/login';
+const REDIRECT_URL = "/login";
 
 let countdown = COUNTDOWN_SECONDS;
-const countdownElement = document.getElementById('countdown');
-const redirectLink = document.getElementById('redirect-link');
+const countdownElement = document.getElementById("countdown");
+const redirectLink = document.getElementById("redirect-link");
 
 // Update countdown display
 const updateCountdown = () => {
@@ -24,15 +24,15 @@ const updateCountdown = () => {
 };
 
 // Start countdown when page loads
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', updateCountdown);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", updateCountdown);
 } else {
   updateCountdown();
 }
 
 // Handle manual redirect link click
 if (redirectLink) {
-  redirectLink.addEventListener('click', (e) => {
+  redirectLink.addEventListener("click", (e) => {
     e.preventDefault();
     window.location.href = REDIRECT_URL;
   });

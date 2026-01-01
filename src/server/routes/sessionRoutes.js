@@ -1,49 +1,49 @@
-const express = require('express');
-const Database = require('../config/database');
-const { authLimiter } = require('../middleware/rateLimiting');
-const { getCookieOptions, extractUserMetadata } = require('../utils/authUtils');
+const express = require("express");
+const Database = require("../config/database");
+const { authLimiter } = require("../middleware/rateLimiting");
+const { getCookieOptions, extractUserMetadata } = require("../utils/authUtils");
 
 const router = express.Router();
 const supabase = Database.getClient();
 
 // Session cookie helpers for client
-router.post('/session', authLimiter, (req, res) => {
+router.post("/session", authLimiter, (req, res) => {
   try {
     const token = req.body?.access_token;
     const remember = Boolean(req.body?.remember);
 
     if (!token) {
-      return res.status(400).json({ success: false, error: 'access_token is required' });
+      return res.status(400).json({ success: false, error: "access_token is required" });
     }
 
     const cookieOptions = getCookieOptions(remember);
-    res.cookie('sb_access_token', token, cookieOptions);
+    res.cookie("sb_access_token", token, cookieOptions);
 
     return res.json({ success: true });
   } catch (e) {
-    console.error('[SERVER SESSION] 💥 Error setting session cookie:', e);
-    console.error('[SERVER SESSION] Error stack:', e.stack);
-    return res.status(500).json({ success: false, error: 'Failed to set session' });
+    console.error("[SERVER SESSION] 💥 Error setting session cookie:", e);
+    console.error("[SERVER SESSION] Error stack:", e.stack);
+    return res.status(500).json({ success: false, error: "Failed to set session" });
   }
 });
 
-router.delete('/session', authLimiter, (req, res) => {
+router.delete("/session", authLimiter, (req, res) => {
   try {
-    res.clearCookie('sb_access_token');
+    res.clearCookie("sb_access_token");
     return res.json({ success: true });
   } catch (e) {
-    return res.status(500).json({ success: false, error: 'Failed to clear session' });
+    return res.status(500).json({ success: false, error: "Failed to clear session" });
   }
 });
 
 // Get session token for client-side Supabase sync (requires valid cookie)
-router.get('/session/token', authLimiter, async (req, res) => {
+router.get("/session/token", authLimiter, async (req, res) => {
   try {
     const token = req.cookies?.sb_access_token;
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: 'No session token found'
+        error: "No session token found"
       });
     }
     // Validate token and get user info
@@ -51,7 +51,7 @@ router.get('/session/token', authLimiter, async (req, res) => {
     if (userError || !user) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid session token'
+        error: "Invalid session token"
       });
     }
     // Return access token for client-side Supabase use
@@ -59,7 +59,7 @@ router.get('/session/token', authLimiter, async (req, res) => {
       success: true,
       data: {
         access_token: token,
-        token_type: 'bearer',
+        token_type: "bearer",
         user: {
           id: user.id,
           email: user.email
@@ -67,16 +67,16 @@ router.get('/session/token', authLimiter, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[SESSION TOKEN] Error:', error);
+    console.error("[SESSION TOKEN] Error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to get session token'
+      error: "Failed to get session token"
     });
   }
 });
 
 // Session health endpoint for monitoring (public - no auth required)
-router.get('/session/health', async (req, res) => {
+router.get("/session/health", async (req, res) => {
   try {
     // Check if user has valid session cookie
     const token = req.cookies?.sb_access_token;
@@ -84,7 +84,7 @@ router.get('/session/health', async (req, res) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: 'No session token found',
+        error: "No session token found",
         data: {
           authenticated: false,
           timestamp: new Date().toISOString()
@@ -98,7 +98,7 @@ router.get('/session/health', async (req, res) => {
     if (error || !user) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid session token',
+        error: "Invalid session token",
         data: {
           authenticated: false,
           timestamp: new Date().toISOString()
@@ -108,8 +108,8 @@ router.get('/session/health', async (req, res) => {
 
     // Extract role from user metadata
     const combinedMetadata = extractUserMetadata(user);
-    const role = combinedMetadata.role || 'citizen';
-    const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+    const role = combinedMetadata.role || "citizen";
+    const name = combinedMetadata.name || user.email?.split("@")[0] || "Unknown";
 
     res.json({
       success: true,
@@ -123,10 +123,10 @@ router.get('/session/health', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[SESSION HEALTH] Error:', error);
+    console.error("[SESSION HEALTH] Error:", error);
     res.status(500).json({
       success: false,
-      error: 'Session health check failed',
+      error: "Session health check failed",
       data: {
         authenticated: false,
         timestamp: new Date().toISOString()
@@ -136,7 +136,7 @@ router.get('/session/health', async (req, res) => {
 });
 
 // Session refresh endpoint (public - no auth required)
-router.post('/session/refresh', async (req, res) => {
+router.post("/session/refresh", async (req, res) => {
   try {
     // Check if user has existing session cookie
     const existingToken = req.cookies?.sb_access_token;
@@ -144,7 +144,7 @@ router.post('/session/refresh', async (req, res) => {
     if (!existingToken) {
       return res.status(401).json({
         success: false,
-        error: 'No existing session to refresh',
+        error: "No existing session to refresh",
         data: {
           refreshed: false,
           timestamp: new Date().toISOString()
@@ -164,7 +164,7 @@ router.post('/session/refresh', async (req, res) => {
     if (error || !session) {
       return res.status(401).json({
         success: false,
-        error: 'No valid Supabase session found',
+        error: "No valid Supabase session found",
         debug: {
           error: error?.message,
           hasSession: Boolean(session)
@@ -174,13 +174,13 @@ router.post('/session/refresh', async (req, res) => {
 
     // Update server cookie with fresh session
     const cookieOptions = getCookieOptions(false); // Regular session, not "remember me"
-    res.cookie('sb_access_token', session.access_token, cookieOptions);
+    res.cookie("sb_access_token", session.access_token, cookieOptions);
 
     // Extract user info from session
     const { user } = session;
     const combinedMetadata = extractUserMetadata(user);
-    const role = combinedMetadata.role || 'citizen';
-    const name = combinedMetadata.name || user.email?.split('@')[0] || 'Unknown';
+    const role = combinedMetadata.role || "citizen";
+    const name = combinedMetadata.name || user.email?.split("@")[0] || "Unknown";
 
     res.json({
       success: true,
@@ -194,10 +194,10 @@ router.post('/session/refresh', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[SESSION REFRESH] Error:', error);
+    console.error("[SESSION REFRESH] Error:", error);
     res.status(500).json({
       success: false,
-      error: 'Session refresh failed',
+      error: "Session refresh failed",
       debug: {
         error: error.message
       }
@@ -206,7 +206,7 @@ router.post('/session/refresh', async (req, res) => {
 });
 
 // Simple authentication test endpoint (public)
-router.get('/test', (req, res) => {
+router.get("/test", (req, res) => {
   try {
     const token = req.cookies?.sb_access_token;
 
@@ -214,7 +214,7 @@ router.get('/test', (req, res) => {
       return res.json({
         success: false,
         authenticated: false,
-        message: 'No session token found',
+        message: "No session token found",
         timestamp: new Date().toISOString()
       });
     }
@@ -225,7 +225,7 @@ router.get('/test', (req, res) => {
         return res.json({
           success: false,
           authenticated: false,
-          message: 'Invalid session token',
+          message: "Invalid session token",
           error: error?.message,
           timestamp: new Date().toISOString()
         });
@@ -234,7 +234,7 @@ router.get('/test', (req, res) => {
       res.json({
         success: true,
         authenticated: true,
-        message: 'Session is valid',
+        message: "Session is valid",
         userId: user.id,
         email: user.email,
         timestamp: new Date().toISOString()
@@ -243,7 +243,7 @@ router.get('/test', (req, res) => {
       res.json({
         success: false,
         authenticated: false,
-        message: 'Token validation failed',
+        message: "Token validation failed",
         error: error.message,
         timestamp: new Date().toISOString()
       });
@@ -252,7 +252,7 @@ router.get('/test', (req, res) => {
     res.json({
       success: false,
       authenticated: false,
-      message: 'Authentication test failed',
+      message: "Authentication test failed",
       error: error.message,
       timestamp: new Date().toISOString()
     });

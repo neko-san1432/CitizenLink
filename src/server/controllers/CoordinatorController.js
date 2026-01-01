@@ -1,5 +1,5 @@
-const CoordinatorService = require('../services/CoordinatorService');
-const InsightsService = require('../services/InsightsService');
+const CoordinatorService = require("../services/CoordinatorService");
+const InsightsService = require("../services/InsightsService");
 
 /**
  * CoordinatorController
@@ -38,7 +38,7 @@ class CoordinatorController {
       console.error(`[COORDINATOR_CONTROLLER] ${new Date().toISOString()} Error stack:`, error.stack);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch review queue',
+        error: "Failed to fetch review queue",
         details: error.message
       });
     }
@@ -57,10 +57,10 @@ class CoordinatorController {
         data: result
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Get complaint for review error:', error);
+      console.error("[COORDINATOR_CONTROLLER] Get complaint for review error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch complaint details'
+        error: "Failed to fetch complaint details"
       });
     }
   }
@@ -76,7 +76,7 @@ class CoordinatorController {
       if (!decision) {
         return res.status(400).json({
           success: false,
-          error: 'Decision type is required'
+          error: "Decision type is required"
         });
       }
       const result = await this.coordinatorService.processDecision(
@@ -90,8 +90,8 @@ class CoordinatorController {
         ...result
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Process decision error:', error);
-      const status = error.message.includes('required') ? 400 : 500;
+      console.error("[COORDINATOR_CONTROLLER] Process decision error:", error);
+      const status = error.message.includes("required") ? 400 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -109,13 +109,13 @@ class CoordinatorController {
       if (!complaint_ids || !Array.isArray(complaint_ids) || complaint_ids.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Complaint IDs array is required'
+          error: "Complaint IDs array is required"
         });
       }
       if (!department) {
         return res.status(400).json({
           success: false,
-          error: 'Department is required'
+          error: "Department is required"
         });
       }
       const result = await this.coordinatorService.bulkAssign(
@@ -128,10 +128,10 @@ class CoordinatorController {
         ...result
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Bulk assign error:', error);
+      console.error("[COORDINATOR_CONTROLLER] Bulk assign error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to bulk assign complaints'
+        error: "Failed to bulk assign complaints"
       });
     }
   }
@@ -150,8 +150,8 @@ class CoordinatorController {
         data
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Get dashboard error:', error);
-      console.error('[COORDINATOR_CONTROLLER] Error details:', {
+      console.error("[COORDINATOR_CONTROLLER] Get dashboard error:", error);
+      console.error("[COORDINATOR_CONTROLLER] Error details:", {
         message: error.message,
         stack: error.stack,
         code: error.code
@@ -165,7 +165,7 @@ class CoordinatorController {
             total_reviews: 0,
             duplicates_merged: 0,
             assignments_made: 0,
-            period: 'last_7_days'
+            period: "last_7_days"
           },
           recent_queue: [],
           active_clusters: []
@@ -192,10 +192,10 @@ class CoordinatorController {
         ...result
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Detect clusters error:', error);
+      console.error("[COORDINATOR_CONTROLLER] Detect clusters error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to detect clusters'
+        error: "Failed to detect clusters"
       });
     }
   }
@@ -218,10 +218,10 @@ class CoordinatorController {
         count: rejected.length
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Get rejected complaints error:', error);
+      console.error("[COORDINATOR_CONTROLLER] Get rejected complaints error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch rejected complaints',
+        error: "Failed to fetch rejected complaints",
         details: error.message
       });
     }
@@ -240,10 +240,10 @@ class CoordinatorController {
         data: status
       });
     } catch (error) {
-      console.error('[COORDINATOR_CONTROLLER] Check status error:', error);
+      console.error("[COORDINATOR_CONTROLLER] Check status error:", error);
       res.status(500).json({
         success: false,
-        error: 'Failed to check coordinator status'
+        error: "Failed to check coordinator status"
       });
     }
   }
@@ -252,17 +252,17 @@ class CoordinatorController {
    */
   async getBarangayInsights(req, res) {
     try {
-      const { period = 'weekly' } = req.query;
+      const { period = "weekly" } = req.query;
       const data = await this.insightsService.getBarangayPrioritization(period);
       res.json({
         success: true,
         data
       });
     } catch (error) {
-      console.error('[COORDINATOR] Get barangay insights error:', error);
+      console.error("[COORDINATOR] Get barangay insights error:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get barangay insights'
+        error: error.message || "Failed to get barangay insights"
       });
     }
   }

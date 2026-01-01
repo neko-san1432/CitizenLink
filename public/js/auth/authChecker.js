@@ -1,8 +1,8 @@
-import { supabase } from '../config/config.js';
+import { supabase } from "../config/config.js";
 
-const storageKey = 'cl_user_meta';
-const oauthKey = 'cl_oauth_context';
-const authErrorSuppressKey = 'cl_auth_suppress_until';
+const storageKey = "cl_user_meta";
+const oauthKey = "cl_oauth_context";
+const authErrorSuppressKey = "cl_auth_suppress_until";
 const SUPPRESS_DURATION_MS = 8000;
 
 export const saveUserMeta = (meta) => {
@@ -21,7 +21,7 @@ export const getUserMeta = () => {
 export const requireRole = (allowedRoles) => {
   const meta = getUserMeta();
   if (!meta || !meta.role || (allowedRoles && !allowedRoles.includes(meta.role))) {
-    window.location.href = '/login';
+    window.location.href = "/login";
   }
 };
 
@@ -89,7 +89,7 @@ const clearAuthErrorSuppression = () => {
 const hasPendingOAuthSignup = () => {
   try {
     const ctx = getOAuthContext();
-    return ctx && ctx.intent === 'signup' && (ctx.status === 'pending' || ctx.status === 'handoff');
+    return ctx && ctx.intent === "signup" && (ctx.status === "pending" || ctx.status === "handoff");
   } catch {
     return false;
   }
@@ -121,14 +121,14 @@ export const getUserRole = async (options = {}) => {
     // Try to get role from API first (server has complete metadata)
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { "Content-Type": "application/json" };
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
-    const response = await fetch('/api/user/role', {
-      method: 'GET',
+    const response = await fetch("/api/user/role", {
+      method: "GET",
       headers,
-      credentials: 'include'
+      credentials: "include"
     });
     if (response.ok) {
       const data = await response.json();
@@ -141,11 +141,11 @@ export const getUserRole = async (options = {}) => {
         return data.data.role;
       }
     } else if (response.status === 401) {
-      try { localStorage.removeItem('cl_user_meta'); } catch {}
-      throw new Error('Unauthorized');
+      try { localStorage.removeItem("cl_user_meta"); } catch {}
+      throw new Error("Unauthorized");
     }
   } catch (error) {
-    console.warn('Failed to get role from API:', error);
+    console.warn("Failed to get role from API:", error);
   }
   // Fallback to session metadata
   const { data: { session } } = await supabase.auth.getSession();
@@ -166,8 +166,8 @@ export const getUserRole = async (options = {}) => {
 // Check if device is trusted (allows auto-refresh)
 const isDeviceTrusted = () => {
   try {
-    const trusted = localStorage.getItem('device_trusted');
-    return trusted === 'true';
+    const trusted = localStorage.getItem("device_trusted");
+    return trusted === "true";
   } catch {
     return false;
   }
@@ -177,12 +177,12 @@ const isDeviceTrusted = () => {
 export const setDeviceTrusted = (trusted) => {
   try {
     if (trusted) {
-      localStorage.setItem('device_trusted', 'true');
+      localStorage.setItem("device_trusted", "true");
     } else {
-      localStorage.removeItem('device_trusted');
+      localStorage.removeItem("device_trusted");
     }
   } catch (error) {
-    console.error('[AUTH] Failed to store device trust preference:', error);
+    console.error("[AUTH] Failed to store device trust preference:", error);
   }
 };
 
@@ -191,7 +191,7 @@ export const validateAndRefreshToken = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
-      console.log('No valid session found:', error?.message || 'No session');
+      console.log("No valid session found:", error?.message || "No session");
       return false;
     }
     // Check if session is expired
@@ -200,31 +200,31 @@ export const validateAndRefreshToken = async () => {
     if (expiresAt && now >= expiresAt) {
       // Check if device is trusted - if not, don't auto-refresh
       if (!isDeviceTrusted()) {
-        console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
+        console.log("[AUTH] Session expired and device is not trusted. Requiring re-authentication.");
         return false;
       }
-      console.log('Session expired, attempting refresh...');
+      console.log("Session expired, attempting refresh...");
       // Try to refresh the session (only if device is trusted)
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
-        console.log('Session refresh failed:', refreshError?.message);
+        console.log("Session refresh failed:", refreshError?.message);
         return false;
       }
       // Update server cookie with new token
       try {
-        await fetch('/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch("/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ access_token: refreshData.session.access_token })
         });
-        console.log('Session refreshed successfully');
+        console.log("Session refreshed successfully");
       } catch (cookieError) {
-        console.error('Failed to update server cookie:', cookieError);
+        console.error("Failed to update server cookie:", cookieError);
       }
     }
     return true;
   } catch (error) {
-    console.error('Token validation failed:', error);
+    console.error("Token validation failed:", error);
     return false;
   }
 };
@@ -234,11 +234,11 @@ export const initializeAuthListener = () => {
   supabase.auth.onAuthStateChange(async (event, session) => {
     // console.log removed for security
     // Ensure server cookie is set when we get a valid session
-    if (event === 'SIGNED_IN' && session) {
+    if (event === "SIGNED_IN" && session) {
       try {
-        await fetch('/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch("/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ access_token: session.access_token })
         });
       } catch {}
@@ -246,10 +246,10 @@ export const initializeAuthListener = () => {
       stopTokenExpiryMonitoring();
       startTokenExpiryMonitoring();
     }
-    if (event === 'TOKEN_REFRESHED' && session) {
+    if (event === "TOKEN_REFRESHED" && session) {
       // Check if device is trusted before allowing auto-refresh
       if (!isDeviceTrusted()) {
-        console.log('[AUTH] Token refresh attempted but device is not trusted. Signing out.');
+        console.log("[AUTH] Token refresh attempted but device is not trusted. Signing out.");
         await supabase.auth.signOut();
         handleSessionExpired();
         return;
@@ -257,19 +257,19 @@ export const initializeAuthListener = () => {
       // console.log removed for security
       try {
         // Update server-side cookie with new token
-        await fetch('/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch("/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ access_token: session.access_token })
         });
         // Check for role changes when token refreshes (e.g., user was promoted)
         await checkAndUpdateRoleChange();
         // console.log removed for security
       } catch (error) {
-        console.error('Failed to update server cookie:', error);
+        console.error("Failed to update server cookie:", error);
       }
     }
-    if (event === 'SIGNED_OUT') {
+    if (event === "SIGNED_OUT") {
       // console.log removed for security
       localStorage.removeItem(storageKey);
       localStorage.removeItem(oauthKey);
@@ -284,8 +284,8 @@ let noSessionAttempts = 0;
 const MAX_NO_SESSION_ATTEMPTS = 3;
 const isAuthPage = () => {
   try {
-    const p = (window.location.pathname || '').toLowerCase();
-    return p === '/login' || p === '/signup' || p === '/signup-with-code' || p === '/resetpassword' || p === '/reset-password' || p === '/success' || p === '/oauth-continuation' || p === '/oauthcontinuation' || p === '/complete-position-signup';
+    const p = (window.location.pathname || "").toLowerCase();
+    return p === "/login" || p === "/signup" || p === "/signup-with-code" || p === "/resetpassword" || p === "/reset-password" || p === "/success" || p === "/oauth-continuation" || p === "/oauthcontinuation" || p === "/complete-position-signup";
   } catch { return false; }
 };
 
@@ -320,11 +320,11 @@ export const startTokenExpiryMonitoring = () => {
       }
 
       // Check if user is authenticated via API instead of Supabase session
-      const response = await fetch('/api/user/role', {
-        method: 'GET',
-        credentials: 'include',
+      const response = await fetch("/api/user/role", {
+        method: "GET",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         }
       });
       if (!response.ok) {
@@ -336,7 +336,7 @@ export const startTokenExpiryMonitoring = () => {
           }
           // If device is not trusted, don't try to refresh - require re-login
           if (!isDeviceTrusted()) {
-            console.log('[AUTH] Session expired and device is not trusted. Requiring re-authentication.');
+            console.log("[AUTH] Session expired and device is not trusted. Requiring re-authentication.");
             tokenExpiryTimer = null;
             handleSessionExpired();
             return;
@@ -369,7 +369,7 @@ export const startTokenExpiryMonitoring = () => {
         } else {
           tokenExpiryTimer = null;
           // Don't redirect if we're on a page that might be loading
-          if (!window.location.pathname.includes('/review-queue') && !hasPendingOAuthSignup()) {
+          if (!window.location.pathname.includes("/review-queue") && !hasPendingOAuthSignup()) {
             handleSessionExpired();
           }
         }
@@ -382,7 +382,7 @@ export const startTokenExpiryMonitoring = () => {
       tokenExpiryTimer = setTimeout(checkTokenExpiry, 5 * 60 * 1000);
     } catch (error) {
       // Silently handle errors - don't spam console with expected errors
-      if (error.name !== 'TypeError' && error.name !== 'AbortError') {
+      if (error.name !== "TypeError" && error.name !== "AbortError") {
         // Only handle unexpected errors
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
@@ -412,13 +412,13 @@ export const stopTokenExpiryMonitoring = () => {
 // Handle session expired - show toast and logout
 const handleSessionExpired = async () => {
   if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
-    console.log('[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)');
+    console.log("[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)");
     clearAuthErrorSuppression();
     return;
   }
   if (isAuthPage()) return;
   // Prevent multiple redirects
-  if (window.location.pathname === '/login') return;
+  if (window.location.pathname === "/login") return;
   // Stop monitoring
   stopTokenExpiryMonitoring();
   // Show session expired toast
@@ -428,14 +428,14 @@ const handleSessionExpired = async () => {
   try {
     await supabase.auth.signOut();
   } catch (error) {
-    console.error('[AUTH] Error signing out from Supabase:', error);
+    console.error("[AUTH] Error signing out from Supabase:", error);
   }
 
   // Clear server session cookie
   try {
-    await fetch('/auth/session', { method: 'DELETE' });
+    await fetch("/auth/session", { method: "DELETE" });
   } catch (error) {
-    console.error('[AUTH] Error clearing server session:', error);
+    console.error("[AUTH] Error clearing server session:", error);
   }
 
   // Clear local data
@@ -447,33 +447,33 @@ const handleSessionExpired = async () => {
   if (loginForm) {
     const emailInput = loginForm.querySelector('input[type="email"], input[name="email"]');
     const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
-    if (emailInput) emailInput.value = '';
-    if (passwordInput) passwordInput.value = '';
+    if (emailInput) emailInput.value = "";
+    if (passwordInput) passwordInput.value = "";
   }
 
   // Redirect with a parameter to prevent auto-login
   setTimeout(() => {
-    window.location.href = '/login?session_expired=true';
+    window.location.href = "/login?session_expired=true";
   }, 3000);
 };
 // Show session expired toast
 const showSessionExpiredToast = () => {
   if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
-    console.log('[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)');
+    console.log("[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)");
     clearAuthErrorSuppression();
     return;
   }
   // Import toast functionality
-  import('../components/toast.js').then(({ showMessage }) => {
-    showMessage('error', 'Authentication failed. Please log in again.', 5000);
+  import("../components/toast.js").then(({ showMessage }) => {
+    showMessage("error", "Authentication failed. Please log in again.", 5000);
   }).catch(async () => {
     // Fallback if toast module fails - try to import and use toast
     try {
-      const { default: showMessage } = await import('../components/toast.js');
-      showMessage('error', 'Authentication failed. Please log in again.');
+      const { default: showMessage } = await import("../components/toast.js");
+      showMessage("error", "Authentication failed. Please log in again.");
     } catch (toastError) {
       // Final fallback - use console.error if toast also fails
-      console.error('Authentication failed. Please log in again.');
+      console.error("Authentication failed. Please log in again.");
     }
   });
 };
@@ -484,16 +484,16 @@ export const logout = async () => {
     // Clear Supabase session
     await supabase.auth.signOut();
     // Clear server session
-    await fetch('/auth/session', { method: 'DELETE' });
+    await fetch("/auth/session", { method: "DELETE" });
     // Clear local storage
     localStorage.removeItem(storageKey);
     clearOAuthContext();
     // Redirect to login
-    window.location.href = '/login';
+    window.location.href = "/login";
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     // Force redirect even if logout fails
-    window.location.href = '/login';
+    window.location.href = "/login";
   }
 };
 /**
@@ -539,17 +539,17 @@ const checkAndUpdateRoleChange = async () => {
       roleApiCacheTime = 0;
 
       // Dispatch custom event to notify components
-      window.dispatchEvent(new CustomEvent('userRoleChanged', {
+      window.dispatchEvent(new CustomEvent("userRoleChanged", {
         detail: { oldRole, newRole }
       }));
 
       // Show notification to user
       try {
-        const { default: showMessage } = await import('../components/toast.js');
+        const { default: showMessage } = await import("../components/toast.js");
         const roleDisplayName = formatRoleNameForDisplay(newRole);
-        showMessage('info', `Your role has been updated to ${roleDisplayName}. Refreshing page...`, 5000);
+        showMessage("info", `Your role has been updated to ${roleDisplayName}. Refreshing page...`, 5000);
       } catch (toastError) {
-        console.error('[ROLE_CHANGE] Failed to show toast:', toastError);
+        console.error("[ROLE_CHANGE] Failed to show toast:", toastError);
       }
 
       // Reload page to ensure all components update with new role
@@ -559,7 +559,7 @@ const checkAndUpdateRoleChange = async () => {
       }, 2000);
     }
   } catch (error) {
-    console.error('[ROLE_CHANGE] Error checking role change:', error);
+    console.error("[ROLE_CHANGE] Error checking role change:", error);
   } finally {
     isCheckingRoleChange = false;
   }
@@ -569,33 +569,33 @@ const checkAndUpdateRoleChange = async () => {
  * Format role name for display in notifications
  */
 const formatRoleNameForDisplay = (role) => {
-  if (!role) return 'Unknown';
+  if (!role) return "Unknown";
 
   const roleNames = {
-    'citizen': 'Citizen',
-    'lgu': 'LGU Officer',
-    'lgu-admin': 'LGU Admin',
-    'complaint-coordinator': 'Complaint Coordinator',
-    'super-admin': 'Super Admin',
-    'hr': 'HR',
-    'lgu-hr': 'LGU HR'
+    "citizen": "Citizen",
+    "lgu": "LGU Officer",
+    "lgu-admin": "LGU Admin",
+    "complaint-coordinator": "Complaint Coordinator",
+    "super-admin": "Super Admin",
+    "hr": "HR",
+    "lgu-hr": "LGU HR"
   };
 
   // Handle LGU officer roles with department codes
   if (/^lgu-(?!admin|hr)/.test(role)) {
-    const dept = role.replace(/^lgu-/, '').toUpperCase();
+    const dept = role.replace(/^lgu-/, "").toUpperCase();
     return `LGU Officer (${dept})`;
   }
 
   // Handle LGU admin roles with department codes
   if (/^lgu-admin-/.test(role)) {
-    const dept = role.replace(/^lgu-admin-/, '').toUpperCase();
+    const dept = role.replace(/^lgu-admin-/, "").toUpperCase();
     return `LGU Admin (${dept})`;
   }
 
   // Handle LGU HR roles with department codes
   if (/^lgu-hr-/.test(role)) {
-    const dept = role.replace(/^lgu-hr-/, '').toUpperCase();
+    const dept = role.replace(/^lgu-hr-/, "").toUpperCase();
     return `HR (${dept})`;
   }
 
@@ -611,16 +611,16 @@ try {
   // Initialize header auth UI on all pages
   const initializeHeaderAuthUI = () => {
     try {
-      const path = (window.location && window.location.pathname || '').toLowerCase();
-      const unauthEl = document.getElementById('unauthenticated-buttons');
-      const authEl = document.getElementById('authenticated-buttons');
-      const dashboardBtn = document.getElementById('dashboard-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const onAuthPage = (path === '/login' || path === '/signup' || path === '/signup-with-code' || path === '/complete-position-signup');
+      const path = (window.location && window.location.pathname || "").toLowerCase();
+      const unauthEl = document.getElementById("unauthenticated-buttons");
+      const authEl = document.getElementById("authenticated-buttons");
+      const dashboardBtn = document.getElementById("dashboard-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      const onAuthPage = (path === "/login" || path === "/signup" || path === "/signup-with-code" || path === "/complete-position-signup");
 
       // Hide unauthenticated buttons on auth pages themselves
       if (onAuthPage) {
-        if (unauthEl) unauthEl.classList.add('hidden');
+        if (unauthEl) unauthEl.classList.add("hidden");
       }
       // Resolve role and set dashboard target + toggle buttons
       (async () => {
@@ -628,8 +628,8 @@ try {
           // Skip API call on auth pages to avoid 401 errors
           if (onAuthPage) {
             // On auth pages, keep unauth buttons hidden, auth buttons hidden
-            if (unauthEl) unauthEl.classList.add('hidden');
-            if (authEl) authEl.classList.add('hidden');
+            if (unauthEl) unauthEl.classList.add("hidden");
+            if (authEl) authEl.classList.add("hidden");
             return;
           }
 
@@ -637,45 +637,45 @@ try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
             // No session, show unauthenticated buttons
-            if (unauthEl) unauthEl.classList.remove('hidden');
-            if (authEl) authEl.classList.add('hidden');
+            if (unauthEl) unauthEl.classList.remove("hidden");
+            if (authEl) authEl.classList.add("hidden");
             return;
           }
 
           // User has session, check role via API
-          const res = await fetch('/api/user/role', { credentials: 'include' });
+          const res = await fetch("/api/user/role", { credentials: "include" });
           const authed = res.ok ? (await res.clone().json())?.success : false;
           if (authed) {
-            if (unauthEl) unauthEl.classList.add('hidden');
-            if (authEl) authEl.classList.remove('hidden');
+            if (unauthEl) unauthEl.classList.add("hidden");
+            if (authEl) authEl.classList.remove("hidden");
             try {
               const data = await res.json();
               const role = data?.data?.role?.toLowerCase?.();
               // Unified dashboard route for all roles
-              const href = '/dashboard';
-              if (dashboardBtn) dashboardBtn.setAttribute('href', href);
+              const href = "/dashboard";
+              if (dashboardBtn) dashboardBtn.setAttribute("href", href);
             } catch {}
           } else {
             // Not authenticated, show unauthenticated buttons
-            if (unauthEl) unauthEl.classList.remove('hidden');
-            if (authEl) authEl.classList.add('hidden');
+            if (unauthEl) unauthEl.classList.remove("hidden");
+            if (authEl) authEl.classList.add("hidden");
           }
         } catch (error) {
           // Silently handle errors - don't show 401 errors in console
           if (onAuthPage) {
             // On auth pages, ensure buttons are hidden
-            if (unauthEl) unauthEl.classList.add('hidden');
-            if (authEl) authEl.classList.add('hidden');
+            if (unauthEl) unauthEl.classList.add("hidden");
+            if (authEl) authEl.classList.add("hidden");
           } else {
             // On other pages, show unauthenticated buttons on error
-            if (unauthEl) unauthEl.classList.remove('hidden');
-            if (authEl) authEl.classList.add('hidden');
+            if (unauthEl) unauthEl.classList.remove("hidden");
+            if (authEl) authEl.classList.add("hidden");
           }
         }
         // Bind logout
         if (logoutBtn) {
           try {
-            logoutBtn.addEventListener('click', async () => {
+            logoutBtn.addEventListener("click", async () => {
               await logout();
             }, { once: true });
           } catch {}
@@ -683,8 +683,8 @@ try {
       })();
     } catch {}
   };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeHeaderAuthUI);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeHeaderAuthUI);
   } else {
     initializeHeaderAuthUI();
   }

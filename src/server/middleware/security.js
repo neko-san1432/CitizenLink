@@ -79,10 +79,10 @@ const securityHeaders = helmet({
   hsts:
     process.env.NODE_ENV === "production"
       ? {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true,
-        }
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
       : false, // Disable HSTS in development to prevent SSL redirects
   noSniff: true,
   frameguard: { action: "deny" },

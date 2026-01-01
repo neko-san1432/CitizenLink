@@ -274,46 +274,46 @@ class CoordinatorDashboard {
             <div class="queue-item">
                 <div class="queue-item-icon">
                     ${
-                      complaint.priority === "urgent"
-                        ? "🚨"
-                        : complaint.priority === "high"
-                        ? "⚠️"
-                        : "📋"
-                    }
+  complaint.priority === "urgent"
+    ? "🚨"
+    : complaint.priority === "high"
+      ? "⚠️"
+      : "📋"
+}
                 </div>
                 <div class="queue-item-content">
                     <div class="queue-item-title">${complaint.title}</div>
                     <div class="queue-item-details">
                         <span class="priority-${
-                          complaint.urgency_level || "medium"
-                        } urgency-badge">${
-          complaint.urgency_level || "medium"
-        }</span>
+  complaint.urgency_level || "medium"
+} urgency-badge">${
+  complaint.urgency_level || "medium"
+}</span>
                         <span class="separator">•</span>
                         <span class="category">${
-                          complaint.category || "General"
-                        }</span>
+  complaint.category || "General"
+}</span>
                         ${
-                          complaint.submitted_by_profile
-                            ? `<span class="separator">•</span>
+  complaint.submitted_by_profile
+    ? `<span class="separator">•</span>
                              <span class="submitter">${
-                               complaint.submitted_by_profile.name || "Unknown"
-                             }</span>`
-                            : ""
-                        }
+  complaint.submitted_by_profile.name || "Unknown"
+}</span>`
+    : ""
+}
                     </div>
                 </div>
                 <div class="queue-item-actions">
                     <button class="btn btn-sm btn-secondary js-quick-action-btn" data-complaint-id="${
-                      complaint.id
-                    }" data-citizen-urgency="${
-          complaint.urgency_level || "medium"
-        }">
+  complaint.id
+}" data-citizen-urgency="${
+  complaint.urgency_level || "medium"
+}">
                         ⚡ Quick
                     </button>
                     <button class="btn btn-sm btn-primary js-review-btn" data-complaint-id="${
-                      complaint.id
-                    }">
+  complaint.id
+}">
                         Review
                     </button>
                 </div>
@@ -356,7 +356,7 @@ class CoordinatorDashboard {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const id = btn.dataset.complaintId;
-        const citizenUrgency = btn.dataset.citizenUrgency;
+        const {citizenUrgency} = btn.dataset;
         this.openQuickActionModal(id, citizenUrgency);
       });
     });

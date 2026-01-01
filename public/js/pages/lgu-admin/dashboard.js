@@ -91,7 +91,7 @@ class LguAdminDashboard {
           datasets: [
             {
               label: "New Complaints",
-              data: data,
+              data,
               borderColor: "#3b82f6",
               backgroundColor: "rgba(59, 130, 246, 0.1)",
               borderWidth: 2,
@@ -173,21 +173,21 @@ class LguAdminDashboard {
                data-id="${item.id}">
               <div>
                   <h4 class="font-medium text-gray-900">${this.escapeHtml(
-                    item.title || "Untitled"
-                  )}</h4>
+    item.title || "Untitled"
+  )}</h4>
                   <p class="text-sm text-gray-500 mt-1">${
-                    item.location_text || "No location"
-                  }</p>
+  item.location_text || "No location"
+}</p>
               </div>
               <div class="text-right">
                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded ${this.getPriorityBadgeClass(
-                     item.priority
-                   )}">
+    item.priority
+  )}">
                       ${item.priority}
                   </span>
                   <p class="text-xs text-gray-400 mt-2">${new Date(
-                    item.submitted_at
-                  ).toLocaleDateString()}</p>
+    item.submitted_at
+  ).toLocaleDateString()}</p>
               </div>
           </div>
       `

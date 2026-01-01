@@ -1496,22 +1496,22 @@ class HeatmapVisualization {
     return `
       <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
         <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${
-          complaint.title
-        }</h4>
+  complaint.title
+}</h4>
         <div class="complaint-details" style="margin: 0; padding: 0;">
           <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${
-            complaint.type
-          }</p>
+  complaint.type
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(
-            " ",
-            "-"
-          )}">${complaint.status}</span></p>
+    " ",
+    "-"
+  )}">${complaint.status}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${
-      complaint.priority
-    }</span></p>
+  complaint.priority
+}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${
-            complaint.location
-          }</p>
+  complaint.location
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
@@ -1548,8 +1548,8 @@ class HeatmapVisualization {
         <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
           <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
             <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-              complaint.title
-            }</h3>
+  complaint.title
+}</h3>
             <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
               <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
               <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1564,8 +1564,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Location:</span>
                 <span class="value" style="text-align: right; max-width: 60%;">${
-                  complaint.location
-                }</span>
+  complaint.location
+}</span>
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1578,8 +1578,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${
-        daysSinceSubmission !== 1 ? "s" : ""
-      }</span>
+  daysSinceSubmission !== 1 ? "s" : ""
+}</span>
               </div>
             </div>
             <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd;">
@@ -1596,8 +1596,8 @@ class HeatmapVisualization {
       <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
         <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
           <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-            complaint.title
-          }</h3>
+  complaint.title
+}</h3>
           <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
             <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
             <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1612,8 +1612,8 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Location:</span>
               <span class="value" style="text-align: right; max-width: 60%;">${
-                complaint.location
-              }</span>
+  complaint.location
+}</span>
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1626,21 +1626,21 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${
-      daysSinceSubmission !== 1 ? "s" : ""
-    }</span>
+  daysSinceSubmission !== 1 ? "s" : ""
+}</span>
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
             <button class="btn-details" onclick="viewComplaintDetails('${
-              complaint.id
-            }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+  complaint.id
+}')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
             <button class="btn-location" onclick="centerOnComplaint(${
-              complaint.lat
-            }, ${
-      complaint.lng
-    })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+  complaint.lat
+}, ${
+  complaint.lng
+})" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
             </button>
           </div>
@@ -1835,10 +1835,10 @@ class HeatmapVisualization {
         icon: L.divIcon({
           html: `<div style="
             background-color: ${
-              this.clusterConfig.clusterColors[
-                index % this.clusterConfig.clusterColors.length
-              ]
-            };
+  this.clusterConfig.clusterColors[
+    index % this.clusterConfig.clusterColors.length
+  ]
+};
             color: white;
             border-radius: 50%;
             width: 40px;
@@ -1920,26 +1920,26 @@ class HeatmapVisualization {
     return `
       <div class="cluster-popup-content">
         <h4>Cluster ${clusterIndex + 1} (${
-      clusterPoints.length
-    } complaints)</h4>
+  clusterPoints.length
+} complaints)</h4>
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
             ${Object.entries(statusCounts)
-              .map(([status, count]) => `<li>${status}: ${count}</li>`)
-              .join("")}
+    .map(([status, count]) => `<li>${status}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
             ${Object.entries(typeCounts)
-              .map(([type, count]) => `<li>${type}: ${count}</li>`)
-              .join("")}
+    .map(([type, count]) => `<li>${type}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
             ${Object.entries(priorityCounts)
-              .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
-              .join("")}
+    .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
+    .join("")}
           </ul>
         </div>
       </div>

@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!isReload) {
         // Check if we arrived from a different page or direct entry
-        const referrer = document.referrer;
+        const {referrer} = document;
         const isInternal =
           referrer && referrer.includes(window.location.hostname);
         const isSignupUrl = referrer && referrer.includes("/signup");

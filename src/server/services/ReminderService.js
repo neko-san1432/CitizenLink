@@ -2,8 +2,8 @@
  * Reminder Service
  * Handles automatic reminders for unworked/unresponded complaints
  */
-const Database = require('../config/database');
-const NotificationService = require('./NotificationService');
+const Database = require("../config/database");
+const NotificationService = require("./NotificationService");
 
 // Get service role client (bypasses RLS)
 // Note: We get it fresh each time to ensure it's using service role key
@@ -48,7 +48,7 @@ class ReminderService {
         await this.sendReminder(complaint);
       }
     } catch (error) {
-      console.error('[REMINDER_SERVICE] Error processing reminders:', error);
+      console.error("[REMINDER_SERVICE] Error processing reminders:", error);
     }
   }
   /**
@@ -59,30 +59,30 @@ class ReminderService {
       const supabase = getServiceClient();
       // Get complaints that are assigned but haven't been worked on
       const { data: assignedComplaints, error: assignedError } = await supabase
-        .from('complaints')
+        .from("complaints")
         .select(`
           id, title, workflow_status, submitted_at, last_activity_at,
           department_r, preferred_departments,
           submitted_by, coordinator_notes
         `)
-        .in('workflow_status', ['assigned', 'in_progress'])
-        .lt('last_activity_at', new Date(now.getTime() - this.reminderIntervals.first).toISOString());
+        .in("workflow_status", ["assigned", "in_progress"])
+        .lt("last_activity_at", new Date(now.getTime() - this.reminderIntervals.first).toISOString());
       if (assignedError) {
-        console.error('[REMINDER_SERVICE] Error fetching assigned complaints:', assignedError);
+        console.error("[REMINDER_SERVICE] Error fetching assigned complaints:", assignedError);
         return [];
       }
       // Get complaints that are pending review for too long
       const { data: pendingComplaints, error: pendingError } = await supabase
-        .from('complaints')
+        .from("complaints")
         .select(`
           id, title, workflow_status, submitted_at, last_activity_at,
           department_r, preferred_departments,
           submitted_by, coordinator_notes
         `)
-        .eq('workflow_status', 'new')
-        .lt('submitted_at', new Date(now.getTime() - this.reminderIntervals.first).toISOString());
+        .eq("workflow_status", "new")
+        .lt("submitted_at", new Date(now.getTime() - this.reminderIntervals.first).toISOString());
       if (pendingError) {
-        console.error('[REMINDER_SERVICE] Error fetching pending complaints:', pendingError);
+        console.error("[REMINDER_SERVICE] Error fetching pending complaints:", pendingError);
         return [];
       }
       // Combine and filter out recently reminded complaints
@@ -94,13 +94,13 @@ class ReminderService {
           now.getTime() - new Date(lastReminder.reminded_at).getTime() :
           now.getTime() - new Date(complaint.submitted_at).getTime();
         // Determine which reminder level this should be
-        let reminderLevel = 'first';
+        let reminderLevel = "first";
         if (timeSinceLastReminder >= this.reminderIntervals.final) {
-          reminderLevel = 'final';
+          reminderLevel = "final";
         } else if (timeSinceLastReminder >= this.reminderIntervals.third) {
-          reminderLevel = 'third';
+          reminderLevel = "third";
         } else if (timeSinceLastReminder >= this.reminderIntervals.second) {
-          reminderLevel = 'second';
+          reminderLevel = "second";
         }
         // Check if we should send this reminder level
         const shouldRemind = this.shouldSendReminder(complaint, reminderLevel, lastReminder);
@@ -114,7 +114,7 @@ class ReminderService {
       }
       return complaintsNeedingReminders;
     } catch (error) {
-      console.error('[REMINDER_SERVICE] Error getting pending reminders:', error);
+      console.error("[REMINDER_SERVICE] Error getting pending reminders:", error);
       return [];
     }
   }
@@ -133,22 +133,22 @@ class ReminderService {
 
     // Check if complaint is in a state that needs reminders
     const needsReminder = [
-      'new',
-      'assigned',
-      'in_progress'
+      "new",
+      "assigned",
+      "in_progress"
     ].includes(complaint.workflow_status);
     if (!needsReminder) {
       return false;
     }
     // Check time thresholds
     switch (reminderLevel) {
-      case 'first':
+      case "first":
         return timeSinceLastReminder >= this.reminderIntervals.first;
-      case 'second':
+      case "second":
         return timeSinceLastReminder >= this.reminderIntervals.second;
-      case 'third':
+      case "third":
         return timeSinceLastReminder >= this.reminderIntervals.third;
-      case 'final':
+      case "final":
         return timeSinceLastReminder >= this.reminderIntervals.final;
       default:
         return false;
@@ -180,9 +180,9 @@ class ReminderService {
     // Get departments from department_r array
     if (complaint.department_r && complaint.department_r.length > 0) {
       const { data: deptData } = await supabase
-        .from('departments')
-        .select('id, name, code')
-        .in('code', complaint.department_r);
+        .from("departments")
+        .select("id, name, code")
+        .in("code", complaint.department_r);
       if (deptData) {
         departments.push(...deptData);
       }
@@ -190,9 +190,9 @@ class ReminderService {
     // Get preferred departments from JSONB
     if (complaint.preferred_departments && Array.isArray(complaint.preferred_departments)) {
       const { data: preferredDepts } = await supabase
-        .from('departments')
-        .select('id, name, code')
-        .in('code', complaint.preferred_departments);
+        .from("departments")
+        .select("id, name, code")
+        .in("code", complaint.preferred_departments);
       if (preferredDepts) {
         departments.push(...preferredDepts);
       }
@@ -207,11 +207,11 @@ class ReminderService {
     // Ensure we're using the service role client (bypasses RLS)
     // We create a fresh client here to guarantee we are using the service role key
     // and to avoid any potential issues with the shared Database singleton
-    const { createClient } = require('@supabase/supabase-js');
+    const { createClient } = require("@supabase/supabase-js");
     const dbClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const { data, error } = await dbClient
-      .from('complaint_reminders')
+      .from("complaint_reminders")
       .insert({
         complaint_id: complaintId,
         reminder_type: reminderLevel,
@@ -221,7 +221,7 @@ class ReminderService {
       .single();
 
     if (error) {
-      console.error('[REMINDER_SERVICE] Error creating reminder record:', error);
+      console.error("[REMINDER_SERVICE] Error creating reminder record:", error);
       // ... error logging ...
       throw error;
     }
@@ -234,24 +234,24 @@ class ReminderService {
   async sendReminderNotifications(complaint, departments, reminderLevel) {
     const reminderMessages = {
       first: {
-        title: 'Complaint Reminder',
+        title: "Complaint Reminder",
         message: `Complaint "${complaint.title}" has been pending for 24+ hours and needs attention.`,
-        priority: 'warning'
+        priority: "warning"
       },
       second: {
-        title: 'Urgent Complaint Reminder',
+        title: "Urgent Complaint Reminder",
         message: `Complaint "${complaint.title}" has been pending for 3+ days and requires immediate attention.`,
-        priority: 'urgent'
+        priority: "urgent"
       },
       third: {
-        title: 'Critical Complaint Reminder',
+        title: "Critical Complaint Reminder",
         message: `Complaint "${complaint.title}" has been pending for 1+ week and needs urgent resolution.`,
-        priority: 'urgent'
+        priority: "urgent"
       },
       final: {
-        title: 'Final Complaint Reminder',
+        title: "Final Complaint Reminder",
         message: `Complaint "${complaint.title}" has been pending for 2+ weeks. This is the final reminder.`,
-        priority: 'urgent'
+        priority: "urgent"
       }
     };
     const reminder = reminderMessages[reminderLevel];
@@ -273,14 +273,14 @@ class ReminderService {
       // Get coordinator users
       const { data: coordinators } = await supabase.auth.admin.listUsers();
       const coordinatorIds = coordinators?.users
-        ?.filter(user => user.raw_user_meta_data?.role === 'complaint-coordinator')
+        ?.filter(user => user.raw_user_meta_data?.role === "complaint-coordinator")
         ?.map(user => user.id) || [];
       if (coordinatorIds.length > 0) {
 
         for (const coordinatorId of coordinatorIds) {
           await this.notificationService.createNotification(
             coordinatorId,
-            'complaint_reminder',
+            "complaint_reminder",
             reminder.title,
             reminder.message,
             {
@@ -295,7 +295,7 @@ class ReminderService {
         }
       }
     } catch (error) {
-      console.error('[REMINDER_SERVICE] Error notifying coordinator:', error);
+      console.error("[REMINDER_SERVICE] Error notifying coordinator:", error);
     }
   }
   /**
@@ -308,14 +308,14 @@ class ReminderService {
         // Get department admin users
         const { data: allUsers } = await supabase.auth.admin.listUsers();
         const admins = allUsers?.users
-          ?.filter(user => user.raw_user_meta_data?.role === 'lgu-admin' && user.raw_user_meta_data?.dpt === department.code)
+          ?.filter(user => user.raw_user_meta_data?.role === "lgu-admin" && user.raw_user_meta_data?.dpt === department.code)
           ?.map(user => user.id) || [];
         if (admins.length > 0) {
 
           for (const adminId of admins) {
             await this.notificationService.createNotification(
               adminId,
-              'complaint_reminder',
+              "complaint_reminder",
               reminder.title,
               reminder.message,
               {
@@ -332,7 +332,7 @@ class ReminderService {
         }
       }
     } catch (error) {
-      console.error('[REMINDER_SERVICE] Error notifying department admins:', error);
+      console.error("[REMINDER_SERVICE] Error notifying department admins:", error);
     }
   }
   /**
@@ -343,7 +343,7 @@ class ReminderService {
       if (complaint.submitted_by) {
         await this.notificationService.createNotification(
           complaint.submitted_by,
-          'complaint_reminder',
+          "complaint_reminder",
           reminder.title,
           reminder.message,
           {
@@ -357,7 +357,7 @@ class ReminderService {
         );
       }
     } catch (error) {
-      console.error('[REMINDER_SERVICE] Error notifying citizen:', error);
+      console.error("[REMINDER_SERVICE] Error notifying citizen:", error);
     }
   }
   /**
@@ -367,48 +367,48 @@ class ReminderService {
     try {
       const supabase = getServiceClient();
       if (!supabase) {
-        console.warn('[REMINDER_SERVICE] Supabase client not available');
+        console.warn("[REMINDER_SERVICE] Supabase client not available");
         return null;
       }
 
       const { data, error } = await supabase
-        .from('complaint_reminders')
-        .select('*')
-        .eq('complaint_id', complaintId)
-        .order('reminded_at', { ascending: false })
+        .from("complaint_reminders")
+        .select("*")
+        .eq("complaint_id", complaintId)
+        .order("reminded_at", { ascending: false })
         .limit(1)
         .maybeSingle(); // Use maybeSingle() instead of single() to return null when no rows found
 
       if (error) {
         // Only log non-PGRST116 errors (PGRST116 = no rows returned, which is expected)
-        if (error.code !== 'PGRST116') {
+        if (error.code !== "PGRST116") {
           // Check if error message contains HTML (indicates server/infrastructure error)
-          const errorMessage = error.message || '';
-          const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
-                             errorMessage.includes('<html') ||
-                             errorMessage.includes('Cloudflare') ||
-                             errorMessage.includes('Internal server error');
+          const errorMessage = error.message || "";
+          const isHtmlError = errorMessage.trim().startsWith("<!DOCTYPE html>") ||
+                             errorMessage.includes("<html") ||
+                             errorMessage.includes("Cloudflare") ||
+                             errorMessage.includes("Internal server error");
 
           if (isHtmlError) {
             // Extract error code from HTML if possible
             const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
-            const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
-            console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
+            const errorCode = errorCodeMatch ? errorCodeMatch[1] : "500";
+            console.error("[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):", {
               errorCode,
-              type: 'HTML_ERROR_RESPONSE',
-              message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
+              type: "HTML_ERROR_RESPONSE",
+              message: "Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.",
               complaintId
             });
-          } else if (errorMessage.includes('fetch failed')) {
+          } else if (errorMessage.includes("fetch failed")) {
             // Check if it's a network error
-            console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', error.message);
+            console.warn("[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):", error.message);
           } else {
             // Standard Supabase error
-            console.error('[REMINDER_SERVICE] Error getting last reminder:', {
+            console.error("[REMINDER_SERVICE] Error getting last reminder:", {
               message: errorMessage,
               code: error.code,
-              details: error.details || '',
-              hint: error.hint || ''
+              details: error.details || "",
+              hint: error.hint || ""
             });
           }
         }
@@ -418,25 +418,25 @@ class ReminderService {
       return data || null;
     } catch (error) {
       // Handle network errors gracefully
-      const errorMessage = error.message || '';
-      const isHtmlError = errorMessage.trim().startsWith('<!DOCTYPE html>') ||
-                         errorMessage.includes('<html') ||
-                         errorMessage.includes('Cloudflare') ||
-                         errorMessage.includes('Internal server error');
+      const errorMessage = error.message || "";
+      const isHtmlError = errorMessage.trim().startsWith("<!DOCTYPE html>") ||
+                         errorMessage.includes("<html") ||
+                         errorMessage.includes("Cloudflare") ||
+                         errorMessage.includes("Internal server error");
 
       if (isHtmlError) {
         const errorCodeMatch = errorMessage.match(/Error code (\d+)/);
-        const errorCode = errorCodeMatch ? errorCodeMatch[1] : '500';
-        console.error('[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):', {
+        const errorCode = errorCodeMatch ? errorCodeMatch[1] : "500";
+        console.error("[REMINDER_SERVICE] Infrastructure error getting last reminder (Supabase/Cloudflare server error):", {
           errorCode,
-          type: 'HTML_ERROR_RESPONSE',
-          message: 'Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.',
+          type: "HTML_ERROR_RESPONSE",
+          message: "Received HTML error page instead of JSON response. This indicates a server/infrastructure issue.",
           complaintId
         });
-      } else if (error instanceof TypeError && errorMessage.includes('fetch failed')) {
-        console.warn('[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):', errorMessage);
+      } else if (error instanceof TypeError && errorMessage.includes("fetch failed")) {
+        console.warn("[REMINDER_SERVICE] Network error getting last reminder (database may be unreachable):", errorMessage);
       } else {
-        console.error('[REMINDER_SERVICE] Unexpected error getting last reminder:', {
+        console.error("[REMINDER_SERVICE] Unexpected error getting last reminder:", {
           message: errorMessage,
           stack: error.stack
         });

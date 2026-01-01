@@ -162,7 +162,7 @@ class LguAdminController {
         success: true,
         stats: {
           total_active: totalActive,
-          unassigned: unassigned,
+          unassigned,
           priority: {
             urgent,
             high,
@@ -344,8 +344,8 @@ class LguAdminController {
         officerIds && Array.isArray(officerIds)
           ? officerIds
           : officerId
-          ? [officerId]
-          : [];
+            ? [officerId]
+            : [];
       if (officersToAssign.length === 0) {
         return res.status(400).json({
           success: false,
@@ -829,7 +829,7 @@ class LguAdminController {
       // Step 2a: Fetch Assignments for these SPECIFIC complaints
       // ---------------------------------------------------------
 
-      let assignmentsMap = {};
+      const assignmentsMap = {};
 
       if (complaintIds.length > 0) {
         // Fetch assignments only for the displayed complaints
@@ -917,8 +917,8 @@ class LguAdminController {
           citizen_name: userProfile
             ? userProfile.name
             : complaint.submitted_by
-            ? "Citizen"
-            : "Anonymous",
+              ? "Citizen"
+              : "Anonymous",
 
           assigned_to: assignment?.assigned_to || null,
           assigned_by: assignment?.assigned_by || null,
@@ -927,8 +927,8 @@ class LguAdminController {
           status: assignment
             ? assignment.status
             : complaint.workflow_status === "new"
-            ? "unassigned"
-            : complaint.workflow_status,
+              ? "unassigned"
+              : complaint.workflow_status,
           priority: assignment?.priority || complaint.priority || "medium",
 
           deadline: assignment?.deadline || null,
@@ -1300,8 +1300,8 @@ class LguAdminController {
         priority === "urgent"
           ? "urgent"
           : priority === "high"
-          ? "warning"
-          : "info";
+            ? "warning"
+            : "info";
       await notificationService.notifyTaskAssigned(
         officerId,
         complaintId,

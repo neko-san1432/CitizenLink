@@ -1,11 +1,11 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 class AuditLogRepository {
 
   constructor() {
     this.db = new Database();
     this.supabase = this.db.getClient();
-    this.table = 'audit_logs';
+    this.table = "audit_logs";
   }
 
   /**
@@ -65,23 +65,23 @@ class AuditLogRepository {
 
       if (error) {
         // Check if it's a foreign key constraint error
-        if (error.code === '23503' && error.message.includes('performed_by')) {
+        if (error.code === "23503" && error.message.includes("performed_by")) {
           // User was deleted between check and insert, skip silently
           console.warn(`[AUDIT_LOG] Skipping audit log - user ${performedBy} was deleted (action: ${actionType})`);
           return false;
         }
-        console.error('[AUDIT_LOG] Failed to log action:', error);
+        console.error("[AUDIT_LOG] Failed to log action:", error);
         // Don't throw - audit logging failure shouldn't break operations
         return false;
       }
       return true;
     } catch (error) {
       // Handle foreign key constraint errors gracefully
-      if (error.code === '23503' && error.message && error.message.includes('performed_by')) {
+      if (error.code === "23503" && error.message && error.message.includes("performed_by")) {
         console.warn(`[AUDIT_LOG] Skipping audit log - user was deleted (action: ${actionType})`);
         return false;
       }
-      console.error('[AUDIT_LOG] Log error:', error);
+      console.error("[AUDIT_LOG] Log error:", error);
       return false;
     }
   }
@@ -113,15 +113,15 @@ class AuditLogRepository {
 
     let query = this.supabase
       .from(this.table)
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (actionType) query = query.eq('action_type', actionType);
-    if (performedBy) query = query.eq('performed_by', performedBy);
-    if (targetType) query = query.eq('target_type', targetType);
-    if (targetId) query = query.eq('target_id', targetId);
-    if (startDate) query = query.gte('created_at', startDate.toISOString());
-    if (endDate) query = query.lte('created_at', endDate.toISOString());
+    if (actionType) query = query.eq("action_type", actionType);
+    if (performedBy) query = query.eq("performed_by", performedBy);
+    if (targetType) query = query.eq("target_type", targetType);
+    if (targetId) query = query.eq("target_id", targetId);
+    if (startDate) query = query.gte("created_at", startDate.toISOString());
+    if (endDate) query = query.lte("created_at", endDate.toISOString());
 
     const { data, error } = await query.range(offset, offset + limit - 1);
     if (error) throw error;

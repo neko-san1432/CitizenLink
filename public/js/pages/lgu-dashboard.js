@@ -2,16 +2,16 @@
  * LGU Dashboard
  * Comprehensive dashboard for LGU officers with task management and statistics
  */
-import showMessage from '../components/toast.js';
-import { initializeRoleToggle } from '../auth/roleToggle.js';
-import { getActivityIcon } from '../utils/icons.js';
+import showMessage from "../components/toast.js";
+import { initializeRoleToggle } from "../auth/roleToggle.js";
+import { getActivityIcon } from "../utils/icons.js";
 
 // Dashboard state
 const dashboardData = null;
 /**
  * Initialize dashboard
  */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   await loadDashboardData();
   await loadMyTasks();
   await loadStatistics();
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await initializeRoleToggle();
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Error initializing role toggle:', error);
+    console.error("[LGU_DASHBOARD] Error initializing role toggle:", error);
   }
 });
 /**
@@ -37,8 +37,8 @@ async function loadDashboardData() {
       loadUpdates()
     ]);
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Load dashboard error:', error);
-    showMessage('error', 'Failed to load dashboard data');
+    console.error("[LGU_DASHBOARD] Load dashboard error:", error);
+    showMessage("error", "Failed to load dashboard data");
   }
 }
 /**
@@ -46,7 +46,7 @@ async function loadDashboardData() {
  */
 async function loadMyTasks() {
   try {
-    const response = await fetch('/api/lgu/tasks?limit=5');
+    const response = await fetch("/api/lgu/tasks?limit=5");
     const result = await response.json();
     if (result.success) {
       renderMyTasks(result.data || []);
@@ -54,7 +54,7 @@ async function loadMyTasks() {
       renderMyTasks([]);
     }
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Load tasks error:', error);
+    console.error("[LGU_DASHBOARD] Load tasks error:", error);
     renderMyTasks([]);
   }
 }
@@ -63,7 +63,7 @@ async function loadMyTasks() {
  */
 async function loadStatistics() {
   try {
-    const response = await fetch('/api/lgu/statistics');
+    const response = await fetch("/api/lgu/statistics");
     const result = await response.json();
     if (result.success) {
       renderStatistics(result.data);
@@ -71,7 +71,7 @@ async function loadStatistics() {
       renderStatistics({});
     }
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Load statistics error:', error);
+    console.error("[LGU_DASHBOARD] Load statistics error:", error);
     renderStatistics({});
   }
 }
@@ -80,7 +80,7 @@ async function loadStatistics() {
  */
 async function loadActivities() {
   try {
-    const response = await fetch('/api/lgu/activities?limit=5');
+    const response = await fetch("/api/lgu/activities?limit=5");
     const result = await response.json();
     if (result.success) {
       renderActivities(result.data || []);
@@ -88,7 +88,7 @@ async function loadActivities() {
       renderActivities([]);
     }
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Load activities error:', error);
+    console.error("[LGU_DASHBOARD] Load activities error:", error);
     renderActivities([]);
   }
 }
@@ -97,7 +97,7 @@ async function loadActivities() {
  */
 async function loadUpdates() {
   try {
-    const response = await fetch('/api/lgu/updates?limit=5');
+    const response = await fetch("/api/lgu/updates?limit=5");
     const result = await response.json();
     if (result.success) {
       renderUpdates(result.data || []);
@@ -105,7 +105,7 @@ async function loadUpdates() {
       renderUpdates([]);
     }
   } catch (error) {
-    console.error('[LGU_DASHBOARD] Load updates error:', error);
+    console.error("[LGU_DASHBOARD] Load updates error:", error);
     renderUpdates([]);
   }
 }
@@ -113,7 +113,7 @@ async function loadUpdates() {
  * Render my tasks
  */
 function renderMyTasks(tasks) {
-  const container = document.getElementById('tasks-container');
+  const container = document.getElementById("tasks-container");
   if (!container) return;
   if (tasks.length === 0) {
     container.innerHTML = `
@@ -147,23 +147,23 @@ function renderMyTasks(tasks) {
         <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${task.id}')">Add Note</button>
       </div>
     </div>
-  `).join('');
+  `).join("");
   container.innerHTML = html;
 }
 /**
  * Render statistics
  */
 function renderStatistics(stats) {
-  document.getElementById('stat-total-tasks').textContent = stats.total_tasks || 0;
-  document.getElementById('stat-pending-tasks').textContent = stats.pending_tasks || 0;
-  document.getElementById('stat-completed-tasks').textContent = stats.completed_tasks || 0;
-  document.getElementById('stat-efficiency').textContent = stats.efficiency_rate || '0%';
+  document.getElementById("stat-total-tasks").textContent = stats.total_tasks || 0;
+  document.getElementById("stat-pending-tasks").textContent = stats.pending_tasks || 0;
+  document.getElementById("stat-completed-tasks").textContent = stats.completed_tasks || 0;
+  document.getElementById("stat-efficiency").textContent = stats.efficiency_rate || "0%";
 }
 /**
  * Render activities
  */
 function renderActivities(activities) {
-  const container = document.getElementById('activities-container');
+  const container = document.getElementById("activities-container");
   if (!container) return;
   if (activities.length === 0) {
     container.innerHTML = `
@@ -182,14 +182,14 @@ function renderActivities(activities) {
         <div class="activity-time">${formatDate(activity.created_at)}</div>
       </div>
     </div>
-  `).join('');
+  `).join("");
   container.innerHTML = html;
 }
 /**
  * Render updates
  */
 function renderUpdates(updates) {
-  const container = document.getElementById('updates-container');
+  const container = document.getElementById("updates-container");
   if (!container) return;
   if (updates.length === 0) {
     container.innerHTML = `
@@ -214,7 +214,7 @@ function renderUpdates(updates) {
         </div>
       </div>
     </div>
-  `).join('');
+  `).join("");
   container.innerHTML = html;
 }
 /**
@@ -228,27 +228,27 @@ function setupEventListeners() {
  */
 function getTaskProgress(status) {
   const progressMap = {
-    'assigned': 25,
-    'in_progress': 50,
-    'review': 75,
-    'completed': 100,
-    'cancelled': 0
+    "assigned": 25,
+    "in_progress": 50,
+    "review": 75,
+    "completed": 100,
+    "cancelled": 0
   };
   return progressMap[status] || 0;
 }
 function getTaskStatusText(status) {
   const textMap = {
-    'assigned': 'Assigned',
-    'in_progress': 'In Progress',
-    'review': 'Under Review',
-    'completed': 'Completed',
-    'cancelled': 'Cancelled'
+    "assigned": "Assigned",
+    "in_progress": "In Progress",
+    "review": "Under Review",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
   };
-  return textMap[status] || 'Unknown';
+  return textMap[status] || "Unknown";
 }
 // getActivityIcon is now imported from icons.js utility
 function formatDate(dateString) {
-  if (!dateString) return 'N/A';
+  if (!dateString) return "N/A";
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
@@ -261,8 +261,8 @@ function formatDate(dateString) {
   return date.toLocaleDateString();
 }
 function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
+  if (!text) return "";
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -270,49 +270,49 @@ function escapeHtml(text) {
  * Global functions for onclick handlers
  */
 window.refreshDashboard = async function() {
-  showMessage('info', 'Refreshing dashboard...');
+  showMessage("info", "Refreshing dashboard...");
   await loadDashboardData();
   await loadMyTasks();
-  showMessage('success', 'Dashboard refreshed');
+  showMessage("success", "Dashboard refreshed");
 };
 window.viewAllTasks = function() {
-  window.location.href = '/lgu-officer/task-assigned';
+  window.location.href = "/lgu-officer/task-assigned";
 };
 window.refreshTasks = async function() {
-  showMessage('info', 'Refreshing tasks...');
+  showMessage("info", "Refreshing tasks...");
   await loadMyTasks();
-  showMessage('success', 'Tasks refreshed');
+  showMessage("success", "Tasks refreshed");
 };
 window.refreshActivities = async function() {
-  showMessage('info', 'Refreshing activities...');
+  showMessage("info", "Refreshing activities...");
   await loadActivities();
-  showMessage('success', 'Activities refreshed');
+  showMessage("success", "Activities refreshed");
 };
 window.refreshUpdates = async function() {
-  showMessage('info', 'Refreshing updates...');
+  showMessage("info", "Refreshing updates...");
   await loadUpdates();
-  showMessage('success', 'Updates refreshed');
+  showMessage("success", "Updates refreshed");
 };
 window.viewTaskDetail = function(taskId) {
   window.location.href = `/lgu-officer/task-detail?id=${taskId}`;
 };
 window.updateTask = function(taskId) {
-  showMessage('info', 'Opening task update form...');
+  showMessage("info", "Opening task update form...");
   // TODO: Implement task update modal
 };
 window.addNote = function(taskId) {
-  showMessage('info', 'Opening note form...');
+  showMessage("info", "Opening note form...");
   // TODO: Implement note addition modal
 };
 window.updateTaskStatus = function() {
-  showMessage('info', 'Task status update feature coming soon');
+  showMessage("info", "Task status update feature coming soon");
 };
 window.addTaskNote = function() {
-  showMessage('info', 'Add note feature coming soon');
+  showMessage("info", "Add note feature coming soon");
 };
 window.viewReports = function() {
-  showMessage('info', 'Reports feature coming soon');
+  showMessage("info", "Reports feature coming soon");
 };
 window.contactSupervisor = function() {
-  showMessage('info', 'Contact supervisor feature coming soon');
+  showMessage("info", "Contact supervisor feature coming soon");
 };

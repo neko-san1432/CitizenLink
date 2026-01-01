@@ -1,8 +1,8 @@
-const ComplaintService = require('../../src/server/services/ComplaintService');
-const ComplaintRepository = require('../../src/server/repositories/ComplaintRepository');
-const CoordinatorRepository = require('../../src/server/repositories/CoordinatorRepository');
-const ComplaintAssignmentRepository = require('../../src/server/repositories/ComplaintAssignmentRepository');
-const DepartmentRepository = require('../../src/server/repositories/DepartmentRepository');
+const ComplaintService = require("../../src/server/services/ComplaintService");
+const ComplaintRepository = require("../../src/server/repositories/ComplaintRepository");
+const CoordinatorRepository = require("../../src/server/repositories/CoordinatorRepository");
+const ComplaintAssignmentRepository = require("../../src/server/repositories/ComplaintAssignmentRepository");
+const DepartmentRepository = require("../../src/server/repositories/DepartmentRepository");
 
 // Mocks
 const mockNotificationService = {
@@ -22,18 +22,18 @@ const mockSupabase = {
   delete: () => mockSupabase,
   auth: {
     admin: {
-      getUserById: async () => ({ data: { user: { id: 'u1', email: 'test@example.com' } }, error: null })
+      getUserById: async () => ({ data: { user: { id: "u1", email: "test@example.com" } }, error: null })
     }
   }
 };
 
 // Mock Repositories
-const { normalizeComplaintData } = require('../../src/server/utils/complaintUtils');
+const { normalizeComplaintData } = require("../../src/server/utils/complaintUtils");
 
 class MockComplaintRepo {
   constructor() { this.supabase = mockSupabase; }
   async findById(id) {
-    return { id, title: 'Test', submitted_by: 'u1', workflow_status: 'pending' };
+    return { id, title: "Test", submitted_by: "u1", workflow_status: "pending" };
   }
   updateStatus(id, status) { return Promise.resolve({ id, status }); }
   logAction() { return Promise.resolve(true); }
@@ -51,7 +51,7 @@ class MockDepartmentRepo { constructor() { this.supabase = mockSupabase; } }
 
 async function run() {
   try {
-    console.log('Setting up services...');
+    console.log("Setting up services...");
     const complaintRepo = new MockComplaintRepo();
     const coordinatorRepo = new MockCoordinatorRepo();
     const assignmentRepo = new MockAssignmentRepo();
@@ -64,17 +64,17 @@ async function run() {
       mockNotificationService
     );
 
-    console.log('Running updateComplaintStatus...');
-    await complaintService.updateComplaintStatus('c1', 'in_progress', 'Working on it', 'admin1');
-    console.log('✅ updateComplaintStatus success');
+    console.log("Running updateComplaintStatus...");
+    await complaintService.updateComplaintStatus("c1", "in_progress", "Working on it", "admin1");
+    console.log("✅ updateComplaintStatus success");
   } catch (e) {
-    console.error('❌ Error:', e);
-    console.error('Stack:', e.stack);
+    console.error("❌ Error:", e);
+    console.error("Stack:", e.stack);
   }
 }
 
 // Mock other dependencies that might crash
-require('../../src/server/services/DuplicationDetectionService'); // Should crash if not mocked?
+require("../../src/server/services/DuplicationDetectionService"); // Should crash if not mocked?
 // Actually, in standalone script, I can just NOT require them if ComplaintService doesn't need them.
 // But ComplaintService requires them at top level?
 // Let's check ComplaintService imports again.

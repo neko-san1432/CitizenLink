@@ -1,6 +1,6 @@
 // Navigation utilities for clearing OAuth context on explicit navigation
-import { getOAuthContext, clearOAuthContext } from '../auth/authChecker.js';
-import { supabase } from '../config/config.js';
+import { getOAuthContext, clearOAuthContext } from "../auth/authChecker.js";
+import { supabase } from "../config/config.js";
 
 /**
  * Clears incomplete OAuth signup context when user explicitly navigates
@@ -11,16 +11,16 @@ export const clearOAuthOnNavigation = async () => {
     const ctx = getOAuthContext();
     // Only cleanup if there's a pending OAuth attempt
     // Only delete users for incomplete signups, not logins
-    if (ctx && ctx.status === 'pending') {
+    if (ctx && ctx.status === "pending") {
       // Get user ID before signing out (only for signups)
-      const shouldDeleteUser = ctx.intent === 'signup';
+      const shouldDeleteUser = ctx.intent === "signup";
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
       // Store user ID temporarily in case cleanup is interrupted
       if (shouldDeleteUser && userId) {
         try {
-          sessionStorage.setItem('cl_pending_deletion_user_id', userId);
+          sessionStorage.setItem("cl_pending_deletion_user_id", userId);
         } catch {}
       }
 
@@ -32,17 +32,17 @@ export const clearOAuthOnNavigation = async () => {
         if (session?.access_token) {
           try {
             const token = session.access_token;
-            const headers = { 'Content-Type': 'application/json' };
-            headers['Authorization'] = `Bearer ${token}`;
+            const headers = { "Content-Type": "application/json" };
+            headers["Authorization"] = `Bearer ${token}`;
 
-            const deleteResponse = await fetch('/api/compliance/delete', {
-              method: 'DELETE',
+            const deleteResponse = await fetch("/api/compliance/delete", {
+              method: "DELETE",
               headers,
-              credentials: 'include',
+              credentials: "include",
               body: JSON.stringify({
                 userId,
                 confirm: true,
-                reason: 'Incomplete OAuth signup cancelled - user navigated away'
+                reason: "Incomplete OAuth signup cancelled - user navigated away"
               })
             });
 
@@ -53,15 +53,15 @@ export const clearOAuthOnNavigation = async () => {
               const {status} = deleteResponse;
               // Don't log auth errors - they're expected for incomplete signups
               if (status !== 401 && status !== 403) {
-                console.warn('[NAV] Failed to delete incomplete OAuth user:', {
+                console.warn("[NAV] Failed to delete incomplete OAuth user:", {
                   status,
-                  error: errorData.error || 'Unknown error',
+                  error: errorData.error || "Unknown error",
                   userId
                 });
               }
             }
           } catch (deleteError) {
-            console.warn('[NAV] Error during user deletion:', deleteError.message);
+            console.warn("[NAV] Error during user deletion:", deleteError.message);
           }
         }
 
@@ -75,17 +75,17 @@ export const clearOAuthOnNavigation = async () => {
             const { data: { session: retrySession } } = await supabase.auth.getSession();
             if (retrySession?.access_token) {
               const token = retrySession.access_token;
-              const headers = { 'Content-Type': 'application/json' };
-              headers['Authorization'] = `Bearer ${token}`;
+              const headers = { "Content-Type": "application/json" };
+              headers["Authorization"] = `Bearer ${token}`;
 
-              const retryResponse = await fetch('/api/compliance/delete', {
-                method: 'DELETE',
+              const retryResponse = await fetch("/api/compliance/delete", {
+                method: "DELETE",
                 headers,
-                credentials: 'include',
+                credentials: "include",
                 body: JSON.stringify({
                   userId,
                   confirm: true,
-                  reason: 'Incomplete OAuth signup cancelled - retry deletion'
+                  reason: "Incomplete OAuth signup cancelled - retry deletion"
                 })
               });
 
@@ -101,7 +101,7 @@ export const clearOAuthOnNavigation = async () => {
         // Clear stored user ID on successful deletion
         if (deletionSuccessful) {
           try {
-            sessionStorage.removeItem('cl_pending_deletion_user_id');
+            sessionStorage.removeItem("cl_pending_deletion_user_id");
           } catch {}
         }
       }
@@ -115,14 +115,14 @@ export const clearOAuthOnNavigation = async () => {
       } catch {}
 
       try {
-        await fetch('/auth/session', { method: 'DELETE', credentials: 'include' });
+        await fetch("/auth/session", { method: "DELETE", credentials: "include" });
       } catch {}
 
       // Force clear all Supabase storage
       try {
         const keys = Object.keys(localStorage);
         keys.forEach(key => {
-          if (key.startsWith('sb-') || key.includes('supabase')) {
+          if (key.startsWith("sb-") || key.includes("supabase")) {
             localStorage.removeItem(key);
           }
         });
@@ -139,7 +139,7 @@ export const clearOAuthOnNavigation = async () => {
         try {
           const keys = Object.keys(localStorage);
           keys.forEach(key => {
-            if (key.startsWith('sb-') || key.includes('supabase')) {
+            if (key.startsWith("sb-") || key.includes("supabase")) {
               localStorage.removeItem(key);
             }
           });
@@ -149,7 +149,7 @@ export const clearOAuthOnNavigation = async () => {
       }
     }
   } catch (error) {
-    console.warn('[NAV] Error clearing OAuth context:', error);
+    console.warn("[NAV] Error clearing OAuth context:", error);
   }
 };
 
@@ -160,23 +160,23 @@ export const clearOAuthOnNavigation = async () => {
 export const setupNavigationCleanup = () => {
   const handleNavigationClick = async (e) => {
     const target = e.currentTarget;
-    const href = target.getAttribute('href');
+    const href = target.getAttribute("href");
 
     // Only handle login/signup links
-    if (!href || (!href.includes('/login') && !href.includes('/signup'))) {
+    if (!href || (!href.includes("/login") && !href.includes("/signup"))) {
       return;
     }
 
     // Check if we need to cleanup OAuth (both login and signup)
     const ctx = getOAuthContext();
-    if (ctx && ctx.status === 'pending') {
+    if (ctx && ctx.status === "pending") {
       // Prevent default navigation
       e.preventDefault();
       e.stopPropagation();
 
       // Set flag to prevent redirects on destination page
       try {
-        sessionStorage.setItem('cl_oauth_cleanup', 'true');
+        sessionStorage.setItem("cl_oauth_cleanup", "true");
       } catch {}
 
       // Clear OAuth context, delete user, and sign out
@@ -188,12 +188,12 @@ export const setupNavigationCleanup = () => {
       // Final check - clear session one more time before navigation
       try {
         await supabase.auth.signOut();
-        await fetch('/auth/session', { method: 'DELETE', credentials: 'include' });
+        await fetch("/auth/session", { method: "DELETE", credentials: "include" });
       } catch {}
 
       // Navigate manually with a cache-busting parameter to force fresh load
       if (href) {
-        const separator = href.includes('?') ? '&' : '?';
+        const separator = href.includes("?") ? "&" : "?";
         window.location.href = `${href}${separator}_t=${Date.now()}`;
       }
     }
@@ -201,28 +201,28 @@ export const setupNavigationCleanup = () => {
   };
 
   // Setup click handlers for login/signup buttons by ID
-  const loginBtn = document.getElementById('login-btn');
-  const signupBtn = document.getElementById('signup-btn');
+  const loginBtn = document.getElementById("login-btn");
+  const signupBtn = document.getElementById("signup-btn");
 
   if (loginBtn) {
-    loginBtn.addEventListener('click', handleNavigationClick);
+    loginBtn.addEventListener("click", handleNavigationClick);
   }
   if (signupBtn) {
-    signupBtn.addEventListener('click', handleNavigationClick);
+    signupBtn.addEventListener("click", handleNavigationClick);
   }
 
   // Setup click handlers for auth links in footer (class="auth-link")
   const authLinks = document.querySelectorAll('a.auth-link[href*="/login"], a.auth-link[href*="/signup"]');
   authLinks.forEach(link => {
-    link.addEventListener('click', handleNavigationClick);
+    link.addEventListener("click", handleNavigationClick);
   });
 
   // Setup click handler for brand logo
-  const brandLogo = document.querySelector('.brand-logo');
+  const brandLogo = document.querySelector(".brand-logo");
   if (brandLogo) {
-    brandLogo.addEventListener('click', async (e) => {
+    brandLogo.addEventListener("click", async (e) => {
       const ctx = getOAuthContext();
-      if (ctx && ctx.status === 'pending') {
+      if (ctx && ctx.status === "pending") {
         e.preventDefault();
         e.stopPropagation();
         await clearOAuthOnNavigation();
@@ -230,7 +230,7 @@ export const setupNavigationCleanup = () => {
         // Final check - clear session one more time before navigation
         try {
           await supabase.auth.signOut();
-          await fetch('/auth/session', { method: 'DELETE', credentials: 'include' });
+          await fetch("/auth/session", { method: "DELETE", credentials: "include" });
         } catch {}
         window.location.href = `/?_t=${Date.now()}`;
       }
@@ -241,10 +241,10 @@ export const setupNavigationCleanup = () => {
   const allLoginSignupLinks = document.querySelectorAll('a[href*="/login"], a[href*="/signup"]');
   allLoginSignupLinks.forEach(link => {
     // Skip if already handled above
-    if (link.id === 'login-btn' || link.id === 'signup-btn' || link.classList.contains('auth-link')) {
+    if (link.id === "login-btn" || link.id === "signup-btn" || link.classList.contains("auth-link")) {
       return;
     }
-    link.addEventListener('click', handleNavigationClick);
+    link.addEventListener("click", handleNavigationClick);
   });
 };
 

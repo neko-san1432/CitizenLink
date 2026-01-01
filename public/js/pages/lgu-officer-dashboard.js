@@ -132,44 +132,44 @@ function renderMyTasks(tasks) {
       <div class="task-header">
         <h4 class="task-title">${escapeHtml(getTaskTitle(task))}</h4>
         <span class="task-priority priority-${(
-          task.urgency_level ||
+    task.urgency_level ||
           task.priority ||
           "medium"
-        ).toLowerCase()}">${(
-        task.urgency_level ||
+  ).toLowerCase()}">${(
+  task.urgency_level ||
         task.priority ||
         "MEDIUM"
-      ).toUpperCase()}</span>
+).toUpperCase()}</span>
       </div>
       <div class="task-meta">
         <span class="task-type">${escapeHtml(
-          task.complaint?.category || "General"
-        )}</span>
+    task.complaint?.category || "General"
+  )}</span>
         <span class="task-deadline">Due: ${formatDate(task.deadline)}</span>
         ${
-          task.complaint?.urgency_level
-            ? `<span class="citizen-urgency" title="Citizen Reported Urgency">Citizen: ${task.complaint.urgency_level}</span>`
-            : ""
-        }
+  task.complaint?.urgency_level
+    ? `<span class="citizen-urgency" title="Citizen Reported Urgency">Citizen: ${task.complaint.urgency_level}</span>`
+    : ""
+}
       </div>
       <div class="task-progress">
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${getTaskProgress(
-            task.status
-          )}%"></div>
+    task.status
+  )}%"></div>
         </div>
         <span class="progress-text">${getStatusText(task.status)}</span>
       </div>
       <div class="task-actions">
         <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${
-          task.complaint_id
-        }')">Update</button>
+  task.complaint_id
+}')">Update</button>
         <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${
-          task.complaint_id
-        }')">Add Note</button>
+  task.complaint_id
+}')">Add Note</button>
         <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); escalateTask('${
-          task.complaint_id
-        }')">Return</button>
+  task.complaint_id
+}')">Return</button>
       </div>
     </div>
   `
@@ -262,8 +262,8 @@ function renderUpdates(updates) {
       <div class="update-content">
         <div class="update-title">${escapeHtml(update.title)}</div>
         <div class="update-text">${escapeHtml(
-          `${update.content?.substring(0, 80)}...`
-        )}</div>
+    `${update.content?.substring(0, 80)}...`
+  )}</div>
         <div class="update-time">${formatDate(update.created_at)}</div>
       </div>
     </div>

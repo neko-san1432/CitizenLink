@@ -1,7 +1,7 @@
 // Date utilities
 
 export function formatDate(dateString) {
-  if (!dateString) return 'N/A';
+  if (!dateString) return "N/A";
   const date = new Date(dateString);
   const now = new Date();
   const diff = now - date;
@@ -18,7 +18,7 @@ export function formatDate(dateString) {
 }
 
 export function formatDateLocale(dateString) {
-  if (!dateString) return 'N/A';
+  if (!dateString) return "N/A";
   const date = new Date(dateString);
   return date.toLocaleString();
 }

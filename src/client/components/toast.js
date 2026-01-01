@@ -8,11 +8,11 @@ class ToastManager {
   }
   init() {
     // Create toast container if it doesn't exist
-    this.container = document.getElementById('toast');
+    this.container = document.getElementById("toast");
     if (!this.container) {
-      this.container = document.createElement('div');
-      this.container.id = 'toast';
-      this.container.className = 'toast-container';
+      this.container = document.createElement("div");
+      this.container.id = "toast";
+      this.container.className = "toast-container";
       document.body.appendChild(this.container);
     }
   }
@@ -22,7 +22,7 @@ class ToastManager {
     this.toasts.push(toast);
     // Trigger animation
     requestAnimationFrame(() => {
-      toast.classList.add('toast-show');
+      toast.classList.add("toast-show");
     });
     // Auto remove after duration
     const duration = options.duration || this.getDuration(type);
@@ -32,7 +32,7 @@ class ToastManager {
     return toast;
   }
   createToast(type, message, options = {}) {
-    const toast = document.createElement('div');
+    const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     const icon = this.getIcon(type);
     const title = this.getTitle(type);
@@ -53,8 +53,8 @@ class ToastManager {
       <div class="toast-progress"></div>
     `;
     // Add click to dismiss
-    toast.addEventListener('click', (e) => {
-      if (!e.target.closest('.toast-close')) {
+    toast.addEventListener("click", (e) => {
+      if (!e.target.closest(".toast-close")) {
         this.remove(toast);
       }
     });
@@ -90,13 +90,13 @@ class ToastManager {
 
   getTitle(type) {
     const titles = {
-      success: 'Success',
-      error: 'Error',
-      warning: 'Warning',
-      info: 'Information',
-      message: 'Message'
+      success: "Success",
+      error: "Error",
+      warning: "Warning",
+      info: "Information",
+      message: "Message"
     };
-    return titles[type] || 'Message';
+    return titles[type] || "Message";
   }
 
   getDuration(type) {
@@ -113,7 +113,7 @@ class ToastManager {
   remove(toast) {
     if (!toast || !toast.parentNode) return;
 
-    toast.classList.add('toast-hide');
+    toast.classList.add("toast-hide");
     setTimeout(() => {
       if (toast.parentNode) {
         toast.parentNode.removeChild(toast);
@@ -140,10 +140,10 @@ export default function showMessage(type, message, options = {}) {
 
 // Export additional methods
 export const Toast = {
-  success: (message, options = {}) => toastManager.show('success', message, options),
-  error: (message, options = {}) => toastManager.show('error', message, options),
-  warning: (message, options = {}) => toastManager.show('warning', message, options),
-  info: (message, options = {}) => toastManager.show('info', message, options),
-  message: (message, options = {}) => toastManager.show('message', message, options),
+  success: (message, options = {}) => toastManager.show("success", message, options),
+  error: (message, options = {}) => toastManager.show("error", message, options),
+  warning: (message, options = {}) => toastManager.show("warning", message, options),
+  info: (message, options = {}) => toastManager.show("info", message, options),
+  message: (message, options = {}) => toastManager.show("message", message, options),
   clear: () => toastManager.clear()
 };

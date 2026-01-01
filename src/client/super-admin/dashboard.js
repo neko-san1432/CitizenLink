@@ -365,15 +365,15 @@ function displayLatestUsers(users) {
   const html = `
     <div class="latest-users-list">
       ${users
-        .map((user) => {
-          const registrationDate = new Date(user.created_at).toLocaleString();
-          const emailConfirmedDate = user.email_confirmed_at
-            ? new Date(user.email_confirmed_at).toLocaleString()
-            : null;
-          const authMethod = user.is_oauth ? "OAuth" : "Email";
-          const roleBadge = user.role || "citizen";
+    .map((user) => {
+      const registrationDate = new Date(user.created_at).toLocaleString();
+      const emailConfirmedDate = user.email_confirmed_at
+        ? new Date(user.email_confirmed_at).toLocaleString()
+        : null;
+      const authMethod = user.is_oauth ? "OAuth" : "Email";
+      const roleBadge = user.role || "citizen";
 
-          return `
+      return `
           <div class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #e5e7eb; gap: 1rem;">
             <div style="flex: 1;">
               <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
@@ -393,10 +393,10 @@ function displayLatestUsers(users) {
                 <span><strong>Role:</strong> ${roleBadge}</span>
                 <span><strong>Method:</strong> ${authMethod}</span>
                 ${
-                  emailConfirmedDate
-                    ? `<span><strong>Confirmed:</strong> ${emailConfirmedDate}</span>`
-                    : ""
-                }
+  emailConfirmedDate
+    ? `<span><strong>Confirmed:</strong> ${emailConfirmedDate}</span>`
+    : ""
+}
               </div>
             </div>
             <div style="text-align: right; font-size: 0.875rem; color: #6b7280;">
@@ -405,8 +405,8 @@ function displayLatestUsers(users) {
             </div>
           </div>
         `;
-        })
-        .join("")}
+    })
+    .join("")}
     </div>
   `;
 
@@ -551,10 +551,10 @@ function formatLogEntry(log) {
       <strong>${userEmail}</strong>: ${log.old_role} → ${log.new_role}
       <div style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">By: ${performerEmail}</div>
       ${
-        log.metadata?.reason
-          ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.metadata.reason}</div>`
-          : ""
-      }
+  log.metadata?.reason
+    ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.metadata.reason}</div>`
+    : ""
+}
     `;
   } else if (log.log_type === "dept_transfer") {
     typeLabel = "Dept Transfer";
@@ -563,29 +563,29 @@ function formatLogEntry(log) {
     const performerEmail = log.performer?.email || "System";
     content = `
       <strong>${userEmail}</strong>: ${log.from_department || "N/A"} → ${
-      log.to_department
-    }
+  log.to_department
+}
       <div style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">By: ${performerEmail}</div>
       ${
-        log.reason
-          ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.reason}</div>`
-          : ""
-      }
+  log.reason
+    ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">Reason: ${log.reason}</div>`
+    : ""
+}
     `;
   } else if (log.log_type === "complaint") {
     typeLabel = "Complaint";
     typeColor = "#10b981";
     content = `
       <strong>${
-        log.action_type
-      }</strong>: Complaint #${log.complaint_id?.substring(0, 8)}...
+  log.action_type
+}</strong>: Complaint #${log.complaint_id?.substring(0, 8)}...
       ${
-        log.details
-          ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">${JSON.stringify(
-              log.details
-            )}</div>`
-          : ""
-      }
+  log.details
+    ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">${JSON.stringify(
+      log.details
+    )}</div>`
+    : ""
+}
     `;
   }
 
@@ -689,11 +689,11 @@ function renderUserListSA(users) {
     <div class="user-item" data-user-id="${u.id}">
       <div><strong>${escapeHtml(u.fullName || u.name || u.email)}</strong></div>
       <div style="color:#64748b; font-size:0.875rem; margin-top:0.25rem;">${escapeHtml(
-        u.email || ""
-      )}</div>
+    u.email || ""
+  )}</div>
       <div style="color:#64748b; font-size:0.875rem; margin-top:0.25rem;">Role: ${escapeHtml(
-        u.role || ""
-      )} | Brgy: ${escapeHtml(u.address?.barangay || "-")}</div>
+    u.role || ""
+  )} | Brgy: ${escapeHtml(u.address?.barangay || "-")}</div>
     </div>
   `
     )
@@ -719,29 +719,29 @@ async function loadUserDetailsSA(userId) {
           <div style="width:48px; height:48px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>
           <div>
             <div style="font-weight:700; font-size:1.125rem; color:#1e293b;">${escapeHtml(
-              u.fullName || u.name || u.email
-            )}</div>
+    u.fullName || u.name || u.email
+  )}</div>
             <div style="color:#64748b; font-size:0.875rem;">${escapeHtml(
-              u.email || ""
-            )}</div>
+    u.email || ""
+  )}</div>
           </div>
         </div>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; padding-top:1rem; border-top:1px solid #e2e8f0;">
           <div><strong style="color:#1e293b;">Role:</strong> <span style="color:#64748b;">${escapeHtml(
-            u.role || "-"
-          )}</span></div>
+    u.role || "-"
+  )}</span></div>
           <div><strong style="color:#1e293b;">Department:</strong> <span style="color:#64748b;">${escapeHtml(
-            u.department || "-"
-          )}</span></div>
+    u.department || "-"
+  )}</span></div>
           <div><strong style="color:#1e293b;">Barangay:</strong> <span style="color:#64748b;">${escapeHtml(
-            u.address?.barangay || "-"
-          )}</span></div>
+    u.address?.barangay || "-"
+  )}</span></div>
           <div><strong style="color:#1e293b;">City:</strong> <span style="color:#64748b;">${escapeHtml(
-            u.address?.city || "-"
-          )}</span></div>
+    u.address?.city || "-"
+  )}</span></div>
           <div><strong style="color:#1e293b;">Mobile:</strong> <span style="color:#64748b;">${escapeHtml(
-            u.mobileNumber || "-"
-          )}</span></div>
+    u.mobileNumber || "-"
+  )}</span></div>
         </div>
       `;
     } else {
@@ -772,22 +772,22 @@ async function loadUserComplaintsSA(userId) {
         <div style="padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; background:#f8fafc; margin-bottom:0.75rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
             <strong style="color:#1e293b;">${escapeHtml(
-              c.title || "Untitled"
-            )}</strong>
+    c.title || "Untitled"
+  )}</strong>
             <span style="color:#64748b; font-size:0.875rem; padding:0.25rem 0.5rem; background:white; border-radius:0.25rem; border:1px solid #e2e8f0;">${escapeHtml(
-              c.status || ""
-            )}</span>
+    c.status || ""
+  )}</span>
           </div>
           <div style="color:#64748b; font-size:0.875rem;">Type: ${escapeHtml(
-            c.type || "-"
-          )}</div>
+    c.type || "-"
+  )}</div>
           ${
-            c.location_text
-              ? `<div style=\"color:#64748b; font-size:0.875rem; margin-top:0.25rem;\">${escapeHtml(
-                  c.location_text
-                )}</div>`
-              : ""
-          }
+  c.location_text
+    ? `<div style=\"color:#64748b; font-size:0.875rem; margin-top:0.25rem;\">${escapeHtml(
+      c.location_text
+    )}</div>`
+    : ""
+}
         </div>
       `
         )

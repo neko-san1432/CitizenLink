@@ -1,20 +1,20 @@
-const Database = require('../config/database');
+const Database = require("../config/database");
 
 const supabase = Database.getClient();
-const { ValidationError, ConflictError } = require('../middleware/errorHandler');
+const { ValidationError, ConflictError } = require("../middleware/errorHandler");
 
 class UserService {
   constructor() {
   }
   // Map arbitrary role strings to allowed DB values
   normalizeRole(rawRole) {
-    if (!rawRole) return 'citizen';
+    if (!rawRole) return "citizen";
     const role = String(rawRole).toLowerCase();
-    if (role === 'lgu-admin') return 'lgu-admin';
-    if (role === 'lgu') return 'lgu';
-    if (role === 'super-admin' || role === 'superadmin') return 'super-admin';
-    if (role === 'citizen') return 'citizen';
-    return 'citizen';
+    if (role === "lgu-admin") return "lgu-admin";
+    if (role === "lgu") return "lgu";
+    if (role === "super-admin" || role === "superadmin") return "super-admin";
+    if (role === "citizen") return "citizen";
+    return "citizen";
   }
   /**
   * Create a new user (stores everything in auth.users metadata)
@@ -29,18 +29,18 @@ class UserService {
       name, // Single name field (for OAuth users)
       mobileNumber,
       gender,
-      role = 'citizen',
+      role = "citizen",
       department = null,
       employeeId = null,
       address = {},
       isOAuth = false // Flag to indicate if this is OAuth signup
     } = userData;
     // Handle single name field - use name if provided, otherwise combine firstName + lastName
-    const displayName = name || [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
-    const nameParts = displayName ? displayName.split(' ') : [];
-    const firstNameFinal = firstName || nameParts[0] || '';
-    const middleNameFinal = middleName || nameParts.slice(1, -1).join(' ') || '';
-    const lastNameFinal = lastName || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
+    const displayName = name || [firstName, middleName, lastName].filter(Boolean).join(" ").trim();
+    const nameParts = displayName ? displayName.split(" ") : [];
+    const firstNameFinal = firstName || nameParts[0] || "";
+    const middleNameFinal = middleName || nameParts.slice(1, -1).join(" ") || "";
+    const lastNameFinal = lastName || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
     // Validate required fields
     this.validateUserData(userData, isOAuth);
     const normalizedRole = this.normalizeRole(role);
@@ -60,7 +60,7 @@ class UserService {
           normalized_role: normalizedRole,
           mobile_number: mobileNumber || null,
           is_oauth: isOAuth,
-          status: 'pending_verification',
+          status: "pending_verification",
           // Address
           address_line_1: address.line1 || null,
           address_line_2: address.line2 || null,
@@ -77,8 +77,8 @@ class UserService {
           mobile_verified: false,
           gender: gender || null,
           // Preferences
-          preferred_language: 'en',
-          timezone: 'Asia/Manila',
+          preferred_language: "en",
+          timezone: "Asia/Manila",
           email_notifications: true,
           sms_notifications: false,
           push_notifications: true,
@@ -99,7 +99,7 @@ class UserService {
           mobile_number: mobileNumber || null,
           mobile: mobileNumber || null, // Also store as 'mobile' for compatibility
           is_oauth: isOAuth,
-          status: 'pending_verification',
+          status: "pending_verification",
           // Address
           address_line_1: address.line1 || null,
           address_line_2: address.line2 || null,
@@ -115,8 +115,8 @@ class UserService {
           email_verified: false,
           phone_verified: false,
           // Preferences
-          preferred_language: 'en',
-          timezone: 'Asia/Manila',
+          preferred_language: "en",
+          timezone: "Asia/Manila",
           email_notifications: true,
           sms_notifications: false,
           push_notifications: true,
@@ -127,39 +127,39 @@ class UserService {
           // Timestamps
           updated_at: new Date().toISOString(),
           // OAuth providers
-          oauth_providers: isOAuth ? [] : ['email']
+          oauth_providers: isOAuth ? [] : ["email"]
         }
       });
       if (authError) {
-        const msg = String(authError.message || '').toLowerCase();
-        const code = String(authError.code || '').toLowerCase();
+        const msg = String(authError.message || "").toLowerCase();
+        const code = String(authError.code || "").toLowerCase();
         // Normalize duplicate email errors from Supabase/PostgREST
         const isDuplicateEmail = (
-          code === 'user_already_exists' ||
-          code === 'email_exists' ||
-          code === '23505' || // unique_violation
+          code === "user_already_exists" ||
+          code === "email_exists" ||
+          code === "23505" || // unique_violation
           /already\s*(registered|exists)/i.test(msg) ||
           /duplicate/i.test(msg) ||
           /unique/i.test(msg) ||
           /email.*(in use|used|taken)/i.test(msg)
         );
         if (isDuplicateEmail) {
-          throw new ConflictError('Email already exist');
+          throw new ConflictError("Email already exist");
         }
         throw new Error(`Auth creation failed: ${authError.message}`);
       }
       const authUserId = authData.user.id;
       // Send verification email (server-side) using resend API
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
       const { error: emailError } = await supabase.auth.resend({
-        type: 'signup',
+        type: "signup",
         email,
         options: {
           emailRedirectTo: `${frontendUrl}/email-verification-success`
         }
       });
       if (emailError) {
-        console.warn('Email verification sending failed:', emailError.message);
+        console.warn("Email verification sending failed:", emailError.message);
       }
 
 
@@ -169,12 +169,12 @@ class UserService {
         name: displayName,
         fullName: displayName,
         role: normalizedRole,
-        status: 'pending_verification',
+        status: "pending_verification",
         emailVerified: false,
         createdAt: authData.user.created_at
       };
     } catch (error) {
-      console.error('User creation error:', error);
+      console.error("User creation error:", error);
       throw error;
     }
   }
@@ -185,7 +185,7 @@ class UserService {
     try {
       const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
       if (error) {
-        console.error('[AUTH] Failed to fetch user via admin API:', error);
+        console.error("[AUTH] Failed to fetch user via admin API:", error);
         return null;
       }
       if (!authUser || !authUser.user) {
@@ -193,7 +193,7 @@ class UserService {
       }
       return this.formatUserResponse(authUser.user);
     } catch (error) {
-      console.error('[AUTH] Get user error:', error);
+      console.error("[AUTH] Get user error:", error);
       return null;
     }
   }
@@ -207,11 +207,11 @@ class UserService {
       // Get current user to merge metadata
       const currentUser = await this.getUserById(userId);
       if (!currentUser) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
       // Merge with existing metadata
       // IMPORTANT: Normalize roles using general normalization function
-      const { normalizeRole } = require('../utils/roleValidation');
+      const { normalizeRole } = require("../utils/roleValidation");
       const normalizedUpdateData = { ...updateData };
 
       // Normalize role fields if present
@@ -219,7 +219,7 @@ class UserService {
         const originalRole = normalizedUpdateData.role;
         normalizedUpdateData.role = normalizeRole(normalizedUpdateData.role);
         if (originalRole !== normalizedUpdateData.role) {
-          console.log('[UserService] Normalizing role from', originalRole, 'to', normalizedUpdateData.role, 'in updateData');
+          console.log("[UserService] Normalizing role from", originalRole, "to", normalizedUpdateData.role, "in updateData");
         }
       }
       if (normalizedUpdateData.normalized_role) {
@@ -258,7 +258,7 @@ class UserService {
 
       return this.formatUserResponse(authData.user);
     } catch (error) {
-      console.error('Update user error:', error);
+      console.error("Update user error:", error);
       throw error;
     }
   }
@@ -268,24 +268,24 @@ class UserService {
   async changeUserRole(userId, newRole, changedBy, reason = null) {
     // Validate role parameter to prevent injection
     const validRoles = [
-      'citizen', 'lgu', 'lgu-admin', 'lgu-hr', 'complaint-coordinator',
-      'super-admin', 'lgu-admin-health', 'lgu-admin-education',
-      'lgu-admin-social', 'lgu-admin-infrastructure', 'lgu-admin-environment',
-      'lgu-admin-agriculture', 'lgu-admin-tourism', 'lgu-admin-publicsafety',
-      'lgu-admin-economic', 'lgu-admin-legal', 'lgu-hr-health', 'lgu-hr-education'
+      "citizen", "lgu", "lgu-admin", "lgu-hr", "complaint-coordinator",
+      "super-admin", "lgu-admin-health", "lgu-admin-education",
+      "lgu-admin-social", "lgu-admin-infrastructure", "lgu-admin-environment",
+      "lgu-admin-agriculture", "lgu-admin-tourism", "lgu-admin-publicsafety",
+      "lgu-admin-economic", "lgu-admin-legal", "lgu-hr-health", "lgu-hr-education"
     ];
-    if (!newRole || typeof newRole !== 'string') {
-      throw new ValidationError('Role must be a valid string');
+    if (!newRole || typeof newRole !== "string") {
+      throw new ValidationError("Role must be a valid string");
     }
     // Normalize and validate role
     const normalizedRole = this.normalizeRole(newRole);
     if (!validRoles.includes(normalizedRole)) {
-      throw new ValidationError(`Invalid role: ${newRole}. Must be one of: ${validRoles.join(', ')}`);
+      throw new ValidationError(`Invalid role: ${newRole}. Must be one of: ${validRoles.join(", ")}`);
     }
     // Get current user
     const currentUser = await this.getUserById(userId);
     if (!currentUser) {
-      throw new ValidationError('User not found');
+      throw new ValidationError("User not found");
     }
     const oldRole = currentUser.role;
     // Update role in metadata
@@ -302,16 +302,16 @@ class UserService {
   */
   async trackLogin(userId, ipAddress = null, userAgent = null) {
     try {
-      const { error } = await supabase.rpc('update_user_login', {
+      const { error } = await supabase.rpc("update_user_login", {
         p_user_id: userId,
         p_ip_address: ipAddress,
         p_user_agent: userAgent
       });
       if (error) {
-        console.warn('Login tracking failed:', error.message);
+        console.warn("Login tracking failed:", error.message);
       }
     } catch (error) {
-      console.warn('Login tracking error:', error);
+      console.warn("Login tracking error:", error);
     }
   }
   /**
@@ -344,9 +344,9 @@ class UserService {
         // Note: This path provides limited columns; we reconstruct response
         try {
           const query = supabase
-            .from('auth.users')
-            .select('id, email, created_at, user_metadata, raw_user_meta_data')
-            .order('created_at', { ascending: false })
+            .from("auth.users")
+            .select("id, email, created_at, user_metadata, raw_user_meta_data")
+            .order("created_at", { ascending: false })
             .range((page - 1) * limit, page * limit - 1);
           const { data: sqlRows, error: sqlError } = await query;
           if (sqlError) throw sqlError;
@@ -358,7 +358,7 @@ class UserService {
             raw_user_meta_data: row.raw_user_meta_data || {}
           }));
         } catch (sqlErr) {
-          const msg = adminErr?.message || sqlErr?.message || 'Unknown error';
+          const msg = adminErr?.message || sqlErr?.message || "Unknown error";
           throw new Error(`Failed to fetch users: ${msg}`);
         }
       }
@@ -374,7 +374,7 @@ class UserService {
         users = users.filter(u => u.department === department);
       }
       if (!includeInactive) {
-        users = users.filter(u => u.status !== 'inactive');
+        users = users.filter(u => u.status !== "inactive");
       }
       if (search) {
         const searchLower = search.toLowerCase();
@@ -394,7 +394,7 @@ class UserService {
         }
       };
     } catch (error) {
-      console.error('Get users error:', error);
+      console.error("Get users error:", error);
       throw error;
     }
   }
@@ -410,47 +410,47 @@ class UserService {
   // ============================================================================
   validateUserData(userData, isOAuth = false) {
     const { email, password, firstName, lastName, name, mobileNumber } = userData;
-    if (!email || !email.includes('@')) {
-      throw new ValidationError('Valid email is required');
+    if (!email || !email.includes("@")) {
+      throw new ValidationError("Valid email is required");
     }
     // Password only required for regular signup, not OAuth
     if (!isOAuth && (!password || password.length < 4)) {
-      throw new ValidationError('Password must be at least 4 characters');
+      throw new ValidationError("Password must be at least 4 characters");
     }
     // Name validation - handle both single name and firstName/lastName
-    const fullName = name || `${firstName || ''} ${lastName || ''}`.trim();
+    const fullName = name || `${firstName || ""} ${lastName || ""}`.trim();
     if (!fullName || fullName.length < 2) {
-      throw new ValidationError('Name must be at least 2 characters');
+      throw new ValidationError("Name must be at least 2 characters");
     }
     // Mobile number validation - required for regular signup, optional for OAuth
     if (!isOAuth && (!mobileNumber || mobileNumber.trim().length < 10)) {
-      throw new ValidationError('Mobile number is required for registration');
+      throw new ValidationError("Mobile number is required for registration");
     }
   }
   validateUpdateData(updateData) {
     const allowedFields = [
-      'first_name', 'last_name', 'middle_name', 'mobile_number', 'date_of_birth', 'gender',
-      'address_line_1', 'address_line_2', 'city', 'province', 'postal_code', 'barangay',
-      'position', 'bio', 'avatar_url', 'preferred_language', 'timezone',
-      'email_notifications', 'sms_notifications', 'push_notifications',
+      "first_name", "last_name", "middle_name", "mobile_number", "date_of_birth", "gender",
+      "address_line_1", "address_line_2", "city", "province", "postal_code", "barangay",
+      "position", "bio", "avatar_url", "preferred_language", "timezone",
+      "email_notifications", "sms_notifications", "push_notifications",
       // Role-related fields for admin operations
-      'role', 'normalized_role', 'base_role',
+      "role", "normalized_role", "base_role",
       // Department fields
-      'department', 'dpt',
+      "department", "dpt",
       // Status field
-      'status',
+      "status",
       // Pending approval fields (for signup-with-code workflow)
-      'pending_role', 'pending_department', 'pending_signup_code'
+      "pending_role", "pending_department", "pending_signup_code"
     ];
     const invalidFields = Object.keys(updateData).filter(field => !allowedFields.includes(field));
     if (invalidFields.length > 0) {
-      throw new ValidationError(`Invalid fields: ${invalidFields.join(', ')}`);
+      throw new ValidationError(`Invalid fields: ${invalidFields.join(", ")}`);
     }
   }
   async logRoleChange(userId, oldRole, newRole, changedBy, reason) {
     try {
       await supabase
-        .from('user_role_history')
+        .from("user_role_history")
         .insert({
           user_id: userId,
           old_role: oldRole,
@@ -459,7 +459,7 @@ class UserService {
           reason
         });
     } catch (error) {
-      console.warn('Role change logging failed:', error);
+      console.warn("Role change logging failed:", error);
     }
   }
   formatUserResponse(authUser) {
@@ -470,8 +470,8 @@ class UserService {
     // Use name as primary, generate from first_name + middle_name + last_name as fallback
     const displayName = combined.name ||
       (combined.first_name || combined.last_name
-        ? [combined.first_name, combined.middle_name, combined.last_name].filter(Boolean).join(' ').trim()
-        : 'Unknown User');
+        ? [combined.first_name, combined.middle_name, combined.last_name].filter(Boolean).join(" ").trim()
+        : "Unknown User");
     return {
       id: authUser.id,
       email: authUser.email,
@@ -492,9 +492,9 @@ class UserService {
         postalCode: combined.postal_code,
         barangay: combined.barangay
       },
-      role: combined.role || 'citizen',
+      role: combined.role || "citizen",
       normalizedRole: combined.normalized_role || this.normalizeRole(combined.role),
-      status: combined.status || 'active',
+      status: combined.status || "active",
       department: combined.department,
       position: combined.position,
       employeeId: combined.employee_id,
@@ -504,8 +504,8 @@ class UserService {
         id: combined.id_verified || false
       },
       preferences: {
-        language: combined.preferred_language || 'en',
-        timezone: combined.timezone || 'Asia/Manila',
+        language: combined.preferred_language || "en",
+        timezone: combined.timezone || "Asia/Manila",
         notifications: {
           email: combined.email_notifications !== false,
           sms: combined.sms_notifications || false,

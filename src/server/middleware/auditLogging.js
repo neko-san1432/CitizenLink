@@ -1,4 +1,4 @@
-const AuditLogRepository = require('../repositories/AuditLogRepository');
+const AuditLogRepository = require("../repositories/AuditLogRepository");
 
 const auditLog = new AuditLogRepository();
 
@@ -28,15 +28,15 @@ function auditMiddleware(actionType, getTargetInfo = null) {
       if (req.params.id) {
         targetId = req.params.id;
         // Try to infer target type from route
-        if (req.path.includes('/complaints')) targetType = 'complaint';
-        else if (req.path.includes('/users')) targetType = 'user';
-        else if (req.path.includes('/departments')) targetType = 'department';
+        if (req.path.includes("/complaints")) targetType = "complaint";
+        else if (req.path.includes("/users")) targetType = "user";
+        else if (req.path.includes("/departments")) targetType = "department";
       }
     }
 
     // Extract request details
     const ipAddress = req.ip || req.connection.remoteAddress || null;
-    const userAgent = req.get('user-agent') || null;
+    const userAgent = req.get("user-agent") || null;
     const details = {
       method: req.method,
       path: req.path,
@@ -52,7 +52,7 @@ function auditMiddleware(actionType, getTargetInfo = null) {
       userAgent
     }).catch(error => {
       // Log error but don't break the request
-      console.error('[AUDIT_MIDDLEWARE] Failed to log action:', error);
+      console.error("[AUDIT_MIDDLEWARE] Failed to log action:", error);
     });
 
     next();
@@ -63,14 +63,14 @@ function auditMiddleware(actionType, getTargetInfo = null) {
  * Specific audit middleware for data access (GDPR compliance)
  */
 function auditDataAccess(req, res, next) {
-  return auditMiddleware('data_access', (req) => {
+  return auditMiddleware("data_access", (req) => {
     // Extract target from request
     if (req.params.id) {
       return {
         id: req.params.id,
-        type: req.path.includes('/complaints') ? 'complaint' :
-          req.path.includes('/users') ? 'user' :
-            req.path.includes('/departments') ? 'department' : null
+        type: req.path.includes("/complaints") ? "complaint" :
+          req.path.includes("/users") ? "user" :
+            req.path.includes("/departments") ? "department" : null
       };
     }
     return null;
@@ -81,13 +81,13 @@ function auditDataAccess(req, res, next) {
  * Specific audit middleware for data modification
  */
 function auditDataModification(req, res, next) {
-  return auditMiddleware('data_modification', (req) => {
+  return auditMiddleware("data_modification", (req) => {
     if (req.params.id) {
       return {
         id: req.params.id,
-        type: req.path.includes('/complaints') ? 'complaint' :
-          req.path.includes('/users') ? 'user' :
-            req.path.includes('/departments') ? 'department' : null
+        type: req.path.includes("/complaints") ? "complaint" :
+          req.path.includes("/users") ? "user" :
+            req.path.includes("/departments") ? "department" : null
       };
     }
     return null;
@@ -98,13 +98,13 @@ function auditDataModification(req, res, next) {
  * Specific audit middleware for data deletion
  */
 function auditDataDeletion(req, res, next) {
-  return auditMiddleware('data_deletion', (req) => {
+  return auditMiddleware("data_deletion", (req) => {
     if (req.params.id) {
       return {
         id: req.params.id,
-        type: req.path.includes('/complaints') ? 'complaint' :
-          req.path.includes('/users') ? 'user' :
-            req.path.includes('/departments') ? 'department' : null
+        type: req.path.includes("/complaints") ? "complaint" :
+          req.path.includes("/users") ? "user" :
+            req.path.includes("/departments") ? "department" : null
       };
     }
     return null;
@@ -118,10 +118,10 @@ function auditAuthEvent(eventType) {
   return async (req, res, next) => {
     const userId = req.user?.id || null;
     const ipAddress = req.ip || req.connection.remoteAddress || null;
-    const userAgent = req.get('user-agent') || null;
+    const userAgent = req.get("user-agent") || null;
 
     auditLog.log(eventType, userId, {
-      targetType: 'user',
+      targetType: "user",
       targetId: userId,
       details: {
         method: req.method,
@@ -131,7 +131,7 @@ function auditAuthEvent(eventType) {
       ipAddress,
       userAgent
     }).catch(error => {
-      console.error('[AUDIT_MIDDLEWARE] Failed to log auth event:', error);
+      console.error("[AUDIT_MIDDLEWARE] Failed to log auth event:", error);
     });
 
     next();

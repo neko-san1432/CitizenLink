@@ -1,5 +1,5 @@
-const Database = require('../config/database');
-const NotificationService = require('./NotificationService');
+const Database = require("../config/database");
+const NotificationService = require("./NotificationService");
 
 class OfficeConfirmationService {
   constructor() {
@@ -17,7 +17,7 @@ class OfficeConfirmationService {
     try {
       // 1. Get the officer's department
       const { data: officer, error: officerError } = await this.supabase
-        .from('user_profiles') // Assuming user_profiles or similar table holds department info.
+        .from("user_profiles") // Assuming user_profiles or similar table holds department info.
         // Wait, looking at other files, department might be in metadata or a separate table.
         // Let's check how other services get officer department.
         // ComplianceService uses auth.users metadata.
@@ -37,7 +37,7 @@ class OfficeConfirmationService {
           *,
           complaint:complaints(id, title, description, status, location_text)
         `)
-        .eq('status', 'pending_confirmation') // Assuming a status column
+        .eq("status", "pending_confirmation") // Assuming a status column
         // .eq('assigned_to', officerId) // If assigned to specific person
         // OR .eq('department_id', officerDepartmentId)
         ;
@@ -55,7 +55,7 @@ class OfficeConfirmationService {
       // I'll stick to a safe implementation.
 
       const { data, error } = await this.supabase
-        .from('task_forces')
+        .from("task_forces")
         .select(`
           id,
           complaint_id,
@@ -75,8 +75,8 @@ class OfficeConfirmationService {
             code
           )
         `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -86,7 +86,7 @@ class OfficeConfirmationService {
       return data;
 
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION] Get pending error:', error);
+      console.error("[OFFICE_CONFIRMATION] Get pending error:", error);
       throw error;
     }
   }
@@ -102,14 +102,14 @@ class OfficeConfirmationService {
     try {
       // Update task_force record
       const { data, error } = await this.supabase
-        .from('task_forces')
+        .from("task_forces")
         .update({
           status,
           confirmed_by: officerId,
           confirmed_at: new Date().toISOString(),
           notes
         })
-        .eq('id', taskForceId)
+        .eq("id", taskForceId)
         .select()
         .single();
 
@@ -119,8 +119,8 @@ class OfficeConfirmationService {
       if (data.created_by) {
         await this.notificationService.createNotification(
           data.created_by,
-          'task_force_update',
-          'Task Force Update',
+          "task_force_update",
+          "Task Force Update",
           `Task force assignment ${status} by officer.`,
           {
             task_force_id: taskForceId,
@@ -132,7 +132,7 @@ class OfficeConfirmationService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION] Confirm assignment error:', error);
+      console.error("[OFFICE_CONFIRMATION] Confirm assignment error:", error);
       throw error;
     }
   }
@@ -144,19 +144,19 @@ class OfficeConfirmationService {
   async getTaskForceDetails(taskForceId) {
     try {
       const { data, error } = await this.supabase
-        .from('task_forces')
+        .from("task_forces")
         .select(`
           *,
           complaint:complaints (*),
           department:departments (*)
         `)
-        .eq('id', taskForceId)
+        .eq("id", taskForceId)
         .single();
 
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('[OFFICE_CONFIRMATION] Get details error:', error);
+      console.error("[OFFICE_CONFIRMATION] Get details error:", error);
       throw error;
     }
   }

@@ -1,14 +1,14 @@
 // Database-backed rate limiting using Supabase
 // Falls back to in-memory store if database is unavailable
 
-const Database = require('../config/database');
+const Database = require("../config/database");
 let supabase = null;
 
 // Initialize Supabase connection
 try {
   supabase = Database.getClient();
 } catch (error) {
-  console.warn('[RATE LIMIT] Database not available, using in-memory fallback');
+  console.warn("[RATE LIMIT] Database not available, using in-memory fallback");
 }
 
 
@@ -35,19 +35,19 @@ async function getRateLimitFromDB(key, windowMs) {
 
     // Get or create rate limit record
     const { data: existing, error: fetchError } = await supabase
-      .from('rate_limits')
-      .select('*')
-      .eq('key', key)
+      .from("rate_limits")
+      .select("*")
+      .eq("key", key)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
-      console.warn('[RATE LIMIT] Database fetch error:', fetchError.message);
+    if (fetchError && fetchError.code !== "PGRST116") { // PGRST116 = not found
+      console.warn("[RATE LIMIT] Database fetch error:", fetchError.message);
       return null;
     }
 
     if (existing) {
       // Clean old requests outside the window
-      const requests = JSON.parse(existing.requests || '[]').filter(ts => ts > windowStart);
+      const requests = JSON.parse(existing.requests || "[]").filter(ts => ts > windowStart);
       return {
         requests,
         resetTime: existing.reset_time ? new Date(existing.reset_time).getTime() : now + windowMs
@@ -56,7 +56,7 @@ async function getRateLimitFromDB(key, windowMs) {
 
     return null;
   } catch (error) {
-    console.warn('[RATE LIMIT] Database operation failed:', error.message);
+    console.warn("[RATE LIMIT] Database operation failed:", error.message);
     return null;
   }
 }
@@ -69,7 +69,7 @@ async function saveRateLimitToDB(key, data, windowMs) {
     const resetTime = new Date(data.resetTime).toISOString();
 
     const { error } = await supabase
-      .from('rate_limits')
+      .from("rate_limits")
       .upsert({
         key,
         requests: JSON.stringify(data.requests),
@@ -77,17 +77,17 @@ async function saveRateLimitToDB(key, data, windowMs) {
         window_ms: windowMs,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'key'
+        onConflict: "key"
       });
 
     if (error) {
-      console.warn('[RATE LIMIT] Database save error:', error.message);
+      console.warn("[RATE LIMIT] Database save error:", error.message);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.warn('[RATE LIMIT] Database save failed:', error.message);
+    console.warn("[RATE LIMIT] Database save failed:", error.message);
     return false;
   }
 }
@@ -96,14 +96,14 @@ async function saveRateLimitToDB(key, data, windowMs) {
 function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = false) {
   return async (req, res, next) => {
     // Use higher limits in development but still enforce rate limiting
-    const hostname = req.hostname || req.get('host')?.split(':')[0] || '';
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0';
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const hostname = req.hostname || req.get("host")?.split(":")[0] || "";
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "0.0.0.0";
+    const isDevelopment = process.env.NODE_ENV === "development";
 
     // In development/localhost, use more permissive limits (5x) but still enforce rate limiting
     const effectiveMaxRequests = (isDevelopment || isLocalhost) ? maxRequests * 5 : maxRequests;
 
-    const key = req.ip || req.connection.remoteAddress || 'unknown';
+    const key = req.ip || req.connection.remoteAddress || "unknown";
     const now = Date.now();
     const windowStart = now - windowMs;
 
@@ -129,7 +129,7 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
     if (rateLimitData.requests.length >= effectiveMaxRequests) {
       return res.status(429).json({
         success: false,
-        error: 'Too many requests from this IP, please try again later.'
+        error: "Too many requests from this IP, please try again later."
       });
     }
 
@@ -156,15 +156,15 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
 
     // Add headers for rate limit info
     res.set({
-      'X-RateLimit-Limit': effectiveMaxRequests,
-      'X-RateLimit-Remaining': Math.max(0, effectiveMaxRequests - rateLimitData.requests.length),
-      'X-RateLimit-Reset': Math.ceil(rateLimitData.resetTime / 1000)
+      "X-RateLimit-Limit": effectiveMaxRequests,
+      "X-RateLimit-Remaining": Math.max(0, effectiveMaxRequests - rateLimitData.requests.length),
+      "X-RateLimit-Reset": Math.ceil(rateLimitData.resetTime / 1000)
     });
     next();
   };
 }
 // Check if rate limiting should be disabled entirely (only via explicit env var)
-const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === 'true';
+const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === "true";
 // Create a no-op rate limiter for when rate limiting is explicitly disabled
 const noOpLimiter = (req, res, next) => {
   next();
