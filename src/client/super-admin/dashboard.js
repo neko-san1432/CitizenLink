@@ -50,7 +50,7 @@ let roleDistributionChart = null;
 /**
  * Load department roles dynamically
  */
-async function loadDepartmentRoles() {
+async function _loadDepartmentRoles() {
   try {
     const apiClient = (await import("../config/apiClient.js")).default;
     // Prefer the explicit endpoint that exists in routes
@@ -161,7 +161,7 @@ function updateStatistics(stats) {
  */
 async function loadRoleCounts() {
   try {
-    const res = await fetch("/api/superadmin/users?limit=1");
+    const _res = await fetch("/api/superadmin/users?limit=1");
     const metaRes = await fetch("/api/superadmin/users?limit=1000");
     const meta = await metaRes.json();
     const users = meta.success && Array.isArray(meta.data) ? meta.data : [];
@@ -603,7 +603,7 @@ function formatLogEntry(log) {
 /**
  * Setup form handlers
  */
-function setupFormHandlers() {
+function _setupFormHandlers() {
   // Role Swap
   document
     .getElementById("role-swap-form")
@@ -649,7 +649,7 @@ function setupFormHandlers() {
     loadLogs();
   });
 }
-function setupUserSearchSA() {
+function _setupUserSearchSA() {
   const btn = document.getElementById("sa-user-search-btn");
   const input = document.getElementById("sa-user-search");
   const brgy = document.getElementById("sa-user-barangay");

@@ -54,13 +54,13 @@ class Database {
       // console.log removed for security
       // Test basic connection by checking if we can list tables
       // This is more reliable than querying a specific table that might not exist
-      const { data, error } = await this.supabase
+      const { _data, error } = await this.supabase
         .rpc("get_current_user");
       // If the RPC function doesn't exist, try a simple query that should work
       if (error && error.message.includes("function")) {
         // console.log removed for security
         // Fallback: try to query a system table or use a basic auth check
-        const { data: authData, error: authError } = await this.supabase.auth.getSession();
+        const { data: _authData, error: authError } = await this.supabase.auth.getSession();
         if (authError && authError.message.includes("JWT")) {
           console.error("[DB] Authentication test failed:", authError.message);
           throw new Error("Invalid Supabase configuration");

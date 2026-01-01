@@ -137,7 +137,7 @@ class CoordinatorDashboard {
 
   generateActivityFromStats(data) {
     const activities = [];
-    const now = new Date();
+    const _now = new Date();
 
     // Add activity for pending reviews
     if (data.pending_reviews > 0) {
@@ -535,7 +535,7 @@ class CoordinatorDashboard {
     alert("Help documentation coming soon!");
   }
 
-  async filterQueue(filter) {
+  async filterQueue(_filter) {
     // Implementation for queue filtering
     await this.loadRecentQueue();
   }
@@ -568,18 +568,18 @@ class CoordinatorDashboard {
   }
 }
 // Global functions for quick actions
-async function bulkAssignComplaints() {
+async function _bulkAssignComplaints() {
   window.coordinatorDashboard?.bulkAssignComplaints();
 }
 
-async function refreshActivity() {
+async function _refreshActivity() {
   window.coordinatorDashboard?.loadRecentQueue();
 }
 // Manual test function for debugging
 async function testCoordinatorStats() {
   try {
     // Test authentication
-    const authResponse = await fetch("/api/coordinator/status");
+    const _authResponse = await fetch("/api/coordinator/status");
     // Test dashboard API
     const dashboardResponse = await fetch("/api/coordinator/dashboard");
     const dashboardData = await dashboardResponse.json();
@@ -615,7 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "review-queue-container",
   ];
   requiredElements.forEach((id) => {
-    const element = document.getElementById(id);
+    const _element = document.getElementById(id);
   });
   // Immediate fallback: Set stats to 0 so user sees dashboard is working
   setTimeout(() => {

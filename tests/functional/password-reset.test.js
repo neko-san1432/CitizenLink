@@ -342,7 +342,7 @@ describe("Password Reset Flow", () => {
 
   describe("Token Reuse Prevention", () => {
     it("should prevent token reuse after successful reset", async () => {
-      const user = createTestUser();
+      const _user = createTestUser();
       const token = "single_use_token";
 
       req.method = "POST";

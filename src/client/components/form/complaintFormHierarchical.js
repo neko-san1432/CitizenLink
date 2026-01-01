@@ -61,7 +61,7 @@ export async function initializeComplaintForm() {
   // Initialize file handler with upload state callback
   const fileHandler = createComplaintFileHandler({
     previewContainer: elements.filePreview,
-    onFilesChange: (files) => {
+    onFilesChange: (_files) => {
       // console.log removed for security
     },
     onUploadStateChange: (isUploading) => {
@@ -405,7 +405,7 @@ function setupFormSubmission(form, fileHandler) {
       // Get selected files from file handler
       const selectedFiles = fileHandler.getFiles();
       // Submit the complaint using the correct parameters with fileHandler for progress tracking
-      const result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
+      const _result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
@@ -448,7 +448,7 @@ function setupDepartmentSearch(allDepartments) {
  */
 function filterDepartments(query, allDepartments, searchResultsInfo, searchResultsCount) {
   const departmentSections = document.querySelectorAll(".department-section");
-  const departmentCheckboxes = document.querySelectorAll(".checkbox-wrapper");
+  const _departmentCheckboxes = document.querySelectorAll(".checkbox-wrapper");
   let visibleCount = 0;
   if (!query) {
     // Show all departments

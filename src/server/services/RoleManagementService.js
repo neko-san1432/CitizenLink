@@ -185,7 +185,7 @@ class RoleManagementService {
   /**
   * Get all users by role
   */
-  async getUsersByRole(role, options = {}) {
+  async getUsersByRole(role, _options = {}) {
     try {
       // Note: Supabase doesn't allow querying auth.users directly via client
       // This would need to use a custom RPC function or edge function

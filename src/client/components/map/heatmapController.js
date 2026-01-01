@@ -3,7 +3,6 @@
  * Integrates map, visualization, and controls
  */
 class HeatmapController {
-
   constructor() {
     this.map = null;
     this.heatmapViz = null;
@@ -21,7 +20,7 @@ class HeatmapController {
       // Initialize map
       this.map = await initializeSimpleMap(mapContainerId, {
         center: [6.7492, 125.3571], // Digos City, Philippines
-        zoom: 12
+        zoom: 12,
       });
       if (!this.map) {
         throw new Error("Failed to initialize map");
@@ -30,7 +29,9 @@ class HeatmapController {
       this.heatmapViz = new HeatmapVisualization(this.map);
       // Initialize controls (skip if enhanced controls exist on the page)
       const existingControls = document.getElementById("heatmap-controls");
-      const hasEnhancedControls = existingControls && existingControls.classList.contains("enhanced-controls");
+      const hasEnhancedControls =
+        existingControls &&
+        existingControls.classList.contains("enhanced-controls");
       if (!hasEnhancedControls && !window.enhancedHeatmapController) {
         this.controls = new HeatmapControls(this);
       } else {
@@ -84,7 +85,6 @@ class HeatmapController {
    * @param {boolean} enabled - Whether clustering should be enabled
    */
   toggleClustering(enabled) {
-
     if (this.heatmapViz) {
       this.heatmapViz.toggleClustering(enabled);
       this.updateStatistics();
@@ -96,7 +96,6 @@ class HeatmapController {
    * @param {number} minPts - Minimum points parameter
    */
   updateClusteringParameters(eps, minPts) {
-
     if (this.heatmapViz) {
       this.heatmapViz.updateClusteringParameters(eps, minPts);
       this.updateStatistics();
@@ -122,7 +121,7 @@ class HeatmapController {
     if (!this.heatmapViz || !this.controls) return;
     const stats = {
       totalComplaints: this.heatmapViz.complaintData.length,
-      clusteringStats: this.heatmapViz.getClusteringStatistics()
+      clusteringStats: this.heatmapViz.getClusteringStatistics(),
     };
     this.controls.updateStatistics(stats);
   }
@@ -131,7 +130,6 @@ class HeatmapController {
    * @param {string} message - Error message
    */
   showError(message) {
-
     if (this.controls) {
       this.controls.showError(message);
     } else {
@@ -176,7 +174,8 @@ class HeatmapController {
    */
   handleZoomStart() {
     // Store current state before zoom changes
-    this.preZoomView = this.map.getZoom() >= this.zoomThreshold ? "markers" : "heatmap";
+    this.preZoomView =
+      this.map.getZoom() >= this.zoomThreshold ? "markers" : "heatmap";
   }
   /**
    * Update view based on zoom level
@@ -234,12 +233,15 @@ class HeatmapController {
    * Fit map to show all complaints
    */
   fitToComplaints() {
-
-    if (!this.heatmapViz || !this.map || this.heatmapViz.complaintData.length === 0) {
+    if (
+      !this.heatmapViz ||
+      !this.map ||
+      this.heatmapViz.complaintData.length === 0
+    ) {
       return;
     }
     const group = new L.featureGroup();
-    this.heatmapViz.complaintData.forEach(complaint => {
+    this.heatmapViz.complaintData.forEach((complaint) => {
       group.addLayer(L.marker([complaint.lat, complaint.lng]));
     });
     this.map.fitBounds(group.getBounds().pad(0.1));
@@ -287,7 +289,6 @@ class HeatmapController {
    * @param {number} intensity - Heatmap intensity multiplier
    */
   setHeatmapIntensity(intensity) {
-
     if (this.heatmapViz) {
       this.heatmapViz.heatmapConfig.intensity = intensity;
       // Refresh heatmap with new intensity
@@ -303,17 +304,20 @@ class HeatmapController {
   getState() {
     return {
       isInitialized: this.isInitialized,
-      complaintCount: this.heatmapViz ? this.heatmapViz.complaintData.length : 0,
-      clusteringEnabled: this.heatmapViz ? this.heatmapViz.isClusteringEnabled : false,
+      complaintCount: this.heatmapViz
+        ? this.heatmapViz.complaintData.length
+        : 0,
+      clusteringEnabled: this.heatmapViz
+        ? this.heatmapViz.isClusteringEnabled
+        : false,
       mapCenter: this.map ? this.map.getCenter() : null,
       mapZoom: this.map ? this.map.getZoom() : null,
-      zoomThreshold: this.zoomThreshold
+      zoomThreshold: this.zoomThreshold,
     };
   }
 }
 // Export for use in other modules
 if (typeof module !== "undefined" && module.exports) {
-
   module.exports = HeatmapController;
 } else {
   window.HeatmapController = HeatmapController;

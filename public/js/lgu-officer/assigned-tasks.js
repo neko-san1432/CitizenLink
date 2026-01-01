@@ -330,7 +330,7 @@ class AssignedTasks {
       console.error("[LGU_OFFICER] No resolve buttons found in DOM!");
     }
 
-    resolveButtons.forEach((btn, index) => {
+    resolveButtons.forEach((btn, _index) => {
 
 
       btn.addEventListener("click", (e) => {
@@ -376,7 +376,7 @@ class AssignedTasks {
   async confirmResolution() {
     const complaintIdInput = document.getElementById("resolution-complaint-id");
     const id = complaintIdInput.value;
-    const idType = complaintIdInput.dataset.idType || "complaint";
+    const _idType = complaintIdInput.dataset._idType || "complaint";
     const resolutionNotes = document.getElementById("resolution-notes").value;
     const evidenceInput = document.getElementById("resolution-evidence");
     if (!resolutionNotes.trim()) {
@@ -389,7 +389,7 @@ class AssignedTasks {
       formData.append("notes", resolutionNotes.trim());
       // Add files if selected
       if (evidenceInput && evidenceInput.files && evidenceInput.files.length > 0) {
-        Array.from(evidenceInput.files).forEach((file, index) => {
+        Array.from(evidenceInput.files).forEach((file, _index) => {
           formData.append(`completionEvidence`, file);
         });
       }

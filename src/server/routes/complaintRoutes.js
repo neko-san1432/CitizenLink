@@ -3,7 +3,7 @@ const multer = require("multer");
 const ComplaintController = require("../controllers/ComplaintController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
-const { complaintLimiter, uploadLimiter } = require("../middleware/rateLimiting");
+const { complaintLimiter, _uploadLimiter } = require("../middleware/rateLimiting");
 const { ErrorHandler } = require("../middleware/errorHandler");
 const { validate, schemas } = require("../middleware/validation");
 

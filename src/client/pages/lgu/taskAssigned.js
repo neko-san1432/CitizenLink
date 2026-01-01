@@ -2,7 +2,7 @@ import apiClient from "../../utils/apiClient.js";
 import { showToast } from "../../components/toast.js";
 
 // Enhanced URL validation function
-function validateAndSanitizeURL(urlString) {
+function _validateAndSanitizeURL(urlString) {
 
   if (!urlString || typeof urlString !== "string") {
     return "";

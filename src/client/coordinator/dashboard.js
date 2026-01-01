@@ -196,7 +196,7 @@ window.viewComplaintDetail = async function(complaintId) {
 /**
  * View cluster detail
  */
-window.viewClusterDetail = async function(clusterId) {
+window.viewClusterDetail = async function(_clusterId) {
   showMessage("info", "Cluster detail view coming soon");
   // TODO: Implement cluster detail view
 };
@@ -424,7 +424,7 @@ async function loadAnalytics(period) {
 /**
  * Refresh activity feed
  */
-async function refreshActivity() {
+async function _refreshActivity() {
   try {
     showMessage("info", "Refreshing activity...");
     // Reload activity data

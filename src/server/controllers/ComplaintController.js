@@ -276,7 +276,7 @@ class ComplaintController {
   async getComplaintLocations(req, res) {
     const {
       status,
-      type,
+      _type,
       department,
       category,
       startDate,

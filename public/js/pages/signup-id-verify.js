@@ -50,12 +50,12 @@ import { supabase } from "../config/config.js";
   const review = qs("#id-review");
   const reviewGrid = qs("#id-review-grid");
 
-  const form = qs("#regForm") || qs("#oauthCompleteForm");
+  const _form = qs("#regForm") || qs("#oauthCompleteForm");
 
   let mediaStream = null;
   let capturedBlob = null;
   let isStartingCamera = false; // Prevent multiple simultaneous start attempts
-  let lastCameraError = null;
+  const _lastCameraError = null;
   let cameraErrorCount = 0;
   let cameraCooldownUntil = 0; // Timestamp when camera can be retried
   let extractedIdData = null; // Store extracted ID data for comparison
@@ -202,7 +202,7 @@ import { supabase } from "../config/config.js";
             });
             console.log("Camera access granted with basic constraints");
           } catch (basicError) {
-            lastError = basicError;
+            _lastError = basicError;
             console.log("All camera attempts failed", basicError.name);
             throw basicError; // Re-throw to be caught by outer catch
           }
@@ -769,7 +769,7 @@ import { supabase } from "../config/config.js";
     }
   });
 
-  function renderReview(fields, provider) {
+  function renderReview(fields, _provider) {
     if (!fields || Object.keys(fields).length === 0) {
       review.hidden = true;
       reviewGrid.innerHTML = "";
@@ -792,7 +792,7 @@ import { supabase } from "../config/config.js";
 
     // Filter out null/empty values and format entries
     const entries = Object.entries(fields)
-      .filter(([k, v]) => v != null && String(v).trim() !== "")
+      .filter(([_k, v]) => v != null && String(v).trim() !== "")
       .map(([k, v]) => {
         const label =
           fieldLabels[k] ||
@@ -824,7 +824,7 @@ import { supabase } from "../config/config.js";
     }
 
     reviewGrid.innerHTML = entries
-      .map(({ key, label, value }) => {
+      .map(({ _key, label, value }) => {
         const safeLabel = escapeHtml(label);
         const safeValue = escapeHtml(value);
         return `<div class="kv"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;
@@ -1120,7 +1120,7 @@ import { supabase } from "../config/config.js";
   /**
    * Display comparison results
    */
-  function displayComparisonResults(comparisons, idOnlyFields = []) {
+  function displayComparisonResults(comparisons, _idOnlyFields = []) {
     // If no comparisons possible, show extracted ID data only
     if (!comparisons || comparisons.length === 0) {
       if (extractedIdData && reviewGrid) {
@@ -1143,8 +1143,8 @@ import { supabase } from "../config/config.js";
     }
 
     // Count matches and mismatches
-    const matches = comparisons.filter((c) => c.match).length;
-    const mismatches = comparisons.filter((c) => !c.match).length;
+    const _matches = comparisons.filter((c) => c.match).length;
+    const _mismatches = comparisons.filter((c) => !c.match).length;
 
     // Check for ID Type validity (must be PhilID/PhilSys)
     const isPhilId =
@@ -1283,7 +1283,7 @@ import { supabase } from "../config/config.js";
   /**
    * Render other extracted fields that aren't being compared (ID number, dates, etc.)
    */
-  function renderOtherExtractedFields(idFields, comparisons) {
+  function renderOtherExtractedFields(idFields, _comparisons) {
     if (!idFields) return "";
 
     const comparedFields = [
@@ -1362,7 +1362,7 @@ import { supabase } from "../config/config.js";
     };
 
     const entries = Object.entries(idFields)
-      .filter(([k, v]) => v != null && String(v).trim() !== "")
+      .filter(([_k, v]) => v != null && String(v).trim() !== "")
       .map(([k, v]) => {
         const label =
           fieldLabels[k] ||
@@ -1390,7 +1390,7 @@ import { supabase } from "../config/config.js";
     if (entries.length === 0) return "";
 
     return entries
-      .map(({ key, label, value }) => {
+      .map(({ _key, label, value }) => {
         const safeLabel = escapeHtml(label);
         const safeValue = escapeHtml(value);
         return `<div class="kv" style="margin-bottom: 8px;"><div class="k">${safeLabel}</div><div class="v">${safeValue}</div></div>`;

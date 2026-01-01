@@ -385,7 +385,7 @@ class CoordinatorRepository {
   /**
    * Get pending reviews count
    */
-  async getPendingReviewsCount(coordinatorId) {
+  async getPendingReviewsCount(_coordinatorId) {
     try {
       // console.log removed for security
       const { count, error } = await this.supabase

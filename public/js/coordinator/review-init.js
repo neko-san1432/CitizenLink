@@ -14,7 +14,7 @@ window.openFalseComplaintModal = function() {
   const complaintId = pathParts[pathParts.length - 1];
 
   if (complaintId && complaintId !== "review") {
-    falseComplaintMarker.show(complaintId, (result) => {
+    falseComplaintMarker.show(complaintId, (_result) => {
       // Reload the page after marking as false
       window.location.reload();
     });

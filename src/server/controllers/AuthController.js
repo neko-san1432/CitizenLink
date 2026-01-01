@@ -7,7 +7,7 @@ const Database = require("../config/database");
 const {
   extractUserMetadata,
   getCookieOptions,
-  createErrorResponse,
+  _createErrorResponse,
   invalidateAllUserSessions,
 } = require("../utils/authUtils");
 const {
@@ -152,7 +152,7 @@ class AuthController {
         email,
         password,
         remember = false,
-        skipCaptcha = false,
+        _skipCaptcha = false,
       } = req.body;
 
       // Validate required fields
@@ -537,7 +537,7 @@ class AuthController {
   async requestEmailChange(req, res) {
     try {
       const { newEmail, currentPassword } = req.body;
-      const userId = req.user.id;
+      const _userId = req.user.id;
       const currentEmail = req.user.email;
 
       if (!newEmail || !currentPassword) {
@@ -604,7 +604,7 @@ class AuthController {
   async changePassword(req, res) {
     try {
       const { currentPassword, newPassword, confirmNewPassword } = req.body;
-      const userId = req.user.id;
+      const _userId = req.user.id;
       if (!currentPassword || !newPassword || !confirmNewPassword) {
         return res.status(400).json({
           success: false,
@@ -1101,7 +1101,7 @@ class AuthController {
       let lastError = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const updated = await UserService.updateUser(
+          const _updated = await UserService.updateUser(
             pendingUser.id,
             {
               status: "pending_approval",
@@ -1410,7 +1410,7 @@ class AuthController {
         });
       }
       // Verify with Supabase
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { _data, error } = await supabase.auth.verifyOtp({
         token_hash: token,
         type: "signup",
       });

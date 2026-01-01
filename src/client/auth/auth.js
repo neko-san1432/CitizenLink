@@ -10,8 +10,8 @@ import { setButtonLoading, temporarilyMark } from "../utils/buttonState.js";
 import { addCsrfTokenToForm } from "../utils/csrf.js";
 import {
   validateAndSanitizeForm,
-  isValidPhilippineMobile,
-  validatePassword,
+  _isValidPhilippineMobile,
+  _validatePassword,
   isValidEmail,
 } from "../utils/validation.js";
 
@@ -341,7 +341,7 @@ if (regFormEl) {
         temporarilyMark(submitBtn, "Failed", "btn-danger");
       } catch {}
       try {
-        const submitBtn = regFormEl.querySelector(
+        const _submitBtn = regFormEl.querySelector(
           'button[type="submit"], .btn-primary, .btn'
         );
       } catch {}

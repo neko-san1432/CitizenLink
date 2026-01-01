@@ -1,7 +1,7 @@
 import { brandConfig } from "../config/index.js";
 import {
   initializeNotificationButton,
-  closeNotificationPanel,
+  _closeNotificationPanel,
 } from "./notification.js";
 
 // Header component for easy modification
@@ -150,7 +150,7 @@ function initializeProfileButton() {
     if (!profilePanel) return;
 
     const profileBtnRect = profileBtn.getBoundingClientRect();
-    const headerHeight = 64; // Approximate header height
+    const _headerHeight = 64; // Approximate header height
 
     // Position panel below the profile button, aligned to the right
     profilePanel.style.top = `${profileBtnRect.bottom + 8}px`;

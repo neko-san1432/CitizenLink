@@ -359,7 +359,7 @@ class ContentBannerManager {
     }
     // Create content items HTML
     let itemHTML = "";
-    itemsToShow.forEach((item, idx) => {
+    itemsToShow.forEach((item, _idx) => {
       // Determine badge based on content type
       let badge = "";
       if (item.content_type === "event") {
@@ -731,7 +731,7 @@ function renderMyComplaints(complaints, totalCount = null) {
   }
 
   // Filter out duplicate and cancelled complaints for display (but show them in count)
-  const filteredComplaints = complaints.filter((complaint) => {
+  const filteredComplaints = complaints.filter((_complaint) => {
     // Don't filter - show all complaints including duplicates and cancelled
     // The user might want to see them
     return true;
@@ -923,7 +923,7 @@ function renderCompactStepper(status, confirmedByCitizen = false) {
   stepperHTML += "</div>";
   return stepperHTML;
 }
-function hexToRgb(hex) {
+function _hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? [
@@ -933,7 +933,7 @@ function hexToRgb(hex) {
     ]
     : [0, 0, 0];
 }
-function getProgressWidth(status) {
+function _getProgressWidth(status) {
   // Deprecated - keeping for backward compatibility if needed elsewhere
   const progressMap = {
     new: 20,

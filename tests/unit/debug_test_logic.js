@@ -1,8 +1,8 @@
 const ComplaintService = require("../../src/server/services/ComplaintService");
-const ComplaintRepository = require("../../src/server/repositories/ComplaintRepository");
-const CoordinatorRepository = require("../../src/server/repositories/CoordinatorRepository");
-const ComplaintAssignmentRepository = require("../../src/server/repositories/ComplaintAssignmentRepository");
-const DepartmentRepository = require("../../src/server/repositories/DepartmentRepository");
+const _ComplaintRepository = require("../../src/server/repositories/_ComplaintRepository");
+const _CoordinatorRepository = require("../../src/server/repositories/_CoordinatorRepository");
+const _ComplaintAssignmentRepository = require("../../src/server/repositories/_ComplaintAssignmentRepository");
+const _DepartmentRepository = require("../../src/server/repositories/_DepartmentRepository");
 
 // Mocks
 const mockNotificationService = {
@@ -28,7 +28,7 @@ const mockSupabase = {
 };
 
 // Mock Repositories
-const { normalizeComplaintData } = require("../../src/server/utils/complaintUtils");
+const { _normalizeComplaintData } = require("../../src/server/utils/complaintUtils");
 
 class MockComplaintRepo {
   constructor() { this.supabase = mockSupabase; }
@@ -53,7 +53,7 @@ async function run() {
   try {
     console.log("Setting up services...");
     const complaintRepo = new MockComplaintRepo();
-    const coordinatorRepo = new MockCoordinatorRepo();
+    const _coordinatorRepo = new MockCoordinatorRepo();
     const assignmentRepo = new MockAssignmentRepo();
     const departmentRepo = new MockDepartmentRepo();
 

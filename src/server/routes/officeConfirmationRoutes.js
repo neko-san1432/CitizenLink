@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const OfficeConfirmationController = require("../controllers/OfficeConfirmationController");
-const { authenticateUser, requireRole } = require("../middleware/auth");
+const { authenticateUser, _requireRole } = require("../middleware/auth");
 
 const controller = new OfficeConfirmationController();
 

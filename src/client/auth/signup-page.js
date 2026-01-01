@@ -137,7 +137,7 @@ function attachPasswordStrengthMeter() {
     const strengthFill = document.getElementById("strength-fill");
     const strengthText = document.getElementById("strength-text");
     if (!passwordInput || !strengthFill || !strengthText) return;
-    const classList = ["weak", "fair", "good", "strong"];
+    const _classList = ["weak", "fair", "good", "strong"];
     const calcScore = (pwd) => {
       let score = 0;
       if (!pwd) return 0;
@@ -333,7 +333,7 @@ function setupOAuthPopupBridge() {
           console.log("[SIGNUP] Refresh token length:", refreshToken.length);
 
           // Set the session using setSession
-          const { data, error } = await supabase.auth.setSession({
+          const { _data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
@@ -410,7 +410,7 @@ function setupOAuthPopupBridge() {
       // Increased delay to ensure session is fully set and persisted before redirect
       setTimeout(async () => {
         // Double-check session before redirect
-        const { data: { session: finalCheck }, error: finalError } = await supabase.auth.getSession();
+        const { data: { session: finalCheck }, error: _finalError } = await supabase.auth.getSession();
         if (finalCheck) {
           console.log("[SIGNUP] ✅ Final session check passed - user ID:", finalCheck.user?.id);
           console.log("[SIGNUP] Executing redirect now...");

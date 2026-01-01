@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const cookieParser = require("cookie-parser");
+const _cookieParser = require("cookie-parser");
 
 // CSRF secret key (should be in environment variable in production)
 const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString("hex");

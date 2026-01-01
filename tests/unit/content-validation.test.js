@@ -41,7 +41,7 @@ describe("Content Submission Validation", () => {
 
     it("should validate HTML tags in content", () => {
       const content = "<p>This is <strong>important</strong> news.</p>";
-      const allowedTags = ["p", "strong", "em", "a", "ul", "ol", "li"];
+      const _allowedTags = ["p", "strong", "em", "a", "ul", "ol", "li"];
 
       // Check if content contains script tags (security)
       const hasScriptTag = content.toLowerCase().includes("<script");

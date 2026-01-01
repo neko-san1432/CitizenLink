@@ -401,7 +401,7 @@ class UserService {
   /**
   * Sync auth user (no-op now since we only use auth.users)
   */
-  async syncAuthUser(authUserId) {
+  async syncAuthUser(_authUserId) {
     // No longer needed - all data is in auth.users metadata
     return true;
   }

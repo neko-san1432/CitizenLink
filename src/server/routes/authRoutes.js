@@ -70,7 +70,7 @@ router.post(
   passwordResetLimiter,
   ErrorHandler.asyncWrapper(async (req, res) => {
     try {
-      const { email, logoutOption } = req.body; // logoutOption: 'all', 'others', or 'none' (handled client-side)
+      const { email, _logoutOption } = req.body; // _logoutOption: 'all', 'others', or 'none' (handled client-side)
       if (!email) {
         return res.status(400).json({
           success: false,
@@ -119,7 +119,7 @@ router.post(
             process.env.NODE_ENV === "development" ? clientError.message : null,
         });
       }
-      const { data, error } = await anonClient.auth.resetPasswordForEmail(
+      const { _data, error } = await anonClient.auth.resetPasswordForEmail(
         email,
         {
           redirectTo,

@@ -1,4 +1,4 @@
-const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITY } = require("../../src/shared/constants");
+const { NOTIFICATION_TYPES, _NOTIFICATION_PRIORITY } = require("../../src/shared/constants");
 
 describe("Notification System", () => {
   let NotificationService;
@@ -29,7 +29,7 @@ describe("Notification System", () => {
       range: jest.fn(),
       single: jest.fn(),
       // Make the mock thenable to simulate Supabase Promise-like builder
-      then: jest.fn((resolve, reject) => resolve({ data: [], error: null }))
+      then: jest.fn((resolve, _reject) => resolve({ data: [], error: null }))
     };
 
     // Setup common mock chain return values

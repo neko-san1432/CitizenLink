@@ -257,7 +257,7 @@ class SimilarityCalculatorService {
     const clusters = [];
     const visited = new Set();
     const clustered = new Set();
-    complaints.forEach((complaint, index) => {
+    complaints.forEach((complaint, _index) => {
       if (visited.has(complaint.id)) return;
       visited.add(complaint.id);
       // Find neighbors

@@ -13,10 +13,10 @@ class OfficeConfirmationService {
    * @param {string} officerId - The ID of the officer (user_id)
    * @returns {Promise<Array>} List of pending task force assignments
    */
-  async getPendingConfirmations(officerId) {
+  async getPendingConfirmations(_officerId) {
     try {
       // 1. Get the officer's department
-      const { data: officer, error: officerError } = await this.supabase
+      const { data: _officer, error: _officerError } = await this.supabase
         .from("user_profiles") // Assuming user_profiles or similar table holds department info.
         // Wait, looking at other files, department might be in metadata or a separate table.
         // Let's check how other services get officer department.

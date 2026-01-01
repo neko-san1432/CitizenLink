@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  * @param {L.Map} map - Leaflet map instance
  * @param {Array} brgyData - Array of barangay data
  */
-async function addCityBoundary(map, brgyData) {
+async function _addCityBoundary(map, brgyData) {
   try {
     // console.log removed for security
     // Create a feature collection from all barangay geojson
@@ -94,7 +94,7 @@ async function addCityBoundary(map, brgyData) {
     const cityBoundary = calculateConvexHull(allFeatures);
     if (cityBoundary) {
       // Create a world rectangle that covers the entire map
-      const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
+      const _worldBounds = L.latLngBounds([-90, -180], [90, 180]);
       const worldRectangle = {
         type: "Feature",
         properties: { name: "World" },

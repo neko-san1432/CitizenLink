@@ -8,7 +8,7 @@ const captchaRoutes = require("./captchaRoutes");
 const coordinatorRoutes = require("./coordinatorRoutes");
 const ocrRoutes = require("./ocrRoutes");
 const verificationRoutes = require("./verificationRoutes");
-const { apiLimiter } = require("../middleware/rateLimiting");
+const { _apiLimiter } = require("../middleware/rateLimiting");
 
 let hrRoutes;
 try {

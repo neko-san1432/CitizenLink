@@ -9,7 +9,7 @@ import { getStatusText } from "../utils/complaint.js";
 import { getActivityIcon, getUpdateIcon } from "../utils/icons.js";
 
 // Dashboard state
-const dashboardData = null;
+const _dashboardData = null;
 /**
  * Initialize dashboard
  */

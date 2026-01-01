@@ -7,7 +7,7 @@ import { initializeRoleToggle } from "../auth/roleToggle.js";
 import { getActivityIcon } from "../utils/icons.js";
 
 // Dashboard state
-const dashboardData = null;
+const _dashboardData = null;
 /**
  * Initialize dashboard
  */
@@ -296,11 +296,11 @@ window.refreshUpdates = async function() {
 window.viewTaskDetail = function(taskId) {
   window.location.href = `/lgu-officer/task-detail?id=${taskId}`;
 };
-window.updateTask = function(taskId) {
+window.updateTask = function(_taskId) {
   showMessage("info", "Opening task update form...");
   // TODO: Implement task update modal
 };
-window.addNote = function(taskId) {
+window.addNote = function(_taskId) {
   showMessage("info", "Opening note form...");
   // TODO: Implement note addition modal
 };

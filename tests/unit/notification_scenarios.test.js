@@ -1,10 +1,10 @@
 const ComplaintService = require("../../src/server/services/ComplaintService");
 const CoordinatorService = require("../../src/server/services/CoordinatorService");
-const NotificationService = require("../../src/server/services/NotificationService");
+const _NotificationService = require("../../src/server/services/_NotificationService");
 
 // Mock Repositories
 const ComplaintRepository = require("../../src/server/repositories/ComplaintRepository");
-const CoordinatorRepository = require("../../src/server/repositories/CoordinatorRepository");
+const _CoordinatorRepository = require("../../src/server/repositories/_CoordinatorRepository");
 const ComplaintAssignmentRepository = require("../../src/server/repositories/ComplaintAssignmentRepository");
 const DepartmentRepository = require("../../src/server/repositories/DepartmentRepository");
 
@@ -121,7 +121,7 @@ describe("Notification Scenarios (Role-Based)", () => {
       // Arrange
       const complaintId = "comp-456";
       const userId = "user-citizen-1";
-      const newStatus = "in_progress";
+      const _newStatus = "in_progress";
       const coordId = "user-coord-1";
 
       const mockComplaint = {

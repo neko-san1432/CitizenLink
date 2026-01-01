@@ -96,7 +96,7 @@ class DuplicationDetectionService {
       return [];
     }
     // Search within 1km radius
-    const radiusKm = 1.0;
+    const _radiusKm = 1.0;
     const { data: candidates, error } = await this.supabase
       .from("complaints")
       .select("*")

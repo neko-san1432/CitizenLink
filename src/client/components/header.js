@@ -310,8 +310,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     // Test if buttons were created
-    const testNotificationBtn = document.getElementById("notification-btn");
-    const testProfileBtn = document.getElementById("profile-btn");
+    const _testNotificationBtn = document.getElementById("notification-btn");
+    const _testProfileBtn = document.getElementById("profile-btn");
     // console.log removed for security
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector(".notification-container");

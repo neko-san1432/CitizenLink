@@ -1,6 +1,6 @@
 const express = require("express");
 const config = require("../../../config/app");
-const Database = require("../config/database");
+const _Database = require("../config/database");
 
 const router = express.Router();
 // GET /api/supabase/config - expose only safe client config

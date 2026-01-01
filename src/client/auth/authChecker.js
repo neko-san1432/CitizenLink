@@ -15,26 +15,36 @@ export const getUserMeta = () => {
   try {
     const raw = localStorage.getItem(storageKey);
     return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 export const requireRole = (allowedRoles) => {
   const meta = getUserMeta();
-  if (!meta || !meta.role || (allowedRoles && !allowedRoles.includes(meta.role))) {
+  if (
+    !meta ||
+    !meta.role ||
+    (allowedRoles && !allowedRoles.includes(meta.role))
+  ) {
     window.location.href = "/login";
   }
 };
 
 export const refreshMetaFromSession = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   // Check both raw_user_meta_data and user_metadata
   const rawUserMetaData = session?.user?.raw_user_meta_data || {};
   const userMetadata = session?.user?.user_metadata || {};
   // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
   const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
   // Prioritize original role, but fall back to normalized role for backward compatibility
-  const role = combinedMetadata.role || combinedMetadata.normalized_role || null;
-  const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
+  const role =
+    combinedMetadata.role || combinedMetadata.normalized_role || null;
+  const name =
+    combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
   if (role || name) {
     saveUserMeta({ role, name });
   }
@@ -42,21 +52,29 @@ export const refreshMetaFromSession = async () => {
 };
 
 export const setOAuthContext = (ctx) => {
-  try { localStorage.setItem(oauthKey, JSON.stringify(ctx || {})); } catch {}
+  try {
+    localStorage.setItem(oauthKey, JSON.stringify(ctx || {}));
+  } catch {}
 };
 
 export const getOAuthContext = () => {
   try {
     const raw = localStorage.getItem(oauthKey);
     return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 export const clearOAuthContext = () => {
-  try { localStorage.removeItem(oauthKey); } catch {}
+  try {
+    localStorage.removeItem(oauthKey);
+  } catch {}
 };
 
-export const suppressAuthErrorNotifications = (duration = SUPPRESS_DURATION_MS) => {
+export const suppressAuthErrorNotifications = (
+  duration = SUPPRESS_DURATION_MS
+) => {
   try {
     const expiresAt = Date.now() + duration;
     sessionStorage.setItem(authErrorSuppressKey, String(expiresAt));
@@ -83,13 +101,19 @@ const isAuthErrorSuppressed = () => {
 };
 
 const clearAuthErrorSuppression = () => {
-  try { sessionStorage.removeItem(authErrorSuppressKey); } catch {}
+  try {
+    sessionStorage.removeItem(authErrorSuppressKey);
+  } catch {}
 };
 
 const hasPendingOAuthSignup = () => {
   try {
     const ctx = getOAuthContext();
-    return ctx && ctx.intent === "signup" && (ctx.status === "pending" || ctx.status === "handoff");
+    return (
+      ctx &&
+      ctx.intent === "signup" &&
+      (ctx.status === "pending" || ctx.status === "handoff")
+    );
   } catch {
     return false;
   }
@@ -122,16 +146,21 @@ export const getUserRole = async (options = {}) => {
   }
   // Check API cache to prevent excessive calls
   const now = Date.now();
-  if (!refresh && roleApiCache && (now - roleApiCacheTime) < CACHE_DURATION) {
+  if (!refresh && roleApiCache && now - roleApiCacheTime < CACHE_DURATION) {
     return roleApiCache;
   }
   try {
     // Try to get role from API first (server has complete metadata)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     const token = session?.access_token;
 
     if (!token) {
-      console.warn("[AUTH CHECKER] No session token available for role check", { sessionError });
+      console.warn("[AUTH CHECKER] No session token available for role check", {
+        sessionError,
+      });
     } else {
       console.log("[AUTH CHECKER] Session token found, length:", token.length);
     }
@@ -139,13 +168,13 @@ export const getUserRole = async (options = {}) => {
     // Always include Authorization header if token exists
     const headers = {
       "Content-Type": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
     const response = await fetch("/api/user/role", {
       method: "GET",
       headers,
-      credentials: "include"
+      credentials: "include",
     });
     if (response.ok) {
       const data = await response.json();
@@ -168,7 +197,9 @@ export const getUserRole = async (options = {}) => {
       // Session expired or missing; clear cache and trigger re-login path
       // But don't throw on landing page or auth pages
       if (!isAuthPage()) {
-        try { localStorage.removeItem("cl_user_meta"); } catch {}
+        try {
+          localStorage.removeItem("cl_user_meta");
+        } catch {}
         throw new Error("Unauthorized");
       }
     }
@@ -179,14 +210,18 @@ export const getUserRole = async (options = {}) => {
     }
   }
   // Fallback to session metadata
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const rawUserMetaData = session?.user?.raw_user_meta_data || {};
   const userMetadata = session?.user?.user_metadata || {};
   // Combine metadata sources, prioritizing raw_user_meta_data (single source of truth)
   const combinedMetadata = { ...userMetadata, ...rawUserMetaData };
   // Prioritize original role, but fall back to normalized role for backward compatibility
-  const role = combinedMetadata.role || combinedMetadata.normalized_role || null;
-  const name = combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
+  const role =
+    combinedMetadata.role || combinedMetadata.normalized_role || null;
+  const name =
+    combinedMetadata.name || rawUserMetaData.name || userMetadata.name || null;
   if (role || name) saveUserMeta({ role, name });
   return role;
 };
@@ -216,7 +251,10 @@ export const setDeviceTrusted = (trusted) => {
 // Check if token is valid and refresh if needed
 export const validateAndRefreshToken = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
     if (error || !session) {
       return false;
     }
@@ -226,11 +264,14 @@ export const validateAndRefreshToken = async () => {
     if (expiresAt && now >= expiresAt) {
       // Check if device is trusted - if not, don't auto-refresh
       if (!isDeviceTrusted()) {
-        console.log("[AUTH] Session expired and device is not trusted. Requiring re-authentication.");
+        console.log(
+          "[AUTH] Session expired and device is not trusted. Requiring re-authentication."
+        );
         return false;
       }
       // Try to refresh the session (only if device is trusted)
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
         return false;
       }
@@ -239,7 +280,9 @@ export const validateAndRefreshToken = async () => {
         await fetch("/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: refreshData.session.access_token })
+          body: JSON.stringify({
+            access_token: refreshData.session.access_token,
+          }),
         });
       } catch (cookieError) {
         console.error("Failed to update server cookie:", cookieError);
@@ -253,7 +296,7 @@ export const validateAndRefreshToken = async () => {
 };
 // Set up automatic token refresh listener
 
-export const initializeAuthListener = () => {
+export function initializeAuthListener() {
   supabase.auth.onAuthStateChange(async (event, session) => {
     // Ensure server cookie is set when we get a valid session
     if (event === "SIGNED_IN" && session) {
@@ -261,7 +304,7 @@ export const initializeAuthListener = () => {
         await fetch("/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: session.access_token })
+          body: JSON.stringify({ access_token: session.access_token }),
         });
       } catch {}
       // Restart monitoring on fresh session
@@ -271,7 +314,9 @@ export const initializeAuthListener = () => {
     if (event === "TOKEN_REFRESHED" && session) {
       // Check if device is trusted before allowing auto-refresh
       if (!isDeviceTrusted()) {
-        console.log("[AUTH] Token refresh attempted but device is not trusted. Signing out.");
+        console.log(
+          "[AUTH] Token refresh attempted but device is not trusted. Signing out."
+        );
         await supabase.auth.signOut();
         handleSessionExpired();
         return;
@@ -281,7 +326,7 @@ export const initializeAuthListener = () => {
         await fetch("/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: session.access_token })
+          body: JSON.stringify({ access_token: session.access_token }),
         });
         // Check for role changes when token refreshes (e.g., user was promoted)
         await checkAndUpdateRoleChange();
@@ -296,19 +341,32 @@ export const initializeAuthListener = () => {
       // so it persists for the next login
     }
   });
-};
+}
 // Global token expiry monitoring
 let tokenExpiryTimer = null;
 let noSessionAttempts = 0;
 const MAX_NO_SESSION_ATTEMPTS = 3;
-const isAuthPage = () => {
+function isAuthPage() {
   try {
     const p = (window.location.pathname || "").toLowerCase();
-    return p === "/" || p === "/login" || p === "/signup" || p === "/signup-with-code" || p === "/resetpassword" || p === "/reset-password" || p === "/success" || p === "/oauth-continuation" || p === "/oauthcontinuation" || p === "/complete-position-signup";
-  } catch { return false; }
-};
+    return (
+      p === "/" ||
+      p === "/login" ||
+      p === "/signup" ||
+      p === "/signup-with-code" ||
+      p === "/resetpassword" ||
+      p === "/reset-password" ||
+      p === "/success" ||
+      p === "/oauth-continuation" ||
+      p === "/oauthcontinuation" ||
+      p === "/complete-position-signup"
+    );
+  } catch {
+    return false;
+  }
+}
 
-export const startTokenExpiryMonitoring = () => {
+export function startTokenExpiryMonitoring() {
   // Do not monitor on auth pages
   if (isAuthPage()) return;
   if (tokenExpiryTimer) {
@@ -323,7 +381,9 @@ export const startTokenExpiryMonitoring = () => {
       }
 
       // Check if user has a Supabase session first before making API call
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         // No session, stop monitoring silently
         tokenExpiryTimer = null;
@@ -345,13 +405,15 @@ export const startTokenExpiryMonitoring = () => {
         method: "GET",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       });
       if (!response.ok) {
         // If 401, check if session still exists and if device is trusted
         if (response.status === 401) {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          const {
+            data: { session: currentSession },
+          } = await supabase.auth.getSession();
           if (!currentSession) {
             // Session expired, stop monitoring silently
             tokenExpiryTimer = null;
@@ -370,7 +432,9 @@ export const startTokenExpiryMonitoring = () => {
 
           // If device is not trusted, don't try to refresh - require re-login
           if (!isDeviceTrusted()) {
-            console.log("[AUTH] Session expired and device is not trusted. Requiring re-authentication.");
+            console.log(
+              "[AUTH] Session expired and device is not trusted. Requiring re-authentication."
+            );
             tokenExpiryTimer = null;
             handleSessionExpired();
             return;
@@ -402,7 +466,9 @@ export const startTokenExpiryMonitoring = () => {
       // Silently handle errors - don't spam console with expected errors
       if (error.name !== "TypeError" && error.name !== "AbortError") {
         // Only handle unexpected errors
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
           // Only handle as session expired if we had a session
           handleSessionExpired();
@@ -417,18 +483,20 @@ export const startTokenExpiryMonitoring = () => {
     }
   };
   checkTokenExpiry();
-};
+}
 
-export const stopTokenExpiryMonitoring = () => {
+export function stopTokenExpiryMonitoring() {
   if (tokenExpiryTimer) {
     clearTimeout(tokenExpiryTimer);
     tokenExpiryTimer = null;
   }
-};
+}
 // Handle session expired - show toast and logout
-const handleSessionExpired = async () => {
+async function handleSessionExpired() {
   if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
-    console.log("[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)");
+    console.log(
+      "[AUTH] Session expiration handling suppressed (pending OAuth or intentional cleanup)"
+    );
     clearAuthErrorSuppression();
     return;
   }
@@ -469,8 +537,12 @@ const handleSessionExpired = async () => {
   // Clear any stored credentials (prevent browser autofill)
   const loginForm = document.querySelector('#loginForm, form[action*="login"]');
   if (loginForm) {
-    const emailInput = loginForm.querySelector('input[type="email"], input[name="email"]');
-    const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
+    const emailInput = loginForm.querySelector(
+      'input[type="email"], input[name="email"]'
+    );
+    const passwordInput = loginForm.querySelector(
+      'input[type="password"], input[name="password"]'
+    );
     if (emailInput) emailInput.value = "";
     if (passwordInput) passwordInput.value = "";
   }
@@ -479,25 +551,29 @@ const handleSessionExpired = async () => {
     // Redirect with a parameter to prevent auto-login
     window.location.href = "/login?session_expired=true";
   }, 3000);
-};
+}
 // Show session expired toast
-const showSessionExpiredToast = () => {
+function showSessionExpiredToast() {
   if (isAuthErrorSuppressed() || hasPendingOAuthSignup()) {
-    console.log("[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)");
+    console.log(
+      "[AUTH] Session expiration toast suppressed (pending OAuth or intentional cleanup)"
+    );
     clearAuthErrorSuppression();
     return;
   }
-  import("../components/toast.js").then(({ showMessage }) => {
-    showMessage("error", "Authentication failed. Please log in again.", 5000);
-  }).catch(async () => {
-    try {
-      const { default: showMessage } = await import("../components/toast.js");
-      showMessage("error", "Authentication failed. Please log in again.");
-    } catch (toastError) {
-      console.error("Authentication failed. Please log in again.");
-    }
-  });
-};
+  import("../components/toast.js")
+    .then(({ showMessage }) => {
+      showMessage("error", "Authentication failed. Please log in again.", 5000);
+    })
+    .catch(async () => {
+      try {
+        const { default: showMessage } = await import("../components/toast.js");
+        showMessage("error", "Authentication failed. Please log in again.");
+      } catch (toastError) {
+        console.error("Authentication failed. Please log in again.");
+      }
+    });
+}
 // Logout function
 export const logout = async () => {
   try {
@@ -515,7 +591,7 @@ export const logout = async () => {
  * Check for role changes and update UI accordingly
  * Called when token refreshes to detect promotions/demotions
  */
-const checkAndUpdateRoleChange = async () => {
+async function checkAndUpdateRoleChange() {
   // Prevent multiple simultaneous checks
   if (isCheckingRoleChange) {
     return;
@@ -554,15 +630,21 @@ const checkAndUpdateRoleChange = async () => {
       roleApiCacheTime = 0;
 
       // Dispatch custom event to notify components
-      window.dispatchEvent(new CustomEvent("userRoleChanged", {
-        detail: { oldRole, newRole }
-      }));
+      window.dispatchEvent(
+        new CustomEvent("userRoleChanged", {
+          detail: { oldRole, newRole },
+        })
+      );
 
       // Show notification to user
       try {
         const { default: showMessage } = await import("../components/toast.js");
         const roleDisplayName = formatRoleNameForDisplay(newRole);
-        showMessage("info", `Your role has been updated to ${roleDisplayName}. Refreshing page...`, 5000);
+        showMessage(
+          "info",
+          `Your role has been updated to ${roleDisplayName}. Refreshing page...`,
+          5000
+        );
       } catch (toastError) {
         console.error("[ROLE_CHANGE] Failed to show toast:", toastError);
       }
@@ -578,22 +660,22 @@ const checkAndUpdateRoleChange = async () => {
   } finally {
     isCheckingRoleChange = false;
   }
-};
+}
 
 /**
  * Format role name for display in notifications
  */
-const formatRoleNameForDisplay = (role) => {
+function formatRoleNameForDisplay(role) {
   if (!role) return "Unknown";
 
   const roleNames = {
-    "citizen": "Citizen",
-    "lgu": "LGU Officer",
+    citizen: "Citizen",
+    lgu: "LGU Officer",
     "lgu-admin": "LGU Admin",
     "complaint-coordinator": "Complaint Coordinator",
     "super-admin": "Super Admin",
-    "hr": "HR",
-    "lgu-hr": "LGU HR"
+    hr: "HR",
+    "lgu-hr": "LGU HR",
   };
 
   // Handle LGU officer roles with department codes
@@ -615,7 +697,7 @@ const formatRoleNameForDisplay = (role) => {
   }
 
   return roleNames[role] || role;
-};
+}
 window.getUserRole = (opts) => getUserRole(opts);
 initializeAuthListener();
 startTokenExpiryMonitoring();

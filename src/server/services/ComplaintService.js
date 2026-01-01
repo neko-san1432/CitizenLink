@@ -7,7 +7,7 @@ const {
   normalizeComplaintData,
   prepareComplaintForInsert,
   validateComplaintConsistency,
-  getAssignmentProgress,
+  _getAssignmentProgress,
 } = require("../utils/complaintUtils");
 
 class ComplaintService {
@@ -635,7 +635,7 @@ class ComplaintService {
     return updatedComplaint;
   }
   async assignCoordinator(complaintId, coordinatorId, assignedBy) {
-    const complaint = await this.getComplaintById(complaintId);
+    const _complaint = await this.getComplaintById(complaintId);
     const updatedComplaint = await this.complaintRepo.assignCoordinator(
       complaintId,
       coordinatorId
@@ -660,7 +660,7 @@ class ComplaintService {
     reason,
     transferredBy
   ) {
-    const complaint = await this.getComplaintById(complaintId);
+    const _complaint = await this.getComplaintById(complaintId);
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
       // primary_department: toDept, // Removed - derived from department_r
       assigned_coordinator_id: null,
@@ -798,7 +798,7 @@ class ComplaintService {
         .not("longitude", "is", null);
 
       // Also check total complaints without coordinate filter using direct service role
-      const { count: totalComplaints } = await supabase
+      const { count: _totalComplaints } = await supabase
         .from("complaints")
         .select("id", { count: "exact", head: true });
 
@@ -1560,7 +1560,7 @@ class ComplaintService {
         return [];
       }
       // Get evidence metadata from database to distinguish between types
-      const { data: evidenceMetadata, error: metadataError } = await supabase
+      const { data: _evidenceMetadata, error: metadataError } = await supabase
         .from("complaint_evidence")
         .select("*")
         .eq("complaint_id", complaintId)
@@ -1639,7 +1639,7 @@ class ComplaintService {
    * @param {string} feedback - Optional feedback from citizen
    * @returns {Promise<Object>} Result of confirmation
    */
-  async confirmResolution(complaintId, citizenId, confirmed, feedback = null) {
+  async confirmResolution(complaintId, citizenId, confirmed, _feedback = null) {
     try {
       // Use repository client (service-role) to avoid RLS issues
       const { supabase } = this.complaintRepo;
@@ -1679,7 +1679,7 @@ class ComplaintService {
       };
 
       // Call the database function to update confirmation status
-      const { data: statusResult, error: statusError } = await supabase.rpc(
+      const { data: _statusResult, error: statusError } = await supabase.rpc(
         "update_complaint_confirmation_status",
         {
           complaint_uuid: complaintId,
@@ -1712,7 +1712,7 @@ class ComplaintService {
   async createAssignment(complaintId, officerIds, assignedBy) {
     try {
       // Validate complaint exists
-      const complaint = await this.getComplaintById(complaintId);
+      const _complaint = await this.getComplaintById(complaintId);
       // Create assignment records using the repository method
       const assignments = await this.complaintRepo.createAssignments(
         complaintId,

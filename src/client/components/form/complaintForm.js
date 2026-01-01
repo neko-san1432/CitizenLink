@@ -116,7 +116,7 @@ export async function initializeComplaintForm() {
   // Initialize file handler with upload state callback
   const fileHandler = createComplaintFileHandler({
     previewContainer: elements.filePreview,
-    onFilesChange: (files) => {
+    onFilesChange: (_files) => {
       // console.log removed for security
     },
     onUploadStateChange: (isUploading) => {
@@ -236,7 +236,7 @@ function setupFormSubmission(form, fileHandler) {
       // Get current files
       const selectedFiles = fileHandler.getFiles();
       // Submit the complaint with fileHandler for progress tracking
-      const result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
+      const _result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
       // console.log removed for security
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());

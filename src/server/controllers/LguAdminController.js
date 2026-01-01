@@ -26,7 +26,7 @@ class LguAdminController {
    */
   async getDashboardStats(req, res) {
     try {
-      const userRole = req.user.role;
+      const _userRole = req.user.role;
       // Extract department from user metadata
       const departmentCode =
         req.user.department ||
@@ -193,7 +193,7 @@ class LguAdminController {
    */
   async getDepartmentQueue(req, res) {
     try {
-      const userId = req.user.id;
+      const _userId = req.user.id;
       const userRole = req.user.role;
       const { status, priority, limit } = req.query;
 
@@ -322,7 +322,7 @@ class LguAdminController {
       const { complaintId } = req.params;
       const { officerIds, officerId, priority, deadline, notes } = req.body;
       const userId = req.user?.id;
-      const userRole = req.user?.role;
+      const _userRole = req.user?.role;
       // Validate required parameters
       if (!complaintId) {
         console.error("[LGU_ADMIN] Missing complaintId in params");
@@ -465,7 +465,7 @@ class LguAdminController {
         const hasLegacyDepartment =
           metadata.department === departmentCode ||
           rawMetadata.department === departmentCode;
-        const belongsToDepartment =
+        const _belongsToDepartment =
           (isLguOfficer && hasCorrectDepartment) ||
           (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
         // console.log removed for security
@@ -666,7 +666,7 @@ class LguAdminController {
    */
   async getDepartmentAssignments(req, res) {
     try {
-      const userRole = req.user.role;
+      const _userRole = req.user.role;
       const {
         status,
         priority,

@@ -220,15 +220,15 @@ function renderProfile(profile) {
   const address = profile?.address || {};
   const addressLine1 = address?.line1 || address?.address_line_1 || null;
   const addressLine2 = address?.line2 || address?.address_line_2 || null;
-  const city = address?.city || "Digos City";
-  const province = address?.province || "Davao del Sur";
+  const _city = address?._city || "Digos City";
+  const _province = address?._province || "Davao del Sur";
   const postalCode = address?.postalCode || address?.postal_code || null;
   const barangay = address?.barangay || null;
 
   const addressLine1Display = document.getElementById("address-line-1-display");
   const addressLine2Display = document.getElementById("address-line-2-display");
-  const cityDisplay = document.getElementById("address-city-display");
-  const provinceDisplay = document.getElementById("address-province-display");
+  const _cityDisplay = document.getElementById("address-city-display");
+  const _provinceDisplay = document.getElementById("address-province-display");
   const postalDisplay = document.getElementById("address-postal-display");
   const barangayDisplay = document.getElementById("address-barangay-display");
 
@@ -403,11 +403,11 @@ function formatStatus(status) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
-function updateStatistics(complaints) {
+function _updateStatistics(_complaints) {
   // Statistics are no longer displayed in the compact layout
   // This function is kept for backward compatibility but does nothing
 }
-function scrollToAnchorIfNeeded() {
+function _scrollToAnchorIfNeeded() {
   // Anchor scrolling no longer needed with new layout
   // This function is kept for backward compatibility but does nothing
 }
@@ -794,7 +794,7 @@ function wireEmailEdit() {
 
         // Step 2: Update email client-side using Supabase's standard flow
         const { supabase } = await import("/js/config/config.js");
-        const { data: updateData, error: updateError } =
+        const { data: _updateData, error: updateError } =
           await supabase.auth.updateUser({
             email: newEmail,
           });
@@ -950,15 +950,15 @@ function wireAddressEdit() {
     // Prefill inputs
     const line1El = document.getElementById("edit-address-line-1");
     const line2El = document.getElementById("edit-address-line-2");
-    const cityEl = document.getElementById("edit-address-city");
-    const provinceEl = document.getElementById("edit-address-province");
+    const _cityEl = document.getElementById("edit-address-city");
+    const _provinceEl = document.getElementById("edit-address-province");
     const postalEl = document.getElementById("edit-address-postal");
     const barangayEl = document.getElementById("edit-address-barangay");
 
     const line1Display = document.getElementById("address-line-1-display");
     const line2Display = document.getElementById("address-line-2-display");
-    const cityDisplay = document.getElementById("address-city-display");
-    const provinceDisplay = document.getElementById("address-province-display");
+    const _cityDisplay = document.getElementById("address-city-display");
+    const _provinceDisplay = document.getElementById("address-province-display");
     const postalDisplay = document.getElementById("address-postal-display");
     const barangayDisplay = document.getElementById("address-barangay-display");
 

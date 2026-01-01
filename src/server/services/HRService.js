@@ -1,6 +1,6 @@
 const RoleManagementService = require("./RoleManagementService");
 const { USER_ROLES } = require("../../shared/constants");
-const { validateUserRole, isValidDepartmentCode } = require("../utils/roleValidation");
+const { _validateUserRole, isValidDepartmentCode } = require("../utils/roleValidation");
 
 /**
 * HRService
@@ -330,7 +330,7 @@ class HRService {
   /**
   * Get role change history for a user
   */
-  async getUserRoleHistory(userId, hrId) {
+  async getUserRoleHistory(userId, _hrId) {
     try {
       const Database = require("../config/database");
 

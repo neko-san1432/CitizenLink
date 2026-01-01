@@ -6,8 +6,8 @@ import showMessage from "../../components/toast.js";
 import { apiClient } from "../../config/apiClient.js";
 
 let categories = [];
-const subcategories = [];
-const departments = [];
+const _subcategories = [];
+const _departments = [];
 // Initialize the page
 document.addEventListener("DOMContentLoaded", async () => {
   await loadAllData();
@@ -214,7 +214,7 @@ async function handleCategorySubmit(e) {
     sort_order: parseInt(document.getElementById("category-sort-order").value) || 0
   };
   try {
-    const { data, error } = await apiClient.post("/api/department-structure/admin/categories", formData);
+    const { _data, error } = await apiClient.post("/api/department-structure/admin/categories", formData);
     if (error) throw error;
     showMessage("success", "Category created successfully");
     closeModal("category");
@@ -237,7 +237,7 @@ async function handleSubcategorySubmit(e) {
     sort_order: parseInt(document.getElementById("subcategory-sort-order").value) || 0
   };
   try {
-    const { data, error } = await apiClient.post("/api/department-structure/admin/subcategories", formData);
+    const { _data, error } = await apiClient.post("/api/department-structure/admin/subcategories", formData);
     if (error) throw error;
     showMessage("success", "Subcategory created successfully");
     closeModal("subcategory");
@@ -262,7 +262,7 @@ async function handleDepartmentSubmit(e) {
     escalation_time_hours: parseInt(document.getElementById("department-escalation-time").value) || 72
   };
   try {
-    const { data, error } = await apiClient.post("/api/department-structure/admin/departments", formData);
+    const { _data, error } = await apiClient.post("/api/department-structure/admin/departments", formData);
     if (error) throw error;
     showMessage("success", "Department created successfully");
     closeModal("department");
@@ -275,13 +275,13 @@ async function handleDepartmentSubmit(e) {
 /**
  * Edit functions (placeholder - would need to implement edit functionality)
  */
-window.editCategory = function(id) {
+window.editCategory = function(_id) {
   showMessage("info", "Edit functionality coming soon");
 };
-window.editSubcategory = function(id) {
+window.editSubcategory = function(_id) {
   showMessage("info", "Edit functionality coming soon");
 };
-window.editDepartment = function(id) {
+window.editDepartment = function(_id) {
   showMessage("info", "Edit functionality coming soon");
 };
 /**

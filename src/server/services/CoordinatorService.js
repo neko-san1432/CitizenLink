@@ -113,7 +113,7 @@ class CoordinatorService {
   /**
   * Get complaint for review with full analysis
   */
-  async getComplaintForReview(complaintId, coordinatorId) {
+  async getComplaintForReview(complaintId, _coordinatorId) {
     try {
       const complaint = await this.coordinatorRepo.getComplaintForReview(complaintId);
       // Run duplication detection if not already done
@@ -504,7 +504,7 @@ class CoordinatorService {
           console.warn("[COORDINATOR_SERVICE] Department not found:", deptError.message);
         } else {
           // Create assignment record
-          const { data: assignment, error: assignError } = await this.coordinatorRepo.supabase
+          const { data: _assignment, error: assignError } = await this.coordinatorRepo.supabase
             .from("complaint_assignments")
             .insert({
               complaint_id: complaintId,
@@ -570,7 +570,7 @@ class CoordinatorService {
       try {
         const { validateDepartmentCodes } = require("../utils/departmentMapping");
 
-        const { validCodes, invalidCodes } = await validateDepartmentCodes(uniqueCodes);
+        const { _validCodes, invalidCodes } = await validateDepartmentCodes(uniqueCodes);
         if (invalidCodes.length > 0) {
           const list = invalidCodes.join(", ");
           const err = new Error(`Invalid department code(s): ${list}`);
@@ -584,8 +584,8 @@ class CoordinatorService {
         throw new Error("Unable to validate department codes at this time");
       }
       // Set primary to first, others as secondary array
-      const primary = uniqueCodes[0];
-      const secondary = uniqueCodes.slice(1);
+      const _primary = uniqueCodes[0];
+      const _secondary = uniqueCodes.slice(1);
       // Update complaint with arrays
       const { data: updated, error: updErr } = await this.coordinatorRepo.supabase
         .from("complaints")

@@ -1,0 +1,6 @@
+node_modules/
+public/js/lib/
+dist/
+coverage/
+.git/
+*.min.js

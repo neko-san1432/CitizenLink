@@ -266,7 +266,7 @@ describe("Session Management", () => {
     });
 
     it("should prevent access after logout", async () => {
-      const token = generateMockToken("user_123");
+      const _token = generateMockToken("user_123");
       const req = createMockRequest({
         path: "/api/test",
         cookies: {}, // No token after logout
@@ -286,7 +286,7 @@ describe("Session Management", () => {
       const token1 = generateMockToken("user_123");
       const token2 = generateMockToken("user_123");
 
-      mockSupabase.auth.getUser.mockImplementation((token) => {
+      mockSupabase.auth.getUser.mockImplementation((_token) => {
         return Promise.resolve({
           data: {
             user: {
@@ -326,7 +326,7 @@ describe("Session Management", () => {
       // Session tracking is implemented in user_sessions table
       // This test verifies the sessions endpoint exists
       const getSessionsHandler = async (req, res) => {
-        const userId = req.user.id;
+        const _userId = req.user.id;
         // Mock session retrieval
         const sessions = [
           {
@@ -362,8 +362,8 @@ describe("Session Management", () => {
 
     it("should allow ending specific sessions", async () => {
       const endSessionHandler = async (req, res) => {
-        const { sessionId } = req.params;
-        const userId = req.user.id;
+        const { _sessionId } = req.params;
+        const _userId = req.user.id;
 
         // Mock session end
         res.json({

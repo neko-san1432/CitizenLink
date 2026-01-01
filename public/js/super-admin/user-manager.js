@@ -97,7 +97,7 @@ function setupHandlers() {
         refreshUserList();
       }
     });
-    search.addEventListener("input", (e) => {
+    search.addEventListener("input", (_e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
         refreshUserList();

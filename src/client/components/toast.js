@@ -31,7 +31,7 @@ class ToastManager {
     }, duration);
     return toast;
   }
-  createToast(type, message, options = {}) {
+  createToast(type, message, _options = {}) {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     const icon = this.getIcon(type);

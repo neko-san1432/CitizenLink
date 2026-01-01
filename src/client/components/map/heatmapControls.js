@@ -3,7 +3,6 @@
  * Handles filters, clustering parameters, and view switching
  */
 class HeatmapControls {
-
   constructor(controller) {
     this.controller = controller;
     this.currentFilters = {
@@ -14,11 +13,11 @@ class HeatmapControls {
       timeRange: "",
       startDate: "",
       endDate: "",
-      includeResolved: true
+      includeResolved: true,
     };
     this.clusteringParams = {
       eps: 0.01,
-      minPts: 3
+      minPts: 3,
     };
     this.isVisible = true;
     this.userRole = null;
@@ -40,7 +39,10 @@ class HeatmapControls {
     // Insert after the map container
     const mapContainer = document.getElementById("map");
     if (mapContainer && mapContainer.parentNode) {
-      mapContainer.parentNode.insertBefore(controlsContainer, mapContainer.nextSibling);
+      mapContainer.parentNode.insertBefore(
+        controlsContainer,
+        mapContainer.nextSibling
+      );
     }
     this.setupEventListeners();
     this.loadCategoriesPromise = this.loadCategories();
@@ -211,7 +213,10 @@ class HeatmapControls {
       try {
         this.userDepartmentCode = (await this.getUserDepartment()) || null;
       } catch (error) {
-        console.warn("[HEATMAP_CONTROLS] Unable to load user department:", error);
+        console.warn(
+          "[HEATMAP_CONTROLS] Unable to load user department:",
+          error
+        );
       }
 
       if (this.userDepartmentCode) {
@@ -255,7 +260,9 @@ class HeatmapControls {
           <strong class="locked-office-code">${this.userDepartmentCode}</strong>.
         </p>
       `;
-      const controls = document.querySelector("#heatmap-controls .control-section");
+      const controls = document.querySelector(
+        "#heatmap-controls .control-section"
+      );
       if (controls && deptGroup && deptGroup.parentNode) {
         deptGroup.parentNode.insertBefore(notice, deptGroup.nextSibling);
       } else if (controls) {
@@ -272,7 +279,6 @@ class HeatmapControls {
    * Set up event listeners
    */
   setupEventListeners() {
-
     // Filter controls
     document.getElementById("apply-filters")?.addEventListener("click", () => {
       this.applyFilters();
@@ -280,13 +286,17 @@ class HeatmapControls {
     document.getElementById("reset-filters")?.addEventListener("click", () => {
       this.resetFilters();
     });
-    document.getElementById("fit-to-complaints")?.addEventListener("click", () => {
-      this.controller.fitToComplaints();
-    });
+    document
+      .getElementById("fit-to-complaints")
+      ?.addEventListener("click", () => {
+        this.controller.fitToComplaints();
+      });
     // Clustering controls
-    document.getElementById("enable-clustering")?.addEventListener("change", (e) => {
-      this.toggleClustering(e.target.checked);
-    });
+    document
+      .getElementById("enable-clustering")
+      ?.addEventListener("change", (e) => {
+        this.toggleClustering(e.target.checked);
+      });
     // Auto-switch toggle
     document.getElementById("eps-slider")?.addEventListener("input", (e) => {
       this.updateEpsValue(e.target.value);
@@ -298,65 +308,81 @@ class HeatmapControls {
       this.suggestParameters();
     });
     // Real-time updates for sliders
-    document.getElementById("eps-slider")?.addEventListener("input", (e) => {
+    document.getElementById("eps-slider")?.addEventListener("input", (_e) => {
       this.updateClusteringParams();
     });
-    document.getElementById("minpts-slider")?.addEventListener("input", (e) => {
-      this.updateClusteringParams();
-    });
+    document
+      .getElementById("minpts-slider")
+      ?.addEventListener("input", (_e) => {
+        this.updateClusteringParams();
+      });
     // Zoom threshold slider
-    document.getElementById("zoom-threshold")?.addEventListener("input", (e) => {
-      const threshold = parseInt(e.target.value);
-      this.updateZoomThresholdValue(threshold);
-      this.controller.setZoomThreshold(threshold);
-    });
+    document
+      .getElementById("zoom-threshold")
+      ?.addEventListener("input", (e) => {
+        const threshold = parseInt(e.target.value);
+        this.updateZoomThresholdValue(threshold);
+        this.controller.setZoomThreshold(threshold);
+      });
     // Heatmap intensity slider
-    document.getElementById("heatmap-intensity")?.addEventListener("input", (e) => {
-      const intensity = parseFloat(e.target.value);
-      this.updateHeatmapIntensityValue(intensity);
-      this.controller.setHeatmapIntensity(intensity);
-    });
+    document
+      .getElementById("heatmap-intensity")
+      ?.addEventListener("input", (e) => {
+        const intensity = parseFloat(e.target.value);
+        this.updateHeatmapIntensityValue(intensity);
+        this.controller.setHeatmapIntensity(intensity);
+      });
     // Filter change listeners
     document.getElementById("status-filter")?.addEventListener("change", () => {
       this.applyFilters();
     });
-    document.getElementById("category-filter")?.addEventListener("change", async (e) => {
-      const categoryId = e.target.value;
-      await this.loadSubcategories(categoryId);
-      this.currentFilters.category = categoryId;
-      this.currentFilters.subcategory = ""; // Reset subcategory when category changes
-      this.applyFilters();
-    });
-    document.getElementById("subcategory-filter")?.addEventListener("change", (e) => {
-      this.currentFilters.subcategory = e.target.value;
-      this.applyFilters();
-    });
-    document.getElementById("department-filter")?.addEventListener("change", () => {
-      this.applyFilters();
-    });
-    document.getElementById("time-range-filter")?.addEventListener("change", (e) => {
-      const timeRange = e.target.value;
-      this.currentFilters.timeRange = timeRange;
-      // Show/hide custom date range
-      const customDateRange = document.getElementById("custom-date-range");
-      if (timeRange === "custom") {
-        customDateRange.style.display = "block";
-      } else {
-        customDateRange.style.display = "none";
-        // Set date range based on selection
-        this.setDateRangeFromTimeRange(timeRange);
-      }
-      this.applyFilters();
-    });
+    document
+      .getElementById("category-filter")
+      ?.addEventListener("change", async (e) => {
+        const categoryId = e.target.value;
+        await this.loadSubcategories(categoryId);
+        this.currentFilters.category = categoryId;
+        this.currentFilters.subcategory = ""; // Reset subcategory when category changes
+        this.applyFilters();
+      });
+    document
+      .getElementById("subcategory-filter")
+      ?.addEventListener("change", (e) => {
+        this.currentFilters.subcategory = e.target.value;
+        this.applyFilters();
+      });
+    document
+      .getElementById("department-filter")
+      ?.addEventListener("change", () => {
+        this.applyFilters();
+      });
+    document
+      .getElementById("time-range-filter")
+      ?.addEventListener("change", (e) => {
+        const timeRange = e.target.value;
+        this.currentFilters.timeRange = timeRange;
+        // Show/hide custom date range
+        const customDateRange = document.getElementById("custom-date-range");
+        if (timeRange === "custom") {
+          customDateRange.style.display = "block";
+        } else {
+          customDateRange.style.display = "none";
+          // Set date range based on selection
+          this.setDateRangeFromTimeRange(timeRange);
+        }
+        this.applyFilters();
+      });
     document.getElementById("start-date")?.addEventListener("change", () => {
       this.applyFilters();
     });
     document.getElementById("end-date")?.addEventListener("change", () => {
       this.applyFilters();
     });
-    document.getElementById("include-resolved")?.addEventListener("change", () => {
-      this.applyFilters();
-    });
+    document
+      .getElementById("include-resolved")
+      ?.addEventListener("change", () => {
+        this.applyFilters();
+      });
   }
   /**
    * Apply current filters
@@ -376,7 +402,9 @@ class HeatmapControls {
     if (typeFilter) typeFilter.value = "";
     const departmentFilter = document.getElementById("department-filter");
     if (departmentFilter) {
-      departmentFilter.value = this.isDepartmentLocked ? (this.userDepartmentCode || "") : "";
+      departmentFilter.value = this.isDepartmentLocked
+        ? this.userDepartmentCode || ""
+        : "";
     }
     const startDate = document.getElementById("start-date");
     if (startDate) startDate.value = "";
@@ -391,10 +419,10 @@ class HeatmapControls {
     this.currentFilters = {
       status: "",
       type: "",
-      department: this.isDepartmentLocked ? (this.userDepartmentCode || "") : "",
+      department: this.isDepartmentLocked ? this.userDepartmentCode || "" : "",
       startDate: "",
       endDate: "",
-      includeResolved: true
+      includeResolved: true,
     };
     this.applyFilters();
   }
@@ -447,9 +475,10 @@ class HeatmapControls {
    * @returns {Object} Current filters
    */
   getCurrentFilters() {
-    const selectedDepartment = document.getElementById("department-filter")?.value || "";
+    const selectedDepartment =
+      document.getElementById("department-filter")?.value || "";
     const enforcedDepartment = this.isDepartmentLocked
-      ? (this.userDepartmentCode || "")
+      ? this.userDepartmentCode || ""
       : selectedDepartment;
     return {
       status: document.getElementById("status-filter")?.value || "",
@@ -459,7 +488,8 @@ class HeatmapControls {
       timeRange: this.currentFilters.timeRange || "",
       startDate: document.getElementById("start-date")?.value || "",
       endDate: document.getElementById("end-date")?.value || "",
-      includeResolved: document.getElementById("include-resolved")?.checked || true
+      includeResolved:
+        document.getElementById("include-resolved")?.checked || true,
     };
   }
   /**
@@ -499,8 +529,12 @@ class HeatmapControls {
    * Update clustering parameters
    */
   updateClusteringParams() {
-    const eps = parseFloat(document.getElementById("eps-slider")?.value || 0.01);
-    const minPts = parseInt(document.getElementById("minpts-slider")?.value || 3);
+    const eps = parseFloat(
+      document.getElementById("eps-slider")?.value || 0.01
+    );
+    const minPts = parseInt(
+      document.getElementById("minpts-slider")?.value || 3
+    );
     this.clusteringParams.eps = eps;
     this.clusteringParams.minPts = minPts;
     this.controller.updateClusteringParameters(eps, minPts);
@@ -509,13 +543,19 @@ class HeatmapControls {
    * Suggest optimal clustering parameters
    */
   suggestParameters() {
-
-    if (!this.controller.heatmapViz || this.controller.heatmapViz.complaintData.length === 0) {
+    if (
+      !this.controller.heatmapViz ||
+      this.controller.heatmapViz.complaintData.length === 0
+    ) {
       this.showError("No complaint data available for parameter suggestion");
       return;
     }
-    const points = this.controller.heatmapViz.complaintData.map(c => ({ lat: c.lat, lng: c.lng }));
-    const suggested = this.controller.heatmapViz.dbscan.suggestParameters(points);
+    const points = this.controller.heatmapViz.complaintData.map((c) => ({
+      lat: c.lat,
+      lng: c.lng,
+    }));
+    const suggested =
+      this.controller.heatmapViz.dbscan.suggestParameters(points);
     // Update sliders
     const epsSlider = document.getElementById("eps-slider");
     const minPtsSlider = document.getElementById("minpts-slider");
@@ -562,7 +602,6 @@ class HeatmapControls {
       totalComplaints.textContent = stats.totalComplaints || 0;
     }
     if (stats.clusteringStats) {
-
       if (clusterCount) {
         clusterCount.textContent = stats.clusteringStats.numClusters || 0;
       }
@@ -606,7 +645,9 @@ class HeatmapControls {
     try {
       const apiClientModule = await import("../../config/apiClient.js");
       const apiClient = apiClientModule.default;
-      const { data, error } = await apiClient.get("/api/department-structure/categories");
+      const { data, error } = await apiClient.get(
+        "/api/department-structure/categories"
+      );
       if (error) throw error;
       const categorySelect = document.getElementById("category-filter");
       if (categorySelect) {
@@ -617,7 +658,7 @@ class HeatmapControls {
         }
         // Add category options
         if (data && data.length > 0) {
-          data.forEach(category => {
+          data.forEach((category) => {
             const option = document.createElement("option");
             option.value = category.id;
             option.textContent = `${category.icon} ${category.name}`;
@@ -631,7 +672,8 @@ class HeatmapControls {
       if (categorySelect) {
         const loadingEl = document.getElementById("category-options-loading");
         if (loadingEl) {
-          loadingEl.innerHTML = '<option value="">Error loading categories</option>';
+          loadingEl.innerHTML =
+            '<option value="">Error loading categories</option>';
         }
       }
     }
@@ -644,19 +686,24 @@ class HeatmapControls {
     if (!subcategorySelect) return;
     try {
       if (!categoryId) {
-        subcategorySelect.innerHTML = '<option value="">Select a category first</option>';
+        subcategorySelect.innerHTML =
+          '<option value="">Select a category first</option>';
         subcategorySelect.disabled = true;
         return;
       }
-      subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
+      subcategorySelect.innerHTML =
+        '<option value="">Loading subcategories...</option>';
       subcategorySelect.disabled = true;
       const apiClientModule = await import("../../config/apiClient.js");
       const apiClient = apiClientModule.default;
-      const { data, error } = await apiClient.get(`/api/department-structure/categories/${categoryId}/subcategories`);
+      const { data, error } = await apiClient.get(
+        `/api/department-structure/categories/${categoryId}/subcategories`
+      );
       if (error) throw error;
-      subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+      subcategorySelect.innerHTML =
+        '<option value="">All Subcategories</option>';
       if (data && data.length > 0) {
-        data.forEach(subcategory => {
+        data.forEach((subcategory) => {
           const option = document.createElement("option");
           option.value = subcategory.id;
           option.textContent = subcategory.name;
@@ -664,11 +711,13 @@ class HeatmapControls {
         });
         subcategorySelect.disabled = false;
       } else {
-        subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
+        subcategorySelect.innerHTML =
+          '<option value="">No subcategories available</option>';
       }
     } catch (error) {
       console.error("Error loading subcategories:", error);
-      subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+      subcategorySelect.innerHTML =
+        '<option value="">Error loading subcategories</option>';
     }
   }
   /**
@@ -681,12 +730,13 @@ class HeatmapControls {
       const response = await apiClient.get("/api/user/role-info");
       if (response.success && response.data) {
         // Try multiple possible field names for department
-        const department = response.data.department ||
-                          response.data.dpt ||
-                          response.data.metadata?.department ||
-                          response.data.metadata?.dpt ||
-                          response.data.raw_user_meta_data?.department ||
-                          response.data.raw_user_meta_data?.dpt;
+        const department =
+          response.data.department ||
+          response.data.dpt ||
+          response.data.metadata?.department ||
+          response.data.metadata?.dpt ||
+          response.data.raw_user_meta_data?.department ||
+          response.data.raw_user_meta_data?.dpt;
         if (department) {
           return department.toUpperCase();
         }
@@ -697,14 +747,20 @@ class HeatmapControls {
     // Fallback: try Supabase session
     try {
       const { supabase } = await import("../../config/config.js");
-      const { data: { session } } = await supabase.auth.getSession();
-      const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const metadata =
+        session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
       const department = metadata.department || metadata.dpt;
       if (department) {
         return department.toUpperCase();
       }
     } catch (error) {
-      console.warn("[HEATMAP_CONTROLS] Failed to get department from session:", error);
+      console.warn(
+        "[HEATMAP_CONTROLS] Failed to get department from session:",
+        error
+      );
     }
     return null;
   }
@@ -718,7 +774,8 @@ class HeatmapControls {
       const departments = await getDepartments();
 
       // Get user's department and sort departments to put user's office first
-      const userDepartmentCode = this.userDepartmentCode || await this.getUserDepartment();
+      const userDepartmentCode =
+        this.userDepartmentCode || (await this.getUserDepartment());
       if (userDepartmentCode && !this.userDepartmentCode) {
         this.userDepartmentCode = userDepartmentCode;
       }
@@ -745,11 +802,15 @@ class HeatmapControls {
           loadingEl.remove();
         }
         // Add department options
-        departments.forEach(dept => {
+        departments.forEach((dept) => {
           const option = document.createElement("option");
           option.value = dept.code;
-          const isUserDept = userDepartmentCode && (dept.code || "").toUpperCase() === userDepartmentCode;
-          option.textContent = `${dept.name} (${dept.code})${isUserDept ? " ★" : ""}`;
+          const isUserDept =
+            userDepartmentCode &&
+            (dept.code || "").toUpperCase() === userDepartmentCode;
+          option.textContent = `${dept.name} (${dept.code})${
+            isUserDept ? " ★" : ""
+          }`;
           if (isUserDept) {
             option.style.fontWeight = "bold";
           }
@@ -767,7 +828,8 @@ class HeatmapControls {
       if (departmentSelect) {
         const loadingEl = document.getElementById("department-options-loading");
         if (loadingEl) {
-          loadingEl.innerHTML = '<option value="">Error loading departments</option>';
+          loadingEl.innerHTML =
+            '<option value="">Error loading departments</option>';
         }
       }
     }
@@ -780,13 +842,12 @@ class HeatmapControls {
     return {
       filters: this.getCurrentFilters(),
       clusteringParams: this.clusteringParams,
-      isVisible: this.isVisible
+      isVisible: this.isVisible,
     };
   }
 }
 // Export for use in other modules
 if (typeof module !== "undefined" && module.exports) {
-
   module.exports = HeatmapControls;
 } else {
   window.HeatmapControls = HeatmapControls;

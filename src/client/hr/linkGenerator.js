@@ -228,7 +228,7 @@ class LinkGenerator {
       container.innerHTML = '<div class="no-links">No signup links generated yet</div>';
       return;
     }
-    container.innerHTML = this.links.map((link, index) => {
+    container.innerHTML = this.links.map((link, _index) => {
       // console.log removed for security
       return `
       <div class="link-item ${link.is_expired ? "expired" : ""} ${link.is_used ? "used" : ""}" data-link-id="${link.id}">
@@ -268,7 +268,7 @@ class LinkGenerator {
   attachLinkEventListeners(container) {
     // Copy URL buttons
     container.querySelectorAll(".copy-link-url-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", (_e) => {
         const url = btn.getAttribute("data-link-url");
         if (url) {
           this.copyLinkUrl(decodeURIComponent(url));
@@ -278,7 +278,7 @@ class LinkGenerator {
 
     // Deactivate buttons
     container.querySelectorAll(".deactivate-link-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", (_e) => {
         const linkId = btn.getAttribute("data-link-id");
         if (linkId) {
           this.deactivateLink(linkId);

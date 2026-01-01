@@ -40,7 +40,7 @@ export async function canSwitchToCitizen() {
     if (roleInfoCache && (now - roleInfoCacheTime) < ROLE_INFO_CACHE_DURATION) {
       // console.log removed for security
       const baseRole = roleInfoCache.data.base_role;
-      const currentRole = roleInfoCache.data.role;
+      const _currentRole = roleInfoCache.data.role;
 
       // If no base_role exists, user is a real citizen
       if (!baseRole) {
@@ -73,7 +73,7 @@ export async function canSwitchToCitizen() {
     // base_role tells us what the user's real role is
     // If they're in citizen mode, base_role will still be their staff role
     const baseRole = result.data.base_role;
-    const currentRole = result.data.role;
+    const _currentRole = result.data.role;
     // If no base_role exists, user is a real citizen
     if (!baseRole) {
       // console.log removed for security

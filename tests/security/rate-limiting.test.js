@@ -4,7 +4,7 @@
  * Tests rate limiting effectiveness and bypass attempts
  */
 
-const { createMockRequest, createMockResponse, createMockNext, wait, makeConcurrentRequests } = require("../utils/testHelpers");
+const { createMockRequest, createMockResponse, createMockNext, _wait, makeConcurrentRequests } = require("../utils/testHelpers");
 
 describe("Rate Limiting Security", () => {
   let req, res, next;

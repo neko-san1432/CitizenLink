@@ -100,6 +100,7 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
 
       const latBetween = lat1 > lat !== lat2 > lat;
       if (latBetween) {
+        // Calculate the longitude where the edge crosses the point's latitude
         const intersectLng =
           ((lat - lat1) * (lng2 - lng1)) / (lat2 - lat1) + lng1;
         if (lng < intersectLng) {
@@ -134,19 +135,19 @@ function isWithinCityBoundary(lat, lng) {
   // Debug: Log boundary structure once
   if (!window._boundaryDebugged && window.cityBoundaries.length > 0) {
     window._boundaryDebugged = true;
-    const firstBoundary = window.cityBoundaries[0];
+    const _firstBoundary = window.cityBoundaries[0];
 
     // Test with a known point inside Digos City (approximate center)
     const testLat = 6.85;
     const testLng = 125.35;
-    let testResult = false;
+    let _testResult = false;
     for (const boundary of window.cityBoundaries) {
       if (
         boundary &&
         boundary.geojson &&
         isPointInPolygon(testLat, testLng, boundary.geojson)
       ) {
-        testResult = true;
+        _testResult = true;
         break;
       }
     }
@@ -243,7 +244,7 @@ class HeatmapVisualization {
 
     const rawEntries = [];
     const pushValue = (value) => {
-      if (value === null || value === undefined) return;
+      if (value === null || typeof value === "undefined") return;
       if (Array.isArray(value)) {
         value.forEach(pushValue);
         return;
@@ -832,7 +833,7 @@ class HeatmapVisualization {
     const intensities = heatmapPoints.map((d) => d[2]);
     const maxIntensity = Math.max(...intensities);
     const minIntensity = Math.min(...intensities);
-    const intensitiesAt1 = intensities.filter((i) => i >= 0.99).length;
+    const _intensitiesAt1 = intensities.filter((i) => i >= 0.99).length;
 
     // Ensure at least one point reaches 1.0 (red) by finding all max points and setting them to 1.0
     if (maxIntensity < 0.99 && intensities.length > 0) {
@@ -843,7 +844,7 @@ class HeatmapVisualization {
       );
       // Find all indices with maximum intensity and set them to 1.0
       let fixedCount = 0;
-      heatmapPoints.forEach((point, index) => {
+      heatmapPoints.forEach((point, _index) => {
         if (Math.abs(point[2] - maxIntensity) < 0.001) {
           point[2] = 1.0;
           fixedCount++;
@@ -1232,7 +1233,7 @@ class HeatmapVisualization {
         marker.options?.complaintId ||
         (this.markerMap &&
           Array.from(this.markerMap.entries()).find(
-            ([id, m]) => m === marker
+            ([_id, m]) => m === marker
           )?.[0]);
 
       // Determine if marker should be visible
@@ -1291,7 +1292,7 @@ class HeatmapVisualization {
     }
     this.circleLayer = L.layerGroup();
     // console.log removed for security
-    this.complaintData.forEach((complaint, index) => {
+    this.complaintData.forEach((complaint, _index) => {
       // console.log removed for security
       const circle = this.createComplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
@@ -1364,13 +1365,13 @@ class HeatmapVisualization {
       className: "complaint-circle",
     });
     // Add hover effects
-    circle.on("mouseover", function (e) {
+    circle.on("mouseover", function (_e) {
       this.setStyle({
         weight: 5,
         fillOpacity: 0.6,
       });
     });
-    circle.on("mouseout", function (e) {
+    circle.on("mouseout", function (_e) {
       this.setStyle({
         weight: 3,
         fillOpacity: 0.4,
@@ -1390,7 +1391,7 @@ class HeatmapVisualization {
       }
     );
     // Add click event for additional actions
-    circle.on("click", (e) => {
+    circle.on("click", (_e) => {
       // console.log removed for security
       // You can add additional click actions here
     });
@@ -1531,7 +1532,7 @@ class HeatmapVisualization {
    */
   async createDetailedComplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
-    const submittedTime = new Date(complaint.submittedAt).toLocaleTimeString();
+    const _submittedTime = new Date(complaint.submittedAt).toLocaleTimeString();
     const priorityClass = complaint.priority.replace(" ", "-").toLowerCase();
     const statusClass = complaint.status.replace(" ", "-").toLowerCase();
     const assignedOffices =
@@ -1981,7 +1982,7 @@ class HeatmapVisualization {
 
       // Verify it's actually on the map
       setTimeout(() => {
-        const hasLayer = this.map.hasLayer(this.heatmapLayer);
+        const _hasLayer = this.map._hasLayer(this.heatmapLayer);
         // console.log removed for security
       }, 100);
     } catch (e) {
@@ -2038,7 +2039,7 @@ class HeatmapVisualization {
           if (layers.length > 0) {
             const firstMarker = layers[0];
             if (firstMarker && firstMarker.getLatLng) {
-              const latLng = firstMarker.getLatLng();
+              const _latLng = firstMarker.getLatLng();
               // console.log removed for security
             }
           }

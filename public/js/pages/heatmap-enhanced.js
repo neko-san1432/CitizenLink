@@ -545,21 +545,21 @@ class EnhancedHeatmapController {
   /**
    * Export as PNG
    */
-  exportAsPNG(includeLegend, includeStats, highQuality) {
+  exportAsPNG(_includeLegend, _includeStats, _highQuality) {
     // Implementation for PNG export
     this.showMessage("info", "PNG export feature coming soon");
   }
   /**
    * Export as SVG
    */
-  exportAsSVG(includeLegend, includeStats) {
+  exportAsSVG(_includeLegend, _includeStats) {
     // Implementation for SVG export
     this.showMessage("info", "SVG export feature coming soon");
   }
   /**
    * Export as PDF
    */
-  exportAsPDF(includeLegend, includeStats) {
+  exportAsPDF(_includeLegend, _includeStats) {
     // Implementation for PDF export
     this.showMessage("info", "PDF export feature coming soon");
   }

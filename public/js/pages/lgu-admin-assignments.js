@@ -160,7 +160,7 @@ class LguAdminAssignments {
   renderAssignmentCard(assignment) {
     const statusClass = this.getStatusClass(assignment.status);
     const priorityClass = this.getPriorityClass(assignment.priority);
-    const assignedDate = new Date(assignment.assigned_at).toLocaleDateString();
+    const _assignedDate = new Date(assignment.assigned_at).toLocaleDateString();
     const submittedDate = new Date(assignment.submitted_at).toLocaleDateString();
     return `
       <div class="assignment-card" data-assignment-id="${assignment.id}" data-complaint-id="${assignment.complaint_id}">

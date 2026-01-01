@@ -86,7 +86,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     // Use XMLHttpRequest for progress tracking
     const result = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      const totalFileSize = getTotalFileSize(selectedFiles);
+      const _totalFileSize = getTotalFileSize(selectedFiles);
       let uploadedBytes = 0;
       const fileSizes = selectedFiles.map(f => f.size);
       const fileStartPositions = [0];
@@ -100,7 +100,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable && fileHandler && selectedFiles.length > 0) {
           uploadedBytes = e.loaded;
-          const totalSize = e.total;
+          const _totalSize = e.total;
 
           // Calculate progress for each file based on its position
           selectedFiles.forEach((file, index) => {
@@ -243,7 +243,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
           xhr.setRequestHeader("Authorization", headers.Authorization);
         }
         xhr.send(apiFormData);
-      }).catch(err => {
+      }).catch(_err => {
         reject(new Error("Failed to prepare submission"));
       });
     });

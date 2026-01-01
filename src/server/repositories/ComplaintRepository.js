@@ -1,4 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
+const { _createClient } = require("@supabase/supabase-js");
 const Database = require("../config/database");
 const Complaint = require("../models/Complaint");
 const crypto = require("crypto");

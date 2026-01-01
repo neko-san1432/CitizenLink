@@ -149,7 +149,7 @@ class NotificationService {
    * @param {object} metadata - Notification metadata
    * @returns {object} Duplicate check result
    */
-  async checkDuplicateNotification(userId, type, title, metadata = {}) {
+  async checkDuplicateNotification(userId, type, title, _metadata = {}) {
     try {
       // console.log removed for security
       const { data, error } = await this.supabase

@@ -349,7 +349,7 @@ class LguAdminAssignments {
       "assignments-table-container"
     );
     const tableBody = document.getElementById("assignments-table-body");
-    const paginationControls = document.getElementById("pagination-controls");
+    const _paginationControls = document.getElementById("pagination-controls");
 
     if (tableContainer) {
       tableContainer.classList.remove("hidden");
@@ -553,7 +553,7 @@ class LguAdminAssignments {
   renderAssignmentRow(assignment) {
     const statusClass = getStatusClass(assignment.status);
     const priorityClass = getPriorityClass(assignment.priority);
-    const dateDisplay = assignment.assigned_at
+    const _dateDisplay = assignment.assigned_at
       ? new Date(assignment.assigned_at).toLocaleDateString()
       : new Date(assignment.submitted_at).toLocaleDateString();
 
@@ -720,7 +720,7 @@ class LguAdminAssignments {
         officerCheckboxes.innerHTML =
           '<div class="no-officers text-center text-gray-400 dark:text-gray-500 italic p-4">No officers available</div>';
       } else {
-        this.officers.forEach((officer, index) => {
+        this.officers.forEach((officer, _index) => {
           const checkboxItem = document.createElement("div");
           checkboxItem.className =
             "officer-checkbox-item flex items-center p-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer";
@@ -1152,7 +1152,7 @@ class LguAdminAssignments {
           errorMessage = `Cannot assign: ${reasons}`;
         }
       } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+        _errorMessage = error.response.data.error;
       }
       const evidenceContainer = document.getElementById(
         `evidence-container-${complaintId}`

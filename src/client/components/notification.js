@@ -66,7 +66,7 @@ export function initializeNotificationButton() {
       // console.log removed for security
       // Debug positioning
       if (notificationPanel.classList.contains("show")) {
-        const rect = notificationPanel.getBoundingClientRect();
+        const _rect = notificationPanel.getBoundingClientRect();
         // console.log removed for security
       }
       // Load notifications when panel is opened (only show loading on first load)

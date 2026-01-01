@@ -375,7 +375,7 @@ router.post("/notices", authenticateUser, requireRole(["lgu-admin"]), async (req
     if (!data || data.length === 0) {
       console.error("[CONTENT] Insert succeeded but no data returned");
       // Try to query the notices table to verify insert
-      const { data: verifyData, error: verifyError } = await dbClient
+      const { data: _verifyData, error: verifyError } = await dbClient
         .from("notices")
         .select("*")
         .eq("title", noticeData.title)

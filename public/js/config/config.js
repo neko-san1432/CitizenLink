@@ -3,7 +3,7 @@
 // import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Fetch Supabase configuration securely from server
-let supabaseConfig = null;
+const _supabaseConfig = null;
 let supabase = null;
 let initPromise = null;
 async function initializeSupabase() {

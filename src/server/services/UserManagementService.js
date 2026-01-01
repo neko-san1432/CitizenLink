@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require("../../shared/constants");
+const { _USER_ROLES, _ROLE_HIERARCHY, _SWITCHABLE_ROLES } = require("../../shared/constants");
 
 /**
  * UserManagementService

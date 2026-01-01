@@ -399,7 +399,7 @@ class LguOfficerService {
   /**
    * Get department updates (placeholder for future implementation)
    */
-  async getUpdates(officerId, limit = 10) {
+  async getUpdates(officerId, _limit = 10) {
     // Placeholder - department updates will be implemented later
     return [];
   }

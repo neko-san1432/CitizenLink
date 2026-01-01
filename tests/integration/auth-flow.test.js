@@ -28,7 +28,7 @@ describe("Complete Authentication Flow", () => {
       const user = createTestUser();
 
       // Step 1: Signup
-      const signupReq = createMockRequest({
+      const _signupReq = createMockRequest({
         method: "POST",
         path: "/api/auth/signup",
         body: {
@@ -41,7 +41,7 @@ describe("Complete Authentication Flow", () => {
           agreedToTerms: true,
         },
       });
-      const signupRes = createMockResponse();
+      const _signupRes = createMockResponse();
 
       const signupResult = await mockSupabase.auth.signUp({
         email: user.email,
@@ -60,12 +60,12 @@ describe("Complete Authentication Flow", () => {
       expect(signupResult.data.user.email).toBe(user.email);
 
       // Step 2: Email Verification (simulated)
-      const verifyReq = createMockRequest({
+      const _verifyReq = createMockRequest({
         method: "GET",
         path: "/api/auth/verify-email",
         query: { token: "verification_token" },
       });
-      const verifyRes = createMockResponse();
+      const _verifyRes = createMockResponse();
 
       // Simulate email verification
       const dbUser = mockSupabase.users.get(signupResult.data.user.id);
@@ -74,7 +74,7 @@ describe("Complete Authentication Flow", () => {
       expect(dbUser.email_confirmed_at).toBeDefined();
 
       // Step 3: Login
-      const loginReq = createMockRequest({
+      const _loginReq = createMockRequest({
         method: "POST",
         path: "/api/auth/login",
         body: {
@@ -82,7 +82,7 @@ describe("Complete Authentication Flow", () => {
           password: user.password,
         },
       });
-      const loginRes = createMockResponse();
+      const _loginRes = createMockResponse();
 
       const loginResult = await mockSupabase.auth.signInWithPassword({
         email: user.email,
@@ -93,12 +93,12 @@ describe("Complete Authentication Flow", () => {
       expect(loginResult.data.user.email).toBe(user.email);
 
       // Step 4: Access Protected Resource
-      const protectedReq = createMockRequest({
+      const _protectedReq = createMockRequest({
         method: "GET",
         path: "/api/auth/profile",
         cookies: { sb_access_token: loginResult.data.session.access_token },
       });
-      const protectedRes = createMockResponse();
+      const _protectedRes = createMockResponse();
 
       const userResult = await mockSupabase.auth.getUser(
         loginResult.data.session.access_token
@@ -108,12 +108,12 @@ describe("Complete Authentication Flow", () => {
       expect(userResult.data.user.id).toBe(signupResult.data.user.id);
 
       // Step 5: Logout
-      const logoutReq = createMockRequest({
+      const _logoutReq = createMockRequest({
         method: "POST",
         path: "/api/auth/logout",
         cookies: { sb_access_token: loginResult.data.session.access_token },
       });
-      const logoutRes = createMockResponse();
+      const _logoutRes = createMockResponse();
 
       await mockSupabase.auth.signOut();
 
@@ -139,7 +139,7 @@ describe("Complete Authentication Flow", () => {
       const userId = signupResult.data.user.id;
 
       // Step 2: Request password reset
-      const resetReq = createMockRequest({
+      const _resetReq = createMockRequest({
         method: "POST",
         path: "/api/auth/forgot-password",
         body: { email: user.email },
@@ -150,7 +150,7 @@ describe("Complete Authentication Flow", () => {
 
       // Step 3: Reset password with token
       const newPassword = "NewPassword123!@#";
-      const resetPasswordReq = createMockRequest({
+      const _resetPasswordReq = createMockRequest({
         method: "POST",
         path: "/api/auth/reset-password",
         body: {
@@ -213,7 +213,7 @@ describe("Complete Authentication Flow", () => {
       const originalToken = loginResult.data.session.access_token;
 
       // Refresh session
-      const refreshReq = createMockRequest({
+      const _refreshReq = createMockRequest({
         method: "POST",
         path: "/api/auth/refresh",
         body: {

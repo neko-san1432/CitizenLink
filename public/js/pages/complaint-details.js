@@ -654,7 +654,7 @@ class ComplaintDetails {
     return this.boundaryData;
   }
 
-  createBoundaryLayer(map) {
+  createBoundaryLayer(_map) {
     if (!Array.isArray(this.boundaryData) || this.boundaryData.length === 0) {
       return null;
     }
@@ -966,7 +966,7 @@ class ComplaintDetails {
     }
     // Create control container
     const routeControlContainer = L.control({ position: "topright" });
-    routeControlContainer.onAdd = function(map) {
+    routeControlContainer.onAdd = function(_map) {
       const div = L.DomUtil.create("div", "route-controls");
       div.innerHTML = `
                      <div class="route-control-panel">
@@ -1112,7 +1112,7 @@ class ComplaintDetails {
         ],
         routeWhileDragging: false,
         addWaypoints: false,
-        createMarker: function(i, waypoint, n) {
+        createMarker: function(i, waypoint, _n) {
           // Custom markers
           if (i === 0) {
             // User location marker

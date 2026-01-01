@@ -2,7 +2,7 @@
 const fs = require("fs");
 const fsPromises = fs.promises;
 const { spawn } = require("child_process");
-const IDVerificationService = require("../services/IDVerificationService");
+const _IDVerificationService = require("../services/_IDVerificationService");
 
 // Try to load Sharp, but make it optional
 let sharp;
@@ -450,7 +450,7 @@ class OCRController {
       agency: "LTO",
     };
 
-    const lines = text
+    const _lines = text
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l.length > 0);

@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (requestForm) {
     const emailInput = document.getElementById("request-email");
-    const requestBtn = document.getElementById("request-btn");
+    const _requestBtn = document.getElementById("request-btn");
 
     // Open confirmation modal instead of submitting directly
     requestForm.addEventListener("submit", async (e) => {

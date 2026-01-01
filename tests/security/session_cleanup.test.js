@@ -9,7 +9,7 @@ const SupabaseMock = require("../utils/supabaseMock");
 const {
   createMockRequest,
   createMockResponse,
-  createMockNext,
+  _createMockNext,
 } = require("../utils/testHelpers");
 
 describe("Session Cleanup & Data Removal", () => {

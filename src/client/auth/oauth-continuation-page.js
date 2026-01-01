@@ -9,7 +9,7 @@ import showMessage from "../components/toast.js";
 // console.log('[OAUTH_CONT] Imports completed');
 
 // Cleanup incomplete OAuth signup on interruption
-const cleanupIncompleteOAuthSignup = async (reason = "OAuth signup was interrupted") => {
+const cleanupIncompleteOAuthSignup = async (_reason = "OAuth signup was interrupted") => {
   suppressAuthErrorNotifications();
   try {
     const ctx = getOAuthContext();
@@ -135,7 +135,7 @@ const validateOAuthContinuation = async () => {
 
       // Check if there's any session data in localStorage
       const storageKeys = Object.keys(localStorage);
-      const supabaseKeys = storageKeys.filter(k => k.includes("supabase") || k.startsWith("sb-"));
+      const _supabaseKeys = storageKeys.filter(k => k.includes("supabase") || k.startsWith("sb-"));
       // console.log('[OAUTH_CONT_VALIDATE] Supabase storage keys:', supabaseKeys);
 
       // console.log('[OAUTH_CONT_VALIDATE] Redirecting to signup...');
@@ -280,7 +280,7 @@ const initializeCaptcha = async () => {
 // Setup interruption handlers
 const setupInterruptionHandlers = () => {
   // Handle tab close / navigation away
-  const handleBeforeUnload = (e) => {
+  const handleBeforeUnload = (_e) => {
     const ctx = getOAuthContext();
     if (ctx && ctx.intent === "signup" && ctx.status !== "completed") {
       // Cleanup on page unload (but don't block navigation)
@@ -359,7 +359,7 @@ const initializeOAuthContinuationPage = async () => {
   // Update page title and subtitle based on user type
   const updatePageMessages = () => {
     const isNewSignup = ctx?.isNewSignup || ctx?.intent === "signup";
-    const userType = ctx?.userType || (isNewSignup ? "new" : "existing");
+    const _userType = ctx?._userType || (isNewSignup ? "new" : "existing");
     const customMessage = ctx?.message;
 
     // Update page title
@@ -407,7 +407,7 @@ const initializeOAuthContinuationPage = async () => {
   }
 
   // Check session
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const { data: { session }, error: _sessionError } = await supabase.auth.getSession();
   // console.log('[OAUTH_CONT] Session exists:', !!session);
   // console.log('[OAUTH_CONT] Session error:', sessionError);
   if (session?.user) {
@@ -422,7 +422,7 @@ const initializeOAuthContinuationPage = async () => {
   }
 
   const form = document.getElementById("oauthCompleteForm");
-  const steps = document.getElementById("signup-steps");
+  const _steps = document.getElementById("signup-_steps");
   const step1 = document.querySelector('.signup-step[data-step="1"]');
   // console.log('[OAUTH_CONT] Form element exists:', !!form);
   // console.log('[OAUTH_CONT] Steps container exists:', !!steps);
@@ -541,8 +541,8 @@ const initializeOAuthContinuationPage = async () => {
   setTimeout(initializeCaptcha, 1000);
 
   // Verify form is visible
-  const formVisible = form && form.offsetParent !== null;
-  const step1Visible = step1 && step1.offsetParent !== null;
+  const _formVisible = form && form.offsetParent !== null;
+  const _step1Visible = step1 && step1.offsetParent !== null;
   /* console.log('[OAUTH_CONT] Form visibility check:', {
     formExists: !!form,
     formVisible: formVisible,
