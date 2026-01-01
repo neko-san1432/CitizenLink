@@ -1,142 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>Review Queue - CitizenLink</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/toast.css">
-    <link rel="stylesheet" href="/css/components/sidebar.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/header-redesign.css">
-    <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css">
-    <link rel="stylesheet" href="/css/components/barangay-prioritization.css">
-</head>
-<body>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css" />
+    <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
+  </head>
+  <body>
     <div class="app-container">
-        <!-- Header will be injected here -->
-        <div class="header-container"></div>
+      <!-- Header will be injected here -->
+      <div class="header-container"></div>
 
-        <!-- Sidebar will be injected here -->
-        <div id="sidebar"></div>
+      <!-- Sidebar will be injected here -->
+      <div id="sidebar"></div>
 
-        <main class="main-content">
-            <div class="queue-container">
+      <main class="main-content">
+        <div class="queue-container">
+          <div class="queue-header">
+            <h1>📋 Review Queue</h1>
+          </div>
+
+          <!-- Side-by-side Layout -->
+          <div class="queue-layout">
+            <!-- Left Column: Review Queue Content -->
+            <div class="queue-main">
+              <!-- Enhanced Filters -->
+              <div class="filters">
+                <div class="filter-group">
+                  <label for="filter-priority">Priority</label>
+                  <select id="filter-priority">
+                    <option value="">All Priorities</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="filter-type">Category</label>
+                  <select id="filter-type">
+                    <option value="">All Categories</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Sanitation">Sanitation</option>
+                    <option value="Community">Community</option>
+                    <option value="Safety">Safety</option>
+                    <option value="Environment">Environment</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="filter-similar">Duplicates</label>
+                  <select id="filter-similar">
+                    <option value="">All Complaints</option>
+                    <option value="yes">With Similar Complaints</option>
+                    <option value="no">No Duplicates</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="filter-prioritization">Prioritization</label>
+                  <select id="filter-prioritization">
+                    <option value="">Default Order</option>
+                    <option value="desc">Highest Priority First</option>
+                    <option value="asc">Lowest Priority First</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="search-input">Search</label>
+                  <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search complaints..."
+                  />
+                </div>
+              </div>
+
+              <!-- Loading State -->
+              <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading review queue...</p>
+              </div>
+
+              <!-- Empty State -->
+              <div id="empty-state" class="empty-state" style="display: none">
+                <h2>✅ All Caught Up!</h2>
+                <p>There are no complaints pending review at the moment.</p>
+              </div>
+
+              <!-- Complaint List -->
+              <div
+                id="complaint-list"
+                class="complaint-list"
+                style="display: none"
+              ></div>
+
+              <!-- Rejected Complaints Section -->
+              <div class="rejected-section" style="margin-top: 40px">
                 <div class="queue-header">
-                    <h1>📋 Review Queue</h1>
+                  <h2>❌ Rejected Complaints</h2>
+                  <button
+                    class="btn btn-secondary btn-sm"
+                    id="toggle-rejected-btn"
+                  >
+                    Show Rejected
+                  </button>
                 </div>
-
-                <!-- Side-by-side Layout -->
-                <div class="queue-layout">
-                    <!-- Left Column: Review Queue Content -->
-                    <div class="queue-main">
-                        <!-- Enhanced Filters -->
-                <div class="filters">
-                    <div class="filter-group">
-                        <label for="filter-priority">Priority</label>
-                        <select id="filter-priority">
-                            <option value="">All Priorities</option>
-                            <option value="urgent">Urgent</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-type">Category</label>
-                        <select id="filter-type">
-                            <option value="">All Categories</option>
-                            <option value="Infrastructure">Infrastructure</option>
-                            <option value="Sanitation">Sanitation</option>
-                            <option value="Community">Community</option>
-                            <option value="Safety">Safety</option>
-                            <option value="Environment">Environment</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-similar">Duplicates</label>
-                        <select id="filter-similar">
-                            <option value="">All Complaints</option>
-                            <option value="yes">With Similar Complaints</option>
-                            <option value="no">No Duplicates</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-prioritization">Prioritization</label>
-                        <select id="filter-prioritization">
-                            <option value="">Default Order</option>
-                            <option value="desc">Highest Priority First</option>
-                            <option value="asc">Lowest Priority First</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="search-input">Search</label>
-                        <input type="text" id="search-input" placeholder="Search complaints...">
-                    </div>
-                </div>
-
-                <!-- Loading State -->
-                <div id="loading" class="loading">
+                <div id="rejected-container" style="display: none">
+                  <div
+                    id="rejected-loading"
+                    class="loading"
+                    style="display: none"
+                  >
                     <div class="spinner"></div>
-                    <p>Loading review queue...</p>
+                    <p>Loading rejected complaints...</p>
+                  </div>
+                  <div id="rejected-list" class="complaint-list"></div>
                 </div>
+              </div>
 
-                <!-- Empty State -->
-                <div id="empty-state" class="empty-state" style="display: none;">
-                    <h2>✅ All Caught Up!</h2>
-                    <p>There are no complaints pending review at the moment.</p>
+              <!-- Pagination -->
+              <div
+                id="pagination-container"
+                class="pagination-container"
+                style="display: none"
+              >
+                <div class="pagination-info">
+                  <span id="page-info">Page 1 of 1</span>
+                  <span class="pagination-separator">•</span>
+                  <span id="items-info">Showing 0 of 0 complaints</span>
                 </div>
-
-                <!-- Complaint List -->
-                <div id="complaint-list" class="complaint-list" style="display: none;"></div>
-
-                <!-- Rejected Complaints Section -->
-                <div class="rejected-section" style="margin-top: 40px;">
-                    <div class="queue-header">
-                        <h2>❌ Rejected Complaints</h2>
-                        <button class="btn btn-secondary btn-sm" id="toggle-rejected-btn">Show Rejected</button>
-                    </div>
-                    <div id="rejected-container" style="display: none;">
-                        <div id="rejected-loading" class="loading" style="display: none;">
-                            <div class="spinner"></div>
-                            <p>Loading rejected complaints...</p>
-                        </div>
-                        <div id="rejected-list" class="complaint-list"></div>
-                    </div>
+                <div class="pagination-controls">
+                  <button id="prev-page" class="pagination-btn" disabled>
+                    <span>←</span> Previous
+                  </button>
+                  <div id="page-numbers" class="page-numbers"></div>
+                  <button id="next-page" class="pagination-btn">
+                    Next <span>→</span>
+                  </button>
                 </div>
-
-                        <!-- Pagination -->
-                        <div id="pagination-container" class="pagination-container" style="display: none;">
-                            <div class="pagination-info">
-                                <span id="page-info">Page 1 of 1</span>
-                                <span class="pagination-separator">•</span>
-                                <span id="items-info">Showing 0 of 0 complaints</span>
-                            </div>
-                            <div class="pagination-controls">
-                                <button id="prev-page" class="pagination-btn" disabled>
-                                    <span>←</span> Previous
-                                </button>
-                                <div id="page-numbers" class="page-numbers"></div>
-                                <button id="next-page" class="pagination-btn">
-                                    Next <span>→</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Barangay Prioritization -->
-                    <div class="queue-sidebar">
-                        <div class="barangay-prioritization-section">
-                            <div id="barangay-prioritization-container"></div>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
-        </main>
+
+            <!-- Right Column: Barangay Prioritization -->
+            <div class="queue-sidebar">
+              <div class="barangay-prioritization-section">
+                <div id="barangay-prioritization-container"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
     <!-- Toast container -->
@@ -147,23 +171,27 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/services/toastNotificationService.js"></script>
-    <script type="module" src="../../js/coordinator/department-selection-modal.js"></script>
+    <script
+      type="module"
+      src="../../js/services/toastNotificationService.js"
+    ></script>
+    <script
+      type="module"
+      src="../../js/coordinator/department-selection-modal.js"
+    ></script>
     <script type="module" src="../../js/coordinator/review-queue.js"></script>
-    
+
     <script type="module">
-        // Initialize toast notification service
-        import toastNotificationService from '../../js/services/toastNotificationService.js';
-        
-        // Start listening for real-time notifications
-        toastNotificationService.startListening();
-        
-        // Clean up on page unload
-        window.addEventListener('beforeunload', () => {
-            toastNotificationService.stopListening();
-        });
+      // Initialize toast notification service
+      import toastNotificationService from "../../js/services/toastNotificationService.js";
+
+      // Start listening for real-time notifications
+      toastNotificationService.startListening();
+
+      // Clean up on page unload
+      window.addEventListener("beforeunload", () => {
+        toastNotificationService.stopListening();
+      });
     </script>
-</body>
+  </body>
 </html>
-
-
