@@ -790,21 +790,31 @@ class ComplaintService {
     try {
       // First, get total count of complaints with coordinates for debugging
       // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
-      const { supabase } = this.complaintRepo; // Use repository client
+      // CRITICAL: Create a fresh service role client to ensure we BYPASS RLS
+      // The repository client might be shared or not properly privileged in some contexts
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      );
+
+      // Use the fresh client for these diagnostic counts as well
       const { count: totalWithCoords } = await supabase
         .from("complaints")
         .select("id", { count: "exact", head: true })
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
-      // Also check total complaints without coordinate filter using direct service role
       const { count: _totalComplaints } = await supabase
         .from("complaints")
         .select("id", { count: "exact", head: true });
 
-      // CRITICAL FIX: Build base query using DIRECT service role client, not this.complaintRepo.supabase
-      // This ensures we bypass any RLS policies that might be filtering results
-      // The repository might be using a different client instance
       let query = supabase
         .from("complaints")
         .select(
@@ -1152,8 +1162,8 @@ class ComplaintService {
           const departmentR = Array.isArray(complaint.department_r)
             ? complaint.department_r
             : complaint.department_r
-              ? [complaint.department_r]
-              : [];
+            ? [complaint.department_r]
+            : [];
 
           return {
             id: complaint.id,

@@ -121,30 +121,30 @@ window.isInitialLoad = true;
     // Initialize user role for role-based filtering
     await heatmapViz.initializeUserRole();
 
-    console.log("[HEATMAP] User role initialized:", {
-      role: heatmapViz.userRole,
-      department: heatmapViz.userDepartment,
-      isCoordinator: heatmapViz.userRole === "complaint-coordinator",
-      isSuperAdmin: heatmapViz.userRole === "super-admin",
-    });
+    // console.log("[HEATMAP] User role initialized:", {
+    //   role: heatmapViz.userRole,
+    //   department: heatmapViz.userDepartment,
+    //   isCoordinator: heatmapViz.userRole === "complaint-coordinator",
+    //   isSuperAdmin: heatmapViz.userRole === "super-admin",
+    // });
 
     // LGU Admins are always scoped to their assigned office
     // Coordinators and super-admins should NOT have department filters applied
     if (heatmapViz.userRole === "lgu-admin" && heatmapViz.userDepartment) {
       currentFilters.department = heatmapViz.userDepartment;
-      console.log(
-        "[HEATMAP] LGU Admin detected - applying department filter:",
-        heatmapViz.userDepartment
-      );
+      // console.log(
+      //   "[HEATMAP] LGU Admin detected - applying department filter:",
+      //   heatmapViz.userDepartment
+      // );
     } else if (
       heatmapViz.userRole === "complaint-coordinator" ||
       heatmapViz.userRole === "super-admin"
     ) {
       // Ensure coordinators and super-admins have NO department filter
       currentFilters.department = "";
-      console.log(
-        "[HEATMAP] Coordinator/Super-admin detected - NO department filter applied"
-      );
+      // console.log(
+      //   "[HEATMAP] Coordinator/Super-admin detected - NO department filter applied"
+      // );
     }
 
     // Store globally for boundaryGenerator to access
@@ -166,9 +166,9 @@ window.isInitialLoad = true;
     }
 
     if (window.cityBoundaries) {
-      console.log(
-        "[HEATMAP] Boundaries loaded, filtering complaints by boundary"
-      );
+      // console.log(
+      //   "[HEATMAP] Boundaries loaded, filtering complaints by boundary"
+      // );
     } else {
       console.warn(
         "[HEATMAP] Boundaries not loaded yet, using bounding box fallback"
@@ -312,7 +312,7 @@ async function loadComplaintData() {
     const totalCount = heatmapViz.allComplaintData
       ? heatmapViz.allComplaintData.length
       : 0;
-    console.log(`[HEATMAP] Loaded ${totalCount} total complaint(s)`);
+    // console.log(`[HEATMAP] Loaded ${totalCount} total complaint(s)`);
 
     // Setup date picker constraints based on loaded complaint data
     setupDatePickerConstraints();
@@ -332,7 +332,7 @@ async function loadComplaintData() {
 
       // Update constraints for the selected dates
       updateDatePickerConstraints(todayStr, todayStr);
-      console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
+      // console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
     }
 
     // REMOVED: Redundant initial heatmap creation
@@ -888,7 +888,7 @@ function setupControlPanel() {
     resetViewBtn.addEventListener("click", () => {
       resetMapView();
     });
-    console.log("[HEATMAP] Reset view button initialized");
+    // console.log("[HEATMAP] Reset view button initialized");
   } else {
     console.warn("[HEATMAP] Reset view button not found in DOM");
   }
@@ -1070,9 +1070,9 @@ async function loadCategories() {
         group.appendChild(label);
       });
 
-      console.log(
-        `[HEATMAP] Loaded ${sortedData.length} categories (Prioritized for ${userDepartmentCode})`
-      );
+      // console.log(
+      //   `[HEATMAP] Loaded ${sortedData.length} categories (Prioritized for ${userDepartmentCode})`
+      // );
     }
   } catch (error) {
     console.error("[HEATMAP] Failed to load categories:", error);

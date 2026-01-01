@@ -8,12 +8,7 @@ import {
 } from "./authChecker.js";
 import { setButtonLoading, temporarilyMark } from "../utils/buttonState.js";
 import { addCsrfTokenToForm } from "../utils/csrf.js";
-import {
-  validateAndSanitizeForm,
-  _isValidPhilippineMobile,
-  _validatePassword,
-  isValidEmail,
-} from "../utils/validation.js";
+import { validateAndSanitizeForm, isValidEmail } from "../utils/validation.js";
 
 // Show toast on login page if redirected due to missing auth
 try {

@@ -1,7 +1,7 @@
 import { brandConfig } from "../config/index.js";
 import {
   initializeNotificationButton,
-  _closeNotificationPanel,
+  closeNotificationPanel,
 } from "./notification.js";
 
 // Header component for easy modification

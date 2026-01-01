@@ -2,7 +2,6 @@
 const fs = require("fs");
 const fsPromises = fs.promises;
 const { spawn } = require("child_process");
-const _IDVerificationService = require("../services/_IDVerificationService");
 
 // Try to load Sharp, but make it optional
 let sharp;
@@ -866,7 +865,6 @@ class OCRController {
         verified: false,
         error: errorMsg,
       });
-
     } catch (error) {
       console.error("[OCR-RESIDENCY] Error:", error);
       return res.status(500).json({
