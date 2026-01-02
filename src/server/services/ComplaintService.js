@@ -107,8 +107,7 @@ class ComplaintService {
             createdComplaint.id,
             createdComplaint.title
           );
-        if (coordResult.success) {
-        } else {
+        if (!coordResult.success) {
           console.warn(
             "[COMPLAINT] Failed to send coordinator notifications:",
             coordResult.error
@@ -135,9 +134,6 @@ class ComplaintService {
     if (departmentArray.length > 0) {
       try {
         await this.complaintRepo.update(complaint.id, {
-          // primary_department: departmentArray[0], // Removed - derived from department_r
-          // secondary_departments: departmentArray.slice(1), // Removed - derived from department_r
-          // Ensure workflow status is 'new' for coordinator review
           workflow_status: "new",
           updated_at: new Date().toISOString(),
         });
@@ -153,23 +149,12 @@ class ComplaintService {
                 complaint.submitted_by,
                 { status: "pending" }
               );
-              // TODO: Fix notifyDepartmentAdminsByCode RPC function
-              // Notify department admins about new assignment
-              // try {
-              //   await this.notificationService.notifyDepartmentAdminsByCode(
-              //     deptCode,
-              //     complaint.id,
-              //     complaint.title
-              //   );
-              // } catch (notifErr) {
-              //   console.warn('[WORKFLOW] Notify admins failed:', notifErr.message);
-              // }
             }
-          } catch (assignErr) {
+          } catch (error) {
             console.warn(
               "[WORKFLOW] Assignment creation failed for dept:",
               deptCode,
-              assignErr.message
+              error.message
             );
           }
         }
@@ -177,16 +162,6 @@ class ComplaintService {
         console.warn("[WORKFLOW] Department assignment failed:", error.message);
       }
     }
-    // Auto-assignment based on complaint content (type field removed)
-    // TODO: Implement auto_assign_departments RPC function
-    // try {
-    //   const autoAssignResult = await this.complaintRepo.autoAssignDepartments(complaint.id);
-    //   if (autoAssignResult && autoAssignResult.length > 0) {
-
-    //   }
-    // } catch (error) {
-    //   console.warn('[WORKFLOW] Auto-assignment failed:', error.message);
-    // }
     if (departmentArray.length > 0) {
       const targetDept = departmentArray[0];
       try {
@@ -198,11 +173,6 @@ class ComplaintService {
             complaint.id,
             coordinator.user_id
           );
-          // TODO: Fix log_complaint_action RPC function parameter types
-          // await this.complaintRepo.logAction(complaint.id, 'coordinator_assigned', {
-          //   to_dept: targetDept,
-          //   reason: 'Auto-assigned available coordinator'
-          // });
         }
       } catch (error) {
         console.warn(
@@ -211,19 +181,6 @@ class ComplaintService {
         );
       }
     }
-    // TODO: Fix log_complaint_action RPC function parameter types
-    // try {
-    //   await this.complaintRepo.logAction(complaint.id, 'created', {
-    //     reason: 'Complaint submitted by citizen',
-    //     details: {
-    //       title: complaint.title,
-    //       departments: departmentArray,
-    //       has_evidence: false
-    //     }
-    //   });
-    // } catch (error) {
-    //   console.warn('[AUDIT] Audit logging failed:', error.message);
-    // }
   }
   async _processFileUploads(complaintId, files, userId = null) {
     if (!files || files.length === 0) {
@@ -278,8 +235,8 @@ class ComplaintService {
           if (dbError) {
             console.error("[FILE] Evidence metadata storage error:", dbError);
           }
-        } catch (dbErr) {
-          console.error("[FILE] Evidence metadata storage failed:", dbErr);
+        } catch (error) {
+          console.error("[FILE] Evidence metadata storage failed:", error);
         }
       } catch (error) {
         console.error("[FILE] Processing error:", error);
@@ -356,8 +313,8 @@ class ComplaintService {
           if (dbError) {
             console.error("[FILE] Evidence metadata storage error:", dbError);
           }
-        } catch (dbErr) {
-          console.error("[FILE] Evidence metadata storage failed:", dbErr);
+        } catch (error) {
+          console.error("[FILE] Evidence metadata storage failed:", error);
         }
       } catch (error) {
         console.error("[FILE] Processing completion evidence error:", error);
@@ -635,7 +592,7 @@ class ComplaintService {
     return updatedComplaint;
   }
   async assignCoordinator(complaintId, coordinatorId, assignedBy) {
-    const _complaint = await this.getComplaintById(complaintId);
+    await this.getComplaintById(complaintId);
     const updatedComplaint = await this.complaintRepo.assignCoordinator(
       complaintId,
       coordinatorId
@@ -660,9 +617,8 @@ class ComplaintService {
     reason,
     transferredBy
   ) {
-    const _complaint = await this.getComplaintById(complaintId);
+    await this.getComplaintById(complaintId);
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
-      // primary_department: toDept, // Removed - derived from department_r
       assigned_coordinator_id: null,
     });
     try {
@@ -811,10 +767,6 @@ class ComplaintService {
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
-      const { count: _totalComplaints } = await supabase
-        .from("complaints")
-        .select("id", { count: "exact", head: true });
-
       let query = supabase
         .from("complaints")
         .select(
@@ -836,16 +788,12 @@ class ComplaintService {
           // Single status
           query = query.eq("workflow_status", status);
         }
-      } else {
+      } else if (!includeResolved) {
         // No status filter - check if we should exclude resolved
-        if (!includeResolved) {
-          // Exclude completed and cancelled complaints
-          query = query
-            .neq("workflow_status", "completed")
-            .neq("workflow_status", "cancelled");
-        } else {
-          // includeResolved is true - show ALL complaints regardless of status
-        }
+        // Exclude completed and cancelled complaints
+        query = query
+          .neq("workflow_status", "completed")
+          .neq("workflow_status", "cancelled");
       }
 
       // Filter by confirmation_status (supports array for multiple values)
@@ -1028,12 +976,6 @@ class ComplaintService {
       // console.log(
       //   `[COMPLAINT-SERVICE] Fetched ${data.length} complaint(s) for heatmap using pagination`
       // );
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
       if (data && data.length === 1 && totalWithCoords > 1) {
         console.error(
           "[COMPLAINT-SERVICE] ⚠️ CRITICAL: Query returned only 1 complaint but DB has",
@@ -1049,18 +991,14 @@ class ComplaintService {
           includeResolved,
         });
       }
-      // console.log removed for security
       // Debug: Log first few complaints to see their structure
       if (data && data.length > 0) {
-        // console.log removed for security
-        // console.log removed for security
         // Check status breakdown of returned data
         const returnedStatusBreakdown = {};
         data.forEach((c) => {
           returnedStatusBreakdown[c.workflow_status] =
             (returnedStatusBreakdown[c.workflow_status] || 0) + 1;
         });
-        // console.log removed for security
       } else {
         console.warn("[COMPLAINT-SERVICE] ⚠️ NO DATA RETURNED FROM QUERY!");
       }
@@ -1078,7 +1016,6 @@ class ComplaintService {
           "[COMPLAINT-SERVICE] Attempting fallback: Direct query without filters..."
         );
         // Try a direct query as fallback using service role client
-        // console.log removed for security
         const { data: fallbackData, error: fallbackError } = await supabase
           .from("complaints")
           .select(
@@ -1103,9 +1040,9 @@ class ComplaintService {
           // Use fallback data if it has more results
           return fallbackData
             .map((complaint) => {
-              const lat = parseFloat(complaint.latitude);
-              const lng = parseFloat(complaint.longitude);
-              if (isNaN(lat) || isNaN(lng)) return null;
+              const lat = Number.parseFloat(complaint.latitude);
+              const lng = Number.parseFloat(complaint.longitude);
+              if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
               return {
                 id: complaint.id,
                 title: complaint.title,
@@ -1146,10 +1083,15 @@ class ComplaintService {
       const transformedData = data
         .map((complaint) => {
           // Parse coordinates carefully
-          const lat = parseFloat(complaint.latitude);
-          const lng = parseFloat(complaint.longitude);
+          const lat = Number.parseFloat(complaint.latitude);
+          const lng = Number.parseFloat(complaint.longitude);
           // Skip if coordinates are invalid
-          if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+          if (
+            Number.isNaN(lat) ||
+            Number.isNaN(lng) ||
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng)
+          ) {
             console.warn(
               "[COMPLAINT-SERVICE] Skipping complaint with invalid coordinates:",
               complaint.id,
@@ -1159,11 +1101,12 @@ class ComplaintService {
           }
 
           // Ensure department_r is properly handled
-          const departmentR = Array.isArray(complaint.department_r)
-            ? complaint.department_r
-            : complaint.department_r
-            ? [complaint.department_r]
-            : [];
+          let departmentR = [];
+          if (Array.isArray(complaint.department_r)) {
+            departmentR = complaint.department_r;
+          } else if (complaint.department_r) {
+            departmentR = [complaint.department_r];
+          }
 
           return {
             id: complaint.id,
@@ -1187,13 +1130,6 @@ class ComplaintService {
         })
         .filter(Boolean); // Remove null entries
 
-      // Debug log removed
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
-      // console.log removed for security
       if (transformedData.length === 0 && totalWithCoords > 0) {
         console.error(
           "[COMPLAINT-SERVICE] ⚠️ ERROR: No valid complaints after transformation, but",
@@ -1514,7 +1450,7 @@ class ComplaintService {
       };
     } catch (error) {
       console.error(
-        "[COMPLAINT_SERVICE] Error getting false complaint stats:",
+        "[COMPLAINT-SERVICE] Error getting false complaint stats:",
         error
       );
       return {
@@ -1534,22 +1470,18 @@ class ComplaintService {
       const Database = require("../config/database");
 
       const supabase = Database.getClient();
-      // console.log removed for security
       // First, verify the user has access to this complaint
-      // console.log removed for security
       const { data: complaint, error: complaintError } = await supabase
         .from("complaints")
         .select("id, submitted_by, department_r, assigned_coordinator_id")
         .eq("id", complaintId)
         .single();
-      // console.log removed for security
       if (complaintError || !complaint) {
         console.error(
           `[COMPLAINT_SERVICE] Complaint not found:`,
           complaintError
         );
         // Return empty array instead of throwing error - complaint might have been deleted
-        // console.log removed for security
         return [];
       }
       // Basic access control without external helpers
@@ -1568,18 +1500,6 @@ class ComplaintService {
       if (!isCitizenOwner && !isStaff) {
         // Return empty list instead of error to avoid breaking the UI
         return [];
-      }
-      // Get evidence metadata from database to distinguish between types
-      const { data: _evidenceMetadata, error: metadataError } = await supabase
-        .from("complaint_evidence")
-        .select("*")
-        .eq("complaint_id", complaintId)
-        .order("uploaded_at", { ascending: false });
-      if (metadataError) {
-        console.warn(
-          "[COMPLAINT_SERVICE] Error fetching evidence metadata:",
-          metadataError
-        );
       }
       // List files in the complaint-evidence bucket for this complaint
       const bucketName = "complaint-evidence";
@@ -1654,34 +1574,6 @@ class ComplaintService {
       // Use repository client (service-role) to avoid RLS issues
       const { supabase } = this.complaintRepo;
 
-      // Update the complaint with citizen's confirmation directly
-      // TODO: Re-enable table update when schema supports confirmed_by_citizen, citizen_confirmation_date, etc.
-      // Currently bypassing table update and relying on RPC because columns might be missing or RLS issues.
-      /*
-      const updateData = {
-        // confirmed_by_citizen: confirmed,
-        // citizen_confirmation_date: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      if (confirmed) {
-        updateData.workflow_status = 'completed';
-        updateData.resolved_at = new Date().toISOString();
-        updateData.last_activity_at = new Date().toISOString();
-      }
-
-      const { data: updatedComplaint, error: updateError } = await supabase
-        .from('complaints')
-        .update(updateData)
-        .eq('id', complaintId)
-        .select()
-        .maybeSingle();
-
-      if (updateError) throw updateError;
-      if (!updatedComplaint) throw new Error('Complaint not found or access denied');
-      if (updatedComplaint.submitted_by !== citizenId) throw new Error('Access denied');
-      */
-
       // Bypass table update for now
       const updatedComplaint = {
         id: complaintId,
@@ -1689,18 +1581,9 @@ class ComplaintService {
       };
 
       // Call the database function to update confirmation status
-      const { data: _statusResult, error: statusError } = await supabase.rpc(
-        "update_complaint_confirmation_status",
-        {
-          complaint_uuid: complaintId,
-        }
-      );
-      if (statusError) {
-        console.warn(
-          "[COMPLAINT_SERVICE] Error updating confirmation status:",
-          statusError
-        );
-      }
+      await supabase.rpc("update_complaint_confirmation_status", {
+        complaint_uuid: complaintId,
+      });
       // Ensure final workflow reconciliation when confirmed
       if (confirmed) {
         try {
@@ -1722,7 +1605,7 @@ class ComplaintService {
   async createAssignment(complaintId, officerIds, assignedBy) {
     try {
       // Validate complaint exists
-      const _complaint = await this.getComplaintById(complaintId);
+      await this.getComplaintById(complaintId);
       // Create assignment records using the repository method
       const assignments = await this.complaintRepo.createAssignments(
         complaintId,

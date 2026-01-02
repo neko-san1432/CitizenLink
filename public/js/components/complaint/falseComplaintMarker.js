@@ -2,7 +2,7 @@
  * False Complaint Marker Component
  * Handles marking complaints as false with reasons and evidence
  */
-import { supabase } from '/js/config/config.js';
+import { supabase } from "/js/config/config.js";
 
 class FalseComplaintMarker {
 
@@ -24,17 +24,17 @@ class FalseComplaintMarker {
     document.body.appendChild(this.modal);
     // Trigger animation
     requestAnimationFrame(() => {
-      this.modal.style.opacity = '1';
+      this.modal.style.opacity = "1";
     });
   }
   /**
    * Create the modal HTML structure
    */
   createModal() {
-    this.modal = document.createElement('div');
-    this.modal.className = 'false-complaint-modal';
-    this.modal.style.opacity = '0';
-    this.modal.style.transition = 'opacity 0.3s ease';
+    this.modal = document.createElement("div");
+    this.modal.className = "false-complaint-modal";
+    this.modal.style.opacity = "0";
+    this.modal.style.transition = "opacity 0.3s ease";
     this.modal.innerHTML = `
       <div class="false-complaint-content">
         <div class="false-complaint-header">
@@ -120,35 +120,35 @@ class FalseComplaintMarker {
    * Attach event listeners to the modal
    */
   attachEventListeners() {
-    const form = this.modal.querySelector('#false-complaint-form');
-    const cancelBtn = this.modal.querySelector('#cancel-false-complaint');
-    const reasonOptions = this.modal.querySelectorAll('.reason-option');
+    const form = this.modal.querySelector("#false-complaint-form");
+    const cancelBtn = this.modal.querySelector("#cancel-false-complaint");
+    const reasonOptions = this.modal.querySelectorAll(".reason-option");
     // Handle form submission
-    form.addEventListener('submit', (e) => {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.handleSubmit();
     });
     // Handle cancel button
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener("click", () => {
       this.hide();
     });
     // Handle reason option selection
     reasonOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        const radio = option.querySelector('.reason-radio');
+      option.addEventListener("click", () => {
+        const radio = option.querySelector(".reason-radio");
         radio.checked = !radio.checked;
-        option.classList.toggle('selected', radio.checked);
+        option.classList.toggle("selected", radio.checked);
       });
     });
     // Handle clicking outside modal to close
-    this.modal.addEventListener('click', (e) => {
+    this.modal.addEventListener("click", (e) => {
       if (e.target === this.modal) {
         this.hide();
       }
     });
     // Handle escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.modal && this.modal.parentNode) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.modal && this.modal.parentNode) {
         this.hide();
       }
     });
@@ -157,14 +157,14 @@ class FalseComplaintMarker {
    * Handle form submission
    */
   async handleSubmit() {
-    const form = this.modal.querySelector('#false-complaint-form');
+    const form = this.modal.querySelector("#false-complaint-form");
     const formData = new FormData(form);
-    const reason = formData.get('false-reason');
-    const notes = formData.get('false-notes');
-    const evidence = Array.from(this.modal.querySelectorAll('.reason-radio:checked'))
+    const reason = formData.get("false-reason");
+    const notes = formData.get("false-notes");
+    const evidence = Array.from(this.modal.querySelectorAll(".reason-radio:checked"))
       .map(radio => radio.value);
     if (!reason) {
-      this.showError('Please select a reason for marking this complaint as false.');
+      this.showError("Please select a reason for marking this complaint as false.");
       return;
     }
     try {
@@ -173,13 +173,13 @@ class FalseComplaintMarker {
       // SECURITY: Use Supabase session token, never localStorage
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const headers = { 'Content-Type': 'application/json' };
+      const headers = { "Content-Type": "application/json" };
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
       // Submit the false complaint marking
       const response = await fetch(`/api/complaints/${this.complaintId}/mark-false`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: JSON.stringify({
           reason,
@@ -190,9 +190,9 @@ class FalseComplaintMarker {
       });
       const result = await response.json();
       if (result.success) {
-        this.showSuccess('Complaint marked as false successfully.');
+        this.showSuccess("Complaint marked as false successfully.");
         // Execute callback if provided
-        if (this.callback && typeof this.callback === 'function') {
+        if (this.callback && typeof this.callback === "function") {
           this.callback(result);
         }
         // Close modal after a short delay
@@ -200,18 +200,18 @@ class FalseComplaintMarker {
           this.hide();
         }, 1500);
       } else {
-        this.showError(result.error || 'Failed to mark complaint as false.');
+        this.showError(result.error || "Failed to mark complaint as false.");
       }
     } catch (error) {
-      console.error('Error marking complaint as false:', error);
-      this.showError('An error occurred while marking the complaint as false.');
+      console.error("Error marking complaint as false:", error);
+      this.showError("An error occurred while marking the complaint as false.");
     }
   }
   /**
    * Show loading state
    */
   showLoading() {
-    const submitBtn = this.modal.querySelector('#confirm-false-complaint');
+    const submitBtn = this.modal.querySelector("#confirm-false-complaint");
     const originalText = submitBtn.textContent;
     submitBtn.innerHTML = '<div class="spinner"></div> Processing...';
     submitBtn.disabled = true;
@@ -220,27 +220,27 @@ class FalseComplaintMarker {
    * Show error message
    */
   showError(message) {
-    this.showMessage(message, 'error');
+    this.showMessage(message, "error");
   }
   /**
    * Show success message
    */
   showSuccess(message) {
-    this.showMessage(message, 'success');
+    this.showMessage(message, "success");
   }
   /**
    * Show message in modal
    */
   showMessage(message, type) {
     // Remove existing messages
-    const existingMessage = this.modal.querySelector('.modal-message');
+    const existingMessage = this.modal.querySelector(".modal-message");
     if (existingMessage) {
       existingMessage.remove();
     }
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `modal-message ${type === 'error' ? 'error-message' : 'success-message'}`;
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `modal-message ${type === "error" ? "error-message" : "success-message"}`;
     messageDiv.textContent = message;
-    const form = this.modal.querySelector('#false-complaint-form');
+    const form = this.modal.querySelector("#false-complaint-form");
     form.insertBefore(messageDiv, form.firstChild);
     // Auto-remove after 5 seconds
     setTimeout(() => {
@@ -255,7 +255,7 @@ class FalseComplaintMarker {
   hide() {
 
     if (this.modal && this.modal.parentNode) {
-      this.modal.style.opacity = '0';
+      this.modal.style.opacity = "0";
       setTimeout(() => {
         if (this.modal && this.modal.parentNode) {
           this.modal.parentNode.removeChild(this.modal);

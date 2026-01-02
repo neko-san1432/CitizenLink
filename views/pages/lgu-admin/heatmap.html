@@ -90,6 +90,25 @@
       html.dark .leaflet-control-zoom a:hover {
         background-color: #374151 !important;
       }
+      /* Legend Collapsible Styles */
+      #map-legend .legend-content {
+        transition: all 0.3s ease-in-out;
+        max-height: 500px;
+        opacity: 1;
+      }
+      #map-legend.collapsed .legend-content {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+      }
+      #map-legend #legend-icon {
+        transition: transform 0.3s ease;
+      }
+      #map-legend.collapsed #legend-icon {
+        transform: rotate(180deg);
+      }
     </style>
 
     <!-- Sidebar CSS - Load after inline styles to ensure proper cascade -->
@@ -105,7 +124,7 @@
     <div class="flex-1 relative h-full w-full">
       <!-- Top Bar Overlay -->
       <div
-        class="absolute top-4 left-4 right-4 z-[50] flex flex-col md:flex-row justify-between items-start gap-3 pointer-events-none"
+        class="absolute top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-[50] flex flex-col md:flex-row justify-between items-stretch md:items-start gap-2 md:gap-3 pointer-events-none"
       >
         <!-- Left: Title & Menu PC -->
         <div
@@ -155,7 +174,7 @@
             >
               Complaint Heatmap
             </h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-gray-500 dark:text-gray-400 hidden md:block">
               Geospatial analysis of reports
             </p>
           </div>
@@ -163,7 +182,7 @@
 
         <!-- Right: Map Controls Toolbar -->
         <div
-          class="pointer-events-auto flex flex-wrap gap-2 justify-end items-start text-left"
+          class="pointer-events-auto flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-visible w-full md:w-auto px-1 pb-1 md:pb-0 justify-start md:justify-end items-center md:items-start custom-scroll"
         >
           <!-- Reset View -->
           <button
@@ -216,7 +235,7 @@
             </button>
             <div
               id="toolbar-display-dropdown"
-              class="absolute top-full right-0 mt-2 w-56 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-56 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div class="space-y-2">
                 <button
@@ -279,7 +298,7 @@
             </button>
             <div
               id="toolbar-date-dropdown"
-              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div class="space-y-2">
                 <div class="grid grid-cols-2 gap-2">
@@ -348,7 +367,7 @@
             </button>
             <div
               id="toolbar-status-dropdown"
-              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div
                 id="status-filters"
@@ -383,7 +402,7 @@
             </button>
             <div
               id="toolbar-category-dropdown"
-              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div
                 id="category-filter-group"
@@ -420,7 +439,7 @@
             </button>
             <div
               id="toolbar-office-dropdown"
-              class="absolute top-full right-0 mt-2 w-64 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div
                 id="department-filter-group"
@@ -457,7 +476,7 @@
             </button>
             <div
               id="toolbar-stats-dropdown"
-              class="absolute top-full right-0 mt-2 w-56 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-56 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur"
             >
               <div class="grid grid-cols-2 gap-2">
                 <div
@@ -638,7 +657,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="/js/pages/heatmap-leaflet-check.js"></script>
-    <script src="/js/lib/supabase.js"></script>
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script src="../../js/components/map/map-generator.js"></script>
     <script src="../../js/components/map/dbscan.js"></script>
     <script src="../../js/components/map/heatmapVisualization.js"></script>

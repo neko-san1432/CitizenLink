@@ -101,7 +101,7 @@
   width: 50px;
   height: 50px;
   /*border-radius: var(--radius-md);*/
-  background-image: url("/public/assets/img/CitizenLink-logo-no-text.png"); /* <--- IMPORTANT: Update this path */
+  background-image: url("/assets/images/CitizenLink-logo-no-text.png"); /* <--- Update to correct asset path */
   background-size: 150%; /* or 'cover' depending on your logo */
   background-repeat: no-repeat;
   background-position: center;

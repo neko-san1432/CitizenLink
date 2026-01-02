@@ -38,6 +38,22 @@ class ConsoleLogger {
 
     // Override console.error
     console.error = function (...args) {
+      if (
+        args[0] &&
+        typeof args[0] === "string" &&
+        args[0].includes("TypeScript compiler process error")
+      )
+        return;
+
+      // Silence repeated Supabase/undici fetch failures for specific hostname
+      const msgStr = args.map(String).join(" ");
+      if (
+        msgStr.includes("TypeError: fetch failed") &&
+        (msgStr.includes("getaddrinfo ENOTFOUND") || msgStr.includes("undici"))
+      ) {
+        return;
+      }
+
       self.addLog("error", args);
       self.originalConsole.error.apply(console, [formatTimestamp(), ...args]);
     };

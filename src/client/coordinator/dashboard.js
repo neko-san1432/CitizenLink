@@ -10,7 +10,7 @@ if (oauthSuccessMessage) {
   sessionStorage.removeItem("oauth_success_message");
   showMessage("success", oauthSuccessMessage, 5000);
 }
-import apiClient from "../config/apiClient.js";
+
 
 // Dashboard state
 let dashboardData = null;

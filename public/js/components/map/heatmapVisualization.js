@@ -339,10 +339,10 @@ class HeatmapVisualization {
         }
       }
 
-      // console.log("[HEATMAP] User role initialized:", {
-      //   role: this.userRole,
-      //   department: this.userDepartment,
-      // });
+      console.log("[HEATMAP] User role initialized:", {
+        role: this.userRole,
+        department: this.userDepartment,
+      });
     } catch (error) {
       console.error("[HEATMAP] Failed to initialize user role:", error);
       this.userRole = "citizen"; // Default fallback
@@ -411,9 +411,9 @@ class HeatmapVisualization {
         this.userRole === "super-admin"
       ) {
         delete sanitizedFilters.department;
-        // console.log(
-        //   "[HEATMAP] Coordinator/Super-admin detected - removing department filter from API request"
-        // );
+        console.log(
+          "[HEATMAP] Coordinator/Super-admin detected - removing department filter from API request"
+        );
       } else if (
         this.userRole === "lgu-admin" &&
         this.userDepartment &&
@@ -421,10 +421,10 @@ class HeatmapVisualization {
       ) {
         // Automatically add department filter for LGU admins if not already present
         sanitizedFilters.department = this.userDepartment;
-        // console.log(
-        //   "[HEATMAP] LGU Admin detected - adding department filter to API request:",
-        //   this.userDepartment
-        // );
+        console.log(
+          "[HEATMAP] LGU Admin detected - adding department filter to API request:",
+          this.userDepartment
+        );
       }
 
       const queryParams = new URLSearchParams();
@@ -446,12 +446,12 @@ class HeatmapVisualization {
         }
       });
 
-      // console.log("[HEATMAP] Loading complaint data with filters:", {
-      //   role: this.userRole,
-      //   originalFilters: filters,
-      //   sanitizedFilters,
-      //   queryString: queryParams.toString(),
-      // });
+      console.log("[HEATMAP] Loading complaint data with filters:", {
+        role: this.userRole,
+        originalFilters: filters,
+        sanitizedFilters,
+        queryString: queryParams.toString(),
+      });
       // console.log removed for security
       // Use apiClient for authenticated requests
       const apiClientModule = await import("../../config/apiClient.js");
@@ -580,11 +580,11 @@ class HeatmapVisualization {
       this.applyClientSideFilters(filters);
 
       // Log summary of filtering
-      // console.log(`[HEATMAP] Data loading summary:`);
-      // console.log(`  - Raw data from API: ${raw.length} complaints`);
-      // console.log(
-      //   `  - After coordinate validation: ${this.allComplaintData.length} complaints`
-      // );
+      console.log(`[HEATMAP] Data loading summary:`);
+      console.log(`  - Raw data from API: ${raw.length} complaints`);
+      console.log(
+        `  - After coordinate validation: ${this.allComplaintData.length} complaints`
+      );
       if (this.filterByBoundary && this._filteredCount > 0) {
         console.log(
           `  - Filtered out by boundary: ${this._filteredCount} complaint(s)`
@@ -1408,29 +1408,24 @@ class HeatmapVisualization {
     // Handles both 'status' and 'workflow_status' fields
     const statusColors = {
       // Standard status values
-      new: "#6B7280", // Gray
-      pending: "#6B7280", // Gray
-      "pending review": "#6B7280", // Gray
-      assigned: "#FBBF24", // Yellow
-      "in progress": "#3B82F6", // Blue
-      in_progress: "#3B82F6", // Blue
-      resolved: "#10B981", // Green
-      completed: "#10B981", // Green
-      closed: "#10B981", // Green
-      rejected: "#EF4444", // Red (Use urgent/high color for rejected as alert) or keep gray? Legend doesn't explicitly have rejected. Keeping red or gray. Let's make it Gray to match "Completed" or similar? No, rejected is bad.
-      // Wait, User only specified New/Pending, Assigned, In Progress, Completed.
-      // I will map others to these core 4 or keep sensible defaults.
-      // Rejected -> Gray or Red. Let's stick to Gray for now as it's not "active". Actually let's use the explicit ones first.
-
+      "pending review": "#6c757d", // Gray
+      pending: "#6c757d", // Gray
+      "in progress": "#17a2b8", // Cyan/Teal
+      in_progress: "#17a2b8", // Cyan/Teal (workflow_status format)
+      resolved: "#28a745", // Green
+      closed: "#6c757d", // Gray
+      rejected: "#dc3545", // Red
+      cancelled: "#6c757d", // Gray
+      completed: "#28a745", // Green
       // Workflow status values
-      pending_approval: "#FBBF24", // Yellow (Assume similar to assigned/pending)
-
-      // Confirmation status values - mapping to closest visual match
-      waiting_for_responders: "#3B82F6", // Blue
-      waiting_for_complainant: "#FBBF24", // Yellow
-      confirmed: "#10B981", // Green
-      disputed: "#EF4444", // Red
-      cancelled: "#6B7280", // Gray
+      new: "#6c757d", // Gray
+      assigned: "#ffc107", // Yellow
+      pending_approval: "#fd7e14", // Orange
+      // Confirmation status values
+      waiting_for_responders: "#17a2b8", // Cyan
+      waiting_for_complainant: "#ffc107", // Yellow
+      confirmed: "#28a745", // Green
+      disputed: "#dc3545", // Red
     };
 
     // Check both status and workflow_status fields
@@ -1456,10 +1451,10 @@ class HeatmapVisualization {
 
     // Add a small border color based on priority for additional visual distinction
     const priorityBorderColors = {
-      low: "#10B981", // Green border
-      medium: "#FBBF24", // Yellow border
-      high: "#F97316", // Orange border
-      urgent: "#EF4444", // Red border
+      low: "#28a745", // Green border
+      medium: "#ffc107", // Yellow border
+      high: "#fd7e14", // Orange border
+      urgent: "#dc3545", // Red border
     };
     const priority = (complaint.priority || "medium").toLowerCase();
     const borderColor = priorityBorderColors[priority] || "#ffffff";
@@ -1502,22 +1497,22 @@ class HeatmapVisualization {
     return `
       <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
         <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${
-          complaint.title
-        }</h4>
+  complaint.title
+}</h4>
         <div class="complaint-details" style="margin: 0; padding: 0;">
           <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${
-            complaint.type
-          }</p>
+  complaint.type
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(
-            " ",
-            "-"
-          )}">${complaint.status}</span></p>
+    " ",
+    "-"
+  )}">${complaint.status}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${
-      complaint.priority
-    }</span></p>
+  complaint.priority
+}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${
-            complaint.location
-          }</p>
+  complaint.location
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
@@ -1554,8 +1549,8 @@ class HeatmapVisualization {
         <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
           <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
             <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-              complaint.title
-            }</h3>
+  complaint.title
+}</h3>
             <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
               <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
               <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1570,8 +1565,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Location:</span>
                 <span class="value" style="text-align: right; max-width: 60%;">${
-                  complaint.location
-                }</span>
+  complaint.location
+}</span>
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1584,8 +1579,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${
-        daysSinceSubmission !== 1 ? "s" : ""
-      }</span>
+  daysSinceSubmission !== 1 ? "s" : ""
+}</span>
               </div>
             </div>
             <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd;">
@@ -1602,8 +1597,8 @@ class HeatmapVisualization {
       <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
         <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
           <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-            complaint.title
-          }</h3>
+  complaint.title
+}</h3>
           <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
             <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
             <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1618,8 +1613,8 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Location:</span>
               <span class="value" style="text-align: right; max-width: 60%;">${
-                complaint.location
-              }</span>
+  complaint.location
+}</span>
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1632,21 +1627,21 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${
-      daysSinceSubmission !== 1 ? "s" : ""
-    }</span>
+  daysSinceSubmission !== 1 ? "s" : ""
+}</span>
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
             <button class="btn-details" onclick="viewComplaintDetails('${
-              complaint.id
-            }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+  complaint.id
+}')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
             <button class="btn-location" onclick="centerOnComplaint(${
-              complaint.lat
-            }, ${
-      complaint.lng
-    })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+  complaint.lat
+}, ${
+  complaint.lng
+})" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
             </button>
           </div>
@@ -1841,10 +1836,10 @@ class HeatmapVisualization {
         icon: L.divIcon({
           html: `<div style="
             background-color: ${
-              this.clusterConfig.clusterColors[
-                index % this.clusterConfig.clusterColors.length
-              ]
-            };
+  this.clusterConfig.clusterColors[
+    index % this.clusterConfig.clusterColors.length
+  ]
+};
             color: white;
             border-radius: 50%;
             width: 40px;
@@ -1926,26 +1921,26 @@ class HeatmapVisualization {
     return `
       <div class="cluster-popup-content">
         <h4>Cluster ${clusterIndex + 1} (${
-      clusterPoints.length
-    } complaints)</h4>
+  clusterPoints.length
+} complaints)</h4>
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
             ${Object.entries(statusCounts)
-              .map(([status, count]) => `<li>${status}: ${count}</li>`)
-              .join("")}
+    .map(([status, count]) => `<li>${status}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
             ${Object.entries(typeCounts)
-              .map(([type, count]) => `<li>${type}: ${count}</li>`)
-              .join("")}
+    .map(([type, count]) => `<li>${type}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
             ${Object.entries(priorityCounts)
-              .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
-              .join("")}
+    .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
+    .join("")}
           </ul>
         </div>
       </div>

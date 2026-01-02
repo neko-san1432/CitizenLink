@@ -11,10 +11,14 @@
     "test:watch": "jest --config tests/setup/jest.config.js --watch",
     "test:coverage": "jest --config tests/setup/jest.config.js --coverage",
     "test:security": "jest --config tests/setup/jest.config.js tests/security",
-    "test:functional": "jest --config tests/setup/jest.config.js tests/functional"
+    "test:functional": "jest --config tests/setup/jest.config.js tests/functional",
+    "security-audit": "npm audit",
+    "security-fix": "npm audit fix",
+    "security-scan": "node scripts/security-scan.js",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
+    "@supabase/supabase-js": "^2.40.0",
     "axios": "^1.13.0",
     "chart.js": "^4.5.0",
     "compression": "^1.8.1",

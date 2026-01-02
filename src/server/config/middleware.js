@@ -3,7 +3,10 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const config = require("../../../config/app");
-const { securityHeaders, customSecurityHeaders } = require("../middleware/security");
+const {
+  securityHeaders,
+  customSecurityHeaders,
+} = require("../middleware/security");
 const { apiLimiter } = require("../middleware/rateLimiting");
 const InputSanitizer = require("../middleware/inputSanitizer");
 const { enforceHTTPS, trustProxy } = require("../middleware/httpsEnforcement");
@@ -43,14 +46,26 @@ const setupMiddleware = (app) => {
   app.use("/js", express.static(path.join(config.rootDir, "public", "js")));
   app.use("/css", express.static(path.join(config.rootDir, "public", "css")));
   app.use("/js", express.static(path.join(config.rootDir, "src", "client")));
-  app.use("/css", express.static(path.join(config.rootDir, "src", "client", "styles")));
-  app.use("/assets", express.static(path.join(config.rootDir, "src", "client", "assets")));
+  app.use(
+    "/css",
+    express.static(path.join(config.rootDir, "src", "client", "styles"))
+  );
+  app.use(
+    "/assets",
+    express.static(path.join(config.rootDir, "src", "client", "assets"))
+  );
   app.use("/public", express.static(path.join(config.rootDir, "public")));
   app.use("/uploads", express.static(path.join(config.rootDir, "uploads")));
 
   // Additional static file serving for coordinator review system
-  app.use("/components", express.static(path.join(config.rootDir, "public", "components")));
-  app.use("/styles", express.static(path.join(config.rootDir, "public", "styles")));
+  app.use(
+    "/components",
+    express.static(path.join(config.rootDir, "public", "components"))
+  );
+  app.use(
+    "/styles",
+    express.static(path.join(config.rootDir, "public", "styles"))
+  );
 
   // Serve favicon
   app.get("/favicon.ico", (req, res) => {
@@ -58,7 +73,10 @@ const setupMiddleware = (app) => {
   });
 
   // Serve node_modules for browser imports
-  app.use("/node_modules", express.static(path.join(config.rootDir, "node_modules")));
+  app.use(
+    "/node_modules",
+    express.static(path.join(config.rootDir, "node_modules"))
+  );
 };
 
 /**
@@ -75,5 +93,5 @@ const setupErrorHandling = (app) => {
 
 module.exports = {
   setupMiddleware,
-  setupErrorHandling
+  setupErrorHandling,
 };

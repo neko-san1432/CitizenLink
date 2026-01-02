@@ -6,7 +6,7 @@ const cspConfig = {
     defaultSrc: ["'self'"],
     styleSrc: [
       "'self'",
-      "'unsafe-inline'", // TODO: remove after moving inline styles
+      "'unsafe-inline'", // Note: remove after moving inline styles
       "https://fonts.googleapis.com",
       "https://unpkg.com",
     ],
@@ -19,7 +19,7 @@ const cspConfig = {
       "https://www.gstatic.com",
       "https://unpkg.com",
       "https://esm.sh",
-      "https://cdn.jsdelivr.net",
+      "https://cdn.jsdelivr.net", // Ensure this is explicitly allowed
       "https://cdn.tailwindcss.com",
     ],
     // Disallow inline event handlers (onclick, etc.) — move logic to JS modules

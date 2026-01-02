@@ -287,6 +287,16 @@ class AuthController {
           error: "Please verify your email address before logging in.",
         });
       }
+      const normalizeIp = (ip) => {
+        if (!ip) return "0.0.0.0";
+        const cleaned = ip
+          .replace(/^::ffff:/i, "") // IPv4-mapped IPv6
+          .replace(/%[0-9a-zA-Z]+$/, ""); // drop zone index (e.g., fe80::1%lo0)
+        if (cleaned === "::1" || cleaned === "0:0:0:0:0:0:0:1")
+          return "127.0.0.1";
+        if (cleaned === "::") return "0.0.0.0";
+        return cleaned;
+      };
       // Track login (continue even if tracking fails)
       const resolveClientIp = (request) => {
         try {
@@ -311,16 +321,6 @@ class AuthController {
         } catch (_) {
           return "0.0.0.0";
         }
-      };
-      const normalizeIp = (ip) => {
-        if (!ip) return "0.0.0.0";
-        const cleaned = ip
-          .replace(/^::ffff:/i, "") // IPv4-mapped IPv6
-          .replace(/%[0-9a-zA-Z]+$/, ""); // drop zone index (e.g., fe80::1%lo0)
-        if (cleaned === "::1" || cleaned === "0:0:0:0:0:0:0:1")
-          return "127.0.0.1";
-        if (cleaned === "::") return "0.0.0.0";
-        return cleaned;
       };
       const ipAddress = resolveClientIp(req);
       const userAgent = req.get("User-Agent");
@@ -890,9 +890,7 @@ class AuthController {
         first_name: firstNameFinal,
         middle_name: middleNameFinal || existingMetadata.middle_name || null,
         last_name: lastNameFinal,
-        first_name: firstNameFinal,
-        middle_name: middleNameFinal || existingMetadata.middle_name || null,
-        last_name: lastNameFinal,
+
         name: displayName,
         role,
         normalized_role: normalizedRole,
@@ -1094,7 +1092,9 @@ class AuthController {
       });
       // Store intent for approval in user metadata
       // Add a small delay to ensure user is fully created before updating
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 500);
+      });
 
       // Retry logic for updating user metadata
       let updateSuccess = false;
@@ -1133,7 +1133,9 @@ class AuthController {
           );
           if (attempt < 2) {
             // Wait before retry
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await new Promise((resolve) => {
+              setTimeout(resolve, 500);
+            });
           }
         }
       }
@@ -1223,12 +1225,10 @@ class AuthController {
             timestamp: new Date().toISOString(),
           }
         );
-        return res
-          .status(400)
-          .json({
-            success: false,
-            error: codeValidation.error || "Invalid signup code",
-          });
+        return res.status(400).json({
+          success: false,
+          error: codeValidation.error || "Invalid signup code",
+        });
       }
       const { role, department_code } = codeValidation.data;
       console.log("[OAUTH_SIGNUP_HR] Status: SIGNUP_CODE_VALIDATED", {
@@ -1253,12 +1253,7 @@ class AuthController {
         mobile: mobile || req.user?.mobileNumber || null,
         // Role fields (department-specific role allowed in role; normalized_role is general bucket)
         role,
-        normalized_role:
-          (role || "") === "lgu-admin"
-            ? "lgu-admin"
-            : (role || "") === "lgu"
-              ? "lgu"
-              : role || "citizen",
+        normalized_role: role || "citizen",
         department: department_code || null,
         // Flags
         is_oauth: true,
@@ -1389,12 +1384,10 @@ class AuthController {
         duration: `${duration}ms`,
         timestamp: new Date().toISOString(),
       });
-      return res
-        .status(500)
-        .json({
-          success: false,
-          error: "Failed to complete OAuth registration",
-        });
+      return res.status(500).json({
+        success: false,
+        error: "Failed to complete OAuth registration",
+      });
     }
   }
   /**

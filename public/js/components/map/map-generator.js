@@ -37,9 +37,9 @@ async function initializeSimpleMap(containerId = "map", options = {}) {
     }
     // Default map options
     const defaultOptions = {
-      center: [0, 0], // Digos City, Philippines
+      center: [0,0], // Digos City, Philippines
       zoom: 10,
-      zoomControl: false, // Disabled as per user request to rely on scroll
+      zoomControl: true,
       preferCanvas: true,
       scrollWheelZoom: true,
       doubleClickZoom: true,
@@ -54,10 +54,7 @@ async function initializeSimpleMap(containerId = "map", options = {}) {
     // Merge with provided options
     const mapOptions = { ...defaultOptions, ...options };
     // If container is already bound to a Leaflet map, reuse or force a clean host
-    if (
-      mapContainer.classList.contains("leaflet-container") ||
-      mapContainer._leaflet_id
-    ) {
+    if (mapContainer.classList.contains("leaflet-container") || mapContainer._leaflet_id) {
       if (window.simpleMap) {
         window.simpleMap.invalidateSize();
         return window.simpleMap;
@@ -106,15 +103,9 @@ async function initializeSimpleMap(containerId = "map", options = {}) {
     // console.log removed for security
     defaultLayer.addTo(map);
     // Add layer control for tile switching (positioned below other controls)
-    const layerControl = L.control
-      .layers(
-        tileLayers,
-        {},
-        {
-          position: "bottomright",
-        }
-      )
-      .addTo(map);
+    const layerControl = L.control.layers(tileLayers, {}, {
+      position: "topleft"
+    }).addTo(map);
     // Store references globally
     window.simpleMapLayers = tileLayers;
     window.simpleMapLayerControl = layerControl;
@@ -144,7 +135,7 @@ async function initializeSimpleMap(containerId = "map", options = {}) {
 function createTileLayers() {
   const tileLayers = {
     // Standard OpenStreetMap
-    OpenStreetMap: L.tileLayer(
+    "OpenStreetMap": L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         attribution: "© OpenStreetMap contributors",
@@ -168,19 +159,21 @@ function createTileLayers() {
       }
     ),
     // Satellite imagery
-    Satellite: L.tileLayer(
+    "Satellite": L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
-        attribution:
-          "© Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+        attribution: "© Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
         maxZoom: 19,
       }
     ),
     // Terrain
-    Terrain: L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenTopoMap (CC-BY-SA)",
-      maxZoom: 17,
-    }),
+    "Terrain": L.tileLayer(
+      "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+      {
+        attribution: "© OpenTopoMap (CC-BY-SA)",
+        maxZoom: 17,
+      }
+    ),
   };
   return tileLayers;
 }
@@ -190,6 +183,7 @@ function createTileLayers() {
  * @returns {boolean} - Success status
  */
 function switchTileLayer(layerName) {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     console.error("Map not initialized");
     return false;
@@ -200,7 +194,7 @@ function switchTileLayer(layerName) {
     return false;
   }
   // Remove all current tile layers
-  Object.values(window.simpleMapLayers).forEach((layer) => {
+  Object.values(window.simpleMapLayers).forEach(layer => {
     if (window.simpleMap.hasLayer(layer)) {
       window.simpleMap.removeLayer(layer);
     }
@@ -215,6 +209,7 @@ function switchTileLayer(layerName) {
  * @returns {string|null} - Name of current active layer or null
  */
 function getCurrentTileLayer() {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     return null;
   }
@@ -240,6 +235,7 @@ function getAvailableTileLayers() {
  * @returns {boolean} - Success status
  */
 function addCustomTileLayer(name, url, options = {}) {
+
   if (!window.simpleMap || !window.simpleMapLayers) {
     console.error("Map not initialized");
     return false;
@@ -247,7 +243,7 @@ function addCustomTileLayer(name, url, options = {}) {
   const customLayer = L.tileLayer(url, {
     attribution: "Custom Layer",
     maxZoom: 19,
-    ...options,
+    ...options
   });
   window.simpleMapLayers[name] = customLayer;
   // Update layer control
@@ -263,11 +259,8 @@ function addCustomTileLayer(name, url, options = {}) {
  * @returns {boolean} - Success status
  */
 function removeTileLayer(name) {
-  if (
-    !window.simpleMap ||
-    !window.simpleMapLayers ||
-    !window.simpleMapLayers[name]
-  ) {
+
+  if (!window.simpleMap || !window.simpleMapLayers || !window.simpleMapLayers[name]) {
     console.error(`Layer '${name}' not found`);
     return false;
   }
@@ -289,6 +282,7 @@ function removeTileLayer(name) {
  * Clean up map resources
  */
 function destroySimpleMap() {
+
   if (window.simpleMap) {
     window.simpleMap.remove();
     window.simpleMap = null;
@@ -307,6 +301,7 @@ function destroySimpleMap() {
 }
 // Export functions for use in other modules
 if (typeof module !== "undefined" && module.exports) {
+
   module.exports = {
     initializeSimpleMap,
     switchTileLayer,
@@ -314,6 +309,6 @@ if (typeof module !== "undefined" && module.exports) {
     getAvailableTileLayers,
     addCustomTileLayer,
     removeTileLayer,
-    destroySimpleMap,
+    destroySimpleMap
   };
 }

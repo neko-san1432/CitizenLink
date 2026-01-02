@@ -18,18 +18,7 @@
     <link rel="stylesheet" href="/css/header-redesign.css" />
     <link rel="stylesheet" href="/css/viewport-fix.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['"Source Sans 3"', "sans-serif"],
-            },
-          },
-        },
-      };
-    </script>
+    <script src="/js/pages/publish-tailwind-config.js"></script>
   </head>
   <body
     class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200"
@@ -205,7 +194,7 @@
     ></div>
 
     <!-- Scripts -->
-    <script src="/js/lib/supabase.js"></script>
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>

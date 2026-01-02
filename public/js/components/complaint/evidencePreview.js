@@ -40,27 +40,27 @@ class EvidencePreview {
       </div>
     `;
     // Add to body if not exists
-    if (!document.getElementById('evidence-preview-modal')) {
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
+    if (!document.getElementById("evidence-preview-modal")) {
+      document.body.insertAdjacentHTML("beforeend", modalHTML);
     }
-    this.modal = document.getElementById('evidence-preview-modal');
+    this.modal = document.getElementById("evidence-preview-modal");
   }
   bindEvents() {
     // Close button events
-    const closeBtn = document.getElementById('evidence-preview-close');
-    const closeBtn2 = document.getElementById('evidence-close-btn');
-    const overlay = this.modal.querySelector('.evidence-preview-overlay');
-    if (closeBtn) closeBtn.addEventListener('click', () => this.close());
-    if (closeBtn2) closeBtn2.addEventListener('click', () => this.close());
-    if (overlay) overlay.addEventListener('click', () => this.close());
+    const closeBtn = document.getElementById("evidence-preview-close");
+    const closeBtn2 = document.getElementById("evidence-close-btn");
+    const overlay = this.modal.querySelector(".evidence-preview-overlay");
+    if (closeBtn) closeBtn.addEventListener("click", () => this.close());
+    if (closeBtn2) closeBtn2.addEventListener("click", () => this.close());
+    if (overlay) overlay.addEventListener("click", () => this.close());
     // Download button
-    const downloadBtn = document.getElementById('evidence-download-btn');
+    const downloadBtn = document.getElementById("evidence-download-btn");
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', () => this.downloadFile());
+      downloadBtn.addEventListener("click", () => this.downloadFile());
     }
     // ESC key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.modal.style.display !== 'none') {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.modal.style.display !== "none") {
         this.close();
       }
     });
@@ -68,18 +68,18 @@ class EvidencePreview {
   show(file) {
     this.currentFile = file;
     this.loadContent(file);
-    this.modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    this.modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
   }
   close() {
-    this.modal.style.display = 'none';
-    document.body.style.overflow = '';
+    this.modal.style.display = "none";
+    document.body.style.overflow = "";
     this.currentFile = null;
   }
   loadContent(file) {
-    const title = document.getElementById('evidence-preview-title');
-    const body = document.getElementById('evidence-preview-body');
-    if (title) title.textContent = file.fileName || 'Evidence Preview';
+    const title = document.getElementById("evidence-preview-title");
+    const body = document.getElementById("evidence-preview-body");
+    if (title) title.textContent = file.fileName || "Evidence Preview";
     // Check for both publicUrl and signedUrl (from coordinator repository)
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
     if (!fileUrl) {
@@ -88,16 +88,16 @@ class EvidencePreview {
     }
     const fileType = this.getFileType(file.fileType || file.mimeType);
     switch (fileType) {
-      case 'image':
+      case "image":
         this.loadImagePreview(body, file);
         break;
-      case 'pdf':
+      case "pdf":
         this.loadPdfPreview(body, file);
         break;
-      case 'video':
+      case "video":
         this.loadVideoPreview(body, file);
         break;
-      case 'audio':
+      case "audio":
         this.loadAudioPreview(body, file);
         break;
       default:
@@ -105,12 +105,12 @@ class EvidencePreview {
     }
   }
   getFileType(mimeType) {
-    if (!mimeType) return 'unknown';
-    if (mimeType.startsWith('image/')) return 'image';
-    if (mimeType.startsWith('video/')) return 'video';
-    if (mimeType.startsWith('audio/')) return 'audio';
-    if (mimeType === 'application/pdf') return 'pdf';
-    return 'unknown';
+    if (!mimeType) return "unknown";
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("video/")) return "video";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType === "application/pdf") return "pdf";
+    return "unknown";
   }
   loadImagePreview(container, file) {
     const fileUrl = file.publicUrl || file.signedUrl || file.url;
@@ -189,26 +189,26 @@ class EvidencePreview {
     if (!this.currentFile) return;
     const fileUrl = this.currentFile.publicUrl || this.currentFile.signedUrl || this.currentFile.url;
     if (!fileUrl) return;
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = fileUrl;
     link.download = this.currentFile.fileName;
-    link.target = '_blank';
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
   formatFileSize(bytes) {
-    if (!bytes) return 'Unknown size';
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (!bytes) return "Unknown size";
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`;
   }
 }
 // Export for use in other modules
 window.EvidencePreview = EvidencePreview;
 // Auto-initialize if DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
     window.evidencePreview = new EvidencePreview();
   });
 } else {

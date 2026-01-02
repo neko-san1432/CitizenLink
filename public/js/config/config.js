@@ -17,33 +17,58 @@ async function initializeSupabase() {
         throw new Error("Missing Supabase client configuration");
       }
 
-      // Check for common UMD leak issues (where global exports/module are defined)
-      if (!window.supabase) {
-        if (
-          typeof window.exports === "object" &&
-          window.exports &&
-          window.exports.supabase
-        ) {
-          window.supabase = window.exports.supabase;
-          console.log("[Config] Recovered Supabase from window.exports");
-        } else if (
-          typeof window.module === "object" &&
-          window.module &&
-          window.module.exports &&
-          window.module.exports.supabase
-        ) {
-          window.supabase = window.module.exports.supabase;
-          console.log("[Config] Recovered Supabase from window.module.exports");
+      // Ensure Supabase library is loaded
+      // Wait for it up to 5 seconds
+      let attempts = 0;
+      while (
+        (!window.supabase || !window.supabase.createClient) &&
+        attempts < 20
+      ) {
+        // Check for alternative global name
+        if (window.Supabase && window.Supabase.createClient) {
+          window.supabase = window.Supabase;
+          break;
         }
+        if (window.exports && window.exports.supabase)
+          window.supabase = window.exports.supabase;
+        if (window.supabase && window.supabase.createClient) break;
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 250);
+        }); // Wait 250ms
+        attempts++;
+        console.log(
+          `[Config] Waiting for Supabase library... (${attempts}/20). Globals: sup=${Boolean(
+            window.supabase
+          )}, Sup=${Boolean(window.Supabase)}`
+        );
       }
 
-      // Ensure Supabase library is loaded
+      console.log(
+        "[Config] Checking for window.supabase...",
+        typeof window.supabase
+      );
+
       if (!window.supabase || !window.supabase.createClient) {
-        console.error(
-          "[Config] Supabase library check failed. window.supabase:",
-          typeof window.supabase
-        );
-        throw new Error("Supabase library not loaded. Check script inclusion.");
+        // Final check for Capitalized version
+        if (window.Supabase) window.supabase = window.Supabase;
+        if (window.exports && window.exports.supabase)
+          window.supabase = window.exports.supabase;
+
+        if (!window.supabase) {
+          console.error(
+            "[Config] FATAL: window.supabase is missing after waiting."
+          );
+          console.log(
+            "[Config] Available globals (approx):",
+            Object.keys(window).filter((k) =>
+              k.toLowerCase().includes("supabase")
+            )
+          );
+          throw new Error(
+            "Supabase library not loaded. Check script inclusion."
+          );
+        }
       }
       const { createClient } = window.supabase;
 
@@ -71,7 +96,7 @@ const supabaseProxy = new Proxy(
         prop === "constructor" ||
         prop === "prototype"
       ) {
-        return undefined;
+        return;
       }
       if (supabase) {
         return supabase[prop];
@@ -91,7 +116,7 @@ const supabaseProxy = new Proxy(
                 authProp === "constructor" ||
                 authProp === "prototype"
               ) {
-                return undefined;
+                return;
               }
               return (...args) => {
                 if (supabase) {

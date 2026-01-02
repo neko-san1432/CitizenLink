@@ -117,7 +117,7 @@
 }
 
 .btn-danger {
-  background: var(--error-500, #e53e3e);
+  background: #c53030; /* Darker red for better contrast with white text */
   color: white;
 }
 
@@ -127,7 +127,7 @@
 
 .warning-message {
   background: color-mix(in srgb, var(--warning-500, #f59e0b) 6%, white 94%);
-  color: #744210;
+  color: #5f370e; /* Darker brown for better contrast */
   padding: 1rem;
   border-radius: 8px;
   border-left: 4px solid var(--warning-500, #ed8936);
@@ -210,11 +210,11 @@
     padding: 1.5rem;
     margin: 1rem;
   }
-  
+
   .false-complaint-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

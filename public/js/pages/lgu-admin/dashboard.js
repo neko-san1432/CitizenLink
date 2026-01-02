@@ -76,81 +76,141 @@ class LguAdminDashboard {
   }
 
   renderCharts(stats, chartsData) {
+    // Helper to check if data is empty
+    const isAllZeros = (arr) => arr.every((v) => v === 0);
+
     // 1. Trend Chart
+    const trendContainer = document.getElementById("trendChart")?.parentElement;
     const trendCtx = document.getElementById("trendChart")?.getContext("2d");
-    if (trendCtx) {
+
+    if (trendCtx && trendContainer) {
       if (this.charts.trend) this.charts.trend.destroy();
 
       const labels = Object.keys(chartsData.trend || {}).sort();
       const data = labels.map((date) => chartsData.trend[date] || 0);
 
-      this.charts.trend = new Chart(trendCtx, {
-        type: "line",
-        data: {
-          labels: labels.map((d) => new Date(d).toLocaleDateString()),
-          datasets: [
-            {
-              label: "New Complaints",
-              data,
-              borderColor: "#3b82f6",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-              borderWidth: 2,
-              fill: true,
-              tension: 0.4,
+      if (labels.length === 0 || isAllZeros(data)) {
+        this.showNoData(trendContainer, "No trend data available");
+      } else {
+        this.removeNoData(trendContainer);
+        this.charts.trend = new Chart(trendCtx, {
+          type: "line",
+          data: {
+            labels: labels.map((d) => new Date(d).toLocaleDateString()),
+            datasets: [
+              {
+                label: "New Complaints",
+                data,
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
             },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 } },
+            },
           },
-          scales: {
-            y: { beginAtZero: true, ticks: { precision: 0 } },
-          },
-        },
-      });
+        });
+      }
     }
 
     // 2. Distribution Chart
+    const distContainer =
+      document.getElementById("distributionChart")?.parentElement;
     const distCtx = document
       .getElementById("distributionChart")
       ?.getContext("2d");
-    if (distCtx) {
+
+    if (distCtx && distContainer) {
       if (this.charts.distribution) this.charts.distribution.destroy();
 
-      this.charts.distribution = new Chart(distCtx, {
-        type: "doughnut",
-        data: {
-          labels: ["Urgent", "High", "Medium", "Low"],
-          datasets: [
-            {
-              data: [
-                stats.priority?.urgent || 0,
-                stats.priority?.high || 0,
-                stats.priority?.medium || 0,
-                stats.priority?.low || 0,
-              ],
-              backgroundColor: [
-                "#ea580c", // Orange (Urgent)
-                "#ca8a04", // Yellow (High)
-                "#3b82f6", // Blue (Medium)
-                "#6b7280", // Gray (Low)
-              ],
-              borderWidth: 0,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: "bottom" },
+      const priorityData = [
+        stats.priority?.urgent || 0,
+        stats.priority?.high || 0,
+        stats.priority?.medium || 0,
+        stats.priority?.low || 0,
+      ];
+
+      if (isAllZeros(priorityData)) {
+        this.showNoData(distContainer, "No data available");
+      } else {
+        this.removeNoData(distContainer);
+        this.charts.distribution = new Chart(distCtx, {
+          type: "doughnut",
+          data: {
+            labels: ["Urgent", "High", "Medium", "Low"],
+            datasets: [
+              {
+                data: priorityData,
+                backgroundColor: [
+                  "#ea580c", // Orange (Urgent)
+                  "#ca8a04", // Yellow (High)
+                  "#3b82f6", // Blue (Medium)
+                  "#6b7280", // Gray (Low)
+                ],
+                borderWidth: 0,
+              },
+            ],
           },
-        },
-      });
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom" },
+            },
+          },
+        });
+      }
     }
+  }
+
+  showNoData(container, message) {
+    // Remove existing overlay
+    this.removeNoData(container);
+
+    const overlay = document.createElement("div");
+    overlay.className = "no-data-overlay";
+
+    // Use explicit styles to guarantee centering regardless of Tailwind availability
+    overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(2px);
+        z-index: 10;
+        border-radius: 0.5rem;
+    `;
+
+    overlay.innerHTML = `
+        <div class="text-center p-4">
+            <svg class="w-8 h-8 mx-auto text-gray-400 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 font-medium text-sm">${message}</p>
+        </div>
+    `;
+
+    container.appendChild(overlay);
+  }
+
+  removeNoData(container) {
+    const overlay = container.querySelector(".no-data-overlay");
+    if (overlay) overlay.remove();
   }
 
   renderLists(lists) {
@@ -167,31 +227,25 @@ class LguAdminDashboard {
     }
 
     container.innerHTML = lists.recent_unassigned
-      .map(
-        (item) => `
-          <div class="complaint-item flex justify-between items-start p-3 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100 cursor-pointer" 
-               data-id="${item.id}">
-              <div>
-                  <h4 class="font-medium text-gray-900">${this.escapeHtml(
-    item.title || "Untitled"
-  )}</h4>
-                  <p class="text-sm text-gray-500 mt-1">${
-  item.location_text || "No location"
-}</p>
-              </div>
-              <div class="text-right">
-                   <span class="inline-block px-2 py-1 text-xs font-semibold rounded ${this.getPriorityBadgeClass(
-    item.priority
-  )}">
-                      ${item.priority}
-                  </span>
-                  <p class="text-xs text-gray-400 mt-2">${new Date(
-    item.submitted_at
-  ).toLocaleDateString()}</p>
-              </div>
+      .map((item) => {
+        const title = this.escapeHtml(item.title || "Untitled");
+        const location = item.location_text || "No location";
+        const priorityClass = this.getPriorityBadgeClass(item.priority);
+        const date = new Date(item.submitted_at).toLocaleDateString();
+        return `
+        <div class="complaint-item flex justify-between items-start p-3 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100 cursor-pointer" data-id="${item.id}">
+          <div>
+            <h4 class="font-medium text-gray-900">${title}</h4>
+            <p class="text-sm text-gray-500 mt-1">${location}</p>
           </div>
-      `
-      )
+          <div class="text-right">
+            <span class="inline-block px-2 py-1 text-xs font-semibold rounded ${priorityClass}">
+              ${item.priority}
+            </span>
+            <p class="text-xs text-gray-400 mt-2">${date}</p>
+          </div>
+        </div>`;
+      })
       .join("");
   }
 

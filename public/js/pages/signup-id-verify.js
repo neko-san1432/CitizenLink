@@ -50,12 +50,12 @@ import { supabase } from "../config/config.js";
   const review = qs("#id-review");
   const reviewGrid = qs("#id-review-grid");
 
-  const _form = qs("#regForm") || qs("#oauthCompleteForm");
+  // No unused _form variable
 
   let mediaStream = null;
   let capturedBlob = null;
   let isStartingCamera = false; // Prevent multiple simultaneous start attempts
-  const _lastCameraError = null;
+  // No unused _lastCameraError variable
   let cameraErrorCount = 0;
   let cameraCooldownUntil = 0; // Timestamp when camera can be retried
   let extractedIdData = null; // Store extracted ID data for comparison
@@ -69,7 +69,7 @@ import { supabase } from "../config/config.js";
     const isUpload = mode === "upload";
     uploadPanel.hidden = !isUpload;
     cameraPanel.hidden = isUpload;
-    if (!isUpload) {
+    if (mode !== "upload") {
       previewWrap.hidden = true;
       fileInput.value = "";
       // Don't auto-start - let user explicitly click "Enable camera" button
@@ -102,7 +102,7 @@ import { supabase } from "../config/config.js";
       const url = URL.createObjectURL(f);
       previewImg.src = url;
       previewWrap.hidden = false;
-    } else {
+    } else if (f.type.startsWith("image/") === false) {
       previewWrap.hidden = true;
       previewImg.src = "";
     }
@@ -118,7 +118,7 @@ import { supabase } from "../config/config.js";
 
   // Camera handling
   async function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (typeof navigator?.mediaDevices?.getUserMedia === "undefined") {
       status(
         "Camera not supported on this device. Please use Upload mode.",
         "error"
@@ -149,7 +149,9 @@ import { supabase } from "../config/config.js";
     if (mediaStream) {
       stopCamera();
       // Wait longer for cleanup to ensure resources are released
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 500);
+      });
     }
 
     isStartingCamera = true;
@@ -161,7 +163,6 @@ import { supabase } from "../config/config.js";
       // Strategy: Try simplest constraints first, then progressively more specific
       // This avoids NotReadableError from overly complex constraints
       let mediaStreamAttempt = null;
-      let lastError = null;
 
       // Attempt 1: Absolute simplest - just request any video
       try {
@@ -172,14 +173,15 @@ import { supabase } from "../config/config.js";
         });
         console.log("Camera access granted with simple constraints");
       } catch (simpleError) {
-        lastError = simpleError;
         console.log(
           "Simple constraints failed, trying rear camera...",
           simpleError.name
         );
 
         // Attempt 2: Try rear camera (environment) with minimal constraints
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 300);
+        });
         try {
           mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" },
@@ -187,14 +189,15 @@ import { supabase } from "../config/config.js";
           });
           console.log("Camera access granted with rear camera");
         } catch (rearError) {
-          lastError = rearError;
           console.log(
             "Rear camera failed, trying any camera with basic constraints...",
             rearError.name
           );
 
           // Attempt 3: Any camera with basic quality
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          await new Promise((resolve) => {
+            setTimeout(resolve, 300);
+          });
           try {
             mediaStreamAttempt = await navigator.mediaDevices.getUserMedia({
               video: { width: 640, height: 480 },
@@ -202,7 +205,6 @@ import { supabase } from "../config/config.js";
             });
             console.log("Camera access granted with basic constraints");
           } catch (basicError) {
-            _lastError = basicError;
             console.log("All camera attempts failed", basicError.name);
             throw basicError; // Re-throw to be caught by outer catch
           }
@@ -213,7 +215,6 @@ import { supabase } from "../config/config.js";
 
       // Success - reset error tracking
       cameraErrorCount = 0;
-      lastCameraError = null;
 
       cameraVideo.srcObject = mediaStream;
       const cameraWrap = cameraVideo.closest(".camera-wrap");
@@ -279,12 +280,18 @@ import { supabase } from "../config/config.js";
         e.name === "TrackStartError"
       ) {
         cameraErrorCount++;
-        lastCameraError = e.name;
 
         // Implement exponential backoff: 3s, 6s, 10s, then suggest upload mode
-        const cooldownSeconds =
-          cameraErrorCount === 1 ? 3 : cameraErrorCount === 2 ? 6 : 10;
-        cameraCooldownUntil = Date.now() + cooldownSeconds * 1000;
+        let cooldownSeconds;
+        if (cameraErrorCount === 1) {
+          cooldownSeconds = 3;
+        } else if (cameraErrorCount === 2) {
+          cooldownSeconds = 6;
+        } else {
+          cooldownSeconds = 10;
+        }
+        const cooldownMs = cooldownSeconds * 1000;
+        cameraCooldownUntil = Date.now() + cooldownMs;
 
         errorMsg = "Camera cannot be accessed. ";
 
@@ -347,10 +354,9 @@ import { supabase } from "../config/config.js";
         }, 1000);
 
         // Clear timer after cooldown
-        setTimeout(
-          () => clearInterval(cooldownTimer),
-          cooldownSeconds * 1000 + 100
-        );
+        const cooldownMsFactor = cooldownSeconds * 1000;
+        const cooldownTimerDelay = cooldownMsFactor + 100;
+        setTimeout(() => clearInterval(cooldownTimer), cooldownTimerDelay);
       } else if (
         e.name === "OverconstrainedError" ||
         e.name === "ConstraintNotSatisfiedError"
@@ -368,6 +374,7 @@ import { supabase } from "../config/config.js";
             cameraVideo.play();
             status("Camera started with basic settings.", "success");
           } catch (retryError) {
+            console.error("Retry camera failed:", retryError);
             status(
               "Could not start camera. Please use Upload mode instead.",
               "error"
@@ -503,7 +510,7 @@ import { supabase } from "../config/config.js";
 
     try {
       const fd = new FormData();
-      fd.append("file", blob, (file && file.name) || "capture.jpg");
+      fd.append("file", blob, file?.name || "capture.jpg");
       const res = await fetch("/api/identity/ocr", {
         method: "POST",
         body: fd,
@@ -517,13 +524,12 @@ import { supabase } from "../config/config.js";
         let errorMessage =
           data.message || "Could not process the ID automatically.";
 
-        // Provide specific error messages based on error type
         if (
           errorCode === "TEXT_DETECTION_FAILED" ||
           errorCode === "NO_FIELDS_EXTRACTED"
         ) {
           errorMessage = data.message || "Text detection failed. ";
-          if (data.details && data.details.suggestions) {
+          if (data?.details?.suggestions) {
             errorMessage += `\n\nSuggestions:\n${data.details.suggestions
               .map((s, i) => `${i + 1}. ${s}`)
               .join("\n")}`;
@@ -556,7 +562,12 @@ import { supabase } from "../config/config.js";
       // Flatten fields if they are objects with value/confidence (Handle new OCR format)
       Object.keys(rawFields).forEach((key) => {
         const val = rawFields[key];
-        if (val && typeof val === "object" && val.value !== undefined) {
+        if (
+          val !== null &&
+          typeof val === "object" &&
+          val.value !== null &&
+          typeof val.value !== "undefined"
+        ) {
           extractedIdData[key] = val.value;
         } else {
           extractedIdData[key] = val;
@@ -568,10 +579,8 @@ import { supabase } from "../config/config.js";
       // Store verification data in backend (only if authenticated)
       try {
         // Get current session token to ensure request is authenticated
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
 
         // If no session (e.g. email signup), skip server storage
         if (!token) {
@@ -595,8 +604,8 @@ import { supabase } from "../config/config.js";
           sessionStorage.setItem("cl_verification_complete", "true");
 
           // Immediate success for anonymous users
-          if (typeof window.handleVerificationSuccess === "function") {
-            window.handleVerificationSuccess({
+          if (typeof globalThis.handleVerificationSuccess === "function") {
+            globalThis.handleVerificationSuccess({
               idType: data.idType,
               idNumber:
                 extractedIdData.idNumber || extractedIdData.public_id_number,
@@ -682,8 +691,8 @@ import { supabase } from "../config/config.js";
 
           // Call success handler to unlock "Next" button (unless it was a duplicate error)
           if (storeResult.error !== "ID_NUMBER_ALREADY_REGISTERED") {
-            if (typeof window.handleVerificationSuccess === "function") {
-              window.handleVerificationSuccess({
+            if (typeof globalThis.handleVerificationSuccess === "function") {
+              globalThis.handleVerificationSuccess({
                 idType: data.idType,
                 idNumber:
                   extractedIdData.idNumber || extractedIdData.public_id_number,
@@ -726,8 +735,8 @@ import { supabase } from "../config/config.js";
         status("ID Verified successfully!", "success");
 
         // Call success handler
-        if (typeof window.handleVerificationSuccess === "function") {
-          window.handleVerificationSuccess({
+        if (typeof globalThis.handleVerificationSuccess === "function") {
+          globalThis.handleVerificationSuccess({
             idType: data.idType,
             idNumber:
               extractedIdData.idNumber || extractedIdData.public_id_number,
@@ -750,8 +759,8 @@ import { supabase } from "../config/config.js";
       // Determine if it's a network error, camera issue, or other error
       let errorMessage = "Could not process the ID automatically. ";
       if (
-        err.message &&
-        (err.message.includes("fetch") || err.message.includes("network"))
+        err?.message?.includes("fetch") ||
+        err?.message?.includes("network")
       ) {
         errorMessage +=
           "Network error. Please check your connection and try again.";
@@ -797,14 +806,14 @@ import { supabase } from "../config/config.js";
         const label =
           fieldLabels[k] ||
           k
-            .replace(/([A-Z])/g, " $1")
+            .replaceAll(/([A-Z])/g, " $1")
             .replace(/^./, (str) => str.toUpperCase());
         let value = String(v).trim();
 
         // Format dates if they're in ISO format
         if (
           (k === "birthDate" || k === "expiryDate") &&
-          value.match(/^\d{4}-\d{2}-\d{2}$/)
+          /^\d{4}-\d{2}-\d{2}$/.exec(value)
         ) {
           const date = new Date(value);
           value = date.toLocaleDateString("en-US", {
@@ -984,14 +993,13 @@ import { supabase } from "../config/config.js";
 
       const distance = levenshteinDistance(s1, s2);
       const maxLength = Math.max(s1.length, s2.length);
-      const similarity = (1 - distance / maxLength) * 100;
+      const distanceRatio = distance / maxLength;
+      const similarityRate = 1 - distanceRatio;
+      const similarity = similarityRate * 100;
       return Math.max(0, Math.min(100, similarity));
     };
 
     fieldMappings.forEach((mapping) => {
-      // Only compare if:
-      // 1. The ID has this field
-      // 2. The form has this field (element exists in DOM)
       const idHasField = availableIdFields.includes(mapping.idField);
       const formHasField = availableFormFields.includes(mapping.formField);
 
@@ -999,87 +1007,73 @@ import { supabase } from "../config/config.js";
         const idValue = String(idFields[mapping.idField]).trim();
         const formValue = formData[mapping.formField] || "";
 
-        // MIGRANT EXCEPTION: If verified by secondary doc, skip strict address checks
-        // We assume the Form Address is correct (self-declared) and the Secondary Doc proved it.
         if (
           idFields.isMigrantVerified &&
           (mapping.idField === "address" || mapping.idField === "barangay")
         ) {
-          comparisonResults.push({
-            field: mapping.label,
+          comparisons.push({
+            field: mapping.displayName,
             match: true,
-            score: 100, // Auto-pass
-            idValue: `${idValue  } (Migrant Verified)`,
+            score: 100,
+            idValue: `${idValue} (Migrant Verified)`,
             formValue,
           });
-          return; // Skip standard comparison
+          return;
         }
 
         let match = false;
         let score = 0;
 
         if (mapping.type === "gender") {
-          // Special handling for gender
           const idGender = normalizeIdGender(idValue);
           const formGender = normalizeGender(formValue);
-          match = !formValue || idGender === formGender; // Optional field
+          match = !formValue || idGender === formGender;
           score = match ? 100 : 0;
-        } else {
-          // Special handling for address: Use token-based matching and normalization
-          if (mapping.type === "address") {
-            // 1. Advanced Normalization
-            const normalizeAddr = (str) => {
-              if (!str) return "";
-              return str
-                .toUpperCase()
-                .replace(/[.,\-#]/g, " ") // Remove punctuation
-                .replace(/\bPRK\b/g, "PUROK") // Expand abbreviations
-                .replace(/\bBRGY\b/g, "BARANGAY")
-                .replace(/\bSTR\b|\bST\b/g, "STREET")
-                .replace(/\bAVE\b/g, "AVENUE")
-                .replace(/CITY OF (\w+)/g, "$1 CITY") // CITY OF DIGOS -> DIGOS CITY
-                .replace(/\s+/g, " ")
-                .trim();
-            };
+        } else if (mapping.type === "address") {
+          const normalizeAddr = (str) => {
+            if (!str) return "";
+            return str
+              .toUpperCase()
+              .replace(/[.,\-#]/g, " ")
+              .replace(/\bPRK\b/g, "PUROK")
+              .replace(/\bBRGY\b/g, "BARANGAY")
+              .replace(/\bSTR\b|\bST\b/g, "STREET")
+              .replace(/\bAVE\b/g, "AVENUE")
+              .replace(/CITY OF (\w+)/g, "$1 CITY")
+              .replace(/\s+/g, " ")
+              .trim();
+          };
 
-            const s1 = normalizeAddr(idValue);
-            const s2 = normalizeAddr(formValue);
+          const s1 = normalizeAddr(idValue);
+          const s2 = normalizeAddr(formValue);
+          score = calculateSimilarity(s1, s2);
 
-            // 2. Compute similarity on normalized strings
-            score = calculateSimilarity(s1, s2);
+          const tokens1 = s1.split(" ");
+          const tokens2 = s2.split(" ");
+          const matchingTokens = tokens1.filter(
+            (t) => t.length > 2 && tokens2.includes(t)
+          );
 
-            // 3. Token Check: If sufficient keywords match, boost score
-            const tokens1 = s1.split(" ");
-            const tokens2 = s2.split(" ");
-            const matchingTokens = tokens1.filter(
-              (t) => t.length > 2 && tokens2.includes(t)
-            );
+          if (
+            matchingTokens.length >=
+            Math.ceil(Math.min(tokens1.length, tokens2.length) * 0.6)
+          ) {
+            score = Math.max(score, 85);
+          }
 
-            // If > 60% of significant words match, force success (common for address reordering)
-            if (
-              matchingTokens.length >=
-              Math.ceil(Math.min(tokens1.length, tokens2.length) * 0.6)
-            ) {
-              score = Math.max(score, 85);
-            }
-
-            // Lower strict threshold for addresses due to formatting variance
-            // If field is empty in form, consider it a match (optional field logic)
-            if (!formValue) {
-              match = true;
-              score = 100;
-            } else {
-              match = score >= 60;
-            }
+          if (!formValue) {
+            match = true;
+            score = 100;
           } else {
-            // Standard logic for other fields
-            score = calculateSimilarity(idValue, formValue);
-            if (!formValue && !mapping.required) {
-              match = true;
-              score = 100;
-            } else {
-              match = score >= 80;
-            }
+            match = score >= 60;
+          }
+        } else {
+          score = calculateSimilarity(idValue, formValue);
+          if (!formValue && !mapping.required) {
+            match = true;
+            score = 100;
+          } else {
+            match = score >= 80;
           }
         }
 
@@ -1109,9 +1103,6 @@ import { supabase } from "../config/config.js";
 
     // Return result for status message
     return { comparisons, idOnlyFields };
-
-    // Display comparison results
-    displayComparisonResults(comparisons);
   }
 
   /**
@@ -1120,16 +1111,53 @@ import { supabase } from "../config/config.js";
   /**
    * Display comparison results
    */
+  function createComparisonItemHtml(comp) {
+    const matchIcon = comp.match
+      ? '<span style="color: var(--success-600); margin-right: 8px;">✓</span>'
+      : '<span style="color: var(--error-600); margin-right: 8px;">✗</span>';
+    const matchClass = comp.match ? "match" : "mismatch";
+    const safeField = escapeHtml(comp.field);
+    const safeIdValue = escapeHtml(comp.idValue);
+    const safeFormValue = escapeHtml(comp.formValue);
+    const scoreDisplay =
+      comp.type !== "gender"
+        ? `<span style="font-size: 0.8em; color: var(--gray-500); margin-left: auto;">${comp.score}% Match</span>`
+        : "";
+    const scoreAlert =
+      comp.match === false && comp.type !== "gender"
+        ? '<div style="font-size: 0.8rem; color: var(--error-600); margin-top: 4px;">Score below 85% threshold</div>'
+        : "";
+
+    const bg = comp.match ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)";
+    const border = comp.match ? "var(--success-600)" : "var(--error-600)";
+
+    return `
+      <div class="comparison-item ${matchClass}" style="margin-bottom: 12px; padding: 12px; border-radius: 6px; background: ${bg}; border-left: 3px solid ${border};">
+        <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
+          ${matchIcon}
+          <span>${safeField}</span>
+          ${scoreDisplay}
+        </div>
+        <div style="font-size: 0.9rem; color: var(--gray-700); margin-bottom: 4px;">
+          <span style="font-weight: 500;">ID:</span> ${safeIdValue}
+        </div>
+        <div style="font-size: 0.9rem; color: var(--gray-700);">
+          <span style="font-weight: 500;">Form:</span> ${safeFormValue}
+        </div>
+        ${scoreAlert}
+      </div>
+    `;
+  }
+
   function displayComparisonResults(comparisons, _idOnlyFields = []) {
     // If no comparisons possible, show extracted ID data only
     if (!comparisons || comparisons.length === 0) {
       if (extractedIdData && reviewGrid) {
-        let message =
-          '<div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">';
-        message +=
+        const title =
           '<div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Picture is not clear or ID not valid</div>';
-        message +=
-          '<div style="color: var(--error-600); font-size: 0.9rem;">We could not automatically verify your information. Please ensure the image is clear and you are using a valid PhilSys ID.</div></div>';
+        const sub =
+          '<div style="color: var(--error-600); font-size: 0.9rem;">We could not automatically verify your information. Please ensure the image is clear and you are using a valid PhilSys ID.</div>';
+        const message = `<div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">${title}${sub}</div>`;
 
         const extractedHtml = renderExtractedFieldsOnly(extractedIdData);
         reviewGrid.innerHTML = message + extractedHtml;
@@ -1142,17 +1170,10 @@ import { supabase } from "../config/config.js";
       return;
     }
 
-    // Count matches and mismatches
-    const _matches = comparisons.filter((c) => c.match).length;
-    const _mismatches = comparisons.filter((c) => !c.match).length;
-
     // Check for ID Type validity (must be PhilID/PhilSys)
     const isPhilId =
       extractedIdData?.idType === "philid" ||
       extractedIdData?.idType === "philpost";
-    // ^ Assuming philpost is also acceptable or adjust accordingly.
-    // If strict PhilSys request:
-    // const isPhilId = extractedIdData?.idType === 'philid';
 
     // Determine overall status
     // Fail if any REQUIRED field is a mismatch
@@ -1163,53 +1184,24 @@ import { supabase } from "../config/config.js";
     let statusHtml = "";
 
     if (passed) {
-      statusHtml = `
-        <div style="padding: 16px; background: var(--success-50); border: 1px solid var(--success-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-          <div style="color: var(--success-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Confirmed</div>
-          <div style="color: var(--success-600); font-size: 0.9rem;">Your ID matches your profile information.</div>
-        </div>
-      `;
+      statusHtml =
+        '<div style="padding: 16px; background: var(--success-50); border: 1px solid var(--success-200); border-radius: 8px; margin-bottom: 20px; text-align: center;"><div style="color: var(--success-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Confirmed</div><div style="color: var(--success-600); font-size: 0.9rem;">Your ID matches your profile information.</div></div>';
       sessionStorage.setItem("cl_verification_complete", "true");
       status("✓ Identity Confirmed.", "success");
-    } else if (!isPhilId) {
-      statusHtml = `
-        <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-          <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">ID Not Valid</div>
-          <div style="color: var(--error-600); font-size: 0.9rem;">
-            Please use only a valid <strong>PhilSys ID</strong> (National ID).<br>
-            <span style="font-size: 0.8em; color: #666; display:inline-block; margin-top:4px;">(Debug: Detected Type '${
-  extractedIdData?.idType || "Unknown"
-  }')</span>
-          </div>
-        </div>
-      `;
+    } else if (isPhilId === false) {
+      const typeLabel = extractedIdData?.idType || "Unknown";
+      statusHtml = `<div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;"><div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">ID Not Valid</div><div style="color: var(--error-600); font-size: 0.9rem;">Please use only a valid <strong>PhilSys ID</strong> (National ID).<br><span style="font-size: 0.8em; color: #666; display:inline-block; margin-top:4px;">(Debug: Detected Type '${typeLabel}')</span></div></div>`;
       sessionStorage.removeItem("cl_verification_complete");
       status("ID Not Valid. Please use PhilSys ID.", "error");
     } else if (failedRequired.length > 0) {
-      // Identity didn't match (mismatches in required fields)
-      statusHtml = `
-        <div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-          <div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Didn't Match</div>
-          <div style="color: var(--error-600); font-size: 0.9rem;">
-            The information on your ID does not match the details you provided (${
-  failedRequired.length
-  } field${failedRequired.length !== 1 ? "s" : ""} mismatched).
-            <br>Please review your inputs or ensure the ID belongs to you.
-          </div>
-        </div>
-      `;
+      const fieldCount = failedRequired.length;
+      const plural = fieldCount !== 1 ? "s" : "";
+      statusHtml = `<div style="padding: 16px; background: var(--error-50); border: 1px solid var(--error-200); border-radius: 8px; margin-bottom: 20px; text-align: center;"><div style="color: var(--error-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Identity Didn't Match</div><div style="color: var(--error-600); font-size: 0.9rem;">The information on your ID does not match the details you provided (${fieldCount} field${plural} mismatched).<br>Please review your inputs or ensure the ID belongs to you.</div></div>`;
       sessionStorage.removeItem("cl_verification_complete");
       status("Identity Didn't Match. Please review your details.", "error");
     } else {
-      // Fallback for unclear cases (e.g. low confidence but technically matched optional fields?)
-      statusHtml = `
-        <div style="padding: 16px; background: var(--warning-50); border: 1px solid var(--warning-200); border-radius: 8px; margin-bottom: 20px; text-align: center;">
-          <div style="color: var(--warning-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Picture is not clear</div>
-          <div style="color: var(--warning-600); font-size: 0.9rem;">
-            Some fields could not be confidently verified. Please try uploading a clearer image.
-          </div>
-        </div>
-      `;
+      statusHtml =
+        '<div style="padding: 16px; background: var(--warning-50); border: 1px solid var(--warning-200); border-radius: 8px; margin-bottom: 20px; text-align: center;"><div style="color: var(--warning-700); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Picture is not clear</div><div style="color: var(--warning-600); font-size: 0.9rem;">Some fields could not be confidently verified. Please try uploading a clearer image.</div></div>';
       sessionStorage.removeItem("cl_verification_passed");
       status("Picture is not clear. Please try again.", "warning");
     }
@@ -1217,44 +1209,7 @@ import { supabase } from "../config/config.js";
     // Update review section with comparison results
     if (reviewGrid) {
       const comparisonHtml = comparisons
-        .map((comp) => {
-          const matchIcon = comp.match
-            ? '<span style="color: var(--success-600); margin-right: 8px;">✓</span>'
-            : '<span style="color: var(--error-600); margin-right: 8px;">✗</span>';
-          const matchClass = comp.match ? "match" : "mismatch";
-          const safeField = escapeHtml(comp.field);
-          const safeIdValue = escapeHtml(comp.idValue);
-          const safeFormValue = escapeHtml(comp.formValue);
-          const scoreDisplay =
-            comp.type !== "gender"
-              ? `<span style="font-size: 0.8em; color: var(--gray-500); margin-left: auto;">${comp.score}% Match</span>`
-              : "";
-
-          return `
-          <div class="comparison-item ${matchClass}" style="margin-bottom: 12px; padding: 12px; border-radius: 6px; background: ${
-    comp.match ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)"
-  }; border-left: 3px solid ${
-    comp.match ? "var(--success-600)" : "var(--error-600)"
-  };">
-            <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
-              ${matchIcon}
-              <span>${safeField}</span>
-              ${scoreDisplay}
-            </div>
-            <div style="font-size: 0.9rem; color: var(--gray-700); margin-bottom: 4px;">
-              <span style="font-weight: 500;">ID:</span> ${safeIdValue}
-            </div>
-            <div style="font-size: 0.9rem; color: var(--gray-700);">
-              <span style="font-weight: 500;">Form:</span> ${safeFormValue}
-            </div>
-            ${
-  !comp.match && comp.type !== "gender"
-    ? '<div style="font-size: 0.8rem; color: var(--error-600); margin-top: 4px;">Score below 85% threshold</div>'
-    : ""
-  }
-          </div>
-        `;
-        })
+        .map((comp) => createComparisonItemHtml(comp))
         .join("");
 
       // Also show other extracted fields
@@ -1286,18 +1241,18 @@ import { supabase } from "../config/config.js";
   function renderOtherExtractedFields(idFields, _comparisons) {
     if (!idFields) return "";
 
-    const comparedFields = [
+    const comparedFields = new Set([
       "firstName",
       "lastName",
       "middleName",
       "addressLine1",
       "barangay",
       "sex",
-    ];
+    ]);
     const otherFields = Object.entries(idFields)
       .filter(
         ([key, value]) =>
-          !comparedFields.includes(key) &&
+          !comparedFields.has(key) &&
           value != null &&
           String(value).trim() !== ""
       )
@@ -1318,7 +1273,7 @@ import { supabase } from "../config/config.js";
         // Format dates
         if (
           (key === "birthDate" || key === "expiryDate") &&
-          displayValue.match(/^\d{4}-\d{2}-\d{2}$/)
+          /^\d{4}-\d{2}-\d{2}$/.exec(displayValue)
         ) {
           const date = new Date(displayValue);
           displayValue = date.toLocaleDateString("en-US", {
@@ -1374,7 +1329,7 @@ import { supabase } from "../config/config.js";
         // Format dates
         if (
           (k === "birthDate" || k === "expiryDate") &&
-          value.match(/^\d{4}-\d{2}-\d{2}$/)
+          /^\d{4}-\d{2}-\d{2}$/.exec(value)
         ) {
           const date = new Date(value);
           value = date.toLocaleDateString("en-US", {
@@ -1401,12 +1356,13 @@ import { supabase } from "../config/config.js";
   function status(text, kind = "info") {
     if (!statusEl) return;
     statusEl.textContent = text;
-    statusEl.style.color =
-      kind === "error"
-        ? "var(--error-600)"
-        : kind === "success"
-          ? "var(--success-600)"
-          : "var(--gray-600)";
+    let color = "var(--gray-600)";
+    if (kind === "error") {
+      color = "var(--error-600)";
+    } else if (kind === "success") {
+      color = "var(--success-600)";
+    }
+    statusEl.style.color = color;
   }
 
   function escapeHtml(s) {
@@ -1505,7 +1461,7 @@ import { supabase } from "../config/config.js";
 
         if (result.success && result.verified) {
           // Success!
-          statusDiv.textContent = `✅ ${  result.message}`;
+          statusDiv.textContent = `✅ ${result.message}`;
           statusDiv.className =
             "mt-2 text-center text-sm text-green-600 font-bold";
 
@@ -1528,8 +1484,7 @@ import { supabase } from "../config/config.js";
           }, 1500);
         } else {
           // Failure
-          statusDiv.textContent =
-            `❌ ${  result.error || "Verification failed"}`;
+          statusDiv.textContent = `❌ ${result.error || "Verification failed"}`;
           statusDiv.className =
             "mt-2 text-center text-sm text-red-600 font-bold";
           verifyBtn.disabled = false;

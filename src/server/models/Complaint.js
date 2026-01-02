@@ -102,6 +102,7 @@ class Complaint {
     ) {
       errors.push("Invalid workflow status");
     }
+    const validPriorities = ["low", "medium", "high", "urgent", "critical"];
     if (data.priority && !validPriorities.includes(data.priority)) {
       errors.push("Invalid priority");
     }

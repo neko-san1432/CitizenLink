@@ -2,7 +2,6 @@
 import showToast from "../components/toast.js";
 
 class DepartmentQueue {
-
   constructor() {
     this.complaints = [];
     this.department = null;
@@ -11,7 +10,7 @@ class DepartmentQueue {
     this.filters = {
       status: "",
       priority: "",
-      search: ""
+      search: "",
     };
     this.statusPalette = [
       { key: "approved", label: "Approved", color: "#3b82f6" },
@@ -20,14 +19,14 @@ class DepartmentQueue {
       { key: "in progress", label: "In Progress", color: "#facc15" },
       { key: "resolved", label: "Resolved", color: "#22c55e" },
       { key: "closed", label: "Closed", color: "#0ea5e9" },
-      { key: "other", label: "Other", color: "#94a3b8" }
+      { key: "other", label: "Other", color: "#94a3b8" },
     ];
     this.priorityPalette = [
       { key: "urgent", label: "Urgent", color: "#dc2626", track: "#fee2e2" },
       { key: "high", label: "High", color: "#ea580c", track: "#ffedd5" },
       { key: "medium", label: "Medium", color: "#d97706", track: "#fef3c7" },
       { key: "low", label: "Low", color: "#059669", track: "#d1fae5" },
-      { key: "other", label: "Unlabeled", color: "#64748b", track: "#e5e7eb" }
+      { key: "other", label: "Unlabeled", color: "#64748b", track: "#e5e7eb" },
     ];
     this.init();
   }
@@ -88,17 +87,23 @@ class DepartmentQueue {
     try {
       this.showLoading();
       const queryParams = new URLSearchParams();
-      if (this.filters.status) queryParams.append("status", this.filters.status);
-      if (this.filters.priority) queryParams.append("priority", this.filters.priority);
-      if (this.filters.search) queryParams.append("search", this.filters.search);
+      if (this.filters.status)
+        queryParams.append("status", this.filters.status);
+      if (this.filters.priority)
+        queryParams.append("priority", this.filters.priority);
+      if (this.filters.search)
+        queryParams.append("search", this.filters.search);
       queryParams.append("limit", this.itemsPerPage);
-      const response = await fetch(`/api/lgu-admin/department-queue?${queryParams}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include"
-      });
+      const response = await fetch(
+        `/api/lgu-admin/department-queue?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -113,7 +118,7 @@ class DepartmentQueue {
       this.updateDepartmentName();
     } catch (error) {
       console.error("Error loading complaints:", error);
-      this.showError(`Failed to load complaints: ${  error.message}`);
+      this.showError(`Failed to load complaints: ${error.message}`);
     } finally {
       this.hideLoading();
     }
@@ -141,7 +146,9 @@ class DepartmentQueue {
     // Show complaint list and hide empty state
     complaintsList.style.display = "block";
     if (emptyState) emptyState.style.display = "none";
-    complaintsList.innerHTML = paginatedComplaints.map(complaint => `
+    complaintsList.innerHTML = paginatedComplaints
+      .map(
+        (complaint) => `
             <div class="complaint-card">
                 <div class="complaint-header">
                     <div class="complaint-title-section">
@@ -163,7 +170,7 @@ class DepartmentQueue {
                 
                 <div class="complaint-content">
                     <p class="complaint-description">${complaint.descriptive_su || complaint.description || "No description provided"}</p>
-                    ${!complaint.is_assigned_to_department ? `
+                    ${complaint.is_assigned_to_department === false ? `
                         <div class="info-banner" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
                             ⚠️ This complaint is not assigned to your department. Limited information only.
                         </div>
@@ -187,7 +194,9 @@ class DepartmentQueue {
                 ${this.renderDepartmentsInfo(complaint)}
                 ${this.renderAssignmentInfo(complaint)}
             </div>
-        `).join("");
+        `
+      )
+      .join("");
     this.attachActionEventListeners();
   }
   getActionButtons(complaint) {
@@ -211,17 +220,20 @@ class DepartmentQueue {
     return buttons.join("");
   }
   renderDepartmentsInfo(complaint) {
-    const departments = complaint.assigned_departments || complaint.primary_department || [];
+    const departments =
+      complaint.assigned_departments || complaint.primary_department || [];
     const preferredDepartments = complaint.preferred_departments || [];
     if (!departments || departments.length === 0) {
       return "";
     }
-    const departmentArray = Array.isArray(departments) ? departments : [departments];
+    const departmentArray = Array.isArray(departments)
+      ? departments
+      : [departments];
     return `
             <div class="departments-info">
                 <strong>Assigned Departments:</strong>
                 <div class="departments-list">
-                    ${departmentArray.map(dept => `
+                    ${departmentArray.map((dept) => `
                         <div class="department-badge ${preferredDepartments.includes(dept) ? "preferred" : ""}">
                             ${dept}
                         </div>
@@ -254,17 +266,17 @@ class DepartmentQueue {
 
   attachActionEventListeners() {
     // View details buttons
-    document.querySelectorAll('[data-action="view"]').forEach(btn => {
+    document.querySelectorAll('[data-action="view"]').forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const complaintId = e.target.getAttribute("data-complaint-id");
+        const { complaintId } = e.target.dataset;
         this.viewComplaint(complaintId);
       });
     });
 
     // Assign to officer buttons
-    document.querySelectorAll('[data-action="assign"]').forEach(btn => {
+    document.querySelectorAll('[data-action="assign"]').forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const complaintId = e.target.getAttribute("data-complaint-id");
+        const { complaintId } = e.target.dataset;
         this.showAssignmentModal(complaintId);
       });
     });
@@ -272,7 +284,7 @@ class DepartmentQueue {
 
   async viewComplaint(complaintId) {
     // Redirect to complaint details page
-    window.location.href = `/complaint-details?id=${complaintId}`;
+    globalThis.location.href = `/complaint-details?id=${complaintId}`;
   }
   async showAssignmentModal(complaintId) {
     try {
@@ -287,7 +299,7 @@ class DepartmentQueue {
       }
     } catch (error) {
       console.error("Error showing assignment modal:", error);
-      showToast(`Failed to load officers: ${  error.message}`, "error");
+      showToast(`Failed to load officers: ${error.message}`, "error");
     }
   }
   async loadOfficers() {
@@ -295,9 +307,9 @@ class DepartmentQueue {
       const response = await fetch("/api/lgu-admin/department-officers", {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        credentials: "include"
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -308,10 +320,15 @@ class DepartmentQueue {
       }
       const officerSelect = document.getElementById("officer-select");
       if (officerSelect) {
-        officerSelect.innerHTML = `<option value="">Choose an officer...</option>${
-          (data.data || []).map(officer => `
+        officerSelect.innerHTML = `<option value="">Choose an officer...</option>${(
+          data.data || []
+        )
+          .map(
+            (officer) => `
                         <option value="${officer.id}">${officer.name || officer.email}</option>
-                    `).join("")}`;
+                    `
+          )
+          .join("")}`;
       }
     } catch (error) {
       console.error("Error loading officers:", error);
@@ -319,7 +336,9 @@ class DepartmentQueue {
     }
   }
   async confirmAssignment() {
-    const complaintId = document.getElementById("assignment-complaint-id").value;
+    const complaintId = document.getElementById(
+      "assignment-complaint-id"
+    ).value;
     const officerId = document.getElementById("officer-select").value;
     const priority = document.getElementById("assignment-priority").value;
     const deadline = document.getElementById("assignment-deadline").value;
@@ -329,19 +348,22 @@ class DepartmentQueue {
       return;
     }
     try {
-      const response = await fetch(`/api/lgu-admin/complaints/${complaintId}/assign`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          officerId,
-          priority,
-          deadline: deadline || null,
-          notes: notes || null
-        })
-      });
+      const response = await fetch(
+        `/api/lgu-admin/complaints/${complaintId}/assign`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            officerId,
+            priority,
+            deadline: deadline || null,
+            notes: notes || null,
+          }),
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -355,7 +377,7 @@ class DepartmentQueue {
       }
     } catch (error) {
       console.error("Error assigning complaint:", error);
-      showToast(`Failed to assign complaint: ${  error.message}`, "error");
+      showToast(`Failed to assign complaint: ${error.message}`, "error");
     }
   }
   hideModal() {
@@ -373,33 +395,34 @@ class DepartmentQueue {
     let filtered = [...this.complaints];
     if (this.filters.search) {
       const searchTerm = this.filters.search.toLowerCase();
-      filtered = filtered.filter(complaint =>
-        complaint.title?.toLowerCase().includes(searchTerm) ||
-                complaint.description?.toLowerCase().includes(searchTerm) ||
-                complaint.id?.toString().includes(searchTerm)
+      filtered = filtered.filter(
+        (complaint) =>
+          complaint.title?.toLowerCase().includes(searchTerm) ||
+          complaint.description?.toLowerCase().includes(searchTerm) ||
+          complaint.id?.toString().includes(searchTerm)
       );
     }
     return filtered;
   }
   getPaginatedComplaints(complaints) {
-
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return complaints.slice(startIndex, endIndex);
   }
   updateStats() {
     const total = this.complaints.length;
-    const pendingAssignment = this.complaints.filter(c =>
-      c.status === "approved" || c.status === "assigned"
+    const pendingAssignment = this.complaints.filter(
+      (c) => c.status === "approved" || c.status === "assigned"
     ).length;
-    const inProgress = this.complaints.filter(c =>
-      c.status === "assigned to officer" || c.status === "in progress"
+    const inProgress = this.complaints.filter(
+      (c) => c.status === "assigned to officer" || c.status === "in progress"
     ).length;
-    const resolved = this.complaints.filter(c =>
-      c.status === "resolved" || c.status === "closed"
+    const resolved = this.complaints.filter(
+      (c) => c.status === "resolved" || c.status === "closed"
     ).length;
     document.getElementById("total-complaints").textContent = total;
-    document.getElementById("pending-assignment").textContent = pendingAssignment;
+    document.getElementById("pending-assignment").textContent =
+      pendingAssignment;
     document.getElementById("in-progress").textContent = inProgress;
     document.getElementById("resolved").textContent = resolved;
     this.updateVisualizations();
@@ -421,21 +444,28 @@ class DepartmentQueue {
     const circumference = 2 * Math.PI * radius;
     const statusCounts = this.getStatusCounts();
     const visibleStatuses = this.statusPalette
-      .map(item => ({ ...item, count: statusCounts[item.key] || 0 }))
-      .filter(item => item.count > 0);
-    const track = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      .map((item) => ({ ...item, count: statusCounts[item.key] || 0 }))
+      .filter((item) => item.count > 0);
+    const track = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
     track.setAttribute("cx", "80");
     track.setAttribute("cy", "80");
     track.setAttribute("r", radius);
     track.classList.add("donut-track");
     svg.appendChild(track);
     if (total === 0 || visibleStatuses.length === 0) {
-      legend.innerHTML = '<p class="legend-empty">No complaints to visualize.</p>';
+      legend.innerHTML =
+        '<p class="legend-empty">No complaints to visualize.</p>';
       return;
     }
     let offset = 0;
-    visibleStatuses.forEach(item => {
-      const slice = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    visibleStatuses.forEach((item) => {
+      const slice = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+      );
       slice.setAttribute("cx", "80");
       slice.setAttribute("cy", "80");
       slice.setAttribute("r", radius);
@@ -447,9 +477,10 @@ class DepartmentQueue {
       offset += dash;
       svg.appendChild(slice);
     });
-    legend.innerHTML = visibleStatuses.map(item => {
-      const percent = Math.round((item.count / total) * 100);
-      return `
+    legend.innerHTML = visibleStatuses
+      .map((item) => {
+        const percent = Math.round((item.count / total) * 100);
+        return `
         <div class="legend-row">
           <div class="legend-row-info">
             <span class="legend-swatch" style="background:${item.color};"></span>
@@ -461,7 +492,8 @@ class DepartmentQueue {
           <div class="legend-count">${item.count}</div>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
   }
   renderPriorityBars() {
     const container = document.getElementById("priority-bars");
@@ -471,13 +503,15 @@ class DepartmentQueue {
     totalLabel.textContent = `${total} complaint${total === 1 ? "" : "s"}`;
     const priorityCounts = this.getPriorityCounts();
     if (total === 0) {
-      container.innerHTML = '<p class="legend-empty">No priority data available yet.</p>';
+      container.innerHTML =
+        '<p class="legend-empty">No priority data available yet.</p>';
       return;
     }
-    container.innerHTML = this.priorityPalette.map(item => {
-      const count = priorityCounts[item.key] || 0;
-      const percent = total ? Math.round((count / total) * 100) : 0;
-      return `
+    container.innerHTML = this.priorityPalette
+      .map((item) => {
+        const count = priorityCounts[item.key] || 0;
+        const percent = total ? Math.round((count / total) * 100) : 0;
+        return `
         <div class="priority-row">
           <div class="priority-row-head">
             <div class="priority-label">
@@ -493,22 +527,26 @@ class DepartmentQueue {
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
   }
   updateInsightsTimestamp() {
     const element = document.getElementById("insights-updated-text");
     if (!element) return;
     const now = new Date();
-    element.textContent = `Updated ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    element.textContent = `Updated ${now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   }
   getStatusCounts() {
     const counts = this.statusPalette.reduce((acc, item) => {
       acc[item.key] = 0;
       return acc;
     }, {});
-    this.complaints.forEach(complaint => {
+    this.complaints.forEach((complaint) => {
       const status = (complaint.status || "other").toLowerCase();
-      if (counts.hasOwnProperty(status)) {
+      if (Object.hasOwn(counts, status)) {
         counts[status] += 1;
       } else {
         counts.other += 1;
@@ -521,9 +559,9 @@ class DepartmentQueue {
       acc[item.key] = 0;
       return acc;
     }, {});
-    this.complaints.forEach(complaint => {
+    this.complaints.forEach((complaint) => {
       const priority = (complaint.priority || "other").toLowerCase();
-      if (counts.hasOwnProperty(priority)) {
+      if (Object.hasOwn(counts, priority)) {
         counts[priority] += 1;
       } else {
         counts.other += 1;
@@ -564,8 +602,9 @@ class DepartmentQueue {
     if (!dateString) return "Unknown date";
     try {
       const date = new Date(dateString);
-      return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
+      return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     } catch (error) {
+      console.error("Date formatting error:", error);
       return "Invalid date";
     }
   }
@@ -583,5 +622,5 @@ class DepartmentQueue {
 }
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  new DepartmentQueue();
+  globalThis.departmentQueue = new DepartmentQueue();
 });

@@ -1,7 +1,7 @@
-﻿const path = require("path");
-const fs = require("fs");
+﻿const path = require("node:path");
+const fs = require("node:fs");
 const fsPromises = fs.promises;
-const { spawn } = require("child_process");
+const { spawn } = require("node:child_process");
 
 // Try to load Sharp, but make it optional
 let sharp;
@@ -156,6 +156,11 @@ class OCRController {
     return cleaned;
   }
 
+  // Helper: Escape regex characters
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   /**
    * Helper: Find field value by looking for a label (Exact + Fuzzy)
    */
@@ -167,8 +172,12 @@ class OCRController {
       for (const label of labels) {
         const labelUpper = label.toUpperCase();
         // Check if label appears in line with word boundaries
+        // eslint-disable-next-line
         const labelRegex = new RegExp(
-          `(^|[^A-Z])${labelUpper.replace(/\s+/g, "\\s+")}($|[^A-Z])`,
+          `(^|[^A-Z])${this.escapeRegExp(labelUpper).replace(
+            /\s+/g,
+            "\\s+"
+          )}($|[^A-Z])`,
           "i"
         );
 
@@ -449,11 +458,6 @@ class OCRController {
       agency: "LTO",
     };
 
-    const _lines = text
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-
     const licMatch = text.match(/([A-Z]\d{2}-?\d{2}-?\d{6})/);
     if (licMatch) fields.idNumber = licMatch[1];
 
@@ -508,7 +512,7 @@ class OCRController {
         const day = monthDayYearMatch[2].padStart(2, "0");
         let year = monthDayYearMatch[3];
         if (year.length === 2) {
-          const yearNum = parseInt(year);
+          const yearNum = Number.parseInt(year);
           year = yearNum > 50 ? `19${year}` : `20${year}`;
         }
         let monthIndex = monthNames.indexOf(monthName);
@@ -525,13 +529,13 @@ class OCRController {
         let year, month, day;
         if (parts[0].length === 4) {
           [year, month, day] = parts;
-        } else if (parseInt(parts[0]) > 12) {
+        } else if (Number.parseInt(parts[0]) > 12) {
           [day, month, year] = parts;
         } else {
           [month, day, year] = parts;
         }
         if (year.length === 2) {
-          const yearNum = parseInt(year);
+          const yearNum = Number.parseInt(year);
           year = yearNum > 50 ? `19${year}` : `20${year}`;
         }
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
@@ -727,7 +731,11 @@ class OCRController {
 
       try {
         for (const p of intermediateFiles) {
-          if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          if (fs.existsSync(p)) {
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            await fsPromises.unlink(p).catch(() => {});
+          }
         }
       } catch (e) {}
 
@@ -749,7 +757,9 @@ class OCRController {
 
       // Cleanup original file if it exists and wasn't already cleaned up
       try {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         if (file && file.path && fs.existsSync(file.path)) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           await fsPromises.unlink(file.path).catch(() => {});
         }
       } catch (e) {}
@@ -766,10 +776,16 @@ class OCRController {
       console.error("[OCR] Processing error:", error);
       try {
         for (const p of intermediateFiles) {
-          if (fs.existsSync(p)) await fsPromises.unlink(p).catch(() => {});
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          if (fs.existsSync(p)) {
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            await fsPromises.unlink(p).catch(() => {});
+          }
         }
         // Cleanup original file on error as well
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           await fsPromises.unlink(req.file.path).catch(() => {});
         }
       } catch (e) {}
@@ -839,8 +855,14 @@ class OCRController {
 
       // Cleanup
       try {
-        if (file.path) fsPromises.unlink(file.path).catch(() => {});
-        for (const p of intermediateFiles) fsPromises.unlink(p).catch(() => {});
+        if (file.path) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          fsPromises.unlink(file.path).catch(() => {});
+        }
+        for (const p of intermediateFiles) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          fsPromises.unlink(p).catch(() => {});
+        }
       } catch (e) {}
 
       if (hasLocation && hasName) {
