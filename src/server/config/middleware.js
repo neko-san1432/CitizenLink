@@ -27,6 +27,12 @@ const setupMiddleware = (app) => {
   app.use(securityHeaders);
   app.use(customSecurityHeaders);
 
+  // Body parsing middleware (before rate limiting to allow proper request inspection)
+  app.use(cors());
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+  app.use(cookieParser());
+
   // Rate limiting (applied early to protect against abuse)
   app.use("/api/", apiLimiter);
 
@@ -36,15 +42,30 @@ const setupMiddleware = (app) => {
   app.use(InputSanitizer.preventXSS);
   app.use(InputSanitizer.sanitize);
 
-  app.use(cors());
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-  app.use(cookieParser());
+  // ===== STATIC FILE SERVING (MUST BE BEFORE ROUTES) =====
+  // Serve favicon first (most requested)
+  app.get("/favicon.ico", (req, res) => {
+    res.sendFile(path.join(config.rootDir, "public", "favicon.ico"));
+  });
+  app.get("/favicon.png", (req, res) => {
+    res.sendFile(path.join(config.rootDir, "public", "favicon.png"));
+  });
 
   // Serve static files with proper paths
-  // Prefer public assets, then fall back to src client assets
+  // Root public directory (for files like favicon, robots.txt, etc.)
+  app.use(express.static(path.join(config.rootDir, "public")));
+
+  // Specific directories (more specific routes first)
   app.use("/js", express.static(path.join(config.rootDir, "public", "js")));
   app.use("/css", express.static(path.join(config.rootDir, "public", "css")));
+  app.use(
+    "/assets",
+    express.static(path.join(config.rootDir, "public", "assets"))
+  );
+  app.use("/uploads", express.static(path.join(config.rootDir, "uploads")));
+  app.use("/public", express.static(path.join(config.rootDir, "public")));
+
+  // Fallback to src/client for legacy paths
   app.use("/js", express.static(path.join(config.rootDir, "src", "client")));
   app.use(
     "/css",
@@ -54,8 +75,6 @@ const setupMiddleware = (app) => {
     "/assets",
     express.static(path.join(config.rootDir, "src", "client", "assets"))
   );
-  app.use("/public", express.static(path.join(config.rootDir, "public")));
-  app.use("/uploads", express.static(path.join(config.rootDir, "uploads")));
 
   // Additional static file serving for coordinator review system
   app.use(
@@ -67,12 +86,7 @@ const setupMiddleware = (app) => {
     express.static(path.join(config.rootDir, "public", "styles"))
   );
 
-  // Serve favicon
-  app.get("/favicon.ico", (req, res) => {
-    res.sendFile(path.join(config.rootDir, "public", "favicon.ico"));
-  });
-
-  // Serve node_modules for browser imports
+  // Serve node_modules for browser imports (ESM modules)
   app.use(
     "/node_modules",
     express.static(path.join(config.rootDir, "node_modules"))

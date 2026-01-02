@@ -344,7 +344,11 @@ if (regFormEl) {
   });
 }
 const loginFormEl = document.getElementById("login");
-if (loginFormEl)
+if (loginFormEl) {
+  // Enable submit button now that JavaScript is ready
+  const submitBtn = document.getElementById("login-submit-btn");
+  if (submitBtn) submitBtn.disabled = false;
+
   loginFormEl.addEventListener("submit", async (e) => {
     e.preventDefault();
     loginFormEl.classList.add("was-validated");
@@ -604,6 +608,7 @@ if (loginFormEl)
       showMessage("error", "Login failed. Please try again.");
     }
   });
+}
 // OAuth sign-in buttons (popup-based)
 const oauthButtons = [
   { id: "login-google", provider: "google" },

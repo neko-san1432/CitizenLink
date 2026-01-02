@@ -42,7 +42,4 @@ function normalizeRole(role) {
   return roleLower || "citizen";
 }
 
-module.exports = {
-  normalizeRole
-};
-
+export { normalizeRole };

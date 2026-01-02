@@ -49,6 +49,15 @@ router.post(
   loginLimiter,
   ErrorHandler.asyncWrapper(AuthController.login)
 );
+
+// Handle GET requests to /login (browsers sometimes prefetch or make GET requests)
+router.get("/login", (req, res) => {
+  res.status(405).json({
+    success: false,
+    error: "Method Not Allowed. Please use POST to login.",
+    allowedMethods: ["POST"],
+  });
+});
 /**
  * @route   GET /api/auth/verify-email
  * @desc    Verify user email
@@ -215,11 +224,11 @@ router.post(
           details:
             process.env.NODE_ENV === "development"
               ? {
-                message: error.message,
-                code: error.code,
-                status: error.status,
-                note: "This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email",
-              }
+                  message: error.message,
+                  code: error.code,
+                  status: error.status,
+                  note: "This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email",
+                }
               : null,
         });
       }

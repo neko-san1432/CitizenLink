@@ -1,6 +1,7 @@
 import { getUserRole } from "../auth/authChecker.js";
 import { brandConfig } from "../config/brand.js";
 import { getMenuIcon, getIcon } from "../utils/icons.js";
+import { normalizeRole } from "../utils/roleUtils.js";
 
 const _sidebarEl = document.getElementById("sidebar");
 const root = window.location.origin;
@@ -27,7 +28,11 @@ function initializeSidebar() {
 }
 
 function handleEscKey(e) {
-  if (e.key === "Escape" && _sidebarEl && _sidebarEl.classList.contains("open")) {
+  if (
+    e.key === "Escape" &&
+    _sidebarEl &&
+    _sidebarEl.classList.contains("open")
+  ) {
     closeSidebar();
   }
 }
@@ -102,10 +107,13 @@ async function setSidebarRole() {
       // Try to get role from session as fallback
       try {
         const { supabase } = await import("../config/config.js");
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         // console.log removed for security
         if (session?.user) {
-          const metadata = session.user.raw_user_meta_data || session.user.user_metadata || {};
+          const metadata =
+            session.user.raw_user_meta_data || session.user.user_metadata || {};
           // console.log removed for security
           role = metadata.role || metadata.normalized_role;
           // console.log removed for security
@@ -127,7 +135,9 @@ async function setSidebarRole() {
     }
     if (!role) {
       console.error("No role found, redirecting to login");
-      window.location.href = `/login?message=${  encodeURIComponent("Unable to determine user role. Please log in again.")  }&type=error`;
+      window.location.href = `/login?message=${encodeURIComponent(
+        "Unable to determine user role. Please log in again."
+      )}&type=error`;
       return;
     }
     const roleLower = role.toLowerCase();
@@ -142,7 +152,9 @@ async function setSidebarRole() {
   <div class="brand-logo">
     <div class="brand-icon">CL</div>
     <div class="brand-text">
-      <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name}</a>
+      <a href="${brandConfig.dashboardUrl}" class="brand-link">${
+        brandConfig.name
+      }</a>
               <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
@@ -150,12 +162,20 @@ async function setSidebarRole() {
 </div>
         
 <div class="sidebar-menu">
-          ${menuItems.map(item => `
-            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label}">
-              <span class="menu-icon">${getMenuIcon(item.icon, { size: 20 })}</span>
+          ${menuItems
+            .map(
+              (item) => `
+            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${
+                item.label
+              }">
+              <span class="menu-icon">${getMenuIcon(item.icon, {
+                size: 20,
+              })}</span>
               <span>${item.label}</span>
             </a>
-          `).join("")}
+          `
+            )
+            .join("")}
 </div>
         
 <div class="sidebar-bottom">
@@ -168,7 +188,9 @@ async function setSidebarRole() {
   </div>
           <div class="sidebar-footer">
             <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
-              <span class="menu-icon">${getMenuIcon("signout", { size: 20 })}</span>
+              <span class="menu-icon">${getMenuIcon("signout", {
+                size: 20,
+              })}</span>
               <span>Sign Out</span>
             </a>
           </div>
@@ -201,52 +223,75 @@ async function setSidebarRole() {
   }
 }
 function getMenuItemsForRole(role) {
-  // Import normalization function
-  const { normalizeRole } = require("../utils/roleUtils");
-
   // Normalize role using general normalization function
   const originalRole = role;
   role = normalizeRole(role);
   if (originalRole !== role) {
-    console.log("[SIDEBAR] Normalizing role from", originalRole, "to", role, "for menu items");
+    console.log(
+      "[SIDEBAR] Normalizing role from",
+      originalRole,
+      "to",
+      role,
+      "for menu items"
+    );
   }
 
   // console.log removed for security
   const menuItems = {
-    "citizen": [
+    citizen: [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
       { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
     "super-admin": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/super-admin/pending-signups", icon: "review-queue", label: "Pending Signups" },
-      { url: "/super-admin/user-manager", icon: "role-changer", label: "User Manager" },
-      { url: "/super-admin/link-generator", icon: "link-generator", label: "Link Generator" },
-      { url: "/super-admin/server-logs", icon: "server-logs", label: "Server logs" },
+      {
+        url: "/super-admin/pending-signups",
+        icon: "review-queue",
+        label: "Pending Signups",
+      },
+      {
+        url: "/super-admin/user-manager",
+        icon: "role-changer",
+        label: "User Manager",
+      },
+      {
+        url: "/super-admin/link-generator",
+        icon: "link-generator",
+        label: "Link Generator",
+      },
+      {
+        url: "/super-admin/server-logs",
+        icon: "server-logs",
+        label: "Server logs",
+      },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
     "lgu-hr": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/link-generator", icon: "link-generator", label: "Link Generator" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+      {
+        url: "/link-generator",
+        icon: "link-generator",
+        label: "Link Generator",
+      },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
     "complaint-coordinator": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
     "lgu-admin": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       { url: "/publish", icon: "publish", label: "Publish" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
-    ]
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
+    ],
   };
   // Handle simplified LGU roles
   if (role === "lgu-hr") {
@@ -259,19 +304,24 @@ function getMenuItemsForRole(role) {
     return [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/task-assigned", icon: "taskAssigned", label: "Task Assigned" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ];
   }
   // Return menu items for exact role match
   const items = menuItems[role] || [];
-  console.log("[SIDEBAR] Menu items for role:", role, "found", items.length, "items");
+  console.log(
+    "[SIDEBAR] Menu items for role:",
+    role,
+    "found",
+    items.length,
+    "items"
+  );
   return items;
 }
 // Sidebar search removed per requirements
 // Theme toggle is handled by header.js - removed duplicate implementation
 // But we need applyTheme function for compatibility
 function applyTheme(theme) {
-
   if (theme === "dark") {
     document.documentElement.classList.add("dark");
   } else {
@@ -281,7 +331,6 @@ function applyTheme(theme) {
 function updateToggleSwitch(isDark) {
   const toggleSwitch = document.getElementById("toggle-switch");
   if (toggleSwitch) {
-
     if (isDark) {
       toggleSwitch.classList.add("active");
     } else {
@@ -316,7 +365,7 @@ function initializeLogout() {
 function setActiveMenuItem() {
   const currentPath = window.location.pathname;
   const menuItems = document.querySelectorAll(".sidebar-menu a");
-  menuItems.forEach(item => {
+  menuItems.forEach((item) => {
     const href = item.getAttribute("href");
     if (href && currentPath.includes(href.replace(root, ""))) {
       item.classList.add("active");

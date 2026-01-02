@@ -10,6 +10,8 @@
       rel="stylesheet"
     />
     <title>Complete Your Profile</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/toast.css" />
     <link rel="stylesheet" href="./css/header-redesign.css" />
@@ -57,22 +59,14 @@
         <div class="auth-form">
           <form id="oauthCompleteForm" class="signup-form">
             <!-- Progress Bar -->
-            <div class="signup-progress-container mb-6">
-              <div
-                class="signup-progress-bar"
-                role="progressbar"
-                aria-valuenow="0"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              >
-                <div
-                  class="signup-progress-fill"
-                  id="signup-progress-fill"
-                ></div>
-              </div>
-              <div class="signup-progress-label" id="signup-progress-label">
-                Step 1 of 4 · 0% complete
-              </div>
+            <progress
+              class="signup-progress-bar w-full"
+              id="signup-progress-bar"
+              value="0"
+              max="100"
+            ></progress>
+            <div class="signup-progress-label" id="signup-progress-label">
+              Step 1 of 4 · 0% complete
             </div>
 
             <div id="signup-steps">
@@ -348,7 +342,7 @@
                 <div class="id-verify-body">
                   <!-- Upload mode -->
                   <div class="id-mode id-mode-upload" data-mode-panel="upload">
-                    <label for="id-file-input" class="id-dropzone" tabindex="0">
+                    <label for="id-file-input" class="id-dropzone">
                       <div class="dz-icon" aria-hidden="true">
                         <svg
                           width="24"

@@ -10,6 +10,20 @@
 body {
   margin: 0;
   padding: 0;
+  padding-top: 90px; /* Account for fixed header */
+}
+
+/* Mobile adjustments for body padding */
+@media (max-width: 768px) {
+  body {
+    padding-top: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding-top: 60px;
+  }
 }
 
 /* Theme summary: defines a compact set of variables used across components.

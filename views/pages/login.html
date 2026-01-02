@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In - CitizenLink</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -54,7 +56,7 @@
           <div class="auth-content">
             <!-- Main Login Form -->
             <div class="auth-main">
-              <form id="login" class="login-form">
+              <form id="login" class="login-form" method="post">
                 <div class="form-group">
                   <label for="email" class="form-label form-label-required"
                     >Email address</label
@@ -179,6 +181,7 @@
                   type="submit"
                   name="Login"
                   id="login-submit-btn"
+                  disabled
                 >
                   <span id="login-btn-text">Sign in</span>
                   <svg
@@ -269,8 +272,6 @@
     <!-- Scripts -->
     <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script type="module" src="./js/components/toast.js"></script>
-    <!-- reCAPTCHA disabled for development -->
-    <!-- <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script> -->
     <script type="module" src="./js/auth/auth.js"></script>
     <script type="module" src="./js/auth/login-page.js"></script>
     <script type="module" src="./js/auth/authChecker.js"></script>

@@ -14,6 +14,11 @@ main {
 
 footer {
   flex-shrink: 0;
+  background: var(--gray-900);
+  color: var(--gray-100);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  border-top: 1px solid var(--gray-700);
 }
 
 /* --- Hero Section --- */
@@ -30,8 +35,7 @@ footer {
   /* ------------------------- */
 
   /* Background: image with gradient overlay */
-  background-image:
-    linear-gradient(
+  background-image: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.7) 0%,
       rgba(0, 0, 0, 0.6) 50%,
@@ -50,16 +54,13 @@ footer {
   z-index: 1;
 }
 
-.hero-inner h1 {
-  font-size: 50px;
-  font-weight: var(--font-weight-700);
-  color: #ffffff;
+.hero-logo {
   margin-bottom: var(--space-6);
-  line-height: var(--line-height-tight);
-  text-shadow: 
-    0px 2px 8px rgba(0, 0, 0, 0.8),
-    0px 4px 12px rgba(0, 0, 0, 0.6),
-    0px 0px 2px rgba(0, 0, 0, 0.9);
+}
+.hero-logo-img {
+  max-width: 550px;
+  height: auto;
+  filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.4));
 }
 
 .hero-inner > p {
@@ -68,9 +69,7 @@ footer {
   margin-bottom: var(--space-8);
   max-width: 100%;
   line-height: var(--line-height-relaxed);
-  text-shadow: 
-    0px 2px 6px rgba(0, 0, 0, 0.8),
-    0px 1px 3px rgba(0, 0, 0, 0.9);
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8), 0px 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .hero-actions {
@@ -86,10 +85,11 @@ footer {
 
 .hero-actions .btn-outline {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .hero-actions .btn-outline:hover {
@@ -106,7 +106,7 @@ footer {
 }
 
 .card {
-  opacity: .85;
+  opacity: 0.85;
   background: white;
   padding: var(--space-6);
   border-radius: var(--radius-lg);
@@ -135,14 +135,7 @@ footer {
 }
 
 /* --- Footer --- */
-footer {
-  background: var(--gray-900);
-  color: var(--gray-100);
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-  border-top: 1px solid var(--gray-700);
-  flex-shrink: 0; /* Kept from original CSS */
-}
+/* footer moved up */
 
 footer small {
   display: block;
@@ -244,8 +237,11 @@ html.dark main {
 }
 
 html.dark .hero {
-  background-image:
-    linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%),
+  background-image: linear-gradient(
+      135deg,
+      rgba(30, 41, 59, 0.7) 0%,
+      rgba(15, 23, 42, 0.7) 100%
+    ),
     url("/assets/images/bg-digos.jpg");
 }
 
@@ -265,7 +261,8 @@ html.dark .card {
 
 html.dark .card:hover {
   border-color: #475569; /* slate-600 */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4),
+    0 4px 6px -2px rgba(0, 0, 0, 0.3);
 }
 
 html.dark .card h3 {

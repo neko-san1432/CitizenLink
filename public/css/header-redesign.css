@@ -1,5 +1,8 @@
 .header-container {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: var(--z-fixed);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -7,8 +10,8 @@
   border-bottom: 1px solid var(--gray-200);
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 8px rgba(0, 0, 0, 0.04);
   overflow: visible;
-  min-height: 64px;
-  max-height: 64px;
+  min-height: 90px;
+  max-height: 90px;
   box-sizing: border-box;
   transition: all var(--transition-normal, 200ms);
 }
@@ -21,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 90px;
   padding: 0 var(--space-4);
   width: 100%;
   position: relative;
@@ -85,7 +88,7 @@
   font-weight: 700;
   font-size: 1.25rem;
   letter-spacing: -0.025em;
-  padding: var(--space-2) 0;
+  padding: 0;
   transition: all var(--transition-sm, 150ms);
 }
 
@@ -98,11 +101,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  /*border-radius: var(--radius-md);*/
-  background-image: url("/assets/images/CitizenLink-logo-no-text.png"); /* <--- Update to correct asset path */
-  background-size: 150%; /* or 'cover' depending on your logo */
+  width: 80px;
+  height: 80px;
+  background-image: url("/assets/images/CitizenLink-logo-no-text.png");
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -697,26 +699,36 @@
 }
 
 @media (max-width: 768px) {
+  .header-container {
+    min-height: 70px;
+    max-height: 70px;
+  }
+
   .header-content {
+    height: 70px;
     padding: 0 var(--space-2);
   }
 
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+  }
+
   .header-left {
-    gap: var(--space-4);
-    padding-left: var(--space-4);
+    gap: var(--space-2);
+    padding-left: var(--space-2);
     flex: 0 1 auto;
     min-width: 0;
-    max-width: 50%;
   }
 
   .header-right {
-    gap: var(--space-2);
-    padding-right: var(--space-2);
+    gap: var(--space-1);
+    padding-right: var(--space-1);
     flex-shrink: 0;
     overflow: visible;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
     min-width: 0;
-    max-width: 50%;
+    justify-content: flex-end;
   }
 
   .dashboard-clock {
@@ -734,8 +746,13 @@
   }
 
   .header-action {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-action svg {
+    width: 16px;
+    height: 16px;
   }
 
   .notification-panel {
@@ -752,7 +769,13 @@
 }
 
 @media (max-width: 480px) {
+  .header-container {
+    min-height: 60px;
+    max-height: 60px;
+  }
+
   .header-content {
+    height: 60px;
     padding: 0;
   }
 
@@ -793,8 +816,8 @@
   }
 
   .brand-icon {
-    width: 28px;
-    height: 28px;
+    width: 52px;
+    height: 52px;
     font-size: 0.875rem;
   }
 
@@ -836,28 +859,14 @@
   color: var(--primary-400);
 }
 
-.dark .brand-text {
-  color: var(white) !important;
-}
-
-.dark .brand-text:hover {
-  color: var(--primary-400) !important;
-}
-
-/* Additional dark mode styles for brand text span */
+/* Dark mode branding */
+.dark .brand-text,
 html.dark .brand-text {
   color: #ffffff !important;
 }
 
+.dark .brand-text:hover,
 html.dark .brand-text:hover {
-  color: #60a5fa !important;
-}
-
-.dark .brand-text {
-  color: #ffffff !important;
-}
-
-.dark .brand-text:hover {
   color: #60a5fa !important;
 }
 
@@ -899,24 +908,7 @@ html.dark .brand-text:hover {
   background: var(--gray-700);
 }
 
-.dark .notification-item.unread {
-  background: var(--primary-900);
-  border-color: var(--primary-600);
-}
-
-.dark .notification-title,
-.dark .profile-item-title {
-  color: var(--gray-100);
-}
-
-.dark .notification-message,
-.dark .profile-item-subtitle {
-  color: var(--gray-400);
-}
-
-.dark .notification-time {
-  color: var(--gray-500);
-}
+/* Notification time and unread states are handled in consolidated blocks below */
 
 /* Enhanced Dark Mode Styles */
 html.dark .header-container {
@@ -994,13 +986,15 @@ html.dark .notification-item:hover {
   background: linear-gradient(135deg, #1e293b, #0f172a);
 }
 
+/* Consistently styled unread notifications */
+.dark .notification-item.unread,
 html.dark .notification-item.unread {
   background: linear-gradient(
     135deg,
     rgba(37, 99, 235, 0.15),
     rgba(29, 78, 216, 0.15)
-  );
-  border-left-color: var(--primary-500);
+  ) !important;
+  border-left: 3px solid var(--primary-500) !important;
 }
 
 html.dark .notification-icon {
@@ -1055,21 +1049,7 @@ html.dark .notification-btn {
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
 }
 
-.dark .notification-item.unread {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-}
-
-.dark .notification-title {
-  color: #f9fafb;
-}
-
-.dark .notification-message {
-  color: #d1d5db;
-}
-
-.dark .notification-time {
-  color: #9ca3af;
-}
+/* Notification time and unread states are handled above */
 
 .dark .notification-icon {
   background: linear-gradient(135deg, #4b5563 0%, #374151 100%);

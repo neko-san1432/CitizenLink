@@ -46,6 +46,7 @@ const cspConfig = {
       "https://*.google.com",
       "https://*.gstatic.com",
       "https://esm.sh",
+      "https://cdn.jsdelivr.net",
       "https://unpkg.com",
       "http://localhost:*",
       "ws://localhost:*",
@@ -79,10 +80,10 @@ const securityHeaders = helmet({
   hsts:
     process.env.NODE_ENV === "production"
       ? {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      }
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true,
+        }
       : false, // Disable HSTS in development to prevent SSL redirects
   noSniff: true,
   frameguard: { action: "deny" },
