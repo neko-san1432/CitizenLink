@@ -55,15 +55,14 @@ const initialStepLogic = (steps) => {
     const navEntries = performance.getEntriesByType("navigation");
     const navType = navEntries?.[0]?.type;
     const isReload =
-      navType === "reload" ||
       navType === "back_forward" ||
+      // eslint-disable-next-line
       performance?.navigation?.type === 1;
 
     if (!isReload) {
       const { referrer } = document;
-      const isInternal =
-        referrer && referrer.includes(globalThis.location.hostname);
-      const isSignupUrl = referrer && referrer.includes("/signup");
+      const isInternal = referrer?.includes(globalThis.location.hostname);
+      const isSignupUrl = referrer?.includes("/signup");
       if (!isInternal || !isSignupUrl) resetSignupData();
     }
     const saved = sessionStorage.getItem(STEP_STORAGE_KEY);

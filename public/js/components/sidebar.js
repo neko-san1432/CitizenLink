@@ -150,12 +150,14 @@ async function setSidebarRole() {
       _sidebarEl.innerHTML = `
 <div class="sidebar-brand">
   <div class="brand-logo">
-    <div class="brand-icon">CL</div>
+    <img src="${brandConfig.logo.imageUrl}" alt="${
+        brandConfig.name
+      } Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
     <div class="brand-text">
       <a href="${brandConfig.dashboardUrl}" class="brand-link">${
         brandConfig.name
       }</a>
-              <div class="brand-subtitle">Citizen Link</div>
+      <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
   <button id="sidebar-close" class="sidebar-close" aria-label="Close sidebar">×</button>
@@ -179,7 +181,7 @@ async function setSidebarRole() {
 </div>
         
 <div class="sidebar-bottom">
-  <div class="theme-toggle" id="theme-toggle">
+  <div class="theme-toggle" id="sidebar-theme-toggle">
     <div class="theme-toggle-label">
       <span class="menu-icon">${getIcon("darkMode", { size: 20 })}</span>
       <span>Dark Mode</span>
@@ -199,7 +201,7 @@ async function setSidebarRole() {
 
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
-      // Theme toggle is handled by header.js
+      initializeSidebarThemeToggle();
       initializeLogout();
       // Update active menu items with aria-current
       setActiveMenuItem();
@@ -328,6 +330,7 @@ function applyTheme(theme) {
     document.documentElement.classList.remove("dark");
   }
 }
+
 function updateToggleSwitch(isDark) {
   const toggleSwitch = document.getElementById("toggle-switch");
   if (toggleSwitch) {
@@ -336,6 +339,27 @@ function updateToggleSwitch(isDark) {
     } else {
       toggleSwitch.classList.remove("active");
     }
+  }
+}
+
+function initializeSidebarThemeToggle() {
+  const themeToggleBtn = document.getElementById("sidebar-theme-toggle");
+  if (themeToggleBtn) {
+    // Initial state
+    const savedTheme = localStorage.getItem("theme") || "light";
+    updateToggleSwitch(savedTheme === "dark");
+
+    themeToggleBtn.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      const newTheme = isDark ? "light" : "dark";
+
+      applyTheme(newTheme);
+      localStorage.setItem("theme", newTheme);
+      updateToggleSwitch(!isDark);
+
+      // Dispatch event for other components (like header) to update
+      window.dispatchEvent(new Event("themeChanged"));
+    });
   }
 }
 function initializeLogout() {
@@ -384,3 +408,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 export { initializeSidebar, setActiveMenuItem, openSidebar, closeSidebar };
+
+// Expose sidebar controller globally for non-module scripts (like heatmap-init.js)
+window.sidebarController = {
+  open: openSidebar,
+  close: closeSidebar,
+};

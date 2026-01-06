@@ -12,7 +12,7 @@ export function getIcon(iconName, options = {}) {
     size = 20,
     color = "currentColor",
     className = "",
-    strokeWidth = 2
+    strokeWidth = 2,
   } = options;
 
   const icons = {
@@ -241,7 +241,38 @@ export function getIcon(iconName, options = {}) {
     file: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
       <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
       <polyline points="13,2 13,9 20,9"></polyline>
-    </svg>`
+    </svg>`,
+    user: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>`,
+    shield: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    </svg>`,
+    sparkles: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+    </svg>`,
+    rocket: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.48-.56.93-1.23 1.35-2"></path>
+      <path d="M11.5 11.5c1.4-1.4 3.6-1.4 5 0l2.5-2.5c2.7-2.7 2.7-7.3 0-10-2.7 2.7-7.3 2.7-10 0l2.5 2.5c1.4 1.4 1.4 3.6 0 5"></path>
+    </svg>`,
+    copy: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>`,
+    trash: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>`,
+    help: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>`,
+    gear: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>`,
   };
 
   return icons[iconName] || icons.file;
@@ -252,26 +283,26 @@ export function getIcon(iconName, options = {}) {
  */
 export function getMenuIcon(iconName, options = {}) {
   const iconMap = {
-    "dashboard": "dashboard",
-    "fileComplaint": "fileComplaint",
-    "myProfile": "myProfile",
-    "appointAdmins": "appointAdmins",
-    "departments": "departments",
+    dashboard: "dashboard",
+    fileComplaint: "fileComplaint",
+    myProfile: "myProfile",
+    appointAdmins: "appointAdmins",
+    departments: "departments",
     "role-changer": "roleChanger",
     "link-generator": "linkGenerator",
     "review-queue": "reviewQueue",
-    "assignments": "assignments",
-    "heatmap": "heatmap",
-    "publish": "publish",
-    "taskAssigned": "taskAssigned",
-    "signout": "signout",
-    "settings": "settings",
+    assignments: "assignments",
+    heatmap: "heatmap",
+    publish: "publish",
+    taskAssigned: "taskAssigned",
+    signout: "signout",
+    settings: "settings",
     "hr-dashboard": "hrDashboard",
     "coordinator-dashboard": "coordinatorDashboard",
     "lgu-admin-dashboard": "lguAdminDashboard",
     "lgu-officer-dashboard": "lguOfficerDashboard",
     "super-admin-dashboard": "superAdminDashboard",
-    "analytics": "analytics"
+    analytics: "analytics",
   };
 
   const mappedName = iconMap[iconName] || "file";
@@ -283,37 +314,37 @@ export function getMenuIcon(iconName, options = {}) {
  */
 export function getNotificationIcon(notificationType, options = {}) {
   const iconMap = {
-    "complaint_submitted": "check",
-    "complaint_status_changed": "refresh",
-    "complaint_assigned_to_officer": "worker",
-    "complaint_marked_duplicate": "link",
-    "complaint_resolved": "check",
-    "complaint_rejected": "x",
-    "officer_added_update": "message",
-    "workflow_step_completed": "trendingUp",
-    "lgu_work_completed": "target",
-    "resolution_review_needed": "search",
-    "task_assigned": "file",
-    "task_deadline_approaching": "clock",
-    "task_overdue": "alert",
-    "task_priority_changed": "alert",
-    "coordinator_added_note": "note",
-    "assignment_completed": "check",
-    "admin_reminder_to_complete": "bell",
-    "new_complaint_needs_review": "search",
-    "duplicate_detected": "link",
-    "similar_complaints_found": "chart",
-    "resolution_pending_approval": "hand",
-    "approval_required": "appointAdmins",
-    "officer_assigned_to_department": "briefcase",
-    "complaint_escalated": "arrowUp",
-    "officer_reminder": "message",
-    "pending_task_reminder": "clock",
-    "staff_member_added": "users",
-    "role_change_completed": "refresh",
-    "department_transfer_completed": "departments",
-    "system_alert": "bell",
-    "welcome": "welcome"
+    complaint_submitted: "check",
+    complaint_status_changed: "refresh",
+    complaint_assigned_to_officer: "worker",
+    complaint_marked_duplicate: "link",
+    complaint_resolved: "check",
+    complaint_rejected: "x",
+    officer_added_update: "message",
+    workflow_step_completed: "trendingUp",
+    lgu_work_completed: "target",
+    resolution_review_needed: "search",
+    task_assigned: "file",
+    task_deadline_approaching: "clock",
+    task_overdue: "alert",
+    task_priority_changed: "alert",
+    coordinator_added_note: "note",
+    assignment_completed: "check",
+    admin_reminder_to_complete: "bell",
+    new_complaint_needs_review: "search",
+    duplicate_detected: "link",
+    similar_complaints_found: "chart",
+    resolution_pending_approval: "hand",
+    approval_required: "appointAdmins",
+    officer_assigned_to_department: "briefcase",
+    complaint_escalated: "arrowUp",
+    officer_reminder: "message",
+    pending_task_reminder: "clock",
+    staff_member_added: "users",
+    role_change_completed: "refresh",
+    department_transfer_completed: "departments",
+    system_alert: "bell",
+    welcome: "welcome",
   };
 
   const iconName = iconMap[notificationType] || "bell";
@@ -325,15 +356,15 @@ export function getNotificationIcon(notificationType, options = {}) {
  */
 export function getActivityIcon(activityType, options = {}) {
   const iconMap = {
-    "task_assigned": "file",
-    "task_completed": "check",
-    "task_updated": "note",
-    "note_added": "note",
-    "evidence_uploaded": "camera",
-    "status_updated": "refresh",
-    "status_changed": "refresh",
-    "deadline_approaching": "clock",
-    "general": "megaphone"
+    task_assigned: "file",
+    task_completed: "check",
+    task_updated: "note",
+    note_added: "note",
+    evidence_uploaded: "camera",
+    status_updated: "refresh",
+    status_changed: "refresh",
+    deadline_approaching: "clock",
+    general: "megaphone",
   };
 
   const iconName = iconMap[activityType] || "file";
@@ -345,14 +376,13 @@ export function getActivityIcon(activityType, options = {}) {
  */
 export function getUpdateIcon(updateType, options = {}) {
   const iconMap = {
-    "announcement": "megaphone",
-    "guideline": "file",
-    "meeting": "calendar",
-    "target": "target",
-    "policy": "scroll"
+    announcement: "megaphone",
+    guideline: "file",
+    meeting: "calendar",
+    target: "target",
+    policy: "scroll",
   };
 
   const iconName = iconMap[updateType] || "megaphone";
   return getIcon(iconName, { size: 18, ...options });
 }
-

@@ -8,7 +8,9 @@ let currentUserId = null;
 
 // Helper function to get auth headers
 async function getAuthHeaders() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const token = session?.access_token;
   const headers = { "Content-Type": "application/json" };
   if (token) {
@@ -20,10 +22,13 @@ async function getAuthHeaders() {
 // Get current user role
 async function getCurrentUserRole() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       currentUserId = session.user.id;
-      const metadata = session.user.user_metadata || session.user.raw_user_meta_data || {};
+      const metadata =
+        session.user.user_metadata || session.user.raw_user_meta_data || {};
       return metadata.role || "citizen";
     }
   } catch (e) {
@@ -48,9 +53,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Also try to attach handlers immediately (in case DOMContentLoaded already fired)
 if (document.readyState === "loading") {
-  console.log("[USER_MANAGER] Document still loading, waiting for DOMContentLoaded");
+  console.log(
+    "[USER_MANAGER] Document still loading, waiting for DOMContentLoaded"
+  );
 } else {
-  console.log("[USER_MANAGER] Document already loaded, setting up handlers immediately");
+  console.log(
+    "[USER_MANAGER] Document already loaded, setting up handlers immediately"
+  );
   loadDepartments().then(async () => {
     currentUserRole = await getCurrentUserRole();
     setupHandlers();
@@ -63,13 +72,13 @@ async function loadDepartments() {
     const headers = await getAuthHeaders();
     const res = await fetch("/api/department-structure/departments", {
       headers,
-      credentials: "include"
+      credentials: "include",
     });
     const { data } = await res.json();
     departmentsCache = Array.isArray(data) ? data : [];
     const deptSelect = document.getElementById("promotion-dept");
     if (deptSelect) {
-      departmentsCache.forEach(d => {
+      departmentsCache.forEach((d) => {
         const opt = document.createElement("option");
         opt.value = d.code?.toUpperCase() || "";
         opt.textContent = `${d.name} (${d.code})`;
@@ -133,7 +142,9 @@ function setupHandlers() {
 
   const promotionModal = document.getElementById("promotion-modal");
   if (promotionModal) {
-    promotionModal.addEventListener("click", (e) => { if (e.target === promotionModal) hidePromotionModal(); });
+    promotionModal.addEventListener("click", (e) => {
+      if (e.target === promotionModal) hidePromotionModal();
+    });
   }
 
   const promotionForm = document.getElementById("promotion-form");
@@ -149,7 +160,9 @@ function setupHandlers() {
 
   const banModal = document.getElementById("ban-modal");
   if (banModal) {
-    banModal.addEventListener("click", (e) => { if (e.target === banModal) hideBanModal(); });
+    banModal.addEventListener("click", (e) => {
+      if (e.target === banModal) hideBanModal();
+    });
   }
 
   const banForm = document.getElementById("ban-form");
@@ -183,6 +196,24 @@ function setupHandlers() {
     deleteForm.addEventListener("submit", onDeleteUserSubmit);
   }
 
+  // Transfer modal handlers
+  const transferCloseBtn = document.getElementById("transfer-close");
+  if (transferCloseBtn) {
+    transferCloseBtn.addEventListener("click", hideTransferModal);
+  }
+
+  const transferModal = document.getElementById("transfer-modal");
+  if (transferModal) {
+    transferModal.addEventListener("click", (e) => {
+      if (e.target === transferModal) hideTransferModal();
+    });
+  }
+
+  const transferForm = document.getElementById("transfer-form");
+  if (transferForm) {
+    transferForm.addEventListener("submit", onTransferSubmit);
+  }
+
   // Ban type change handler
   const banTypeSelect = document.getElementById("ban-type");
   if (banTypeSelect) {
@@ -190,7 +221,9 @@ function setupHandlers() {
       const durationGroup = document.getElementById("ban-duration-group");
       if (e.target.value === "temporary") {
         durationGroup.style.display = "block";
-        document.getElementById("ban-duration").setAttribute("required", "required");
+        document
+          .getElementById("ban-duration")
+          .setAttribute("required", "required");
       } else {
         durationGroup.style.display = "none";
         document.getElementById("ban-duration").removeAttribute("required");
@@ -215,15 +248,21 @@ async function refreshUserList() {
 
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`/api/superadmin/users?limit=1000&search=${encodeURIComponent(searchQuery)}`, {
-      headers,
-      credentials: "include"
-    });
+    const res = await fetch(
+      `/api/superadmin/users?limit=1000&search=${encodeURIComponent(
+        searchQuery
+      )}`,
+      {
+        headers,
+        credentials: "include",
+      }
+    );
     const result = await res.json();
-    const users = (result.success && Array.isArray(result.data)) ? result.data : [];
+    const users =
+      result.success && Array.isArray(result.data) ? result.data : [];
 
     // Apply filters
-    const filtered = users.filter(u => {
+    const filtered = users.filter((u) => {
       // Role filter
       const role = String(u.role || "").toLowerCase();
       if (filter === "citizen") {
@@ -231,7 +270,10 @@ async function refreshUserList() {
       } else if (filter === "staff") {
         if (role === "citizen") return false;
       } else if (filter === "banned") {
-        const isBanned = u.isBanned === true || u.raw_user_meta_data?.isBanned === true || u.user_metadata?.isBanned === true;
+        const isBanned =
+          u.isBanned === true ||
+          u.raw_user_meta_data?.isBanned === true ||
+          u.user_metadata?.isBanned === true;
         if (!isBanned) return false;
       }
 
@@ -240,12 +282,16 @@ async function refreshUserList() {
         const name = (u.fullName || u.name || "").toLowerCase();
         const email = (u.email || "").toLowerCase();
         const department = (u.department || "").toLowerCase();
-        const roleDisplay = normalizeRoleDisplay(u.role, u.department).toLowerCase();
+        const roleDisplay = normalizeRoleDisplay(
+          u.role,
+          u.department
+        ).toLowerCase();
 
-        const matchesSearch = name.includes(searchQuery) ||
-                             email.includes(searchQuery) ||
-                             department.includes(searchQuery) ||
-                             roleDisplay.includes(searchQuery);
+        const matchesSearch =
+          name.includes(searchQuery) ||
+          email.includes(searchQuery) ||
+          department.includes(searchQuery) ||
+          roleDisplay.includes(searchQuery);
 
         if (!matchesSearch) return false;
       }
@@ -255,52 +301,18 @@ async function refreshUserList() {
 
     // Render results
     if (filtered.length === 0) {
-      list.innerHTML = '<p class="empty-state">No users found matching your criteria.</p>';
+      list.innerHTML =
+        '<p class="empty-state">No users found matching your criteria.</p>';
     } else {
-      list.innerHTML = filtered.map(u => renderUserRow(u)).join("");
+      list.innerHTML = filtered.map((u) => renderUserRow(u)).join("");
     }
 
     // Attach event listeners
-    list.querySelectorAll(".um-user-item").forEach(el => {
+    list.querySelectorAll(".um-user-item").forEach((el) => {
       el.addEventListener("click", async () => {
         const id = el.getAttribute("data-user-id");
         await loadUserDetails(id);
       });
-
-      const promoteBtn = el.querySelector(".um-promote");
-      const demoteBtn = el.querySelector(".um-demote");
-      const banBtn = el.querySelector(".um-ban");
-      const unbanBtn = el.querySelector(".um-unban");
-
-      if (promoteBtn) {
-        promoteBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          openPromotionModal(el.dataset.userEmail, el.dataset.userName, el.dataset.userId);
-        });
-      }
-
-      if (demoteBtn) {
-        demoteBtn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await demoteToCitizen(el.dataset.userId);
-        });
-      }
-
-      if (banBtn) {
-        banBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          openBanModal(el.dataset.userEmail, el.dataset.userName, el.dataset.userId);
-        });
-      }
-
-      if (unbanBtn) {
-        unbanBtn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await unbanUser(el.dataset.userId);
-        });
-      }
     });
   } catch (e) {
     list.innerHTML = '<p class="empty-state">Failed to load users.</p>';
@@ -326,10 +338,17 @@ function normalizeRoleDisplay(role, department = null) {
   } else if (roleLower === "citizen") {
     displayRole = "Citizen";
   } else {
-    displayRole = role.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    displayRole = role
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
-  const isLguRole = roleLower === "lgu" || roleLower === "lgu-officer" || roleLower === "lgu-admin" || roleLower === "lgu-hr";
+  const isLguRole =
+    roleLower === "lgu" ||
+    roleLower === "lgu-officer" ||
+    roleLower === "lgu-admin" ||
+    roleLower === "lgu-hr";
   if (isLguRole && department) {
     displayRole += ` - ${department}`;
   }
@@ -338,44 +357,49 @@ function normalizeRoleDisplay(role, department = null) {
 }
 
 function renderUserRow(u) {
-  const role = (u.role || "").toLowerCase();
-  const isCitizen = role === "citizen";
   const displayRole = normalizeRoleDisplay(u.role, u.department);
+  const initials = (u.fullName || u.name || u.email || "?")
+    .charAt(0)
+    .toUpperCase();
 
   // Check ban status
-  const isBanned = u.isBanned === true ||
-                  u.raw_user_meta_data?.isBanned === true ||
-                  u.user_metadata?.isBanned === true;
-  const banExpiresAt = u.banExpiresAt || u.raw_user_meta_data?.banExpiresAt || u.user_metadata?.banExpiresAt;
-  const warningStrike = u.warningStrike || u.raw_user_meta_data?.warningStrike || u.user_metadata?.warningStrike || 0;
+  const isBanned =
+    u.isBanned === true ||
+    u.raw_user_meta_data?.isBanned === true ||
+    u.user_metadata?.isBanned === true;
 
-  // Check if ban has expired
-  let banStatus = "";
-  if (isBanned && banExpiresAt) {
-    const expirationDate = new Date(banExpiresAt);
-    const now = new Date();
-    if (now > expirationDate) {
-      banStatus = '<span style="color:#10b981; font-size:0.75rem;">(Ban Expired)</span>';
-    } else {
-      const banType = u.banType || u.raw_user_meta_data?.banType || u.user_metadata?.banType || "temporary";
-      if (banType === "permanent") {
-        banStatus = '<span style="color:#ef4444; font-size:0.75rem;">🔴 BANNED (Permanent)</span>';
-      } else {
-        banStatus = `<span style="color:#f59e0b; font-size:0.75rem;">🟡 BANNED (Until ${new Date(banExpiresAt).toLocaleDateString()})</span>`;
-      }
-    }
+  let statusIndicator = "";
+  if (isBanned) {
+    statusIndicator = `<span style="color:#ef4444; margin-left:0.5rem;" title="Banned">🚫</span>`;
+  } else if (u.warningStrike > 0) {
+    statusIndicator = `<span style="color:#f59e0b; margin-left:0.5rem;" title="Strikes: ${u.warningStrike}">⚠️</span>`;
   }
 
+  // Active state logic should be handled by click event adding 'active' class
+  // We add 'user-row-id-${u.id}' to easily toggle active state
+
   return `
-    <div class="um-user-item user-item" data-user-id="${u.id}" data-user-email="${escapeHtml(u.email || "")}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
-      <div><strong>${escapeHtml(u.fullName || u.name || u.email)}</strong> ${banStatus}</div>
-      <div style="color:#64748b; font-size:0.875rem;">${escapeHtml(u.email || "")}</div>
-      <div style="color:#64748b; font-size:0.875rem;">Role: ${escapeHtml(displayRole)}</div>
-      ${warningStrike > 0 ? `<div style="color:#f59e0b; font-size:0.75rem;">⚠️ Warning Strikes: ${warningStrike}</div>` : ""}
-      <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-        ${isCitizen ? `<button class="btn btn-primary um-promote">Promote</button>` : `<button class="btn btn-secondary um-demote">Demote to Citizen</button>`}
-        ${!isBanned ? `<button class="btn btn-danger um-ban">Ban Now</button>` : ""}
-        ${isBanned && currentUserRole === "super-admin" ? `<button class="btn btn-success um-unban">Unban</button>` : ""}
+    <div class="um-user-item user-item" id="user-row-${u.id}" data-user-id="${
+    u.id
+  }" data-user-email="${escapeHtml(
+    u.email || ""
+  )}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
+      <div class="user-item-avatar">
+        ${initials}
+      </div>
+      <div class="user-item-info">
+        <div class="user-item-name">
+            ${escapeHtml(u.fullName || u.name || "Unknown")}
+            ${statusIndicator}
+        </div>
+        <div class="user-item-meta">
+            <span class="user-item-email">${escapeHtml(u.email || "")}</span>
+            <span class="user-item-role">${escapeHtml(displayRole)}</span>
+        </div>
+      </div>
+      <div class="user-item-actions">
+        <!-- Minimal actions, full actions in details panel -->
+        <span style="color:var(--gray-400);">›</span>
       </div>
     </div>
   `;
@@ -383,69 +407,163 @@ function renderUserRow(u) {
 
 async function loadUserDetails(userId) {
   selectedUser = null;
+  // Highlight selected row
+  document
+    .querySelectorAll(".um-user-item")
+    .forEach((el) => el.classList.remove("active"));
+  const row = document.getElementById(`user-row-${userId}`);
+  if (row) row.classList.add("active");
+
   try {
+    // Show loading state in details
+    const container = document.getElementById("um-user-details");
+    if (container)
+      container.innerHTML =
+        '<div style="display:flex; justify-content:center; align-items:center; height:200px;"><div class="loading-spinner"></div></div>';
+
     const headers = await getAuthHeaders();
     const res = await fetch(`/api/superadmin/users/${userId}`, {
       headers,
-      credentials: "include"
+      credentials: "include",
     });
     const result = await res.json();
-    const container = document.getElementById("um-user-details");
+
     if (!container) return;
+
     if (result.success && result.data) {
       selectedUser = result.data;
       const u = selectedUser;
+      const initials = (u.fullName || u.name || u.email || "?")
+        .charAt(0)
+        .toUpperCase();
 
       // Get ban status
-      const isBanned = u.isBanned === true ||
-                      u.raw_user_meta_data?.isBanned === true ||
-                      u.user_metadata?.isBanned === true;
-      const banType = u.banType || u.raw_user_meta_data?.banType || u.user_metadata?.banType;
-      const banExpiresAt = u.banExpiresAt || u.raw_user_meta_data?.banExpiresAt || u.user_metadata?.banExpiresAt;
-      const banReason = u.banReason || u.raw_user_meta_data?.banReason || u.user_metadata?.banReason;
-      const warningStrike = u.warningStrike || u.raw_user_meta_data?.warningStrike || u.user_metadata?.warningStrike || 0;
+      const isBanned =
+        u.isBanned === true ||
+        u.raw_user_meta_data?.isBanned === true ||
+        u.user_metadata?.isBanned === true;
+      const banType =
+        u.banType || u.raw_user_meta_data?.banType || u.user_metadata?.banType;
+      const banExpiresAt =
+        u.banExpiresAt ||
+        u.raw_user_meta_data?.banExpiresAt ||
+        u.user_metadata?.banExpiresAt;
+      const banReason =
+        u.banReason ||
+        u.raw_user_meta_data?.banReason ||
+        u.user_metadata?.banReason;
+      const warningStrike =
+        u.warningStrike ||
+        u.raw_user_meta_data?.warningStrike ||
+        u.user_metadata?.warningStrike ||
+        0;
 
-      let banInfo = "";
+      let banAlert = "";
       if (isBanned) {
-        if (banExpiresAt) {
-          const expirationDate = new Date(banExpiresAt);
-          const now = new Date();
-          if (now > expirationDate) {
-            banInfo = '<div style="color:#10b981; padding:0.5rem; background:#f0fdf4; border-radius:4px; margin-top:0.5rem;">Ban has expired</div>';
-          } else {
-            const banTypeText = banType === "permanent" ? "Permanent" : "Temporary";
-            banInfo = `
-              <div style="color:#ef4444; padding:0.5rem; background:#fef2f2; border-radius:4px; margin-top:0.5rem;">
-                <strong>Banned (${banTypeText})</strong><br>
-                ${banType !== "permanent" ? `Expires: ${new Date(banExpiresAt).toLocaleString()}<br>` : ""}
-                ${banReason ? `Reason: ${escapeHtml(banReason)}` : ""}
-              </div>
-            `;
-          }
-        }
+        const banTypeText =
+          banType === "permanent" ? "Permanent Ban" : "Temporary Ban";
+        const expiryText =
+          banType !== "permanent" && banExpiresAt
+            ? `<br>Expires: ${new Date(banExpiresAt).toLocaleString()}`
+            : "";
+        const reasonText = banReason
+          ? `<br>Reason: ${escapeHtml(banReason)}`
+          : "";
+
+        banAlert = `
+          <div style="background:#fef2f2; border:1px solid #fee2e2; color:#991b1b; padding:1rem; border-radius:8px; margin-bottom:1.5rem; text-align:left;">
+              <strong style="display:flex; align-items:center; gap:0.5rem;">🚫 ${banTypeText}</strong>
+              <p style="margin-top:0.5rem; font-size:0.9rem; opacity:0.9;">
+                  ${reasonText}
+                  ${expiryText}
+              </p>
+          </div>
+        `;
       }
 
-      const isTargetSuperAdmin = String(u.role || "").toLowerCase() === "super-admin";
-      const canDeleteUser = currentUserRole === "super-admin" && u.id !== currentUserId && !isTargetSuperAdmin;
+      const roleDisplay = normalizeRoleDisplay(u.role, u.department);
+      const isCitizen = (u.role || "").toLowerCase() === "citizen";
+      const isTargetSuperAdmin =
+        String(u.role || "").toLowerCase() === "super-admin";
+      const canDeleteUser =
+        currentUserRole === "super-admin" &&
+        u.id !== currentUserId &&
+        !isTargetSuperAdmin;
 
       container.innerHTML = `
-        <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
-          <div style="width:48px; height:48px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center;">👤</div>
-          <div>
-            <div style="font-weight:700; font-size:1.125rem; color:#1e293b;">${escapeHtml(u.fullName || u.name || u.email)}</div>
-            <div style="color:#64748b; font-size:0.875rem;">${escapeHtml(u.email || "")}</div>
-          </div>
+        <div class="profile-card">
+            <div class="profile-avatar">${initials}</div>
+            <h2 class="profile-name">${escapeHtml(
+              u.fullName || u.name || "Unknown"
+            )}</h2>
+            <p class="profile-email">${escapeHtml(u.email || "")}</p>
         </div>
-        ${banInfo}
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; padding-top:1rem; border-top:1px solid #e2e8f0;">
-          <div><strong style="color:#1e293b;">Role:</strong> <span style="color:#64748b;">${escapeHtml(normalizeRoleDisplay(u.role, u.department))}</span></div>
-          <div><strong style="color:#1e293b;">Department:</strong> <span style="color:#64748b;">${escapeHtml(u.department || "-")}</span></div>
-          <div><strong style="color:#1e293b;">Warning Strikes:</strong> <span style="color:#64748b;">${warningStrike}</span></div>
+
+        ${banAlert}
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Role</span>
+                <div class="info-value">${escapeHtml(roleDisplay)}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Department</span>
+                <div class="info-value">${escapeHtml(u.department || "-")}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <div class="info-value" style="color:${
+                  isBanned ? "#ef4444" : "#10b981"
+                }">
+                    ${isBanned ? "Banned" : "Active"}
+                </div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Warning Strikes</span>
+                <div class="info-value">${warningStrike}</div>
+            </div>
         </div>
-        <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-          ${!isBanned ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(u.email || "")}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id}')">Ban Now</button>` : ""}
-          ${isBanned && currentUserRole === "super-admin" ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban</button>` : ""}
-          ${canDeleteUser ? '<button class="btn btn-secondary" id="delete-user-btn">Delete Account</button>' : ""}
+
+        <div class="actions-container">
+            ${
+              isCitizen
+                ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
+                    u.email || ""
+                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
+                    u.id
+                  }')">Promote User</button>`
+                : `<button class="btn btn-secondary" onclick="demoteToCitizen('${u.id}')">Demote to Citizen</button>`
+            }
+            
+            ${
+              !isCitizen && !isTargetSuperAdmin
+                ? `<button class="btn btn-warning" onclick="openTransferModal('${escapeHtml(
+                    u.email || ""
+                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
+                    u.id
+                  }', '${escapeHtml(
+                    u.department || ""
+                  )}')">Transfer Dept</button>`
+                : ""
+            }
+            
+            ${
+              !isBanned
+                ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(
+                    u.email || ""
+                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
+                    u.id
+                  }')">Ban User</button>`
+                : currentUserRole === "super-admin"
+                ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban User</button>`
+                : ""
+            }
+            
+            ${
+              canDeleteUser
+                ? `<button class="btn btn-secondary" style="border-color:#fee2e2; color:#991b1b; background:#fff;" id="delete-user-btn">Delete Account</button>`
+                : ""
+            }
         </div>
       `;
 
@@ -461,8 +579,20 @@ async function loadUserDetails(userId) {
     }
   } catch (e) {
     console.error("[USER_MANAGER] Error loading user details:", e);
+    const container = document.getElementById("um-user-details");
+    if (container)
+      container.innerHTML =
+        '<p class="empty-state">Failed to load user details.</p>';
   }
 }
+
+// Make functions global so inline onclicks work
+window.demoteToCitizen = demoteToCitizen;
+window.openPromotionModal = openPromotionModal;
+window.openBanModal = openBanModal;
+window.unbanUser = unbanUser;
+window.openTransferModal = openTransferModal;
+window.openDeleteModal = openDeleteModal;
 
 function openPromotionModal(email, name, userId) {
   const modal = document.getElementById("promotion-modal");
@@ -502,29 +632,27 @@ function updateDepartmentRequirement() {
 
   if (!roleSelect || !deptSelect) return;
 
-  const selectedRole = roleSelect.value;
-  const isSuperAdmin = selectedRole === "super-admin";
-  const isCoordinator = selectedRole === "complaint-coordinator";
-  const shouldDisable = isSuperAdmin || isCoordinator;
+  const role = roleSelect.value;
+  // Roles that require department: lgu-officer, lgu-admin, lgu-hr
+  // Roles that DO NOT: super-admin, complaint-coordinator (usually global)
+  // Actually coordinator depends on business logic, but typically they are global or per-type, not per-department
+  const needsDepartment =
+    ["lgu-officer", "lgu-admin", "lgu-hr"].includes(role) ||
+    role.startsWith("lgu-"); // Catch all lgu roles
 
-  if (shouldDisable) {
+  if (needsDepartment) {
+    deptSelect.required = true;
+    deptSelect.disabled = false;
+    if (requiredIndicator) requiredIndicator.style.display = "inline";
+    if (helpText) helpText.textContent = "Required for this role";
+  } else {
+    deptSelect.required = false;
     deptSelect.disabled = true;
-    deptSelect.removeAttribute("required");
     deptSelect.value = "";
     if (requiredIndicator) requiredIndicator.style.display = "none";
-    if (helpText) {
-      const roleName = isSuperAdmin ? "Super Admin" : "Complaint Coordinator";
-      helpText.textContent = `Not applicable for ${roleName}`;
-    }
-    deptSelect.style.backgroundColor = "#f3f4f6";
-    deptSelect.style.cursor = "not-allowed";
-  } else {
-    deptSelect.disabled = false;
-    deptSelect.setAttribute("required", "required");
-    if (requiredIndicator) requiredIndicator.style.display = "inline";
-    if (helpText) {
-      helpText.textContent = "Required for all roles except Super Admin and Complaint Coordinator";
-    }
+    if (helpText)
+      helpText.textContent =
+        "Required for all roles except Super Admin and Complaint Coordinator";
     deptSelect.style.backgroundColor = "";
     deptSelect.style.cursor = "";
   }
@@ -568,7 +696,10 @@ async function onPromoteSubmit(e) {
 
   const rolesWithoutDept = ["super-admin", "complaint-coordinator"];
   if (!rolesWithoutDept.includes(role) && !dept) {
-    showMessage("error", "Please select an office (not required for Super Admin and Complaint Coordinator)");
+    showMessage(
+      "error",
+      "Please select an office (not required for Super Admin and Complaint Coordinator)"
+    );
     return;
   }
 
@@ -576,7 +707,7 @@ async function onPromoteSubmit(e) {
     user_id: selectedUser.id,
     role,
     department_id: dept,
-    reason: reason || undefined
+    reason: reason || undefined,
   };
 
   try {
@@ -585,7 +716,7 @@ async function onPromoteSubmit(e) {
       method: "POST",
       headers,
       credentials: "include",
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
     const result = await res.json();
@@ -593,7 +724,7 @@ async function onPromoteSubmit(e) {
     if (result.success) {
       showMessage("success", `Citizen promoted successfully to ${role}`);
       hidePromotionModal();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserList();
       if (selectedUser && selectedUser.id) {
         await loadUserDetails(selectedUser.id);
@@ -607,6 +738,120 @@ async function onPromoteSubmit(e) {
   }
 }
 
+function openTransferModal(email, name, userId, currentDept) {
+  const modal = document.getElementById("transfer-modal");
+  if (!modal) {
+    showMessage("error", "Transfer modal not found");
+    return;
+  }
+
+  selectedUser = { id: userId, email, name, department: currentDept };
+
+  const userLabel = document.getElementById("transfer-user-label");
+  const currentDeptInput = document.getElementById("transfer-current-dept");
+  const newDeptSelect = document.getElementById("transfer-new-dept");
+  const reasonText = document.getElementById("transfer-reason");
+
+  if (userLabel) userLabel.value = name || email;
+  if (currentDeptInput) currentDeptInput.value = currentDept || "None";
+  if (newDeptSelect) {
+    newDeptSelect.innerHTML = '<option value="">Select new department</option>';
+    if (departmentsCache && departmentsCache.length > 0) {
+      departmentsCache.forEach((d) => {
+        const code = d.code?.toUpperCase();
+        if (code !== currentDept) {
+          const opt = document.createElement("option");
+          opt.value = code || "";
+          opt.textContent = `${d.name} (${code})`;
+          newDeptSelect.appendChild(opt);
+        }
+      });
+    }
+  }
+  if (reasonText) reasonText.value = "";
+
+  modal.style.display = "flex";
+  modal.style.visibility = "visible";
+  modal.style.opacity = "1";
+  modal.style.zIndex = "10000";
+}
+
+function hideTransferModal() {
+  const modal = document.getElementById("transfer-modal");
+  if (modal) {
+    modal.style.display = "none";
+    modal.style.visibility = "hidden";
+    modal.style.opacity = "0";
+  }
+}
+
+async function onTransferSubmit(e) {
+  e.preventDefault();
+  if (!selectedUser) {
+    showMessage("error", "No user selected");
+    return;
+  }
+
+  const newDeptSelect = document.getElementById("transfer-new-dept");
+  const reasonText = document.getElementById("transfer-reason");
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  if (!newDeptSelect || !reasonText) return;
+
+  const toDepartment = newDeptSelect.value;
+  const reason = reasonText.value.trim();
+
+  if (!toDepartment) {
+    showMessage("error", "Please select a new department");
+    return;
+  }
+  if (!reason) {
+    showMessage("error", "Please provide a reason");
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Transferring...";
+  }
+
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/superadmin/transfer-department", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify({
+        user_id: selectedUser.id,
+        from_department: selectedUser.department,
+        to_department: toDepartment,
+        reason: reason,
+      }),
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      showMessage("success", "User transferred successfully");
+      hideTransferModal();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await refreshUserList();
+      if (selectedUser && selectedUser.id) {
+        await loadUserDetails(selectedUser.id);
+      }
+    } else {
+      showMessage("error", result.error || "Failed to transfer user");
+    }
+  } catch (error) {
+    console.error("[USER_MANAGER] Transfer error:", error);
+    showMessage("error", error.message || "Failed to transfer user");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Transfer User";
+    }
+  }
+}
+
 async function demoteToCitizen(userId) {
   if (!confirm("Demote this user to Citizen?")) return;
   try {
@@ -615,11 +860,17 @@ async function demoteToCitizen(userId) {
       method: "POST",
       headers,
       credentials: "include",
-      body: JSON.stringify({ user_id: userId, new_role: "citizen", reason: "Demotion by super-admin" })
+      body: JSON.stringify({
+        user_id: userId,
+        new_role: "citizen",
+        reason: "Demotion by super-admin",
+      }),
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ error: "Network error" }));
+      const errorData = await res
+        .json()
+        .catch(() => ({ error: "Network error" }));
       throw new Error(errorData.error || `HTTP ${res.status}`);
     }
 
@@ -627,7 +878,7 @@ async function demoteToCitizen(userId) {
 
     if (result.success) {
       showMessage("success", `User demoted to Citizen.`);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserList();
       if (selectedUser && selectedUser.id === userId) {
         await loadUserDetails(userId);
@@ -637,7 +888,7 @@ async function demoteToCitizen(userId) {
     }
   } catch (e) {
     console.error("[USER_MANAGER] Demotion exception:", e);
-    showMessage("error", `Failed to demote: ${  e.message || "Network error"}`);
+    showMessage("error", `Failed to demote: ${e.message || "Network error"}`);
   }
 }
 
@@ -699,7 +950,8 @@ async function onBanSubmit(e) {
   }
 
   const banType = banTypeSelect.value;
-  const duration = banType === "temporary" ? parseInt(durationInput?.value) : null;
+  const duration =
+    banType === "temporary" ? parseInt(durationInput?.value) : null;
   const reason = reasonTextarea.value.trim();
 
   if (!banType) {
@@ -721,7 +973,7 @@ async function onBanSubmit(e) {
     user_id: selectedUser.id,
     type: banType,
     duration,
-    reason
+    reason,
   };
 
   try {
@@ -730,7 +982,7 @@ async function onBanSubmit(e) {
       method: "POST",
       headers,
       credentials: "include",
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
     const result = await res.json();
@@ -738,7 +990,7 @@ async function onBanSubmit(e) {
     if (result.success) {
       showMessage("success", `User banned successfully (${banType})`);
       hideBanModal();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserList();
       if (selectedUser && selectedUser.id) {
         await loadUserDetails(selectedUser.id);
@@ -760,11 +1012,13 @@ async function unbanUser(userId) {
       method: "POST",
       headers,
       credentials: "include",
-      body: JSON.stringify({ user_id: userId })
+      body: JSON.stringify({ user_id: userId }),
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ error: "Network error" }));
+      const errorData = await res
+        .json()
+        .catch(() => ({ error: "Network error" }));
       throw new Error(errorData.error || `HTTP ${res.status}`);
     }
 
@@ -772,7 +1026,7 @@ async function unbanUser(userId) {
 
     if (result.success) {
       showMessage("success", "User unbanned successfully");
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserList();
       if (selectedUser && selectedUser.id === userId) {
         await loadUserDetails(userId);
@@ -782,7 +1036,7 @@ async function unbanUser(userId) {
     }
   } catch (e) {
     console.error("[USER_MANAGER] Unban exception:", e);
-    showMessage("error", `Failed to unban: ${  e.message || "Network error"}`);
+    showMessage("error", `Failed to unban: ${e.message || "Network error"}`);
   }
 }
 
@@ -800,7 +1054,8 @@ function openDeleteModal(user) {
   const reasonInput = document.getElementById("delete-user-reason");
 
   if (nameLabel) {
-    nameLabel.textContent = user.fullName || user.name || user.email || "Selected user";
+    nameLabel.textContent =
+      user.fullName || user.name || user.email || "Selected user";
   }
   if (emailLabel) {
     emailLabel.textContent = user.email || "N/A";
@@ -863,7 +1118,7 @@ async function onDeleteUserSubmit(e) {
       method: "DELETE",
       headers,
       credentials: "include",
-      body: JSON.stringify({ userId: selectedUser.id, reason })
+      body: JSON.stringify({ userId: selectedUser.id, reason }),
     });
     const result = await res.json().catch(() => ({}));
     if (!res.ok || !result?.success) {
@@ -893,6 +1148,7 @@ async function onDeleteUserSubmit(e) {
 window.openBanModal = openBanModal;
 window.unbanUser = unbanUser;
 window.openDeleteModal = openDeleteModal;
+window.openTransferModal = openTransferModal;
 
 function escapeHtml(s) {
   if (s == null) return "";
@@ -903,4 +1159,3 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
-

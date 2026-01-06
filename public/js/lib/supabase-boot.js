@@ -8,16 +8,16 @@ console.log("[Supabase-Boot] Starting initialization...");
     return;
   }
 
-  console.log("[Supabase-Boot] Loading UMD bundle from CDN...");
+  console.log("[Supabase-Boot] Loading UMD bundle from local...");
 
   // Create script tag for UMD bundle
   const script = document.createElement("script");
-  script.src =
-    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js";
+  // Use local file instead of CDN for reliability and speed
+  script.src = "/js/lib/supabase.js";
   script.crossOrigin = "anonymous";
 
   script.onload = function () {
-    console.log("[Supabase-Boot] ✅ UMD bundle loaded");
+    console.log("[Supabase-Boot] ✅ Local UMD bundle loaded");
 
     // The UMD bundle exposes window.supabase directly
     if (window.supabase && window.supabase.createClient) {

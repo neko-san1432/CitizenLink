@@ -1,386 +1,196 @@
 /**
- * LGU Officer Dashboard
- * Field operations and task management for local government officers
+ * LGU Officer Dashboard JavaScript
+ * Handles API calls and dashboard functionality
  */
-import showMessage from "../components/toast.js";
-import { escapeHtml } from "../utils/string.js";
-import { formatDate } from "../utils/date.js";
-import { getStatusText } from "../utils/complaint.js";
-import { getActivityIcon, getUpdateIcon } from "../utils/icons.js";
+class OfficerDashboard {
+  constructor() {
+    this.statsInterval = null;
+    this.activityInterval = null;
+    this.trendChart = null;
+    this.distributionChart = null;
+    this.init();
+  }
 
-// Dashboard state
-const _dashboardData = null;
-/**
- * Initialize dashboard
- */
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadDashboardData();
-  await loadMyTasks();
-  await loadStatistics();
-  await loadActivity();
-  await loadUpdates();
-  setupEventListeners();
-});
-/**
- * Load dashboard data
- */
-async function loadDashboardData() {
-  try {
-    // Load all dashboard components
-    await Promise.all([loadStatistics(), loadActivity(), loadUpdates()]);
-  } catch (error) {
-    console.error("[LGU_OFFICER] Load dashboard error:", error);
-    showMessage("error", "Failed to load dashboard data");
-  }
-}
-/**
- * Load my tasks
- */
-async function loadMyTasks() {
-  try {
-    const response = await fetch("/api/lgu/tasks?limit=5");
-    const result = await response.json();
-    if (result.success) {
-      renderMyTasks(result.data || []);
-    } else {
-      renderMyTasks([]);
+  async init() {
+    try {
+      await this.loadDashboardData();
+      this.initCharts();
+      this.startAutoRefresh();
+    } catch (error) {
+      console.error("[OFFICER] Init error:", error);
+      this.setDefaultStats();
     }
-  } catch (error) {
-    console.error("[LGU_OFFICER] Load tasks error:", error);
-    renderMyTasks([]);
   }
-}
-/**
- * Load statistics
- */
-async function loadStatistics() {
-  try {
-    const response = await fetch("/api/lgu/statistics");
-    const result = await response.json();
-    if (result.success) {
-      renderStatistics(result.data);
-    } else {
-      renderStatistics({});
-    }
-  } catch (error) {
-    console.error("[LGU_OFFICER] Load statistics error:", error);
-    renderStatistics({});
-  }
-}
-/**
- * Load activity
- */
-async function loadActivity() {
-  try {
-    const response = await fetch("/api/lgu/activities?limit=5");
-    const result = await response.json();
-    if (result.success) {
-      renderActivity(result.data || []);
-    }
-  } catch (error) {
-    console.error("[LGU_OFFICER] Load activity error:", error);
-  }
-}
-/**
- * Load updates
- */
-async function loadUpdates() {
-  try {
-    const response = await fetch("/api/lgu/updates?limit=5");
-    const result = await response.json();
-    if (result.success) {
-      renderUpdates(result.data || []);
-    }
-  } catch (error) {
-    console.error("[LGU_OFFICER] Load updates error:", error);
-  }
-}
-/**
- * Render my tasks
- */
-function renderMyTasks(tasks) {
-  const container = document.getElementById("tasks-container");
-  if (!container) return;
-  // Client-side deduplication by complaint_id (keep the most recent one)
-  const uniqueTasks = tasks.reduce((acc, task) => {
-    const existing = acc.find((t) => t.complaint_id === task.complaint_id);
-    if (
-      !existing ||
-      new Date(task.updated_at || task.created_at) >
-        new Date(existing.updated_at || existing.created_at)
-    ) {
-      const filtered = acc.filter((t) => t.complaint_id !== task.complaint_id);
-      return [...filtered, task];
-    }
-    return acc;
-  }, []);
-  if (uniqueTasks.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        <h3>No Tasks Assigned</h3>
-        <p>You don't have any tasks assigned at the moment.</p>
-        <button class="btn btn-primary" onclick="refreshTasks()">Refresh</button>
-      </div>
-    `;
-    return;
-  }
-  const html = uniqueTasks
-    .map(
-      (task) => `
-    <div class="task-item" onclick="viewTaskDetail('${task.complaint_id}')">
-      <div class="task-header">
-        <h4 class="task-title">${escapeHtml(getTaskTitle(task))}</h4>
-        <span class="task-priority priority-${(
-    task.urgency_level ||
-          task.priority ||
-          "medium"
-  ).toLowerCase()}">${(
-  task.urgency_level ||
-        task.priority ||
-        "MEDIUM"
-).toUpperCase()}</span>
-      </div>
-      <div class="task-meta">
-        <span class="task-type">${escapeHtml(
-    task.complaint?.category || "General"
-  )}</span>
-        <span class="task-deadline">Due: ${formatDate(task.deadline)}</span>
-        ${
-  task.complaint?.urgency_level
-    ? `<span class="citizen-urgency" title="Citizen Reported Urgency">Citizen: ${task.complaint.urgency_level}</span>`
-    : ""
-}
-      </div>
-      <div class="task-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${getTaskProgress(
-    task.status
-  )}%"></div>
-        </div>
-        <span class="progress-text">${getStatusText(task.status)}</span>
-      </div>
-      <div class="task-actions">
-        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${
-  task.complaint_id
-}')">Update</button>
-        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${
-  task.complaint_id
-}')">Add Note</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); escalateTask('${
-  task.complaint_id
-}')">Return</button>
-      </div>
-    </div>
-  `
-    )
-    .join("");
-  container.innerHTML = html;
-}
-/**
- * Render statistics
- */
-function renderStatistics(stats) {
-  document.getElementById("stat-total-assigned").textContent =
-    stats.total_tasks || 0;
-  document.getElementById("stat-in-progress").textContent =
-    stats.in_progress_tasks || 0;
-  document.getElementById("stat-completed").textContent =
-    stats.completed_tasks || 0;
-  document.getElementById("stat-overdue").textContent =
-    stats.overdue_tasks || 0;
-}
-/**
- * Render activity
- */
-function renderActivity(activities) {
-  const container = document.getElementById("activity-container");
-  if (!container) return;
-  // Client-side deduplication by complaint_id (keep the most recent one)
-  const uniqueActivities = activities.reduce((acc, activity) => {
-    const existing = acc.find((a) => a.complaint_id === activity.complaint_id);
-    if (
-      !existing ||
-      new Date(activity.created_at) > new Date(existing.created_at)
-    ) {
-      const filtered = acc.filter(
-        (a) => a.complaint_id !== activity.complaint_id
-      );
-      return [...filtered, activity];
-    }
-    return acc;
-  }, []);
-  console.log("[LGU_OFFICER_DASHBOARD] Activity deduplication:", {
-    originalCount: activities.length,
-    uniqueCount: uniqueActivities.length,
-    removedDuplicates: activities.length - uniqueActivities.length,
-  });
-  if (uniqueActivities.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🕒</div>
-        <p>No recent activity</p>
-      </div>
-    `;
-    return;
-  }
-  const html = uniqueActivities
-    .map(
-      (activity) => `
-    <div class="activity-item" data-type="${activity.type}">
-      <div class="activity-icon">${getActivityIcon(activity.type)}</div>
-      <div class="activity-content">
-        <div class="activity-text">${escapeHtml(activity.description)}</div>
-        <div class="activity-time">${formatDate(activity.created_at)}</div>
-      </div>
-    </div>
-  `
-    )
-    .join("");
-  container.querySelector(".activity-list").innerHTML = html;
-}
-/**
- * Render updates
- */
-function renderUpdates(updates) {
-  const container = document.getElementById("updates-container");
-  if (!container) return;
-  if (updates.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🏢</div>
-        <p>No department updates</p>
-      </div>
-    `;
-    return;
-  }
-  const html = updates
-    .map(
-      (update) => `
-    <div class="update-item">
-      <div class="update-icon">${getUpdateIcon(update.type)}</div>
-      <div class="update-content">
-        <div class="update-title">${escapeHtml(update.title)}</div>
-        <div class="update-text">${escapeHtml(
-    `${update.content?.substring(0, 80)}...`
-  )}</div>
-        <div class="update-time">${formatDate(update.created_at)}</div>
-      </div>
-    </div>
-  `
-    )
-    .join("");
-  container.querySelector(".updates-list").innerHTML = html;
-}
-/**
- * Setup event listeners
- */
-function setupEventListeners() {}
-/**
- * Helper functions
- */
-function getTaskProgress(status) {
-  const progressMap = {
-    assigned: 25,
-    in_progress: 50,
-    review: 75,
-    completed: 100,
-    cancelled: 0,
-  };
-  return progressMap[status] || 0;
-}
-// getActivityIcon and getUpdateIcon are now imported from icons.js utility
-// Removed duplicate formatDate and escapeHtml in favor of shared utils
-// Title fallback helper to avoid blank titles
-function getTaskTitle(task) {
-  const complaint = task?.complaint || {};
-  const byPriority = (task?.priority || "").toString().toUpperCase();
 
-  const result =
-    complaint.title ||
-    complaint.category ||
-    `Complaint ${
-      task?.complaint_id ? `#${String(task.complaint_id).substring(0, 8)}` : ""
-    } ${byPriority ? `(${byPriority})` : ""}`.trim();
-  return result;
-}
-/**
- * Global functions for onclick handlers
- */
-window.viewAssignedTasks = function () {
-  window.location.href = "/taskAssigned";
-};
-window.updateTaskStatus = function () {
-  showMessage("info", "Task status update feature coming soon");
-  // TODO: Implement task status update modal
-};
-window.addProgressNote = function () {
-  showMessage("info", "Add progress note feature coming soon");
-  // TODO: Implement add note modal
-};
-window.uploadEvidence = function () {
-  showMessage("info", "Upload evidence feature coming soon");
-  // TODO: Implement evidence upload modal
-};
-window.requestSupport = function () {
-  showMessage("info", "Request support feature coming soon");
-  // TODO: Implement support request modal
-};
-window.viewMap = function () {
-  window.location.href = "/heatmap";
-};
-window.escalateTask = function (taskId) {
-  if (!taskId) {
-    showMessage("warning", "Please select a task to escalate");
-    return;
+  async loadDashboardData() {
+    try {
+      await this.loadStats();
+      await this.loadActivity();
+    } catch (error) {
+      console.error("[OFFICER] Load data error:", error);
+      this.setDefaultStats();
+    }
   }
-  const reason = prompt("Please enter the reason for return/escalation:");
-  if (reason) {
-    fetch(`/api/lgu/tasks/${taskId}/escalate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason }),
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        if (result.success) {
-          showMessage("success", "Task escalated successfully");
-          loadMyTasks();
-        } else {
-          showMessage("error", result.message || "Failed to escalate task");
-        }
+
+  async loadStats() {
+    try {
+      const response = await fetch("/api/lgu/statistics");
+      if (!response.ok) throw new Error("Failed to fetch stats");
+
+      const result = await response.json();
+      if (result.success) {
+        const { data } = result;
+
+        // Map API data to new HTML IDs
+        this.updateStatCard("stat-assigned", data.total_tasks || 0);
+        this.updateStatCard("stat-in-progress", data.in_progress_tasks || 0);
+        this.updateStatCard("stat-completed", data.completed_tasks || 0);
+        this.updateStatCard("stat-overdue", data.overdue_tasks || 0);
+
+        // Update charts if API provides data
+        this.updateCharts(data);
+      } else {
+        this.setDefaultStats();
+      }
+    } catch (error) {
+      this.setDefaultStats();
+    }
+  }
+
+  setDefaultStats() {
+    this.updateStatCard("stat-assigned", 0);
+    this.updateStatCard("stat-in-progress", 0);
+    this.updateStatCard("stat-completed", 0);
+    this.updateStatCard("stat-overdue", 0);
+  }
+
+  updateStatCard(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = value;
+      element.classList.remove("animate-pulse");
+    }
+  }
+
+  async loadActivity() {
+    try {
+      const response = await fetch("/api/lgu/tasks?limit=5"); // Using tasks as activity for officer
+      const result = await response.json();
+
+      const container = document.getElementById("recent-activity-list");
+      if (!container) return;
+
+      if (result.success && result.data && result.data.length > 0) {
+        container.innerHTML = result.data
+          .map(
+            (task) => `
+          <div class="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-800">${
+  task.complaint?.title || "Assigned Task"
+}</p>
+              <p class="text-xs text-gray-500">
+                Status: ${task.status || "Pending"} • Due: ${new Date(
+  task.deadline
+).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      } else {
+        container.innerHTML = `
+          <div class="text-center py-4 text-gray-500 text-sm">
+            No recent tasks
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error("[OFFICER] Activity load error:", error);
+    }
+  }
+
+  initCharts() {
+    // Trend Chart
+    const trendCtx = document.getElementById("trendChart");
+    if (trendCtx) {
+      this.trendChart = new Chart(trendCtx, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              label: "Tasks Completed",
+              data: [5, 8, 3, 12, 6, 4, 7], // Mock
+              backgroundColor: "#3b82f6",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false } },
+            x: { grid: { display: false } },
+          },
+        },
       });
+    }
+
+    // Distribution Chart
+    const distCtx = document.getElementById("distributionChart");
+    if (distCtx) {
+      this.distributionChart = new Chart(distCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Pending", "In Progress", "Completed", "Review"],
+          datasets: [
+            {
+              data: [10, 25, 45, 20], // Mock
+              backgroundColor: ["#f59e0b", "#eab308", "#10b981", "#6366f1"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "right" } },
+        },
+      });
+    }
   }
-};
-window.viewTaskDetail = function (taskId) {
-  showMessage("info", `Viewing task ${taskId}...`);
-  // TODO: Implement task detail view
-};
-window.updateTask = function (taskId) {
-  showMessage("info", `Updating task ${taskId}...`);
-  // TODO: Implement task update modal
-};
-window.addNote = function (taskId) {
-  showMessage("info", `Adding note to task ${taskId}...`);
-  // TODO: Implement add note modal
-};
-window.refreshStats = async function () {
-  showMessage("info", "Refreshing statistics...");
-  await loadStatistics();
-  showMessage("success", "Statistics refreshed");
-};
-window.refreshActivity = async function () {
-  showMessage("info", "Refreshing activity...");
-  await loadActivity();
-  showMessage("success", "Activity refreshed");
-};
-window.refreshUpdates = async function () {
-  showMessage("info", "Refreshing updates...");
-  await loadUpdates();
-  showMessage("success", "Updates refreshed");
-};
-window.refreshTasks = async function () {
-  showMessage("info", "Refreshing tasks...");
-  await loadMyTasks();
-  showMessage("success", "Tasks refreshed");
-};
+
+  updateCharts(data) {
+    // Implement chart update
+  }
+
+  startAutoRefresh() {
+    this.statsInterval = setInterval(() => this.loadStats(), 30000);
+    this.activityInterval = setInterval(() => this.loadActivity(), 60000);
+  }
+
+  destroy() {
+    if (this.statsInterval) clearInterval(this.statsInterval);
+    if (this.activityInterval) clearInterval(this.activityInterval);
+    if (this.trendChart) this.trendChart.destroy();
+    if (this.distributionChart) this.distributionChart.destroy();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.officerDashboard = new OfficerDashboard();
+});
+
+window.addEventListener("beforeunload", () => {
+  if (window.officerDashboard) {
+    window.officerDashboard.destroy();
+  }
+});

@@ -1,6 +1,7 @@
 // SECURITY: Environment variables are now handled securely
 // Auth operations use a limited client, database operations go through server API
 // import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { supabaseReady } from "../lib/supabase-boot.js";
 
 // Fetch Supabase configuration securely from server
 let _supabaseConfig = null;
@@ -17,59 +18,18 @@ async function initializeSupabase() {
         throw new Error("Missing Supabase client configuration");
       }
 
-      // Ensure Supabase library is loaded
-      // Wait for it up to 5 seconds
-      let attempts = 0;
-      while (
-        (!window.supabase || !window.supabase.createClient) &&
-        attempts < 20
-      ) {
-        // Check for alternative global name
-        if (window.Supabase && window.Supabase.createClient) {
-          window.supabase = window.Supabase;
-          break;
-        }
-        if (window.exports && window.exports.supabase)
-          window.supabase = window.exports.supabase;
-        if (window.supabase && window.supabase.createClient) break;
+      // Ensure Supabase library is loaded using the robust bootloader
+      const supabaseLib = await supabaseReady;
 
-        await new Promise((resolve) => {
-          setTimeout(resolve, 250);
-        }); // Wait 250ms
-        attempts++;
-        console.log(
-          `[Config] Waiting for Supabase library... (${attempts}/20). Globals: sup=${Boolean(
-            window.supabase
-          )}, Sup=${Boolean(window.Supabase)}`
+      if (!supabaseLib || !supabaseLib.createClient) {
+        console.error(
+          "[Config] FATAL: Supabase library failed to load via bootloader."
         );
+        throw new Error("Supabase library not loaded. Check script inclusion.");
       }
 
-      console.log(
-        "[Config] Checking for window.supabase...",
-        typeof window.supabase
-      );
-
-      if (!window.supabase || !window.supabase.createClient) {
-        // Final check for Capitalized version
-        if (window.Supabase) window.supabase = window.Supabase;
-        if (window.exports && window.exports.supabase)
-          window.supabase = window.exports.supabase;
-
-        if (!window.supabase) {
-          console.error(
-            "[Config] FATAL: window.supabase is missing after waiting."
-          );
-          console.log(
-            "[Config] Available globals (approx):",
-            Object.keys(window).filter((k) =>
-              k.toLowerCase().includes("supabase")
-            )
-          );
-          throw new Error(
-            "Supabase library not loaded. Check script inclusion."
-          );
-        }
-      }
+      // Ensure global is set (should be done by bootloader, but safety first)
+      if (!window.supabase) window.supabase = supabaseLib;
       const { createClient } = window.supabase;
 
       _supabaseConfig = config;

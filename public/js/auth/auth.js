@@ -351,6 +351,7 @@ if (loginFormEl) {
 
   loginFormEl.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.log("[LOGIN] Form submitted");
     loginFormEl.classList.add("was-validated");
     const email = document.getElementById("email").value;
     const pass = document.getElementById("password").value;

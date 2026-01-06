@@ -446,3 +446,4 @@ CREATE TABLE public.user_sessions (
   last_activity_at timestamp with time zone DEFAULT now(),
   CONSTRAINT user_sessions_pkey PRIMARY KEY (id)
 );
+

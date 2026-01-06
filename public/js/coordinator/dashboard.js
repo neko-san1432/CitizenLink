@@ -7,6 +7,8 @@ class CoordinatorDashboard {
     this.statsInterval = null;
     this.queueInterval = null;
     this.activityInterval = null;
+    this.trendChart = null;
+    this.distributionChart = null;
     this.init();
   }
 
@@ -14,11 +16,11 @@ class CoordinatorDashboard {
     try {
       await this.checkCoordinatorStatus();
       await this.loadDashboardData();
+      this.initCharts();
       this.setupEventListeners();
       this.startAutoRefresh();
     } catch (error) {
-      // Continue with basic functionality even if initialization fails
-      this.setupEventListeners();
+      console.error("[COORDINATOR] Init error:", error);
       this.setDefaultStats();
     }
   }
@@ -26,69 +28,47 @@ class CoordinatorDashboard {
   async checkCoordinatorStatus() {
     try {
       const response = await fetch("/api/coordinator/status");
-      if (!response.ok) {
-        return;
-      }
-      const result = await response.json();
-      if (!result.success) {
-        // Error handled by caller
-      }
+      if (!response.ok) throw new Error("Not authenticated");
     } catch (error) {
-      // Silently catch error
+      console.warn("Coordinator status check failed");
     }
   }
 
   async loadDashboardData() {
     try {
-      // Load dashboard statistics
       await this.loadStats();
-      // Load recent review queue (only 5 complaints)
-      await this.loadRecentQueue();
-      // Load recent activity
       await this.loadActivity();
-      // Fallback: Update stats with default values if API fails
-      setTimeout(() => {
-        this.updateStatCard("stat-pending", 0);
-        this.updateStatCard("stat-reviews", 0);
-        this.updateStatCard("stat-duplicates", 0);
-        this.updateStatCard("stat-assignments", 0);
-      }, 5000);
     } catch (error) {
-      console.error(
-        "[COORDINATOR DASHBOARD] Failed to load dashboard data:",
-        error
-      );
+      console.error("[COORDINATOR] Load data error:", error);
+      this.setDefaultStats();
     }
   }
 
   async loadStats() {
     try {
-      // Check if we're authenticated first
-      const authResponse = await fetch("/api/coordinator/status");
-      if (!authResponse.ok) {
-        this.setDefaultStats();
-        return;
-      }
       const response = await fetch("/api/coordinator/dashboard");
-      if (!response.ok) {
-        this.setDefaultStats();
-        return;
-      }
+      if (!response.ok) throw new Error("Failed to fetch stats");
+
       const result = await response.json();
       if (result.success) {
         const { data } = result;
-        // Update statistics cards only - don't update queue or clusters here
-        // Queue and clusters are handled by separate methods to avoid conflicts
-        this.updateStatCard("stat-pending", data.pending_reviews || 0);
-        this.updateStatCard("stat-reviews", data.stats?.total_reviews || 0);
-        this.updateStatCard(
-          "stat-duplicates",
-          data.stats?.duplicates_merged || 0
-        );
-        this.updateStatCard(
-          "stat-assignments",
-          data.stats?.assignments_made || 0
-        );
+
+        // Map API data to new HTML IDs
+        // Incoming Reports -> Pending Reviews
+        this.updateStatCard("stat-incoming", data.pending_reviews || 0);
+
+        // Unverified -> Duplicate/Pending mix or just 0 for now if no specific metric
+        // For now using pending reviews as proxy or 0
+        this.updateStatCard("stat-unverified", data.pending_reviews || 0);
+
+        // Assigned -> Assignments made
+        this.updateStatCard("stat-assigned", data.stats?.assignments_made || 0);
+
+        // Escalated -> No direct metric, using 0 or mock
+        this.updateStatCard("stat-escalated", 0);
+
+        // Update charts if they exist
+        this.updateCharts(data);
       } else {
         this.setDefaultStats();
       }
@@ -98,559 +78,144 @@ class CoordinatorDashboard {
   }
 
   setDefaultStats() {
-    this.updateStatCard("stat-pending", 0);
-    this.updateStatCard("stat-reviews", 0);
-    this.updateStatCard("stat-duplicates", 0);
-    this.updateStatCard("stat-assignments", 0);
-  }
-
-  async loadRecentQueue() {
-    try {
-      const response = await fetch("/api/coordinator/review-queue?limit=5");
-      const result = await response.json();
-      if (result.success) {
-        this.updateRecentQueuePreview(result.data);
-      } else {
-        this.updateRecentQueuePreview([]);
-      }
-    } catch (error) {
-      this.updateRecentQueuePreview([]);
-    }
-  }
-
-  async loadActivity() {
-    try {
-      const response = await fetch("/api/coordinator/dashboard");
-      const result = await response.json();
-      if (result.success) {
-        // Get recent activity from dashboard data or generate from stats
-        const activities = this.generateActivityFromStats(result.data);
-        this.updateActivityPreview(activities);
-      } else {
-        this.updateActivityPreview([]);
-      }
-    } catch (error) {
-      console.error("[COORDINATOR DASHBOARD] Failed to load activity:", error);
-      this.updateActivityPreview([]);
-    }
-  }
-
-  generateActivityFromStats(data) {
-    const activities = [];
-    const _now = new Date();
-
-    // Add activity for pending reviews
-    if (data.pending_reviews > 0) {
-      activities.push({
-        icon: "⏰",
-        text: `${data.pending_reviews} complaint${
-          data.pending_reviews !== 1 ? "s" : ""
-        } pending review`,
-        time: "Just now",
-        type: "pending",
-      });
-    }
-
-    // Add activity for recent reviews
-    if (data.stats?.total_reviews > 0) {
-      activities.push({
-        icon: "📊",
-        text: `${data.stats.total_reviews} review${
-          data.stats.total_reviews !== 1 ? "s" : ""
-        } completed in last 7 days`,
-        time: "This week",
-        type: "review",
-      });
-    }
-
-    // Add activity for assignments
-    if (data.stats?.assignments_made > 0) {
-      activities.push({
-        icon: "📤",
-        text: `${data.stats.assignments_made} assignment${
-          data.stats.assignments_made !== 1 ? "s" : ""
-        } made this week`,
-        time: "This week",
-        type: "assignment",
-      });
-    }
-
-    // Add activity for duplicates merged
-    if (data.stats?.duplicates_merged > 0) {
-      activities.push({
-        icon: "🔗",
-        text: `${data.stats.duplicates_merged} duplicate${
-          data.stats.duplicates_merged !== 1 ? "s" : ""
-        } merged this week`,
-        time: "This week",
-        type: "duplicate",
-      });
-    }
-
-    // If no activities, add a default message
-    if (activities.length === 0) {
-      activities.push({
-        icon: "📋",
-        text: "No recent activity",
-        time: "—",
-        type: "empty",
-      });
-    }
-
-    return activities.slice(0, 5); // Limit to 5 most recent
-  }
-
-  updateActivityPreview(activities) {
-    const container = document.getElementById("activity-container");
-    if (!container) return;
-
-    if (!activities || activities.length === 0) {
-      container.innerHTML = `
-        <div class="activity-list">
-          <div class="no-data">
-            <div class="no-data-icon">🕒</div>
-            <div class="no-data-text">No recent activity</div>
-            <div class="no-data-subtext">Activity will appear here</div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    const activitiesList = activities
-      .map(
-        (activity) => `
-      <div class="activity-item" data-type="${activity.type}">
-        <div class="activity-icon">${activity.icon}</div>
-        <div class="activity-content">
-          <div class="activity-text">${activity.text}</div>
-          <div class="activity-time">${activity.time}</div>
-        </div>
-      </div>
-    `
-      )
-      .join("");
-
-    container.innerHTML = `
-      <div class="activity-list">
-        ${activitiesList}
-      </div>
-    `;
+    this.updateStatCard("stat-incoming", 0);
+    this.updateStatCard("stat-unverified", 0);
+    this.updateStatCard("stat-assigned", 0);
+    this.updateStatCard("stat-escalated", 0);
   }
 
   updateStatCard(elementId, value) {
     const element = document.getElementById(elementId);
     if (element) {
       element.textContent = value;
-      element.classList.add("loaded");
-    } else {
-      console.error(
-        `[COORDINATOR DASHBOARD] Element ${elementId} not found in DOM`
-      );
+      element.classList.remove("animate-pulse");
     }
   }
 
-  updateRecentQueuePreview(complaints) {
-    const container = document.getElementById("review-queue-container");
-    if (!container) {
-      console.warn("[COORDINATOR DASHBOARD] review-queue-container not found");
-      return;
-    }
-    if (!complaints || complaints.length === 0) {
-      container.innerHTML = `
-                <div class="no-data">
-                    <div class="no-data-icon">📋</div>
-                    <div class="no-data-text">No complaints in review queue</div>
-                    <div class="no-data-subtext">New complaints will appear here</div>
-                </div>
-            `;
-      return;
-    }
-    // Always limit to 5 complaints for preview
-    const displayedComplaints = complaints.slice(0, 5);
-    const complaintsList = displayedComplaints
-      .map(
-        (complaint) => `
-            <div class="queue-item">
-                <div class="queue-item-icon">
-                    ${
-  complaint.priority === "urgent"
-    ? "🚨"
-    : complaint.priority === "high"
-      ? "⚠️"
-      : "📋"
-}
-                </div>
-                <div class="queue-item-content">
-                    <div class="queue-item-title">${complaint.title}</div>
-                    <div class="queue-item-details">
-                        <span class="priority-${
-  complaint.urgency_level || "medium"
-} urgency-badge">${
-  complaint.urgency_level || "medium"
-}</span>
-                        <span class="separator">•</span>
-                        <span class="category">${
-  complaint.category || "General"
-}</span>
-                        ${
-  complaint.submitted_by_profile
-    ? `<span class="separator">•</span>
-                             <span class="submitter">${
-  complaint.submitted_by_profile.name || "Unknown"
-}</span>`
-    : ""
-}
-                    </div>
-                </div>
-                <div class="queue-item-actions">
-                    <button class="btn btn-sm btn-secondary js-quick-action-btn" data-complaint-id="${
-  complaint.id
-}" data-citizen-urgency="${
-  complaint.urgency_level || "medium"
-}">
-                        ⚡ Quick
-                    </button>
-                    <button class="btn btn-sm btn-primary js-review-btn" data-complaint-id="${
-  complaint.id
-}">
-                        Review
-                    </button>
-                </div>
+  async loadActivity() {
+    try {
+      // Use recent review queue or logs for activity
+      const response = await fetch("/api/coordinator/review-queue?limit=5");
+      const result = await response.json();
+
+      const container = document.getElementById("recent-activity-list");
+      if (!container) return;
+
+      if (result.success && result.data && result.data.length > 0) {
+        container.innerHTML = result.data
+          .map(
+            (item) => `
+          <div class="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
+            <div>
+              <p class="text-sm font-medium text-gray-800">${
+  item.title || "New Report"
+}</p>
+              <p class="text-xs text-gray-500">
+                ${item.category || "General"} • ${
+  item.urgency_level || "Medium"
+} Priority
+              </p>
+            </div>
+          </div>
         `
-      )
-      .join("");
-
-    container.innerHTML = `
-            <div class="queue-header">
-                <h3>Recent Complaints (${displayedComplaints.length})</h3>
-                <button class="btn btn-secondary btn-sm" id="js-view-all-queue">
-                    View All
-                </button>
-            </div>
-            <div class="queue-items">
-                ${complaintsList}
-            </div>
+          )
+          .join("");
+      } else {
+        container.innerHTML = `
+          <div class="text-center py-4 text-gray-500 text-sm">
+            No recent activity
+          </div>
         `;
+      }
+    } catch (error) {
+      console.error("[COORDINATOR] Activity load error:", error);
+    }
+  }
 
-    // Attach event listeners instead of inline handlers (CSP compliant)
-    const reviewButtons = container.querySelectorAll(".js-review-btn");
-    reviewButtons.forEach((btn) => {
-      const id = btn.getAttribute("data-complaint-id");
-      btn.addEventListener("click", () => {
-        if (id) window.location.href = `/coordinator/review/${id}`;
-      });
-    });
-
-    const viewAllBtn = container.querySelector("#js-view-all-queue");
-    if (viewAllBtn) {
-      viewAllBtn.addEventListener("click", () => {
-        window.location.href = "/coordinator/review-queue";
+  initCharts() {
+    // Trend Chart
+    const trendCtx = document.getElementById("trendChart");
+    if (trendCtx) {
+      this.trendChart = new Chart(trendCtx, {
+        type: "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              label: "Incoming Reports",
+              data: [12, 19, 3, 5, 2, 3, 15], // Mock data for now
+              borderColor: "#3b82f6",
+              tension: 0.4,
+              fill: true,
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false } },
+            x: { grid: { display: false } },
+          },
+        },
       });
     }
 
-    // Attach event listeners to Quick Action buttons
-    const quickActionBtns = container.querySelectorAll(".js-quick-action-btn");
-    quickActionBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.complaintId;
-        const {citizenUrgency} = btn.dataset;
-        this.openQuickActionModal(id, citizenUrgency);
+    // Distribution Chart
+    const distCtx = document.getElementById("distributionChart");
+    if (distCtx) {
+      this.distributionChart = new Chart(distCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Infrastructure", "Health", "Environment", "Other"],
+          datasets: [
+            {
+              data: [40, 30, 20, 10], // Mock data
+              backgroundColor: ["#3b82f6", "#ef4444", "#10b981", "#f59e0b"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "right" } },
+        },
       });
-    });
+    }
+  }
+
+  updateCharts(data) {
+    // Implement chart data update when API endpoint supports it
   }
 
   setupEventListeners() {
-    // Quick action buttons
-    const reviewQueueBtn = document.getElementById("review-queue-btn");
-    if (reviewQueueBtn) {
-      reviewQueueBtn.addEventListener("click", () => {
-        window.location.href = "/review-queue";
-      });
-    }
-
-    const bulkAssignBtn = document.getElementById("bulk-assign-btn");
-    if (bulkAssignBtn) {
-      bulkAssignBtn.addEventListener("click", () =>
-        this.bulkAssignComplaints()
-      );
-    }
-
-    const generateReportBtn = document.getElementById("generate-report-btn");
-    if (generateReportBtn) {
-      generateReportBtn.addEventListener("click", () => this.generateReport());
-    }
-
-    const manageDepartmentsBtn = document.getElementById(
-      "manage-departments-btn"
-    );
-    if (manageDepartmentsBtn) {
-      manageDepartmentsBtn.addEventListener("click", () =>
-        this.manageDepartments()
-      );
-    }
-
-    const viewFullQueueBtn = document.getElementById("view-full-queue-btn");
-    if (viewFullQueueBtn) {
-      viewFullQueueBtn.addEventListener("click", () => {
-        window.location.href = "/review-queue";
-      });
-    }
-
-    const refreshActivityBtn = document.getElementById("refresh-activity-btn");
-    if (refreshActivityBtn) {
-      refreshActivityBtn.addEventListener("click", () => this.loadActivity());
-    }
-
-    // Queue filter selector
-    const queueFilter = document.getElementById("queue-filter");
-    if (queueFilter) {
-      queueFilter.addEventListener("change", (e) => {
-        this.filterQueue(e.target.value);
-      });
-    }
-
-    // Modal listeners
-    const closeModalBtn = document.getElementById("close-modal-btn");
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener("click", () =>
-        this.closeQuickActionModal()
-      );
-    }
-
-    const quickActionForm = document.getElementById("quick-action-form");
-    if (quickActionForm) {
-      quickActionForm.addEventListener("submit", (e) =>
-        this.handleQuickActionSubmit(e)
-      );
-    }
-  }
-
-  async openQuickActionModal(complaintId, citizenUrgency = "medium") {
-    const modal = document.getElementById("quick-action-modal");
-    const idInput = document.getElementById("modal-complaint-id");
-    const urgencyDisplay = document.getElementById("modal-citizen-urgency");
-    if (!modal || !idInput) return;
-
-    idInput.value = complaintId;
-    if (urgencyDisplay) {
-      urgencyDisplay.textContent = citizenUrgency;
-      urgencyDisplay.className = `text-lg font-bold capitalize priority-${citizenUrgency}`;
-    }
-    modal.classList.remove("hidden");
-
-    // Load departments/officers if not already loaded
-    await this.loadAssignmentTargets();
-  }
-
-  closeQuickActionModal() {
-    const modal = document.getElementById("quick-action-modal");
-    if (modal) modal.classList.add("hidden");
-  }
-
-  async loadAssignmentTargets() {
-    const select = document.getElementById("modal-assignment");
-    if (!select || select.options.length > 1) return;
-
-    try {
-      const response = await fetch("/api/departments");
-      const result = await response.json();
-      if (result.success) {
-        result.data.forEach((dept) => {
-          const option = document.createElement("option");
-          option.value = dept.code;
-          option.textContent = dept.name;
-          select.appendChild(option);
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load departments:", error);
-    }
-  }
-
-  async handleQuickActionSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById("modal-complaint-id").value;
-    const category = document.getElementById("modal-category").value;
-    const urgency = document.querySelector(
-      'input[name="urgency"]:checked'
-    ).value;
-    const department = document.getElementById("modal-assignment").value;
-    const deadline = document.getElementById("modal-deadline").value;
-    const remarks = document.getElementById("modal-remarks").value;
-
-    try {
-      // 1. Update Classification & Priority
-      const updateResponse = await fetch(`/api/complaints/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, priority: urgency, notes: remarks }),
-      });
-
-      // 2. Assign to Department
-      const assignResponse = await fetch(
-        `/api/complaints/${id}/assign-coordinator`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ coordinator_id: department, deadline }), // Assuming coordinator_id can be a dept code for routing
-        }
-      );
-
-      if (updateResponse.ok && assignResponse.ok) {
-        if (window.showMessage) {
-          window.showMessage("success", "Complaint classified and assigned!");
-        } else {
-          const { default: showMsg } = await import("../components/toast.js");
-          showMsg("success", "Complaint classified and assigned!");
-        }
-        this.closeQuickActionModal();
-        this.loadDashboardData();
-      }
-    } catch (error) {
-      console.error("Quick action failed:", error);
-    }
-  }
-
-  async bulkAssignComplaints() {
-    // Implementation for bulk assignment
-    // This would open a modal or redirect to bulk assign page
-    window.location.href = "/coordinator/review-queue?bulk=true";
-  }
-
-  async generateReport() {
-    // Implementation for report generation
-    window.location.href = "/coordinator/review-queue?report=true";
-  }
-
-  async manageDepartments() {
-    // Implementation for department management
-    window.location.href = "/departments";
-  }
-
-  async getHelp() {
-    // Implementation for help
-    alert("Help documentation coming soon!");
-  }
-
-  async filterQueue(_filter) {
-    // Implementation for queue filtering
-    await this.loadRecentQueue();
+    // Add any button listeners specific to dashboard actions if needed
   }
 
   startAutoRefresh() {
-    // Refresh stats every 30 seconds
-    this.statsInterval = setInterval(() => {
-      this.loadStats();
-    }, 30000);
-    // Refresh queue every 60 seconds
-    this.queueInterval = setInterval(() => {
-      this.loadRecentQueue();
-    }, 60000);
-    // Refresh activity every 60 seconds
-    this.activityInterval = setInterval(() => {
-      this.loadActivity();
-    }, 60000);
+    this.statsInterval = setInterval(() => this.loadStats(), 30000);
+    this.activityInterval = setInterval(() => this.loadActivity(), 60000);
   }
 
   destroy() {
-    if (this.statsInterval) {
-      clearInterval(this.statsInterval);
-    }
-    if (this.queueInterval) {
-      clearInterval(this.queueInterval);
-    }
-    if (this.activityInterval) {
-      clearInterval(this.activityInterval);
-    }
+    if (this.statsInterval) clearInterval(this.statsInterval);
+    if (this.activityInterval) clearInterval(this.activityInterval);
+    if (this.trendChart) this.trendChart.destroy();
+    if (this.distributionChart) this.distributionChart.destroy();
   }
-}
-// Global functions for quick actions
-async function _bulkAssignComplaints() {
-  window.coordinatorDashboard?.bulkAssignComplaints();
 }
 
-async function _refreshActivity() {
-  window.coordinatorDashboard?.loadRecentQueue();
-}
-// Manual test function for debugging
-async function testCoordinatorStats() {
-  try {
-    // Test authentication
-    const _authResponse = await fetch("/api/coordinator/status");
-    // Test dashboard API
-    const dashboardResponse = await fetch("/api/coordinator/dashboard");
-    const dashboardData = await dashboardResponse.json();
-    // Manually update stats
-    if (dashboardData.success) {
-      const { data } = dashboardData;
-      const updateStatCard = (id, value) => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.textContent = value;
-          element.classList.add("loaded");
-        } else {
-          console.error(`[COORDINATOR TEST] Element ${id} not found`);
-        }
-      };
-      updateStatCard("stat-pending", data.pending_reviews || 0);
-      updateStatCard("stat-reviews", data.stats?.total_reviews || 0);
-      updateStatCard("stat-duplicates", data.stats?.duplicates_merged || 0);
-      updateStatCard("stat-assignments", data.stats?.assignments_made || 0);
-    }
-  } catch (error) {
-    console.error("[COORDINATOR TEST] Manual test failed:", error);
-  }
-}
-// Make test function globally available
-window.testCoordinatorStats = testCoordinatorStats;
-// Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
-  // Check if required elements exist
-  const requiredElements = [
-    "stat-pending",
-    "stat-reviews",
-    "review-queue-container",
-  ];
-  requiredElements.forEach((id) => {
-    const _element = document.getElementById(id);
-  });
-  // Immediate fallback: Set stats to 0 so user sees dashboard is working
-  setTimeout(() => {
-    const fallbackUpdate = (id, value) => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.textContent = value;
-        element.classList.add("loaded");
-      }
-    };
-    fallbackUpdate("stat-pending", "0");
-    fallbackUpdate("stat-reviews", "0");
-    fallbackUpdate("stat-duplicates", "0");
-    fallbackUpdate("stat-assignments", "0");
-  }, 1000);
-  try {
-    window.coordinatorDashboard = new CoordinatorDashboard();
-  } catch (error) {
-    // Continue with basic stats display even if dashboard fails
-    setTimeout(() => {
-      const fallbackUpdate = (id, value) => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.textContent = value;
-          element.classList.add("loaded");
-        }
-      };
-      fallbackUpdate("stat-pending", "0");
-      fallbackUpdate("stat-reviews", "0");
-      fallbackUpdate("stat-duplicates", "0");
-      fallbackUpdate("stat-assignments", "0");
-    }, 2000);
-  }
+  window.coordinatorDashboard = new CoordinatorDashboard();
 });
-// Clean up on page unload
+
 window.addEventListener("beforeunload", () => {
   if (window.coordinatorDashboard) {
     window.coordinatorDashboard.destroy();

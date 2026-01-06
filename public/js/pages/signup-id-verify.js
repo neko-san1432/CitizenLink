@@ -55,7 +55,6 @@ import { supabase } from "../config/config.js";
   let mediaStream = null;
   let capturedBlob = null;
   let isStartingCamera = false; // Prevent multiple simultaneous start attempts
-  // No unused _lastCameraError variable
   let cameraErrorCount = 0;
   let cameraCooldownUntil = 0; // Timestamp when camera can be retried
   let extractedIdData = null; // Store extracted ID data for comparison
@@ -778,7 +777,7 @@ import { supabase } from "../config/config.js";
     }
   });
 
-  function renderReview(fields, _provider) {
+  function renderReview(fields) {
     if (!fields || Object.keys(fields).length === 0) {
       review.hidden = true;
       reviewGrid.innerHTML = "";

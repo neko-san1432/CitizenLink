@@ -31,7 +31,7 @@ class InputSanitizer {
       res.status(400).json({
         success: false,
         error: "Invalid input data",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -41,12 +41,15 @@ class InputSanitizer {
       return obj;
     }
     if (Array.isArray(obj)) {
-      return obj.map((item, index) => InputSanitizer.sanitizeObject(item, `${context}[${index}]`));
+      return obj.map((item, index) =>
+        InputSanitizer.sanitizeObject(item, `${context}[${index}]`)
+      );
     }
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
       const safeKey = String(key || "").replace(/[^a-zA-Z0-9_-]/g, "");
-      const sanitizedKey = InputSanitizer.sanitizeValue(safeKey, `key_${safeKey}`);
+      // Don't sanitize key using values logic (avoids triggering email validation on the key 'email' itself)
+      const sanitizedKey = safeKey;
       const fieldPath = context ? `${context}.${safeKey}` : safeKey;
       sanitized[sanitizedKey] = InputSanitizer.sanitizeValue(value, fieldPath);
     }
@@ -54,7 +57,12 @@ class InputSanitizer {
   }
   // Sanitize HTTP headers
   static sanitizeHeaders(headers) {
-    const sensitiveHeaders = ["user-agent", "referer", "origin", "x-forwarded-for"];
+    const sensitiveHeaders = [
+      "user-agent",
+      "referer",
+      "origin",
+      "x-forwarded-for",
+    ];
     for (const [key, value] of Object.entries(headers)) {
       const safeKey = String(key || "").toLowerCase();
       if (sensitiveHeaders.includes(safeKey) && typeof value === "string") {
@@ -76,8 +84,19 @@ class InputSanitizer {
       return "";
     }
     // Skip sanitization for certain field types that shouldn't be modified
-    const skipFields = ["password", "currentPassword", "newPassword", "confirmPassword", "token", "secret"];
-    if (skipFields.some(field => fieldName.toLowerCase().includes(field.toLowerCase()))) {
+    const skipFields = [
+      "password",
+      "currentPassword",
+      "newPassword",
+      "confirmPassword",
+      "token",
+      "secret",
+    ];
+    if (
+      skipFields.some((field) =>
+        fieldName.toLowerCase().includes(field.toLowerCase())
+      )
+    ) {
       return value; // Return original value for sensitive fields
     }
     // Sanitize based on field name patterns
@@ -85,28 +104,42 @@ class InputSanitizer {
       const normalized = validator.normalizeEmail(stringValue);
       return normalized && validator.isEmail(normalized) ? normalized : "";
     }
-    if (fieldName.toLowerCase().includes("phone") || fieldName.toLowerCase().includes("mobile")) {
+    if (
+      fieldName.toLowerCase().includes("phone") ||
+      fieldName.toLowerCase().includes("mobile")
+    ) {
       // Remove all non-digit characters for phone numbers and validate length
       const cleaned = stringValue.replace(/\D/g, "");
       return cleaned.length >= 10 && cleaned.length <= 15 ? cleaned : "";
     }
-    if (fieldName.toLowerCase().includes("url") || fieldName.toLowerCase().includes("link")) {
+    if (
+      fieldName.toLowerCase().includes("url") ||
+      fieldName.toLowerCase().includes("link")
+    ) {
       return InputSanitizer.validateAndSanitizeURL(stringValue);
     }
-    if (fieldName.toLowerCase().includes("name") || fieldName.toLowerCase().includes("title")) {
+    if (
+      fieldName.toLowerCase().includes("name") ||
+      fieldName.toLowerCase().includes("title")
+    ) {
       // Allow only alphanumeric, spaces, hyphens, and apostrophes for names
       return stringValue.replace(/[^a-zA-Z0-9\s\-']/g, "").trim();
     }
 
-    if (fieldName.toLowerCase().includes("description") ||
-        fieldName.toLowerCase().includes("comment") ||
-        fieldName.toLowerCase().includes("message") ||
-        fieldName.toLowerCase().includes("content")) {
+    if (
+      fieldName.toLowerCase().includes("description") ||
+      fieldName.toLowerCase().includes("comment") ||
+      fieldName.toLowerCase().includes("message") ||
+      fieldName.toLowerCase().includes("content")
+    ) {
       // For text content, use XSS sanitization and limit length
       const sanitized = DOMPurify.sanitize(stringValue);
       return sanitized.length > 5000 ? sanitized.substring(0, 5000) : sanitized;
     }
-    if (fieldName.toLowerCase().includes("id") || fieldName.toLowerCase().includes("uuid")) {
+    if (
+      fieldName.toLowerCase().includes("id") ||
+      fieldName.toLowerCase().includes("uuid")
+    ) {
       // For ID fields, only allow alphanumeric and hyphens
       return stringValue.replace(/[^a-zA-Z0-9-]/g, "");
     }
@@ -152,10 +185,10 @@ class InputSanitizer {
       /\$ne/gi,
       /\$gt/gi,
       /\$lt/gi,
-      /\$regex/gi
+      /\$regex/gi,
     ];
 
-    return threats.some(pattern => pattern.test(value));
+    return threats.some((pattern) => pattern.test(value));
   }
 
   // Validation middleware for specific data types
@@ -239,17 +272,28 @@ class InputSanitizer {
       const trimmed = text.trim();
 
       if (trimmed.length < minLength) {
-        return { valid: false, error: `Text must be at least ${minLength} characters` };
+        return {
+          valid: false,
+          error: `Text must be at least ${minLength} characters`,
+        };
       }
       if (trimmed.length > maxLength) {
-        return { valid: false, error: `Text must not exceed ${maxLength} characters` };
+        return {
+          valid: false,
+          error: `Text must not exceed ${maxLength} characters`,
+        };
       }
       return { valid: true, sanitized: trimmed };
     }
     return { valid: true, sanitized: text };
   }
   static validateNumber(number, options = {}) {
-    const { min = -Infinity, max = Infinity, integer = false, required = false } = options;
+    const {
+      min = -Infinity,
+      max = Infinity,
+      integer = false,
+      required = false,
+    } = options;
     if (required && (number === null || number === void 0)) {
       return { valid: false, error: "Number is required" };
     }
@@ -272,11 +316,10 @@ class InputSanitizer {
     return { valid: true, sanitized: number };
   }
   static validateBoolean(bool, required = false) {
-    if (required && bool === null || bool === void 0) {
+    if ((required && bool === null) || bool === void 0) {
       return { valid: false, error: "Boolean value is required" };
     }
     if (bool !== null && bool !== void 0) {
-
       if (typeof bool === "boolean") {
         return { valid: true, sanitized: bool };
       }
@@ -299,7 +342,10 @@ class InputSanitizer {
     if (url && typeof url === "string") {
       const sanitized = InputSanitizer.validateAndSanitizeURL(url);
       if (sanitized === "") {
-        return { valid: false, error: "Invalid URL format or security risk detected" };
+        return {
+          valid: false,
+          error: "Invalid URL format or security risk detected",
+        };
       }
       return { valid: true, sanitized };
     }
@@ -308,10 +354,13 @@ class InputSanitizer {
   // Request size validation middleware
   static validateRequestSize(req, res, next) {
     const maxSize = 10 * 1024 * 1024; // 10MB
-    if (req.headers["content-length"] && parseInt(req.headers["content-length"]) > maxSize) {
+    if (
+      req.headers["content-length"] &&
+      parseInt(req.headers["content-length"]) > maxSize
+    ) {
       return res.status(413).json({
         success: false,
-        error: "Request too large"
+        error: "Request too large",
       });
     }
     next();
@@ -325,15 +374,19 @@ class InputSanitizer {
       /(\band\b\s+\d+\s*=\s*\d+)/gi,
       /(\b(load_file|into\s+outfile|into\s+dumpfile)\b)/gi,
       /(\b(concat|group_concat|char|ascii|ord|hex|unhex)\b)/gi,
-      /(\b(benchmark|sleep|waitfor\s+delay)\b)/gi
+      /(\b(benchmark|sleep|waitfor\s+delay)\b)/gi,
     ];
 
     const checkForSQLInjection = (obj, path = "") => {
-
       if (typeof obj === "string") {
-        const hasThreat = sqlPatterns.some(pattern => pattern.test(obj));
+        const hasThreat = sqlPatterns.some((pattern) => pattern.test(obj));
         if (hasThreat) {
-          console.warn(`[SECURITY] SQL injection attempt detected in ${path}: ${obj.substring(0, 100)}...`);
+          console.warn(
+            `[SECURITY] SQL injection attempt detected in ${path}: ${obj.substring(
+              0,
+              100
+            )}...`
+          );
         }
         return hasThreat;
       }
@@ -344,14 +397,16 @@ class InputSanitizer {
       }
       return false;
     };
-    if (checkForSQLInjection(req.body, "body") ||
-        checkForSQLInjection(req.query, "query") ||
-        checkForSQLInjection(req.params, "params")) {
+    if (
+      checkForSQLInjection(req.body, "body") ||
+      checkForSQLInjection(req.query, "query") ||
+      checkForSQLInjection(req.params, "params")
+    ) {
       return res.status(400).json({
         success: false,
         error: "Potentially malicious input detected",
         timestamp: new Date().toISOString(),
-        ip: req.ip
+        ip: req.ip,
       });
     }
     next();
@@ -370,14 +425,18 @@ class InputSanitizer {
       /onblur\s*=/gi,
       /<iframe[^>]*>.*?<\/iframe>/gi,
       /<object[^>]*>.*?<\/object>/gi,
-      /<embed[^>]*>.*?<\/embed>/gi
+      /<embed[^>]*>.*?<\/embed>/gi,
     ];
     const checkForXSS = (obj, path = "") => {
-
       if (typeof obj === "string") {
-        const hasThreat = xssPatterns.some(pattern => pattern.test(obj));
+        const hasThreat = xssPatterns.some((pattern) => pattern.test(obj));
         if (hasThreat) {
-          console.warn(`[SECURITY] XSS attempt detected in ${path}: ${obj.substring(0, 100)}...`);
+          console.warn(
+            `[SECURITY] XSS attempt detected in ${path}: ${obj.substring(
+              0,
+              100
+            )}...`
+          );
         }
         return hasThreat;
       }
@@ -388,20 +447,26 @@ class InputSanitizer {
       }
       return false;
     };
-    if (checkForXSS(req.body, "body") ||
-        checkForXSS(req.query, "query") ||
-        checkForXSS(req.params, "params")) {
+    if (
+      checkForXSS(req.body, "body") ||
+      checkForXSS(req.query, "query") ||
+      checkForXSS(req.params, "params")
+    ) {
       return res.status(400).json({
         success: false,
         error: "Potentially malicious input detected",
         timestamp: new Date().toISOString(),
-        ip: req.ip
+        ip: req.ip,
       });
     }
     next();
   }
   // Rate limiting for specific endpoints
-  static createEndpointRateLimit(windowMs, maxRequests, message = "Too many requests") {
+  static createEndpointRateLimit(
+    windowMs,
+    maxRequests,
+    message = "Too many requests"
+  ) {
     const requests = new Map();
     return (req, res, next) => {
       const key = `${req.ip}-${req.path}`;
@@ -413,7 +478,10 @@ class InputSanitizer {
           requests.delete(k);
         }
       }
-      const userRequests = requests.get(key) || { count: 0, resetTime: now + windowMs };
+      const userRequests = requests.get(key) || {
+        count: 0,
+        resetTime: now + windowMs,
+      };
       if (userRequests.resetTime < now) {
         userRequests.count = 0;
         userRequests.resetTime = now + windowMs;
@@ -422,7 +490,7 @@ class InputSanitizer {
         return res.status(429).json({
           success: false,
           error: message,
-          retryAfter: Math.ceil((userRequests.resetTime - now) / 1000)
+          retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
         });
       }
       userRequests.count++;
@@ -446,7 +514,9 @@ class InputSanitizer {
       // Whitelist of allowed protocols
       const allowedProtocols = ["http:", "https:", "ftp:", "ftps:"];
       if (!allowedProtocols.includes(url.protocol)) {
-        console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
+        console.warn(
+          `[SECURITY] Disallowed protocol detected: ${url.protocol}`
+        );
         return "";
       }
       // Check for suspicious patterns that might bypass validation
@@ -463,15 +533,25 @@ class InputSanitizer {
         /ms-appx-web:/i,
         /blob:/i,
         /ws:/i,
-        /wss:/i
+        /wss:/i,
       ];
-      if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
-        console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
+      if (suspiciousPatterns.some((pattern) => pattern.test(trimmedUrl))) {
+        console.warn(
+          `[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(
+            0,
+            100
+          )}...`
+        );
         return "";
       }
       // Check for protocol confusion attacks (e.g., "http:javascript:alert(1)")
-      if (url.protocol !== `${trimmedUrl.split(":")[0]  }:`) {
-        console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
+      if (url.protocol !== `${trimmedUrl.split(":")[0]}:`) {
+        console.warn(
+          `[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(
+            0,
+            100
+          )}...`
+        );
         return "";
       }
       // Validate hostname
@@ -486,7 +566,9 @@ class InputSanitizer {
         for (const part of parts) {
           const num = parseInt(part, 10);
           if (num < 0 || num > 255) {
-            console.warn(`[SECURITY] Invalid IP address detected: ${url.hostname}`);
+            console.warn(
+              `[SECURITY] Invalid IP address detected: ${url.hostname}`
+            );
             return "";
           }
         }
@@ -500,17 +582,21 @@ class InputSanitizer {
         /^localhost$/i,
         /^0\.0\.0\.0$/,
         /^::1$/,
-        /^fe80:/i
+        /^fe80:/i,
       ];
-      if (privateRanges.some(range => range.test(url.hostname))) {
-        console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
+      if (privateRanges.some((range) => range.test(url.hostname))) {
+        console.warn(
+          `[SECURITY] Private/localhost URL detected: ${url.hostname}`
+        );
         return "";
       }
       // Return the sanitized URL
       return validator.escape(trimmedUrl);
     } catch (error) {
       // If URL constructor fails, the URL is invalid
-      console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
+      console.warn(
+        `[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`
+      );
       return "";
     }
   }
@@ -523,7 +609,7 @@ class InputSanitizer {
       ip: req?.ip,
       userAgent: req?.get("User-Agent"),
       path: req?.path,
-      method: req?.method
+      method: req?.method,
     };
     // console.log removed for security
   }

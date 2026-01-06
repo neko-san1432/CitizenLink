@@ -15,6 +15,10 @@ import {
   clearOAuthContext,
   getOAuthContext,
 } from "../auth/authChecker.js";
+import {
+  verifySessionPersistence,
+  clearServerSession,
+} from "./success-helpers.js";
 
 console.log("[SUCCESS] ✅ Imports completed successfully");
 
@@ -118,36 +122,14 @@ async function handleSessionPersistence(
       });
 
       if (respOk) {
-        // Verify session persistence with retry
-        for (let i = 0; i < 2; i++) {
-          try {
-            const { ok: checkOk } = await fetch("/api/user/role", {
-              method: "GET",
-            });
-            if (checkOk) return true;
-          } catch (e) {
-            console.error(`[SUCCESS] Role check attempt ${i + 1} failed:`, e);
-          }
-          if (i === 0)
-            await new Promise((r) => {
-              setTimeout(r, 300);
-            });
-        }
-        return false; // Could not verify
+        return await verifySessionPersistence();
       }
     } catch (err) {
       console.error("[SUCCESS] Session persistence error:", err);
     }
   } else if (cameFromSignup) {
     // Incomplete OAuth signup - clear server session to be safe
-    console.log(
-      "[SUCCESS] Clearing server session cookie (keeping Supabase session)"
-    );
-    try {
-      await fetch("/auth/session", { method: "DELETE" });
-    } catch (err) {
-      console.warn("[SUCCESS] Error clearing server session:", err);
-    }
+    await clearServerSession();
   }
   return true;
 }

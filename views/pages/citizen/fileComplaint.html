@@ -43,176 +43,272 @@
     </style>
   </head>
   <body>
+    <!-- Premium Background (handled by CSS) -->
+
     <div class="app-container">
+      <!-- Header -->
       <div class="header-container"></div>
+
+      <!-- Sidebar -->
       <div id="sidebar" class="collapsible"></div>
-      <div id="app" class="collapsible">
-        <div
-          class="complaint-form-container"
-          style="max-width: 1200px !important"
-        >
-          <h1>File Complaint</h1>
-          <form
-            id="complaintForm"
-            class="complaint-form"
-            style="display: flex; flex-direction: column"
-          >
-            <div class="form-group">
-              <label for="complaintTitle">Complaint Title *</label>
-              <input
-                type="text"
-                id="complaintTitle"
-                name="complaintTitle"
-                class="form-control"
-                placeholder="Enter a descriptive title for your complaint"
-              />
-            </div>
 
-            <div class="form-row">
-              <div class="form-group form-col">
-                <label for="complaintCategory">Category *</label>
-                <select
-                  id="complaintCategory"
-                  name="complaintCategory"
-                  class="form-control"
-                >
-                  <option value="">Select a category...</option>
-                </select>
-              </div>
+      <!-- Main Content -->
+      <div id="app" class="collapsible main-content-wrapper">
+        <div class="complaint-wizard-container">
+          <!-- Page Header -->
+          <div class="page-header">
+            <h1 class="page-title">File a Complaint</h1>
+            <p class="page-subtitle">
+              We are here to help. Please provide details below so we can assist
+              you effectively.
+            </p>
+          </div>
 
-              <div class="form-group form-col">
-                <label for="complaintSubcategory">Subcategory *</label>
-                <select
-                  id="complaintSubcategory"
-                  name="complaintSubcategory"
-                  class="form-control"
-                >
-                  <option value="">Select a subcategory...</option>
-                </select>
-              </div>
-            </div>
+          <form id="complaintForm" class="complaint-form">
+            <div class="form-layout-wrapper">
+              <!-- Left Column: Input Details -->
+              <div class="form-column-main">
+                <!-- Section 1: Basic Information -->
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">📝</div>
+                    <h3>Basic Information</h3>
+                  </div>
 
-            <div class="form-group">
-              <label for="urgencyLevel">Urgency Level *</label>
-              <select
-                id="urgencyLevel"
-                name="urgencyLevel"
-                class="form-control"
-                required
-              >
-                <option value="low" selected>
-                  Low - Routine issue, no immediate threat
-                </option>
-                <option value="medium">
-                  Medium - Requires attention within standard timeframe
-                </option>
-                <option value="high">
-                  High - Serious issue requiring prompt response
-                </option>
-                <option value="urgent">
-                  Urgent - Emergency or critical situation requiring immediate
-                  action
-                </option>
-              </select>
-              <small class="form-hint">How urgent is this matter to you?</small>
-            </div>
+                  <div class="form-grid">
+                    <div class="form-group full-width">
+                      <label for="complaintTitle" class="float-label"
+                        >Complaint Title <span class="required">*</span></label
+                      >
+                      <input
+                        type="text"
+                        id="complaintTitle"
+                        name="complaintTitle"
+                        class="premium-input"
+                        placeholder="e.g., Uncollected Garbage in Brgy. Zone 1"
+                      />
+                    </div>
 
-            <!-- Type field removed - all submissions are complaints -->
+                    <div class="form-group">
+                      <label for="complaintCategory"
+                        >Category <span class="required">*</span></label
+                      >
+                      <div class="select-wrapper">
+                        <select
+                          id="complaintCategory"
+                          name="complaintCategory"
+                          class="premium-select"
+                        >
+                          <option value="">Select Category</option>
+                        </select>
+                      </div>
+                    </div>
 
-            <!-- Subtype field removed - not needed in current schema -->
-            <div class="form-group">
-              <label>Relevant Offices</label>
-              <div class="department-selection-info">
-                <p class="info-text">
-                  All available offices are shown below. When you select a
-                  subcategory, appropriate offices will be suggested. You can
-                  select or unselect any offices as needed.
-                </p>
-              </div>
-              <div id="departmentCheckboxes" class="checkbox-group">
-                <div class="loading-placeholder">Loading departments...</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="description">Description *</label>
-              <textarea
-                id="description"
-                name="description"
-                class="form-control"
-                placeholder="Please provide a detailed description of your complaint..."
-                rows="5"
-              ></textarea>
-            </div>
-            <div class="form-row form-row-map">
-              <div class="form-group form-col">
-                <label for="location">Location *</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  placeholder="Move the map or pin to select location"
-                  readonly
-                  title="This field updates automatically based on the pin on the map."
-                />
-                <small class="form-hint"
-                  >Move the map or drag the pin. The address will update
-                  automatically.</small
-                >
-              </div>
-              <div class="form-group form-col form-col-map">
-                <label>Pin Location on Map</label>
-                <div
-                  id="complaint-map"
-                  style="
-                    width: 100%;
-                    height: 320px;
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    position: relative;
-                  "
-                ></div>
-                <input type="hidden" id="latitude" name="latitude" />
-                <input type="hidden" id="longitude" name="longitude" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="evidence">Evidence (Optional)</label>
-              <div class="file-upload-container">
-                <div class="file-drop-zone" id="fileDropZone">
-                  <div class="drop-zone-content">
-                    <div class="upload-icon">📁</div>
-                    <p>Drag and drop files here or click to browse</p>
-                    <p class="file-types">
-                      Supported: Images, Audio, Video (Max 5 files)
-                    </p>
-                    <input
-                      type="file"
-                      id="evidenceFiles"
-                      name="evidenceFiles"
-                      multiple
-                      accept="image/*,audio/*,video/*"
-                      style="display: none"
-                    />
+                    <div class="form-group">
+                      <label for="complaintSubcategory"
+                        >Subcategory <span class="required">*</span></label
+                      >
+                      <div class="select-wrapper">
+                        <select
+                          id="complaintSubcategory"
+                          name="complaintSubcategory"
+                          class="premium-select"
+                        >
+                          <option value="">Select Subcategory</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                      <label for="urgencyLevel"
+                        >Urgency Level <span class="required">*</span></label
+                      >
+                      <div class="urgency-container">
+                        <div class="select-wrapper">
+                          <select
+                            id="urgencyLevel"
+                            name="urgencyLevel"
+                            class="premium-select urgency-select"
+                          >
+                            <option value="low">Low - Routine issue</option>
+                            <option value="medium">
+                              Medium - Requires attention
+                            </option>
+                            <option value="high">High - Serious issue</option>
+                            <option value="urgent">
+                              Urgent - Critical situation
+                            </option>
+                          </select>
+                        </div>
+                        <small class="form-hint"
+                          >How critical is this issue?</small
+                        >
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="file-preview" id="filePreview"></div>
+
+                <!-- Section 2: Details & Evidence -->
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">📎</div>
+                    <h3>Details & Evidence</h3>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="description"
+                      >Description <span class="required">*</span></label
+                    >
+                    <textarea
+                      id="description"
+                      name="description"
+                      class="premium-textarea"
+                      placeholder="Please describe the issue in detail..."
+                      rows="6"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Evidence (Optional)</label>
+                    <div class="file-upload-container premium-dropzone">
+                      <div class="file-drop-zone" id="fileDropZone">
+                        <div class="drop-zone-content">
+                          <div class="upload-icon-animated">
+                            <svg
+                              width="48"
+                              height="48"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                            >
+                              <path
+                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                              ></path>
+                              <polyline points="17 8 12 3 7 8"></polyline>
+                              <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                          </div>
+                          <p class="upload-text">
+                            <strong>Click to upload</strong> or drag and drop
+                          </p>
+                          <p class="file-types">
+                            Images, Audio, Video (Max 5 files)
+                          </p>
+                          <input
+                            type="file"
+                            id="evidenceFiles"
+                            name="evidenceFiles"
+                            multiple
+                            accept="image/*,audio/*,video/*"
+                            style="display: none"
+                          />
+                        </div>
+                      </div>
+                      <div class="file-preview" id="filePreview"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Location & Departments -->
+              <div class="form-column-sidebar">
+                <!-- Section 3: Location -->
+                <div class="form-section card-glass sticky-section">
+                  <div class="section-header">
+                    <div class="section-icon">📍</div>
+                    <h3>Location</h3>
+                  </div>
+
+                  <div class="location-wrapper">
+                    <div class="map-wrapper">
+                      <div id="complaint-map" class="premium-map"></div>
+                      <input type="hidden" id="latitude" name="latitude" />
+                      <input type="hidden" id="longitude" name="longitude" />
+                    </div>
+
+                    <div class="form-group location-input-group">
+                      <label for="location"
+                        >Pinned Address <span class="required">*</span></label
+                      >
+                      <div class="input-with-icon">
+                        <span class="input-icon">🗺️</span>
+                        <input
+                          type="text"
+                          id="location"
+                          name="location"
+                          class="premium-input"
+                          placeholder="Pin location on map"
+                          readonly
+                        />
+                      </div>
+                      <small class="form-hint"
+                        >Move the map pin to update address.</small
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 4: Relevant Offices -->
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">🏢</div>
+                    <h3>Relevant Departments</h3>
+                  </div>
+
+                  <div class="department-selection-info">
+                    <p>
+                      Select specific offices if known. Otherwise, we will route
+                      it automatically.
+                    </p>
+                  </div>
+
+                  <div class="form-group">
+                    <div
+                      id="departmentCheckboxes"
+                      class="department-grid-compact"
+                    >
+                      <div class="loading-state">
+                        <div class="spinner"></div>
+                        <span>Loading...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="form-actions">
-              <button type="submit" class="submit-btn">Submit Complaint</button>
+
+            <!-- Actions -->
+            <div class="form-actions-sticky">
               <button
                 type="button"
-                class="cancel-btn"
+                class="btn-cancel"
                 onclick="window.history.back()"
               >
                 Cancel
+              </button>
+              <button type="submit" class="btn-submit-premium">
+                <span>Submit Complaint</span>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
     <div id="toast-container" class="toast-container"></div>
+
     <!-- Core Scripts -->
     <script type="module" src="/js/components/toast.js"></script>
     <script type="module" src="/js/components/header.js"></script>

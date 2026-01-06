@@ -11,6 +11,8 @@ let boundaryLoadPromise = null;
 /**
  * Load Digos city boundary from JSON file
  */
+// Load Digos city boundary from JSON file
+// Prioritize barangay boundaries as they are what the user sees on the map
 async function loadDigosBoundary() {
   if (boundaryCache) {
     return boundaryCache;
@@ -22,23 +24,10 @@ async function loadDigosBoundary() {
 
   boundaryLoadPromise = (async () => {
     try {
-      // Try to fetch from API endpoint first (if it exists)
       let response;
-      try {
-        response = await fetch("/api/digos-boundary");
-        if (response.ok) {
-          const boundary = await response.json();
-          boundaryCache = boundary;
-          return boundary;
-        }
-        // If 404, silently fall back (don't log - this is expected if server not restarted)
-      } catch (err) {
-        // Network error - continue to fallback
-        console.debug("[BOUNDARY_VALIDATOR] Network error fetching API:", err);
-      }
 
-      // Fallback: try to use barangay boundaries from /api/boundaries
-      // and construct city boundary from them
+      // 1. Try to use barangay boundaries from /api/boundaries (Visual Source)
+      // This ensures validation matches exactly what the user sees
       try {
         response = await fetch("/api/boundaries");
         if (response.ok) {
@@ -51,25 +40,32 @@ async function loadDigosBoundary() {
               // Create a simple bounding box from all barangays
               bounds: calculateBoundsFromBarangays(brgyData),
             };
-            // Log that we're using barangay boundaries fallback (only once)
-            if (!boundaryCache._logged) {
-              console.log(
-                "[BOUNDARY_VALIDATOR] Using barangay boundaries for validation"
-              );
-              boundaryCache._logged = true;
-            }
             return boundaryCache;
           }
         }
       } catch (err) {
-        // Barangay boundaries API failed, continue to final fallback
         console.debug(
           "[BOUNDARY_VALIDATOR] Error fetching barangay boundaries:",
           err
         );
       }
 
-      // Final fallback: try direct file path (may not work in production)
+      // 2. Fallback: try to fetch from simplified API endpoint
+      try {
+        response = await fetch("/api/digos-boundary");
+        if (response.ok) {
+          const boundary = await response.json();
+          boundaryCache = boundary;
+          return boundary;
+        }
+      } catch (err) {
+        console.debug(
+          "[BOUNDARY_VALIDATOR] Network error fetching simplified API:",
+          err
+        );
+      }
+
+      // 3. Final fallback: try direct file path (may not work in production)
       try {
         response = await fetch("/assets/json/digos-city-boundary.json");
         if (response.ok) {
@@ -78,7 +74,6 @@ async function loadDigosBoundary() {
           return boundary;
         }
       } catch (err) {
-        // Direct file path also failed
         console.debug(
           "[BOUNDARY_VALIDATOR] Error fetching static boundary file:",
           err
@@ -207,10 +202,10 @@ async function isWithinDigosBoundary(latitude, longitude) {
   const boundary = await loadDigosBoundary();
   if (!boundary) {
     // Use bounding box fallback if boundary not available
-    const minLat = 6.723539;
-    const maxLat = 6.985025;
-    const minLng = 125.245633;
-    const maxLng = 125.39129;
+    const minLat = 6.65;
+    const maxLat = 7.0;
+    const minLng = 125.2;
+    const maxLng = 125.5;
     return (
       latitude >= minLat &&
       latitude <= maxLat &&
@@ -222,17 +217,40 @@ async function isWithinDigosBoundary(latitude, longitude) {
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
 
   // Handle barangay boundaries format (from /api/boundaries)
+  let isValid = false;
+
   if (boundary.type === "barangay_boundaries" && boundary.barangays) {
-    return _checkBarangayBoundaries(boundary, point, latitude, longitude);
+    isValid = _checkBarangayBoundaries(boundary, point, latitude, longitude);
+  } else if (boundary.geometry?.coordinates) {
+    // Handle standard GeoJSON boundary format
+    isValid = _checkGeoJsonBoundary(boundary, point);
+  } else {
+    console.warn("[BOUNDARY_VALIDATOR] Invalid boundary format");
+    isValid = true; // Fail open if boundary format invalid
   }
 
-  // Handle standard GeoJSON boundary format
-  if (boundary.geometry?.coordinates) {
-    return _checkGeoJsonBoundary(boundary, point);
+  // Double-Safety: If polygon check failed, check permissive bounding box
+  // This handles edge cases where visual boundary might differ slightly from validation data
+  if (!isValid) {
+    const minLat = 6.65;
+    const maxLat = 7.0;
+    const minLng = 125.2;
+    const maxLng = 125.5;
+
+    if (
+      latitude >= minLat &&
+      latitude <= maxLat &&
+      longitude >= minLng &&
+      longitude <= maxLng
+    ) {
+      console.log(
+        "[BOUNDARY_VALIDATOR] Polygon check failed but within permissive bounds. allowing."
+      );
+      return true;
+    }
   }
 
-  console.warn("[BOUNDARY_VALIDATOR] Invalid boundary format");
-  return true; // Fail open if boundary format invalid
+  return isValid;
 }
 
 function _checkBarangayBoundaries(boundary, point, latitude, longitude) {

@@ -937,9 +937,14 @@ class HeatmapVisualization {
     this.complaintData = baseData.filter((complaint) => {
       // Filter by status
       if (effectiveFilters.status && effectiveFilters.status !== "") {
-        const statusArray = Array.isArray(effectiveFilters.status)
+        const rawStatusArray = Array.isArray(effectiveFilters.status)
           ? effectiveFilters.status
           : [effectiveFilters.status];
+
+        // Flatten comma-separated values (e.g., "new,pending")
+        const statusArray = rawStatusArray
+          .flatMap((s) => (typeof s === "string" ? s.split(",") : [s]))
+          .map((s) => s.trim());
         const complaintStatus = (
           complaint.status ||
           complaint.workflow_status ||
@@ -1115,14 +1120,14 @@ class HeatmapVisualization {
     let complaintsForMarkers = this.getRoleScopedComplaints();
 
     // Citizens: No markers (only heatmap)
-    if (this.userRole === "citizen") {
-      console.log(
-        "[HEATMAP] Citizen role: Markers disabled, only heatmap shown"
-      );
-      this.markerLayer = L.layerGroup(); // Empty layer group
-      this.markerMap.clear();
-      return this.markerLayer;
-    }
+    // if (this.userRole === "citizen") {
+    //   console.log(
+    //     "[HEATMAP] Citizen role: Markers disabled, only heatmap shown"
+    //   );
+    //   this.markerLayer = L.layerGroup(); // Empty layer group
+    //   this.markerMap.clear();
+    //   return this.markerLayer;
+    // }
 
     // Complaint coordinators and super-admin: All markers
     if (
@@ -1227,7 +1232,6 @@ class HeatmapVisualization {
 
     // Update visibility of each marker
     this.markerLayer.eachLayer((marker) => {
-      // Get complaint ID from marker (try multiple ways)
       const complaintId =
         marker._complaintId ||
         marker.options?.complaintId ||
@@ -1236,8 +1240,8 @@ class HeatmapVisualization {
             ([_id, m]) => m === marker
           )?.[0]);
 
-      // Determine if marker should be visible
       let shouldBeVisible = false;
+
       if (complaintId) {
         shouldBeVisible = visibleComplaintIds.has(complaintId);
       } else {
@@ -1253,19 +1257,15 @@ class HeatmapVisualization {
       // Show or hide marker based on filter match
       // Note: Markers are part of markerLayer, so we manage visibility by adding/removing from layer
       if (shouldBeVisible) {
-        // Show marker - ensure it's in the layer (it should be, but check anyway)
+        // Show marker - ensure it's in the layer
         if (!this.markerLayer.hasLayer(marker)) {
           this.markerLayer.addLayer(marker);
         }
-        // Also ensure it's visible on the map
-        if (!this.map.hasLayer(marker)) {
-          marker.addTo(this.map);
-        }
         visibleCount++;
       } else {
-        // Hide marker by removing from map (but keep in layer for later)
-        if (this.map.hasLayer(marker)) {
-          this.map.removeLayer(marker);
+        // Hide marker by removing from layer
+        if (this.markerLayer.hasLayer(marker)) {
+          this.markerLayer.removeLayer(marker);
         }
         hiddenCount++;
       }
@@ -1339,14 +1339,14 @@ class HeatmapVisualization {
     };
     const statusColors = {
       "pending review": "#6c757d",
-      "in progress": "#17a2b8",
+      "in progress": "#3b82f6",
       resolved: "#28a745",
       closed: "#6c757d",
       rejected: "#dc3545",
     };
-    // Use priority color for fill, status color for border
-    const fillColor = priorityColors[complaint.priority] || "#6c757d";
-    const borderColor = statusColors[complaint.status] || "#6c757d";
+    // Match Legend: Status = Fill, Priority = Border
+    const fillColor = statusColors[complaint.status] || "#6c757d";
+    const borderColor = priorityColors[complaint.priority] || "#6c757d";
     // Circle size based on priority
     const radiusSizes = {
       low: 50,
@@ -1410,8 +1410,8 @@ class HeatmapVisualization {
       // Standard status values
       "pending review": "#6c757d", // Gray
       pending: "#6c757d", // Gray
-      "in progress": "#17a2b8", // Cyan/Teal
-      in_progress: "#17a2b8", // Cyan/Teal (workflow_status format)
+      "in progress": "#3b82f6", // Blue
+      in_progress: "#3b82f6", // Blue (workflow_status format)
       resolved: "#28a745", // Green
       closed: "#6c757d", // Gray
       rejected: "#dc3545", // Red
@@ -1422,7 +1422,7 @@ class HeatmapVisualization {
       assigned: "#ffc107", // Yellow
       pending_approval: "#fd7e14", // Orange
       // Confirmation status values
-      waiting_for_responders: "#17a2b8", // Cyan
+      waiting_for_responders: "#3b82f6", // Blue
       waiting_for_complainant: "#ffc107", // Yellow
       confirmed: "#28a745", // Green
       disputed: "#dc3545", // Red
@@ -1497,22 +1497,22 @@ class HeatmapVisualization {
     return `
       <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
         <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${
-  complaint.title
-}</h4>
+          complaint.title
+        }</h4>
         <div class="complaint-details" style="margin: 0; padding: 0;">
           <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${
-  complaint.type
-}</p>
+            complaint.type
+          }</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(
-    " ",
-    "-"
-  )}">${complaint.status}</span></p>
+            " ",
+            "-"
+          )}">${complaint.status}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${
-  complaint.priority
-}</span></p>
+      complaint.priority
+    }</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${
-  complaint.location
-}</p>
+            complaint.location
+          }</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
@@ -1549,8 +1549,8 @@ class HeatmapVisualization {
         <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
           <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
             <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-  complaint.title
-}</h3>
+              complaint.title
+            }</h3>
             <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
               <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
               <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1565,8 +1565,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Location:</span>
                 <span class="value" style="text-align: right; max-width: 60%;">${
-  complaint.location
-}</span>
+                  complaint.location
+                }</span>
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1579,8 +1579,8 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Days Open:</span>
                 <span class="value">${daysSinceSubmission} day${
-  daysSinceSubmission !== 1 ? "s" : ""
-}</span>
+        daysSinceSubmission !== 1 ? "s" : ""
+      }</span>
               </div>
             </div>
             <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd;">
@@ -1597,8 +1597,8 @@ class HeatmapVisualization {
       <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
         <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
           <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-  complaint.title
-}</h3>
+            complaint.title
+          }</h3>
           <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
             <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
             <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1613,8 +1613,8 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Location:</span>
               <span class="value" style="text-align: right; max-width: 60%;">${
-  complaint.location
-}</span>
+                complaint.location
+              }</span>
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1627,21 +1627,21 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${
-  daysSinceSubmission !== 1 ? "s" : ""
-}</span>
+      daysSinceSubmission !== 1 ? "s" : ""
+    }</span>
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
             <button class="btn-details" onclick="viewComplaintDetails('${
-  complaint.id
-}')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+              complaint.id
+            }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
             <button class="btn-location" onclick="centerOnComplaint(${
-  complaint.lat
-}, ${
-  complaint.lng
-})" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+              complaint.lat
+            }, ${
+      complaint.lng
+    })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
             </button>
           </div>
@@ -1836,10 +1836,10 @@ class HeatmapVisualization {
         icon: L.divIcon({
           html: `<div style="
             background-color: ${
-  this.clusterConfig.clusterColors[
-    index % this.clusterConfig.clusterColors.length
-  ]
-};
+              this.clusterConfig.clusterColors[
+                index % this.clusterConfig.clusterColors.length
+              ]
+            };
             color: white;
             border-radius: 50%;
             width: 40px;
@@ -1921,26 +1921,26 @@ class HeatmapVisualization {
     return `
       <div class="cluster-popup-content">
         <h4>Cluster ${clusterIndex + 1} (${
-  clusterPoints.length
-} complaints)</h4>
+      clusterPoints.length
+    } complaints)</h4>
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
             ${Object.entries(statusCounts)
-    .map(([status, count]) => `<li>${status}: ${count}</li>`)
-    .join("")}
+              .map(([status, count]) => `<li>${status}: ${count}</li>`)
+              .join("")}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
             ${Object.entries(typeCounts)
-    .map(([type, count]) => `<li>${type}: ${count}</li>`)
-    .join("")}
+              .map(([type, count]) => `<li>${type}: ${count}</li>`)
+              .join("")}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
             ${Object.entries(priorityCounts)
-    .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
-    .join("")}
+              .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
+              .join("")}
           </ul>
         </div>
       </div>
@@ -1977,7 +1977,7 @@ class HeatmapVisualization {
 
       // Verify it's actually on the map
       setTimeout(() => {
-        const _hasLayer = this.map._hasLayer(this.heatmapLayer);
+        const _hasLayer = this.map.hasLayer(this.heatmapLayer);
         // console.log removed for security
       }, 100);
     } catch (e) {

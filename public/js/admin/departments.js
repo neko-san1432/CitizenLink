@@ -2,11 +2,12 @@ import apiClient from "../config/apiClient.js";
 import showMessage from "../components/toast.js";
 
 class DepartmentManager {
-
   constructor() {
     this.departments = [];
     this.currentDepartment = null;
-    this.init();
+    this.searchTerm = "";
+    this.filterStatus = "all";
+    this.filterStatus = "all";
   }
   async init() {
     await this.loadDepartments();
@@ -18,17 +19,37 @@ class DepartmentManager {
     if (form) {
       form.addEventListener("submit", (e) => this.handleSubmit(e));
     }
-    // Auto-format department code
     const codeInput = document.getElementById("departmentCode");
     if (codeInput) {
       codeInput.addEventListener("input", (e) => {
-        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+        e.target.value = e.target.value
+          .toUpperCase()
+          .replaceAll(/[^A-Z0-9_]/g, "");
+      });
+    }
+
+    // Search and Filter Listeners
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        this.searchTerm = e.target.value.toLowerCase();
+        this.renderDepartments();
+      });
+    }
+
+    if (statusFilter) {
+      statusFilter.addEventListener("change", (e) => {
+        this.filterStatus = e.target.value;
+        this.renderDepartments();
       });
     }
   }
   async loadDepartments() {
     try {
-      const response = await apiClient.get("/api/departments/active");
+      // Fetch ALL departments to allow management of inactive ones
+      const response = await apiClient.get("/api/departments");
       if (response.success) {
         this.departments = response.data;
         // Load officers for each department
@@ -46,10 +67,13 @@ class DepartmentManager {
       try {
         const response = await apiClient.getDepartmentOfficers(dept.id);
         if (response.success) {
-          dept.officers = response.data.map(officer => ({
+          dept.officers = response.data.map((officer) => ({
             ...officer,
             lastSeenText: this.getLastSeenText(officer.last_sign_in_at),
-            statusClass: this.getStatusClass(officer.is_online, officer.last_sign_in_at)
+            statusClass: this.getStatusClass(
+              officer.is_online,
+              officer.last_sign_in_at
+            ),
           }));
           dept.officersVisible = false; // Initially hidden
         } else {
@@ -57,75 +81,151 @@ class DepartmentManager {
           dept.officersVisible = false;
         }
       } catch (error) {
-        console.error(`Failed to load officers for department ${dept.name}:`, error);
+        console.error(
+          `Failed to load officers for department ${dept.name}:`,
+          error
+        );
         dept.officers = [];
         dept.officersVisible = false;
       }
     });
     await Promise.all(promises);
   }
+  getFilteredDepartments() {
+    return this.departments.filter((dept) => {
+      // Status Filter
+      if (this.filterStatus === "active" && !dept.is_active) return false;
+      if (this.filterStatus === "inactive" && dept.is_active) return false;
+
+      // Search Filter
+      if (this.searchTerm) {
+        const term = this.searchTerm;
+        const name = (dept.name || "").toLowerCase();
+        const code = (dept.code || "").toLowerCase();
+        const desc = (dept.description || "").toLowerCase();
+        return (
+          name.includes(term) || code.includes(term) || desc.includes(term)
+        );
+      }
+
+      return true;
+    });
+  }
+
   renderDepartments() {
     const grid = document.getElementById("departmentGrid");
     if (!grid) return;
-    // Use safer DOM manipulation instead of innerHTML
     grid.innerHTML = "";
-    const safeHtml = this.departments.map(dept => `
-      <div class="department-card">
-        <div class="department-header">
-          <span class="department-code">${dept.code}</span>
-          <span class="status-badge ${dept.is_active ? "status-active" : "status-inactive"}">
-            ${dept.is_active ? "Active" : "Inactive"}
-          </span>
-        </div>
-        <h3>${dept.name}</h3>
-        <p>${dept.description || "No description provided"}</p>
 
-        <div class="officers-section" id="officers-${dept.id}">
-          <div class="officers-header">
-            <h4>Officers (${dept.officers ? dept.officers.length : 0})</h4>
-            <button class="toggle-officers" onclick="departmentManager.toggleOfficers(${dept.id})">
-              ${dept.officersVisible ? "Hide" : "Show"} Officers
-            </button>
-          </div>
-          <div class="officers-list" style="display: ${dept.officersVisible ? "grid" : "none"}">
-            ${dept.officers && dept.officers.length > 0 ?
-    dept.officers.map(officer => `
+    const filteredDepartments = this.getFilteredDepartments();
+    const safeHtml = filteredDepartments
+      .map((dept) => {
+        const statusClass = dept.is_active ? "status-active" : "status-inactive";
+        const statusText = dept.is_active ? "Active" : "Inactive";
+        const description = dept.description || "No description provided.";
+        const officerCount = dept.officers ? dept.officers.length : 0;
+        const toggleText = dept.officersVisible ? "Hide" : "Show";
+        const officersListDisplay = dept.officersVisible ? "grid" : "none";
+
+        let officersHtml = '<div class="no-officers">No officers assigned</div>';
+        if (dept.officers && dept.officers.length > 0) {
+          officersHtml = dept.officers
+            .map((officer) => {
+              const officerInitials = officer.name.charAt(0).toUpperCase();
+              const officerStatusClass = officer.statusClass.replaceAll(
+                "status-",
+                ""
+              );
+              const officerRole = officer.role || "Officer";
+
+              return `
                 <div class="officer-item">
-                  <div class="officer-status">
-                    <div class="officer-avatar">${officer.name.charAt(0).toUpperCase()}</div>
-                    <div class="status-indicator ${officer.statusClass}"></div>
+                  <div class="officer-avatar">
+                    ${officerInitials}
+                    <div class="status-dot dot-${officerStatusClass}"></div>
                   </div>
                   <div class="officer-info">
-                    <p class="officer-name">${officer.name}</p>
-                    <p class="officer-role">${officer.role || "Officer"}</p>
-                    <p class="officer-status-text ${officer.statusClass}-text">
-                      ${officer.is_online ? "Online" : "Offline"}
-                    </p>
-                    <p class="officer-last-seen">${officer.lastSeenText}</p>
+                    <p class="officer-name" title="${officer.name}">${officer.name}</p>
+                    <div class="officer-details">
+                      <span class="officer-role text-xs text-gray-500">${officerRole}</span>
+                      <span class="detail-dot"></span>
+                      <span class="officer-last-seen text-xs text-gray-400">${officer.lastSeenText}</span>
+                    </div>
                   </div>
-                </div>
-              `).join("") :
-    '<div class="no-officers">No officers assigned to this department</div>'
-}
+                </div>`;
+            })
+            .join("");
+        }
+
+        const actionBtnClass = dept.is_active
+          ? "btn-deactivate"
+          : "btn-activate";
+        const actionText = dept.is_active ? "Deactivate" : "Activate";
+        const actionIcon = dept.is_active
+          ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+          : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+
+        return `
+        <div class="department-card">
+          <div class="card-header">
+            <div class="header-top">
+              <span class="department-code">${dept.code}</span>
+              <span class="status-badge ${statusClass}">
+                ${statusText}
+              </span>
+            </div>
+            <h3 class="department-name">${dept.name}</h3>
+          </div>
+          
+          <div class="card-body">
+            <p class="department-description">${description}</p>
+          </div>
+
+          <div class="officers-section" id="officers-${dept.id}">
+            <div class="officers-header">
+              <span class="officers-count">${officerCount} Officers</span>
+              <button class="toggle-officers" onclick="departmentManager.toggleOfficers(${dept.id})" 
+                      aria-expanded="${dept.officersVisible}">
+                <span class="toggle-text">${toggleText}</span>
+                <svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="officers-list" style="display: ${officersListDisplay}">
+              ${officersHtml}
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="action-btn btn-edit" onclick="departmentManager.editDepartment(${dept.id})">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit
+            </button>
+            <button class="action-btn ${actionBtnClass}"
+                    onclick="departmentManager.toggleStatus(${dept.id})">
+              ${actionIcon}
+              ${actionText}
+            </button>
           </div>
         </div>
-        <div class="department-actions">
-          <button class="btn btn-sm btn-primary" onclick="departmentManager.editDepartment(${dept.id})">
-            Edit
-          </button>
-          <button class="btn btn-sm ${dept.is_active ? "btn-warning" : "btn-success"}"
-                  onclick="departmentManager.toggleStatus(${dept.id})">
-            ${dept.is_active ? "Deactivate" : "Activate"}
-          </button>
-        </div>
-      </div>
-    `).join("");
+      `;
+      })
+      .join("");
 
-    // Use safer approach - create elements directly
     const parser = new DOMParser();
-    const doc = parser.parseFromString(this.sanitizeHtml(safeHtml), "text/html");
+    const doc = parser.parseFromString(
+      this.sanitizeHtml(safeHtml),
+      "text/html"
+    );
     const fragment = document.createDocumentFragment();
-    Array.from(doc.body.children).forEach(child => fragment.appendChild(child.cloneNode(true)));
+    Array.from(doc.body.children).forEach((child) =>
+      fragment.appendChild(child.cloneNode(true))
+    );
     grid.appendChild(fragment);
   }
   // Enhanced HTML sanitization function
@@ -134,54 +234,89 @@ class DepartmentManager {
     // Use DOMPurify for comprehensive sanitization
     if (typeof DOMPurify !== "undefined") {
       return DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ["div", "span", "p", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "b", "i", "u", "br", "hr", "ul", "ol", "li", "a", "img"],
-        ALLOWED_ATTR: ["class", "id", "style", "href", "src", "alt", "title", "data-*"],
+        ALLOWED_TAGS: [
+          "div",
+          "span",
+          "p",
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+          "strong",
+          "em",
+          "b",
+          "i",
+          "u",
+          "br",
+          "hr",
+          "ul",
+          "ol",
+          "li",
+          "a",
+          "img",
+        ],
+        ALLOWED_ATTR: [
+          "class",
+          "id",
+          "style",
+          "href",
+          "src",
+          "alt",
+          "title",
+          "data-*",
+        ],
         ALLOW_DATA_ATTR: true,
         ALLOW_UNKNOWN_PROTOCOLS: false,
         SANITIZE_DOM: true,
-        KEEP_CONTENT: true
+        KEEP_CONTENT: true,
       });
     }
     // Fallback sanitization if DOMPurify is not available
-    return html
-      // Remove script tags and their content
-      // eslint-disable-next-line security/detect-unsafe-regex
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-      // Remove event handlers
-      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "")
-      // Remove javascript: URLs
-      .replace(/javascript\s*:/gi, "")
-      // Remove vbscript: URLs
-      .replace(/vbscript\s*:/gi, "")
-      // Remove data: URLs (except safe image types)
-      .replace(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, "")
-      // Remove iframe tags
-      .replace(/<iframe\b[^<]*>.*?<\/iframe>/gi, "")
-      // Remove object tags
-      // eslint-disable-next-line security/detect-unsafe-regex
-      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "")
-      // Remove embed tags
-      .replace(/<embed\b[^<]*>/gi, "")
-      // Remove form tags
-      // eslint-disable-next-line security/detect-unsafe-regex
-      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, "")
-      // Remove input tags
-      .replace(/<input\b[^<]*>/gi, "")
-      // Remove button tags with onclick
-      .replace(/<button\b[^<]*onclick[^<]*>/gi, "<button>")
-      // Remove style attributes with javascript
-      .replace(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, "")
-      // Remove href with javascript
-      .replace(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
-      // Remove src with javascript
-      .replace(/src\s*=\s*["']javascript[^"']*["']/gi, "");
+    return (
+      html
+        // Remove script tags and their content
+        // eslint-disable-next-line security/detect-unsafe-regex
+        .replaceAll(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+        // Remove event handlers
+        .replaceAll(/on\w+\s*=\s*["'][^"']*["']/gi, "")
+        // Remove javascript: URLs
+        .replaceAll(/javascript\s*:/gi, "")
+        // Remove vbscript: URLs
+        .replaceAll(/vbscript\s*:/gi, "")
+        // Remove data: URLs (except safe image types)
+        .replaceAll(/data\s*:(?!image\/(png|jpg|jpeg|gif|svg|webp))/gi, "")
+        // Remove iframe tags
+        .replaceAll(/<iframe\b[^<]*>.*?<\/iframe>/gi, "")
+        // Remove object tags
+        // eslint-disable-next-line security/detect-unsafe-regex
+        .replaceAll(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "")
+        // Remove embed tags
+        .replaceAll(/<embed\b[^<]*>/gi, "")
+        // Remove form tags
+        // eslint-disable-next-line security/detect-unsafe-regex
+        .replaceAll(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, "")
+        // Remove input tags
+        .replaceAll(/<input\b[^<]*>/gi, "")
+        // Remove button tags with onclick
+        .replaceAll(/<button\b[^<]*onclick[^<]*>/gi, "<button>")
+        // Remove style attributes with javascript
+        .replaceAll(/style\s*=\s*["'][^"']*javascript[^"']*["']/gi, "")
+        // Remove href with javascript
+        .replaceAll(/href\s*=\s*["']javascript[^"']*["']/gi, 'href="#"')
+        // Remove src with javascript
+        .replaceAll(/src\s*=\s*["']javascript[^"']*["']/gi, "")
+    );
   }
   updateStats() {
     const totalElement = document.getElementById("totalCount");
     const activeElement = document.getElementById("activeCount");
     if (totalElement) totalElement.textContent = this.departments.length;
     if (activeElement) {
-      activeElement.textContent = this.departments.filter(d => d.is_active).length;
+      activeElement.textContent = this.departments.filter(
+        (d) => d.is_active
+      ).length;
     }
   }
   async handleSubmit(e) {
@@ -191,12 +326,15 @@ class DepartmentManager {
       name: formData.get("name"),
       code: formData.get("code"),
       description: formData.get("description"),
-      is_active: formData.has("is_active")
+      is_active: formData.has("is_active"),
     };
     try {
       let response;
       if (this.currentDepartment) {
-        response = await apiClient.put(`/api/departments/${this.currentDepartment.id}`, data);
+        response = await apiClient.put(
+          `/api/departments/${this.currentDepartment.id}`,
+          data
+        );
       } else {
         response = await apiClient.post("/api/departments", data);
       }
@@ -219,8 +357,10 @@ class DepartmentManager {
       title.textContent = "Edit Department";
       document.getElementById("departmentName").value = department.name;
       document.getElementById("departmentCode").value = department.code;
-      document.getElementById("departmentDescription").value = department.description || "";
-      document.getElementById("departmentActive").checked = department.is_active;
+      document.getElementById("departmentDescription").value =
+        department.description || "";
+      document.getElementById("departmentActive").checked =
+        department.is_active;
     } else {
       title.textContent = "Add Department";
       form.reset();
@@ -233,13 +373,13 @@ class DepartmentManager {
     this.currentDepartment = null;
   }
   editDepartment(id) {
-    const department = this.departments.find(d => d.id === id);
+    const department = this.departments.find((d) => d.id === id);
     if (department) {
       this.openModal("edit", department);
     }
   }
   async toggleStatus(id) {
-    const department = this.departments.find(d => d.id === id);
+    const department = this.departments.find((d) => d.id === id);
     if (!department) return;
     const newStatus = !department.is_active;
     const action = newStatus ? "activate" : "deactivate";
@@ -248,7 +388,7 @@ class DepartmentManager {
     }
     try {
       const response = await apiClient.put(`/api/departments/${id}`, {
-        is_active: newStatus
+        is_active: newStatus,
       });
       if (response.success) {
         showMessage("success", `Department ${action}d successfully`);
@@ -260,7 +400,7 @@ class DepartmentManager {
     }
   }
   toggleOfficers(departmentId) {
-    const department = this.departments.find(d => d.id === departmentId);
+    const department = this.departments.find((d) => d.id === departmentId);
     if (!department) return;
     department.officersVisible = !department.officersVisible;
     this.renderDepartments();
@@ -297,7 +437,9 @@ class DepartmentManager {
   }
   async refreshOfficerStatus() {
     // Only refresh if officers are visible
-    const hasVisibleOfficers = this.departments.some(dept => dept.officersVisible);
+    const hasVisibleOfficers = this.departments.some(
+      (dept) => dept.officersVisible
+    );
     if (!hasVisibleOfficers) return;
     try {
       // Reload officers for all departments
@@ -309,29 +451,30 @@ class DepartmentManager {
   }
 }
 // Global functions for onclick handlers
-window.openModal = (mode) => {
-  if (window.departmentManager) {
-    window.departmentManager.openModal(mode);
+globalThis.openModal = (mode) => {
+  if (globalThis.departmentManager) {
+    globalThis.departmentManager.openModal(mode);
   }
 };
-window.closeModal = () => {
-  if (window.departmentManager) {
-    window.departmentManager.closeModal();
+globalThis.closeModal = () => {
+  if (globalThis.departmentManager) {
+    globalThis.departmentManager.closeModal();
   }
 };
-window.toggleOfficers = (departmentId) => {
-  if (window.departmentManager) {
-    window.departmentManager.toggleOfficers(departmentId);
+globalThis.toggleOfficers = (departmentId) => {
+  if (globalThis.departmentManager) {
+    globalThis.departmentManager.toggleOfficers(departmentId);
   }
 };
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  window.departmentManager = new DepartmentManager();
+  globalThis.departmentManager = new DepartmentManager();
+  globalThis.departmentManager.init();
 });
 // Close modal when clicking outside
-window.addEventListener("click", (e) => {
+globalThis.addEventListener("click", (e) => {
   const modal = document.getElementById("departmentModal");
   if (e.target === modal) {
-    window.departmentManager?.closeModal();
+    globalThis.departmentManager?.closeModal();
   }
 });

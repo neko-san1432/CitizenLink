@@ -254,6 +254,97 @@ const ITEMS_PER_PAGE = 10;
 function renderComplaints(list, role) {
   allItems = list;
   renderPage(1, role);
+  renderComplaintChart(list);
+}
+
+function renderComplaintChart(items) {
+  const container = document.getElementById("complaint-stats-container");
+  const canvas = document.getElementById("complaintStatsChart");
+
+  if (!items || items.length === 0 || !container || !canvas) {
+    if (container) container.style.display = "none";
+    return;
+  }
+
+  // Show container
+  container.style.display = "block";
+
+  // Calculate Stats
+  let open = 0,
+    inProgress = 0,
+    resolved = 0;
+
+  items.forEach((item) => {
+    // Check both workflow_status and status fields, fallback to string matching
+    const status = (item.workflow_status || item.status || "").toLowerCase();
+
+    if (["submitted", "pending", "new", "open"].includes(status)) {
+      open++;
+    } else if (
+      ["in_progress", "assigned", "on_hold", "investigating"].includes(status)
+    ) {
+      inProgress++;
+    } else if (
+      ["resolved", "closed", "completed", "rejected", "done"].includes(status)
+    ) {
+      resolved++;
+    }
+  });
+
+  // Destroy existing chart if it exists
+  const existingChart = Chart.getChart(canvas);
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+  // Create new Chart
+  new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: ["Open", "In Progress", "Resolved"],
+      datasets: [
+        {
+          data: [open, inProgress, resolved],
+          backgroundColor: [
+            "#60a5fa", // Blue-400 (Open)
+            "#f59e0b", // Amber-500 (In Progress)
+            "#10b981", // Emerald-500 (Resolved)
+          ],
+          borderWidth: 0,
+          hoverOffset: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            boxWidth: 12,
+            font: {
+              family: "'Source Sans 3', sans-serif",
+            },
+          },
+        },
+        title: {
+          display: true,
+          text: "Status Overview",
+          font: {
+            size: 14,
+            weight: "600",
+          },
+          align: "start",
+          padding: { bottom: 10 },
+        },
+      },
+      cutout: "70%",
+      layout: {
+        padding: 0,
+      },
+    },
+  });
 }
 
 function renderPage(page, role) {
@@ -345,19 +436,19 @@ function renderPage(page, role) {
 
     const dateStr = date
       ? new Date(date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
       : "";
 
     tr.innerHTML = `
       <td>
         <div style="font-weight: 500; color: #1f2937;" class="complaint-title-text">${title}</div>
         <div style="font-size: 0.75rem; color: #6b7280;">ID: ${complaintId.substring(
-    0,
-    8
-  )}...</div>
+          0,
+          8
+        )}...</div>
       </td>
       <td>
         <span class="status-badge status-${status}">${statusLabel}</span>
@@ -379,11 +470,11 @@ function renderPage(page, role) {
     </div>
     <div class="pagination-buttons">
       <button class="page-btn" ${
-  currentPage === 1 ? "disabled" : ""
-} id="prev-btn">Previous</button>
+        currentPage === 1 ? "disabled" : ""
+      } id="prev-btn">Previous</button>
       <button class="page-btn" ${
-  currentPage === totalPages ? "disabled" : ""
-} id="next-btn">Next</button>
+        currentPage === totalPages ? "disabled" : ""
+      } id="next-btn">Next</button>
     </div>
   `;
 
@@ -958,7 +1049,9 @@ function wireAddressEdit() {
     const line1Display = document.getElementById("address-line-1-display");
     const line2Display = document.getElementById("address-line-2-display");
     const _cityDisplay = document.getElementById("address-city-display");
-    const _provinceDisplay = document.getElementById("address-province-display");
+    const _provinceDisplay = document.getElementById(
+      "address-province-display"
+    );
     const postalDisplay = document.getElementById("address-postal-display");
     const barangayDisplay = document.getElementById("address-barangay-display");
 

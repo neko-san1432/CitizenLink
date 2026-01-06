@@ -50,14 +50,6 @@ router.post(
   ErrorHandler.asyncWrapper(AuthController.login)
 );
 
-// Handle GET requests to /login (browsers sometimes prefetch or make GET requests)
-router.get("/login", (req, res) => {
-  res.status(405).json({
-    success: false,
-    error: "Method Not Allowed. Please use POST to login.",
-    allowedMethods: ["POST"],
-  });
-});
 /**
  * @route   GET /api/auth/verify-email
  * @desc    Verify user email
@@ -79,7 +71,7 @@ router.post(
   passwordResetLimiter,
   ErrorHandler.asyncWrapper(async (req, res) => {
     try {
-      const { email, _logoutOption } = req.body; // _logoutOption: 'all', 'others', or 'none' (handled client-side)
+      const { email } = req.body;
       if (!email) {
         return res.status(400).json({
           success: false,
@@ -128,109 +120,18 @@ router.post(
             process.env.NODE_ENV === "development" ? clientError.message : null,
         });
       }
-      const { _data, error } = await anonClient.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo,
-        }
-      );
+      const { error } = await anonClient.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
       if (error) {
-        console.error("[FORGOT_PASSWORD] Supabase error:", error);
-        console.error("[FORGOT_PASSWORD] Error details:", {
-          message: error.message,
-          status: error.status,
-          code: error.code,
+        const handlePasswordResetError = require("../utils/passwordResetHelper");
+        return await handlePasswordResetError(
+          res,
+          error,
           redirectTo,
-          supabaseUrl: process.env.SUPABASE_URL,
-        });
-        // Check if it's a redirectTo URL issue
-        if (error.code === "unexpected_failure" && error.status === 500) {
-          console.error("[FORGOT_PASSWORD] Possible causes:");
-          console.error(
-            "  1. Email sending is disabled in Supabase Dashboard → Authentication → Email"
-          );
-          console.error(
-            "  2. RedirectTo URL not whitelisted in Supabase Dashboard → Authentication → URL Configuration"
-          );
-          console.error(
-            "  3. SMTP/SES not configured in Supabase Dashboard → Settings → Auth"
-          );
-          console.error("  4. Supabase project email service issue");
-          // Development workaround: Try to generate link manually if email sending fails
-          if (process.env.NODE_ENV === "development") {
-            // Try using admin API as fallback (only in development)
-            try {
-              const { data: adminData, error: adminError } =
-                await supabase.auth.admin.generateLink({
-                  type: "recovery",
-                  email,
-                  options: { redirectTo },
-                });
-              if (!adminError && adminData?.action_link) {
-                // In development, return the link so user can test
-                return res.json({
-                  success: true,
-                  message: "Recovery link generated (development mode)",
-                  note: "Email not sent - Supabase email service not configured. Check server logs for the reset link.",
-                  link: adminData.action_link,
-                  development: true,
-                });
-              }
-              console.error(
-                "[FORGOT_PASSWORD] Admin API also failed:",
-                adminError?.message || "Unknown error"
-              );
-              console.error(
-                "[FORGOT_PASSWORD] This suggests the service role key may not have proper permissions"
-              );
-            } catch (adminErr) {
-              console.error(
-                "[FORGOT_PASSWORD] Admin API exception:",
-                adminErr.message
-              );
-            }
-          }
-        }
-        // Return more specific error messages
-        let errorMessage = "Failed to send password reset email";
-        let statusCode = 400;
-
-        if (error.status === 429) {
-          statusCode = 429;
-          errorMessage = error.message; // "For security purposes, you can only request this after X seconds."
-        } else if (
-          error.code === "unexpected_failure" &&
-          error.status === 500
-        ) {
-          errorMessage =
-            "Email service is not configured. Please contact your administrator or check Supabase email settings.";
-        } else if (error.message) {
-          // Supabase returns user-friendly messages for common cases
-          if (
-            error.message.includes("not found") ||
-            error.message.includes("does not exist")
-          ) {
-            errorMessage = "No account found with this email address";
-          } else if (error.message.includes("email")) {
-            errorMessage = error.message;
-          } else {
-            errorMessage = error.message;
-          }
-        }
-        return res.status(statusCode).json({
-          success: false,
-          error: errorMessage,
-          errorCode: error.code || null,
-          details:
-            process.env.NODE_ENV === "development"
-              ? {
-                  message: error.message,
-                  code: error.code,
-                  status: error.status,
-                  note: "This error usually means email sending is disabled in Supabase Dashboard → Authentication → Email",
-                }
-              : null,
-        });
+          supabase,
+          email
+        );
       }
       // Even if there's no error, Supabase might not send an email if email sending is disabled
       // but it will still return success for security reasons (to prevent email enumeration)

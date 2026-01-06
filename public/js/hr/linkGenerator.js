@@ -2,11 +2,11 @@
  * HR Link Generator
  * Handles signup link generation and management
  */
+import { getIcon } from "../utils/icons.js";
 import apiClient from "../config/apiClient.js";
 import showMessage from "../components/toast.js";
 
 class LinkGenerator {
-
   constructor() {
     this.links = [];
     this.departments = [];
@@ -88,12 +88,13 @@ class LinkGenerator {
           }
           // Then try metadata fields
           const metadata = response.data.metadata || response.data;
-          const department = metadata.department ||
-                             metadata.dpt ||
-                             metadata.raw_user_meta_data?.department ||
-                             metadata.raw_user_meta_data?.dpt ||
-                             metadata.user_metadata?.department ||
-                             metadata.user_metadata?.dpt;
+          const department =
+            metadata.department ||
+            metadata.dpt ||
+            metadata.raw_user_meta_data?.department ||
+            metadata.raw_user_meta_data?.dpt ||
+            metadata.user_metadata?.department ||
+            metadata.user_metadata?.dpt;
           if (department) {
             return department.toUpperCase();
           }
@@ -104,8 +105,13 @@ class LinkGenerator {
       // Fallback: try Supabase session metadata
       try {
         const { supabase } = await import("../../config/config.js");
-        const { data: { session } } = await supabase.auth.getSession();
-        const metadata = session?.user?.raw_user_meta_data || session?.user?.user_metadata || {};
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const metadata =
+          session?.user?.raw_user_meta_data ||
+          session?.user?.user_metadata ||
+          {};
         const department = metadata.department || metadata.dpt;
         if (department) {
           return department.toUpperCase();
@@ -123,8 +129,8 @@ class LinkGenerator {
     // If user is LGU-HR, filter to only their department
     if (userRole === "lgu-hr") {
       const userDepartment = await this.getHRDepartment(userRole);
-      this.departments = this.departments.filter(dept =>
-        dept.code === userDepartment.toUpperCase()
+      this.departments = this.departments.filter(
+        (dept) => dept.code === userDepartment.toUpperCase()
       );
     }
     // Coordinators and super-admin can see all departments
@@ -137,7 +143,7 @@ class LinkGenerator {
     if (userRole === "lgu-hr") {
       // LGU-HR can only create officer or admin roles
       const options = roleSelect.querySelectorAll("option");
-      options.forEach(option => {
+      options.forEach((option) => {
         if (!["lgu-officer", "lgu-admin"].includes(option.value)) {
           option.style.display = "none";
         }
@@ -147,7 +153,8 @@ class LinkGenerator {
       if (!hrDepartment) {
         // If no department found, show a generic message
         if (roleInfo && roleDescription) {
-          roleDescription.textContent = "As an LGU-HR, you can only create signup links for your assigned department with officer or admin roles. Please contact your administrator if your department is not set.";
+          roleDescription.textContent =
+            "As an LGU-HR, you can only create signup links for your assigned department with officer or admin roles. Please contact your administrator if your department is not set.";
           roleInfo.style.display = "block";
         }
         return;
@@ -155,29 +162,34 @@ class LinkGenerator {
       const departmentName = this.getDepartmentName(hrDepartment);
       // console.log removed for security
       // Hide the department field completely for LGU-HR
-      const departmentField = document.querySelector(".form-group:has(#department)");
+      const departmentField = document.querySelector(
+        ".form-group:has(#department)"
+      );
       if (departmentField) {
         departmentField.style.display = "none";
       }
       // Show role info with dynamic department
       if (roleInfo && roleDescription) {
         // Only show department code if name lookup failed
-        const displayText = departmentName && departmentName !== hrDepartment
-          ? `${departmentName} (${hrDepartment})`
-          : hrDepartment;
+        const displayText =
+          departmentName && departmentName !== hrDepartment
+            ? `${departmentName} (${hrDepartment})`
+            : hrDepartment;
         roleDescription.textContent = `As an LGU-HR, you can only create signup links for ${displayText} department with officer or admin roles.`;
         roleInfo.style.display = "block";
       }
     } else if (userRole === "complaint-coordinator") {
       // Show coordinator info
       if (roleInfo && roleDescription) {
-        roleDescription.textContent = "As a Complaint Coordinator, you can create signup links for any department and any position.";
+        roleDescription.textContent =
+          "As a Complaint Coordinator, you can create signup links for any department and any position.";
         roleInfo.style.display = "block";
       }
     } else if (userRole === "super-admin") {
       // Show super admin info
       if (roleInfo && roleDescription) {
-        roleDescription.textContent = "As a Super Admin, you have full access to create signup links for any department and any position.";
+        roleDescription.textContent =
+          "As a Super Admin, you have full access to create signup links for any department and any position.";
         roleInfo.style.display = "block";
       }
     }
@@ -185,10 +197,11 @@ class LinkGenerator {
   getDepartmentName(departmentCode) {
     if (!departmentCode) return null;
     // Try to find department name from loaded departments
-    const dept = this.departments.find(d =>
-      d.code === departmentCode ||
-      d.code === departmentCode.toUpperCase() ||
-      d.code?.toUpperCase() === departmentCode.toUpperCase()
+    const dept = this.departments.find(
+      (d) =>
+        d.code === departmentCode ||
+        d.code === departmentCode.toUpperCase() ||
+        d.code?.toUpperCase() === departmentCode.toUpperCase()
     );
     if (dept && dept.name) {
       return dept.name;
@@ -200,7 +213,7 @@ class LinkGenerator {
     const select = document.getElementById("department");
     if (!select) return;
     select.innerHTML = '<option value="">Select Department (Optional)</option>';
-    this.departments.forEach(dept => {
+    this.departments.forEach((dept) => {
       const option = document.createElement("option");
       option.value = dept.code;
       option.textContent = `${dept.name} (${dept.code})`;
@@ -225,49 +238,75 @@ class LinkGenerator {
     const container = document.getElementById("linksList");
     if (!container) return;
     if (this.links.length === 0) {
-      container.innerHTML = '<div class="no-links">No signup links generated yet</div>';
+      container.innerHTML =
+        '<div class="no-links">No signup links generated yet</div>';
       return;
     }
-    container.innerHTML = this.links.map((link, _index) => {
-      // console.log removed for security
-      return `
-      <div class="link-item ${link.is_expired ? "expired" : ""} ${link.is_used ? "used" : ""}" data-link-id="${link.id}">
-        <div class="link-item-header">
-          <span class="link-role">${this.getRoleDisplayName(link.role)}</span>
-          <span class="link-status ${this.getStatusClass(link)}">${this.getStatusText(link)}</span>
+    container.innerHTML = this.links
+      .map((link, _index) => {
+        const status = this.getStatusClass(link);
+        const deptCode = link.department_code || "Any Dept";
+        const createdDate = new Date(link.created_at).toLocaleDateString();
+        const expiryDate = link.expires_at
+          ? new Date(link.expires_at).toLocaleDateString()
+          : "Never";
+
+        return `
+      <div class="link-item" data-link-id="${link.id}">
+        
+        <!-- Column 1: Main Info -->
+        <div class="link-main">
+          <div class="link-role">${this.getRoleDisplayName(link.role)}</div>
+          <div class="link-meta">
+             <span>🏢 ${deptCode}</span>
+             <span>📅 Created: ${createdDate}</span>
+             <span>⏳ Expires: ${expiryDate}</span>
+          </div>
+          <div class="link-url-box" title="${link.url}">
+            ${link.url}
+          </div>
         </div>
-        <div class="link-details">
-          <div><strong>Department:</strong> ${link.department_code || "Any"}</div>
-          <div><strong>Created:</strong> ${this.formatDate(link.created_at)}</div>
-          <div><strong>Expires:</strong> ${link.expires_at ? this.formatDate(link.expires_at) : "Never"}</div>
+
+        <!-- Column 2: Status -->
+        <div style="text-align: center;">
+          <span class="status-badge ${status}">
+            ${this.getStatusIcon(status)} ${this.getStatusText(link)}
+          </span>
         </div>
-        <div class="link-details">
-          <div><strong>Code:</strong> ${link.code}</div>
-          <div><strong>Used:</strong> ${link.used_at ? this.formatDate(link.used_at) : "Not used"}</div>
-          <div><strong>URL:</strong> ${!link.is_used ? `<a href="${link.url}" target="_blank">Open Link</a>` : '<span style="color: #9ca3af; font-style: italic;">Link used</span>'}</div>
+
+        <!-- Column 3: Actions -->
+        <div class="action-group">
+          ${
+            !link.is_used
+              ? `<button class="action-btn copy-link-url-btn" title="Copy URL" data-link-url="${encodeURIComponent(
+                  link.url
+                )}">
+                ${getIcon("copy", { size: 16 })}
+               </button>`
+              : ""
+          }
+          ${
+            !link.is_used && !link.is_expired
+              ? `<button class="action-btn delete deactivate-link-btn" title="Deactivate" data-link-id="${
+                  link.id
+                }">
+                ${getIcon("trash", { size: 16 })}
+               </button>`
+              : ""
+          }
         </div>
-        <div class="link-actions">
-          ${!link.is_used ? `
-          <button class="btn btn-sm btn-primary copy-link-url-btn" data-link-url="${encodeURIComponent(link.url)}">
-            Copy URL
-          </button>
-          ` : ""}
-          ${!link.is_used && !link.is_expired ? `
-            <button class="btn btn-sm btn-warning deactivate-link-btn" data-link-id="${link.id}">
-              Deactivate
-            </button>
-          ` : ""}
-        </div>
+
       </div>
     `;
-    }).join("");
+      })
+      .join("");
 
     // Attach event listeners to dynamically generated buttons
     this.attachLinkEventListeners(container);
   }
   attachLinkEventListeners(container) {
     // Copy URL buttons
-    container.querySelectorAll(".copy-link-url-btn").forEach(btn => {
+    container.querySelectorAll(".copy-link-url-btn").forEach((btn) => {
       btn.addEventListener("click", (_e) => {
         const url = btn.getAttribute("data-link-url");
         if (url) {
@@ -277,7 +316,7 @@ class LinkGenerator {
     });
 
     // Deactivate buttons
-    container.querySelectorAll(".deactivate-link-btn").forEach(btn => {
+    container.querySelectorAll(".deactivate-link-btn").forEach((btn) => {
       btn.addEventListener("click", (_e) => {
         const linkId = btn.getAttribute("data-link-id");
         if (linkId) {
@@ -296,21 +335,34 @@ class LinkGenerator {
     const activeElement = document.getElementById("activeLinks");
     const usedElement = document.getElementById("usedLinks");
     if (totalElement) totalElement.textContent = this.links.length;
-    if (activeElement) activeElement.textContent = this.links.filter(l => !l.is_used && !l.is_expired).length;
-    if (usedElement) usedElement.textContent = this.links.filter(l => l.is_used).length;
+    if (activeElement)
+      activeElement.textContent = this.links.filter(
+        (l) => !l.is_used && !l.is_expired
+      ).length;
+    if (usedElement)
+      usedElement.textContent = this.links.filter((l) => l.is_used).length;
   }
   getRoleDisplayName(role) {
     const roleMap = {
       "lgu-officer": "LGU Officer",
       "lgu-admin": "LGU Admin",
-      "lgu-hr": "LGU HR"
+      "lgu-hr": "LGU HR",
     };
     return roleMap[role] || role;
   }
   getStatusClass(link) {
-    if (link.is_used) return "status-used";
-    if (link.is_expired) return "status-expired";
-    return "status-active";
+    if (link.is_used) return "used";
+    if (link.is_expired) return "expired";
+    return "active";
+  }
+  getStatusIcon(status) {
+    if (status === "active")
+      return getIcon("sparkles", { size: 14, color: "#059669" });
+    if (status === "expired")
+      return getIcon("clock", { size: 14, color: "#dc2626" });
+    if (status === "used")
+      return getIcon("check", { size: 14, color: "#4b5563" });
+    return getIcon("help", { size: 14 });
   }
   getStatusText(link) {
     if (link.is_used) return "Used";
@@ -319,7 +371,7 @@ class LinkGenerator {
   }
   formatDate(dateString) {
     const date = new Date(dateString);
-    return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
   generateLink() {
     const form = document.getElementById("generatorForm");
@@ -351,7 +403,7 @@ class LinkGenerator {
     const data = {
       role: formData.get("role"),
       department_code: departmentCode,
-      expires_in_hours: parseInt(formData.get("expires_in_hours")) || 1
+      expires_in_hours: parseInt(formData.get("expires_in_hours")) || 1,
     };
     // console.log removed for security
     try {
@@ -387,18 +439,21 @@ class LinkGenerator {
     }
   }
   copyLinkUrl(url) {
-    navigator.clipboard.writeText(url).then(() => {
-      showMessage("success", "URL copied to clipboard");
-    }).catch(() => {
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      showMessage("success", "URL copied to clipboard");
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        showMessage("success", "URL copied to clipboard");
+      })
+      .catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        showMessage("success", "URL copied to clipboard");
+      });
   }
   async deactivateLink(linkId) {
     // console.log removed for security
@@ -425,16 +480,17 @@ class LinkGenerator {
     const statusFilter = document.getElementById("statusFilter")?.value;
     let filteredLinks = this.links;
     if (roleFilter) {
-      filteredLinks = filteredLinks.filter(link => link.role === roleFilter);
+      filteredLinks = filteredLinks.filter((link) => link.role === roleFilter);
     }
     if (statusFilter) {
-
       if (statusFilter === "active") {
-        filteredLinks = filteredLinks.filter(link => !link.is_used && !link.is_expired);
+        filteredLinks = filteredLinks.filter(
+          (link) => !link.is_used && !link.is_expired
+        );
       } else if (statusFilter === "expired") {
-        filteredLinks = filteredLinks.filter(link => link.is_expired);
+        filteredLinks = filteredLinks.filter((link) => link.is_expired);
       } else if (statusFilter === "used") {
-        filteredLinks = filteredLinks.filter(link => link.is_used);
+        filteredLinks = filteredLinks.filter((link) => link.is_used);
       }
     }
     // Temporarily replace links array for rendering

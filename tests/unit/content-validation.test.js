@@ -11,12 +11,12 @@ describe("Content Submission Validation", () => {
         content: "The city council will meet on...",
         author: "user_123",
         category: "government",
-        status: "draft"
+        status: "draft",
       };
 
-      const hasRequiredFields = Boolean(validArticle.title &&
-                               validArticle.content &&
-                               validArticle.author);
+      const hasRequiredFields = Boolean(
+        validArticle.title && validArticle.content && validArticle.author
+      );
       expect(hasRequiredFields).toBe(true);
     });
 
@@ -24,16 +24,19 @@ describe("Content Submission Validation", () => {
       const invalidArticle = {
         title: "",
         content: "Some content",
-        author: "user_123"
+        author: "user_123",
       };
 
-      const isValid = Boolean(invalidArticle.title && invalidArticle.title.trim().length > 0);
+      const isValid = Boolean(
+        invalidArticle.title && invalidArticle.title.trim().length > 0
+      );
       expect(isValid).toBe(false);
     });
 
     it("should enforce minimum content length", () => {
       const shortContent = "Too short";
-      const validContent = "This is a properly detailed news article about the upcoming city council meeting and various agenda items.";
+      const validContent =
+        "This is a properly detailed news article about the upcoming city council meeting and various agenda items.";
 
       expect(shortContent.length < 50).toBe(true);
       expect(validContent.length >= 50).toBe(true);
@@ -41,7 +44,6 @@ describe("Content Submission Validation", () => {
 
     it("should validate HTML tags in content", () => {
       const content = "<p>This is <strong>important</strong> news.</p>";
-      const _allowedTags = ["p", "strong", "em", "a", "ul", "ol", "li"];
 
       // Check if content contains script tags (security)
       const hasScriptTag = content.toLowerCase().includes("<script");
@@ -71,21 +73,17 @@ describe("Content Submission Validation", () => {
       const validLocations = [
         "Manila City Hall, Ermita, Manila",
         "Online via Zoom",
-        "Barangay Hall, Poblacion"
+        "Barangay Hall, Poblacion",
       ];
 
-      const invalidLocations = [
-        "",
-        "   ",
-        null
-      ];
+      const invalidLocations = ["", "   ", null];
 
-      validLocations.forEach(loc => {
+      validLocations.forEach((loc) => {
         expect(loc && loc.trim().length > 0).toBe(true);
       });
 
-      invalidLocations.forEach(loc => {
-        const isValid = Boolean(loc && loc.trim && loc.trim().length > 0);
+      invalidLocations.forEach((loc) => {
+        const isValid = Boolean(loc?.trim?.().length > 0);
         expect(isValid).toBe(false);
       });
     });
@@ -96,15 +94,15 @@ describe("Content Submission Validation", () => {
           title: "Community Meeting",
           requiresRSVP: true,
           maxAttendees: 50,
-          rsvpDeadline: "2024-01-14"
+          rsvpDeadline: "2024-01-14",
         },
         {
           title: "Town Hall",
-          requiresRSVP: false
-        }
+          requiresRSVP: false,
+        },
       ];
 
-      eventsWithRSVP.forEach(event => {
+      eventsWithRSVP.forEach((event) => {
         if (event.requiresRSVP) {
           expect(event.maxAttendees).toBeDefined();
           expect(event.rsvpDeadline).toBeDefined();
@@ -118,7 +116,7 @@ describe("Content Submission Validation", () => {
       const validPriorities = ["low", "medium", "high", "urgent"];
       const invalidPriority = "critical"; // Not in allowed list
 
-      validPriorities.forEach(priority => {
+      validPriorities.forEach((priority) => {
         const isValid = validPriorities.includes(priority);
         expect(isValid).toBe(true);
       });
@@ -128,7 +126,9 @@ describe("Content Submission Validation", () => {
 
     it("should validate expiration date", () => {
       const now = new Date();
-      const futureExpiration = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      const futureExpiration = new Date(
+        now.getTime() + 7 * 24 * 60 * 60 * 1000
+      ); // 7 days
       const pastExpiration = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Yesterday
 
       expect(futureExpiration > now).toBe(true);
@@ -141,13 +141,13 @@ describe("Content Submission Validation", () => {
         "alert",
         "reminder",
         "policy",
-        "service-update"
+        "service-update",
       ];
 
       const notice = {
         category: "announcement",
         title: "Office Closure",
-        content: "The office will be closed..."
+        content: "The office will be closed...",
       };
 
       expect(validCategories.includes(notice.category)).toBe(true);
@@ -156,15 +156,24 @@ describe("Content Submission Validation", () => {
 
   describe("File Upload Validation", () => {
     it("should validate image file types", () => {
-      const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-      const disallowedTypes = ["application/exe", "text/html", "application/javascript"];
+      const allowedImageTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ];
+      const disallowedTypes = [
+        "application/exe",
+        "text/html",
+        "application/javascript",
+      ];
 
-      allowedImageTypes.forEach(type => {
+      allowedImageTypes.forEach((type) => {
         const isImage = type.startsWith("image/");
         expect(isImage).toBe(true);
       });
 
-      disallowedTypes.forEach(type => {
+      disallowedTypes.forEach((type) => {
         const isImage = type.startsWith("image/");
         expect(isImage).toBe(false);
       });
@@ -181,11 +190,8 @@ describe("Content Submission Validation", () => {
 
     it("should validate multiple file uploads", () => {
       const maxFiles = 5;
-      const validUploads = [
-        { name: "image1.jpg" },
-        { name: "image2.png" }
-      ];
-      const tooManyUploads = Array(10).fill({ name: "file.jpg" });
+      const validUploads = [{ name: "image1.jpg" }, { name: "image2.png" }];
+      const tooManyUploads = new Array(10).fill({ name: "file.jpg" });
 
       expect(validUploads.length <= maxFiles).toBe(true);
       expect(tooManyUploads.length <= maxFiles).toBe(false);
@@ -197,13 +203,17 @@ describe("Content Submission Validation", () => {
       const allowedRoles = ["super-admin", "hr", "content-manager"];
       const deniedRoles = ["citizen", "lgu-officer"];
 
-      allowedRoles.forEach(role => {
-        const canCreate = ["super-admin", "hr", "content-manager"].includes(role);
+      allowedRoles.forEach((role) => {
+        const canCreate = ["super-admin", "hr", "content-manager"].includes(
+          role
+        );
         expect(canCreate).toBe(true);
       });
 
-      deniedRoles.forEach(role => {
-        const canCreate = ["super-admin", "hr", "content-manager"].includes(role);
+      deniedRoles.forEach((role) => {
+        const canCreate = ["super-admin", "hr", "content-manager"].includes(
+          role
+        );
         expect(canCreate).toBe(false);
       });
     });
@@ -211,7 +221,7 @@ describe("Content Submission Validation", () => {
     it("should allow LGU officers to create events", () => {
       const allowedRoles = ["super-admin", "lgu-admin", "lgu-officer", "hr"];
 
-      allowedRoles.forEach(role => {
+      allowedRoles.forEach((role) => {
         const canCreateEvent = allowedRoles.includes(role);
         expect(canCreateEvent).toBe(true);
       });
@@ -222,7 +232,7 @@ describe("Content Submission Validation", () => {
     it("should save as draft by default", () => {
       const content = {
         title: "New Article",
-        content: "Content here"
+        content: "Content here",
       };
 
       const defaultStatus = content.status || "draft";
@@ -233,7 +243,7 @@ describe("Content Submission Validation", () => {
       const statuses = {
         draft: "Can edit freely",
         pending: "Awaiting approval",
-        published: "Requires approval or admin role"
+        published: "Requires approval or admin role",
       };
 
       expect(statuses.draft).toBeDefined();

@@ -8,6 +8,7 @@ const {
   buildUserObject,
   handleAuthError,
 } = require("../utils/authUtils");
+const { SWITCHABLE_ROLES } = require("../../shared/constants");
 
 const supabase = Database.getClient();
 
@@ -24,7 +25,6 @@ const authenticateUser = async (req, res, next) => {
       req.cookies?.sb_access_token_debug;
 
     if (!token) {
-      // console.log removed for security
       if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
         return res.status(401).json({
           success: false,
@@ -43,8 +43,7 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token);
 
     if (error || !tokenUser) {
-      // console.log removed for security
-      // Clear invalid cookie to prevent redirect loops
+      // Clear invalid cookie
       res.clearCookie("sb_access_token");
 
       if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
@@ -60,20 +59,16 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    // Check if sessions were invalidated (e.g., after password change)
-    // When password changes, we mark sessions as invalidated in metadata
-    // All tokens issued before this time should be rejected
+    // Check if sessions were invalidated
     const userMetadata = tokenUser.user_metadata || {};
     const sessionsInvalidatedAt = userMetadata.sessions_invalidated_at;
     const passwordChangedAt = userMetadata.password_changed_at;
 
     if (sessionsInvalidatedAt || passwordChangedAt) {
       // Decode JWT token to get issued-at time (iat claim)
-      // JWT format: header.payload.signature (base64url encoded)
       try {
         const tokenParts = token.split(".");
         if (tokenParts.length === 3) {
-          // Decode payload (second part)
           const payload = JSON.parse(
             Buffer.from(tokenParts[1], "base64").toString()
           );
@@ -87,7 +82,6 @@ const authenticateUser = async (req, res, next) => {
             invalidationTime &&
             new Date(invalidationTime) > tokenIssuedAt
           ) {
-            // Token was issued before password change/invalidation, reject it immediately
             res.clearCookie("sb_access_token");
             if (
               req.originalUrl.startsWith("/api/") ||
@@ -106,8 +100,6 @@ const authenticateUser = async (req, res, next) => {
           }
         }
       } catch (jwtErr) {
-        // If JWT decoding fails, allow the request (fallback to Supabase validation)
-        // This prevents breaking authentication if token format changes
         console.warn(
           "[AUTH] Failed to decode JWT for session invalidation check:",
           jwtErr.message
@@ -117,6 +109,17 @@ const authenticateUser = async (req, res, next) => {
 
     // Extract and combine user metadata
     const combinedMetadata = extractUserMetadata(tokenUser);
+
+    // Check for Citizen Mode override
+    const appMode = req.cookies?.app_mode;
+    const realRole = combinedMetadata.role || "citizen";
+
+    if (appMode === "citizen_mode" && SWITCHABLE_ROLES.includes(realRole)) {
+      // Override role to citizen, but save original role
+      combinedMetadata.base_role = realRole;
+      combinedMetadata.role = "citizen";
+      combinedMetadata.normalized_role = "citizen";
+    }
 
     // Validate user role and department code
     const userRole = combinedMetadata.role || "citizen";
@@ -277,10 +280,10 @@ const requireRole = (allowedRoles) => {
           debug:
             process.env.NODE_ENV === "development"
               ? {
-                userRole,
-                allowedRoles,
-                path: req.path,
-              }
+                  userRole,
+                  allowedRoles,
+                  path: req.path,
+                }
               : null,
         });
       }

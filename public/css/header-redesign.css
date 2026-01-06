@@ -10,8 +10,8 @@
   border-bottom: 1px solid var(--gray-200);
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 8px rgba(0, 0, 0, 0.04);
   overflow: visible;
-  min-height: 90px;
-  max-height: 90px;
+  min-height: 70px; /* Reduced from 90px */
+  max-height: 70px;
   box-sizing: border-box;
   transition: all var(--transition-normal, 200ms);
 }
@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 90px;
+  height: 70px; /* Reduced from 90px */
   padding: 0 var(--space-4);
   width: 100%;
   position: relative;
@@ -114,8 +114,8 @@
 }
 
 .brand-text {
-  font-size: 25px;
-  font-weight: 900;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: rgb(28, 76, 153);
 }
 
@@ -394,7 +394,8 @@
   border-top: 1px solid var(--gray-200);
 }
 
-.notification-panel {
+.notification-panel,
+.profile-panel {
   position: fixed !important;
   top: 70px !important;
   right: 20px !important;
@@ -415,7 +416,12 @@
   transition: all var(--transition-normal, 200ms) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.notification-panel.show {
+.profile-panel {
+  width: 260px; /* Smaller width for profile menu */
+}
+
+.notification-panel.show,
+.profile-panel.show {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -1021,14 +1027,19 @@ html.dark .notification-time {
 
 /* Dark mode for notification button */
 .dark .notification-btn,
-html.dark .notification-btn {
+html.dark .notification-btn,
+.dark .profile-btn,
+html.dark .profile-btn {
   background: transparent;
   border-color: transparent;
   color: var(--gray-300);
   box-shadow: none;
 }
 
-.dark .notification-btn:hover {
+.dark .notification-btn:hover,
+html.dark .notification-btn:hover,
+.dark .profile-btn:hover,
+html.dark .profile-btn:hover {
   background: var(--gray-700);
   border-color: var(--gray-600);
   color: var(--gray-100);
@@ -1162,4 +1173,33 @@ html.dark .notification-btn {
     flex-shrink: 0;
     z-index: 20;
   }
+}
+
+/* Force icon visibility - Critical Fix */
+.header-action svg {
+  stroke: currentColor;
+  stroke-width: 2px;
+  overflow: visible;
+}
+
+.dark .header-action svg,
+html.dark .header-action svg {
+  stroke: var(--gray-300);
+  color: var(--gray-300);
+}
+
+.dark .header-action svg path,
+.dark .header-action svg circle,
+html.dark .header-action svg path,
+html.dark .header-action svg circle {
+  stroke: currentColor;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.dark .notification-btn:hover,
+.dark .profile-btn:hover,
+html.dark .notification-btn:hover,
+html.dark .profile-btn:hover {
+  color: var(--gray-100);
 }

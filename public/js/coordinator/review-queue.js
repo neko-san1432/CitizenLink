@@ -1,9 +1,8 @@
 // Coordinator Review Queue JavaScript
 import showToast from "../components/toast.js";
-import BarangayPrioritization from "../components/barangay-prioritization.js";
+// import BarangayPrioritization from "../components/barangay-prioritization.js";
 
 class ReviewQueue {
-
   constructor() {
     this.complaints = [];
     this.currentPage = 1;
@@ -13,7 +12,7 @@ class ReviewQueue {
       category: "",
       duplicates: "",
       search: "",
-      prioritization: ""
+      prioritization: "",
     };
     this.barangayPrioritization = null;
     this.barangayPrioritizationComponent = null;
@@ -22,11 +21,11 @@ class ReviewQueue {
   async init() {
     this.setupEventListeners();
     this.setupRejectedSection();
-    // Load prioritization first, then complaints
-    await this.initBarangayPrioritization();
+    // await this.initBarangayPrioritization();
     await this.loadComplaints();
   }
 
+  /*
   async initBarangayPrioritization() {
     try {
       this.barangayPrioritizationComponent = new BarangayPrioritization("barangay-prioritization-container");
@@ -45,6 +44,7 @@ class ReviewQueue {
       console.error("[REVIEW_QUEUE] Error initializing prioritization:", error);
     }
   }
+  */
 
   setupRejectedSection() {
     const toggleBtn = document.getElementById("toggle-rejected-btn");
@@ -66,19 +66,23 @@ class ReviewQueue {
             const response = await fetch("/api/coordinator/rejected", {
               method: "GET",
               headers: { "Content-Type": "application/json" },
-              credentials: "include"
+              credentials: "include",
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
             rejectedComplaints = data.data || [];
 
             if (rejectedList) {
               if (rejectedComplaints.length === 0) {
-                rejectedList.innerHTML = '<div class="empty-state"><p>No rejected complaints</p></div>';
+                rejectedList.innerHTML =
+                  '<div class="empty-state"><p>No rejected complaints</p></div>';
               } else {
-                rejectedList.innerHTML = rejectedComplaints.map(complaint => this.createComplaintCard(complaint, true)).join("");
+                rejectedList.innerHTML = rejectedComplaints
+                  .map((complaint) => this.createComplaintCard(complaint, true))
+                  .join("");
                 this.attachRejectedEventListeners();
               }
             }
@@ -90,7 +94,8 @@ class ReviewQueue {
             console.error("Error loading rejected complaints:", error);
             showToast("Failed to load rejected complaints", "error");
             if (rejectedList) {
-              rejectedList.innerHTML = '<div class="empty-state"><p>Error loading rejected complaints</p></div>';
+              rejectedList.innerHTML =
+                '<div class="empty-state"><p>Error loading rejected complaints</p></div>';
             }
           } finally {
             if (loading) loading.style.display = "none";
@@ -105,7 +110,7 @@ class ReviewQueue {
   }
 
   attachRejectedEventListeners() {
-    document.querySelectorAll("#rejected-list .view-btn").forEach(btn => {
+    document.querySelectorAll("#rejected-list .view-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const complaintId = e.target.getAttribute("data-complaint-id");
         this.viewComplaint(complaintId);
@@ -137,7 +142,9 @@ class ReviewQueue {
       });
     }
 
-    const prioritizationFilter = document.getElementById("filter-prioritization");
+    const prioritizationFilter = document.getElementById(
+      "filter-prioritization"
+    );
     if (prioritizationFilter) {
       prioritizationFilter.addEventListener("change", (e) => {
         this.filters.prioritization = e.target.value;
@@ -171,7 +178,7 @@ class ReviewQueue {
       const complaintsResponse = await fetch("/api/coordinator/review-queue", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        credentials: "include"
+        credentials: "include",
       });
 
       if (!complaintsResponse.ok) {
@@ -189,19 +196,26 @@ class ReviewQueue {
           barangay: sample.barangay,
           hasBarangay: Boolean(sample.barangay),
           latitude: sample.latitude,
-          longitude: sample.longitude
+          longitude: sample.longitude,
         });
       }
 
       // Enhance complaints with prioritization if available
       if (this.barangayPrioritization) {
         this.enhanceComplaintsWithPrioritization();
-      } else if (this.barangayPrioritizationComponent && this.barangayPrioritizationComponent.insightsData) {
+      } else if (
+        this.barangayPrioritizationComponent &&
+        this.barangayPrioritizationComponent.insightsData
+      ) {
         // Build map if not already built
-        this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
+        this.barangayPrioritization = this.buildBarangayMap(
+          this.barangayPrioritizationComponent.insightsData.barangays
+        );
         this.enhanceComplaintsWithPrioritization();
       } else {
-        console.warn("[REVIEW_QUEUE] Prioritization not available yet, complaints will be enhanced when prioritization loads");
+        console.warn(
+          "[REVIEW_QUEUE] Prioritization not available yet, complaints will be enhanced when prioritization loads"
+        );
       }
 
       this.renderComplaints();
@@ -213,7 +227,7 @@ class ReviewQueue {
 
   buildBarangayMap(barangays) {
     const map = new Map();
-    barangays.forEach(barangay => {
+    barangays.forEach((barangay) => {
       map.set(barangay.barangay, barangay.prioritizationScore);
     });
     return map;
@@ -221,26 +235,39 @@ class ReviewQueue {
 
   enhanceComplaintsWithPrioritization() {
     if (!this.barangayPrioritization) {
-      console.warn("[REVIEW_QUEUE] Cannot enhance complaints: prioritization map not available");
+      console.warn(
+        "[REVIEW_QUEUE] Cannot enhance complaints: prioritization map not available"
+      );
       return;
     }
 
     let enhancedCount = 0;
     // Enhance each complaint with its barangay prioritization score
-    this.complaints.forEach(complaint => {
-      if (complaint.barangay && this.barangayPrioritization.has(complaint.barangay)) {
-        complaint.prioritizationScore = this.barangayPrioritization.get(complaint.barangay);
-        complaint.priorityLevel = this.getPriorityLevelFromScore(complaint.prioritizationScore);
+    this.complaints.forEach((complaint) => {
+      if (
+        complaint.barangay &&
+        this.barangayPrioritization.has(complaint.barangay)
+      ) {
+        complaint.prioritizationScore = this.barangayPrioritization.get(
+          complaint.barangay
+        );
+        complaint.priorityLevel = this.getPriorityLevelFromScore(
+          complaint.prioritizationScore
+        );
         enhancedCount++;
       } else {
         complaint.prioritizationScore = 0;
         complaint.priorityLevel = "low";
         if (complaint.barangay) {
-          console.warn(`[REVIEW_QUEUE] Barangay "${complaint.barangay}" not found in prioritization map`);
+          console.warn(
+            `[REVIEW_QUEUE] Barangay "${complaint.barangay}" not found in prioritization map`
+          );
         }
       }
     });
-    console.log(`[REVIEW_QUEUE] Enhanced ${enhancedCount} out of ${this.complaints.length} complaints with prioritization scores`);
+    console.log(
+      `[REVIEW_QUEUE] Enhanced ${enhancedCount} out of ${this.complaints.length} complaints with prioritization scores`
+    );
   }
 
   getPriorityLevelFromScore(score) {
@@ -280,20 +307,22 @@ class ReviewQueue {
     if (emptyState) emptyState.style.display = "none";
     // Reset debug flag for this render
     this._lastLoggedCardId = null;
-    complaintList.innerHTML = paginatedComplaints.map(complaint => this.createComplaintCard(complaint)).join("");
+    complaintList.innerHTML = paginatedComplaints
+      .map((complaint) => this.createComplaintCard(complaint))
+      .join("");
     this.updatePagination(filteredComplaints.length);
     this.attachEventListeners();
   }
   attachEventListeners() {
     // View buttons
-    document.querySelectorAll(".view-btn").forEach(btn => {
+    document.querySelectorAll(".view-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const complaintId = e.target.getAttribute("data-complaint-id");
         this.viewComplaint(complaintId);
       });
     });
     // Reject buttons
-    document.querySelectorAll(".reject-btn").forEach(btn => {
+    document.querySelectorAll(".reject-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const complaintId = e.target.getAttribute("data-complaint-id");
         this.rejectComplaint(complaintId);
@@ -316,7 +345,7 @@ class ReviewQueue {
         barangay,
         prioritizationScore,
         priorityLevel,
-        hasBarangay: Boolean(barangay)
+        hasBarangay: Boolean(barangay),
       });
     }
 
@@ -366,8 +395,14 @@ class ReviewQueue {
       prioritizationSuggestionHTML = `
                 <div class="${suggestionClass}">
                     ${suggestionText}
-                    <span class="barangay-name">${this.escapeHtml(barangay)}</span>
-                    ${prioritizationScore > 0 ? `<span class="priority-score">Score: ${prioritizationScore}</span>` : ""}
+                    <span class="barangay-name">${this.escapeHtml(
+                      barangay
+                    )}</span>
+                    ${
+                      prioritizationScore > 0
+                        ? `<span class="priority-score">Score: ${prioritizationScore}</span>`
+                        : ""
+                    }
                 </div>
             `;
 
@@ -378,7 +413,7 @@ class ReviewQueue {
           priorityLevel,
           score: prioritizationScore,
           htmlLength: prioritizationSuggestionHTML.length,
-          htmlPreview: prioritizationSuggestionHTML.substring(0, 100)
+          htmlPreview: prioritizationSuggestionHTML.substring(0, 100),
         });
       }
     } else {
@@ -386,86 +421,152 @@ class ReviewQueue {
       if (isFirstCard) {
         console.log("[REVIEW_QUEUE] ✗ No suggestion - no barangay:", {
           id: complaint.id.substring(0, 8),
-          hasBarangay: Boolean(complaint.barangay)
+          hasBarangay: Boolean(complaint.barangay),
         });
       }
     }
 
     return `
-            <div class="complaint-card ${complaint.priority?.toLowerCase() || "medium"} ${priorityLevel === "critical" || priorityLevel === "high" ? "high-priority-barangay" : ""}" data-complaint-id="${complaint.id}" data-priority-score="${prioritizationScore}">
+            <div class="complaint-card ${
+              complaint.priority?.toLowerCase() || "medium"
+            } ${
+      priorityLevel === "critical" || priorityLevel === "high"
+        ? "high-priority-barangay"
+        : ""
+    }" data-complaint-id="${
+      complaint.id
+    }" data-priority-score="${prioritizationScore}">
                 ${prioritizationSuggestionHTML}
                 <div class="complaint-header">
                     <div>
                         <div class="complaint-id">#${complaint.id}</div>
-                        <h3 class="complaint-title">${complaint.title || "Untitled Complaint"}</h3>
+                        <h3 class="complaint-title">${
+                          complaint.title || "Untitled Complaint"
+                        }</h3>
                     </div>
-                    <div class="complaint-status status-${complaint.workflow_status?.toLowerCase() || complaint.status?.toLowerCase() || "pending"}">
-                        ${complaint.workflow_status || complaint.status || "Pending"}
+                    <div class="complaint-status status-${
+                      complaint.workflow_status?.toLowerCase() ||
+                      complaint.status?.toLowerCase() ||
+                      "pending"
+                    }">
+                        ${
+                          complaint.workflow_status ||
+                          complaint.status ||
+                          "Pending"
+                        }
                     </div>
                 </div>
                 <div class="complaint-content">
-                    <p class="complaint-description">${complaint.descriptive_su || complaint.description || "No description provided"}</p>
+                    <p class="complaint-description">${
+                      complaint.descriptive_su ||
+                      complaint.description ||
+                      "No description provided"
+                    }</p>
                     <div class="complaint-meta">
-                        <span class="badge ${priorityBadge}">${complaint.priority || "Medium"}</span>
-                        <span class="badge badge-medium">${complaint.category || "General"}</span>
-                        ${barangay ? `<span class="badge badge-info">📍 ${barangay}</span>` : ""}
-                        <span class="complaint-date">${this.formatTimeAgo(complaint.submitted_at || complaint.created_at)}</span>
+                        <span class="badge ${priorityBadge}">${
+      complaint.priority || "Medium"
+    }</span>
+                        <span class="badge badge-medium">${
+                          complaint.category || "General"
+                        }</span>
+                        ${
+                          barangay
+                            ? `<span class="badge badge-info">📍 ${barangay}</span>`
+                            : ""
+                        }
+                        <span class="complaint-date">${this.formatTimeAgo(
+                          complaint.submitted_at || complaint.created_at
+                        )}</span>
                     </div>
                     ${flagHTML}
                 </div>
                 <div class="complaint-actions">
-                    <button class="btn btn-primary view-btn" data-complaint-id="${complaint.id}">
+                    <button class="btn btn-primary view-btn" data-complaint-id="${
+                      complaint.id
+                    }">
                         View Details
                     </button>
-                    ${!isRejected ? `<button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
+                    ${
+                      !isRejected
+                        ? `<button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
                         Reject
-                    </button>` : `<span class="badge badge-danger" style="padding: 8px 12px;">Rejected</span>`}
-                    ${isRejected && complaint.coordinator_notes ? `<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                    </button>`
+                        : `<span class="badge badge-danger" style="padding: 8px 12px;">Rejected</span>`
+                    }
+                    ${
+                      isRejected && complaint.coordinator_notes
+                        ? `<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
                         <strong>Rejection Reason:</strong> ${complaint.coordinator_notes}
-                    </div>` : ""}
+                    </div>`
+                        : ""
+                    }
                 </div>
             </div>
         `;
   }
   getFilteredComplaints() {
-    let filtered = this.complaints.filter(complaint => {
+    let filtered = this.complaints.filter((complaint) => {
       // Priority filter
-      const matchesPriority = !this.filters.priority || this.filters.priority === "" ||
-                                  complaint.priority?.toLowerCase() === this.filters.priority.toLowerCase();
+      const matchesPriority =
+        !this.filters.priority ||
+        this.filters.priority === "" ||
+        complaint.priority?.toLowerCase() ===
+          this.filters.priority.toLowerCase();
       // Category filter
-      const matchesCategory = !this.filters.category || this.filters.category === "" ||
-                                  complaint.category?.toLowerCase() === this.filters.category.toLowerCase();
+      const matchesCategory =
+        !this.filters.category ||
+        this.filters.category === "" ||
+        complaint.category?.toLowerCase() ===
+          this.filters.category.toLowerCase();
       // Duplicate filter
-      const matchesDuplicates = !this.filters.duplicates || this.filters.duplicates === "" ||
-                                    (this.filters.duplicates === "yes" && complaint.algorithm_flags?.has_duplicates) ||
-                                    (this.filters.duplicates === "no" && !complaint.algorithm_flags?.has_duplicates);
+      const matchesDuplicates =
+        !this.filters.duplicates ||
+        this.filters.duplicates === "" ||
+        (this.filters.duplicates === "yes" &&
+          complaint.algorithm_flags?.has_duplicates) ||
+        (this.filters.duplicates === "no" &&
+          !complaint.algorithm_flags?.has_duplicates);
       // Search filter
-      const matchesSearch = !this.filters.search || this.filters.search === "" ||
-                                complaint.title?.toLowerCase().includes(this.filters.search.toLowerCase()) ||
-                                (complaint.descriptive_su || complaint.description)?.toLowerCase().includes(this.filters.search.toLowerCase());
-      return matchesPriority && matchesCategory && matchesDuplicates && matchesSearch;
+      const matchesSearch =
+        !this.filters.search ||
+        this.filters.search === "" ||
+        complaint.title
+          ?.toLowerCase()
+          .includes(this.filters.search.toLowerCase()) ||
+        (complaint.descriptive_su || complaint.description)
+          ?.toLowerCase()
+          .includes(this.filters.search.toLowerCase());
+      return (
+        matchesPriority && matchesCategory && matchesDuplicates && matchesSearch
+      );
     });
 
     // Sort by prioritization if filter is set, otherwise default to highest priority first
     if (this.barangayPrioritization) {
       filtered = filtered.sort((a, b) => {
-        const scoreA = a.prioritizationScore || this.barangayPrioritization.get(a.barangay || "") || 0;
-        const scoreB = b.prioritizationScore || this.barangayPrioritization.get(b.barangay || "") || 0;
+        const scoreA =
+          a.prioritizationScore ||
+          this.barangayPrioritization.get(a.barangay || "") ||
+          0;
+        const scoreB =
+          b.prioritizationScore ||
+          this.barangayPrioritization.get(b.barangay || "") ||
+          0;
 
         if (this.filters.prioritization) {
           // Use filter setting
-          return this.filters.prioritization === "desc" ? scoreB - scoreA : scoreA - scoreB;
+          return this.filters.prioritization === "desc"
+            ? scoreB - scoreA
+            : scoreA - scoreB;
         }
         // Default: highest priority first
         return scoreB - scoreA;
-
       });
     }
 
     return filtered;
   }
   getPaginatedComplaints(complaints) {
-
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return complaints.slice(startIndex, endIndex);
@@ -494,8 +595,12 @@ class ReviewQueue {
 
     // Update items info
     if (itemsInfo) {
-      const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
-      const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
+      const startItem =
+        totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
+      const endItem = Math.min(
+        this.currentPage * this.itemsPerPage,
+        totalItems
+      );
       itemsInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} complaints`;
     }
 
@@ -511,7 +616,10 @@ class ReviewQueue {
     if (pageNumbers) {
       pageNumbers.innerHTML = "";
       const maxVisiblePages = 7;
-      let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let startPage = Math.max(
+        1,
+        this.currentPage - Math.floor(maxVisiblePages / 2)
+      );
       const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
       // Adjust start page if we're near the end
@@ -566,7 +674,9 @@ class ReviewQueue {
   }
 
   goToPage(page) {
-    const totalPages = Math.ceil(this.getFilteredComplaints().length / this.itemsPerPage);
+    const totalPages = Math.ceil(
+      this.getFilteredComplaints().length / this.itemsPerPage
+    );
     if (page >= 1 && page <= totalPages) {
       this.currentPage = page;
       this.renderComplaints();
@@ -583,7 +693,9 @@ class ReviewQueue {
     }
   }
   nextPage() {
-    const totalPages = Math.ceil(this.getFilteredComplaints().length / this.itemsPerPage);
+    const totalPages = Math.ceil(
+      this.getFilteredComplaints().length / this.itemsPerPage
+    );
     if (this.currentPage < totalPages) {
       this.goToPage(this.currentPage + 1);
     }
@@ -601,17 +713,20 @@ class ReviewQueue {
     const reason = prompt("Please provide a reason for rejection:");
     if (!reason) return;
     try {
-      const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          decision: "reject",
-          data: { reason }
-        })
-      });
+      const response = await fetch(
+        `/api/coordinator/review-queue/${complaintId}/decide`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            decision: "reject",
+            data: { reason },
+          }),
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -635,10 +750,10 @@ class ReviewQueue {
   }
   getPriorityBadgeClass(priority) {
     const map = {
-      "urgent": "badge-urgent",
-      "high": "badge-high",
-      "medium": "badge-medium",
-      "low": "badge-low"
+      urgent: "badge-urgent",
+      high: "badge-high",
+      medium: "badge-medium",
+      low: "badge-low",
     };
     return map[priority] || "badge-medium";
   }
@@ -656,7 +771,7 @@ class ReviewQueue {
   formatDate(dateString) {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
   debounce(func, wait) {
     let timeout;

@@ -47,12 +47,12 @@ async function initializeComplaintLocationPicker(
       keyboard: true,
       dragging: true,
       worldCopyJump: false,
-      minZoom: 11, // Restrict minimum zoom to keep focus on Digos City
+      minZoom: 10, // Restrict minimum zoom to keep focus on Digos City
       maxZoom: 18,
       // Restrict map bounds to Digos City area
       maxBounds: [
-        [6.723539, 125.245633], // Southwest corner
-        [6.985025, 125.39129], // Northeast corner
+        [6.65, 125.2], // Southwest corner
+        [7.0, 125.5], // Northeast corner
       ],
       maxBoundsViscosity: 1.0, // Prevent panning outside bounds
     };
@@ -196,23 +196,10 @@ function setupLocationPicker(map) {
   marker = L.marker([initialCenter.lat, initialCenter.lng], {
     draggable: true,
     icon: L.divIcon({
-      html: `<div style="
-        background-color: #3388ff;
-        color: white;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        font-size: 18px;
-        font-weight: bold;
-      ">📍</div>`,
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
       className: "valid-location-marker",
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
     }),
   }).addTo(map);
 
@@ -234,10 +221,10 @@ function setupLocationPicker(map) {
     } catch (error) {
       console.warn("[COMPLAINT_MAP] Boundary validation failed:", error);
       // Fallback to bounding box check
-      const minLat = 6.723539;
-      const maxLat = 6.985025;
-      const minLng = 125.245633;
-      const maxLng = 125.39129;
+      const minLat = 6.65;
+      const maxLat = 7.0;
+      const minLng = 125.2;
+      const maxLng = 125.5;
       return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
     }
   }
@@ -314,23 +301,10 @@ function setupLocationPicker(map) {
       if (marker) {
         marker.setIcon(
           L.divIcon({
-            html: `<div style="
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            font-size: 18px;
-            font-weight: bold;
-          ">⚠️</div>`,
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`,
             className: "invalid-location-marker",
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
           })
         );
       }
@@ -340,23 +314,10 @@ function setupLocationPicker(map) {
       if (marker) {
         marker.setIcon(
           L.divIcon({
-            html: `<div style="
-            background-color: #3388ff;
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            font-size: 18px;
-            font-weight: bold;
-          ">📍</div>`,
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
             className: "valid-location-marker",
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
           })
         );
       }

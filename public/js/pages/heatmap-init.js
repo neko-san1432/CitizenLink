@@ -10,8 +10,8 @@ let currentFilters = {
   department: "",
   includeResolved: true,
 };
-let isInitialLoad = true;
-window.isInitialLoad = true;
+let isInitialLoad = false;
+window.isInitialLoad = false;
 
 // Simple initialization - map with heatmap and controls
 (async function () {
@@ -318,22 +318,22 @@ async function loadComplaintData() {
     setupDatePickerConstraints();
 
     // Default to showing only Today's complaints
-    const dateStart = document.getElementById("date-range-start");
-    const dateEnd = document.getElementById("date-range-end");
-    if (dateStart && dateEnd) {
-      const today = new Date();
-      // Handle timezone offset to ensure we get the correct local date string
-      const offset = today.getTimezoneOffset() * 60000; // offset in milliseconds
-      const localToday = new Date(today.getTime() - offset);
-      const todayStr = localToday.toISOString().split("T")[0];
+    // const dateStart = document.getElementById("date-range-start");
+    // const dateEnd = document.getElementById("date-range-end");
+    // if (dateStart && dateEnd) {
+    //   const today = new Date();
+    //   // Handle timezone offset to ensure we get the correct local date string
+    //   const offset = today.getTimezoneOffset() * 60000; // offset in milliseconds
+    //   const localToday = new Date(today.getTime() - offset);
+    //   const todayStr = localToday.toISOString().split("T")[0];
 
-      dateStart.value = todayStr;
-      dateEnd.value = todayStr;
+    //   dateStart.value = todayStr;
+    //   dateEnd.value = todayStr;
 
-      // Update constraints for the selected dates
-      updateDatePickerConstraints(todayStr, todayStr);
-      // console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
-    }
+    //   // Update constraints for the selected dates
+    //   updateDatePickerConstraints(todayStr, todayStr);
+    //   // console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
+    // }
 
     // REMOVED: Redundant initial heatmap creation
     // applyFiltersAndUpdate() below will create the heatmap with the "Today" filter applied
@@ -366,7 +366,7 @@ async function loadComplaintData() {
 function updateZoomBasedVisibility(zoom) {
   if (!heatmapViz) return;
 
-  const zoomThreshold = 11;
+  const zoomThreshold = 10;
   const heatmapToggle = document.getElementById("toggle-heatmap-btn");
   const isHeatmapForced =
     heatmapToggle && heatmapToggle.classList.contains("forced-on");
@@ -398,65 +398,66 @@ function updateZoomBasedVisibility(zoom) {
     // Role-based: Citizens don't see markers (only heatmap), others see markers based on role
     const userRole = heatmapViz.userRole || "citizen";
 
+    // ALLOW MARKERS FOR ALL ROLES (Debug fix)
     // Citizens: Always show only heatmap, never markers
-    if (userRole === "citizen") {
-      if (heatmapViz.heatmapLayer) {
-        heatmapViz.showHeatmap();
+    // if (userRole === "citizen") {
+    //   if (heatmapViz.heatmapLayer) {
+    //     heatmapViz.showHeatmap();
+    //   }
+    //   if (heatmapViz.markerLayer) {
+    //     heatmapViz.hideMarkers();
+    //   }
+    //   // Hide toggle markers button for citizens
+    //   const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
+    //   if (toggleMarkersBtn) {
+    //     toggleMarkersBtn.style.display = "none";
+    //   }
+    // } else {
+    // Non-citizens: Show markers based on zoom and filters
+    // Create markers lazily if they don't exist yet (first time user zooms in)
+    if (
+      !heatmapViz.markerLayer ||
+      heatmapViz.markerLayer.getLayers().length === 0
+    ) {
+      heatmapViz.createMarkerLayer();
+    }
+
+    if (
+      heatmapViz.markerLayer &&
+      heatmapViz.markerLayer.getLayers().length > 0
+    ) {
+      // First ensure the marker layer is on the map
+      if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
+        heatmapViz.markerLayer.addTo(heatmapViz.map);
       }
-      if (heatmapViz.markerLayer) {
-        heatmapViz.hideMarkers();
+
+      // Trigger marker visibility update based on current filters
+      // This ensures markers respect filter settings when zooming in
+      if (heatmapViz.updateMarkerVisibility) {
+        heatmapViz.updateMarkerVisibility();
+      } else {
+        // Fallback: show all markers if updateMarkerVisibility doesn't exist
+        heatmapViz.showMarkers();
       }
-      // Hide toggle markers button for citizens
+
+      // Update toggle button state
       const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
       if (toggleMarkersBtn) {
-        toggleMarkersBtn.style.display = "none";
-      }
-    } else {
-      // Non-citizens: Show markers based on zoom and filters
-      // Create markers lazily if they don't exist yet (first time user zooms in)
-      if (
-        !heatmapViz.markerLayer ||
-        heatmapViz.markerLayer.getLayers().length === 0
-      ) {
-        heatmapViz.createMarkerLayer();
-      }
-
-      if (
-        heatmapViz.markerLayer &&
-        heatmapViz.markerLayer.getLayers().length > 0
-      ) {
-        // First ensure the marker layer is on the map
-        if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
-          heatmapViz.markerLayer.addTo(heatmapViz.map);
-        }
-
-        // Trigger marker visibility update based on current filters
-        // This ensures markers respect filter settings when zooming in
-        if (heatmapViz.updateMarkerVisibility) {
-          heatmapViz.updateMarkerVisibility();
-        } else {
-          // Fallback: show all markers if updateMarkerVisibility doesn't exist
-          heatmapViz.showMarkers();
-        }
-
-        // Update toggle button state
-        const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
-        if (toggleMarkersBtn) {
-          toggleMarkersBtn.textContent = "Hide Markers";
-          toggleMarkersBtn.classList.add("active");
-          toggleMarkersBtn.style.display = "block";
-        }
-      }
-
-      // Hide heatmap unless forced on
-      if (heatmapViz.heatmapLayer) {
-        if (isHeatmapForced) {
-          heatmapViz.showHeatmap();
-        } else {
-          heatmapViz.hideHeatmap();
-        }
+        toggleMarkersBtn.textContent = "Hide Markers";
+        toggleMarkersBtn.classList.add("active");
+        toggleMarkersBtn.style.display = "block";
       }
     }
+
+    // Hide heatmap unless forced on
+    if (heatmapViz.heatmapLayer) {
+      if (isHeatmapForced) {
+        heatmapViz.showHeatmap();
+      } else {
+        heatmapViz.hideHeatmap();
+      }
+    }
+    // }
   }
 }
 
@@ -1339,8 +1340,14 @@ function setupSidebarToggle() {
   const sidebar = document.getElementById("sidebar");
 
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("open");
+    menuToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (window.sidebarController && window.sidebarController.open) {
+        window.sidebarController.open();
+      } else {
+        // Fallback if controller not ready
+        sidebar.classList.toggle("open");
+      }
     });
 
     // Ensure button is visible

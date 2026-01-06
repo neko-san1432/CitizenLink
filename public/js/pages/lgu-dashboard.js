@@ -1,318 +1,125 @@
 /**
- * LGU Dashboard
- * Comprehensive dashboard for LGU officers with task management and statistics
- */
-import showMessage from "../components/toast.js";
-import { initializeRoleToggle } from "../auth/roleToggle.js";
-import { getActivityIcon } from "../utils/icons.js";
-
-// Dashboard state
-const _dashboardData = null;
-/**
- * Initialize dashboard
+ * LGU Dashboard JavaScript
+ * For LGU Admins
  */
 document.addEventListener("DOMContentLoaded", async () => {
   await loadDashboardData();
-  await loadMyTasks();
-  await loadStatistics();
-  await loadActivities();
-  await loadUpdates();
-  setupEventListeners();
-  // Initialize role switcher for staff members
-  try {
-    await initializeRoleToggle();
-  } catch (error) {
-    console.error("[LGU_DASHBOARD] Error initializing role toggle:", error);
-  }
+  initCharts();
+
+  // Refresh interval
+  setInterval(loadDashboardData, 30000);
 });
-/**
- * Load dashboard data
- */
+
 async function loadDashboardData() {
   try {
-    // Load all dashboard components
-    await Promise.all([
-      loadStatistics(),
-      loadActivities(),
-      loadUpdates()
-    ]);
-  } catch (error) {
-    console.error("[LGU_DASHBOARD] Load dashboard error:", error);
-    showMessage("error", "Failed to load dashboard data");
-  }
-}
-/**
- * Load my tasks
- */
-async function loadMyTasks() {
-  try {
-    const response = await fetch("/api/lgu/tasks?limit=5");
+    const response = await fetch("/api/lgu-admin/dashboard-stats");
+    if (!response.ok) throw new Error("API Error");
+
     const result = await response.json();
     if (result.success) {
-      renderMyTasks(result.data || []);
-    } else {
-      renderMyTasks([]);
+      updateStats(result.data);
     }
   } catch (error) {
-    console.error("[LGU_DASHBOARD] Load tasks error:", error);
-    renderMyTasks([]);
+    console.error("[LGU-ADMIN] Load dashboard error:", error);
+    updateStats({});
   }
 }
-/**
- * Load statistics
- */
-async function loadStatistics() {
-  try {
-    const response = await fetch("/api/lgu/statistics");
-    const result = await response.json();
-    if (result.success) {
-      renderStatistics(result.data);
-    } else {
-      renderStatistics({});
-    }
-  } catch (error) {
-    console.error("[LGU_DASHBOARD] Load statistics error:", error);
-    renderStatistics({});
-  }
+
+function updateStats(data) {
+  setText("stat-total", data.total_complaints || 0);
+  setText("stat-pending", data.pending_complaints || 0);
+  setText("stat-in-progress", data.in_progress_complaints || 0);
+  setText("stat-resolved", data.resolved_complaints || 0);
+
+  // Update Recent Activity
+  // Note: If API doesn't return recent_activity, this will be empty.
+  updateActivity(data.recent_activity || []);
 }
-/**
- * Load activities
- */
-async function loadActivities() {
-  try {
-    const response = await fetch("/api/lgu/activities?limit=5");
-    const result = await response.json();
-    if (result.success) {
-      renderActivities(result.data || []);
-    } else {
-      renderActivities([]);
-    }
-  } catch (error) {
-    console.error("[LGU_DASHBOARD] Load activities error:", error);
-    renderActivities([]);
-  }
-}
-/**
- * Load updates
- */
-async function loadUpdates() {
-  try {
-    const response = await fetch("/api/lgu/updates?limit=5");
-    const result = await response.json();
-    if (result.success) {
-      renderUpdates(result.data || []);
-    } else {
-      renderUpdates([]);
-    }
-  } catch (error) {
-    console.error("[LGU_DASHBOARD] Load updates error:", error);
-    renderUpdates([]);
-  }
-}
-/**
- * Render my tasks
- */
-function renderMyTasks(tasks) {
-  const container = document.getElementById("tasks-container");
+
+function updateActivity(activities) {
+  const container = document.getElementById("recent-activity-list");
   if (!container) return;
-  if (tasks.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        <h3>No Tasks Assigned</h3>
-        <p>You don't have any tasks assigned at the moment.</p>
-        <button class="btn btn-primary" onclick="refreshTasks()">Refresh</button>
-      </div>
-    `;
-    return;
+
+  if (activities && activities.length > 0) {
+    container.innerHTML = activities
+      .map(
+        (item) => `
+         <div class="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+           <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+             </svg>
+           </div>
+           <div>
+             <p class="text-sm font-medium text-gray-800">${
+  item.title || "Activity"
+}</p>
+             <p class="text-xs text-gray-500">${new Date(
+    item.created_at
+  ).toLocaleDateString()}</p>
+           </div>
+         </div>
+      `
+      )
+      .join("");
+  } else {
+    container.innerHTML = `<div class="text-center py-4 text-gray-500">No recent activity</div>`;
   }
-  const html = tasks.map(task => `
-    <div class="task-item" onclick="viewTaskDetail('${task.id}')">
-      <div class="task-header">
-        <h4 class="task-title">${escapeHtml(task.title)}</h4>
-        <span class="task-priority priority-${task.priority}">${task.priority}</span>
-      </div>
-      <div class="task-meta">
-        <span class="task-type">${escapeHtml(task.type || task.category)}</span>
-        <span class="task-deadline">Due: ${formatDate(task.deadline)}</span>
-      </div>
-      <div class="task-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${getTaskProgress(task.status)}%"></div>
-        </div>
-        <span class="progress-text">${getTaskStatusText(task.status)}</span>
-      </div>
-      <div class="task-actions">
-        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); updateTask('${task.id}')">Update</button>
-        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); addNote('${task.id}')">Add Note</button>
-      </div>
-    </div>
-  `).join("");
-  container.innerHTML = html;
 }
-/**
- * Render statistics
- */
-function renderStatistics(stats) {
-  document.getElementById("stat-total-tasks").textContent = stats.total_tasks || 0;
-  document.getElementById("stat-pending-tasks").textContent = stats.pending_tasks || 0;
-  document.getElementById("stat-completed-tasks").textContent = stats.completed_tasks || 0;
-  document.getElementById("stat-efficiency").textContent = stats.efficiency_rate || "0%";
-}
-/**
- * Render activities
- */
-function renderActivities(activities) {
-  const container = document.getElementById("activities-container");
-  if (!container) return;
-  if (activities.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📝</div>
-        <p>No recent activities</p>
-      </div>
-    `;
-    return;
+
+function initCharts() {
+  const trendCtx = document.getElementById("trendChart");
+  if (trendCtx) {
+    new Chart(trendCtx, {
+      type: "line",
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [
+          {
+            label: "Complaints",
+            data: [12, 19, 3, 5, 2, 3, 10], // Mock Data
+            borderColor: "#3b82f6",
+            tension: 0.4,
+            fill: true,
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { display: false } },
+          x: { grid: { display: false } },
+        },
+      },
+    });
   }
-  const html = activities.map(activity => `
-    <div class="activity-item">
-      <div class="activity-icon">${getActivityIcon(activity.type)}</div>
-      <div class="activity-content">
-        <div class="activity-text">${escapeHtml(activity.description)}</div>
-        <div class="activity-time">${formatDate(activity.created_at)}</div>
-      </div>
-    </div>
-  `).join("");
-  container.innerHTML = html;
-}
-/**
- * Render updates
- */
-function renderUpdates(updates) {
-  const container = document.getElementById("updates-container");
-  if (!container) return;
-  if (updates.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📢</div>
-        <p>No department updates</p>
-      </div>
-    `;
-    return;
+
+  const distCtx = document.getElementById("distributionChart");
+  if (distCtx) {
+    new Chart(distCtx, {
+      type: "doughnut",
+      data: {
+        labels: ["Infrastructure", "Health", "Environment", "Other"],
+        datasets: [
+          {
+            data: [40, 30, 20, 10], // Mock Data
+            backgroundColor: ["#3b82f6", "#ef4444", "#10b981", "#f59e0b"],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "right" } },
+      },
+    });
   }
-  const html = updates.map(update => `
-    <div class="update-item">
-      <div class="update-header">
-        <h4 class="update-title">${escapeHtml(update.title)}</h4>
-        <span class="update-priority priority-${update.priority}">${update.priority}</span>
-      </div>
-      <div class="update-content">
-        <p>${escapeHtml(update.content)}</p>
-        <div class="update-meta">
-          <span class="update-author">By: ${escapeHtml(update.author)}</span>
-          <span class="update-date">${formatDate(update.created_at)}</span>
-        </div>
-      </div>
-    </div>
-  `).join("");
-  container.innerHTML = html;
 }
-/**
- * Setup event listeners
- */
-function setupEventListeners() {
-  // Add any additional event listeners here
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
 }
-/**
- * Helper functions
- */
-function getTaskProgress(status) {
-  const progressMap = {
-    "assigned": 25,
-    "in_progress": 50,
-    "review": 75,
-    "completed": 100,
-    "cancelled": 0
-  };
-  return progressMap[status] || 0;
-}
-function getTaskStatusText(status) {
-  const textMap = {
-    "assigned": "Assigned",
-    "in_progress": "In Progress",
-    "review": "Under Review",
-    "completed": "Completed",
-    "cancelled": "Cancelled"
-  };
-  return textMap[status] || "Unknown";
-}
-// getActivityIcon is now imported from icons.js utility
-function formatDate(dateString) {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-}
-function escapeHtml(text) {
-  if (!text) return "";
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-/**
- * Global functions for onclick handlers
- */
-window.refreshDashboard = async function() {
-  showMessage("info", "Refreshing dashboard...");
-  await loadDashboardData();
-  await loadMyTasks();
-  showMessage("success", "Dashboard refreshed");
-};
-window.viewAllTasks = function() {
-  window.location.href = "/lgu-officer/task-assigned";
-};
-window.refreshTasks = async function() {
-  showMessage("info", "Refreshing tasks...");
-  await loadMyTasks();
-  showMessage("success", "Tasks refreshed");
-};
-window.refreshActivities = async function() {
-  showMessage("info", "Refreshing activities...");
-  await loadActivities();
-  showMessage("success", "Activities refreshed");
-};
-window.refreshUpdates = async function() {
-  showMessage("info", "Refreshing updates...");
-  await loadUpdates();
-  showMessage("success", "Updates refreshed");
-};
-window.viewTaskDetail = function(taskId) {
-  window.location.href = `/lgu-officer/task-detail?id=${taskId}`;
-};
-window.updateTask = function(_taskId) {
-  showMessage("info", "Opening task update form...");
-  // TODO: Implement task update modal
-};
-window.addNote = function(_taskId) {
-  showMessage("info", "Opening note form...");
-  // TODO: Implement note addition modal
-};
-window.updateTaskStatus = function() {
-  showMessage("info", "Task status update feature coming soon");
-};
-window.addTaskNote = function() {
-  showMessage("info", "Add note feature coming soon");
-};
-window.viewReports = function() {
-  showMessage("info", "Reports feature coming soon");
-};
-window.contactSupervisor = function() {
-  showMessage("info", "Contact supervisor feature coming soon");
-};

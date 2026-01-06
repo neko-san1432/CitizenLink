@@ -373,11 +373,7 @@ const handleOAuthPopupMessage = async (event) => {
       const {
         data: { session: finalCheck },
       } = await supabase.auth.getSession();
-      if (finalCheck) {
-        globalThis.location.href = redirectUrl;
-      } else {
-        globalThis.location.href = redirectUrl;
-      }
+      globalThis.location.href = redirectUrl;
     }, 800);
   } else if (type === "oauth-user-exists") {
     cleanupPendingOAuth("User already exist");

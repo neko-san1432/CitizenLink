@@ -12,9 +12,8 @@ const cspConfig = {
     ],
     scriptSrc: [
       "'self'",
+      "'unsafe-inline'", // Allowed for onclick handlers
       "'unsafe-eval'", // Required for some reCAPTCHA implementations
-      // Allow specific inline script hash for dashboard
-      "'sha256-0Dr8sVaJkoiX93UyTTWlbHfCjfIBgNYRC1k4YSi6ZY8='",
       "https://www.google.com",
       "https://www.gstatic.com",
       "https://unpkg.com",
@@ -22,7 +21,6 @@ const cspConfig = {
       "https://cdn.jsdelivr.net", // Ensure this is explicitly allowed
       "https://cdn.tailwindcss.com",
     ],
-    // Disallow inline event handlers (onclick, etc.) — move logic to JS modules
     imgSrc: [
       "'self'",
       "data:",

@@ -4,10 +4,17 @@
  */
 import { handleComplaintSubmit, resetComplaintForm } from "./formSubmission.js";
 import { setupRealtimeValidation } from "../../utils/validation.js";
-import { createComplaintFileHandler, setupDragAndDrop } from "../../utils/fileHandler.js";
+import {
+  createComplaintFileHandler,
+  setupDragAndDrop,
+} from "../../utils/fileHandler.js";
 import showMessage from "../toast.js";
 import apiClient from "../../config/apiClient.js";
-import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from "../../auth/roleToggle.js";
+import {
+  getActiveRole,
+  isInCitizenMode,
+  canSwitchToCitizen,
+} from "../../auth/roleToggle.js";
 import { getUserRole } from "../../auth/authChecker.js";
 
 /**
@@ -26,7 +33,10 @@ export async function initializeComplaintForm() {
   try {
     activeRole = await getUserRole({ refresh: true });
   } catch (error) {
-    console.warn("[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:", error);
+    console.warn(
+      "[COMPLAINT FORM] Failed to get role from authChecker, trying roleToggle:",
+      error
+    );
     activeRole = getActiveRole();
   }
   const inCitizenMode = isInCitizenMode();
@@ -48,14 +58,17 @@ export async function initializeComplaintForm() {
     departmentCheckboxes: form.querySelector("#departmentCheckboxes"),
     fileDropZone: form.querySelector("#fileDropZone"),
     fileInput: form.querySelector("#evidenceFiles"),
-    filePreview: form.querySelector("#filePreview")
+    filePreview: form.querySelector("#filePreview"),
   };
   // Validate required elements
   const missingElements = Object.entries(elements)
     .filter(([key, element]) => !element && key !== "filePreview")
     .map(([key]) => key);
   if (missingElements.length > 0) {
-    console.error("[COMPLAINT FORM] Missing required elements:", missingElements);
+    console.error(
+      "[COMPLAINT FORM] Missing required elements:",
+      missingElements
+    );
     return;
   }
   // Initialize file handler with upload state callback
@@ -67,14 +80,16 @@ export async function initializeComplaintForm() {
     onUploadStateChange: (isUploading) => {
       // Disable/enable buttons based on upload state
       const submitBtn = elements.form.querySelector(".submit-btn");
-      const cancelBtn = elements.form.querySelector(".cancel-btn") || document.querySelector(".cancel-btn");
+      const cancelBtn =
+        elements.form.querySelector(".cancel-btn") ||
+        document.querySelector(".cancel-btn");
       if (submitBtn) {
         submitBtn.disabled = isUploading;
       }
       if (cancelBtn) {
         cancelBtn.disabled = isUploading;
       }
-    }
+    },
   });
   // Setup form functionality
   setupHierarchicalSelection(elements);
@@ -102,7 +117,8 @@ function setupHierarchicalSelection(elements) {
     const categoryId = e.target.value;
     await loadSubcategories(categoryId, subcategorySelect);
     // Clear departments when category changes
-    departmentCheckboxes.innerHTML = '<div class="loading-placeholder">Select a subcategory to see relevant departments</div>';
+    departmentCheckboxes.innerHTML =
+      '<div class="loading-placeholder">Select a subcategory to see relevant departments</div>';
   });
   // Subcategory selection handler
   subcategorySelect.addEventListener("change", async (e) => {
@@ -110,7 +126,10 @@ function setupHierarchicalSelection(elements) {
     if (subcategoryId) {
       // First load all departments, then auto-select appropriate ones
       await loadAllDepartments(departmentCheckboxes);
-      await autoSelectAppropriateDepartments(subcategoryId, departmentCheckboxes);
+      await autoSelectAppropriateDepartments(
+        subcategoryId,
+        departmentCheckboxes
+      );
     } else {
       // If no subcategory selected, just load all departments without auto-selection
       await loadAllDepartments(departmentCheckboxes);
@@ -124,12 +143,15 @@ async function loadCategories() {
   const categorySelect = document.getElementById("complaintCategory");
   if (!categorySelect) return;
   try {
-    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
-    const { data, error } = await apiClient.get("/api/department-structure/categories");
+    categorySelect.innerHTML =
+      '<option value="">Loading categories...</option>';
+    const { data, error } = await apiClient.get(
+      "/api/department-structure/categories"
+    );
     if (error) throw error;
     categorySelect.innerHTML = '<option value="">Select a category</option>';
     if (data && data.length > 0) {
-      data.forEach(category => {
+      data.forEach((category) => {
         const option = document.createElement("option");
         option.value = category.id;
         option.textContent = category.name;
@@ -139,7 +161,8 @@ async function loadCategories() {
   } catch (error) {
     console.error("Error loading categories:", error);
     showMessage("error", "Failed to load categories");
-    categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    categorySelect.innerHTML =
+      '<option value="">Error loading categories</option>';
   }
 }
 /**
@@ -148,13 +171,17 @@ async function loadCategories() {
 async function loadSubcategories(categoryId, subcategorySelect) {
   if (!subcategorySelect || !categoryId) return;
   try {
-    subcategorySelect.innerHTML = '<option value="">Loading subcategories...</option>';
+    subcategorySelect.innerHTML =
+      '<option value="">Loading subcategories...</option>';
     subcategorySelect.disabled = true;
-    const { data, error } = await apiClient.get(`/api/department-structure/categories/${categoryId}/subcategories`);
+    const { data, error } = await apiClient.get(
+      `/api/department-structure/categories/${categoryId}/subcategories`
+    );
     if (error) throw error;
-    subcategorySelect.innerHTML = '<option value="">Select a subcategory</option>';
+    subcategorySelect.innerHTML =
+      '<option value="">Select a subcategory</option>';
     if (data && data.length > 0) {
-      data.forEach(subcategory => {
+      data.forEach((subcategory) => {
         const option = document.createElement("option");
         option.value = subcategory.id;
         option.textContent = subcategory.name;
@@ -162,31 +189,39 @@ async function loadSubcategories(categoryId, subcategorySelect) {
       });
       subcategorySelect.disabled = false;
     } else {
-      subcategorySelect.innerHTML = '<option value="">No subcategories available</option>';
+      subcategorySelect.innerHTML =
+        '<option value="">No subcategories available</option>';
     }
   } catch (error) {
     console.error("Error loading subcategories:", error);
     showMessage("error", "Failed to load subcategories");
-    subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+    subcategorySelect.innerHTML =
+      '<option value="">Error loading subcategories</option>';
   }
 }
 /**
  * Auto-select appropriate departments when subcategory is selected
  */
-async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckboxes) {
+async function autoSelectAppropriateDepartments(
+  subcategoryId,
+  departmentCheckboxes
+) {
   if (!departmentCheckboxes || !subcategoryId) return;
   try {
     // Get departments mapped to this subcategory
-    const { data, error } = await apiClient.get(`/api/department-structure/subcategories/${subcategoryId}/departments`);
+    const { data, error } = await apiClient.get(
+      `/api/department-structure/subcategories/${subcategoryId}/departments`
+    );
     if (error) throw error;
     if (data && data.length > 0) {
       // Find departments that are mapped to this subcategory
-      const mappedDepartments = data.filter(dept =>
-        dept.department_subcategory_mapping &&
-        dept.department_subcategory_mapping.response_priority
+      const mappedDepartments = data.filter(
+        (dept) =>
+          dept.department_subcategory_mapping &&
+          dept.department_subcategory_mapping.response_priority
       );
       // Auto-check mapped departments
-      mappedDepartments.forEach(dept => {
+      mappedDepartments.forEach((dept) => {
         const checkbox = document.querySelector(`input[value="${dept.code}"]`);
         if (checkbox) {
           checkbox.checked = true;
@@ -204,11 +239,16 @@ async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckbo
           </div>
         `;
         // Remove existing suggestion message if any
-        const existingMessage = departmentCheckboxes.querySelector(".suggestion-message");
+        const existingMessage = departmentCheckboxes.querySelector(
+          ".suggestion-message"
+        );
         if (existingMessage) {
           existingMessage.remove();
         }
-        departmentCheckboxes.insertBefore(suggestionMessage, departmentCheckboxes.firstChild);
+        departmentCheckboxes.insertBefore(
+          suggestionMessage,
+          departmentCheckboxes.firstChild
+        );
       }
     }
   } catch (error) {
@@ -221,9 +261,12 @@ async function autoSelectAppropriateDepartments(subcategoryId, departmentCheckbo
 async function loadAllDepartments(departmentCheckboxes) {
   if (!departmentCheckboxes) return;
   try {
-    departmentCheckboxes.innerHTML = '<div class="loading-placeholder">Loading departments...</div>';
+    departmentCheckboxes.innerHTML =
+      '<div class="loading-placeholder">Loading departments...</div>';
     // Always get ALL departments, regardless of subcategory
-    const { data, error } = await apiClient.get(`/api/department-structure/departments/all`);
+    const { data, error } = await apiClient.get(
+      `/api/department-structure/departments/all`
+    );
     if (error) throw error;
     departmentCheckboxes.innerHTML = "";
     if (data && data.length > 0) {
@@ -232,23 +275,22 @@ async function loadAllDepartments(departmentCheckboxes) {
       searchContainer.className = "department-search-container";
       searchContainer.innerHTML = `
         <div class="search-input-wrapper">
-          <input type="text" id="department-search" placeholder="Search departments..." class="department-search-input">
-          <div class="search-icon">🔍</div>
+          <input type="text" id="department-search" placeholder="Search departments..." class="premium-input department-search-input" style="margin-bottom: 0.5rem;">
         </div>
-        <div class="search-results-info" id="search-results-info" style="display: none;">
+        <div class="search-results-info" id="search-results-info" style="display: none; margin-bottom: 0.5rem; font-size: 0.85rem; color: #6b7280;">
           <span id="search-results-count">0</span> departments found
         </div>
       `;
       departmentCheckboxes.appendChild(searchContainer);
       // Group departments by level
-      const lguDepartments = data.filter(dept => dept.level === "LGU");
-      const ngaDepartments = data.filter(dept => dept.level === "NGA");
+      const lguDepartments = data.filter((dept) => dept.level === "LGU");
+      const ngaDepartments = data.filter((dept) => dept.level === "NGA");
       // Create LGU section
       if (lguDepartments.length > 0) {
         const lguSection = document.createElement("div");
         lguSection.className = "department-section";
         lguSection.innerHTML = "<h4>Local Government Units (LGU)</h4>";
-        lguDepartments.forEach(dept => {
+        lguDepartments.forEach((dept) => {
           const checkbox = createDepartmentCheckbox(dept);
           lguSection.appendChild(checkbox);
         });
@@ -259,7 +301,7 @@ async function loadAllDepartments(departmentCheckboxes) {
         const ngaSection = document.createElement("div");
         ngaSection.className = "department-section";
         ngaSection.innerHTML = "<h4>National Government Agencies (NGA)</h4>";
-        ngaDepartments.forEach(dept => {
+        ngaDepartments.forEach((dept) => {
           const checkbox = createDepartmentCheckbox(dept);
           ngaSection.appendChild(checkbox);
         });
@@ -276,17 +318,22 @@ async function loadAllDepartments(departmentCheckboxes) {
           <strong>💡 Department Selection (Optional):</strong> You can select departments that should handle your complaint. If none are selected, the system will route your complaint to appropriate departments automatically.
         </div>
       `;
-      departmentCheckboxes.insertBefore(suggestionMessage, departmentCheckboxes.firstChild);
+      departmentCheckboxes.insertBefore(
+        suggestionMessage,
+        departmentCheckboxes.firstChild
+      );
       // Setup search functionality
       setupDepartmentSearch(data);
       // No "None" option - users can simply leave all departments unchecked
     } else {
-      departmentCheckboxes.innerHTML = '<div class="no-departments">No departments available for this subcategory</div>';
+      departmentCheckboxes.innerHTML =
+        '<div class="no-departments">No departments available for this subcategory</div>';
     }
   } catch (error) {
     console.error("Error loading departments:", error);
     showMessage("error", "Failed to load departments");
-    departmentCheckboxes.innerHTML = '<div class="error-message">Error loading departments</div>';
+    departmentCheckboxes.innerHTML =
+      '<div class="error-message">Error loading departments</div>';
   }
 }
 /**
@@ -361,14 +408,15 @@ function setupFormSubmission(form, fileHandler) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     // Get selected departments (optional)
-    const selectedDepartments = Array.from(form.querySelectorAll('input[name="departments"]:checked'))
-      .map(checkbox => checkbox.value);
+    const selectedDepartments = Array.from(
+      form.querySelectorAll('input[name="departments"]:checked')
+    ).map((checkbox) => checkbox.value);
     // Department selection is now optional - no validation required
     // console.log removed for security
     // Add selected departments as preferred_departments (user's choice)
     if (selectedDepartments.length > 0) {
       // Send array of selected department codes
-      selectedDepartments.forEach(deptCode => {
+      selectedDepartments.forEach((deptCode) => {
         const hiddenInput = document.createElement("input");
         hiddenInput.type = "hidden";
         hiddenInput.name = "preferred_departments";
@@ -405,7 +453,11 @@ function setupFormSubmission(form, fileHandler) {
       // Get selected files from file handler
       const selectedFiles = fileHandler.getFiles();
       // Submit the complaint using the correct parameters with fileHandler for progress tracking
-      const _result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
+      const _result = await handleComplaintSubmit(
+        form,
+        selectedFiles,
+        fileHandler
+      );
       // Reset form on success
       resetComplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
@@ -432,30 +484,45 @@ function setupDepartmentSearch(allDepartments) {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const query = e.target.value.toLowerCase().trim();
-      filterDepartments(query, allDepartments, searchResultsInfo, searchResultsCount);
+      filterDepartments(
+        query,
+        allDepartments,
+        searchResultsInfo,
+        searchResultsCount
+      );
     }, 300);
   });
   // Clear search on escape
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.target.value = "";
-      filterDepartments("", allDepartments, searchResultsInfo, searchResultsCount);
+      filterDepartments(
+        "",
+        allDepartments,
+        searchResultsInfo,
+        searchResultsCount
+      );
     }
   });
 }
 /**
  * Filter departments based on search query
  */
-function filterDepartments(query, allDepartments, searchResultsInfo, searchResultsCount) {
+function filterDepartments(
+  query,
+  allDepartments,
+  searchResultsInfo,
+  searchResultsCount
+) {
   const departmentSections = document.querySelectorAll(".department-section");
   const _departmentCheckboxes = document.querySelectorAll(".checkbox-wrapper");
   let visibleCount = 0;
   if (!query) {
     // Show all departments
-    departmentSections.forEach(section => {
+    departmentSections.forEach((section) => {
       section.style.display = "block";
       const checkboxes = section.querySelectorAll(".checkbox-wrapper");
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         checkbox.style.display = "block";
         visibleCount++;
       });
@@ -464,14 +531,16 @@ function filterDepartments(query, allDepartments, searchResultsInfo, searchResul
     return;
   }
   // Filter departments
-  departmentSections.forEach(section => {
+  departmentSections.forEach((section) => {
     const checkboxes = section.querySelectorAll(".checkbox-wrapper");
     let sectionHasVisible = false;
-    checkboxes.forEach(checkbox => {
+    checkboxes.forEach((checkbox) => {
       const label = checkbox.querySelector("label");
       const departmentName = label ? label.textContent.toLowerCase() : "";
-      const departmentCode = checkbox.querySelector("input")?.value?.toLowerCase() || "";
-      const matches = departmentName.includes(query) || departmentCode.includes(query);
+      const departmentCode =
+        checkbox.querySelector("input")?.value?.toLowerCase() || "";
+      const matches =
+        departmentName.includes(query) || departmentCode.includes(query);
       if (matches) {
         checkbox.style.display = "block";
         sectionHasVisible = true;

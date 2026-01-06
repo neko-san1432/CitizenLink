@@ -1,59 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>Pending Signups - Super Admin</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/toast.css">
-    <link rel="stylesheet" href="/css/components/clock.css">
-    <link rel="stylesheet" href="/css/components/sidebar.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/header-redesign.css">
-    <link rel="stylesheet" href="/css/pages/dashboard-common.css">
-    <link rel="stylesheet" href="/css/viewport-fix.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/pages/pending-signups.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
+  </head>
+  <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        
-        <div id="app" class="collapsible superadmin-dashboard">
-            <div class="dashboard-header">
-                <div class="dashboard-title-group">
-                    <h1>📋 Pending Signups</h1>
-                    <p class="dashboard-subtitle">Review and approve pending user signup requests</p>
-                </div>
-                <div class="header-quick-actions">
-                    <button id="refresh-btn-header" class="quick-action-btn quick-action-btn--sm">
-                        <div class="quick-action-icon">🔄</div>
-                        <div class="quick-action-text">Refresh</div>
-                    </button>
-                </div>
-            </div>
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
 
-            <!-- Main Content -->
-            <div class="dashboard-grid">
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Pending Signup Requests</h2>
-                        <div class="section-controls">
-                            <button id="refresh-btn-section" class="btn btn-info">Refresh</button>
-                        </div>
-                    </div>
-                    <div id="pending-signups-container" class="content-container">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <p>Loading pending signups...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div id="app" class="collapsible superadmin-dashboard">
+        <div class="dashboard-header-section">
+          <div class="dashboard-title-group">
+            <h1>Pending Signups</h1>
+            <p class="dashboard-subtitle">
+              Review and approve new account requests
+            </p>
+          </div>
+          <div class="header-quick-actions">
+            <button id="refresh-btn" class="refresh-btn">
+              <span class="refresh-icon">🔄</span>
+              <span>Refresh List</span>
+            </button>
+          </div>
         </div>
+
+        <!-- Main Content -->
+        <div id="pending-signups-container" class="pending-signups-grid">
+          <!-- Content injected via JS -->
+          <div class="loading-container" style="grid-column: 1 / -1">
+            <div class="spinner-lg"></div>
+            <p>Loading requests...</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
@@ -63,7 +60,9 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/super-admin/pending-signups.js"></script>
-</body>
+    <script
+      type="module"
+      src="../../js/super-admin/pending-signups.js"
+    ></script>
+  </body>
 </html>
-
