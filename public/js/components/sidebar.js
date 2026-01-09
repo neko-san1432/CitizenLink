@@ -296,7 +296,6 @@ function getMenuItemsForRole(role) {
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/lgu-admin/reports", icon: "analytics", label: "Reports" },
       { url: "/publish", icon: "publish", label: "Publish" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],

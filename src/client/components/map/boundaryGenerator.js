@@ -15,7 +15,7 @@ async function loadBoundaries() {
       return; // Don't throw error, just skip if map isn't ready
     }
     // Fetch boundaries data
-    const response = await fetch("/assets/json/digos-city-boundary.json");
+    const response = await fetch("/api/boundaries");
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

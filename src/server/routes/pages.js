@@ -283,16 +283,6 @@ router.get(
     );
   }
 );
-router.get(
-  "/lgu-admin/reports",
-  authenticateUser,
-  requireRole(["lgu-admin", "super-admin", "complaint-coordinator"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lgu-admin", "reports.html")
-    );
-  }
-);
 
 // Super Admin specific pages - redirect to User Manager
 router.get(

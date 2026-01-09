@@ -518,15 +518,4 @@ router.get("/csrf-token", authLimiter, generateCsrfToken, (req, res) => {
   });
 });
 
-/**
- * @route   DELETE /api/auth/account
- * @desc    Delete current user account
- * @access  Private
- */
-router.delete(
-  "/account",
-  authenticateUser,
-  ErrorHandler.asyncWrapper(AuthController.deleteAccount)
-);
-
 module.exports = router;
