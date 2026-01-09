@@ -3,7 +3,10 @@
  * Handles loading and reviewing individual complaints
  */
 import { Toast } from "../components/toast.js";
-import { getDepartmentNameByIdOrCode, getActiveDepartments } from "../utils/departmentUtils.js";
+import {
+  getDepartmentNameByIdOrCode,
+  getActiveDepartments,
+} from "../utils/departmentUtils.js";
 
 let currentComplaint = null;
 let complaintId = null;
@@ -17,8 +20,10 @@ let reviewBoundaryLayer = null;
  */
 function cleanupStuckModals() {
   // Remove any stuck modal overlays
-  const stuckModals = document.querySelectorAll('.modal.active, .modal-overlay.active, [id^="modal-"]');
-  stuckModals.forEach(modal => {
+  const stuckModals = document.querySelectorAll(
+    '.modal.active, .modal-overlay.active, [id^="modal-"]'
+  );
+  stuckModals.forEach((modal) => {
     if (modal.id !== "modal-overlay" || modal.classList.contains("active")) {
       modal.classList.remove("active");
       modal.style.display = "none";
@@ -97,7 +102,9 @@ function setupEventListeners() {
 
   const falseComplaintBtn = document.getElementById("false-complaint-btn");
   if (falseComplaintBtn) {
-    falseComplaintBtn.addEventListener("click", () => window.openFalseComplaintModal());
+    falseComplaintBtn.addEventListener("click", () =>
+      window.openFalseComplaintModal()
+    );
   }
 
   const uniqueBtn = document.getElementById("unique-btn");
@@ -108,43 +115,63 @@ function setupEventListeners() {
   // Modal close buttons
   const closeAssignModal = document.getElementById("close-assign-modal");
   if (closeAssignModal) {
-    closeAssignModal.addEventListener("click", () => window.closeModal("assign-modal"));
+    closeAssignModal.addEventListener("click", () =>
+      window.closeModal("assign-modal")
+    );
   }
 
   const closeDuplicateModal = document.getElementById("close-duplicate-modal");
   if (closeDuplicateModal) {
-    closeDuplicateModal.addEventListener("click", () => window.closeModal("duplicate-modal"));
+    closeDuplicateModal.addEventListener("click", () =>
+      window.closeModal("duplicate-modal")
+    );
   }
 
   const closeRejectModal = document.getElementById("close-reject-modal");
   if (closeRejectModal) {
-    closeRejectModal.addEventListener("click", () => window.closeModal("reject-modal"));
+    closeRejectModal.addEventListener("click", () =>
+      window.closeModal("reject-modal")
+    );
   }
 
-  const closeFalseComplaintModal = document.getElementById("close-false-complaint-modal");
+  const closeFalseComplaintModal = document.getElementById(
+    "close-false-complaint-modal"
+  );
   if (closeFalseComplaintModal) {
-    closeFalseComplaintModal.addEventListener("click", () => window.closeModal("false-complaint-modal"));
+    closeFalseComplaintModal.addEventListener("click", () =>
+      window.closeModal("false-complaint-modal")
+    );
   }
 
   // Cancel buttons
   const cancelAssignBtn = document.getElementById("cancel-assign-btn");
   if (cancelAssignBtn) {
-    cancelAssignBtn.addEventListener("click", () => window.closeModal("assign-modal"));
+    cancelAssignBtn.addEventListener("click", () =>
+      window.closeModal("assign-modal")
+    );
   }
 
   const cancelDuplicateBtn = document.getElementById("cancel-duplicate-btn");
   if (cancelDuplicateBtn) {
-    cancelDuplicateBtn.addEventListener("click", () => window.closeModal("duplicate-modal"));
+    cancelDuplicateBtn.addEventListener("click", () =>
+      window.closeModal("duplicate-modal")
+    );
   }
 
   const cancelRejectBtn = document.getElementById("cancel-reject-btn");
   if (cancelRejectBtn) {
-    cancelRejectBtn.addEventListener("click", () => window.closeModal("reject-modal"));
+    cancelRejectBtn.addEventListener("click", () =>
+      window.closeModal("reject-modal")
+    );
   }
 
-  const cancelFalseComplaintBtn = document.getElementById("cancel-false-complaint-btn");
+  const cancelFalseComplaintBtn = document.getElementById(
+    "cancel-false-complaint-btn"
+  );
   if (cancelFalseComplaintBtn) {
-    cancelFalseComplaintBtn.addEventListener("click", () => window.closeModal("false-complaint-modal"));
+    cancelFalseComplaintBtn.addEventListener("click", () =>
+      window.closeModal("false-complaint-modal")
+    );
   }
 
   // Form submissions
@@ -185,7 +212,9 @@ function setupEventListeners() {
  */
 async function loadComplaint() {
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}`);
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}`
+    );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -205,25 +234,52 @@ async function loadComplaint() {
  */
 async function renderComplaint() {
   // The service returns complaint in nested structure
-  const {complaint} = currentComplaint;
-  const similarities = currentComplaint.analysis?.duplicate_candidates ||
-                     currentComplaint.analysis?.similar_complaints ||
-                     currentComplaint.similarities || [];
+  const { complaint } = currentComplaint;
+  const similarities =
+    currentComplaint.analysis?.duplicate_candidates ||
+    currentComplaint.analysis?.similar_complaints ||
+    currentComplaint.similarities ||
+    [];
   // Hide loading, show content
   document.getElementById("loading").style.display = "none";
   document.getElementById("complaint-content").style.display = "block";
   // Header
+  // document.getElementById("complaint-title").textContent = complaint.title; // Old title population
   document.getElementById("complaint-title").textContent = complaint.title;
-  document.getElementById("complaint-id").textContent = complaint.id;
-  document.getElementById("submitted-date").textContent = formatDate(complaint.submitted_at);
+
+  // document.getElementById("complaint-id").textContent = complaint.id; // Old ID
+  const idHeader = document.getElementById("complaint-id-header");
+  if (idHeader) idHeader.textContent = `#${complaint.id.substring(0, 8)}`;
+
+  // Category Badge
+  const categoryBadge = document.getElementById("complaint-category-badge");
+  if (categoryBadge) {
+    // Try to find category name from joined data or heuristic
+    let catName = "Complaint";
+    if (complaint.categories && complaint.categories.name) {
+      catName = complaint.categories.name;
+    } else if (complaint.category_name) {
+      catName = complaint.category_name;
+    }
+    categoryBadge.textContent = catName;
+  }
+
+  document.getElementById("submitted-date").textContent = formatDate(
+    complaint.submitted_at
+  );
   document.getElementById("submitter-name").textContent =
-    complaint.submitted_by_profile?.name || complaint.submitted_by_profile?.email || "Unknown";
+    complaint.submitted_by_profile?.name ||
+    complaint.submitted_by_profile?.email ||
+    "Unknown";
   // Render complainant info panel
   renderComplainantInfo(complaint.submitted_by_profile);
   // Status badge
   const statusEl = document.getElementById("complaint-status");
   const status = complaint.workflow_status || complaint.status || "unknown";
-  statusEl.innerHTML = `<span class="badge status-${status.replace(" ", "-")}">${status}</span>`;
+  statusEl.innerHTML = `<span class="badge status-${status.replace(
+    " ",
+    "-"
+  )}">${status}</span>`;
   // Priority badge
   const priorityEl = document.getElementById("complaint-priority");
   priorityEl.innerHTML = `<span class="badge priority-${complaint.priority}">${complaint.priority}</span>`;
@@ -237,18 +293,24 @@ async function renderComplaint() {
   } else {
     subtypeEl.textContent = "";
   }
-  document.getElementById("complaint-description").textContent = complaint.descriptive_su;
-  document.getElementById("complaint-location").textContent = complaint.location_text;
+  document.getElementById("complaint-description").textContent =
+    complaint.descriptive_su;
+  document.getElementById("complaint-location").textContent =
+    complaint.location_text;
   // Show preferred departments in main details
-  const preferredDeptsEl = document.getElementById("preferred-departments-list");
+  const preferredDeptsEl = document.getElementById(
+    "preferred-departments-list"
+  );
   if (preferredDeptsEl) {
     const departments = complaint.preferred_departments || [];
     if (departments.length > 0) {
       // Load department names dynamically
       const displayNames = await Promise.all(
-        departments.map(dept => getDepartmentNameByIdOrCode(dept))
+        departments.map((dept) => getDepartmentNameByIdOrCode(dept))
       );
-      preferredDeptsEl.innerHTML = displayNames.map(name => `<span class="dept-badge">${name}</span>`).join(" ");
+      preferredDeptsEl.innerHTML = displayNames
+        .map((name) => `<span class="dept-badge">${name}</span>`)
+        .join(" ");
     } else {
       preferredDeptsEl.textContent = "No departments selected by citizen";
     }
@@ -260,7 +322,7 @@ async function renderComplaint() {
     if (departments.length > 0) {
       // Load department names dynamically
       const displayNames = await Promise.all(
-        departments.map(dept => getDepartmentNameByIdOrCode(dept))
+        departments.map((dept) => getDepartmentNameByIdOrCode(dept))
       );
       preferenceEl.textContent = displayNames.join(", ");
     } else {
@@ -278,7 +340,8 @@ async function renderComplaint() {
   try {
     const mapEl = document.getElementById("location-map");
     const hasLat = complaint.latitude !== null && complaint.latitude !== void 0;
-    const hasLng = complaint.longitude !== null && complaint.longitude !== void 0;
+    const hasLng =
+      complaint.longitude !== null && complaint.longitude !== void 0;
     console.log("[REVIEW] Map setup:", {
       mapEl: Boolean(mapEl),
       hasLat,
@@ -286,7 +349,7 @@ async function renderComplaint() {
       lat: complaint.latitude,
       lng: complaint.longitude,
       latType: typeof complaint.latitude,
-      lngType: typeof complaint.longitude
+      lngType: typeof complaint.longitude,
     });
     if (mapEl && (hasLat || hasLng)) {
       // Use ComplaintMap component
@@ -322,7 +385,9 @@ async function renderComplaint() {
           setTimeout(initMap, 300);
         }
       } else {
-        console.warn("[REVIEW] ComplaintMap component not loaded, trying fallback...");
+        console.warn(
+          "[REVIEW] ComplaintMap component not loaded, trying fallback..."
+        );
         // Fallback to basic Leaflet map
         try {
           if (typeof L !== "undefined") {
@@ -331,10 +396,14 @@ async function renderComplaint() {
             const center = [lat, lng];
             const map = L.map("location-map").setView(center, 15);
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-              attribution: "© OpenStreetMap contributors"
+              attribution: "© OpenStreetMap contributors",
             }).addTo(map);
             const marker = L.marker(center).addTo(map);
-            marker.bindPopup(`<b>${complaint.title || "Complaint Location"}</b><br>${complaint.location_text || ""}`);
+            marker.bindPopup(
+              `<b>${complaint.title || "Complaint Location"}</b><br>${
+                complaint.location_text || ""
+              }`
+            );
             complaintMapInstance = { map };
             reviewBoundaryLayer = null;
             boundaryVisible = false;
@@ -347,7 +416,8 @@ async function renderComplaint() {
         }
       }
     } else if (mapEl) {
-      mapEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
+      mapEl.innerHTML =
+        '<div style="padding: 20px; text-align: center; color: #666;">No location coordinates available</div>';
     }
   } catch (e) {
     console.warn("[REVIEW] Map init failed:", e);
@@ -359,7 +429,10 @@ async function renderComplaint() {
   let evidenceList = [];
   if (complaint.evidence && Array.isArray(complaint.evidence)) {
     evidenceList = complaint.evidence;
-  } else if (complaint.evidence_files && Array.isArray(complaint.evidence_files)) {
+  } else if (
+    complaint.evidence_files &&
+    Array.isArray(complaint.evidence_files)
+  ) {
     evidenceList = complaint.evidence_files;
   } else if (complaint.files && Array.isArray(complaint.files)) {
     evidenceList = complaint.files;
@@ -375,12 +448,17 @@ async function renderComplaint() {
     if (grid) grid.innerHTML = "";
   }
   // Check for high confidence duplicates (similarity score >= 0.85)
-  const duplicateCandidates = currentComplaint.analysis?.duplicate_candidates || [];
-  const hasHighConfidenceDuplicate = duplicateCandidates.length > 0 ||
-    (similarities && similarities.some(s => (s.similarity_score || s.score || 0) >= 0.85));
+  const duplicateCandidates =
+    currentComplaint.analysis?.duplicate_candidates || [];
+  const hasHighConfidenceDuplicate =
+    duplicateCandidates.length > 0 ||
+    (similarities &&
+      similarities.some((s) => (s.similarity_score || s.score || 0) >= 0.85));
 
   // Show/hide high confidence duplicate alert
-  const duplicateAlert = document.getElementById("high-confidence-duplicate-alert");
+  const duplicateAlert = document.getElementById(
+    "high-confidence-duplicate-alert"
+  );
   if (duplicateAlert) {
     if (hasHighConfidenceDuplicate && !complaint.is_duplicate) {
       duplicateAlert.style.display = "block";
@@ -412,7 +490,8 @@ function renderEvidence(evidence) {
   const normalize = (item) => {
     // Support both DB_FORMAT.sql (snake_case) and existing code (camelCase)
     // Also support signedUrl from coordinator repository
-    const url = item.publicUrl || item.signedUrl || item.url || item.public_url || null;
+    const url =
+      item.publicUrl || item.signedUrl || item.url || item.public_url || null;
     const fileName = item.fileName || item.file_name || item.name || "file";
     const filePath = item.filePath || item.file_path || item.path || null;
     const fileType = item.fileType || item.file_type || item.type || "";
@@ -423,7 +502,12 @@ function renderEvidence(evidence) {
   const isImage = (type, name) => {
     if (type && type.startsWith("image/")) return true;
     const n = (name || "").toLowerCase();
-    return n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp");
+    return (
+      n.endsWith(".jpg") ||
+      n.endsWith(".jpeg") ||
+      n.endsWith(".png") ||
+      n.endsWith(".webp")
+    );
   };
   const isVideo = (type, name) => {
     if (type && type.startsWith("video/")) return true;
@@ -431,13 +515,19 @@ function renderEvidence(evidence) {
     return n.endsWith(".mp4") || n.endsWith(".mov") || n.endsWith(".webm");
   };
   const isPdf = (type, name) => {
-    return (type === "application/pdf") || (name || "").toLowerCase().endsWith(".pdf");
+    return (
+      type === "application/pdf" || (name || "").toLowerCase().endsWith(".pdf")
+    );
   };
   const formatSize = (bytes) => {
     if (!bytes || isNaN(bytes)) return "";
-    const units = ["B","KB","MB","GB"];
-    let i = 0; let n = Number(bytes);
-    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    const units = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let n = Number(bytes);
+    while (n >= 1024 && i < units.length - 1) {
+      n /= 1024;
+      i++;
+    }
     return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
   };
   const getFileIcon = (type, name) => {
@@ -447,31 +537,38 @@ function renderEvidence(evidence) {
     if (type && type.startsWith("audio/")) return "🎵";
     return "📎";
   };
-  grid.innerHTML = evidence.map((raw, index) => {
-    const item = normalize(raw);
-    const sizeText = item.fileSize ? ` · ${formatSize(item.fileSize)}` : "";
-    const icon = getFileIcon(item.fileType, item.fileName);
-    return `
+  grid.innerHTML = evidence
+    .map((raw, index) => {
+      const item = normalize(raw);
+      const sizeText = item.fileSize ? ` · ${formatSize(item.fileSize)}` : "";
+      const icon = getFileIcon(item.fileType, item.fileName);
+      return `
       <div class="evidence-item" data-evidence-index="${index}" style="cursor: pointer;">
         <div class="evidence-preview">
-          ${isImage(item.fileType, item.fileName) && item.url ?
-    `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">` :
-    `<div class="evidence-icon" style="display: flex; align-items: center; justify-content: center; height: 120px; font-size: 48px; background: #f3f4f6; border-radius: 8px;">${icon}</div>`
-}
+          ${
+            isImage(item.fileType, item.fileName) && item.url
+              ? `<img src="${item.url}" alt="${item.fileName}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">`
+              : `<div class="evidence-icon" style="display: flex; align-items: center; justify-content: center; height: 120px; font-size: 48px; background: #f3f4f6; border-radius: 8px;">${icon}</div>`
+          }
           <div class="evidence-info" style="padding: 8px;">
-            <div class="evidence-name" style="font-weight: 500; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.fileName}">${item.fileName}</div>
-            <div class="evidence-meta" style="font-size: 12px; color: #6b7280;">${item.fileType || "Unknown type"}${sizeText}</div>
+            <div class="evidence-name" style="font-weight: 500; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${
+              item.fileName
+            }">${item.fileName}</div>
+            <div class="evidence-meta" style="font-size: 12px; color: #6b7280;">${
+              item.fileType || "Unknown type"
+            }${sizeText}</div>
           </div>
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   // Store evidence data globally for preview
   window.evidenceData = evidence.map(normalize);
 
   // Attach event listeners for evidence items
-  document.querySelectorAll(".evidence-item").forEach(item => {
+  document.querySelectorAll(".evidence-item").forEach((item) => {
     const index = parseInt(item.getAttribute("data-evidence-index"));
     item.addEventListener("click", () => {
       window.openEvidencePreview(index);
@@ -482,19 +579,25 @@ function renderEvidence(evidence) {
 /**
  * Open evidence preview modal
  */
-window.openEvidencePreview = function(index) {
+window.openEvidencePreview = function (index) {
   console.log("[REVIEW] Opening evidence preview:", {
     index,
     hasPreview: Boolean(window.evidencePreview),
     hasData: Boolean(window.evidenceData),
     dataLength: window.evidenceData?.length,
-    evidence: window.evidenceData?.[index]
+    evidence: window.evidenceData?.[index],
   });
 
-  if (window.evidencePreview && window.evidenceData && window.evidenceData[index]) {
+  if (
+    window.evidencePreview &&
+    window.evidenceData &&
+    window.evidenceData[index]
+  ) {
     window.evidencePreview.show(window.evidenceData[index]);
   } else {
-    console.error("[REVIEW] Cannot open evidence preview - missing components or data");
+    console.error(
+      "[REVIEW] Cannot open evidence preview - missing components or data"
+    );
   }
 };
 
@@ -506,8 +609,10 @@ function setupMapControlButtons(complaint) {
   const fullscreenBtn = document.getElementById("map-fullscreen-btn");
   if (!boundaryBtn || !fullscreenBtn) return;
 
-  const hasLatitude = complaint.latitude !== null && complaint.latitude !== void 0;
-  const hasLongitude = complaint.longitude !== null && complaint.longitude !== void 0;
+  const hasLatitude =
+    complaint.latitude !== null && complaint.latitude !== void 0;
+  const hasLongitude =
+    complaint.longitude !== null && complaint.longitude !== void 0;
   const hasCoordinates = hasLatitude && hasLongitude;
 
   if (!hasCoordinates) {
@@ -529,8 +634,13 @@ function setupMapControlButtons(complaint) {
 
 function updateBoundaryButtonText() {
   if (!boundaryToggleBtn) return;
-  boundaryToggleBtn.textContent = boundaryVisible ? "Hide Digos City Boundary" : "Show Digos City Boundary";
-  boundaryToggleBtn.setAttribute("aria-pressed", boundaryVisible ? "true" : "false");
+  boundaryToggleBtn.textContent = boundaryVisible
+    ? "Hide Digos City Boundary"
+    : "Show Digos City Boundary";
+  boundaryToggleBtn.setAttribute(
+    "aria-pressed",
+    boundaryVisible ? "true" : "false"
+  );
 }
 
 async function handleBoundaryToggle() {
@@ -584,7 +694,7 @@ async function ensureBoundaryData() {
     throw new Error("Boundary data is not available.");
   }
 
-  boundaryDataCache = data.filter(item => item && item.geojson);
+  boundaryDataCache = data.filter((item) => item && item.geojson);
   if (boundaryDataCache.length === 0) {
     throw new Error("Boundary GeoJSON data is missing.");
   }
@@ -592,12 +702,16 @@ async function ensureBoundaryData() {
 }
 
 function createBoundaryLayer(map) {
-  if (!Array.isArray(boundaryDataCache) || boundaryDataCache.length === 0 || !map) {
+  if (
+    !Array.isArray(boundaryDataCache) ||
+    boundaryDataCache.length === 0 ||
+    !map
+  ) {
     return null;
   }
 
   const layerGroup = L.layerGroup();
-  boundaryDataCache.forEach(barangay => {
+  boundaryDataCache.forEach((barangay) => {
     if (!barangay?.geojson) return;
     const geoLayer = L.geoJSON(barangay.geojson, {
       style: {
@@ -605,9 +719,9 @@ function createBoundaryLayer(map) {
         weight: 1.5,
         opacity: 0.8,
         dashArray: "6,4",
-        fillOpacity: 0
+        fillOpacity: 0,
       },
-      interactive: false
+      interactive: false,
     });
 
     if (barangay.name) {
@@ -615,7 +729,7 @@ function createBoundaryLayer(map) {
         permanent: false,
         direction: "center",
         className: "boundary-tooltip",
-        interactive: false
+        interactive: false,
       });
     }
 
@@ -626,8 +740,10 @@ function createBoundaryLayer(map) {
 }
 
 function openFullscreenMap(complaint) {
-  const hasLatitude = complaint.latitude !== null && complaint.latitude !== void 0;
-  const hasLongitude = complaint.longitude !== null && complaint.longitude !== void 0;
+  const hasLatitude =
+    complaint.latitude !== null && complaint.latitude !== void 0;
+  const hasLongitude =
+    complaint.longitude !== null && complaint.longitude !== void 0;
   if (!hasLatitude || !hasLongitude) {
     Toast.error("No coordinates available for this complaint.");
     return;
@@ -641,7 +757,8 @@ function openFullscreenMap(complaint) {
   const modal = document.createElement("div");
   modal.id = "review-map-modal";
   modal.className = "modal active";
-  modal.style.cssText = "position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);";
+  modal.style.cssText =
+    "position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);";
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 90vw; width: 960px; background: #fff; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
       <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem; border-bottom:1px solid #e5e7eb;">
@@ -652,7 +769,9 @@ function openFullscreenMap(complaint) {
         <div id="review-fullscreen-map" style="width:100%; height:70vh; border-radius:10px; overflow:hidden; background:#f3f4f6;"></div>
         <div style="margin-top:1rem; font-size:0.95rem;">
           <strong>Address:</strong> ${complaint.location_text || "N/A"}<br>
-          <strong>Coordinates:</strong> ${complaint.latitude}, ${complaint.longitude}
+          <strong>Coordinates:</strong> ${complaint.latitude}, ${
+    complaint.longitude
+  }
         </div>
       </div>
     </div>
@@ -664,10 +783,12 @@ function openFullscreenMap(complaint) {
     document.removeEventListener("keydown", handleEscape);
   };
 
-  document.getElementById("close-review-map-modal").addEventListener("click", (e) => {
-    e.stopPropagation();
-    closeModal();
-  });
+  document
+    .getElementById("close-review-map-modal")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeModal();
+    });
 
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
@@ -697,12 +818,16 @@ async function initializeFullscreenMap(complaint) {
     const map = L.map("review-fullscreen-map").setView([lat, lng], 15);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
-      maxZoom: 19
+      maxZoom: 19,
     }).addTo(map);
 
     L.marker([lat, lng])
       .addTo(map)
-      .bindPopup(`<strong>${complaint.title || "Complaint Location"}</strong><br>${complaint.location_text || ""}`)
+      .bindPopup(
+        `<strong>${complaint.title || "Complaint Location"}</strong><br>${
+          complaint.location_text || ""
+        }`
+      )
       .openPopup();
 
     if (Array.isArray(boundaryDataCache) && boundaryDataCache.length > 0) {
@@ -715,7 +840,8 @@ async function initializeFullscreenMap(complaint) {
     setTimeout(() => map.invalidateSize(), 200);
   } catch (error) {
     console.error("[REVIEW] Fullscreen map error:", error);
-    mapContainer.innerHTML = '<p style="padding: 1rem; color: #b91c1c;">Unable to load map preview.</p>';
+    mapContainer.innerHTML =
+      '<p style="padding: 1rem; color: #b91c1c;">Unable to load map preview.</p>';
   }
 }
 
@@ -728,7 +854,9 @@ async function ensureLeafletLoaded() {
     const existingScript = document.querySelector("script[data-leaflet]");
     if (existingScript) {
       existingScript.addEventListener("load", resolve);
-      existingScript.addEventListener("error", () => reject(new Error("Failed to load Leaflet.")));
+      existingScript.addEventListener("error", () =>
+        reject(new Error("Failed to load Leaflet."))
+      );
       return;
     }
 
@@ -750,34 +878,52 @@ function renderSimilarComplaints(similarities) {
   const list = document.getElementById("similar-list");
   const masterSelect = document.getElementById("master-complaint");
 
-  list.innerHTML = similarities.map(sim => `
+  list.innerHTML = similarities
+    .map(
+      (sim) => `
     <div class="similar-item">
       <h4>${sim.similar_complaint?.title || "Unknown"}</h4>
       <div class="similar-meta">
-        ${sim.similar_complaint?.category || sim.similar_complaint?.type || ""} | 
-        ${sim.similar_complaint?.workflow_status || sim.similar_complaint?.status || ""} | 
+        ${
+          sim.similar_complaint?.category || sim.similar_complaint?.type || ""
+        } | 
+        ${
+          sim.similar_complaint?.workflow_status ||
+          sim.similar_complaint?.status ||
+          ""
+        } | 
         ${formatDate(sim.similar_complaint?.submitted_at)}
-        <span class="similarity-score">${Math.round(sim.similarity_score * 100)}% match</span>
+        <span class="similarity-score">${Math.round(
+          sim.similarity_score * 100
+        )}% match</span>
       </div>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 
   // Populate master complaint dropdown
-  masterSelect.innerHTML = `<option value="">Select master complaint...</option>${
-    similarities.map(sim => `
+  masterSelect.innerHTML = `<option value="">Select master complaint...</option>${similarities
+    .map(
+      (sim) => `
       <option value="${sim.similar_complaint_id}">
-        ${sim.similar_complaint?.title} (${Math.round(sim.similarity_score * 100)}% match)
+        ${sim.similar_complaint?.title} (${Math.round(
+        sim.similarity_score * 100
+      )}% match)
       </option>
-    `).join("")}`;
+    `
+    )
+    .join("")}`;
 }
 /**
  * Modal functions
  */
-window.openAssignModal = function() {
+window.openAssignModal = function () {
   document.getElementById("assign-modal").classList.add("active");
   // Pre-fill priority from complaint
-  const {complaint} = currentComplaint;
-  document.getElementById("assign-priority").value = complaint.priority || "medium";
+  const { complaint } = currentComplaint;
+  document.getElementById("assign-priority").value =
+    complaint.priority || "medium";
   // Reset search input
   const searchInput = document.getElementById("department-search-input");
   if (searchInput) {
@@ -788,46 +934,51 @@ window.openAssignModal = function() {
   // Load departments dynamically
   loadDepartmentsForAssignment();
 };
-window.openDuplicateModal = function() {
+window.openDuplicateModal = function () {
   document.getElementById("duplicate-modal").classList.add("active");
 };
-window.linkRelatedComplaints = function() {
+window.linkRelatedComplaints = function () {
   Toast.info("Link related complaints feature coming soon");
 };
-window.showRejectModal = function() {
+window.showRejectModal = function () {
   document.getElementById("reject-modal").classList.add("active");
 };
-window.openFalseComplaintModal = function() {
+window.openFalseComplaintModal = function () {
   document.getElementById("false-complaint-modal").classList.add("active");
 };
-window.closeModal = function(modalId) {
+window.closeModal = function (modalId) {
   document.getElementById(modalId).classList.remove("active");
 };
 /**
  * Handle assign to department
  */
-window.handleAssign = async function(event) {
+window.handleAssign = async function (event) {
   event.preventDefault();
-  const selectedDepartments = Array.from(document.querySelectorAll(".dept-check:checked")).map(el => el.value);
+  const selectedDepartments = Array.from(
+    document.querySelectorAll(".dept-check:checked")
+  ).map((el) => el.value);
   const priority = document.getElementById("assign-priority").value;
   const deadline = document.getElementById("deadline").value;
   const notes = document.getElementById("notes").value;
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: "assign_department",
-        data: {
-          departments: selectedDepartments,
-          options: {
-            priority,
-            deadline: deadline || null,
-            notes: notes || null
-          }
-        }
-      })
-    });
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}/decide`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "assign_department",
+          data: {
+            departments: selectedDepartments,
+            options: {
+              priority,
+              deadline: deadline || null,
+              notes: notes || null,
+            },
+          },
+        }),
+      }
+    );
     const result = await response.json();
     if (!result.success) {
       throw new Error(result.error || "Failed to assign complaint");
@@ -844,22 +995,25 @@ window.handleAssign = async function(event) {
 /**
  * Handle mark as duplicate
  */
-window.handleDuplicate = async function(event) {
+window.handleDuplicate = async function (event) {
   event.preventDefault();
   const masterComplaintId = document.getElementById("master-complaint").value;
   const reason = document.getElementById("duplicate-reason").value;
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: "mark_duplicate",
-        data: {
-          masterComplaintId,
-          reason
-        }
-      })
-    });
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}/decide`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "mark_duplicate",
+          data: {
+            masterComplaintId,
+            reason,
+          },
+        }),
+      }
+    );
     const result = await response.json();
     if (!result.success) {
       throw new Error(result.error || "Failed to mark as duplicate");
@@ -876,20 +1030,23 @@ window.handleDuplicate = async function(event) {
 /**
  * Handle reject complaint
  */
-window.handleReject = async function(event) {
+window.handleReject = async function (event) {
   event.preventDefault();
   const reason = document.getElementById("reject-reason").value;
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: "reject",
-        data: {
-          reason
-        }
-      })
-    });
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}/decide`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "reject",
+          data: {
+            reason,
+          },
+        }),
+      }
+    );
     const result = await response.json();
     if (!result.success) {
       throw new Error(result.error || "Failed to reject complaint");
@@ -906,7 +1063,7 @@ window.handleReject = async function(event) {
 /**
  * Handle mark as false complaint
  */
-window.handleFalseComplaint = async function(event) {
+window.handleFalseComplaint = async function (event) {
   event.preventDefault();
   const reason = document.getElementById("false-complaint-reason").value;
   const notes = document.getElementById("false-complaint-notes").value;
@@ -918,16 +1075,19 @@ window.handleFalseComplaint = async function(event) {
   // Combine reason and notes
   const fullReason = notes ? `${reason}: ${notes}` : reason;
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: "mark_false",
-        data: {
-          reason: fullReason
-        }
-      })
-    });
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}/decide`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "mark_false",
+          data: {
+            reason: fullReason,
+          },
+        }),
+      }
+    );
     const result = await response.json();
     if (!result.success) {
       throw new Error(result.error || "Failed to mark as false complaint");
@@ -944,16 +1104,19 @@ window.handleFalseComplaint = async function(event) {
 /**
  * Mark complaint as unique (no duplicates)
  */
-window.markAsUnique = async function() {
+window.markAsUnique = async function () {
   try {
-    const response = await fetch(`/api/coordinator/review-queue/${complaintId}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: "mark_unique",
-        data: {}
-      })
-    });
+    const response = await fetch(
+      `/api/coordinator/review-queue/${complaintId}/decide`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "mark_unique",
+          data: {},
+        }),
+      }
+    );
     const result = await response.json();
     if (!result.success) {
       throw new Error(result.error || "Failed to mark as unique");
@@ -991,7 +1154,8 @@ async function loadDepartmentsForAssignment() {
     console.error("Error loading departments:", error);
     const departmentsList = document.getElementById("departments-list");
     if (departmentsList) {
-      departmentsList.innerHTML = '<p style="color: #e74c3c; padding: 10px;">Failed to load departments. Please refresh the page or contact support.</p>';
+      departmentsList.innerHTML =
+        '<p style="color: #e74c3c; padding: 10px;">Failed to load departments. Please refresh the page or contact support.</p>';
     }
   }
 }
@@ -1001,31 +1165,42 @@ function renderDepartmentsList() {
   if (!departmentsList) return;
 
   if (filteredDepartments.length === 0) {
-    departmentsList.innerHTML = '<div class="no-results">No departments match your search</div>';
+    departmentsList.innerHTML =
+      '<div class="no-results">No departments match your search</div>';
     return;
   }
 
   // Get currently selected departments before re-rendering
   const selectedDepts = new Set(
-    Array.from(document.querySelectorAll(".dept-check:checked")).map(cb => cb.value)
+    Array.from(document.querySelectorAll(".dept-check:checked")).map(
+      (cb) => cb.value
+    )
   );
 
-  departmentsList.innerHTML = filteredDepartments.map(dept => {
-    const deptId = dept.code || dept.id;
-    const isChecked = selectedDepts.has(deptId);
-    return `
+  departmentsList.innerHTML = filteredDepartments
+    .map((dept) => {
+      const deptId = dept.code || dept.id;
+      const isChecked = selectedDepts.has(deptId);
+      return `
       <label class="department-checkbox-label">
-        <input type="checkbox" class="dept-check" value="${deptId}" data-dept-name="${escapeHtml(dept.name)}" ${isChecked ? "checked" : ""}>
+        <input type="checkbox" class="dept-check" value="${deptId}" data-dept-name="${escapeHtml(
+        dept.name
+      )}" ${isChecked ? "checked" : ""}>
         <span class="department-checkbox-text">
           <span class="dept-name">${escapeHtml(dept.name)}</span>
-          ${dept.code ? `<span class="dept-code">${escapeHtml(dept.code)}</span>` : ""}
+          ${
+            dept.code
+              ? `<span class="dept-code">${escapeHtml(dept.code)}</span>`
+              : ""
+          }
         </span>
       </label>
     `;
-  }).join("");
+    })
+    .join("");
 
   // Attach change listeners
-  document.querySelectorAll(".dept-check").forEach(checkbox => {
+  document.querySelectorAll(".dept-check").forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
       updateSelectedCount();
     });
@@ -1042,7 +1217,7 @@ function setupDepartmentSearch() {
     if (searchTerm === "") {
       filteredDepartments = [...allDepartments];
     } else {
-      filteredDepartments = allDepartments.filter(dept => {
+      filteredDepartments = allDepartments.filter((dept) => {
         const name = (dept.name || "").toLowerCase();
         const code = (dept.code || "").toLowerCase();
         return name.includes(searchTerm) || code.includes(searchTerm);
@@ -1086,7 +1261,8 @@ function renderComplainantInfo(profile) {
   if (!contentEl) return;
 
   if (!profile) {
-    contentEl.innerHTML = '<div class="complainant-empty">No complainant information available</div>';
+    contentEl.innerHTML =
+      '<div class="complainant-empty">No complainant information available</div>';
     return;
   }
 
@@ -1097,13 +1273,14 @@ function renderComplainantInfo(profile) {
 
   // Get phone number from multiple possible fields
   const rawMeta = profile.raw_user_meta_data || {};
-  const phoneNumber = profile.mobileNumber ||
-                     profile.mobile ||
-                     rawMeta.mobile_number ||
-                     rawMeta.mobile ||
-                     rawMeta.phone_number ||
-                     rawMeta.phone ||
-                     null;
+  const phoneNumber =
+    profile.mobileNumber ||
+    profile.mobile ||
+    rawMeta.mobile_number ||
+    rawMeta.mobile ||
+    rawMeta.phone_number ||
+    rawMeta.phone ||
+    null;
 
   // Get address from metadata - check multiple formats
   const address = rawMeta.address || {};
@@ -1126,10 +1303,14 @@ function renderComplainantInfo(profile) {
   }
 
   // Add city, province, barangay, postal code if available
-  if (rawMeta.city || address.city) addressParts.push(rawMeta.city || address.city);
-  if (rawMeta.barangay || address.barangay) addressParts.push(rawMeta.barangay || address.barangay);
-  if (rawMeta.province || address.province) addressParts.push(rawMeta.province || address.province);
-  if (rawMeta.postal_code || address.postalCode) addressParts.push(rawMeta.postal_code || address.postalCode);
+  if (rawMeta.city || address.city)
+    addressParts.push(rawMeta.city || address.city);
+  if (rawMeta.barangay || address.barangay)
+    addressParts.push(rawMeta.barangay || address.barangay);
+  if (rawMeta.province || address.province)
+    addressParts.push(rawMeta.province || address.province);
+  if (rawMeta.postal_code || address.postalCode)
+    addressParts.push(rawMeta.postal_code || address.postalCode);
 
   const fullAddress = addressParts.filter(Boolean).join(", ") || null;
 
@@ -1139,38 +1320,62 @@ function renderComplainantInfo(profile) {
         <div class="complainant-label">Name</div>
         <div class="complainant-value">${escapeHtml(name)}</div>
       </div>
-      ${firstName || lastName ? `
+      ${
+        firstName || lastName
+          ? `
       <div class="complainant-field">
         <div class="complainant-label">Full Name</div>
-        <div class="complainant-value">${escapeHtml(`${firstName} ${lastName}`.trim() || name)}</div>
+        <div class="complainant-value">${escapeHtml(
+          `${firstName} ${lastName}`.trim() || name
+        )}</div>
       </div>
-      ` : ""}
+      `
+          : ""
+      }
       <div class="complainant-field">
         <div class="complainant-label">Email</div>
         <div class="complainant-value">
-          <a href="mailto:${escapeHtml(email)}" class="complainant-link">${escapeHtml(email)}</a>
+          <a href="mailto:${escapeHtml(
+            email
+          )}" class="complainant-link">${escapeHtml(email)}</a>
         </div>
       </div>
       <div class="complainant-field">
         <div class="complainant-label">Phone Number</div>
         <div class="complainant-value">
-          ${phoneNumber ? `
-          <a href="tel:${escapeHtml(phoneNumber)}" class="complainant-link">${escapeHtml(phoneNumber)}</a>
-          ` : '<span style="color: #9ca3af;">Not provided</span>'}
+          ${
+            phoneNumber
+              ? `
+          <a href="tel:${escapeHtml(
+            phoneNumber
+          )}" class="complainant-link">${escapeHtml(phoneNumber)}</a>
+          `
+              : '<span style="color: #9ca3af;">Not provided</span>'
+          }
         </div>
       </div>
       <div class="complainant-field">
         <div class="complainant-label">Address</div>
         <div class="complainant-value">
-          ${fullAddress ? escapeHtml(fullAddress) : '<span style="color: #9ca3af;">Not provided</span>'}
+          ${
+            fullAddress
+              ? escapeHtml(fullAddress)
+              : '<span style="color: #9ca3af;">Not provided</span>'
+          }
         </div>
       </div>
-      ${profile.id ? `
+      ${
+        profile.id
+          ? `
       <div class="complainant-field">
         <div class="complainant-label">User ID</div>
-        <div class="complainant-value complainant-id">${escapeHtml(profile.id.substring(0, 8))}...</div>
+        <div class="complainant-value complainant-id">${escapeHtml(
+          profile.id.substring(0, 8)
+        )}...</div>
       </div>
-      ` : ""}
+      `
+          : ""
+      }
     </div>
   `;
 }
@@ -1202,6 +1407,6 @@ function formatDate(dateString) {
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
-    day: "numeric"
+    day: "numeric",
   });
 }

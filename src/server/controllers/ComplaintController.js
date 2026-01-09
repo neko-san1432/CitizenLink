@@ -290,13 +290,13 @@ class ComplaintController {
     const categoryArray = Array.isArray(category)
       ? category
       : category
-        ? [category]
-        : [];
+      ? [category]
+      : [];
     let departmentArray = Array.isArray(department)
       ? department
       : department
-        ? [department]
-        : [];
+      ? [department]
+      : [];
 
     // ROLE-BASED FILTERING: Enforce department restrictions
     const userRole = req.user?.role || "citizen";
@@ -411,6 +411,69 @@ class ComplaintController {
       return res.status(400).json(result);
     }
 
+    res.json(result);
+  }
+
+  /**
+   * Upvote a complaint (Citizen "Me Too")
+   */
+  async upvoteComplaint(req, res) {
+    const { id } = req.params;
+    const { user } = req;
+
+    const result = await this.complaintService.upvoteComplaint(id, user.id);
+    res.json(result);
+  }
+
+  /**
+   * Check for duplicate complaints
+   */
+  async checkDuplicates(req, res) {
+    const { latitude, longitude, category, subcategory } = req.query;
+
+    // Validate inputs
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        error: "Latitude and longitude are required",
+      });
+    }
+
+    const duplicates = await this.complaintService.detectDuplicates({
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      category,
+      subcategory,
+    });
+
+    res.json({
+      success: true,
+      data: duplicates,
+    });
+  }
+
+  /**
+   * Admin: Get duplicates for a specific complaint
+   */
+  async getPotentialDuplicatesForId(req, res) {
+    const { id } = req.params;
+    const duplicates = await this.complaintService.getPotentialDuplicatesForId(
+      id
+    );
+    res.json({ success: true, data: duplicates });
+  }
+
+  /**
+   * Admin: Bulk Merge
+   */
+  async bulkMergeComplaints(req, res) {
+    const { id } = req.params; // Master ID
+    const { childIds } = req.body;
+
+    const result = await this.complaintService.bulkMergeComplaints(
+      id,
+      childIds
+    );
     res.json(result);
   }
 

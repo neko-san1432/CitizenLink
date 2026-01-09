@@ -22,120 +22,161 @@
   <body>
     <div id="app">
       <!-- Header -->
-      <header id="header"></header>
+      <header id="header" class="header-container"></header>
 
       <!-- Sidebar -->
       <div id="sidebar" class="collapsible"></div>
 
       <!-- Main Content -->
       <main class="main-content">
-        <div class="container">
-          <div class="page-header">
-            <h1>My Assigned Tasks</h1>
-            <p>Manage and resolve complaints assigned to you</p>
-          </div>
+        <div class="container-fluid">
+          <!-- Page Header -->
+          <div class="page-header-modern">
+            <div class="page-title-wrapper">
+              <h1 class="page-title">My Assigned Tasks</h1>
+              <p class="page-subtitle">
+                Manage, track, and resolve citizen complaints assigned to you.
+              </p>
+            </div>
 
-          <!-- Side-by-side Layout -->
-          <div class="tasks-layout">
-            <!-- Left Column: Tasks Content -->
-            <div class="tasks-main">
-              <!-- Filters -->
-              <div class="filters-section">
-                <div class="filter-group">
-                  <label for="status-filter">Status:</label>
-                  <select id="status-filter" class="filter-select">
-                    <option value="">All Status</option>
-                    <option value="assigned">Assigned</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-                <div class="filter-group">
-                  <label for="priority-filter">Priority:</label>
-                  <select id="priority-filter" class="filter-select">
-                    <option value="">All Priority</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div class="filter-group">
-                  <label for="urgency-filter">Urgency:</label>
-                  <select id="urgency-filter" class="filter-select">
-                    <option value="">All Urgency</option>
-                    <option value="urgent">Urgent Only</option>
-                    <option value="high">Urgent & High</option>
-                  </select>
-                </div>
-                <div class="filter-group">
-                  <label for="prioritization-filter">Prioritization:</label>
-                  <select id="prioritization-filter" class="filter-select">
-                    <option value="">Default Order</option>
-                    <option value="desc">Highest Priority First</option>
-                    <option value="asc">Lowest Priority First</option>
-                  </select>
-                </div>
-                <div class="filter-group">
-                  <label for="search-input">Search:</label>
-                  <input
-                    type="text"
-                    id="search-input"
-                    class="filter-input"
-                    placeholder="Search tasks..."
-                  />
+            <!-- Stats Overview - Now at the top -->
+            <div class="stats-grid">
+              <div class="stat-card gradient-blue">
+                <div class="stat-icon">📋</div>
+                <div class="stat-info">
+                  <div class="stat-number" id="total-tasks">0</div>
+                  <div class="stat-label">Total Assigned</div>
                 </div>
               </div>
-
-              <!-- Stats -->
-              <div class="stats-section">
-                <div class="stat-card">
-                  <div class="stat-number" id="total-tasks">0</div>
-                  <div class="stat-label">Total Tasks</div>
-                </div>
-                <div class="stat-card">
+              <div class="stat-card gradient-orange">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
                   <div class="stat-number" id="pending-tasks">0</div>
-                  <div class="stat-label">Pending</div>
+                  <div class="stat-label">Pending Action</div>
                 </div>
-                <div class="stat-card">
+              </div>
+              <div class="stat-card gradient-purple">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
                   <div class="stat-number" id="in-progress-tasks">0</div>
                   <div class="stat-label">In Progress</div>
                 </div>
-                <div class="stat-card">
+              </div>
+              <div class="stat-card gradient-green">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
                   <div class="stat-number" id="completed-tasks">0</div>
-                  <div class="stat-label">Completed</div>
+                  <div class="stat-label">Resolved</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Layout -->
+          <div class="dashboard-layout">
+            <!-- Tasks Section -->
+            <div class="tasks-section-wrapper">
+              <!-- Control Bar -->
+              <div class="control-bar glass-panel">
+                <div class="search-wrapper">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="search-icon"
+                  >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input
+                    type="text"
+                    id="search-input"
+                    class="modern-input"
+                    placeholder="Search by ID, title, or content..."
+                  />
+                </div>
+
+                <div class="filters-wrapper">
+                  <div class="select-wrapper">
+                    <select id="status-filter" class="modern-select">
+                      <option value="">All Status</option>
+                      <option value="assigned">Assigned</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div class="select-wrapper">
+                    <select id="priority-filter" class="modern-select">
+                      <option value="">All Priority</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+
+                  <div class="select-wrapper">
+                    <select id="prioritization-filter" class="modern-select">
+                      <option value="">Sort By</option>
+                      <option value="desc">Highest Priority</option>
+                      <option value="asc">Lowest Priority</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <!-- Loading State -->
-              <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>Loading tasks...</p>
+              <!-- Content Area -->
+              <div id="loading" class="loading-state">
+                <div class="spinner-modern"></div>
+                <p>Loading your tasks...</p>
               </div>
 
-              <!-- Empty State -->
-              <div id="empty-state" class="empty-state" style="display: none">
+              <div
+                id="empty-state"
+                class="empty-state-modern"
+                style="display: none"
+              >
+                <div class="empty-icon">📝</div>
                 <h2>No tasks found</h2>
-                <p>No tasks match your current filters.</p>
+                <p>There are no tasks matching your current filters.</p>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="location.reload()"
+                >
+                  Refresh Page
+                </button>
               </div>
 
-              <!-- Tasks List -->
-              <div id="tasks-list" class="tasks-list" style="display: none">
-                <!-- Tasks will be populated here -->
-              </div>
-
-              <!-- Pagination -->
-              <div id="pagination" class="pagination" style="display: none">
-                <!-- Pagination will be populated here -->
+              <div
+                id="tasks-list"
+                class="tasks-grid-layout"
+                style="display: none"
+              >
+                <!-- Javascript will populate this -->
               </div>
             </div>
 
-            <!-- Right Column: Barangay Prioritization -->
-            <div class="tasks-sidebar">
-              <div class="barangay-prioritization-section">
-                <div id="barangay-prioritization-container"></div>
+            <!-- Sidebar / Widgets -->
+            <aside class="dashboard-sidebar">
+              <div class="widget-card glass-panel">
+                <div class="widget-header">
+                  <h3>Insights</h3>
+                </div>
+                <div
+                  id="barangay-prioritization-container"
+                  class="widget-content"
+                >
+                  <!-- Widget Content -->
+                </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </main>
@@ -145,55 +186,71 @@
     </div>
 
     <!-- Resolution Modal -->
-    <div id="resolution-modal" class="modal-overlay">
-      <div class="modal-content">
+    <div id="resolution-modal" class="modal-overlay-modern">
+      <div class="modal-container glass-modal">
         <div class="modal-header">
-          <h3>Mark as Resolved</h3>
-          <button class="modal-close" type="button">&times;</button>
+          <div class="modal-title-wrapper">
+            <div class="modal-icon-bg success">
+              <span>✓</span>
+            </div>
+            <div>
+              <h3>Resolve Task</h3>
+              <p class="text-sm text-muted">
+                Complete the assignment and archive it.
+              </p>
+            </div>
+          </div>
+          <button class="modal-close-btn modal-close" type="button">
+            &times;
+          </button>
         </div>
+
         <div class="modal-body">
           <form id="resolution-form">
             <input type="hidden" id="resolution-complaint-id" />
 
-            <div class="form-group">
-              <label for="resolution-notes">Resolution Notes *</label>
+            <div class="form-group-modern">
+              <label for="resolution-notes">Resolution Notes</label>
               <textarea
                 id="resolution-notes"
-                class="form-textarea"
-                rows="6"
-                placeholder="Please provide detailed notes about how the complaint was resolved..."
+                class="modern-textarea"
+                rows="5"
+                placeholder="Describe the actions taken to resolve this complaint..."
                 required
               ></textarea>
             </div>
 
-            <div class="form-group">
-              <label for="resolution-evidence"
-                >Evidence/Attachments (Optional)</label
-              >
-              <input
-                type="file"
-                id="resolution-evidence"
-                class="form-input"
-                multiple
-                accept="image/*,.pdf,.doc,.docx"
-              />
-              <small class="form-help"
-                >Upload photos, documents, or other evidence of
-                resolution</small
-              >
+            <div class="form-group-modern">
+              <label for="resolution-evidence" class="file-upload-label">
+                <span class="upload-icon">📎</span>
+                <span>Attach Evidence (Photos/Docs)</span>
+                <input
+                  type="file"
+                  id="resolution-evidence"
+                  class="file-input-hidden"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                />
+              </label>
+              <div id="file-list-preview" class="file-preview"></div>
             </div>
           </form>
         </div>
+
         <div class="modal-footer">
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn-modern btn-ghost"
             id="cancel-resolution"
           >
             Cancel
           </button>
-          <button type="button" class="btn btn-success" id="confirm-resolution">
-            Mark as Resolved
+          <button
+            type="button"
+            class="btn-modern btn-success"
+            id="confirm-resolution"
+          >
+            Confirm Resolution
           </button>
         </div>
       </div>

@@ -445,16 +445,14 @@ function setupLocationPicker(map) {
     div.innerHTML = '<button type="button" title="Use my location">📍</button>';
     div.style.cssText =
       "background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px;";
-    div.onclick = function () {
-      // console.log removed for security
+    div.addEventListener("click", function () {
       if (navigator.geolocation) {
-        // console.log removed for security
         // Check geolocation permissions
         if (navigator.permissions) {
           navigator.permissions
             .query({ name: "geolocation" })
             .then((_result) => {
-              // console.log removed for security
+              // console.log removed
             });
         }
         // console.log removed for security
@@ -565,7 +563,7 @@ function setupLocationPicker(map) {
           )
         );
       }
-    };
+    });
     return div;
   };
   geolocationButton.addTo(map);

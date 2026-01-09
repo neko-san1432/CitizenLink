@@ -28,7 +28,7 @@
   <body>
     <div id="app">
       <!-- Header -->
-      <header id="header"></header>
+      <header id="header" class="header-container"></header>
 
       <!-- Sidebar -->
       <div id="sidebar" class="collapsible"></div>
@@ -68,16 +68,48 @@
             <!-- Complaint Header -->
             <div class="complaint-header glass-panel p-6 rounded-xl mb-6">
               <div class="complaint-title-section">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <!-- Category Badge as Main Header -->
+                  <span
+                    id="complaint-category-badge"
+                    style="
+                      background: #3b82f6;
+                      color: white;
+                      padding: 4px 12px;
+                      border-radius: 20px;
+                      font-weight: 700;
+                      font-size: 0.9rem;
+                      text-transform: uppercase;
+                      letter-spacing: 0.05em;
+                    "
+                    >CATEGORY</span
+                  >
+
+                  <span
+                    id="complaint-id"
+                    class="complaint-id text-gray-500 font-mono text-sm"
+                    >#12345</span
+                  >
+                </div>
+
                 <h1
                   id="complaint-title"
-                  class="complaint-title text-2xl font-bold text-gray-800"
+                  class="complaint-title text-xl font-semibold text-gray-700"
+                  style="margin: 0; line-height: 1.4"
                 >
                   Complaint Title
                 </h1>
-                <div class="complaint-meta mt-2 flex gap-3">
-                  <span id="complaint-id" class="complaint-id text-gray-500"
-                    >#12345</span
-                  >
+
+                <div
+                  class="complaint-meta mt-3 flex gap-3 flex-wrap items-center"
+                >
                   <span
                     id="complaint-status"
                     class="complaint-status status-pending"
@@ -88,6 +120,9 @@
                     class="complaint-priority priority-medium"
                     >Medium</span
                   >
+                  <span id="complaint-date" class="text-sm text-gray-500">
+                    <!-- Date -->
+                  </span>
                 </div>
               </div>
               <div class="complaint-actions" id="complaint-actions">

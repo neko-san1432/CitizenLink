@@ -52,7 +52,14 @@ router.post("/switch-role", authenticateUser, async (req, res) => {
     // We can also check raw authenticated role if needed, but req.user.role is populated by auth middleware
 
     // Check permissions
-    if (!roleService.canSwitchToCitizen(currentRole)) {
+    const baseRole = req.user.raw_user_meta_data?.base_role;
+    const canSwitch =
+      roleService.canSwitchToCitizen(currentRole) ||
+      (currentRole === "citizen" &&
+        baseRole &&
+        roleService.canSwitchToCitizen(baseRole));
+
+    if (!canSwitch) {
       return res.status(403).json({
         success: false,
         error: "Not authorized to switch to citizen mode",

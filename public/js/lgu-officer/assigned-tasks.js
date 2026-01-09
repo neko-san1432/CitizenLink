@@ -3,7 +3,6 @@ import showToast from "../components/toast.js";
 import BarangayPrioritization from "../components/barangay-prioritization.js";
 
 class AssignedTasks {
-
   constructor() {
     this.tasks = [];
     this.currentPage = 1;
@@ -13,7 +12,7 @@ class AssignedTasks {
       priority: "",
       urgency: "",
       prioritization: "",
-      search: ""
+      search: "",
     };
     this.barangayPrioritization = null;
     this.barangayPrioritizationComponent = null;
@@ -26,18 +25,22 @@ class AssignedTasks {
   }
 
   async initBarangayPrioritization() {
-    this.barangayPrioritizationComponent = new BarangayPrioritization("barangay-prioritization-container");
+    this.barangayPrioritizationComponent = new BarangayPrioritization(
+      "barangay-prioritization-container"
+    );
     await this.barangayPrioritizationComponent.loadInsights();
     // Build barangay prioritization map for sorting
     if (this.barangayPrioritizationComponent.insightsData) {
-      this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
+      this.barangayPrioritization = this.buildBarangayMap(
+        this.barangayPrioritizationComponent.insightsData.barangays
+      );
       this.enhanceTasksWithPrioritization();
     }
   }
 
   buildBarangayMap(barangays) {
     const map = new Map();
-    barangays.forEach(barangay => {
+    barangays.forEach((barangay) => {
       map.set(barangay.barangay, barangay.prioritizationScore);
     });
     return map;
@@ -47,9 +50,11 @@ class AssignedTasks {
     if (!this.barangayPrioritization) return;
 
     // Enhance each task with its barangay prioritization score
-    this.tasks.forEach(task => {
+    this.tasks.forEach((task) => {
       // Get barangay from complaint location or use a default
-      const barangay = task.complaint?.barangay || this.getBarangayFromLocation(task.complaint?.location_text);
+      const barangay =
+        task.complaint?.barangay ||
+        this.getBarangayFromLocation(task.complaint?.location_text);
       if (barangay && this.barangayPrioritization.has(barangay)) {
         task.prioritizationScore = this.barangayPrioritization.get(barangay);
       } else {
@@ -62,11 +67,32 @@ class AssignedTasks {
     // Try to extract barangay from location text
     if (!locationText) return null;
     const barangays = [
-      "Aplaya", "Balabag", "Binaton", "Cogon", "Colorado", "Dawis", "Dulangan",
-      "Goma", "Igpit", "Kiagot", "Lungag", "Mahayahay", "Matti", "Kapatagan (Rizal)",
-      "Ruparan", "San Agustin", "San Jose (Balutakay)", "San Miguel (Odaca)",
-      "San Roque", "Sinawilan", "Soong", "Tiguman", "Tres de Mayo",
-      "Zone 1 (Pob.)", "Zone 2 (Pob.)", "Zone 3 (Pob.)"
+      "Aplaya",
+      "Balabag",
+      "Binaton",
+      "Cogon",
+      "Colorado",
+      "Dawis",
+      "Dulangan",
+      "Goma",
+      "Igpit",
+      "Kiagot",
+      "Lungag",
+      "Mahayahay",
+      "Matti",
+      "Kapatagan (Rizal)",
+      "Ruparan",
+      "San Agustin",
+      "San Jose (Balutakay)",
+      "San Miguel (Odaca)",
+      "San Roque",
+      "Sinawilan",
+      "Soong",
+      "Tiguman",
+      "Tres de Mayo",
+      "Zone 1 (Pob.)",
+      "Zone 2 (Pob.)",
+      "Zone 3 (Pob.)",
     ];
     for (const barangay of barangays) {
       if (locationText.toLowerCase().includes(barangay.toLowerCase())) {
@@ -80,7 +106,9 @@ class AssignedTasks {
     const statusFilter = document.getElementById("status-filter");
     const priorityFilter = document.getElementById("priority-filter");
     const urgencyFilter = document.getElementById("urgency-filter");
-    const prioritizationFilter = document.getElementById("prioritization-filter");
+    const prioritizationFilter = document.getElementById(
+      "prioritization-filter"
+    );
     const searchInput = document.getElementById("search-input");
     if (statusFilter) {
       statusFilter.addEventListener("change", (e) => {
@@ -147,16 +175,19 @@ class AssignedTasks {
     try {
       this.showLoading();
       const queryParams = new URLSearchParams();
-      if (this.filters.status) queryParams.append("status", this.filters.status);
-      if (this.filters.priority) queryParams.append("priority", this.filters.priority);
-      if (this.filters.search) queryParams.append("search", this.filters.search);
+      if (this.filters.status)
+        queryParams.append("status", this.filters.status);
+      if (this.filters.priority)
+        queryParams.append("priority", this.filters.priority);
+      if (this.filters.search)
+        queryParams.append("search", this.filters.search);
       queryParams.append("limit", this.itemsPerPage);
       const response = await fetch(`/api/lgu/assigned-tasks?${queryParams}`, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        credentials: "include"
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -176,7 +207,7 @@ class AssignedTasks {
       await this.loadStatistics();
     } catch (error) {
       console.error("Error loading tasks:", error);
-      this.showError(`Failed to load tasks: ${  error.message}`);
+      this.showError(`Failed to load tasks: ${error.message}`);
     } finally {
       this.hideLoading();
     }
@@ -204,54 +235,74 @@ class AssignedTasks {
     // Show task list and hide empty state
     tasksList.style.display = "block";
     if (emptyState) emptyState.style.display = "none";
-    tasksList.innerHTML = paginatedTasks.map(task => `
+    tasksList.innerHTML = paginatedTasks
+      .map(
+        (task) => `
             <div class="task-card">
                 <div class="task-header">
-                    <div class="task-title-section">
-                        <h3 class="task-title">${task.complaint?.title || "Untitled Complaint"}</h3>
-                        <div class="task-meta">
-                            <span class="task-id">#${task.complaint_id}</span>
-                            <span class="task-status status-${task.status?.toLowerCase().replace(" ", "_") || "assigned"}">
-                                ${task.status || "Assigned"}
-                            </span>
-                            <span class="task-priority priority-${task.priority?.toLowerCase() || "medium"}">
-                                ${task.priority || "Medium"}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="task-actions">
-                        ${this.getActionButtons(task)}
+                    <h3 class="task-title">${
+                      task.complaint?.title || "Untitled Complaint"
+                    }</h3>
+                    <div class="task-meta">
+                        <span class="task-tag status-${
+                          task.status?.toLowerCase().replace(" ", "_") ||
+                          "assigned"
+                        }">
+                            ${task.status || "Assigned"}
+                        </span>
+                        <span class="task-tag priority-${
+                          task.priority?.toLowerCase() || "medium"
+                        }">
+                            ${task.priority || "Medium"}
+                        </span>
+                        <span class="task-id">#${task.complaint_id}</span>
                     </div>
                 </div>
                 
                 <div class="task-content">
-                    <p class="task-description">${task.complaint?.description || "No description provided"}</p>
-                    <div class="task-details">
+                    <p>${
+                      task.complaint?.description || "No description provided"
+                    }</p>
+                    
+                    <div class="task-details-grid">
                         <div class="task-detail">
                             <span>📅</span>
-                            <span>Assigned: ${this.formatDate(task.assigned_at)}</span>
+                            <span>${this.formatDate(task.assigned_at)}</span>
                         </div>
                         <div class="task-detail">
                             <span>📍</span>
-                            <span>${task.complaint?.location_text || "No location"}</span>
+                            <span>${
+                              task.complaint?.location_text || "No location"
+                            }</span>
                         </div>
                         <div class="task-detail">
                             <span>🏷️</span>
-                            <span>${task.complaint?.category || "General"}</span>
+                            <span>${
+                              task.complaint?.category || "General"
+                            }</span>
                         </div>
-                        ${task.deadline ? `
+                        ${
+                          task.deadline
+                            ? `
                             <div class="task-detail">
                                 <span>⏰</span>
-                                <span>Deadline: ${this.formatDate(task.deadline)}</span>
+                                <span>${this.formatDate(task.deadline)}</span>
                             </div>
-                        ` : ""}
+                        `
+                            : ""
+                        }
                     </div>
                 </div>
 
-                ${this.renderAssignmentInfo(task)}
                 ${this.renderDeadlineWarning(task)}
+
+                <div class="task-actions">
+                    ${this.getActionButtons(task)}
+                </div>
             </div>
-        `).join("");
+        `
+      )
+      .join("");
     this.attachActionEventListeners();
   }
   getActionButtons(task) {
@@ -273,9 +324,12 @@ class AssignedTasks {
     return buttons.join("");
   }
   renderAssignmentInfo(task) {
-    const statusClass = task.status?.toLowerCase().replace(" ", "_") || "assigned";
+    const statusClass =
+      task.status?.toLowerCase().replace(" ", "_") || "assigned";
     const statusText = task.status || "Assigned";
-    const completedText = task.completed_at ? `Completed: ${this.formatDate(task.completed_at)}` : "";
+    const completedText = task.completed_at
+      ? `Completed: ${this.formatDate(task.completed_at)}`
+      : "";
     return `
             <div class="assignment-info ${statusClass}">
                 <strong>Assignment Status:</strong> ${statusText}
@@ -295,7 +349,9 @@ class AssignedTasks {
     if (hoursUntilDeadline < 0) {
       return `
                 <div class="deadline-warning overdue">
-                    ⚠️ This task is overdue! Deadline was ${this.formatDate(task.deadline)}
+                    ⚠️ This task is overdue! Deadline was ${this.formatDate(
+                      task.deadline
+                    )}
                 </div>
             `;
     } else if (hoursUntilDeadline < 24) {
@@ -310,12 +366,10 @@ class AssignedTasks {
   }
 
   attachActionEventListeners() {
-
-
     // View details buttons
     const viewButtons = document.querySelectorAll('[data-action="view"]');
 
-    viewButtons.forEach(btn => {
+    viewButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const complaintId = e.target.getAttribute("data-complaint-id");
         this.viewComplaint(complaintId);
@@ -325,19 +379,20 @@ class AssignedTasks {
     // Mark as resolved buttons
     const resolveButtons = document.querySelectorAll('[data-action="resolve"]');
 
-
     if (resolveButtons.length === 0) {
       console.error("[LGU_OFFICER] No resolve buttons found in DOM!");
     }
 
     resolveButtons.forEach((btn, _index) => {
-
-
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const complaintId = e.target.getAttribute("data-complaint-id") || btn.getAttribute("data-complaint-id");
-        const assignmentId = e.target.getAttribute("data-assignment-id") || btn.getAttribute("data-assignment-id");
+        const complaintId =
+          e.target.getAttribute("data-complaint-id") ||
+          btn.getAttribute("data-complaint-id");
+        const assignmentId =
+          e.target.getAttribute("data-assignment-id") ||
+          btn.getAttribute("data-assignment-id");
         if (!complaintId) {
           console.error("[LGU_OFFICER] No complaint ID found!");
           return;
@@ -355,7 +410,6 @@ class AssignedTasks {
     window.location.href = `/complaint-details/${complaintId}`;
   }
   showResolutionModal(id, type = "complaint") {
-
     // Set complaint/assignment ID
     const complaintIdInput = document.getElementById("resolution-complaint-id");
     if (!complaintIdInput) {
@@ -388,7 +442,11 @@ class AssignedTasks {
       const formData = new FormData();
       formData.append("notes", resolutionNotes.trim());
       // Add files if selected
-      if (evidenceInput && evidenceInput.files && evidenceInput.files.length > 0) {
+      if (
+        evidenceInput &&
+        evidenceInput.files &&
+        evidenceInput.files.length > 0
+      ) {
         Array.from(evidenceInput.files).forEach((file, _index) => {
           formData.append(`completionEvidence`, file);
         });
@@ -396,14 +454,15 @@ class AssignedTasks {
       const response = await fetch(`/api/complaints/${id}/mark-complete`, {
         method: "POST",
         credentials: "include",
-        body: formData  // Don't set Content-Type header - browser will set it with boundary
+        body: formData, // Don't set Content-Type header - browser will set it with boundary
       });
-
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error("[LGU_OFFICER] API error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${errorText}`
+        );
       }
       const result = await response.json();
       if (result.success) {
@@ -411,11 +470,19 @@ class AssignedTasks {
         this.hideModal();
         this.loadTasks(); // Refresh the list
       } else {
-        throw new Error(result.error || "Failed to mark assignment as complete");
+        throw new Error(
+          result.error || "Failed to mark assignment as complete"
+        );
       }
     } catch (error) {
-      console.error("[LGU_OFFICER] Error marking assignment as complete:", error);
-      showToast(`Failed to mark assignment as complete: ${  error.message}`, "error");
+      console.error(
+        "[LGU_OFFICER] Error marking assignment as complete:",
+        error
+      );
+      showToast(
+        `Failed to mark assignment as complete: ${error.message}`,
+        "error"
+      );
     }
   }
   hideModal() {
@@ -434,30 +501,35 @@ class AssignedTasks {
 
     // Status filter
     if (this.filters.status) {
-      filtered = filtered.filter(task => task.status === this.filters.status);
+      filtered = filtered.filter((task) => task.status === this.filters.status);
     }
 
     // Priority filter
     if (this.filters.priority) {
-      filtered = filtered.filter(task => task.priority === this.filters.priority);
+      filtered = filtered.filter(
+        (task) => task.priority === this.filters.priority
+      );
     }
 
     // Urgency filter (urgent and high priority)
     if (this.filters.urgency) {
       if (this.filters.urgency === "urgent") {
-        filtered = filtered.filter(task => task.priority === "urgent");
+        filtered = filtered.filter((task) => task.priority === "urgent");
       } else if (this.filters.urgency === "high") {
-        filtered = filtered.filter(task => task.priority === "urgent" || task.priority === "high");
+        filtered = filtered.filter(
+          (task) => task.priority === "urgent" || task.priority === "high"
+        );
       }
     }
 
     // Search filter
     if (this.filters.search) {
       const searchTerm = this.filters.search.toLowerCase();
-      filtered = filtered.filter(task =>
-        task.complaint?.title?.toLowerCase().includes(searchTerm) ||
-                task.complaint?.description?.toLowerCase().includes(searchTerm) ||
-                task.complaint_id?.toString().includes(searchTerm)
+      filtered = filtered.filter(
+        (task) =>
+          task.complaint?.title?.toLowerCase().includes(searchTerm) ||
+          task.complaint?.description?.toLowerCase().includes(searchTerm) ||
+          task.complaint_id?.toString().includes(searchTerm)
       );
     }
 
@@ -466,14 +538,15 @@ class AssignedTasks {
       filtered = filtered.sort((a, b) => {
         const scoreA = a.prioritizationScore || 0;
         const scoreB = b.prioritizationScore || 0;
-        return this.filters.prioritization === "desc" ? scoreB - scoreA : scoreA - scoreB;
+        return this.filters.prioritization === "desc"
+          ? scoreB - scoreA
+          : scoreA - scoreB;
       });
     }
 
     return filtered;
   }
   getPaginatedTasks(tasks) {
-
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return tasks.slice(startIndex, endIndex);
@@ -483,9 +556,9 @@ class AssignedTasks {
       const response = await fetch("/api/lgu/statistics", {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        credentials: "include"
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -503,17 +576,21 @@ class AssignedTasks {
     }
   }
   updateStats(stats) {
-
     document.getElementById("total-tasks").textContent = stats.total_tasks || 0;
-    document.getElementById("pending-tasks").textContent = stats.pending_tasks || 0;
-    document.getElementById("in-progress-tasks").textContent = stats.in_progress_tasks || 0;
-    document.getElementById("completed-tasks").textContent = stats.completed_tasks || 0;
+    document.getElementById("pending-tasks").textContent =
+      stats.pending_tasks || 0;
+    document.getElementById("in-progress-tasks").textContent =
+      stats.in_progress_tasks || 0;
+    document.getElementById("completed-tasks").textContent =
+      stats.completed_tasks || 0;
   }
   updateStatsFromTasks() {
     const total = this.tasks.length;
-    const pending = this.tasks.filter(t => t.status === "assigned").length;
-    const inProgress = this.tasks.filter(t => t.status === "in_progress").length;
-    const completed = this.tasks.filter(t => t.status === "completed").length;
+    const pending = this.tasks.filter((t) => t.status === "assigned").length;
+    const inProgress = this.tasks.filter(
+      (t) => t.status === "in_progress"
+    ).length;
+    const completed = this.tasks.filter((t) => t.status === "completed").length;
     document.getElementById("total-tasks").textContent = total;
     document.getElementById("pending-tasks").textContent = pending;
     document.getElementById("in-progress-tasks").textContent = inProgress;
@@ -546,7 +623,7 @@ class AssignedTasks {
     if (!dateString) return "Unknown date";
     try {
       const date = new Date(dateString);
-      return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
+      return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     } catch (error) {
       return "Invalid date";
     }

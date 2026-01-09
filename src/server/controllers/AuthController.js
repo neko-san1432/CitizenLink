@@ -1430,6 +1430,40 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * Delete user account (Citizen only)
+   */
+  async deleteAccount(req, res) {
+    try {
+      const userId = req.user.id;
+
+      console.log(`[AUTH] Deleting account for user ${userId}`);
+
+      // Delete user from Supabase Auth
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) {
+        console.error("[AUTH] Delete account failed:", error);
+        return res
+          .status(500)
+          .json({ success: false, error: "Failed to delete account" });
+      }
+
+      // Clear cookie
+      res.clearCookie("sb_access_token");
+
+      res.json({
+        success: true,
+        message: "Account deleted successfully.",
+      });
+    } catch (error) {
+      console.error("[AUTH] Delete account error:", error);
+      res
+        .status(500)
+        .json({ success: false, error: "An unexpected error occurred." });
+    }
+  }
 }
 
 module.exports = new AuthController();

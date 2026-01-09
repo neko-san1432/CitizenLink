@@ -878,7 +878,11 @@ html.dark .brand-text:hover {
 
 .dark .dashboard-clock {
   background: transparent;
-  color: var(--gray-300);
+  color: #ffffff;
+}
+
+.dark .dashboard-clock svg {
+  color: #ffffff;
 }
 
 .dark .header-dropdown {
@@ -932,14 +936,14 @@ html.dark .menu-toggle,
 html.dark .header-action {
   background: transparent;
   border-color: transparent;
-  color: var(--gray-300);
+  color: #ffffff;
 }
 
 html.dark .menu-toggle:hover,
 html.dark .header-action:hover {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--gray-100);
+  color: #ffffff;
 }
 
 html.dark .header-dropdown {
@@ -1032,7 +1036,7 @@ html.dark .notification-btn,
 html.dark .profile-btn {
   background: transparent;
   border-color: transparent;
-  color: var(--gray-300);
+  color: #ffffff;
   box-shadow: none;
 }
 
@@ -1042,7 +1046,7 @@ html.dark .notification-btn:hover,
 html.dark .profile-btn:hover {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--gray-100);
+  color: #ffffff;
   box-shadow: none;
 }
 
@@ -1184,8 +1188,8 @@ html.dark .profile-btn:hover {
 
 .dark .header-action svg,
 html.dark .header-action svg {
-  stroke: var(--gray-300);
-  color: var(--gray-300);
+  stroke: #ffffff;
+  color: #ffffff;
 }
 
 .dark .header-action svg path,
@@ -1201,5 +1205,5 @@ html.dark .header-action svg circle {
 .dark .profile-btn:hover,
 html.dark .notification-btn:hover,
 html.dark .profile-btn:hover {
-  color: var(--gray-100);
+  color: #ffffff;
 }

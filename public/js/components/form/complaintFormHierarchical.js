@@ -99,12 +99,469 @@ export async function initializeComplaintForm() {
   setupFormValidation(elements.form);
   setupFormSubmission(elements.form, fileHandler);
   loadCategories();
+  // Attach event listener to cancel button (moved from inline onclick)
+  const cancelBtn = document.getElementById("btn-cancel-complaint");
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      window.history.back();
+    });
+  }
+
   // Prevent any auto-focus behavior
   setTimeout(() => {
     if (document.activeElement && document.activeElement.tagName !== "BODY") {
       document.activeElement.blur();
     }
   }, 50);
+
+  // Setup title auto-generation from description
+  setupTitleAutoGeneration(form);
+
+  // Setup voice input
+  setupVoiceInput(form);
+
+  // Setup duplicate detection
+  setupDuplicateDetection(form);
+}
+
+/**
+ * Setup Duplicate Detection
+ * Checks for similar complaints when location or category changes
+ */
+function setupDuplicateDetection(form) {
+  const categorySelect = form.querySelector("#complaintCategory");
+  const subcategorySelect = form.querySelector("#complaintSubcategory");
+  const latInput = form.querySelector("#latitude");
+  const lngInput = form.querySelector("#longitude");
+
+  // Create container for duplicate warnings if it doesn't exist
+  let warningContainer = form.querySelector(".duplicate-warning-container");
+  if (!warningContainer) {
+    warningContainer = document.createElement("div");
+    warningContainer.className = "duplicate-warning-container";
+    warningContainer.style.display = "none";
+
+    // Insert after location map/input
+    const locationGroup = form.querySelector(".location-wrapper");
+    if (locationGroup) {
+      locationGroup.appendChild(warningContainer);
+    }
+  }
+
+  // Debounce function
+  const debounce = (func, wait) => {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  };
+
+  const checkDuplicates = async () => {
+    const category = categorySelect.value;
+    const subcategory = subcategorySelect.value;
+    const latitude = latInput.value;
+    const longitude = lngInput.value;
+
+    // Minimum requirements: Location + Category
+    if (!category || !latitude || !longitude) {
+      warningContainer.style.display = "none";
+      return;
+    }
+
+    try {
+      const { data, error } = await apiClient.get(
+        `/api/complaints/check-duplicates?latitude=${latitude}&longitude=${longitude}&category=${category}&subcategory=${
+          subcategory || ""
+        }`
+      );
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // HYBRID THRESHOLD LOGIC
+        // If duplicates >= 5, BLOCK submission (Option B)
+        // If duplicates < 5, WARN user (Option A)
+
+        const THRESHOLD = 5;
+        if (data.length >= THRESHOLD) {
+          renderBlockingUI(warningContainer, data, form);
+        } else {
+          renderDuplicateWarning(warningContainer, data, form, false); // false = not blocking
+        }
+      } else {
+        warningContainer.style.display = "none";
+        enableSubmitButton(form);
+      }
+    } catch (err) {
+      console.error("Duplicate check failed:", err);
+      warningContainer.style.display = "none";
+      enableSubmitButton(form);
+    }
+  };
+
+  const debouncedCheck = debounce(checkDuplicates, 1000); // 1s delay
+
+  // Listeners
+  categorySelect.addEventListener("change", debouncedCheck);
+  subcategorySelect.addEventListener("change", debouncedCheck);
+
+  // For hidden inputs, standard change events might not fire if updated programmatically.
+  // Use MutationObserver for hidden inputs
+  const observer = new MutationObserver(() => {
+    debouncedCheck();
+  });
+
+  observer.observe(latInput, { attributes: true, attributeFilter: ["value"] });
+  observer.observe(lngInput, { attributes: true, attributeFilter: ["value"] });
+
+  // Also listen to manual input events if they happen
+  latInput.addEventListener("change", debouncedCheck);
+  lngInput.addEventListener("change", debouncedCheck);
+}
+
+/**
+ * Render duplicate warning UI
+ */
+/**
+ * Render duplicate warning UI (Non-Blocking)
+ */
+function renderDuplicateWarning(
+  container,
+  duplicates,
+  form,
+  isBlocking = false
+) {
+  // Ensure submit button is enabled if not blocking
+  if (!isBlocking) {
+    enableSubmitButton(form);
+  }
+
+  container.innerHTML = `
+        <div class="warning-header">
+            <span class="warning-icon">⚠️</span>
+            <h4 class="warning-title">Potential Duplicates Found</h4>
+        </div>
+        <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #431407;">
+            We found ${
+              duplicates.length
+            } similar report(s) near this location. Please check if your issue is already listed.
+            If matched, you can click <strong>"Me Too"</strong> to support the existing report instead of creating a new one.
+        </p>
+        <div class="duplicate-list">
+            ${duplicates.map((d) => renderDuplicateItem(d)).join("")}
+        </div>
+        <div class="dismiss-warning">
+            <button type="button" class="btn-dismiss">None of these match my issue (Continue)</button>
+        </div>
+    `;
+
+  container.style.display = "block";
+  container.classList.remove("blocking-mode");
+
+  // Attach event listeners
+  const dismissBtn = container.querySelector(".btn-dismiss");
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      container.style.display = "none";
+    });
+  }
+
+  attachUpvoteListeners(container);
+}
+
+/**
+ * Render Blocking UI (High Volume of Duplicates)
+ */
+function renderBlockingUI(container, duplicates, form) {
+  // DISABLE submit button
+  const submitBtn =
+    form.querySelector(".submit-btn") ||
+    form.querySelector("button[type='submit']");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.title =
+      "This issue has already been reported multiple times. Please upvote instead.";
+    submitBtn.style.opacity = "0.5";
+    submitBtn.style.cursor = "not-allowed";
+  }
+
+  container.innerHTML = `
+        <div class="warning-header" style="color: #b91c1c;">
+            <span class="warning-icon">🛑</span>
+            <h4 class="warning-title" style="color: #b91c1c;">Report Submission Paused</h4>
+        </div>
+        <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #7f1d1d; font-weight: 500;">
+            We have detected a <strong>high number of reports (${
+              duplicates.length
+            })</strong> for this issue in this area.
+            <br/><br/>
+            To help our coordinators respond faster, we have paused new submissions. 
+            <strong>Please UPVOTE an existing report below</strong> to add urgency to this issue.
+        </p>
+        <div class="duplicate-list">
+            ${duplicates
+              .slice(0, 3)
+              .map((d) => renderDuplicateItem(d))
+              .join("")}
+        </div>
+        <div class="dismiss-warning">
+            <span style="font-size: 0.8rem; color: #6b7280;">(Submitting new reports is temporarily disabled for this area)</span>
+        </div>
+    `;
+
+  container.style.display = "block";
+  container.classList.add("blocking-mode"); // Add class for styling if needed
+
+  attachUpvoteListeners(container);
+}
+
+function renderDuplicateItem(d) {
+  return `
+        <div class="duplicate-item">
+            <div class="duplicate-info">
+                <span class="duplicate-title">${
+                  d.title || "Untitled Complaint"
+                }</span>
+                <div class="duplicate-meta">
+                    <span>📅 ${new Date(
+                      d.submitted_at || d.created_at
+                    ).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span>📍 ${(d.distance * 1000).toFixed(0)}m away</span>
+                    <span style="display: block; margin-top: 4px; color: #4b5563;">
+                        ${
+                          d.description
+                            ? d.description.length > 80
+                              ? d.description.substring(0, 80) + "..."
+                              : d.description
+                            : "No description"
+                        }
+                    </span>
+                </div>
+            </div>
+            <div class="duplicate-actions">
+                    <button type="button" class="btn-me-too" data-id="${d.id}">
+                    <span>👍 Me Too (${d.upvote_count || 0})</span>
+                    </button>
+            </div>
+        </div>
+    `;
+}
+
+function attachUpvoteListeners(container) {
+  const upvoteButtons = container.querySelectorAll(".btn-me-too");
+  upvoteButtons.forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.id;
+      // Optimistic UI update
+      const originalText = e.currentTarget.innerHTML;
+      e.currentTarget.innerHTML = "<span>Checking...</span>";
+      e.currentTarget.disabled = true;
+
+      try {
+        // Call Upvote API
+        const { data, error } = await apiClient.post(
+          `/api/complaints/${id}/upvote`
+        );
+        if (error) throw error;
+
+        showMessage("success", "Thanks! You matched with an existing report.");
+
+        // Show success state and redirect
+        e.currentTarget.innerHTML = "<span>✅ Matched!</span>";
+        e.currentTarget.style.background = "#10b981"; // Green
+
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1500);
+      } catch (err) {
+        console.error("Upvote failed:", err);
+        showMessage("error", "Failed to upvote. Please try again.");
+        e.currentTarget.innerHTML = originalText;
+        e.currentTarget.disabled = false;
+      }
+    });
+  });
+}
+
+function enableSubmitButton(form) {
+  const submitBtn =
+    form.querySelector(".submit-btn") ||
+    form.querySelector("button[type='submit']");
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.title = "";
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+  }
+}
+
+/**
+ * Setup Title Auto-Generation from Description
+ */
+function setupTitleAutoGeneration(form) {
+  const descriptionInput = form.querySelector("#description");
+  const titleInput = form.querySelector("#complaintTitle"); // Hidden input
+
+  if (!descriptionInput || !titleInput) return;
+
+  const updateTitle = () => {
+    const desc = descriptionInput.value.trim();
+    if (desc) {
+      // Create title from first few words (approx 50 chars)
+      let title = desc.split(/\s+/).slice(0, 10).join(" ");
+      if (title.length > 50) {
+        title = title.substring(0, 47) + "...";
+      }
+      // Ensure specific format if needed, or just clean it
+      titleInput.value = title.charAt(0).toUpperCase() + title.slice(1);
+    } else {
+      titleInput.value = "";
+    }
+  };
+
+  descriptionInput.addEventListener("input", updateTitle);
+  descriptionInput.addEventListener("change", updateTitle);
+  descriptionInput.addEventListener("blur", updateTitle); // Ensure final update
+}
+
+/**
+ * Setup Voice Input using Web Speech API
+ */
+/**
+ * Setup Voice Input using Web Speech API
+ */
+function setupVoiceInput(form) {
+  const micBtn = form.querySelector("#startSpeech");
+  const langSelect = form.querySelector("#voiceLanguage");
+  const descriptionInput = form.querySelector("#description");
+
+  if (!micBtn || !descriptionInput) return;
+
+  // Check browser support
+  if (
+    !("webkitSpeechRecognition" in window) &&
+    !("SpeechRecognition" in window)
+  ) {
+    micBtn.style.display = "none";
+    if (langSelect) langSelect.style.display = "none";
+    return;
+  }
+
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+
+  recognition.continuous = false; // Stop after one sentence/pause
+  recognition.interimResults = true;
+
+  let isListening = false;
+
+  micBtn.addEventListener("click", () => {
+    // Check for Secure Context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      showMessage(
+        "error",
+        "Microphone access requires a secure connection (HTTPS) or localhost. Please use http://localhost:3000 if testing locally."
+      );
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      return;
+    }
+
+    // Set language from selector
+    if (langSelect) {
+      recognition.lang = langSelect.value;
+    }
+
+    try {
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add("listening");
+      micBtn.style.background = "rgba(220, 38, 38, 0.2)"; // Red tint
+      micBtn.style.color = "#ef4444"; // Red color
+
+      // Visual feedback with language specific hint
+      const lang = langSelect ? langSelect.value : "en-US";
+      let hint = "Listening... Speak now";
+      if (lang === "tl-PH" || lang === "ceb-PH") {
+        hint = "Listening... (Speak clearly in the selected language)";
+      }
+      showMessage("info", hint);
+    } catch (e) {
+      console.error("Speech recognition error:", e);
+      isListening = false;
+      showMessage("error", "Unable to start speech recognition.");
+    }
+  });
+
+  recognition.onresult = (event) => {
+    let finalTranscript = "";
+    let interimTranscript = "";
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    // Determine where to insert (at cursor or append)
+    // For simplicity, we just append or replace
+    // Better UX: Append with space
+    if (finalTranscript) {
+      const curentVal = descriptionInput.value;
+      // If empty, just set. If not, append.
+      const newVal = curentVal
+        ? curentVal.trim() + " " + finalTranscript.trim()
+        : finalTranscript.trim();
+      descriptionInput.value = newVal;
+
+      // Trigger input event for auto-resize and title generation
+      descriptionInput.dispatchEvent(new Event("input"));
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.warn("Speech recognition error", event.error);
+    isListening = false;
+    resetMicBtn(micBtn);
+
+    if (event.error === "not-allowed") {
+      if (!window.isSecureContext) {
+        showMessage(
+          "error",
+          "Microphone blocked due to insecure connection (HTTP). Please use localhost."
+        );
+      } else {
+        showMessage(
+          "error",
+          "Microphone access denied. Please check your browser permissions."
+        );
+      }
+    } else if (event.error === "no-speech") {
+      // Ignore no-speech error, just stop listening usually or show mild warning
+      // showMessage("info", "No speech detected.");
+    } else {
+      showMessage("error", `Speech recognition error: ${event.error}`);
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    resetMicBtn(micBtn);
+  };
+}
+
+function resetMicBtn(btn) {
+  btn.classList.remove("listening");
+  btn.style.background = "rgba(255, 255, 255, 0.1)";
+  btn.style.color = "inherit";
 }
 /**
  * Setup hierarchical category -> subcategory -> department selection

@@ -28,6 +28,7 @@ class Complaint {
     this.estimated_resolution_date = data.estimated_resolution_date;
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
+    this.upvote_count = data.upvote_count || 0;
   }
   static validate(data) {
     const { isWithinDigosBoundary } = require("../../shared/boundaryValidator");
@@ -135,6 +136,7 @@ class Complaint {
       assigned_coordinator_id: this.assigned_coordinator_id || null,
       response_deadline: this.response_deadline || null,
       submitted_at: this.submitted_at || new Date().toISOString(),
+      upvote_count: this.upvote_count || 0,
     };
   }
   toJSON() {
@@ -163,6 +165,7 @@ class Complaint {
       estimated_resolution_date: this.estimated_resolution_date,
       submitted_at: this.submitted_at,
       updated_at: this.updated_at,
+      upvote_count: this.upvote_count,
     };
   }
 }

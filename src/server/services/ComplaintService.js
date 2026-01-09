@@ -9,6 +9,7 @@ const {
   validateComplaintConsistency,
   _getAssignmentProgress,
 } = require("../utils/complaintUtils");
+const { isPotentialDuplicate } = require("../utils/similarityUtils");
 
 class ComplaintService {
   constructor(
@@ -51,6 +52,15 @@ class ComplaintService {
       type: "complaint",
       // Map 'description' from client to 'descriptive_su' expected by server model
       descriptive_su: complaintData.description || complaintData.descriptive_su,
+      // Handle Title (Map 'complaintTitle' or Auto-Generate)
+      title:
+        complaintData.title ||
+        complaintData.complaintTitle ||
+        (complaintData.description
+          ? complaintData.description.length > 50
+            ? complaintData.description.substring(0, 47) + "..."
+            : complaintData.description
+          : "Untitled Complaint"),
       // Store user's preferred departments
       preferred_departments: preferredDepartments,
       // Initially empty - will be populated by coordinator assignment
@@ -182,6 +192,300 @@ class ComplaintService {
       }
     }
   }
+
+  /**
+   * Detect potential duplicates for a new complaint
+   * @param {Object} complaintData - New complaint data {latitude, longitude, category, subcategory}
+   * @returns {Promise<Array>} List of potential duplicates
+   */
+  async detectDuplicates(complaintData) {
+    try {
+      if (!complaintData.latitude || !complaintData.longitude) return [];
+
+      const { latitude, longitude, category, subcategory } = complaintData;
+
+      // Time window: look back 48 hours (+ buffer) instead of 30 days
+      // We fetch a bit more to be safe, but the strict check is in the utility
+      const lookbackDate = new Date();
+      lookbackDate.setHours(lookbackDate.getHours() - 48);
+
+      // Query active complaints
+      // Fetch broadly based on time and roughly on location first
+      let query = this.complaintRepo.supabase
+        .from("complaints")
+        .select(
+          "id, title, description:descriptive_su, latitude, longitude, submitted_at, workflow_status, category, subcategory, upvote_count"
+        )
+        .gte("submitted_at", lookbackDate.toISOString())
+        .neq("workflow_status", "closed")
+        .neq("workflow_status", "rejected")
+        .neq("workflow_status", "cancelled");
+
+      // Optimization: Rough bounding box (approx 1km)
+      const ROUGH_DEGREE_DIFF = 0.01;
+      query = query
+        .gte("latitude", latitude - ROUGH_DEGREE_DIFF)
+        .lte("latitude", latitude + ROUGH_DEGREE_DIFF)
+        .gte("longitude", longitude - ROUGH_DEGREE_DIFF)
+        .lte("longitude", longitude + ROUGH_DEGREE_DIFF);
+
+      const { data: candidates, error } = await query;
+
+      if (error) {
+        console.error("Error fetching candidates for duplicate check:", error);
+        return [];
+      }
+
+      if (!candidates || candidates.length === 0) return [];
+
+      const potentialDuplicates = candidates
+        .filter((existing) => {
+          const check = isPotentialDuplicate(
+            { latitude, longitude, category, submitted_at: new Date() },
+            existing
+          );
+          if (check.isMatch) {
+            existing.similarity_details = check;
+            return true;
+          }
+          return false;
+        })
+        .map((c) => ({
+          ...c,
+          distance: c.similarity_details.distance,
+          similarity: "High (3-Layer Match)",
+        }));
+
+      return potentialDuplicates.sort((a, b) => a.distance - b.distance);
+    } catch (error) {
+      console.error("Duplicate detection failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Mark a complaint as a duplicate of another
+   */
+  async markAsDuplicate(complaintId, masterComplaintId) {
+    try {
+      // Update the duplicate complaint
+      const { error: updateError } = await this.complaintRepo.supabase
+        .from("complaints")
+        .update({
+          is_duplicate: true,
+          master_complaint_id: masterComplaintId,
+          workflow_status: "closed", // Auto-close duplicates? Or 'resolved'? Let's say 'closed'
+          coordinator_notes: "Marked as duplicate of " + masterComplaintId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", complaintId);
+
+      if (updateError) throw updateError;
+
+      // Increment upvote count on master complaint
+      // RPC is safer for atomic increments, but let's do read-modify-write for now or check if we have an increment RPC
+      // Creating a simple increment logic via SQL usually requires a function.
+      // We'll read, then update.
+      const { data: master, error: masterError } =
+        await this.complaintRepo.supabase
+          .from("complaints")
+          .select("upvote_count")
+          .eq("id", masterComplaintId)
+          .single();
+
+      if (master) {
+        const newCount = (master.upvote_count || 0) + 1;
+        await this.complaintRepo.supabase
+          .from("complaints")
+          .update({ upvote_count: newCount })
+          .eq("id", masterComplaintId);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Marking duplicate failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upvote a complaint (support/me-too)
+   * @param {string} complaintId
+   * @param {string} userId
+   */
+  async upvoteComplaint(complaintId, userId) {
+    try {
+      const client = this.complaintRepo.supabase;
+
+      // 1. Check if user already upvoted
+      // This requires the 'complaint_upvotes' table to be created via migration
+      const { data: existingVote, error: checkError } = await client
+        .from("complaint_upvotes")
+        .select("id")
+        .eq("complaint_id", complaintId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (checkError) {
+        // If table doesn't exist, this will error.
+        console.warn(
+          "[UPVOTE] Error checking existing vote:",
+          checkError.message
+        );
+        // Fallback or rethrow? Rethrow to ensure data integrity
+        throw checkError;
+      }
+
+      let action = "";
+
+      if (existingVote) {
+        // TOGGLE OFF: Remove vote
+        const { error: deleteError } = await client
+          .from("complaint_upvotes")
+          .delete()
+          .eq("id", existingVote.id);
+
+        if (deleteError) throw deleteError;
+        action = "removed";
+      } else {
+        // RATE LIMIT CHECK: Prevent serial upvoting (spamming many complaints)
+        // Limit: 10 upvotes per 24 hours
+        const oneDayAgo = new Date(
+          Date.now() - 24 * 60 * 60 * 1000
+        ).toISOString();
+
+        const { count, error: limitError } = await client
+          .from("complaint_upvotes")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .gte("created_at", oneDayAgo);
+
+        if (!limitError && count >= 10) {
+          throw new Error(
+            "Daily limit reached: You can only upvote 10 complaints per day."
+          );
+        }
+
+        // TOGGLE ON: Add vote
+        const { error: insertError } = await client
+          .from("complaint_upvotes")
+          .insert({ complaint_id: complaintId, user_id: userId });
+
+        if (insertError) throw insertError;
+        action = "added";
+      }
+
+      // 2. Update count on complaint
+      // Fetch current to ensure accuracy before modifying
+      const { data: complaint, error: fetchError } = await client
+        .from("complaints")
+        .select("upvote_count")
+        .eq("id", complaintId)
+        .single();
+
+      if (fetchError || !complaint) throw new Error("Complaint not found");
+
+      let finalCount = complaint.upvote_count || 0;
+      if (action === "added") finalCount++;
+      else if (action === "removed" && finalCount > 0) finalCount--;
+
+      const { error: updateError } = await client
+        .from("complaints")
+        .update({ upvote_count: finalCount })
+        .eq("id", complaintId);
+
+      if (updateError) throw updateError;
+
+      return { success: true, new_count: finalCount, action };
+    } catch (error) {
+      console.error("Upvote failed:", error);
+      if (error.message && error.message.includes("does not exist")) {
+        throw new Error(
+          "System update required: Please contact admin (Migration 20260109 missing)"
+        );
+      }
+      throw error;
+    }
+  }
+  /**
+   * Admin Tool: Find valid duplicates for a specific complaint ID
+   * @param {string} complaintId
+   */
+  async getPotentialDuplicatesForId(complaintId) {
+    try {
+      // 1. Get the target complaint details
+      const { data: target, error } = await this.complaintRepo.supabase
+        .from("complaints")
+        .select(
+          "id, latitude, longitude, category, subcategory, submitted_at, title"
+        )
+        .eq("id", complaintId)
+        .single();
+
+      if (error || !target) throw new Error("Target complaint not found");
+
+      // 2. Reuse the detectDuplicates logic
+      // Note: We need to filter OUT the target complaint itself from results
+      const potential = await this.detectDuplicates({
+        latitude: target.latitude,
+        longitude: target.longitude,
+        category: target.category,
+        subcategory: target.subcategory,
+      });
+
+      // Filter out self and closed complaints
+      return potential.filter((c) => c.id !== complaintId);
+    } catch (error) {
+      console.error("Admin duplicate check failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Admin Tool: Bulk Merge
+   * @param {string} masterId - The ID of the Main Report
+   * @param {Array<string>} childIds - List of IDs to merge into master
+   */
+  async bulkMergeComplaints(masterId, childIds) {
+    if (!masterId || !childIds || childIds.length === 0)
+      return { success: false };
+
+    try {
+      // 1. Mark all children as duplicates
+      const { error: updateError } = await this.complaintRepo.supabase
+        .from("complaints")
+        .update({
+          is_duplicate: true,
+          master_complaint_id: masterId,
+          workflow_status: "closed",
+          coordinator_notes: `Bulk merged into ${masterId}`,
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", childIds);
+
+      if (updateError) throw updateError;
+
+      // 2. Add Upvotes to Master (Count = Number of Children)
+      const { data: master } = await this.complaintRepo.supabase
+        .from("complaints")
+        .select("upvote_count")
+        .eq("id", masterId)
+        .single();
+
+      const newCount = (master.upvote_count || 0) + childIds.length;
+
+      await this.complaintRepo.supabase
+        .from("complaints")
+        .update({ upvote_count: newCount })
+        .eq("id", masterId);
+
+      return { success: true, merged_count: childIds.length };
+    } catch (error) {
+      console.error("Bulk merge failed:", error);
+      throw error;
+    }
+  }
+
   async _processFileUploads(complaintId, files, userId = null) {
     if (!files || files.length === 0) {
       return [];
@@ -658,7 +962,7 @@ class ComplaintService {
     const buildQuery = () => {
       let query = this.complaintRepo.supabase
         .from("complaints")
-        .select("workflow_status, subtype, priority, submitted_at");
+        .select("workflow_status, subtype, priority, submitted_at, category");
 
       if (department) {
         query = query.contains("department_r", [department]);
@@ -700,6 +1004,7 @@ class ComplaintService {
       total: allData.length,
       by_status: {},
       by_subtype: {},
+      by_category: {},
       by_priority: {},
       by_month: {},
     };
@@ -713,6 +1018,12 @@ class ComplaintService {
       if (complaint.subtype) {
         stats.by_subtype[complaint.subtype] =
           (stats.by_subtype[complaint.subtype] || 0) + 1;
+      }
+
+      // Count by category
+      if (complaint.category) {
+        stats.by_category[complaint.category] =
+          (stats.by_category[complaint.category] || 0) + 1;
       }
 
       // Count by priority

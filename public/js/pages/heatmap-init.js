@@ -449,13 +449,9 @@ function updateZoomBasedVisibility(zoom) {
       }
     }
 
-    // Hide heatmap unless forced on
+    // Always show heatmap alongside markers
     if (heatmapViz.heatmapLayer) {
-      if (isHeatmapForced) {
-        heatmapViz.showHeatmap();
-      } else {
-        heatmapViz.hideHeatmap();
-      }
+      heatmapViz.showHeatmap();
     }
     // }
   }
@@ -615,6 +611,7 @@ function setupControlPanel() {
   function applyFiltersAndUpdate() {
     const statusValues = getCheckedValues("status-checkbox");
     const categoryValues = getCheckedValues("category-checkbox");
+    const subcategoryValues = getCheckedValues("subcategory-checkbox");
     // Only apply department filter for LGU admins, NOT for coordinators or super-admins
     const userRestrictedDepartment =
       heatmapViz?.userRole === "lgu-admin" && heatmapViz.userDepartment
@@ -635,6 +632,7 @@ function setupControlPanel() {
     currentFilters = {
       status: statusValues.length > 0 ? statusValues : "",
       category: categoryValues.length > 0 ? categoryValues : "",
+      subcategory: subcategoryValues.length > 0 ? subcategoryValues : "",
       department:
         departmentValues && departmentValues.length > 0 ? departmentValues : "",
       includeResolved: document.getElementById("include-resolved").checked,
@@ -1021,6 +1019,10 @@ async function loadCategories() {
       }
 
       sortedData.forEach((category) => {
+        // Container for the category and its subcategories
+        const categoryContainer = document.createElement("div");
+        categoryContainer.className = "flex flex-col gap-0.5";
+
         const label = document.createElement("label");
         // Use Tailwind classes for styling instead of inline styles where possible for easier dark mode support
         label.className =
@@ -1068,7 +1070,44 @@ async function loadCategories() {
           label.appendChild(badge);
         }
 
-        group.appendChild(label);
+        categoryContainer.appendChild(label);
+
+        // Render Subcategories if available
+        if (category.subcategories && category.subcategories.length > 0) {
+          const subContainer = document.createElement("div");
+          subContainer.className =
+            "ml-5 flex flex-col gap-0.5 border-l-2 border-gray-100 dark:border-gray-700 pl-2";
+
+          category.subcategories.forEach((sub) => {
+            const subLabel = document.createElement("label");
+            subLabel.className =
+              "flex items-center gap-1.5 font-normal py-0.5 cursor-pointer text-xs text-gray-600 dark:text-gray-400";
+
+            const subCheckbox = document.createElement("input");
+            subCheckbox.type = "checkbox";
+            subCheckbox.className = "subcategory-checkbox";
+            subCheckbox.value = sub.id;
+
+            // Add change listener
+            subCheckbox.addEventListener("change", () => {
+              // Check parent category if subcategory is checked
+              if (subCheckbox.checked) {
+                checkbox.checked = true;
+              }
+              if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
+                window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
+              }
+            });
+
+            const subText = document.createTextNode(sub.name);
+            subLabel.appendChild(subCheckbox);
+            subLabel.appendChild(subText);
+            subContainer.appendChild(subLabel);
+          });
+          categoryContainer.appendChild(subContainer);
+        }
+
+        group.appendChild(categoryContainer);
       });
 
       // console.log(

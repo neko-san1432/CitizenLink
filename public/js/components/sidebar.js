@@ -217,10 +217,15 @@ async function setSidebarRole() {
           <div class="error-message">
             <h3>${getIcon("alert", { size: 24 })} Error</h3>
             <p>Failed to load sidebar. Please refresh the page.</p>
-            <button onclick="window.location.reload()" class="retry-btn">Retry</button>
+            <button id="sidebar-retry-btn" class="retry-btn">Retry</button>
           </div>
-</div>
-`;
+        </div>
+      `;
+      // Attach click handler safely
+      const retryBtn = document.getElementById("sidebar-retry-btn");
+      if (retryBtn) {
+        retryBtn.addEventListener("click", () => window.location.reload());
+      }
     }
   }
 }
@@ -291,6 +296,7 @@ function getMenuItemsForRole(role) {
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/lgu-admin/reports", icon: "analytics", label: "Reports" },
       { url: "/publish", icon: "publish", label: "Publish" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],

@@ -4,16 +4,18 @@ async function loadBoundaries() {
     const maxAttempts = 50; // Increased attempts
     let attempts = 0;
     while (!window.simpleMap && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay to 200ms
+      await new Promise((resolve) => setTimeout(resolve, 200)); // Increased delay to 200ms
       attempts++;
     }
     const M = window.simpleMap;
     if (!M) {
-      console.warn("[BOUNDARY] Map not available yet, skipping boundary loading");
+      console.warn(
+        "[BOUNDARY] Map not available yet, skipping boundary loading"
+      );
       return; // Don't throw error, just skip if map isn't ready
     }
     // Fetch boundaries data
-    const response = await fetch("/api/boundaries");
+    const response = await fetch("/assets/json/digos-city-boundary.json");
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -53,8 +55,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadBoundaries();
 
     // If heatmap visualization exists, reload data to apply boundary filtering
-    if (window.heatmapViz && typeof window.heatmapViz.loadComplaintData === "function") {
-      console.log("[BOUNDARY] Boundaries loaded, reloading heatmap data with boundary filter");
+    if (
+      window.heatmapViz &&
+      typeof window.heatmapViz.loadComplaintData === "function"
+    ) {
+      console.log(
+        "[BOUNDARY] Boundaries loaded, reloading heatmap data with boundary filter"
+      );
       const currentFilters = window.heatmapViz.currentFilters || {};
       await window.heatmapViz.loadComplaintData(currentFilters);
 
@@ -89,7 +96,7 @@ async function _addCityBoundary(map, brgyData) {
   try {
     // console.log removed for security
     // Create a feature collection from all barangay geojson
-    const allFeatures = brgyData.map(barangay => barangay.geojson);
+    const allFeatures = brgyData.map((barangay) => barangay.geojson);
     // Calculate the convex hull (outer boundary) of all barangays
     const cityBoundary = calculateConvexHull(allFeatures);
     if (cityBoundary) {
@@ -100,10 +107,16 @@ async function _addCityBoundary(map, brgyData) {
         properties: { name: "World" },
         geometry: {
           type: "Polygon",
-          coordinates: [[
-            [-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]
-          ]]
-        }
+          coordinates: [
+            [
+              [-180, -90],
+              [-180, 90],
+              [180, 90],
+              [180, -90],
+              [-180, -90],
+            ],
+          ],
+        },
       };
       // Create the inverted mask using a "donut" polygon
       const invertedMask = {
@@ -113,18 +126,18 @@ async function _addCityBoundary(map, brgyData) {
           type: "Polygon",
           coordinates: [
             worldRectangle.geometry.coordinates[0], // Outer ring (world)
-            cityBoundary.geometry.coordinates[0]    // Inner ring (city boundary - creates the "hole")
-          ]
-        }
+            cityBoundary.geometry.coordinates[0], // Inner ring (city boundary - creates the "hole")
+          ],
+        },
       };
       // Create the inverted mask layer
       const maskLayer = L.geoJSON(invertedMask, {
         style: {
-          color: "transparent",     // No border
+          color: "transparent", // No border
           weight: 0,
           opacity: 0,
-          fillOpacity: 0.3,         // Semi-transparent fill
-          fillColor: "#000000"      // Black mask
+          fillOpacity: 0.3, // Semi-transparent fill
+          fillColor: "#000000", // Black mask
         },
         onEachFeature(feature, layer) {
           layer.bindPopup(`
@@ -133,7 +146,7 @@ async function _addCityBoundary(map, brgyData) {
               <p>Highlighted area shows the city limits</p>
             </div>
           `);
-        }
+        },
       });
       // Add inverted mask to map
       maskLayer.addTo(map);
