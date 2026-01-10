@@ -507,274 +507,43 @@ import { supabase } from "../config/config.js";
 
     status("Processing ID… This may take a few seconds. (0s)");
 
-    try {
-      const fd = new FormData();
-      fd.append("file", blob, file?.name || "capture.jpg");
-      const res = await fetch("/api/identity/ocr", {
-        method: "POST",
-        body: fd,
+    // SKIP OCR - Immediate Success Mock
+    // The user requested to remove OCR and register immediately.
+    // We mock the success flow without calling the backend.
+
+    // Create dummy extracted data
+    const mockData = {
+      firstName: "Verified",
+      lastName: "User",
+      idNumber: "MANUAL-VERIFY-" + Date.now(),
+      idType: "Generic ID",
+      address: "Manual Verification",
+    };
+
+    extractedIdData = mockData;
+
+    status("ID Verified successfully (OCR bypass active).", "success");
+
+    // Store simple verification marker in session
+    sessionStorage.setItem(
+      "cl_verification_id",
+      `local_verified_${Date.now()}`
+    );
+    sessionStorage.setItem("cl_verification_complete", "true");
+
+    // Call success handler
+    if (typeof globalThis.handleVerificationSuccess === "function") {
+      globalThis.handleVerificationSuccess({
+        idType: "Manual ID",
+        idNumber: mockData.idNumber,
+        ...mockData,
       });
-
-      const data = await res.json();
-
-      // Handle error responses from OCR service
-      if (!res.ok || !data.success) {
-        const errorCode = data.error || "UNKNOWN_ERROR";
-        let errorMessage =
-          data.message || "Could not process the ID automatically.";
-
-        if (
-          errorCode === "TEXT_DETECTION_FAILED" ||
-          errorCode === "NO_FIELDS_EXTRACTED"
-        ) {
-          errorMessage = data.message || "Text detection failed. ";
-          if (data?.details?.suggestions) {
-            errorMessage += `\n\nSuggestions:\n${data.details.suggestions
-              .map((s, i) => `${i + 1}. ${s}`)
-              .join("\n")}`;
-          } else {
-            errorMessage +=
-              "This may be due to poor image quality, blur, or camera issues. Please try again with a clearer image.";
-          }
-        } else if (res.status === 400) {
-          errorMessage =
-            data.message ||
-            "Invalid image. Please ensure the image is clear and readable.";
-        } else if (res.status >= 500) {
-          errorMessage =
-            "Server error occurred while processing the ID. Please try again later.";
-        }
-
-        status(errorMessage, "error");
-        console.error("OCR error:", {
-          code: errorCode,
-          message: data.message,
-          details: data.details,
-        });
-        return;
-      }
-
-      // Store extracted ID data
-      const rawFields = data?.fields || {};
-      extractedIdData = {};
-
-      // Flatten fields if they are objects with value/confidence (Handle new OCR format)
-      Object.keys(rawFields).forEach((key) => {
-        const val = rawFields[key];
-        if (
-          val !== null &&
-          typeof val === "object" &&
-          val.value !== null &&
-          typeof val.value !== "undefined"
-        ) {
-          extractedIdData[key] = val.value;
-        } else {
-          extractedIdData[key] = val;
-        }
-      });
-      // CRITICAL FIX: Ensure idType is part of the extracted data for validation
-      extractedIdData.idType = data.idType;
-
-      // Store verification data in backend (only if authenticated)
-      try {
-        // Get current session token to ensure request is authenticated
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
-
-        // If no session (e.g. email signup), skip server storage
-        if (!token) {
-          console.log(
-            "[ID_VERIFY] Anonymous user - skipping server storage. Using local verification data."
-          );
-          // Use a temporary local ID
-          sessionStorage.setItem(
-            "cl_verification_id",
-            `local_verified_${Date.now()}`
-          );
-
-          // Secure Signup: Store verification token if returned by OCR
-          if (data.verificationToken) {
-            sessionStorage.setItem(
-              "cl_verification_token",
-              data.verificationToken
-            );
-          }
-
-          sessionStorage.setItem("cl_verification_complete", "true");
-
-          // Immediate success for anonymous users
-          if (typeof globalThis.handleVerificationSuccess === "function") {
-            globalThis.handleVerificationSuccess({
-              idType: data.idType,
-              idNumber:
-                extractedIdData.idNumber || extractedIdData.public_id_number,
-              ...extractedIdData,
-            });
-          }
-
-          // ** MIGRANT DETECTION LOGIC **
-          const address = (extractedIdData.address || "").toUpperCase();
-          const isDigos = address.includes("DIGOS");
-
-          if (isDigos) {
-            // Standard Flow: Digos ID -> Verify Address Match
-            status("ID Verified successfully.", "success");
-            compareWithFormData(extractedIdData);
-          } else {
-            // Migrant Flow: Non-Digos ID -> Require Secondary Proof
-            console.log(
-              "[ID_VERIFY] Non-Digos Address detected. Triggering Secondary Verification."
-            );
-            status("ID Valid. Non-Digos Address detected.", "warning");
-
-            // Unhide Secondary Section
-            const secSection = document.getElementById("secondary-doc-section");
-            if (secSection) secSection.hidden = false;
-
-            // Setup Secondary Upload Logic
-            setupSecondaryVerification(extractedIdData.lastName);
-          }
-          return;
-        }
-
-        const headers = { "Content-Type": "application/json" };
-        headers["Authorization"] = `Bearer ${token}`;
-
-        // Normalize ID number for backend (server expects idNumber)
-        if (!extractedIdData.idNumber) {
-          extractedIdData.idNumber =
-            extractedIdData.public_id_number ||
-            extractedIdData.id_number ||
-            extractedIdData.IDNumber ||
-            extractedIdData.documentNumber ||
-            "";
-        }
-
-        const storeResponse = await fetch("/api/verification/store", {
-          method: "POST",
-          headers,
-          credentials: "include",
-          body: JSON.stringify({
-            idType: data.idType,
-            fields: extractedIdData, // Use flattened data for backend storage
-            confidence: data.confidence,
-          }),
-        });
-
-        const storeResult = await storeResponse.json();
-
-        if (!storeResponse.ok || !storeResult.success) {
-          // Handle session expiry / stale user
-          if (storeResponse.status === 401) {
-            console.warn(
-              "[ID_VERIFY] Session issue during storage (non-fatal):",
-              storeResult.error
-            );
-            // Don't redirect, just warn and proceed
-            sessionStorage.setItem(
-              "cl_verification_id",
-              `local_verified_${Date.now()}`
-            );
-            sessionStorage.setItem("cl_verification_complete", "true");
-            status("ID Verified locally.", "success"); // Suppress warning for smooth UX
-          } else if (storeResult.error === "ID_NUMBER_ALREADY_REGISTERED") {
-            status("⚠️ This ID number is already registered.", "warning");
-            return; // Stop if duplicate
-          } else {
-            console.error("Failed to store verification:", storeResult);
-            status(
-              "⚠️ Verification verified locally. Server storage failed.",
-              "warning"
-            );
-          }
-
-          // Call success handler to unlock "Next" button (unless it was a duplicate error)
-          if (storeResult.error !== "ID_NUMBER_ALREADY_REGISTERED") {
-            if (typeof globalThis.handleVerificationSuccess === "function") {
-              globalThis.handleVerificationSuccess({
-                idType: data.idType,
-                idNumber:
-                  extractedIdData.idNumber || extractedIdData.public_id_number,
-                ...extractedIdData,
-              });
-            }
-          }
-          if (storeResult.error !== "ID_NUMBER_ALREADY_REGISTERED") {
-            compareWithFormData(extractedIdData);
-          }
-          return;
-        }
-
-        // Store verification token if present (for secure signup)
-        if (storeResult.data.verificationToken) {
-          sessionStorage.setItem(
-            "cl_verification_token",
-            storeResult.data.verificationToken
-          );
-        }
-
-        // Store verification ID for signup
-        try {
-          sessionStorage.setItem(
-            "cl_verification_id",
-            storeResult.data.verificationId
-          );
-          sessionStorage.setItem("cl_verification_complete", "true");
-        } catch (storageError) {
-          console.warn(
-            "Could not store verification ID in session:",
-            storageError
-          );
-        }
-
-        console.log(
-          "[ID_VERIFY] Verification stored:",
-          storeResult.data.verificationId
-        );
-        status("ID Verified successfully!", "success");
-
-        // Call success handler
-        if (typeof globalThis.handleVerificationSuccess === "function") {
-          globalThis.handleVerificationSuccess({
-            idType: data.idType,
-            idNumber:
-              extractedIdData.idNumber || extractedIdData.public_id_number,
-            ...extractedIdData,
-          });
-        }
-      } catch (storeError) {
-        console.error("Error storing verification:", storeError);
-        status(
-          "⚠️ Could not save verification data. Please try again.",
-          "error"
-        );
-        return;
-      }
-
-      // Success - compare with form data (this will also render the results)
-      compareWithFormData(extractedIdData);
-    } catch (err) {
-      console.error("OCR error", err);
-      // Determine if it's a network error, camera issue, or other error
-      let errorMessage = "Could not process the ID automatically. ";
-      if (
-        err?.message?.includes("fetch") ||
-        err?.message?.includes("network")
-      ) {
-        errorMessage +=
-          "Network error. Please check your connection and try again.";
-      } else if (err.message && err.message.includes("camera")) {
-        errorMessage +=
-          "Camera error detected. Please try using Upload mode instead, or check your camera settings.";
-      } else {
-        errorMessage +=
-          "Please try again with a clearer image or continue with manual verification.";
-      }
-      status(errorMessage, "error");
-    } finally {
-      clearInterval(timerInterval);
-      scanBtn.disabled = false;
     }
+
+    // Compare with form (which mostly just unlocks the next step)
+    compareWithFormData(mockData);
+
+    scanBtn.disabled = false;
   });
 
   function renderReview(fields) {

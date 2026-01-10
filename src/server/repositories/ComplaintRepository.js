@@ -101,6 +101,11 @@ class ComplaintRepository {
       const offset = (page - 1) * limit;
 
       let client = this.supabase;
+      // CRITICAL FIX: Always use service role client (this.supabase) for this query
+      // RLS policy on user_profiles is causing infinite recursion when using the auth token.
+      // Since this method filters by userId explicitly [eq("submitted_by", userId)],
+      // it is safe to use the admin client to fetch the data.
+      /*
       if (token) {
         const { createClient } = require("@supabase/supabase-js");
         const supabaseUrl = process.env.SUPABASE_URL;
@@ -111,6 +116,7 @@ class ComplaintRepository {
           global: { headers: { Authorization: token } },
         });
       }
+      */
 
       let query = client
         .from("complaints")

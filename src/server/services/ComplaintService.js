@@ -658,7 +658,7 @@ class ComplaintService {
     const buildQuery = () => {
       let query = this.complaintRepo.supabase
         .from("complaints")
-        .select("workflow_status, subtype, priority, submitted_at");
+        .select("workflow_status, priority, submitted_at, category");
 
       if (department) {
         query = query.contains("department_r", [department]);
@@ -699,7 +699,8 @@ class ComplaintService {
     const stats = {
       total: allData.length,
       by_status: {},
-      by_subtype: {},
+
+      by_category: {},
       by_priority: {},
       by_month: {},
     };
@@ -709,10 +710,10 @@ class ComplaintService {
       stats.by_status[complaint.workflow_status] =
         (stats.by_status[complaint.workflow_status] || 0) + 1;
 
-      // Count by subtype
-      if (complaint.subtype) {
-        stats.by_subtype[complaint.subtype] =
-          (stats.by_subtype[complaint.subtype] || 0) + 1;
+      // Count by category
+      if (complaint.category) {
+        stats.by_category[complaint.category] =
+          (stats.by_category[complaint.category] || 0) + 1;
       }
 
       // Count by priority

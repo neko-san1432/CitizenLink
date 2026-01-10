@@ -225,100 +225,30 @@ async function setSidebarRole() {
   }
 }
 function getMenuItemsForRole(role) {
-  // Normalize role using general normalization function
-  const originalRole = role;
+  // Normalize role
   role = normalizeRole(role);
-  if (originalRole !== role) {
-    console.log(
-      "[SIDEBAR] Normalizing role from",
-      originalRole,
-      "to",
-      role,
-      "for menu items"
-    );
-  }
 
-  // console.log removed for security
-  const menuItems = {
-    citizen: [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
-      { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
-      { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
-    ],
-    "super-admin": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      {
-        url: "/super-admin/pending-signups",
-        icon: "review-queue",
-        label: "Pending Signups",
-      },
-      {
-        url: "/super-admin/user-manager",
-        icon: "role-changer",
-        label: "User Manager",
-      },
-      {
-        url: "/super-admin/link-generator",
-        icon: "link-generator",
-        label: "Link Generator",
-      },
-      {
-        url: "/super-admin/server-logs",
-        icon: "server-logs",
-        label: "Server logs",
-      },
-      { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
-    ],
-    "lgu-hr": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      {
-        url: "/link-generator",
-        icon: "link-generator",
-        label: "Link Generator",
-      },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
-    ],
-    "complaint-coordinator": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
-      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
-    ],
-    "lgu-admin": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/assignments", icon: "assignments", label: "Assignments" },
-      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/publish", icon: "publish", label: "Publish" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
-    ],
-  };
-  // Handle simplified LGU roles
-  if (role === "lgu-hr") {
-    return menuItems["lgu-hr"] || [];
-  }
-  if (role === "lgu-admin") {
-    return menuItems["lgu-admin"] || [];
-  }
-  if (role === "lgu") {
+  // Collapse all admin-like roles to 'lgu-admin' for this MVP
+  if (
+    ["super-admin", "lgu-admin", "complaint-coordinator", "admin"].includes(
+      role
+    )
+  ) {
     return [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/task-assigned", icon: "taskAssigned", label: "Task Assigned" },
+      {
+        url: "/lgu-admin/reports",
+        icon: "analytics",
+        label: "Complaint Summary",
+      },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ];
   }
-  // Return menu items for exact role match
-  const items = menuItems[role] || [];
-  console.log(
-    "[SIDEBAR] Menu items for role:",
-    role,
-    "found",
-    items.length,
-    "items"
-  );
-  return items;
+
+  // Default to Citizen
+  return [
+    { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
+    { url: "/myProfile", icon: "myProfile", label: "My Profile" },
+  ];
 }
 // Sidebar search removed per requirements
 // Theme toggle is handled by header.js - removed duplicate implementation
