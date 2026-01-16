@@ -3,3 +3,5 @@ node_modules
 codeql-results
 eng.traineddata
 /implementation_plans
+emails
+separate_module

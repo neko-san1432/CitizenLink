@@ -1,4 +1,4 @@
-# manual_testing_guide.md
+ manual_testing_guide.md
 
 ## 🚀 Live User Testing Guide: Duplicate Reporting & Admin Tools
 

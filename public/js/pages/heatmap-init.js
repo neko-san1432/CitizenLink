@@ -346,12 +346,28 @@ async function loadComplaintData() {
     // Apply initial filters (markers don't exist yet, so this only affects heatmap)
     applyFiltersAndUpdate();
 
+    // Initialize Advanced Features (Emergency Panel, etc.)
+    if (window.AdvancedFeatures) {
+      await window.AdvancedFeatures.init(map);
+      console.log("[HEATMAP] Advanced Features Initialized");
+    }
+
     // Apply initial zoom-based visibility (only heatmap will show)
     const initialZoom = map ? map.getZoom() : 11;
     updateZoomBasedVisibility(initialZoom);
 
     // Update statistics
     updateStatistics();
+
+    // Render Emergency Panel with High Priority items
+    if (window.AdvancedFeatures && heatmapViz.allComplaintData) {
+      const criticalItems = heatmapViz.allComplaintData.filter(c =>
+        ['Urgent', 'High'].includes(c.priority) ||
+        ['Critical', 'Emergency'].includes(c.category)
+      );
+      window.AdvancedFeatures.renderEmergencyPanel(criticalItems);
+      window.AdvancedFeatures.renderCriticalMarkers(criticalItems);
+    }
   } catch (error) {
     console.error("[HEATMAP] Failed to load data:", error);
   }
@@ -1236,10 +1252,9 @@ async function loadDepartments() {
         group.appendChild(label);
       });
       console.log(
-        `[HEATMAP] Loaded ${departments.length} department(s) for filtering${
-          resolvedUserDepartmentCode
-            ? ` (user's office: ${resolvedUserDepartmentCode} at top)`
-            : ""
+        `[HEATMAP] Loaded ${departments.length} department(s) for filtering${resolvedUserDepartmentCode
+          ? ` (user's office: ${resolvedUserDepartmentCode} at top)`
+          : ""
         }`
       );
     } else {

@@ -1,47 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Review Queue - CitizenLink</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/toast.css" />
-    <link rel="stylesheet" href="/css/components/sidebar.css" />
-    <link rel="stylesheet" href="/css/app.css" />
-    <link rel="stylesheet" href="/css/header-redesign.css" />
-    <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css" />
-    <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <!-- Header will be injected here -->
-      <div class="header-container"></div>
 
-      <!-- Sidebar will be injected here -->
-      <div id="sidebar"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title>Review Queue - CitizenLink</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/header-redesign.css" />
+  <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css" />
+  <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
+</head>
 
-      <main class="main-content">
-        <div class="queue-container">
-          <div class="queue-header">
-            <h1>📋 Review Queue</h1>
-          </div>
+<body>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
 
-          <!-- Side-by-side Layout -->
-          <div class="queue-layout">
-            <!-- Left Column: Review Queue Content -->
-            <div class="queue-main">
-              <!-- Enhanced Filters -->
-              <div class="filters">
-                <div class="filter-group">
-                  <label for="filter-priority">Priority</label>
-                  <select id="filter-priority">
+    <div id="app" class="collapsible coordinator-dashboard">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header-section">
+        <h1 class="text-2xl font-bold text-gray-800">Review Queue</h1>
+        <p class="text-gray-600">
+          Review, prioritize, and assign incoming complaints.
+        </p>
+      </div>
+
+      <!-- Main Content -->
+      <div class="dashboard-content p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- LEFT COLUMN: Filters & Queue (Span 2) -->
+          <div class="lg:col-span-2 space-y-6">
+
+            <!-- Filters Card -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                  <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <input type="text" id="search-input"
+                      class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="Search complaints...">
+                  </div>
+                </div>
+
+                <!-- Priority Filter -->
+                <div>
+                  <label for="filter-priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <select id="filter-priority"
+                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Priorities</option>
                     <option value="urgent">Urgent</option>
                     <option value="high">High</option>
@@ -49,9 +73,12 @@
                     <option value="low">Low</option>
                   </select>
                 </div>
-                <div class="filter-group">
-                  <label for="filter-type">Category</label>
-                  <select id="filter-type">
+
+                <!-- Category Filter -->
+                <div>
+                  <label for="filter-type" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select id="filter-type"
+                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Categories</option>
                     <option value="Infrastructure">Infrastructure</option>
                     <option value="Sanitation">Sanitation</option>
@@ -60,107 +87,113 @@
                     <option value="Environment">Environment</option>
                   </select>
                 </div>
-                <div class="filter-group">
-                  <label for="filter-similar">Duplicates</label>
-                  <select id="filter-similar">
+
+                <!-- Duplicates Filter -->
+                <div>
+                  <label for="filter-similar" class="block text-sm font-medium text-gray-700 mb-1">Duplicates</label>
+                  <select id="filter-similar"
+                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Complaints</option>
                     <option value="yes">With Similar Complaints</option>
                     <option value="no">No Duplicates</option>
                   </select>
                 </div>
-                <div class="filter-group">
-                  <label for="filter-prioritization">Prioritization</label>
-                  <select id="filter-prioritization">
+
+                <!-- Sort Order -->
+                <div>
+                  <label for="filter-prioritization" class="block text-sm font-medium text-gray-700 mb-1">Sort
+                    By</label>
+                  <select id="filter-prioritization"
+                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">Default Order</option>
                     <option value="desc">Highest Priority First</option>
                     <option value="asc">Lowest Priority First</option>
                   </select>
                 </div>
-                <div class="filter-group">
-                  <label for="search-input">Search</label>
-                  <input
-                    type="text"
-                    id="search-input"
-                    placeholder="Search complaints..."
-                  />
-                </div>
-              </div>
-
-              <!-- Loading State -->
-              <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>Loading review queue...</p>
-              </div>
-
-              <!-- Empty State -->
-              <div id="empty-state" class="empty-state" style="display: none">
-                <h2>✅ All Caught Up!</h2>
-                <p>There are no complaints pending review at the moment.</p>
-              </div>
-
-              <!-- Complaint List -->
-              <div
-                id="complaint-list"
-                class="complaint-list"
-                style="display: none"
-              ></div>
-
-              <!-- Rejected Complaints Section -->
-              <div class="rejected-section" style="margin-top: 40px">
-                <div class="queue-header">
-                  <h2>❌ Rejected Complaints</h2>
-                  <button
-                    class="btn btn-secondary btn-sm"
-                    id="toggle-rejected-btn"
-                  >
-                    Show Rejected
-                  </button>
-                </div>
-                <div id="rejected-container" style="display: none">
-                  <div
-                    id="rejected-loading"
-                    class="loading"
-                    style="display: none"
-                  >
-                    <div class="spinner"></div>
-                    <p>Loading rejected complaints...</p>
-                  </div>
-                  <div id="rejected-list" class="complaint-list"></div>
-                </div>
-              </div>
-
-              <!-- Pagination -->
-              <div
-                id="pagination-container"
-                class="pagination-container"
-                style="display: none"
-              >
-                <div class="pagination-info">
-                  <span id="page-info">Page 1 of 1</span>
-                  <span class="pagination-separator">•</span>
-                  <span id="items-info">Showing 0 of 0 complaints</span>
-                </div>
-                <div class="pagination-controls">
-                  <button id="prev-page" class="pagination-btn" disabled>
-                    <span>←</span> Previous
-                  </button>
-                  <div id="page-numbers" class="page-numbers"></div>
-                  <button id="next-page" class="pagination-btn">
-                    Next <span>→</span>
-                  </button>
-                </div>
               </div>
             </div>
 
-            <!-- Right Column: Barangay Prioritization -->
-            <div class="queue-sidebar">
-              <div class="barangay-prioritization-section">
-                <div id="barangay-prioritization-container"></div>
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-12">
+              <div class="spinner mx-auto mb-3"></div>
+              <p class="text-gray-500">Loading review queue...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
+              <div
+                class="mx-auto h-12 w-12 text-green-100 bg-green-500 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900">All Caught Up!</h3>
+              <p class="mt-2 text-gray-500">There are no complaints pending review at the moment.</p>
+            </div>
+
+            <!-- Complaint List -->
+            <div id="complaint-list" class="space-y-4 hidden">
+              <!-- Complaints will be injected here -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination-container"
+              class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div class="text-sm text-gray-700">
+                <span id="page-info">Page 1 of 1</span>
+                <span class="mx-2 text-gray-300">•</span>
+                <span id="items-info">Showing 0 of 0 complaints</span>
+              </div>
+              <div class="flex gap-2">
+                <button id="prev-page"
+                  class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                  Previous
+                </button>
+                <div id="page-numbers" class="flex gap-1"></div>
+                <button id="next-page"
+                  class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                  Next
+                </button>
+              </div>
+            </div>
+
+            <!-- Rejected Complaints Section -->
+            <div class="rejected-section mt-8 pt-8 border-t border-gray-200">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-gray-800">Rejected Complaints</h2>
+                <button id="toggle-rejected-btn"
+                  class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-3 py-1 rounded-md hover:bg-blue-100 transition-colors">
+                  Show Rejected
+                </button>
+              </div>
+
+              <div id="rejected-container" class="hidden">
+                <div id="rejected-loading" class="hidden text-center py-8">
+                  <div class="spinner mx-auto mb-2"></div>
+                  <p class="text-gray-500">Loading rejected complaints...</p>
+                </div>
+                <div id="rejected-list" class="space-y-4"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: Barangay Prioritization (Span 1) -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-24">
+              <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Barangay
+                  Prioritization</h3>
+                <div id="barangay-prioritization-container">
+                  <!-- Barangay content will be injected here -->
+                </div>
               </div>
             </div>
           </div>
+
         </div>
-      </main>
+      </div>
     </div>
 
     <!-- Toast container -->
@@ -171,14 +204,8 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
-    <script
-      type="module"
-      src="../../js/services/toastNotificationService.js"
-    ></script>
-    <script
-      type="module"
-      src="../../js/coordinator/department-selection-modal.js"
-    ></script>
+    <script type="module" src="../../js/services/toastNotificationService.js"></script>
+    <script type="module" src="../../js/coordinator/department-selection-modal.js"></script>
     <script type="module" src="../../js/coordinator/review-queue.js"></script>
 
     <script type="module">
@@ -193,5 +220,6 @@
         toastNotificationService.stopListening();
       });
     </script>
-  </body>
+</body>
+
 </html>

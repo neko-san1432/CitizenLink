@@ -78,7 +78,7 @@ class ReviewQueue {
             if (rejectedList) {
               if (rejectedComplaints.length === 0) {
                 rejectedList.innerHTML =
-                  '<div class="empty-state"><p>No rejected complaints</p></div>';
+                  '<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-100"><p>No rejected complaints found.</p></div>';
               } else {
                 rejectedList.innerHTML = rejectedComplaints
                   .map((complaint) => this.createComplaintCard(complaint, true))
@@ -95,7 +95,7 @@ class ReviewQueue {
             showToast("Failed to load rejected complaints", "error");
             if (rejectedList) {
               rejectedList.innerHTML =
-                '<div class="empty-state"><p>Error loading rejected complaints</p></div>';
+                '<div class="text-center py-8 text-red-500 bg-red-50 rounded-lg border border-red-100"><p>Error loading rejected complaints</p></div>';
             }
           } finally {
             if (loading) loading.style.display = "none";
@@ -296,8 +296,13 @@ class ReviewQueue {
       if (emptyState) {
         emptyState.style.display = "block";
         emptyState.innerHTML = `
-                    <h2>No complaints found</h2>
-                    <p>No complaints match your current filters.</p>
+                    <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+                        <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">No complaints found</h3>
+                    <p class="mt-2 text-gray-500">No complaints match your current filters.</p>
                 `;
       }
       return;
@@ -352,19 +357,19 @@ class ReviewQueue {
     let flagHTML = "";
     if (algorithmFlags.high_confidence_duplicate) {
       flagHTML = `
-                <div class="algorithm-flag high-confidence">
-                    <span class="flag-icon">⚠️</span>
-                    <span class="flag-text">
-                        <strong>HIGH CONFIDENCE DUPLICATE DETECTED</strong>
-                        <span class="flag-subtext">Similarity score ≥85% - Review required</span>
-                    </span>
+                <div class="rounded-xl p-4 flex gap-4 items-start mt-4 bg-red-50 border border-red-200 text-red-800">
+                    <span class="text-xl">⚠️</span>
+                    <div class="flex flex-col">
+                        <strong class="font-bold">HIGH CONFIDENCE DUPLICATE DETECTED</strong>
+                        <span class="text-sm opacity-90">Similarity score ≥85% - Review required</span>
+                    </div>
                 </div>
             `;
     } else if (algorithmFlags.has_duplicates) {
       flagHTML = `
-                <div class="algorithm-flag">
-                    <span class="flag-icon">🔍</span>
-                    <span class="flag-text">
+                <div class="rounded-xl p-4 flex gap-4 items-start mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800">
+                    <span class="text-xl">🔍</span>
+                    <span class="font-medium">
                         ${algorithmFlags.similarity_count} potential duplicate(s) found
                     </span>
                 </div>
@@ -396,13 +401,12 @@ class ReviewQueue {
                 <div class="${suggestionClass}">
                     ${suggestionText}
                     <span class="barangay-name">${this.escapeHtml(
-                      barangay
-                    )}</span>
-                    ${
-                      prioritizationScore > 0
-                        ? `<span class="priority-score">Score: ${prioritizationScore}</span>`
-                        : ""
-                    }
+        barangay
+      )}</span>
+                    ${prioritizationScore > 0
+          ? `<span class="priority-score">Score: ${prioritizationScore}</span>`
+          : ""
+        }
                 </div>
             `;
 
@@ -427,80 +431,88 @@ class ReviewQueue {
     }
 
     return `
-            <div class="complaint-card ${
-              complaint.priority?.toLowerCase() || "medium"
-            } ${
-      priorityLevel === "critical" || priorityLevel === "high"
-        ? "high-priority-barangay"
+            <div class="complaint-card bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-blue-300 ${complaint.priority?.toLowerCase() || "medium"
+      } ${priorityLevel === "critical" || priorityLevel === "high"
+        ? "ring-2 ring-red-100"
         : ""
-    }" data-complaint-id="${
-      complaint.id
-    }" data-priority-score="${prioritizationScore}">
+      }" data-complaint-id="${complaint.id
+      }" data-priority-score="${prioritizationScore}">
                 ${prioritizationSuggestionHTML}
-                <div class="complaint-header">
+                
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <div class="complaint-id">#${complaint.id}</div>
-                        <h3 class="complaint-title">${
-                          complaint.title || "Untitled Complaint"
-                        }</h3>
+                        <div class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-mono rounded mb-2">#${complaint.id}</div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1 leading-tight">${complaint.title || "Untitled Complaint"
+      }</h3>
                     </div>
-                    <div class="complaint-status status-${
-                      complaint.workflow_status?.toLowerCase() ||
-                      complaint.status?.toLowerCase() ||
-                      "pending"
-                    }">
-                        ${
-                          complaint.workflow_status ||
-                          complaint.status ||
-                          "Pending"
-                        }
+                    <div class="px-3 py-1 rounded-full text-sm font-semibold capitalize status-${complaint.workflow_status?.toLowerCase() ||
+      complaint.status?.toLowerCase() ||
+      "pending"
+      } ${
+      // Dynamic status colors
+      (complaint.workflow_status || complaint.status) === 'resolved' ? 'bg-green-100 text-green-800' :
+        (complaint.workflow_status || complaint.status) === 'rejected' ? 'bg-red-100 text-red-800' :
+          'bg-yellow-100 text-yellow-800'
+      }">
+                        ${complaint.workflow_status ||
+      complaint.status ||
+      "Pending"
+      }
                     </div>
                 </div>
+
                 <div class="complaint-content">
-                    <p class="complaint-description">${
-                      complaint.descriptive_su ||
-                      complaint.description ||
-                      "No description provided"
-                    }</p>
-                    <div class="complaint-meta">
-                        <span class="badge ${priorityBadge}">${
-      complaint.priority || "Medium"
-    }</span>
-                        <span class="badge badge-medium">${
-                          complaint.category || "General"
-                        }</span>
-                        ${
-                          barangay
-                            ? `<span class="badge badge-info">📍 ${barangay}</span>`
-                            : ""
-                        }
-                        <span class="complaint-date">${this.formatTimeAgo(
-                          complaint.submitted_at || complaint.created_at
-                        )}</span>
+                    <p class="text-gray-600 mb-4 leading-relaxed">${complaint.descriptive_su ||
+      complaint.description ||
+      "No description provided"
+      }</p>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${priority === 'urgent' ? 'bg-red-100 text-red-800 border border-red-200' :
+        priority === 'high' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+          priority === 'medium' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+            'bg-green-100 text-green-800 border border-green-200'
+      }">${complaint.priority || "Medium"}</span>
+                        
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-gray-100 text-gray-700 border border-gray-200">
+                          ${complaint.category || "General"}
+                        </span>
+                        
+                        ${barangay
+        ? `<span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-100">📍 ${barangay}</span>`
+        : ""
+      }
+                        
+                         <span class="text-sm text-gray-500 flex items-center ml-auto">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            ${this.formatTimeAgo(complaint.submitted_at || complaint.created_at)}
+                         </span>
                     </div>
+
                     ${flagHTML}
                 </div>
-                <div class="complaint-actions">
-                    <button class="btn btn-primary view-btn" data-complaint-id="${
-                      complaint.id
-                    }">
+
+                <div class="flex gap-4 mt-6 pt-6 border-t border-gray-100">
+                    <button class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-sm hover:shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 view-btn" data-complaint-id="${complaint.id
+      }">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         View Details
                     </button>
-                    ${
-                      !isRejected
-                        ? `<button class="btn btn-danger reject-btn" data-complaint-id="${complaint.id}">
+                    ${!isRejected
+        ? `<button class="px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 hover:border-red-300 transition-all flex items-center gap-2 reject-btn" data-complaint-id="${complaint.id}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         Reject
                     </button>`
-                        : `<span class="badge badge-danger" style="padding: 8px 12px;">Rejected</span>`
-                    }
-                    ${
-                      isRejected && complaint.coordinator_notes
-                        ? `<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
-                        <strong>Rejection Reason:</strong> ${complaint.coordinator_notes}
-                    </div>`
-                        : ""
-                    }
+        : `<span class="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium self-center">Rejected</span>`
+      }
+                    
                 </div>
+                ${isRejected && complaint.coordinator_notes
+        ? `<div class="mt-4 p-3 bg-orange-50 text-orange-800 rounded-lg text-sm border border-orange-100">
+                    <strong>Rejection Reason:</strong> ${complaint.coordinator_notes}
+                </div>`
+        : ""
+      }
             </div>
         `;
   }
@@ -511,13 +523,13 @@ class ReviewQueue {
         !this.filters.priority ||
         this.filters.priority === "" ||
         complaint.priority?.toLowerCase() ===
-          this.filters.priority.toLowerCase();
+        this.filters.priority.toLowerCase();
       // Category filter
       const matchesCategory =
         !this.filters.category ||
         this.filters.category === "" ||
         complaint.category?.toLowerCase() ===
-          this.filters.category.toLowerCase();
+        this.filters.category.toLowerCase();
       // Duplicate filter
       const matchesDuplicates =
         !this.filters.duplicates ||
@@ -630,14 +642,14 @@ class ReviewQueue {
       // First page
       if (startPage > 1) {
         const firstBtn = document.createElement("button");
-        firstBtn.className = "page-number";
+        firstBtn.className = "px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50";
         firstBtn.textContent = "1";
         firstBtn.addEventListener("click", () => this.goToPage(1));
         pageNumbers.appendChild(firstBtn);
 
         if (startPage > 2) {
           const ellipsis = document.createElement("span");
-          ellipsis.className = "page-number ellipsis";
+          ellipsis.className = "px-2 py-1 text-gray-400";
           ellipsis.textContent = "...";
           pageNumbers.appendChild(ellipsis);
         }
@@ -646,10 +658,15 @@ class ReviewQueue {
       // Page numbers
       for (let i = startPage; i <= endPage; i++) {
         const pageBtn = document.createElement("button");
-        pageBtn.className = "page-number";
+        // Base classes
+        let classes = "px-3 py-1 border rounded-md text-sm font-medium transition-colors ";
         if (i === this.currentPage) {
-          pageBtn.classList.add("active");
+          classes += "bg-blue-600 text-white border-blue-600";
+        } else {
+          classes += "bg-white text-gray-700 border-gray-300 hover:bg-gray-50";
         }
+        pageBtn.className = classes;
+
         pageBtn.textContent = i.toString();
         pageBtn.addEventListener("click", () => this.goToPage(i));
         pageNumbers.appendChild(pageBtn);
@@ -659,13 +676,13 @@ class ReviewQueue {
       if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
           const ellipsis = document.createElement("span");
-          ellipsis.className = "page-number ellipsis";
+          ellipsis.className = "px-2 py-1 text-gray-400";
           ellipsis.textContent = "...";
           pageNumbers.appendChild(ellipsis);
         }
 
         const lastBtn = document.createElement("button");
-        lastBtn.className = "page-number";
+        lastBtn.className = "px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50";
         lastBtn.textContent = totalPages.toString();
         lastBtn.addEventListener("click", () => this.goToPage(totalPages));
         pageNumbers.appendChild(lastBtn);

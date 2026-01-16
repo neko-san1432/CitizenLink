@@ -108,7 +108,12 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
     const windowStart = now - windowMs;
 
     // Try to get from database first, fallback to in-memory
-    let rateLimitData = await getRateLimitFromDB(key, windowMs);
+    let rateLimitData = null;
+
+    // Skip DB for development/localhost to prevent shared rate limit buckets
+    if (!isDevelopment && !isLocalhost) {
+      rateLimitData = await getRateLimitFromDB(key, windowMs);
+    }
 
     if (!rateLimitData) {
       // Fallback to in-memory store
@@ -144,7 +149,8 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
     // Save to database (async, don't wait) - Optimized to only sync periodically or on critical thresholds
     // For high-volume traffic (200k users), we shouldn't hit DB on every request
     // Only sync if it's a new window or significant change
-    if (rateLimitData.requests.length % 10 === 0 || rateLimitData.requests.length >= effectiveMaxRequests) {
+    // Skip DB for development/localhost
+    if ((!isDevelopment && !isLocalhost) && (rateLimitData.requests.length % 10 === 0 || rateLimitData.requests.length >= effectiveMaxRequests)) {
       saveRateLimitToDB(key, rateLimitData, windowMs).catch(() => {
         // If DB save fails, keep in-memory copy
         rateLimitStore.set(key, rateLimitData);
