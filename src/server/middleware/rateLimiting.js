@@ -65,7 +65,7 @@ async function saveRateLimitToDB(key, data, windowMs) {
   if (!supabase) return false;
 
   try {
-    const _now = Date._now();
+    const _now = Date.now();
     const resetTime = new Date(data.resetTime).toISOString();
 
     const { error } = await supabase

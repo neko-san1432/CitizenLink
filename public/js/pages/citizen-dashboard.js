@@ -63,13 +63,13 @@ function updateStats(complaints, total) {
   });
 
   // If we have total count from pagination, use it for total submitted
-  setText("stat-submitted", total);
+  setText("stat-total-submitted", total);
 
   // Note: These will only reflect the recent batch if we don't have full stats.
   // Ideally we would fetch /api/citizen/stats.
   setText("stat-in-progress", inProgress);
   setText("stat-resolved", resolved);
-  setText("stat-pending", pending);
+  setText("stat-feedback", pending);
 }
 
 function updateActivity(complaints) {
@@ -79,29 +79,38 @@ function updateActivity(complaints) {
   if (complaints.length > 0) {
     container.innerHTML = complaints
       .map(
-        (c) => `
-       <div class="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
-         <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        (c) => {
+          const status = c.workflow_status || "Submitted";
+          let statusClass = "bg-gray-100 text-gray-800";
+          if (["submitted", "new"].includes(status.toLowerCase())) statusClass = "bg-blue-100 text-blue-800";
+          else if (["in_progress", "assigned"].includes(status.toLowerCase())) statusClass = "bg-orange-100 text-orange-800";
+          else if (["resolved", "completed"].includes(status.toLowerCase())) statusClass = "bg-green-100 text-green-800";
+
+          return `
+       <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
            </svg>
          </div>
+         <div class="flex-1 min-w-0">
+           <p class="text-sm font-semibold text-gray-900 truncate">${c.title || "Untitled Complaint"}</p>
+           <p class="text-xs text-gray-500 mt-0.5">${new Date(c.submitted_at || c.created_at).toLocaleDateString()}</p>
+         </div>
          <div>
-           <p class="text-sm font-medium text-gray-800">${
-  c.title || "Complaint"
-}</p>
-           <p class="text-xs text-gray-500">${
-  c.workflow_status || "Submitted"
-} • ${new Date(
-  c.submitted_at || c.created_at
-).toLocaleDateString()}</p>
+           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+             ${status}
+           </span>
          </div>
        </div>
-    `
+    `;
+        }
       )
       .join("");
   } else {
-    container.innerHTML = `<div class="text-center py-4 text-gray-500">No recent activity</div>`;
+    container.innerHTML = `<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+      <p>No recent activity</p>
+    </div>`;
   }
 }
 
@@ -128,7 +137,7 @@ function initCharts() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, grid: { display: false } },
+          y: { beginAtZero: true, grid: { display: false }, ticks: { precision: 0 } },
           x: { grid: { display: false } },
         },
       },
