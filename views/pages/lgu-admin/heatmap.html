@@ -11,6 +11,18 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { "50": "#eff6ff", "100": "#dbeafe", "200": "#bfdbfe", "300": "#93c5fd", "400": "#60a5fa", "500": "#3b82f6", "600": "#2563eb", "700": "#1d4ed8", "800": "#1e40af", "900": "#1e3a8a", "950": "#172554" }
+          }
+        }
+      }
+    }
+  </script>
 
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -230,6 +242,13 @@
           </div>
         </div>
 
+        <!-- Insights Button (Advanced Features) -->
+        <button id="toolbar-insights-btn"
+          class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium flex items-center gap-2 hidden">
+          <span>Insights</span>
+          <i class="fas fa-magic"></i>
+        </button>
+
         <!-- Reset Filter -->
         <button id="reset-filters-btn"
           class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-sm font-medium"
@@ -307,7 +326,7 @@
 
   <!-- Advanced Features Module -->
   <script type="module">
-    import { AdvancedFeatures } from '/js/components/map/advancedFeatures.js';
+    import { AdvancedFeatures } from '/js/components/map/advancedFeatures.js?v=13';
     window.AdvancedFeatures = AdvancedFeatures;
   </script>
 

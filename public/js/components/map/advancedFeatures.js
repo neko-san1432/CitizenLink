@@ -28,8 +28,48 @@ export const AdvancedFeatures = {
     },
 
     initializeInsights() {
+        // 1. Always setup button listeners first (Robustness)
+        AdvancedFeatures.setupButtonAndListeners();
+
+        // 2. Only create panel markup if completely missing
         if (!document.getElementById('insightsPanel')) {
             AdvancedFeatures.createInsightsPanel();
+        }
+    },
+
+    setupButtonAndListeners() {
+        const insightsBtn = document.getElementById('toolbar-insights-btn');
+
+        if (insightsBtn) {
+            console.log("[ADVANCED] Found Insights button, unhiding...");
+            insightsBtn.classList.remove('hidden');
+
+            // Re-attach listener (cloning to remove any old listeners)
+            const newBtn = insightsBtn.cloneNode(true);
+
+            // Ensure we insert it back in the same position
+            if (insightsBtn.parentNode) {
+                insightsBtn.parentNode.replaceChild(newBtn, insightsBtn);
+            }
+
+            newBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panel = document.getElementById('insightsPanel');
+                if (panel) {
+                    panel.classList.toggle('hidden');
+                    // Hide emergency panel if open
+                    const emergency = document.getElementById('emergencyPanel');
+                    if (emergency) emergency.classList.add('hidden');
+                }
+            });
+
+            // Close button listener
+            document.getElementById('closeInsightsBtn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('insightsPanel')?.classList.add('hidden');
+            });
+        } else {
+            console.warn("[ADVANCED] Insights button not found in DOM");
         }
     },
 
@@ -72,30 +112,8 @@ export const AdvancedFeatures = {
             mapContainer.insertAdjacentHTML('beforeend', panelHTML);
         }
 
-        const toolbar = document.querySelector('#toolbar-stats-btn')?.parentNode?.parentNode;
-        if (toolbar && !document.getElementById('toolbar-insights-btn')) {
-            const btnHTML = `
-            <button id="toolbar-insights-btn" class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>Insights</span>
-            </button>
-            `;
-            const resetBtn = document.getElementById('reset-filters-btn');
-            if (resetBtn) {
-                resetBtn.insertAdjacentHTML('beforebegin', btnHTML);
-            } else {
-                toolbar.insertAdjacentHTML('beforeend', btnHTML);
-            }
-
-            document.getElementById('toolbar-insights-btn').addEventListener('click', () => {
-                document.getElementById('insightsPanel').classList.toggle('hidden');
-            });
-            document.getElementById('closeInsightsBtn').addEventListener('click', () => {
-                document.getElementById('insightsPanel').classList.add('hidden');
-            });
-        }
+        // Re-run setup to bind listeners to new panel
+        AdvancedFeatures.setupButtonAndListeners();
     },
 
     updateInsights: (complaints, clusters) => {
