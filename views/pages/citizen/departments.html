@@ -1,138 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Government Departments - CitizenLink</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/toast.css" />
-    <link rel="stylesheet" href="/css/components/sidebar.css" />
-    <link rel="stylesheet" href="/css/header-redesign.css" />
-    <link rel="stylesheet" href="/css/complaint-form.css" />
-    <!-- Re-using complaint-form.css gives us access to:
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Government Departments - CitizenLink</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/header-redesign.css" />
+  <link rel="stylesheet" href="/css/complaint-form.css" />
+  <!-- Re-using complaint-form.css gives us access to:
          .main-content-wrapper, .card-glass, .premium-input, etc. -->
-    <style>
-      /* Specific overrides for department grid usually handled by JS rendering */
-      .departments-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-      }
+  <style>
+    /* Specific overrides for department grid usually handled by JS rendering */
+    .departments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
 
-      .department-card-premium {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 16px;
-        padding: 1.5rem;
-        transition: transform 0.2s, box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        position: relative;
-        overflow: hidden;
-      }
+    .department-card-premium {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
 
-      .department-card-premium:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        background: #ffffff;
-        border-color: #e5e7eb;
-      }
+    .department-card-premium:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
 
-      .dept-icon-circle {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.75rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      }
+    .dept-icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
 
-      .dept-badge {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #f3f4f6;
-        color: #6b7280;
-      }
+    .dept-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #f3f4f6;
+      color: #6b7280;
+    }
 
-      .dept-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 0.25rem;
-        line-height: 1.3;
-      }
+    .dept-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+    }
 
-      .dept-code {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin-bottom: 1rem;
-        font-family: monospace;
-        background: #f9fafb;
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-      }
+    .dept-code {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+      font-family: monospace;
+      background: #f9fafb;
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
 
-      .dept-description {
-        color: #4b5563;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        flex-grow: 1;
-        margin-bottom: 1.5rem;
-      }
+    .dept-description {
+      color: #4b5563;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      flex-grow: 1;
+      margin-bottom: 1.5rem;
+    }
 
-      .dept-meta-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        border-top: 1px solid #f3f4f6;
-        padding-top: 1rem;
-        margin-top: auto;
-      }
+    .dept-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 1rem;
+      margin-top: auto;
+    }
 
-      .dept-meta-item {
-        display: flex;
-        flex-direction: column;
-      }
+    .dept-meta-item {
+      display: flex;
+      flex-direction: column;
+    }
 
-      .dept-meta-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #9ca3af;
-        margin-bottom: 0.25rem;
-      }
+    .dept-meta-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
 
-      .dept-meta-value {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #374151;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app-container">
-      <div class="header-container"></div>
-      <div id="sidebar" class="collapsible"></div>
+    .dept-meta-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #374151;
+    }
 
-      <!-- Main Content Wrapper using Premium Layout -->
-      <div id="app" class="collapsible main-content-wrapper">
-        <div class="complaint-wizard-container">
-          <!-- Breadcrumb/Back -->
-          <div style="margin-bottom: 2rem">
-            <a
-              href="/dashboard"
-              style="
+    /* Dark Mode Overrides */
+    html.dark .department-card-premium {
+      background: rgba(31, 41, 55, 0.8);
+      border-color: rgba(75, 85, 99, 0.5);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    html.dark .department-card-premium:hover {
+      background: #1f2937;
+      border-color: #60a5fa;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    html.dark .dept-name {
+      color: #f3f4f6;
+    }
+
+    html.dark .dept-description {
+      color: #d1d5db;
+    }
+
+    html.dark .dept-code {
+      background: #374151;
+      color: #9ca3af;
+    }
+
+    html.dark .dept-badge {
+      background: #374151;
+      color: #d1d5db;
+    }
+
+    html.dark .dept-icon-circle {
+      background: rgba(55, 65, 81, 0.5);
+      color: #60a5fa;
+      box-shadow: none;
+    }
+
+    html.dark .dept-meta-grid {
+      border-top-color: #374151;
+    }
+
+    html.dark .dept-meta-label {
+      color: #9ca3af;
+    }
+
+    html.dark .dept-meta-value {
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+
+    <!-- Main Content Wrapper using Premium Layout -->
+    <div id="app" class="collapsible main-content-wrapper">
+      <div class="complaint-wizard-container">
+        <!-- Breadcrumb/Back -->
+        <div style="margin-bottom: 2rem">
+          <a href="/dashboard" style="
                 display: inline-flex;
                 align-items: center;
                 gap: 0.5rem;
@@ -140,86 +189,60 @@
                 text-decoration: none;
                 font-weight: 500;
                 transition: color 0.2s;
-              "
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M19 12H5" />
-                <path d="M12 19l-7-7 7-7" />
-              </svg>
-              Back to Dashboard
-            </a>
-          </div>
+              ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+            Back to Dashboard
+          </a>
+        </div>
 
-          <!-- Page Header -->
-          <div class="page-header">
-            <h1 class="page-title">Government Departments</h1>
-            <p class="page-subtitle">
-              Explore the various government offices serving Digos City.
-            </p>
-          </div>
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">Government Departments</h1>
+          <p class="page-subtitle">
+            Explore the various government offices serving Digos City.
+          </p>
+        </div>
 
-          <!-- Search/Filter Bar -->
-          <div
-            class="form-section card-glass"
-            style="margin-bottom: 2rem; padding: 1.5rem"
-          >
-            <div style="position: relative">
-              <input
-                type="text"
-                id="deptSearch"
-                class="premium-input"
-                placeholder="Search departments by name, code or description..."
-                style="padding-left: 3rem"
-              />
-              <div
-                style="
+        <!-- Search/Filter Bar -->
+        <div class="form-section card-glass" style="margin-bottom: 2rem; padding: 1.5rem">
+          <div style="position: relative">
+            <input type="text" id="deptSearch" class="premium-input"
+              placeholder="Search departments by name, code or description..." style="padding-left: 3rem" />
+            <div style="
                   position: absolute;
                   left: 1rem;
                   top: 50%;
                   transform: translateY(-50%);
                   color: #9ca3af;
-                "
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </div>
+                ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
             </div>
           </div>
+        </div>
 
-          <!-- Content Area -->
-          <div id="departments-content">
-            <div style="text-align: center; padding: 3rem; color: #6b7280">
-              <div class="spinner" style="margin: 0 auto 1rem"></div>
-              <p>Loading departments directory...</p>
-            </div>
+        <!-- Content Area -->
+        <div id="departments-content">
+          <div style="text-align: center; padding: 3rem; color: #6b7280">
+            <div class="spinner" style="margin: 0 auto 1rem"></div>
+            <p>Loading departments directory...</p>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <script type="module" src="/js/components/header.js"></script>
-    <script type="module" src="/js/components/sidebar.js"></script>
-    <script type="module" src="/js/components/toast.js"></script>
-    <script type="module" src="/js/pages/departments.js"></script>
-  </body>
+  <script type="module" src="/js/components/header.js"></script>
+  <script type="module" src="/js/components/sidebar.js"></script>
+  <script type="module" src="/js/components/toast.js"></script>
+  <script type="module" src="/js/pages/departments.js"></script>
+</body>
+
 </html>
