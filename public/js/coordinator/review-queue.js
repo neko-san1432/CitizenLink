@@ -341,6 +341,8 @@ class ReviewQueue {
     const priorityLevel = complaint.priorityLevel || "low";
     const barangay = complaint.barangay || null;
 
+    const priority = complaint.priority?.toLowerCase() || "medium";
+
     // Debug: Log first complaint being rendered
     const isFirstCard = !this._lastLoggedCardId;
     if (isFirstCard) {

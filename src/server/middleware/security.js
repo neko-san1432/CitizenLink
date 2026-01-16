@@ -9,6 +9,7 @@ const cspConfig = {
       "'unsafe-inline'", // Note: remove after moving inline styles
       "https://fonts.googleapis.com",
       "https://unpkg.com",
+      "https://cdnjs.cloudflare.com",
     ],
     scriptSrc: [
       "'self'",
@@ -20,6 +21,7 @@ const cspConfig = {
       "https://esm.sh",
       "https://cdn.jsdelivr.net", // Ensure this is explicitly allowed
       "https://cdn.tailwindcss.com",
+      "https://cdnjs.cloudflare.com",
     ],
     imgSrc: [
       "'self'",
@@ -54,6 +56,7 @@ const cspConfig = {
       "data:",
       "https://fonts.gstatic.com",
       "https://r2cdn.perplexity.ai",
+      "https://cdnjs.cloudflare.com",
     ],
     objectSrc: ["'none'"],
     mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co"],
@@ -78,10 +81,10 @@ const securityHeaders = helmet({
   hsts:
     process.env.NODE_ENV === "production"
       ? {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true,
-        }
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
       : false, // Disable HSTS in development to prevent SSL redirects
   noSniff: true,
   frameguard: { action: "deny" },

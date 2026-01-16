@@ -176,7 +176,23 @@ class HeatmapVisualization {
     this.heatmapLayer = null;
     this.markerLayer = null;
     this.clusterLayer = null;
-    this.dbscan = new DBSCAN();
+    this.clusterLayer = null;
+
+    // Initialize Clustering Engine (Adaptive DBSCAN)
+    if (typeof AdaptiveDBSCAN !== 'undefined') {
+      this.dbscan = new AdaptiveDBSCAN();
+      console.log("HeatmapVisualization: Using Adaptive DBSCAN++");
+    } else {
+      this.dbscan = new DBSCAN();
+      console.warn("HeatmapVisualization: Adaptive DBSCAN not found, falling back to standard DBSCAN");
+    }
+
+    // Initialize Complaint Intelligence (NLP/Triage)
+    if (typeof ComplaintIntelligence !== 'undefined') {
+      this.intelligence = new ComplaintIntelligence();
+      console.log("HeatmapVisualization: Context-Aware Intelligence v3.6 active");
+    }
+
     this.isClusteringEnabled = false;
     this.currentFilters = {};
     this.filterByBoundary = true; // Enable boundary filtering by default
@@ -516,7 +532,7 @@ class HeatmapVisualization {
             return null;
           }
 
-          return {
+          const itemWrapper = {
             ...item,
             lat,
             lng,
@@ -528,9 +544,24 @@ class HeatmapVisualization {
             type: item.type || item.category || "General",
             category: item.category || item.type || "General",
             location: item.location || item.location_text || "",
-            submittedAt:
-              item.submittedAt || item.submitted_at || new Date().toISOString(),
+            submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
           };
+
+          // Apply Context-Aware Intelligence Analysis
+          if (this.intelligence) {
+            const analysis = this.intelligence.analyze(itemWrapper);
+            itemWrapper.intelligence = analysis;
+            // If AI reclassified it (high confidence), switch the category used for display
+            if (analysis.aiReclassified) {
+              itemWrapper.original_category = itemWrapper.category;
+              itemWrapper.category = analysis.effectiveCategory;
+              itemWrapper.type = analysis.effectiveCategory;
+            }
+          }
+
+          return itemWrapper;
+
+
         })
         .filter(Boolean);
 
@@ -597,8 +628,7 @@ class HeatmapVisualization {
         `  - After client-side filters: ${this.complaintData.length} complaint(s) visible`
       );
       console.log(
-        `  - User role: ${this.userRole}, Department: ${
-          this.userDepartment || "N/A"
+        `  - User role: ${this.userRole}, Department: ${this.userDepartment || "N/A"
         }`
       );
 
@@ -860,8 +890,7 @@ class HeatmapVisualization {
         3
       )}, max=${Math.max(...heatmapPoints.map((d) => d[2])).toFixed(
         3
-      )}, count at 1.0=${
-        intensities.filter((i) => i >= 0.99).length
+      )}, count at 1.0=${intensities.filter((i) => i >= 0.99).length
       }, maxDensity=${this.dynamicScaling.maxDensity.toFixed(3)}`
     );
 
@@ -1180,8 +1209,7 @@ class HeatmapVisualization {
     });
 
     console.log(
-      `[HEATMAP] Created ${
-        this.markerLayer.getLayers().length
+      `[HEATMAP] Created ${this.markerLayer.getLayers().length
       } marker(s) for all complaints`
     );
 
@@ -1496,23 +1524,19 @@ class HeatmapVisualization {
 
     return `
       <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
-        <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${
-          complaint.title
-        }</h4>
+        <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${complaint.title
+      }</h4>
         <div class="complaint-details" style="margin: 0; padding: 0;">
-          <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${
-            complaint.type
-          }</p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${complaint.type
+      }</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(
-            " ",
-            "-"
-          )}">${complaint.status}</span></p>
-          <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${
-      complaint.priority
-    }</span></p>
-          <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${
-            complaint.location
-          }</p>
+        " ",
+        "-"
+      )}">${complaint.status}</span></p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${complaint.priority
+      }</span></p>
+          <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${complaint.location
+      }</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
@@ -1538,7 +1562,7 @@ class HeatmapVisualization {
     // Calculate days since submission
     const daysSinceSubmission = Math.floor(
       (Date.now() - new Date(complaint.submittedAt).getTime()) /
-        (1000 * 60 * 60 * 24)
+      (1000 * 60 * 60 * 24)
     );
 
     // Check if user has access to this complaint
@@ -1548,9 +1572,8 @@ class HeatmapVisualization {
       return `
         <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
           <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
-            <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-              complaint.title
-            }</h3>
+            <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${complaint.title
+        }</h3>
             <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
               <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
               <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1564,9 +1587,8 @@ class HeatmapVisualization {
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Location:</span>
-                <span class="value" style="text-align: right; max-width: 60%;">${
-                  complaint.location
-                }</span>
+                <span class="value" style="text-align: right; max-width: 60%;">${complaint.location
+        }</span>
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1576,12 +1598,32 @@ class HeatmapVisualization {
                 <span class="label" style="font-weight: bold;">Submitted:</span>
                 <span class="value">${submittedDate}</span>
               </div>
-              <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
-                <span class="label" style="font-weight: bold;">Days Open:</span>
-                <span class="value">${daysSinceSubmission} day${
-        daysSinceSubmission !== 1 ? "s" : ""
-      }</span>
               </div>
+              
+              <!-- AI Intelligence Section -->
+              ${complaint.intelligence ? `
+              <div class="info-row" style="margin: 6px 0 2px 0; padding-top: 4px; border-top: 1px dashed #eee;">
+                <span class="label" style="font-weight: bold; color: #666;">AI Confidence:</span>
+                <span class="value" style="font-weight: bold; color: ${complaint.intelligence.isCritical ? '#dc3545' : '#28a745'}">
+                  ${Math.round(complaint.intelligence.urgencyScore)}/100 
+                  ${complaint.intelligence.veracityLabel === 'GEO-VERIFIED' ? '<i class="fas fa-check-circle" title="Location Verified" style="color:#007bff; margin-left:4px;"></i>' : ''}
+                </span>
+              </div>
+              ${complaint.intelligence.aiReclassified ? `
+              <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #e67e22;">
+                <i class="fas fa-magic"></i> Auto-categorized from <em>${complaint.original_category || 'Others'}</em>
+              </div>` : ''}
+              ${complaint.intelligence.metaphorDetected ? `
+              <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #17a2b8;">
+                <i class="fas fa-language"></i> Metaphor detected (lowered urgency)
+              </div>` : ''}
+              ${complaint.intelligence.geoBoost > 0 ? `
+              <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #28a745;">
+                <i class="fas fa-map-marker-alt"></i> +${complaint.intelligence.geoBoost} pts: ${complaint.intelligence.geoReason}
+              </div>` : ''}
+              ` : ''}
+
+            </div>
             </div>
             <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd;">
               <div class="access-denied" style="font-size: 10px; color: #dc3545; text-align: center; padding: 4px;">
@@ -1595,10 +1637,14 @@ class HeatmapVisualization {
 
     return `
       <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
-        <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
-          <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${
-            complaint.title
-          }</h3>
+          <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
+              <h3 style="margin: 0; font-size: 13px; font-weight: bold; flex: 1;">${complaint.title}</h3>
+              ${complaint.intelligence && complaint.intelligence.isCritical ?
+        '<span class="badge" style="background: #dc3545; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">CRITICAL</span>' : ''}
+              ${complaint.intelligence && complaint.intelligence.isContextSuppressed ?
+        '<span class="badge" style="background: #6c757d; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">SUPPRESSED</span>' : ''}
+            </div>
           <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
             <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
             <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1612,9 +1658,8 @@ class HeatmapVisualization {
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Location:</span>
-              <span class="value" style="text-align: right; max-width: 60%;">${
-                complaint.location
-              }</span>
+              <span class="value" style="text-align: right; max-width: 60%;">${complaint.location
+      }</span>
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1626,22 +1671,18 @@ class HeatmapVisualization {
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Days Open:</span>
-              <span class="value">${daysSinceSubmission} day${
-      daysSinceSubmission !== 1 ? "s" : ""
-    }</span>
+              <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? "s" : ""
+      }</span>
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
-            <button class="btn-details" onclick="viewComplaintDetails('${
-              complaint.id
-            }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+            <button class="btn-details" onclick="viewComplaintDetails('${complaint.id
+      }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
-            <button class="btn-location" onclick="centerOnComplaint(${
-              complaint.lat
-            }, ${
-      complaint.lng
-    })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+            <button class="btn-location" onclick="centerOnComplaint(${complaint.lat
+      }, ${complaint.lng
+      })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
             </button>
           </div>
@@ -1779,11 +1820,16 @@ class HeatmapVisualization {
             lng <= 180
           );
         })
-        .map((complaint) => ({
-          lat: parseFloat(complaint.lat),
-          lng: parseFloat(complaint.lng),
-          data: complaint,
-        }));
+        .map((complaint) => {
+          const lat = parseFloat(complaint.lat);
+          const lng = parseFloat(complaint.lng);
+          return {
+            ...complaint, // Spread properties so AdaptiveDBSCAN can access category, subcategory, etc.
+            lat: lat,
+            lng: lng,
+            data: complaint
+          };
+        });
 
       if (points.length === 0) {
         console.warn("[HEATMAP] No valid coordinates for clustering");
@@ -1792,7 +1838,20 @@ class HeatmapVisualization {
 
       // Perform clustering
       const clusteringResult = this.dbscan.cluster(points);
-      this.clusters = clusteringResult.clusters || [];
+
+      // Handle different return types (Adaptive returns object, Standard returns array)
+      if (Array.isArray(clusteringResult)) {
+        this.clusters = clusteringResult;
+      } else {
+        this.clusters = clusteringResult.clusters || [];
+        // Note: clusteringResult.noise is also available if needed
+      }
+
+      // Update Command Center Insights if available
+      if (window.AdvancedFeatures && window.AdvancedFeatures.updateInsights) {
+        // Need raw points not just clusters
+        window.AdvancedFeatures.updateInsights(points || [], this.clusters || []);
+      }
 
       return clusteringResult;
     } catch (error) {
@@ -1824,7 +1883,7 @@ class HeatmapVisualization {
         radius: clusterRadius * 1000, // Convert km to meters
         color:
           this.clusterConfig.clusterColors[
-            index % this.clusterConfig.clusterColors.length
+          index % this.clusterConfig.clusterColors.length
           ],
         weight: 2,
         opacity: 0.8,
@@ -1835,10 +1894,9 @@ class HeatmapVisualization {
       const clusterMarker = L.marker(clusterCenter, {
         icon: L.divIcon({
           html: `<div style="
-            background-color: ${
-              this.clusterConfig.clusterColors[
-                index % this.clusterConfig.clusterColors.length
-              ]
+            background-color: ${this.clusterConfig.clusterColors[
+            index % this.clusterConfig.clusterColors.length
+            ]
             };
             color: white;
             border-radius: 50%;
@@ -1920,27 +1978,26 @@ class HeatmapVisualization {
 
     return `
       <div class="cluster-popup-content">
-        <h4>Cluster ${clusterIndex + 1} (${
-      clusterPoints.length
-    } complaints)</h4>
+        <h4>Cluster ${clusterIndex + 1} (${clusterPoints.length
+      } complaints)</h4>
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
             ${Object.entries(statusCounts)
-              .map(([status, count]) => `<li>${status}: ${count}</li>`)
-              .join("")}
+        .map(([status, count]) => `<li>${status}: ${count}</li>`)
+        .join("")}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
             ${Object.entries(typeCounts)
-              .map(([type, count]) => `<li>${type}: ${count}</li>`)
-              .join("")}
+        .map(([type, count]) => `<li>${type}: ${count}</li>`)
+        .join("")}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
             ${Object.entries(priorityCounts)
-              .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
-              .join("")}
+        .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
+        .join("")}
           </ul>
         </div>
       </div>

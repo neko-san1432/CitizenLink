@@ -1,0 +1,47 @@
+/* Heatmap Base Styles */
+
+/* 
+ * This file contains base styles for the heatmap page. 
+ * Advanced styles are in heatmap-advanced.css 
+ */
+
+.heatmap-container {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Override global body padding from app.css */
+body {
+    padding-top: 0 !important;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    z-index: 10;
+}
+
+/* Base Popup Styles */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Control Panel Base Tweaks */
+.leaflet-control-container .leaflet-top.leaflet-right {
+    top: 60px;
+    /* Make room for top bar */
+}
+
+@media (min-width: 768px) {
+    .leaflet-control-container .leaflet-top.leaflet-right {
+        top: 20px;
+    }
+}

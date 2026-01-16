@@ -496,9 +496,8 @@ class ComplaintService {
     for (const file of files) {
       try {
         // Store in evidence subfolder for initial evidence
-        const fileName = `${complaintId}/evidence/${Date.now()}-${
-          file.originalname
-        }`;
+        const fileName = `${complaintId}/evidence/${Date.now()}-${file.originalname
+          }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -571,9 +570,8 @@ class ComplaintService {
     for (const file of files) {
       try {
         // Store in completion subfolder
-        const fileName = `${complaintId}/completion/${Date.now()}-${
-          file.originalname
-        }`;
+        const fileName = `${complaintId}/completion/${Date.now()}-${file.originalname
+          }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -669,9 +667,8 @@ class ComplaintService {
               email: user.email,
               name:
                 combined.name ||
-                `${combined.first_name || ""} ${
-                  combined.last_name || ""
-                }`.trim() ||
+                `${combined.first_name || ""} ${combined.last_name || ""
+                  }`.trim() ||
                 user.email,
               firstName: combined.first_name,
               lastName: combined.last_name,
@@ -835,8 +832,8 @@ class ComplaintService {
       subcategory,
       notes,
     } = typeof updateData === "string"
-      ? { status: updateData, notes: userId } // Handle legacy signature if needed
-      : updateData;
+        ? { status: updateData, notes: userId } // Handle legacy signature if needed
+        : updateData;
 
     const dataToUpdate = { updated_at: new Date().toISOString() };
 
@@ -1366,7 +1363,8 @@ class ComplaintService {
         }
       }
       // Transform data for heatmap
-      // Debug: Log department_r data before transformation
+      // Debug: Log department_r data before transformation (Removed)
+      /*
       if (data && data.length > 0) {
         const deptSample = data.slice(0, 3).map((c) => ({
           id: c.id,
@@ -1383,6 +1381,7 @@ class ComplaintService {
           deptSample
         );
       }
+      */
 
       const transformedData = data
         .map((complaint) => {
@@ -1496,8 +1495,7 @@ class ComplaintService {
           updateError
         );
         throw new Error(
-          `Failed to cancel complaint: ${
-            updateError.message || "Database error"
+          `Failed to cancel complaint: ${updateError.message || "Database error"
           }`
         );
       }
@@ -1892,7 +1890,7 @@ class ComplaintService {
       if (confirmed) {
         try {
           await this.reconcileWorkflowStatus(complaintId);
-        } catch (_) {}
+        } catch (_) { }
       }
       return {
         success: true,

@@ -28,11 +28,13 @@ class CoordinatorService {
   */
   async getReviewQueue(coordinatorId, filters = {}) {
     try {
-      console.log("[COORDINATOR_SERVICE] Getting review queue for coordinator:", coordinatorId);
+      // console.log("[COORDINATOR_SERVICE] Getting review queue for coordinator:", coordinatorId);
       const complaints = await this.coordinatorRepo.getReviewQueue(coordinatorId, filters);
-      console.log(`[COORDINATOR_SERVICE] Retrieved ${complaints.length} complaints from repository`);
+      // console.log(`[COORDINATOR_SERVICE] Retrieved ${complaints.length} complaints from repository`);
 
       // Log sample complaint to check structure
+      // Log sample complaint to check structure (Removed for production brevity)
+      /*
       if (complaints.length > 0) {
         const sample = complaints[0];
         console.log("[COORDINATOR_SERVICE] Sample complaint structure:", {
@@ -45,26 +47,28 @@ class CoordinatorService {
           lngType: typeof sample.longitude
         });
       }
+      */
 
       // Filter complaints with valid coordinates for barangay classification
       const complaintsWithCoords = complaints.filter(c => {
         const lat = parseFloat(c.latitude);
         const lng = parseFloat(c.longitude);
         const hasCoords = c.latitude != null && c.longitude != null &&
-                         !isNaN(lat) && !isNaN(lng) &&
-                         isFinite(lat) && isFinite(lng);
+          !isNaN(lat) && !isNaN(lng) &&
+          isFinite(lat) && isFinite(lng);
         return hasCoords;
       });
 
-      console.log(`[COORDINATOR_SERVICE] Found ${complaintsWithCoords.length} out of ${complaints.length} complaints with valid coordinates`);
+      // console.log(`[COORDINATOR_SERVICE] Found ${complaintsWithCoords.length} out of ${complaints.length} complaints with valid coordinates`);
 
       // Classify complaints by barangay based on coordinates
       let complaintBarangayMap = new Map();
       try {
         complaintBarangayMap = classifyComplaints(complaintsWithCoords);
-        console.log(`[COORDINATOR_SERVICE] Successfully classified ${complaintBarangayMap.size} complaints into barangays`);
+        // console.log(`[COORDINATOR_SERVICE] Successfully classified ${complaintBarangayMap.size} complaints into barangays`);
 
-        // Log first few classifications
+        // Log first few classifications (Removed)
+        /*
         let loggedCount = 0;
         complaintBarangayMap.forEach((barangay, complaintId) => {
           if (loggedCount < 5) {
@@ -72,9 +76,10 @@ class CoordinatorService {
             loggedCount++;
           }
         });
+        */
       } catch (classifyError) {
-        console.error("[COORDINATOR_SERVICE] Error classifying complaints:", classifyError);
-        console.error("[COORDINATOR_SERVICE] Classification error stack:", classifyError.stack);
+        // console.error("[COORDINATOR_SERVICE] Error classifying complaints:", classifyError);
+        console.warn("[COORDINATOR_SERVICE] Classification warning:", classifyError.message);
       }
 
       // Enhance with algorithm confidence levels and barangay information
@@ -101,7 +106,7 @@ class CoordinatorService {
       });
 
       const withBarangay = enhanced.filter(c => c.barangay != null).length;
-      console.log(`[COORDINATOR_SERVICE] ✓ Returning ${withBarangay} out of ${enhanced.length} complaints with barangay info`);
+      // console.log(`[COORDINATOR_SERVICE] ✓ Returning ${withBarangay} out of ${enhanced.length} complaints with barangay info`);
 
       return enhanced;
     } catch (error) {
@@ -210,7 +215,7 @@ class CoordinatorService {
           }
           return await this.markAsFalse(complaintId, coordinatorId, data.reason);
         case "assign_department":
-        // Support single or multiple departments
+          // Support single or multiple departments
           if (!data.department && (!data.departments || data.departments.length === 0)) {
             throw new Error("Department required");
           }
@@ -633,7 +638,7 @@ class CoordinatorService {
       );
       return {
         success: true,
-        message: `Complaint assigned to ${uniqueCodes.length} department(s)` ,
+        message: `Complaint assigned to ${uniqueCodes.length} department(s)`,
         complaint: updated
       };
     } catch (error) {
