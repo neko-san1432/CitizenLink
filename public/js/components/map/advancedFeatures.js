@@ -191,10 +191,32 @@ export const AdvancedFeatures = {
 
             // Suggest team based on category
             let suggestedTeam = 'General Services';
-            if (dominant === 'Roads') suggestedTeam = 'Road Maintenance Team';
-            if (dominant === 'Flood') suggestedTeam = 'Drainage & Flood Control';
-            if (dominant === 'Garbage') suggestedTeam = 'Waste Management Unit';
-            if (dominant === 'Health') suggestedTeam = 'Emergency Health Unit';
+            let iconClass = 'fa-exclamation-circle'; // Default icon
+            
+            if (dominant === 'Roads') {
+                suggestedTeam = 'Road Maintenance Team';
+                iconClass = 'fa-road';
+            }
+            if (dominant === 'Flood') {
+                suggestedTeam = 'Drainage & Flood Control';
+                iconClass = 'fa-water';
+            }
+            if (dominant === 'Garbage') {
+                suggestedTeam = 'Waste Management Unit';
+                iconClass = 'fa-trash-alt';
+            }
+            if (dominant === 'Health') {
+                suggestedTeam = 'Emergency Health Unit';
+                iconClass = 'fa-briefcase-medical';
+            }
+            if (dominant === 'Fire') {
+                suggestedTeam = 'Fire Department';
+                iconClass = 'fa-fire';
+            }
+            if (dominant === 'Crime') {
+                suggestedTeam = 'Police Department';
+                iconClass = 'fa-shield-alt';
+            }
 
             html += `
             <div class="bg-white dark:bg-gray-800 rounded-xl p-0 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden animate-fade-in-up">
@@ -208,30 +230,37 @@ export const AdvancedFeatures = {
                 
                 <div class="p-4">
                     <div class="flex items-start justify-between mb-3">
-                        <div>
-                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 mb-1 border border-red-200 dark:border-red-800">
-                                CRITICAL ALERT: ${dominant.toUpperCase()}
-                            </span>
-                            <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 leading-tight">
-                                ${size} citizen reports merged near ${zoneName}
-                            </h3>
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                                <i class="fas ${iconClass} text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 mb-1 border border-red-200 dark:border-red-800">
+                                    CRITICAL ALERT: ${dominant.toUpperCase()}
+                                </span>
+                                <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 leading-tight">
+                                    ${size} citizen reports merged near ${zoneName}
+                                </h3>
+                            </div>
                         </div>
                     </div>
                     
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 pl-[3.25rem]">
                         System suggests this is a priority incident based on report density (${size} verified inputs).
                     </p>
 
-                    <div class="flex items-center gap-2 mb-4 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded border border-yellow-100 dark:border-yellow-800/30">
+                    <div class="flex items-center gap-2 mb-4 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded border border-yellow-100 dark:border-yellow-800/30 ml-[3.25rem]">
                         <i class="fas fa-hard-hat text-yellow-600 dark:text-yellow-500 text-xs"></i>
                         <span class="text-xs text-yellow-700 dark:text-yellow-400 font-medium">Suggested: <span class="font-bold">${suggestedTeam}</span></span>
                     </div>
 
-                    <button onclick="window.map.flyTo([${lat}, ${lng}], 17)" 
-                        class="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold uppercase tracking-wide shadow-md shadow-red-500/20 hover:shadow-red-500/40 transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-crosshairs"></i>
-                        Review & Dispatch
-                    </button>
+                    <div class="pl-[3.25rem]">
+                         <button onclick="window.map.flyTo([${lat}, ${lng}], 17)" 
+                            class="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold uppercase tracking-wide shadow-md shadow-red-500/20 hover:shadow-red-500/40 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-crosshairs"></i>
+                            Review & Dispatch
+                        </button>
+                    </div>
                 </div>
             </div>`;
         });
