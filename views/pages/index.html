@@ -1,114 +1,356 @@
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CitizenLink - Report Issues & Track Progress</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/toast.css" />
-    <link rel="stylesheet" href="./css/header-redesign.css" />
-    <link rel="stylesheet" href="./css/app.css" />
-    <link rel="stylesheet" href="./css/pages/index.css" />
-  </head>
-  <body>
-    <!-- Header Container -->
-    <div class="header-container">
-      <div class="header-content">
-        <div class="header-left">
-          <a href="/" class="brand-logo">
-            <div class="brand-icon"></div>
-            <span class="brand-text">CitizenLink</span>
-          </a>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <title>CitizenLink | Empowering Communities</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/pages/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <!-- Background Elements -->
+  <div class="background-gradient"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar glass-nav">
+    <div class="nav-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-city"></i>
         </div>
-        <div class="header-right">
-          <div id="unauthenticated-buttons" class="d-flex items-center gap-2">
-            <a href="/login" id="login-btn" class="btn btn-secondary">Login</a>
-            <a href="/signup" id="signup-btn" class="btn btn-primary"
-              >Sign up</a
-            >
-          </div>
-          <div
-            id="authenticated-buttons"
-            class="hidden d-flex items-center gap-2"
-          >
-            <a href="/dashboard" id="dashboard-btn" class="btn btn-primary"
-              >Go to Dashboard</a
-            >
-          </div>
+        <span class="logo-text">CitizenLink</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="/login" class="nav-link-secondary">Login</a>
+        <a href="/signup" class="btn-primary-sm">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>Active in Digos City</span>
+      </div>
+      <h1 class="hero-title">
+        Empowering Voices,<br>
+        <span class="text-gradient">Building Better Cities</span>
+      </h1>
+      <p class="hero-subtitle">
+        The modern platform for citizen engagement. Report issues, track progress,
+        and connect with your local government in real-time.
+      </p>
+      <div class="hero-actions">
+        <a href="/fileComplaint" class="btn-hero-primary">
+          <i class="fa-solid fa-paper-plane"></i>
+          File a Complaint
+        </a>
+        <a href="/login" class="btn-hero-secondary">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          Login to Dashboard
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-value">24/7</span>
+          <span class="stat-label">Support</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">Real-time</span>
+          <span class="stat-label">Updates</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">AI-Powered</span>
+          <span class="stat-label">Triage</span>
         </div>
       </div>
     </div>
 
-    <main role="main">
-      <section class="hero">
-        <div class="hero-inner">
-          <div class="hero-logo">
-            <img
-              src="/assets/images/CitizenLink-logo-no-text.png"
-              alt="CitizenLink"
-              class="hero-logo-img"
-            />
-          </div>
-          <p>
-            Report issues, track progress, and help improve your community.
-            Share your concerns and get real-time updates as your complaints are
-            processed by the right departments.
-          </p>
-
-          <div class="hero-actions">
-            <a href="/signup" class="btn btn-primary btn-lg">Get Started</a>
-            <a href="/login" class="btn btn-outline btn-lg"
-              >I already have an account</a
-            >
-          </div>
-
-          <div class="cards-grid">
-            <div class="card">
-              <h3>📋 Easy Reporting</h3>
-              <p>
-                File a complaint with photos and location in minutes. Our
-                intuitive form makes it simple to report any issue in your area.
-              </p>
-            </div>
-            <div class="card">
-              <h3>🔔 Real-time Updates</h3>
-              <p>
-                Get notified as your report moves through the process. Stay
-                informed about the status and actions taken on your complaint.
-              </p>
-            </div>
-            <div class="card">
-              <h3>🎯 Smart Routing</h3>
-              <p>
-                We automatically route complaints to the right LGU department.
-                Faster resolution through intelligent categorization.
-              </p>
-            </div>
-          </div>
+    <div class="hero-visual">
+      <div class="visual-card glass-card float-animation card-primary">
+        <div class="card-header">
+          <div class="status-indicator status-progress"></div>
+          <span>Drainage Issue</span>
         </div>
-      </section>
-    </main>
+        <div class="card-body">
+          <div class="mini-map-placeholder"></div>
+          <p>Technicians dispatched to Location A.</p>
+        </div>
+        <div class="card-footer">
+          <span>Just now</span>
+        </div>
+      </div>
+      <div class="visual-card glass-card float-animation-delayed card-secondary">
+        <div class="card-header">
+          <div class="status-indicator status-resolved"></div>
+          <span>Street Light Fixed</span>
+        </div>
+        <div class="card-body">
+          <p>Issue resolved verified by LGU.</p>
+        </div>
+      </div>
+    </div>
 
-    <footer>
-      <small>© <span id="year"></span> CitizenLink. All rights reserved.</small>
-      <nav class="footer-links">
-        <a href="/privacy-notice">Privacy Notice</a>
-        <a href="/privacy-notice#privacy-notice-content">Privacy Policy</a>
-      </nav>
-    </footer>
+  </section>
 
-    <div id="toast-container" class="toast-container"></div>
-    <script type="module" src="/js/lib/supabase-boot.js"></script>
-    <script type="module" src="./js/components/toast.js"></script>
-    <script type="module" src="./js/auth/authChecker.js"></script>
-    <script type="module" src="./js/auth/index-page.js"></script>
-    <script type="module" src="./js/pages/index.js"></script>
-  </body>
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="section-header">
+      <h2>Why CitizenLink?</h2>
+      <p>Advanced technology meeting civic responsibility.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card glass-card-hover">
+        <div class="feature-icon icon-ai">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <h3>AI-Powered Triage</h3>
+        <p>Smart categorization and severity analysis ensures urgent issues get prioritized instantly.</p>
+      </div>
+
+      <div class="feature-card glass-card-hover">
+        <div class="feature-icon icon-map">
+          <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <h3>Interactive Heatmaps</h3>
+        <p>Visualize community issues with precision geocoding and real-time clustering.</p>
+      </div>
+
+      <div class="feature-card glass-card-hover">
+        <div class="feature-icon icon-track">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <h3>Transparent Tracking</h3>
+        <p>Follow your report from submission to resolution with automated status updates.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h4>CitizenLink</h4>
+        <p>&copy; 2026 CitizenLink Project</p>
+      </div>
+      <div class="footer-links">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Contact Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Force scroll to top on refresh
+    if (history.scrollRestoration) {
+      history.scrollRestoration = 'manual';
+    }
+    window.onbeforeunload = function () {
+      window.scrollTo(0, 0);
+    }
+
+    // Trap Door Scroll Logic
+    let isScrollingTimer = null;
+    let lastWheelTime = 0;
+    let lastWheelDirection = 0; // 1 = Down, -1 = Up
+    let activeIndex = Math.round(window.scrollY / window.innerHeight);
+
+    // 1. Listen for INTENT (Wheel)
+    window.addEventListener('wheel', (e) => {
+      // STRICT MOBILE DISABLE
+      if (window.innerWidth <= 768) return;
+
+      lastWheelTime = Date.now();
+      if (e.deltaY > 0) lastWheelDirection = 1;
+      if (e.deltaY < 0) lastWheelDirection = -1;
+    }, { passive: true });
+
+    // 2. Listen for STOP (Scroll Debounce)
+    window.addEventListener('scroll', () => {
+      // STRICT MOBILE DISABLE
+      if (window.innerWidth <= 768) return;
+
+      window.clearTimeout(isScrollingTimer);
+
+      isScrollingTimer = setTimeout(() => {
+        const sections = document.querySelectorAll('section');
+        const sectionH = window.innerHeight;
+        const currentY = window.scrollY;
+
+        // Where are we visually?
+        const visualIndex = Math.round(currentY / sectionH);
+
+        // --- TRAP DOOR LOGIC ---
+
+        let targetIndex = activeIndex; // Start with where we think we are
+
+        // CASE 1: We are in Zone 0 (Hero)
+        if (visualIndex === 0) {
+          // Standard Snap Behavior
+          // If we flicked down
+          if (lastWheelDirection === 1 && (Date.now() - lastWheelTime < 500)) {
+            targetIndex = 1;
+          } else {
+            // Default snap to 0
+            targetIndex = 0;
+          }
+        }
+
+        // CASE 2: We are in Zone 1 (Features) or deeper (Footer)
+        else {
+          // We are basically in Free Scroll Mode...
+          // UNLESS we are at the very top of Features and want to go BACK to Hero.
+
+          // Calculate "Trap Door" threshold.
+          // If we are strictly between 1.0 and 1.05 (Top 5% of Features)
+          const featuresTop = sectionH * 1;
+          const trapDoorZone = featuresTop + 50; // 50px buffer
+
+          if (currentY <= trapDoorZone && currentY >= (featuresTop - 50)) {
+            // We are in the "Trap Door Zone" (Transition 0 <-> 1)
+
+            // If intent is UP
+            if (lastWheelDirection === -1 && (Date.now() - lastWheelTime < 500)) {
+              targetIndex = 0; // SNAP BACK TO HERO
+            } else {
+              // Otherwise, we snap to 1 (Features Top) to keep it clean?
+              // Or do we allow it to float?
+              // User prefers clean "snap" for first two. So snap to 1.
+              targetIndex = 1;
+            }
+          } else {
+            // We are DEEP in Features ( > 1.05) or in Footer.
+            // DISABLE SNAP. FREE SCROLL.
+            return;
+          }
+        }
+
+        // Final Bounds Check
+        if (targetIndex < 0) targetIndex = 0;
+
+        // Update active
+        activeIndex = targetIndex;
+
+        // Execute Smooth Slide
+        // Only if targetIndex is 0 or 1.
+        if (targetIndex <= 1 && sections[targetIndex]) {
+          smoothScrollTo(sections[targetIndex].offsetTop, 1000);
+        }
+
+      }, 150);
+    }, { passive: true });
+
+    // 3. Listen for KEYBOARD
+    window.addEventListener('keydown', (e) => {
+      if (window.innerWidth <= 768) return;
+
+      const sections = document.querySelectorAll('section');
+      const sectionH = window.innerHeight;
+      const currentY = window.scrollY;
+
+      if (e.key === 'ArrowDown') {
+        // If at Hero (Index 0), allow snap to 1.
+        if (currentY < sectionH - 50) {
+          e.preventDefault();
+          activeIndex = 1;
+          if (sections[1]) smoothScrollTo(sections[1].offsetTop, 1000);
+        }
+        // If at Features (Index 1) or below, Allow Default Free Scroll
+        else {
+          return;
+        }
+
+      } else if (e.key === 'ArrowUp') {
+        // If at Features Top (Trap Door Zone), Snap to 0.
+        // Zone: < 1.1 * H
+        if (currentY < sectionH * 1.1 && currentY > 50) {
+          e.preventDefault();
+          activeIndex = 0;
+          if (sections[0]) smoothScrollTo(sections[0].offsetTop, 1000);
+        }
+        // If Deep in Features/Footer, Allow Default Free Scroll Up
+        else {
+          return;
+        }
+      }
+    });
+
+    // Custom Smooth Scroll Function
+    function smoothScrollTo(targetPosition, duration) {
+      const startPosition = window.scrollY;
+      const distance = targetPosition - startPosition;
+      let startTime = null;
+
+      function animation(currentTime) {
+        if (startTime === null) startTime = currentTime;
+        const timeElapsed = currentTime - startTime;
+        const run = easeInOutCubic(timeElapsed, startPosition, distance, duration);
+        window.scrollTo(0, run);
+
+        if (timeElapsed < duration) requestAnimationFrame(animation);
+      }
+
+      // Easing Function: easeInOutCubic
+      function easeInOutCubic(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t * t + b;
+        t -= 2;
+        return c / 2 * (t * t * t + 2) + b;
+      }
+
+      requestAnimationFrame(animation);
+    }
+
+    // Simple intersection observer for fade-up animations
+    const fadeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card').forEach(el => fadeObserver.observe(el));
+
+    // Navbar hiding logic using IntersectionObserver on Hero Section
+    const navbar = document.querySelector('.navbar');
+    const heroSection = document.querySelector('.hero-section');
+
+    const heroObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // If hero section is NOT intersecting (scrolled past), hide navbar
+        if (!entry.isIntersecting) {
+          navbar.classList.add('hidden');
+        } else {
+          // If hero section IS intersecting (back at top), show navbar
+          navbar.classList.remove('hidden');
+        }
+      });
+    }, { threshold: 0.1 }); // Trigger when 10% of hero is remaining/visible
+
+    if (heroSection) {
+      heroObserver.observe(heroSection);
+    }
+  </script>
+</body>
+
 </html>

@@ -1842,9 +1842,17 @@ class HeatmapVisualization {
       // Handle different return types (Adaptive returns object, Standard returns array)
       if (Array.isArray(clusteringResult)) {
         this.clusters = clusteringResult;
+        this.chainAnalysis = [];
       } else {
         this.clusters = clusteringResult.clusters || [];
         // Note: clusteringResult.noise is also available if needed
+
+        // Analyze chains if method exists (AdaptiveDBSCAN feature)
+        if (typeof this.dbscan.analyzeCausalChains === 'function') {
+          this.chainAnalysis = this.dbscan.analyzeCausalChains(clusteringResult);
+        } else {
+          this.chainAnalysis = [];
+        }
       }
 
       // Update Command Center Insights if available
@@ -1976,10 +1984,29 @@ class HeatmapVisualization {
         (priorityCounts[complaint.priority] || 0) + 1;
     });
 
+    // Get Chain Insight
+    const chainInfo = this.chainAnalysis ? this.chainAnalysis[clusterIndex] : null;
+    let chainHtml = '';
+
+    if (chainInfo && (chainInfo.chainType === 'DIRECT_CAUSAL' || chainInfo.chainType === 'TRANSITIVE_CHAIN')) {
+      const badgeColor = '#d63384'; // Pink/Purple for Causal
+
+      chainHtml = `
+          <div class="cluster-insight" style="margin-bottom: 10px; padding: 8px; background: rgba(214, 51, 132, 0.1); border-left: 3px solid ${badgeColor}; border-radius: 4px;">
+            <div style="font-size: 10px; font-weight: bold; color: ${badgeColor}; text-transform: uppercase; margin-bottom: 2px;">
+                <i class="fas fa-project-diagram"></i> Causal Chain Detected
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #333;">
+                ${chainInfo.chainDescription}
+            </div>
+          </div>
+        `;
+    }
+
     return `
       <div class="cluster-popup-content">
-        <h4>Cluster ${clusterIndex + 1} (${clusterPoints.length
-      } complaints)</h4>
+        <h4>Cluster ${clusterIndex + 1} (${clusterPoints.length} complaints)</h4>
+        ${chainHtml}
         <div class="cluster-stats">
           <h5>Status Distribution:</h5>
           <ul>
