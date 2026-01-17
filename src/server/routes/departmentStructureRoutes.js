@@ -2,7 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 const Database = require("../config/database");
-const { authenticateUser } = require("../middleware/auth");
+const { authenticateUser, requireRole } = require("../middleware/auth");
+const DepartmentService = require("../services/DepartmentService");
 
 // Get all categories with their subcategories and departments
 router.get("/categories", async (req, res) => {
@@ -36,6 +37,7 @@ router.get("/categories", async (req, res) => {
     });
   }
 });
+
 // Get subcategories for a specific category
 router.get("/categories/:categoryId/subcategories", async (req, res) => {
   try {
@@ -67,6 +69,7 @@ router.get("/categories/:categoryId/subcategories", async (req, res) => {
     });
   }
 });
+
 // Get departments for a specific subcategory
 router.get("/subcategories/:subcategoryId/departments", async (req, res) => {
   try {
@@ -114,6 +117,7 @@ router.get("/subcategories/:subcategoryId/departments", async (req, res) => {
     });
   }
 });
+
 // Get ALL departments (for showing all departments regardless of category)
 router.get("/departments/all", async (req, res) => {
   try {
@@ -142,6 +146,7 @@ router.get("/departments/all", async (req, res) => {
     });
   }
 });
+
 // Get ALL departments (alias for /departments/all)
 router.get("/departments", async (req, res) => {
   try {
@@ -168,6 +173,7 @@ router.get("/departments", async (req, res) => {
     });
   }
 });
+
 // Get department structure for complaint form (simplified)
 router.get("/complaint-form", async (req, res) => {
   try {
@@ -206,280 +212,219 @@ router.get("/complaint-form", async (req, res) => {
     });
   }
 });
+
 // Admin: Create new category
-router.post("/admin/categories", authenticateUser, async (req, res) => {
-  try {
-    const { name, code, description, icon, sort_order } = req.body;
-    const { data, error } = await Database.getClient()
-      .from("categories")
-      .insert({
-        name,
-        code,
-        description,
-        icon,
-        sort_order: sort_order || 0
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error creating category:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to create category"
-    });
+router.post(
+  "/admin/categories",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const category = await DepartmentService.createCategory(req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
-});
-// Admin: Create new subcategory
-router.post("/admin/subcategories", authenticateUser, async (req, res) => {
-  try {
-    const { category_id, name, code, description, sort_order } = req.body;
-    const { data, error } = await Database.getClient()
-      .from("subcategories")
-      .insert({
-        category_id,
-        name,
-        code,
-        description,
-        sort_order: sort_order || 0
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error creating subcategory:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to create subcategory"
-    });
-  }
-});
-// Admin: Create new department
-router.post("/admin/departments", authenticateUser, async (req, res) => {
-  try {
-    const {
-      name,
-      code,
-      description,
-      subcategory_id,
-      level,
-      response_time_hours,
-      escalation_time_hours,
-      contact_info
-    } = req.body;
-    const { data, error } = await Database.getClient()
-      .from("departments")
-      .insert({
-        name,
-        code,
-        description,
-        subcategory_id,
-        level: level || "LGU",
-        response_time_hours: response_time_hours || 24,
-        escalation_time_hours: escalation_time_hours || 72,
-        contact_info: contact_info || {}
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error creating department:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to create department"
-    });
-  }
-});
-// Admin: Map department to subcategory
-router.post("/admin/department-mapping", authenticateUser, async (req, res) => {
-  try {
-    const { department_id, subcategory_id, response_priority } = req.body;
-    const { data, error } = await Database.getClient()
-      .from("department_subcategory_mapping")
-      .insert({
-        department_id,
-        subcategory_id,
-        response_priority: response_priority || 1
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error creating department mapping:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to create department mapping"
-    });
-  }
-});
+);
+
 // Admin: Update category
-router.put("/admin/categories/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-    const { data, error } = await Database.getClient()
-      .from("categories")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error updating category:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to update category"
-    });
+router.put(
+  "/admin/categories/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const category = await DepartmentService.updateCategory(
+        req.params.id,
+        req.body
+      );
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
-});
-// Admin: Update subcategory
-router.put("/admin/subcategories/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-    const { data, error } = await Database.getClient()
-      .from("subcategories")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error updating subcategory:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to update subcategory"
-    });
-  }
-});
-// Admin: Update department
-router.put("/admin/departments/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-    const { data, error } = await Database.getClient()
-      .from("departments")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error("Error updating department:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to update department"
-    });
-  }
-});
+);
+
 // Admin: Delete category (soft delete)
-router.delete("/admin/categories/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await Database.getClient()
-      .from("categories")
-      .update({
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id);
-    if (error) throw error;
-    res.json({
-      success: true,
-      message: "Category deactivated successfully"
-    });
-  } catch (error) {
-    console.error("Error deactivating category:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to deactivate category"
-    });
+router.delete(
+  "/admin/categories/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      await DepartmentService.deleteCategory(req.params.id);
+      res.json({ message: "Category deactivated successfully" });
+    } catch (error) {
+      console.error("Error deactivating category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
+
+// Admin: Create new subcategory
+router.post(
+  "/admin/subcategories",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const subcategory = await DepartmentService.createSubcategory(req.body);
+      res.json(subcategory);
+    } catch (error) {
+      console.error("Error creating subcategory:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// Admin: Update subcategory
+router.put(
+  "/admin/subcategories/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const subcategory = await DepartmentService.updateSubcategory(
+        req.params.id,
+        req.body
+      );
+      res.json(subcategory);
+    } catch (error) {
+      console.error("Error updating subcategory:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 // Admin: Delete subcategory (soft delete)
-router.delete("/admin/subcategories/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await Database.getClient()
-      .from("subcategories")
-      .update({
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id);
-    if (error) throw error;
-    res.json({
-      success: true,
-      message: "Subcategory deactivated successfully"
-    });
-  } catch (error) {
-    console.error("Error deactivating subcategory:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to deactivate subcategory"
-    });
+router.delete(
+  "/admin/subcategories/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      await DepartmentService.deleteSubcategory(req.params.id);
+      res.json({ message: "Subcategory deactivated successfully" });
+    } catch (error) {
+      console.error("Error deactivating subcategory:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
+
+// Admin: Create new department
+router.post(
+  "/admin/departments",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const department = await DepartmentService.createDepartment(req.body);
+      res.json(department);
+    } catch (error) {
+      console.error("Error creating department:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// Admin: Map department to subcategory
+router.post(
+  "/admin/department-mapping",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      // Expecting { department_id, subcategory_id, response_priority }
+      const { department_id, subcategory_id, response_priority } = req.body;
+      const { data, error } = await Database.getClient()
+        .from("department_subcategory_mapping")
+        .insert({
+          department_id,
+          subcategory_id,
+          response_priority: response_priority || 1
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      res.json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      console.error("Error creating department mapping:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create department mapping"
+      });
+    }
+  }
+);
+
+// Admin: Update department
+router.put(
+  "/admin/departments/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const { data, error } = await Database.getClient()
+        .from("departments")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      res.json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      console.error("Error updating department:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update department"
+      });
+    }
+  }
+);
+
 // Admin: Delete department (soft delete)
-router.delete("/admin/departments/:id", authenticateUser, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await Database.getClient()
-      .from("departments")
-      .update({
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id);
-    if (error) throw error;
-    res.json({
-      success: true,
-      message: "Department deactivated successfully"
-    });
-  } catch (error) {
-    console.error("Error deactivating department:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to deactivate department"
-    });
+router.delete(
+  "/admin/departments/:id",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { error } = await Database.getClient()
+        .from("departments")
+        .update({
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+      if (error) throw error;
+      res.json({
+        success: true,
+        message: "Department deactivated successfully"
+      });
+    } catch (error) {
+      console.error("Error deactivating department:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to deactivate department"
+      });
+    }
   }
-});
+);
 
 module.exports = router;

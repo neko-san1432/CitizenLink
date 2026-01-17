@@ -156,9 +156,9 @@ router.get("/departments", authenticateUser, (req, res) => {
         "views",
         "pages",
         "admin",
-        "departments",
-        "index.html"
+        "department-structure.html"
       )
+
     );
   } else {
     res.sendFile(

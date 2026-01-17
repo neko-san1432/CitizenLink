@@ -192,7 +192,7 @@ export const AdvancedFeatures = {
             // Suggest team based on category
             let suggestedTeam = 'General Services';
             let iconClass = 'fa-exclamation-circle'; // Default icon
-            
+
             if (dominant === 'Roads') {
                 suggestedTeam = 'Road Maintenance Team';
                 iconClass = 'fa-road';
@@ -216,6 +216,30 @@ export const AdvancedFeatures = {
             if (dominant === 'Crime') {
                 suggestedTeam = 'Police Department';
                 iconClass = 'fa-shield-alt';
+            }
+            if (dominant === 'Accident') {
+                suggestedTeam = 'Traffic Management Unit';
+                iconClass = 'fa-car-crash';
+            }
+            if (dominant === 'Casualty') {
+                suggestedTeam = 'Emergency Response Team';
+                iconClass = 'fa-skull-crossbones';
+            }
+            if (dominant === 'Protest') {
+                suggestedTeam = 'Public Order and Safety';
+                iconClass = 'fa-users';
+            }
+            if (dominant === 'Power Outage') {
+                suggestedTeam = 'Electrical Services';
+                iconClass = 'fa-lightbulb';
+            }
+            if (dominant === 'Water Shortage') {
+                suggestedTeam = 'Water Utility Services';
+                iconClass = 'fa-tint';
+            }
+            if (dominant === 'Animal Control') {
+                suggestedTeam = 'Animal Welfare Unit';
+                iconClass = 'fa-paw';
             }
 
             html += `
