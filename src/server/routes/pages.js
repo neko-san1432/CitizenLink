@@ -542,9 +542,16 @@ router.get("/signup-with-code", redirectIfAuthenticated, (req, res) => {
   res.sendFile(filePath);
 });
 
+// Privacy and Terms Pages
 router.get(["/privacy-notice", "/privacy"], (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "privacy-notice.html")
+    path.join(config.rootDir, "views", "pages", "privacy.html")
+  );
+});
+
+router.get("/terms", (req, res) => {
+  res.sendFile(
+    path.join(config.rootDir, "views", "pages", "terms.html")
   );
 });
 

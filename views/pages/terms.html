@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terms and Conditions - CitizenLink</title>
+    <link rel="stylesheet" href="/css/pages/index.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* Specific overrides for text readability on glass */
+        .legal-header {
+            padding-top: 8rem;
+            padding-bottom: 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .legal-title {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .legal-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-dim);
+        }
+
+        .legal-container {
+            max-width: 900px;
+            /* Slightly wider for reading */
+            margin: 0 auto 4rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .legal-card {
+            padding: 4rem;
+            background: rgba(30, 41, 59, 0.4);
+            /* Slightly darker glass for logic */
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .legal-content h2 {
+            color: var(--text-light);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: var(--font-heading);
+        }
+
+        .legal-content p,
+        .legal-content li {
+            color: var(--text-dim);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .legal-content strong {
+            color: var(--text-light);
+        }
+
+        /* Navbar overrides to ensure visibility */
+        .navbar {
+            opacity: 1 !important;
+            animation: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .legal-card {
+                padding: 2rem;
+            }
+
+            .legal-title {
+                font-size: 2.25rem;
+            }
+        }
+
+        /* Navbar Contrast Fixes */
+        .logo {
+            text-decoration: none !important;
+        }
+
+        .nav-link-secondary:hover {
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Elements (Copied from Index for consistency) -->
+    <div class="background-gradient"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/assets/images/CitizenLink-logo-no-text.png" alt="CitizenLink"
+                    style="height: 48px; width: auto;" />
+                <span class="logo-text" style="color: #f8fafc; text-decoration: none;">CitizenLink</span>
+            </a>
+            <div class="nav-links">
+                <a href="/login" class="nav-link-secondary" style="color: #cbd5e1; text-decoration: none;">Login</a>
+                <a href="/signup" class="btn-hero-primary"
+                    style="padding: 0.5rem 1.5rem; font-size: 0.9rem; color: #ffffff;">Sign
+                    up</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="legal-container">
+        <div class="legal-header">
+            <h1 class="legal-title">Terms of Service</h1>
+            <p class="legal-subtitle">
+                Welcome to CitizenLink. By accessing or using our platform, you agree to be bound by complying with
+                local regulations and maintaining the integrity of our community.
+            </p>
+        </div>
+
+        <div class="legal-card">
+            <div class="legal-content">
+                <p>
+                    These Terms of Service ("Terms") govern your access to and use of the CitizenLink website, mobile
+                    application, and services (collectively, the "Service"), operated by the Digos City Local Government
+                    Unit.
+                </p>
+
+                <h2>1. Acceptance of Terms</h2>
+                <p>
+                    By creating an account or using CitizenLink, you agree to these Terms. If you do not agree, you may
+                    not use the Service.
+                </p>
+
+                <h2>2. Proper Use of Service</h2>
+                <p>You agree to use CitizenLink only for lawful purposes. You must not:</p>
+                <ul>
+                    <li>Submit false, misleading, or malicious reports.</li>
+                    <li>Post content that is offensive, hate speech, or violates intellectual property rights.</li>
+                    <li>Attempt to interfere with or disrupt the integrity or performance of the Service.</li>
+                </ul>
+
+                <h2>3. Account Registration</h2>
+                <p>
+                    You must provide accurate and complete information when creating an account. You are responsible for
+                    maintaining the confidentiality of your account credentials.
+                </p>
+
+                <h2>4. User Content</h2>
+                <p>
+                    You retain ownership of the photos and descriptions you submit. However, by submitting content, you
+                    grant Digos City LGU a license to use, reproduce, and display such content for the purpose of
+                    resolving issues and improving public services.
+                </p>
+
+                <h2>5. Limitation of Liability</h2>
+                <p>
+                    CitizenLink gives no warranty that the Service will be uninterrupted or error-free. The LGU is not
+                    liable for any damages resulting from your use of the Service or reliance on any information
+                    provided thereof.
+                </p>
+
+                <h2>6. Modifications</h2>
+                <p>
+                    We reserve the right to modify these Terms at any time. Continued use of the Service after any such
+                    changes constitutes your acceptance of the new Terms.
+                </p>
+
+                <p style="margin-top: 3rem; font-size: 0.9rem; opacity: 0.5;">Effective: January 2026</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

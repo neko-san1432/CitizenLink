@@ -22,11 +22,15 @@
   <div class="grid-overlay"></div>
 
   <!-- Navigation -->
+
+  <!-- Navigation -->
   <nav class="navbar glass-nav">
     <div class="nav-container">
       <div class="logo">
         <div class="logo-icon">
-          <i class="fa-solid fa-city"></i>
+          <!-- <i class="fa-solid fa-city"></i> -->
+          <img src="/assets/images/CitizenLink-logo-no-text.png" alt="Logo"
+            style="height: 48px; width: auto; object-fit: contain;">
         </div>
         <span class="logo-text">CitizenLink</span>
       </div>
@@ -144,16 +148,55 @@
     </div>
   </section>
 
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="how-it-works-section">
+    <div class="section-header">
+      <h2>How It Works</h2>
+      <p>From report to resolution in three simple steps.</p>
+    </div>
+
+    <div class="steps-container">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <h3>File a Report</h3>
+        <p>Submit your complaint via the app. Attach photos and let our AI categorize it automatically.</p>
+      </div>
+      <div class="step-divider">
+        <i class="fa-solid fa-arrow-right"></i>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <h3>LGU Verification</h3>
+        <p>Local teams verify the issue. You receive real-time updates as the status changes.</p>
+      </div>
+      <div class="step-divider">
+        <i class="fa-solid fa-arrow-right"></i>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <h3>Resolution</h3>
+        <p>The issue is resolved. You can rate the service and close the ticket.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-brand">
-        <h4>CitizenLink</h4>
-        <p>&copy; 2026 CitizenLink Project</p>
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="/assets/images/CitizenLink-logo-no-text.png" alt="Logo"
+              style="height: 48px; width: auto; object-fit: contain;">
+          </div>
+          <span class="logo-text" style="font-size: 1.5rem;">CitizenLink</span>
+        </div>
+        <p style="margin-top: 1rem;">&copy; 2026 CitizenLink Project</p>
       </div>
+
       <div class="footer-links">
         <a href="/privacy">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
+        <a href="/terms">Terms of Service</a>
         <a href="#">Contact Support</a>
       </div>
     </div>
@@ -193,66 +236,53 @@
 
       isScrollingTimer = setTimeout(() => {
         const sections = document.querySelectorAll('section');
+        const maxIndex = sections.length - 1; // Now 2 (Hero=0, Features=1, How=2)
         const sectionH = window.innerHeight;
         const currentY = window.scrollY;
 
-        // Where are we visually?
         const visualIndex = Math.round(currentY / sectionH);
+        let targetIndex = activeIndex;
 
-        // --- TRAP DOOR LOGIC ---
-
-        let targetIndex = activeIndex; // Start with where we think we are
-
-        // CASE 1: We are in Zone 0 (Hero)
-        if (visualIndex === 0) {
+        // CASE 1: In Snap Zone (Indicies < maxIndex)
+        // e.g. 0 (Hero) or 1 (Features)
+        if (visualIndex < maxIndex) {
           // Standard Snap Behavior
-          // If we flicked down
           if (lastWheelDirection === 1 && (Date.now() - lastWheelTime < 500)) {
-            targetIndex = 1;
+            targetIndex = visualIndex + 1; // Or activeIndex + 1 ? active approach is safer
+            // If visual is 1 and we flick down, snap to 2.
+          } else if (lastWheelDirection === -1 && (Date.now() - lastWheelTime < 500)) {
+            targetIndex = visualIndex - 1;
           } else {
-            // Default snap to 0
-            targetIndex = 0;
+            targetIndex = visualIndex; // Snap to nearest
           }
         }
 
-        // CASE 2: We are in Zone 1 (Features) or deeper (Footer)
+        // CASE 2: At the Last Section (How It Works, Index 2)
         else {
-          // We are basically in Free Scroll Mode...
-          // UNLESS we are at the very top of Features and want to go BACK to Hero.
+          // Trap Door Logic for the LAST section
+          const lastSectionTop = sectionH * maxIndex;
+          const trapDoorZone = lastSectionTop + 50;
 
-          // Calculate "Trap Door" threshold.
-          // If we are strictly between 1.0 and 1.05 (Top 5% of Features)
-          const featuresTop = sectionH * 1;
-          const trapDoorZone = featuresTop + 50; // 50px buffer
-
-          if (currentY <= trapDoorZone && currentY >= (featuresTop - 50)) {
-            // We are in the "Trap Door Zone" (Transition 0 <-> 1)
-
-            // If intent is UP
+          if (currentY <= trapDoorZone && currentY >= (lastSectionTop - 50)) {
+            // We are at the Top Edge of HowItWorks
             if (lastWheelDirection === -1 && (Date.now() - lastWheelTime < 500)) {
-              targetIndex = 0; // SNAP BACK TO HERO
+              targetIndex = maxIndex - 1; // Snap BACK to Features
             } else {
-              // Otherwise, we snap to 1 (Features Top) to keep it clean?
-              // Or do we allow it to float?
-              // User prefers clean "snap" for first two. So snap to 1.
-              targetIndex = 1;
+              targetIndex = maxIndex; // Snap to Top of HowItWorks
             }
           } else {
-            // We are DEEP in Features ( > 1.05) or in Footer.
-            // DISABLE SNAP. FREE SCROLL.
-            return;
+            // We are Deep in HowItWorks or Footer
+            return; // FREE SCROLL
           }
         }
 
-        // Final Bounds Check
         if (targetIndex < 0) targetIndex = 0;
 
-        // Update active
         activeIndex = targetIndex;
 
         // Execute Smooth Slide
-        // Only if targetIndex is 0 or 1.
-        if (targetIndex <= 1 && sections[targetIndex]) {
+        // Only if targetIndex is within valid sections (0, 1, 2)
+        if (targetIndex <= maxIndex && sections[targetIndex]) {
           smoothScrollTo(sections[targetIndex].offsetTop, 1000);
         }
 
@@ -264,31 +294,42 @@
       if (window.innerWidth <= 768) return;
 
       const sections = document.querySelectorAll('section');
+      const maxIndex = sections.length - 1; // 2
       const sectionH = window.innerHeight;
       const currentY = window.scrollY;
 
       if (e.key === 'ArrowDown') {
-        // If at Hero (Index 0), allow snap to 1.
-        if (currentY < sectionH - 50) {
+        const visualIndex = Math.round(currentY / sectionH);
+
+        // If in Snap Zone (0 or 1), Snap to Next
+        if (visualIndex < maxIndex) {
           e.preventDefault();
-          activeIndex = 1;
-          if (sections[1]) smoothScrollTo(sections[1].offsetTop, 1000);
-        }
-        // If at Features (Index 1) or below, Allow Default Free Scroll
-        else {
+          activeIndex = visualIndex + 1;
+          if (sections[activeIndex]) smoothScrollTo(sections[activeIndex].offsetTop, 1000);
+        } else {
+          // If at Max Index (2) or Footer, Free Scroll
           return;
         }
 
       } else if (e.key === 'ArrowUp') {
-        // If at Features Top (Trap Door Zone), Snap to 0.
-        // Zone: < 1.1 * H
-        if (currentY < sectionH * 1.1 && currentY > 50) {
+        const lastSectionTop = sectionH * maxIndex;
+
+        // Trap Door Logic: If at Top of Max Index (2)
+        if (currentY <= lastSectionTop + 50 && currentY >= lastSectionTop - 50) {
           e.preventDefault();
-          activeIndex = 0;
-          if (sections[0]) smoothScrollTo(sections[0].offsetTop, 1000);
+          activeIndex = maxIndex - 1; // Snap Back to 1
+          if (sections[activeIndex]) smoothScrollTo(sections[activeIndex].offsetTop, 1000);
         }
-        // If Deep in Features/Footer, Allow Default Free Scroll Up
+        // If Clearly in Previous Sections (0 or 1)
+        else if (currentY < lastSectionTop - 50) {
+          e.preventDefault();
+          let target = Math.round(currentY / sectionH) - 1;
+          if (target < 0) target = 0;
+          activeIndex = target;
+          if (sections[activeIndex]) smoothScrollTo(sections[activeIndex].offsetTop, 1000);
+        }
         else {
+          // Deep in 2 or Footer -> Free Scroll
           return;
         }
       }
@@ -329,7 +370,7 @@
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.feature-card').forEach(el => fadeObserver.observe(el));
+    document.querySelectorAll('.feature-card, .step-card').forEach(el => fadeObserver.observe(el));
 
     // Navbar hiding logic using IntersectionObserver on Hero Section
     const navbar = document.querySelector('.navbar');
