@@ -1,0 +1,80 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Publication</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/pages/publication.css" />
+  </head>
+  <body>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+      <div id="app" class="collapsible citizen-dashboard animate-fade-in" style="margin-top:64px">
+        <div class="dashboard-header" style="background:transparent">
+          <div class="dashboard-title-group">
+            <h1>📰 Publication</h1>
+            <p class="dashboard-subtitle">Browse published announcements and events</p>
+          </div>
+          <div class="pub-actions">
+            <button id="btn-create" class="btn btn-primary">Create</button>
+          </div>
+        </div>
+
+        <div class="pub-toolbar glass-panel p-4 rounded-xl mb-6">
+          <div class="pub-tabs" role="tablist">
+            <button class="pub-tab active" data-type="news" role="tab" aria-selected="true">News</button>
+            <button class="pub-tab" data-type="notices" role="tab" aria-selected="false">Notices</button>
+            <button class="pub-tab" data-type="events" role="tab" aria-selected="false">Upcoming Events</button>
+          </div>
+          <div class="pub-filters mt-4">
+            <div class="filter-group">
+              <label>From</label>
+              <input type="date" id="filter-from" class="input" />
+            </div>
+            <div class="filter-group">
+              <label>To</label>
+              <input type="date" id="filter-to" class="input" />
+            </div>
+            <div class="filter-group">
+              <label>Office</label>
+              <select id="filter-office" class="input">
+                <option value="">All Offices</option>
+                <option value="ENG">Engineering</option>
+                <option value="HR">Human Resources</option>
+                <option value="HEALTH">Health</option>
+                <option value="SWM">Solid Waste</option>
+              </select>
+            </div>
+            <button id="filter-apply" class="btn btn-secondary">Apply</button>
+          </div>
+        </div>
+
+        <div class="pub-split grid gap-6 md:grid-cols-2">
+          <div class="pub-list glass-panel p-4 rounded-xl" id="pub-list"></div>
+          <div class="pub-detail glass-panel p-6 rounded-xl" id="pub-detail">
+            <div class="empty-state">
+              <div class="empty-state-icon text-4xl mb-4">📄</div>
+              <h3 class="text-xl font-bold mb-2">Select an item to view details</h3>
+              <p class="text-gray-600">Choose a news, notice, or event from the list.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script type="module" src="/js/pages/publication.js"></script>
+  </body>
+  </html>
+
+
+
+

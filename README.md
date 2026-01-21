@@ -1,28 +1,23 @@
 # CitizenLink 2.0
 
-**Modern Citizen Complaint Management System with Advanced Analytics and Clean Architecture**
+**Citizen Complaint Management System with DBSCAN-Based Geospatial Heatmap Analytics**
 
 ## 📖 About the Program
 
 ### Introduction
 
-CitizenLink 2.0 is a comprehensive web-based complaint management system designed for Local Government Units (LGUs) to efficiently handle, route, and resolve citizen complaints. The system features advanced geospatial analytics using DBSCAN clustering for complaint hotspot detection, robust security measures, content management capabilities, and intelligent complaint distribution mechanisms.
+CitizenLink 2.0 is a web-based complaint management system designed for Local Government Units (LGUs) to efficiently handle and analyze citizen complaints. The system's primary innovation is its **advanced geospatial analytics using DBSCAN clustering** for complaint hotspot detection, enabling data-driven decision-making for resource allocation and policy development.
 
-Built with modern web technologies and following clean architecture principles, CitizenLink provides a scalable, maintainable, and secure platform for managing citizen feedback and complaints across multiple government departments.
+Built with modern web technologies, CitizenLink provides a scalable platform for managing citizen feedback with intelligent spatial analysis capabilities.
 
-### Key Capabilities
+### Core Capabilities
 
+- **DBSCAN Heatmap Clustering**: Advanced geospatial analysis for identifying complaint hotspots and density patterns
+- **Interactive Complaint Mapping**: Real-time visualization of complaint locations with cluster overlays
+- **Multi-Role System**: Support for Citizens, LGU Officers, Admins, and Super Admins
 - **Intelligent Complaint Routing**: Automated department assignment with hierarchical category/subcategory routing
-- **Geospatial Analytics**: DBSCAN-based heatmap clustering for identifying complaint hotspots
-- **Multi-Role System**: Support for Citizens, LGU Officers, Admins, HR, and Super Admins
-- **Content Management**: Integrated news, events, and notices publishing system
-- **Duplicate Detection**: Advanced similarity detection to prevent duplicate complaints
-- **Comprehensive Audit Trail**: Verbose logging of all system actions and state changes
-- **Secure by Design**: Enterprise-grade security with Helmet.js, CSP, RLS policies, and advanced rate limiting
-- **Health Monitoring**: Real-time system health checks and performance monitoring
-- **Hierarchical Department Structure**: Three-tier organization (Categories → Subcategories → Departments)
-- **Advanced Security Scanning**: Automated security vulnerability detection and resolution
-- **Rate Limiting System**: Multi-tier rate limiting with IP-based tracking and management
+- **Comprehensive Analytics**: Statistical dashboards for complaint trends and patterns
+- **Secure Architecture**: Enterprise-grade security with role-based access control
 
 ## 📦 Installation & Dependencies
 
@@ -49,42 +44,25 @@ cp .env.example .env
 # Run database migrations
 npm run migrate
 
+# Apply Row Level Security (RLS) policies
+# Run the SQL script in your Supabase SQL Editor:
+# scripts/setup_rls.sql
+
 # Start development server
 npm run dev
 ```
 
-### Dependencies Overview
+### Key Dependencies
 
-#### Production Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|----------|
-| **@supabase/supabase-js** | ^2.57.4 | PostgreSQL database client with built-in authentication, real-time subscriptions, and Row Level Security (RLS) support. Provides seamless integration with Supabase backend services. |
-| **chart.js** | ^4.5.0 | Data visualization library for rendering complaint statistics, trends, and analytics dashboards. Used for generating charts and graphs in admin panels. |
-| **compression** | ^1.8.1 | HTTP response compression middleware for Express. Reduces bandwidth usage by compressing responses using gzip/deflate, improving application performance. |
-| **cookie-parser** | ^1.4.7 | Express middleware for parsing cookies from HTTP requests. Essential for session management and authentication token handling. |
-| **cors** | ^2.8.5 | Cross-Origin Resource Sharing (CORS) middleware. Enables secure API access from different origins while preventing unauthorized cross-domain requests. |
-| **dotenv** | ^17.2.1 | Environment variable loader from `.env` files. Manages sensitive configuration data (API keys, database credentials) outside of source code. |
-| **express** | ^4.21.2 | Fast, minimalist web framework for Node.js. Serves as the core HTTP server handling routing, middleware, and request/response management. |
-| **helmet** | ^8.1.0 | Security middleware that sets various HTTP headers to protect against common web vulnerabilities (XSS, clickjacking, MIME sniffing). Implements Content Security Policy (CSP). |
-| **isomorphic-dompurify** | ^1.8.0 | Client and server-side HTML sanitization library. Prevents XSS attacks by cleaning malicious HTML content in user inputs and outputs. |
-| **multer** | ^2.0.2 | Multipart/form-data middleware for handling file uploads. Manages complaint evidence attachments with file type validation and size limits. |
-| **validator** | ^13.15.15 | String validation and sanitization library. Provides comprehensive input validation for emails, URLs, phone numbers, and other data types. |
-| **xss** | ^1.0.14 | Cross-Site Scripting (XSS) prevention library. Sanitizes user input to prevent malicious script injection attacks. |
-
-#### Development Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|----------|
-| **@microsoft/eslint-formatter-sarif** | ^3.1.0 | SARIF (Static Analysis Results Interchange Format) formatter for ESLint. Enables integration with security scanning tools and GitHub CodeQL. |
-| **autoprefixer** | ^10.4.21 | PostCSS plugin that automatically adds vendor prefixes to CSS rules for cross-browser compatibility. |
-| **eslint** | ^8.57.0 | JavaScript linter for code quality and consistency. Enforces coding standards and identifies potential issues. |
-| **eslint-plugin-no-unsanitized** | ^4.1.4 | ESLint plugin that prevents use of unsanitized content in DOM operations. Critical for XSS prevention. |
-| **eslint-plugin-security** | ^3.0.1 | ESLint plugin with security-focused rules. Detects common security vulnerabilities in JavaScript code. |
-| **gzip-cli** | ^1.0.0 | Command-line tool for compressing static assets during build process to reduce file sizes. |
-| **nodemon** | ^3.1.10 | Development utility that automatically restarts the Node.js server when file changes are detected. |
-| **postcss** | ^8.5.6 | CSS transformation tool used with TailwindCSS for processing and optimizing stylesheets. |
-| **tailwindcss** | ^3.4.18 | Utility-first CSS framework for rapid UI development with responsive design and modern styling. |
+| Package                   | Version   | Purpose                                                                   |
+| ------------------------- | --------- | ------------------------------------------------------------------------- |
+| **@supabase/supabase-js** | ^2.57.4   | PostgreSQL database client with authentication and real-time capabilities |
+| **chart.js**              | ^4.5.0    | Data visualization for complaint statistics and analytics dashboards      |
+| **express**               | ^4.21.2   | Web framework for Node.js serving as the core HTTP server                 |
+| **helmet**                | ^8.1.0    | Security middleware for HTTP headers and Content Security Policy          |
+| **joi**                   | ^18.0.2   | Schema validation for request payloads and data integrity                 |
+| **multer**                | ^2.0.2    | File upload handling for complaint evidence attachments                   |
+| **validator**             | ^13.15.15 | String validation and sanitization for user inputs                        |
 
 ## 🏗️ Architecture
 
@@ -93,450 +71,433 @@ npm run dev
 ```
 CitizenLink/
 ├── 📁 config/                 # Configuration management
-│   └── app.js                 # Centralized app configuration
 ├── 📁 src/
 │   ├── 📁 server/             # Backend (Node.js/Express)
-│   │   ├── 📁 controllers/    # Request handlers (thin)
-│   │   ├── 📁 services/       # Business logic (fat)
+│   │   ├── 📁 controllers/    # Request handlers
+│   │   ├── 📁 services/       # Business logic
 │   │   ├── 📁 repositories/   # Data access layer
 │   │   ├── 📁 models/         # Data models & validation
 │   │   ├── 📁 middleware/     # Express middleware
-│   │   ├── 📁 routes/         # Route definitions
-│   │   ├── 📁 config/         # Server configuration
-│   │   ├── 📁 utils/          # Server utilities (prepared)
-│   │   └── app.js             # Application setup
-│   ├── 📁 client/             # Frontend (JavaScript)
-│   │   ├── 📁 components/     # Reusable UI components
-│   │   │   ├── 📁 complaint/  # Complaint-specific components
-│   │   │   ├── 📁 form/       # Form handling components
-│   │   │   └── 📁 map/        # Map integration components
-│   │   ├── 📁 auth/           # Authentication components
-│   │   ├── 📁 admin/          # Admin interface components
-│   │   ├── 📁 services/       # API clients (prepared)
-│   │   ├── 📁 utils/          # Client utilities
-│   │   ├── 📁 styles/         # CSS files
-│   │   ├── 📁 config/         # Client configuration
-│   │   └── 📁 assets/         # Static assets
-│   └── 📁 shared/             # Shared utilities & constants
+│   │   └── 📁 routes/         # Route definitions
+│   └── 📁 client/             # Frontend (JavaScript)
+│       ├── 📁 components/     # UI components
+│       │   └── 📁 map/        # Map & heatmap components
+│       ├── 📁 utils/          # Client utilities
+│       └── 📁 styles/         # CSS files
 ├── 📁 views/                  # HTML templates
-│   ├── 📁 pages/              # Page templates
-│   │   ├── 📁 admin/          # Admin interface pages
-│   │   ├── 📁 citizen/        # Citizen dashboard pages
-│   │   ├── 📁 lgu/            # LGU staff pages
-│   │   ├── 📁 lgu-admin/      # LGU admin pages
-│   │   └── 📁 super-admin/    # Super admin pages
-│   ├── 📁 components/         # Reusable HTML components (prepared)
-│   └── 📁 layouts/            # Layout templates (prepared)
-├── 📁 scripts/                # Utility scripts
-└── 📁 uploads/                # User uploaded files (auto-created)
+│   └── 📁 pages/              # Page templates
+│       ├── 📁 admin/          # Admin interface
+│       ├── 📁 lgu/            # LGU staff pages
+│       └── 📁 lgu-admin/      # LGU admin pages
+├── 📁 public/                 # Static assets
+│   ├── 📁 css/                # Stylesheets
+│   └── 📁 js/                 # Client-side JavaScript
+└── 📁 scripts/                # Utility scripts
 ```
 
-### Architectural Design Patterns
+### Architectural Pattern
 
-CitizenLink follows a **layered architecture** with clear separation of concerns, implementing multiple design patterns for maintainability and scalability.
-
-#### 🏛️ MVC + Service Layer Architecture (Fat Service, Thin Controller)
-
-The application implements an **enhanced MVC pattern** with an additional Service Layer, following the **"Fat Service, Thin Controller"** principle:
+CitizenLink follows a **layered MVC + Service architecture** with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                         │
-│  (Views, Frontend Components, API Consumers)                 │
+│  (Views, Frontend Components, Map Visualizations)            │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                    CONTROLLER LAYER (Thin)                   │
+│                    CONTROLLER LAYER                          │
 │  • Request/Response handling                                 │
-│  • Input parsing and validation                              │
-│  • HTTP status code management                               │
-│  • Minimal logic - delegates to services                     │
-│                                                               │
-│  Example: ComplaintController.js                             │
-│  - Extracts request data                                     │
-│  - Calls ComplaintService methods                            │
-│  - Formats and returns responses                             │
+│  • Input validation                                          │
+│  • Delegates to services                                     │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                     SERVICE LAYER (Fat)                      │
+│                     SERVICE LAYER                            │
 │  • Business logic and rules                                  │
+│  • DBSCAN clustering algorithms                              │
 │  • Workflow orchestration                                    │
-│  • Cross-cutting concerns                                    │
-│  • Transaction management                                    │
 │  • Coordinates multiple repositories                         │
-│  • Implements domain logic                                   │
-│                                                               │
-│  Example: ComplaintService.js                                │
-│  - Validates business rules                                  │
-│  - Orchestrates complaint workflow                           │
-│  - Manages department assignments                            │
-│  - Triggers notifications                                    │
-│  - Handles file processing                                   │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
 │                   REPOSITORY LAYER                           │
 │  • Data access abstraction                                   │
 │  • Database queries (CRUD operations)                        │
-│  • No business logic                                         │
-│  • Returns domain models                                     │
-│                                                               │
-│  Example: ComplaintRepository.js                             │
-│  - create(), findById(), findAll()                           │
-│  - Supabase query execution                                  │
-│  - Maps database rows to Models                              │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────────────────┐
-│                      MODEL LAYER                             │
-│  • Data structure definitions                                │
-│  • Validation rules                                          │
-│  • Data transformation methods                               │
-│  • No business logic                                         │
-│                                                               │
-│  Example: Complaint.js                                       │
-│  - Property definitions                                      │
-│  - validate() method                                         │
-│  - sanitizeForInsert() method                                │
+│  • Geospatial data retrieval                                 │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
 │                    DATABASE LAYER                            │
-│  (PostgreSQL/Supabase)                                       │
+│  (PostgreSQL/Supabase with PostGIS)                          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Benefits of This Architecture:**
+## ✨ Core Feature: DBSCAN Heatmap Clustering
 
-1. **Separation of Concerns**: Each layer has a single, well-defined responsibility
-2. **Testability**: Business logic in services can be tested independently
-3. **Reusability**: Services can be called from multiple controllers or other services
-4. **Maintainability**: Changes to business logic don't affect controllers or repositories
-5. **Scalability**: Easy to add new features without modifying existing layers
+### Overview
 
-**Code Example:**
+The primary innovation of CitizenLink is its implementation of **Density-Based Spatial Clustering of Applications with Noise (DBSCAN)** algorithm for advanced geospatial analysis of citizen complaints.
+
+### What is DBSCAN?
+
+DBSCAN is a density-based clustering algorithm that groups together points that are closely packed together, marking points in low-density regions as outliers. Unlike other clustering methods (like K-means), DBSCAN:
+
+- **Does not require specifying the number of clusters beforehand**
+- **Can find arbitrarily shaped clusters**
+- **Identifies noise points (outliers)**
+- **Is robust to outliers and varying cluster densities**
+
+#### Advantages Over Other Clustering Algorithms
+
+| Feature                      | DBSCAN                        | K-Means              | Hierarchical                 |
+| ---------------------------- | ----------------------------- | -------------------- | ---------------------------- |
+| **Number of clusters**       | Automatic                     | Must specify k       | Must specify k or cut height |
+| **Cluster shape**            | Arbitrary shapes              | Spherical only       | Depends on linkage           |
+| **Outlier handling**         | Identifies as noise           | Forces into clusters | Forces into clusters         |
+| **Density variation**        | Handles well                  | Struggles            | Moderate                     |
+| **Computational complexity** | O(n log n) with spatial index | O(nk)                | O(n² log n)                  |
+| **Geospatial suitability**   | **Excellent**                 | Poor                 | Moderate                     |
+
+**Why DBSCAN for Complaint Analysis?**
+
+1. **Unknown cluster count**: We don't know in advance how many hotspots exist
+2. **Irregular patterns**: Complaint hotspots follow geographic features (roads, neighborhoods) with irregular shapes
+3. **Noise handling**: Isolated complaints shouldn't force artificial clusters
+4. **Density-based**: Hotspots are naturally defined by complaint density, not arbitrary boundaries
+5. **Scalability**: Efficient for large datasets with spatial indexing
+
+### Implementation Details
+
+#### Algorithm Parameters
+
+- **Epsilon (ε)**: The maximum distance between two points to be considered neighbors (configurable, default: 0.01 degrees ≈ 1.1 km)
+- **MinPoints**: The minimum number of points required to form a dense region (configurable, default: 3 complaints)
+
+#### Mathematical Formulas
+
+##### 1. Haversine Formula (Distance Calculation)
+
+The system uses the **Haversine formula** to calculate the great-circle distance between two points on Earth's surface, accounting for Earth's curvature:
+
+```
+a = sin²(Δφ/2) + cos(φ₁) × cos(φ₂) × sin²(Δλ/2)
+c = 2 × atan2(√a, √(1-a))
+d = R × c
+```
+
+Where:
+
+- **φ₁, φ₂** = latitude of point 1 and point 2 (in radians)
+- **Δφ** = φ₂ - φ₁ (difference in latitude)
+- **Δλ** = λ₂ - λ₁ (difference in longitude)
+- **R** = Earth's radius (6,371 km)
+- **d** = distance between the two points (in km)
+
+**Implementation**:
 
 ```javascript
-// THIN CONTROLLER - Only handles HTTP concerns
-class ComplaintController {
-  async createComplaint(req, res) {
-    try {
-      const { user } = req;
-      const complaintData = req.body;
-      const files = req.files?.evidenceFiles || [];
+calculateDistance(point1, point2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = toRadians(point2.lat - point1.lat);
+  const dLng = toRadians(point2.lng - point1.lng);
 
-      // Delegate to service layer
-      const complaint = await this.complaintService.createComplaint(
-        user.id, 
-        complaintData, 
-        files
-      );
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(point1.lat)) * Math.cos(toRadians(point2.lat)) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
-      // Format response
-      res.status(201).json({
-        success: true,
-        data: complaint,
-        message: "Complaint submitted successfully"
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in kilometers
+}
+```
+
+##### 2. Cluster Centroid Calculation
+
+The center of each cluster is calculated as the arithmetic mean of all points in the cluster:
+
+```
+Center_lat = (Σ lat_i) / n
+Center_lng = (Σ lng_i) / n
+```
+
+Where:
+
+- **lat_i, lng_i** = latitude and longitude of point i
+- **n** = number of points in the cluster
+
+##### 3. Cluster Radius
+
+The cluster radius is the maximum distance from the centroid to any point in the cluster:
+
+```
+Radius = max(d(center, point_i)) for all i in cluster
+```
+
+##### 4. Cluster Density
+
+Density is calculated as the number of complaints per unit area:
+
+```
+Density = n / A
+A = π × r²
+```
+
+Where:
+
+- **n** = number of points in cluster
+- **A** = area of cluster (in km²)
+- **r** = cluster radius (in km)
+
+#### Theoretical Foundation: DBSCAN Algorithm
+
+**DBSCAN** (Density-Based Spatial Clustering of Applications with Noise) is based on the following concepts:
+
+##### Core Concepts
+
+1. **ε-neighborhood**: The neighborhood within a radius ε of a given point
+
+   ```
+   N_ε(p) = {q ∈ D | dist(p,q) ≤ ε}
+   ```
+
+2. **Core Point**: A point p is a core point if:
+
+   ```
+   |N_ε(p)| ≥ MinPts
+   ```
+
+3. **Directly Density-Reachable**: A point q is directly density-reachable from p if:
+
+   - q ∈ N_ε(p)
+   - p is a core point
+
+4. **Density-Reachable**: A point q is density-reachable from p if there exists a chain of points p₁, p₂, ..., pₙ where:
+
+   - p₁ = p and pₙ = q
+   - p\_{i+1} is directly density-reachable from p_i
+
+5. **Density-Connected**: Points p and q are density-connected if there exists a point o such that both p and q are density-reachable from o
+
+##### Algorithm Steps
+
+1. **Initialize**: Mark all points as unvisited
+2. **For each unvisited point p**:
+   - Mark p as visited
+   - Find N_ε(p) (all neighbors within ε distance)
+   - If |N_ε(p)| < MinPts: mark p as noise
+   - Else: Create new cluster C and expand it:
+     - Add p to C
+     - For each point q in N_ε(p):
+       - If q is unvisited:
+         - Mark q as visited
+         - Find N_ε(q)
+         - If |N*ε(q)| ≥ MinPts: add N*ε(q) to N_ε(p)
+       - If q is not in any cluster: add q to C
+
+##### Parameter Selection Theory
+
+**Epsilon (ε)**: Selected using the k-distance graph method:
+
+- Calculate k-distance for each point (distance to kth nearest neighbor)
+- Sort distances in ascending order
+- Plot the sorted k-distances
+- Choose ε at the "elbow" point (point of maximum curvature)
+
+**MinPts**: Typically chosen as:
+
+```
+MinPts ≥ D + 1
+```
+
+Where D is the dimensionality of the dataset (D = 2 for geospatial data)
+
+For our implementation:
+
+- **ε = 0.01 degrees** (≈ 1.1 km at equator)
+- **MinPts = 3** (minimum for 2D spatial data)
+
+#### Technical Implementation
+
+**File**: `public/js/components/map/dbscan.js`
+
+```javascript
+class DBSCAN {
+  constructor(eps = 0.01, minPts = 3) {
+    this.eps = eps; // ε parameter
+    this.minPts = minPts; // MinPts parameter
+  }
+
+  cluster(points) {
+    const visited = new Array(points.length).fill(false);
+    const clustered = new Array(points.length).fill(false);
+    const clusters = [];
+    const noise = [];
+
+    for (let i = 0; i < points.length; i++) {
+      if (visited[i]) continue;
+
+      visited[i] = true;
+      const neighbors = this.findNeighbors(points, i);
+
+      if (neighbors.length < this.minPts) {
+        noise.push(i); // Mark as noise
+      } else {
+        // Expand cluster
+        const cluster = [i];
+        clustered[i] = true;
+
+        let j = 0;
+        while (j < neighbors.length) {
+          const neighborIndex = neighbors[j];
+
+          if (!visited[neighborIndex]) {
+            visited[neighborIndex] = true;
+            const neighborNeighbors = this.findNeighbors(points, neighborIndex);
+
+            if (neighborNeighbors.length >= this.minPts) {
+              neighbors.push(...neighborNeighbors);
+            }
+          }
+
+          if (!clustered[neighborIndex]) {
+            cluster.push(neighborIndex);
+            clustered[neighborIndex] = true;
+          }
+
+          j++;
+        }
+
+        clusters.push(cluster);
+      }
     }
-  }
-}
 
-// FAT SERVICE - Contains all business logic
-class ComplaintService {
-  async createComplaint(userId, complaintData, files) {
-    // Business validation
-    const complaint = new Complaint(complaintData);
-    const validation = Complaint.validate(complaint);
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-    }
-
-    // Orchestrate multiple operations
-    const createdComplaint = await this.complaintRepo.create(complaint);
-    await this._processWorkflow(createdComplaint, departments);
-    await this._processFileUploads(createdComplaint.id, files);
-    await this.notificationService.notifyComplaintSubmitted(userId, createdComplaint.id);
-    
-    // Business logic for duplicate detection
-    await this.duplicationService.checkForDuplicates(createdComplaint);
-    
-    return createdComplaint;
-  }
-}
-
-// REPOSITORY - Only data access
-class ComplaintRepository {
-  async create(complaintData) {
-    const { data, error } = await this.supabase
-      .from('complaints')
-      .insert(complaintData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return new Complaint(data);
+    return { clusters, noise };
   }
 }
 ```
 
-#### 🎯 Additional Design Patterns
+#### Visualization Features
 
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| **Repository Pattern** | `ComplaintRepository`, `DepartmentRepository`, `CoordinatorRepository` | Abstracts data access logic, provides clean interface for database operations, enables easy testing with mock repositories |
-| **Dependency Injection** | Constructor injection in Controllers and Services | Loose coupling between components, easier testing, flexible component replacement |
-| **Model-View-Controller (MVC)** | Models (`Complaint.js`), Views (HTML templates), Controllers (`ComplaintController.js`) | Separates data, presentation, and control logic |
-| **Middleware Pattern** | `auth.js`, `security.js`, `roleCheck.js` | Modular request/response processing pipeline, cross-cutting concerns (auth, logging, security) |
-| **Factory Pattern** | Model constructors, Database client initialization | Centralized object creation, encapsulates instantiation logic |
-| **Strategy Pattern** | Role-based access control, different notification strategies | Enables runtime selection of algorithms based on context |
-| **Observer Pattern** | Notification system, event-driven workflows | Decoupled event handling, automatic notifications on state changes |
-| **Singleton Pattern** | Database connection (`Database` class) | Single shared instance for database connections, resource optimization |
-| **Facade Pattern** | Service layer methods that orchestrate multiple operations | Simplified interface to complex subsystems |
-| **Chain of Responsibility** | Express middleware chain | Sequential processing of requests through multiple handlers |
+- **Color-Coded Clusters**: Different colors for different cluster densities
 
-#### 📋 Layer Responsibilities Summary
+  - Red: High-density clusters (urgent attention required)
+  - Orange: Medium-density clusters
+  - Yellow: Low-density clusters
+  - Gray: Noise points (isolated complaints)
 
-| Layer | Responsibilities | What It Should NOT Do |
-|-------|------------------|----------------------|
-| **Controllers** | Parse requests, call services, format responses, handle HTTP status codes | Business logic, database queries, complex validations |
-| **Services** | Business logic, workflow orchestration, transaction management, coordinate repositories | Direct database access, HTTP concerns, response formatting |
-| **Repositories** | CRUD operations, query building, data mapping | Business logic, validation, workflow management |
-| **Models** | Data structure, basic validation, data transformation | Business logic, database access, HTTP handling |
-| **Middleware** | Authentication, authorization, logging, security headers | Business logic, data access |
+- **Interactive Cluster Markers**: Click on cluster markers to view:
 
-This architecture ensures that **business logic lives in the Service Layer**, making the codebase maintainable, testable, and scalable.
+  - Number of complaints in cluster
+  - Cluster radius
+  - List of complaints within cluster
+  - Common complaint categories
 
-## ✨ Feature Highlights
+- **Dynamic Filtering**: Filter clusters by:
+  - Date range
+  - Complaint status
+  - Department/Category
+  - Priority level
 
-### 🗺️ DBSCAN Heatmap Clustering
+### Use Cases for LGUs
 
-CitizenLink implements **Density-Based Spatial Clustering of Applications with Noise (DBSCAN)** algorithm for advanced geospatial analysis:
+1. **Resource Allocation**: Identify areas requiring immediate attention and allocate resources accordingly
+2. **Infrastructure Planning**: Detect patterns in infrastructure-related complaints to guide development projects
+3. **Policy Development**: Use spatial patterns to inform evidence-based policy decisions
+4. **Performance Monitoring**: Track how complaint hotspots change over time after interventions
+5. **Budget Planning**: Justify budget allocations with data-driven spatial analysis
 
-- **Hotspot Detection**: Automatically identifies areas with high complaint density
-- **Cluster Visualization**: Interactive map overlays showing complaint clusters with color-coded severity
-- **Configurable Parameters**: Adjustable epsilon (radius) and minimum points for cluster formation
-- **Real-time Analysis**: Dynamic clustering based on filtered complaint data
-- **Implementation**: Client-side JavaScript implementation in `src/client/components/map/dbscan.js`
+### Heatmap Analytics Dashboard
 
-**Use Cases**:
-- Identify neighborhoods requiring immediate attention
-- Allocate resources based on complaint concentration
-- Detect patterns in infrastructure issues
-- Support data-driven policy decisions
+**Location**: LGU Admin Dashboard → Heatmap Analytics
 
-### 🔒 Robust Security
+**Features**:
 
-Comprehensive security implementation across multiple layers with advanced threat protection:
+- Real-time cluster visualization on interactive map
+- Statistical summary of clusters (count, average size, density)
+- Temporal analysis of cluster evolution
+- Export capabilities for reports and presentations
+- Comparison tools for before/after intervention analysis
 
-#### Application Security
-- **Helmet.js Integration**: Sets 11+ security-related HTTP headers
-- **Content Security Policy (CSP)**: Prevents XSS attacks by controlling resource loading
-- **XSS Protection**: Multi-layer XSS prevention with isomorphic-dompurify and xss libraries
-- **CSRF Protection**: Request verification tokens
-- **Clickjacking Prevention**: X-Frame-Options headers
-- **MIME Sniffing Protection**: X-Content-Type-Options headers
-- **Input Sanitization**: Comprehensive input validation and sanitization with validator.js
-- **Rate Limiting**: Advanced rate limiting system with configurable limits per endpoint type
+### Database Schema for Geospatial Data
 
-#### Database Security
-- **Row Level Security (RLS)**: PostgreSQL policies enforce data access at database level
-- **Parameterized Queries**: SQL injection prevention
-- **Role-Based Access Control**: Granular permissions per user role
-- **Secure Authentication**: Supabase Auth with JWT tokens
+```sql
+-- Complaints table with geospatial data
+CREATE TABLE complaints (
+  id UUID PRIMARY KEY,
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  location_point GEOGRAPHY(POINT, 4326), -- PostGIS geography type
+  description TEXT,
+  category_id UUID,
+  status VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-#### File Upload Security
-- **Type Validation**: Whitelist-based file type checking
-- **Size Limits**: Configurable maximum file sizes
-- **Virus Scanning Ready**: Architecture supports AV integration
+-- Spatial index for performance
+CREATE INDEX idx_complaints_location ON complaints USING GIST(location_point);
 
-#### Security Monitoring & Scanning
-- **CodeQL Integration**: Automated security scanning with GitHub CodeQL
-- **ESLint Security Rules**: Real-time security vulnerability detection
-- **npm Audit**: Regular dependency vulnerability scanning
-- **Automated Security Fixes**: Self-healing security issues resolution
-- **Security Audit Trail**: Comprehensive logging of security events
-
-#### Rate Limiting System
-- **Multi-Tier Rate Limiting**: Different limits for different endpoint types
-  - General API: 1000 requests per 15 minutes
-  - Authentication: 100 requests per 15 minutes
-  - Login attempts: 20 requests per 15 minutes
-  - Password reset: 5 requests per hour
-  - File uploads: 20 uploads per 15 minutes
-  - Complaint submissions: 10 complaints per hour
-- **IP-based Tracking**: Per-IP rate limit enforcement
-- **Development Mode Bypass**: Automatic bypass for localhost development
-- **Rate Limit Management**: Admin tools for clearing and monitoring rate limits
-
-**Security Files**:
-- `src/server/middleware/security.js` - Security headers and CSP configuration
-- `src/server/middleware/rateLimiting.js` - Advanced rate limiting system
-- `src/server/middleware/inputSanitizer.js` - Input validation and sanitization
-- `scripts/security-scan-detailed.js` - Comprehensive security scanning
-- `scripts/security-autoresolve.js` - Automated security issue resolution
-- `SECURITY.md` - Security policy and procedures
-
-### 🏥 Health Monitoring & System Management
-
-Comprehensive system monitoring and health check capabilities:
-
-#### Health Check System
-- **API Health Endpoint**: `/api/health` provides real-time system status
-- **System Metrics**: Memory usage, uptime, and performance monitoring
-- **Database Connectivity**: Automatic database connection testing
-- **File System Checks**: Directory structure and permission validation
-- **Configuration Validation**: Environment variable and config validation
-
-#### System Monitoring Features
-- **Real-time Status**: Live system health monitoring in Super Admin dashboard
-- **Performance Metrics**: Memory usage, response times, and system load tracking
-- **Error Tracking**: Comprehensive error logging and monitoring
-- **Traffic Monitoring**: Real-time request monitoring and analysis
-- **Log Management**: Centralized logging with search and filtering capabilities
-
-#### Health Check Scripts
-- **Automated Health Checks**: `npm run check` for comprehensive system validation
-- **Development Environment**: Automatic health checks during development
-- **Production Monitoring**: Continuous health monitoring in production environments
-- **Alert System**: Automated alerts for system issues and failures
-
-**Health Monitoring Files**:
-- `src/server/routes/healthRoutes.js` - Health check API endpoints
-- `scripts/healthcheck.js` - Comprehensive health check script
-- `src/client/super-admin/dashboard.js` - System monitoring dashboard
-
-### 📰 Content Management System
-
-Integrated CMS for public information dissemination:
-
-#### News Management
-- Create, publish, and archive news articles
-- Rich text content with image support
-- Category and tag-based organization
-- Draft/Published/Archived workflow
-- Author attribution and timestamps
-
-#### Events Management
-- Upcoming events calendar
-- Event registration tracking
-- Location and organizer information
-- Status tracking (upcoming, ongoing, completed, cancelled)
-- Maximum participant limits
-
-#### Notices System
-- Priority-based notices (low, normal, high, urgent)
-- Target audience filtering (citizens, LGU staff, admins)
-- Time-bound validity periods
-- Alert types (announcement, alert, reminder, advisory)
-
-**Database Tables**: `news`, `events`, `notices` (see `sql/content_management_schema.sql`)
-
-### 🏢 Hierarchical Department Structure
-
-Advanced department management with hierarchical organization:
-
-#### Three-Tier Structure
-- **Categories**: Top-level grouping (Infrastructure, Health, Environment, etc.)
-- **Subcategories**: Specific areas within categories (Roads, Waste Management, etc.)
-- **Departments**: Actual government agencies with unique codes and contact information
-
-#### Department Management Features
-- **Hierarchical Routing**: Automatic complaint routing based on category → subcategory → department
-- **Department Codes**: Short, unique identifiers for efficient database operations
-- **Level Classification**: LGU (Local Government Unit) vs NGA (National Government Agency)
-- **Contact Information**: JSONB storage for flexible contact details
-- **Response Times**: Configurable response and escalation timeframes
-- **Multi-Subcategory Support**: Departments can handle multiple subcategories
-
-#### Example Structure
-```
-Infrastructure & Public Works
-├── Roads & Construction → CEO (City Engineering Office)
-├── Facilities & Maintenance → GSO (City General Services Office)
-└── Land Use & Planning → CPDC (City Planning and Development Coordinator)
-
-Health & Social Services
-├── Public Health → CHO (Digos City Health Office)
-├── Social Welfare → CSWDO (City Social Welfare and Development Office)
-├── Emergency Response → CDRRMO (City Disaster Risk Reduction and Management Office)
-└── Education Welfare → DEPED (Department of Education)
+-- Cluster results storage
+CREATE TABLE complaint_clusters (
+  id UUID PRIMARY KEY,
+  cluster_id INTEGER,
+  center_lat DECIMAL(10, 8),
+  center_lng DECIMAL(11, 8),
+  radius DECIMAL(10, 2),
+  complaint_ids UUID[],
+  complaint_count INTEGER,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-**Key Tables**: `categories`, `subcategories`, `departments`, `department_subcategory_mapping`
+## 🗄️ Database Tables
 
-### 🎯 Complaint Distribution via Coordinator
+### Core Tables for Heatmap Functionality
 
-Intelligent complaint routing system:
+| Table                  | Purpose                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| **complaints**         | Main complaint records with geospatial coordinates (latitude, longitude, location_point) |
+| **complaint_clusters** | Stores DBSCAN clustering results with cluster centers, radius, and member complaint IDs  |
+| **categories**         | Top-level complaint categories for filtering and analysis                                |
+| **subcategories**      | Specific complaint types within categories                                               |
+| **departments**        | Government departments handling complaints                                               |
 
-- **Complaint Coordinator Role**: Dedicated role for complaint triage and assignment
-- **Multi-Department Routing**: Complaints can be assigned to multiple departments
-- **Assignment Workflow**: Pending → Accepted → In Progress → Resolved
-- **Rejection Handling**: Departments can reject with reasons, triggering reassignment
-- **Load Balancing**: Track assignments per officer to distribute workload
-- **Escalation Support**: Automatic escalation for overdue complaints
-- **Hierarchical Routing**: Automatic routing based on category/subcategory selection
+### Supporting Tables
 
-**Key Tables**: `complaint_assignments`, `complaint_coordinators`
+| Table                     | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| **complaint_assignments** | Tracks department assignments for complaints |
+| **complaint_history**     | Audit trail for complaint lifecycle          |
+| **audit_logs**            | System-wide action logging                   |
+| **auth.users**            | User authentication (Supabase-managed)       |
 
-### 🔍 Duplication Detector
+## 🔧 API Endpoints
 
-Advanced similarity detection to prevent duplicate complaints:
+### Heatmap & Analytics
 
-- **Text Similarity Analysis**: Compares complaint descriptions using natural language processing
-- **Location-Based Matching**: Identifies complaints from similar geographic areas
-- **Category Correlation**: Checks for similar complaint types and departments
-- **Similarity Scoring**: Calculates similarity scores (0-1) for complaint pairs
-- **Automatic Flagging**: Marks potential duplicates for coordinator review
-- **Master Complaint Linking**: Links duplicate complaints to master complaint
+- `GET /api/complaints/geospatial` - Get all complaints with geospatial data
+- `GET /api/complaints/clusters` - Get DBSCAN cluster analysis results
+- `GET /api/analytics/heatmap` - Get heatmap data with filters
+- `GET /api/analytics/cluster-stats` - Get cluster statistics
 
-**Implementation**: `src/server/services/SimilarityCalculatorService.js`
-**Database Table**: `complaint_similarities`
+### Complaints
 
-### 📝 Hierarchical Complaint Form
+- `POST /api/complaints` - Submit new complaint with location
+- `GET /api/complaints/my` - Get user's complaints
+- `GET /api/complaints/:id` - Get complaint details
+- `PATCH /api/complaints/:id/status` - Update complaint status
 
-Enhanced complaint submission with intelligent routing:
+### Departments & Structure
 
-- **Three-Step Selection**: Category → Subcategory → Department selection
-- **Dynamic Loading**: Subcategories and departments load based on previous selections
-- **Visual Hierarchy**: Clear visual representation of the selection path
-- **Automatic Routing**: Complaints are automatically routed based on selections
-- **Multi-Department Support**: Complaints can be assigned to multiple departments
-- **Validation**: Real-time validation of selections and form data
+- `GET /api/departments/active` - Get active departments
+- `GET /api/categories` - Get all categories
+- `GET /api/subcategories` - Get subcategories by category
 
-**Implementation**: `src/client/components/form/complaintFormHierarchical.js`
-**Features**: Dynamic form loading, hierarchical validation, automatic department assignment
+## 👥 User Roles
 
-### 📝 Verbose Logging & Audit Trail
-
-Comprehensive logging system for accountability and debugging:
-
-#### Audit Logs (`audit_logs` table)
-- **System-Wide Tracking**: All critical actions logged
-- **Actor Attribution**: Records who performed each action
-- **IP Address Logging**: Tracks request origin
-- **Metadata Storage**: JSONB field for flexible action details
-- **Action Types**: User management, role changes, department transfers, system configuration
-
-#### Complaint History (`complaint_history` table)
-- **Per-Complaint Timeline**: Complete history of complaint lifecycle
-- **Status Changes**: Tracks all status transitions
-- **Assignment History**: Records all department and officer assignments
-- **Notes and Comments**: Stores coordinator and officer notes
-
-#### Workflow Logs (`complaint_workflow_logs` table)
-- **Detailed Action Tracking**: Granular logging of workflow steps
-- **JSONB Details**: Flexible schema for action-specific data
-- **Performance Monitoring**: Timestamps for workflow analysis
-
-**Benefits**:
-- Full accountability and transparency
-- Debugging and troubleshooting support
-- Compliance and reporting
-- Performance analysis and optimization
+- **Citizen**: Submit complaints with location data and track their status
+- **LGU Officer**: View and process assigned complaints
+- **LGU Admin**: Access heatmap analytics, manage department complaints, and view cluster analysis
+- **Super Admin**: Full system administration and advanced analytics
 
 ## 🛠️ Environment Configuration
 
@@ -550,14 +511,14 @@ SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# External Services
-CAPTCHA_CLIENT_KEY=your_recaptcha_site_key
-CAPTCHA_SECRET_KEY=your_recaptcha_secret_key
-
 # Application Settings
 NODE_ENV=development
 PORT=3000
 HOST=localhost
+
+# DBSCAN Configuration (optional, defaults in code)
+DBSCAN_EPSILON=0.01
+DBSCAN_MIN_POINTS=3
 ```
 
 ### NPM Scripts
@@ -566,321 +527,144 @@ HOST=localhost
 # Development
 npm run dev          # Start development server with auto-reload
 npm run check        # Run comprehensive health checks
-npm run setup-dev    # Setup development environment
 
 # Production
 npm start            # Start production server
-npm run prod         # Start with NODE_ENV=production
 
 # Database
 npm run migrate      # Run database migrations
 npm run seed         # Seed database with sample data
 
-# Build
-npm run build:css    # Build and minify TailwindCSS
-
-# Code Quality & Security
-npm test             # Run tests
-npm run lint         # Run ESLint with security rules
+# Code Quality
+npm run lint         # Run ESLint
 npm run lint:fix     # Fix linting issues automatically
-
-# Security Scanning
-npm run security-scan           # Run automated security scan
-npm run security-scan-detailed  # Run detailed security analysis
-npm run security-audit          # Run comprehensive security audit
-npm run security-audit-npm      # Run npm audit for dependency vulnerabilities
-npm run security-fix            # Fix security issues automatically
-
-# CodeQL Analysis
-npm run codeql-scan             # Run CodeQL security analysis
-npm run codeql-scan-verbose     # Run CodeQL with verbose output
-npm run codeql-scan-sarif       # Run CodeQL and output SARIF format
-
-# System Management
-npm run rate-limit              # Manage rate limiting settings
-npm run cleanup                 # Clean up unused files
-npm run fix-indentation         # Fix service file indentation
-npm run fix-all-indentation     # Fix indentation across all files
-npm run setup-actions           # Setup GitHub Actions workflows
 ```
 
-## 🗄️ Database Tables and Purposes
+## 📊 Heatmap Workflow
 
-### Core Complaint Management
+### 1. Data Collection
 
-| Table | Purpose |
-|-------|----------|
-| **complaints** | Main complaint records storing citizen-submitted issues. Includes location data, description, status, priority, type, department routing, workflow status, and resolution information. |
-| **complaint_assignments** | Tracks department and officer assignments for each complaint. Manages assignment status (pending, accepted, rejected, completed), rejection reasons, and assignment history. |
-| **complaint_history** | Complete audit trail for individual complaints. Records all actions, status changes, notes, and actor information with timestamps. |
-| **complaint_workflow_logs** | Detailed workflow action logging with JSONB metadata. Tracks complaint lifecycle events, department transfers, and coordinator actions. |
-| **complaint_similarities** | Stores similarity scores between complaints for duplicate detection. Links potential duplicate complaints with similarity metrics (0-1 scale). |
+Citizens submit complaints through the web interface, providing:
 
-### Department & User Management
+- Complaint description
+- Category/Subcategory
+- **Location (via map picker or GPS)**
+- Optional evidence files
 
-| Table | Purpose |
-|-------|----------|
-| **categories** | Top-level department groupings (Infrastructure, Health, Environment, etc.). Includes name, code, description, icon, and sort order for UI organization. |
-| **subcategories** | Specific areas within categories (Roads, Waste Management, etc.). Links to categories and provides hierarchical organization for complaint routing. |
-| **departments** | Enhanced department table with hierarchical relationships. Stores department name, unique code, subcategory association, level (LGU/NGA), contact info, and response times. |
-| **department_subcategory_mapping** | Many-to-many relationship between departments and subcategories. Allows departments to handle multiple subcategories. |
-| **invitation_tokens** | HR-generated signup links for staff registration. Controls role assignment, department association, expiration, and usage limits. |
-| **signup_links** | Alternative signup link system with metadata support. Tracks link usage, expiration, and creator information. |
-| **role_changes** | Audit trail for user role modifications. Records old role, new role, performer, reason, and timestamp for accountability. |
-| **department_transfers** | Tracks user transfers between departments. Maintains history of department assignments with performer attribution. |
+### 2. Data Storage
 
-### Content Management
+Complaints are stored with geospatial data:
 
-| Table | Purpose |
-|-------|----------|
-| **news** | News articles for public information. Supports title, content, excerpt, images, categories, tags, and publication workflow (draft/published/archived). |
-| **events** | Upcoming events calendar. Stores event details, location, dates, organizer, registration info, and status tracking. |
-| **notices** | Official notices and announcements. Priority-based (low/normal/high/urgent) with target audience filtering and validity periods. |
+- Latitude and longitude coordinates
+- PostGIS geography point for spatial queries
+- Spatial indexing for performance
 
-### Notifications & Communication
+### 3. Cluster Analysis
 
-| Table | Purpose |
-|-------|----------|
-| **app_notifications** | In-app user notifications for assignments, status changes, and system alerts. Supports priority levels, read status, expiration, and metadata. |
+DBSCAN algorithm processes complaint locations:
 
-### System Audit & Security
+- Groups nearby complaints into clusters
+- Identifies cluster centers and boundaries
+- Calculates cluster density and statistics
+- Marks outlier complaints as noise
 
-| Table | Purpose |
-|-------|----------|
-| **audit_logs** | System-wide audit trail for all critical actions. Logs actor, action type, target (user/complaint/department), IP address, user agent, and JSONB details. |
+### 4. Visualization
 
-### Authentication (Managed by Supabase)
+Interactive map displays:
 
-| Table | Purpose |
-|-------|----------|
-| **auth.users** | Supabase-managed user authentication table. Stores email, encrypted password, user metadata (role, department), and authentication tokens. |
+- Individual complaint markers
+- Cluster overlays with color-coded density
+- Cluster statistics on hover/click
+- Filter controls for dynamic analysis
 
-### Additional System Tables
+### 5. Decision Making
 
-| Table | Purpose |
-|-------|----------|
-| **complaint_clusters** | Stores DBSCAN clustering results for geospatial analysis. Tracks cluster centers, radius, complaint IDs, and pattern types for hotspot detection. |
-| **task_forces** | Special task force assignments for complex complaints requiring multi-department coordination. |
-| **settings** | System configuration settings with type validation, categories, and public/private visibility controls. |
+LGU administrators use insights to:
 
-### Total Tables: 20 core tables + Supabase auth tables
-
-## 🔧 API Endpoints
-
-### Complaints
-- `POST /api/complaints` - Submit new complaint
-- `GET /api/complaints/my` - Get user's complaints
-- `GET /api/complaints/:id` - Get complaint details
-- `PATCH /api/complaints/:id/status` - Update complaint status
-
-### Departments & Structure
-- `GET /api/departments/active` - Get active departments
-- `POST /api/departments` - Create department (admin)
-- `PUT /api/departments/:id` - Update department (admin)
-- `DELETE /api/departments/:id` - Delete department (admin)
-- `GET /api/departments/structure` - Get hierarchical department structure
-- `GET /api/categories` - Get all categories
-- `GET /api/subcategories` - Get subcategories by category
-- `GET /api/subcategories/:id/departments` - Get departments by subcategory
-
-### Settings
-- `GET /api/settings/public` - Get public settings
-- `PUT /api/settings/:key` - Update setting (admin)
-- `POST /api/settings/initialize` - Initialize default settings
-
-### Coordinators
-- `GET /api/coordinators` - List coordinators (admin)
-- `POST /api/coordinators` - Assign coordinator (admin)
-- `DELETE /api/coordinators/:id` - Remove coordinator (admin)
-
-### Health & Monitoring
-- `GET /api/health` - System health check
-- `GET /api/health/detailed` - Detailed system metrics
-- `GET /api/logs` - System logs (super admin)
-- `GET /api/statistics` - System statistics (super admin)
-
-### Rate Limiting Management
-- `GET /api/rate-limit/status` - Get rate limit status for IP
-- `POST /api/rate-limit/clear` - Clear rate limits for IP (admin)
-- `GET /api/rate-limit/stats` - Get rate limiting statistics (admin)
-
-## 👥 User Roles
-
-- **Citizen**: Submit and track complaints
-- **LGU**: View and process assigned complaints
-- **LGU Admin**: Manage department complaints and coordinators
-- **Super Admin**: Full system administration
-
-## 🎨 Frontend Architecture
-
-### Component Structure
-
-```javascript
-// Modular component pattern
-import { ComponentBase } from '../base/ComponentBase.js';
-import apiClient from '../services/apiClient.js';
-
-class ComplaintForm extends ComponentBase {
-  constructor(container) {
-    super(container);
-    this.init();
-  }
-  
-  async init() {
-    await this.loadDepartments();
-    this.setupEventListeners();
-  }
-}
-```
-
-### Service Layer
-
-```javascript
-// API service abstraction
-class ApiClient {
-  async submitComplaint(data) {
-    return this.post('/api/complaints', data);
-  }
-  
-  async getDepartments() {
-    return this.get('/api/departments/active');
-  }
-}
-```
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm test
-
-# Run linting
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
-
-## 📈 Performance
-
-- **Modular Loading**: Components load only when needed
-- **Optimized Static Serving**: Efficient asset delivery
-- **Database Indexing**: Optimized query performance
-- **Error Handling**: Graceful error recovery
-- **Caching**: Strategic caching implementation
+- Prioritize resource deployment
+- Plan infrastructure improvements
+- Monitor intervention effectiveness
+- Generate reports for stakeholders
 
 ## 🔒 Security
 
-- **Input Validation**: Comprehensive data validation
-- **SQL Injection Protection**: Parameterized queries
-- **XSS Prevention**: Output sanitization
-- **CSRF Protection**: Request verification
-- **File Upload Security**: Type and size validation
-- **Role-Based Access**: Granular permission system
-
-## 📝 Development Guidelines
-
-### Code Style
-
-- Use meaningful variable and function names
-- Keep functions small and focused
-- Follow single responsibility principle
-- Write self-documenting code
-- Use consistent error handling patterns
-
-### File Organization
-
-- Group related functionality together
-- Separate concerns into different layers
-- Use consistent naming conventions
-- Maintain clean directory structure
-
-### Git Workflow
-
-```bash
-# Feature development
-git checkout -b feature/department-management
-git add .
-git commit -m "feat: add department management system"
-git push origin feature/department-management
-```
+- **Input Validation**: Comprehensive validation of geospatial coordinates
+- **SQL Injection Protection**: Parameterized queries for spatial data
+- **Role-Based Access**: Granular permissions for analytics features
+- **XSS Prevention**: Output sanitization for map markers
+- **Rate Limiting**: Protection against API abuse
 
 ## 🚀 Deployment
 
 ### Production Checklist
 
 - [ ] Environment variables configured
-- [ ] Database migrations applied
+- [ ] Database migrations applied (including PostGIS extension)
+- [ ] Spatial indexes created for performance
 - [ ] SSL certificates installed
 - [ ] Health checks passing
-- [ ] Error monitoring setup
-- [ ] Backup strategy implemented
-
-### Docker Deployment
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-## 📚 Documentation
-
-- **API Docs**: Available at `/api/docs` (when implemented)
-- **Architecture Guide**: See `/docs/architecture.md`
-- **Deployment Guide**: See `/docs/deployment.md`
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Follow coding standards
-4. Write tests for new features
-5. Submit a pull request
+- [ ] Map API keys configured
 
 ## 👨‍💻 Development Team
 
-CitizenLink 2.0 was developed by a dedicated team of specialists:
+CitizenLink 2.0 was developed by:
 
-### Core Developers
+**Pyrrhus Go** - _Backend Developer_
 
-**Pyrrhus Go** - *Backend Developer*
 - Server architecture and API design
-- Database schema and migrations
-- Authentication and security implementation
-- Business logic and service layer
-- Integration with Supabase
+- DBSCAN algorithm implementation
+- Database schema and spatial queries
 
-**John Dave Maca** - *Frontend Developer*
-- User interface design and implementation
-- Client-side JavaScript components
-- Responsive design and UX optimization
-- Map visualization and DBSCAN integration
-- Admin dashboard development
+**John Dave Maca** - _Frontend Developer_
 
-**Josh Andre Timosan** - *Data Surveyor*
+- User interface design
+- Map visualization and clustering UI
+- Interactive heatmap dashboard
+
+**Josh Andre Timosan** - _Data Surveyor_
+
 - Database design and optimization
-- Data modeling and relationships
-- SQL query optimization
-- Data migration and seeding
+- Geospatial data modeling
 - Analytics and reporting requirements
 
 ---
 
-## 📄 License
+## � References
 
-MIT License - see LICENSE file for details
+### Theoretical Foundations
 
-## 🆘 Support
+1. **Ester, M., Kriegel, H. P., Sander, J., & Xu, X. (1996)**. "A density-based algorithm for discovering clusters in large spatial databases with noise." In _Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96)_, pp. 226-231. AAAI Press.
 
-- **Issues**: GitHub Issues
-- **Documentation**: Project Wiki
-- **Email**: support@citizenlink.gov
+   - Original DBSCAN algorithm paper
+   - Defines core concepts: ε-neighborhood, core points, density-reachability
+
+2. **Sinnott, R. W. (1984)**. "Virtues of the Haversine." _Sky and Telescope_, 68(2), 159.
+
+   - Haversine formula for great-circle distance calculation
+   - Accurate distance computation on Earth's surface
+
+3. **Schubert, E., Sander, J., Ester, M., Kriegel, H. P., & Xu, X. (2017)**. "DBSCAN Revisited, Revisited: Why and How You Should (Still) Use DBSCAN." _ACM Transactions on Database Systems (TODS)_, 42(3), 1-21.
+   - Modern analysis of DBSCAN performance
+   - Parameter selection guidelines
+   - Comparison with other clustering algorithms
+
+### Implementation Resources
+
+4. **PostGIS Documentation**. "Geography Type." PostgreSQL PostGIS Extension.
+
+   - Geospatial data types and functions
+   - Spatial indexing with GIST
+
+5. **Leaflet.js**. "Interactive Maps Library."
+   - JavaScript library for interactive maps
+   - Marker clustering and visualization
 
 ---
 
-**CitizenLink 2.0** - Modern, Secure, Intelligent Complaint Management 🚀
+## �📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**CitizenLink 2.0** - Data-Driven Complaint Management with Geospatial Intelligence 🗺️

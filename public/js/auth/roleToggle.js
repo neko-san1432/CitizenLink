@@ -1,0 +1,391 @@
+/**
+ * Simple Role Toggle for Staff Members
+ * Allows staff members to switch between their staff role and citizen view
+ */
+import showMessage from "../components/toast.js";
+
+// Role toggle script loaded
+// Simple role detection - all roles except citizen
+const _STAFF_ROLES = [
+  "lgu",
+  "lgu-admin",
+  "lgu-hr",
+  "coordinator",
+  "hr",
+  "super-admin",
+  "admin",
+];
+// Cache for role info
+let roleInfoCache = null;
+let roleInfoCacheTime = 0;
+const ROLE_INFO_CACHE_DURATION = 30000; // 30 seconds
+let isInitialized = false;
+/**
+ * Check if current user is a staff member
+ */
+async function _isStaffMember() {
+  try {
+    // Check if user is staff member
+    const response = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await response.json();
+    if (!result.success) {
+      return false;
+    }
+    const userRole = result.data.role;
+    const baseRole = result.data.base_role || result.data.actual_role;
+    const isStaff =
+      userRole !== "citizen" || (userRole === "citizen" && baseRole);
+    return isStaff;
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error checking staff status:", error);
+    return false;
+  }
+}
+/**
+ * Create the role toggle button
+ */
+function createRoleButton(currentRole = "lgu", baseRole = null) {
+  // Remove existing button if any
+  const existingBtn = document.getElementById("role-toggle-btn");
+  if (existingBtn) {
+    existingBtn.remove();
+  }
+  // Determine button text and action based on current role
+  const isInCitizenMode = currentRole === "citizen";
+  const targetRole = isInCitizenMode ? baseRole || "lgu" : "citizen";
+
+  // Create button content
+  let buttonLabel;
+  if (isInCitizenMode) {
+    if (baseRole && baseRole !== "citizen") {
+      const roleName = baseRole.toUpperCase();
+      buttonLabel = `Switch to ${roleName} View`;
+    } else {
+      buttonLabel = "Switch to Staff View";
+    }
+  } else {
+    buttonLabel = "Switch to Citizen View";
+  }
+
+  // Create new button
+  const button = document.createElement("button");
+  button.id = "role-toggle-btn";
+  button.className = `role-toggle-btn ${
+    isInCitizenMode ? "btn-citizen-mode" : "btn-staff-mode"
+  }`;
+
+  // Use spans for responsive hiding
+  button.innerHTML = `
+    <span class="role-icon">👤</span>
+    <span class="role-text">${buttonLabel}</span>
+  `;
+
+  // Add click handler
+  button.addEventListener("click", async () => {
+    await switchRole(targetRole);
+  });
+
+  return button;
+}
+/**
+ * Switch role (citizen or staff)
+ */
+async function switchRole(targetRole) {
+  try {
+    // Switch to target role
+    // Get current role info to determine previous role
+    const roleResponse = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const roleResult = await roleResponse.json();
+    const currentRole = roleResult.data?.role || "citizen";
+    const response = await fetch("/api/user/switch-role", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        targetRole,
+        previousRole: currentRole,
+      }),
+    });
+    const result = await response.json();
+    if (result.success) {
+      window.location.reload();
+    } else {
+      showMessage("error", result.message || "Unknown error");
+    }
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error switching role:", error);
+    showMessage("error", error.message || "Error switching role");
+  }
+}
+/**
+ * Add button to header
+ */
+function addButtonToHeader(currentRole = "lgu", baseRole = null) {
+  // Find header right section
+  let headerRight = document.querySelector(".header-right");
+  if (!headerRight) {
+    // Try alternative selectors
+    const header =
+      document.querySelector(".header") || document.querySelector("header");
+    if (header) {
+      const rightSection = document.createElement("div");
+      rightSection.className = "header-right";
+      rightSection.style.cssText =
+        "display: flex; align-items: center; gap: 10px;";
+      header.appendChild(rightSection);
+      headerRight = rightSection;
+    } else {
+      return false;
+    }
+  }
+  // Create and add button with current role and base role
+  const button = createRoleButton(currentRole, baseRole);
+
+  // Insert before theme toggle if it exists, otherwise prepend
+  const themeToggle = headerRight.querySelector("#theme-toggle");
+  if (themeToggle) {
+    headerRight.insertBefore(button, themeToggle);
+  } else {
+    // Insert at the beginning if theme toggle not found
+    headerRight.insertBefore(button, headerRight.firstChild);
+  }
+
+  return true;
+}
+/**
+ * Initialize role toggle
+ */
+
+export async function initializeRoleToggle() {
+  if (isInitialized) {
+    return;
+  }
+  isInitialized = true;
+  try {
+    // Check if user has a session before making API call
+    const { supabase } = await import("../config/config.js");
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      // No session, stop silently
+      isInitialized = false;
+      return;
+    }
+
+    // Get user role info
+    const response = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      // Handle 401 gracefully - user not authenticated
+      if (response.status === 401) {
+        isInitialized = false;
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      isInitialized = false;
+      return;
+    }
+    const userRole = result.data.role;
+    const baseRole = result.data.base_role || result.data.actual_role;
+    const _isInCitizenMode = userRole === "citizen";
+    const _isStaff = userRole !== "citizen"; // Any role that is not citizen is considered staff
+    // Hide role switcher for pure citizens (base_role is 'citizen')
+    if (userRole === "citizen" && (!baseRole || baseRole === "citizen")) {
+      return;
+    }
+    // Add button to header with current role and base role
+    addButtonToHeader(userRole, baseRole);
+  } catch (error) {
+    // Silently handle errors - don't spam console with expected 401 errors
+    if (error.message && !error.message.includes("401")) {
+      console.error("[ROLE_TOGGLE] Error initializing role toggle:", error);
+    }
+    isInitialized = false;
+  }
+}
+/**
+ * Check if user can switch to citizen mode
+ */
+
+export async function canSwitchToCitizen() {
+  try {
+    // Check cache first
+    const now = Date.now();
+    if (roleInfoCache && now - roleInfoCacheTime < ROLE_INFO_CACHE_DURATION) {
+      const baseRole = roleInfoCache.data.base_role;
+      return baseRole && baseRole !== "citizen";
+    }
+    const response = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await response.json();
+    if (!result.success) {
+      return false;
+    }
+    // Cache the result
+    roleInfoCache = result;
+    roleInfoCacheTime = now;
+    const baseRole = result.data.base_role;
+    return baseRole && baseRole !== "citizen";
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error checking citizen switch:", error);
+    return false;
+  }
+}
+/**
+ * Get active role
+ */
+
+export async function getActiveRole() {
+  try {
+    // Check cache first
+    const now = Date.now();
+    if (roleInfoCache && now - roleInfoCacheTime < ROLE_INFO_CACHE_DURATION) {
+      return roleInfoCache.data.role;
+    }
+    const response = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await response.json();
+    if (!result.success) {
+      return "citizen";
+    }
+    // Cache the result
+    roleInfoCache = result;
+    roleInfoCacheTime = now;
+    return result.data.role;
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error getting active role:", error);
+    return "citizen";
+  }
+}
+/**
+ * Check if user is in citizen mode
+ */
+
+export async function isInCitizenMode() {
+  try {
+    const activeRole = await getActiveRole();
+    return activeRole === "citizen";
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error checking citizen mode:", error);
+    return true;
+  }
+}
+/**
+ * Switch to citizen mode
+ */
+
+export async function switchToCitizenMode() {
+  try {
+    const response = await fetch("/api/user/switch-role", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        targetRole: "citizen",
+      }),
+    });
+    const result = await response.json();
+    if (result.success) {
+      window.location.reload();
+    } else {
+      console.error("Failed to switch to citizen mode:", result.message);
+    }
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error switching to citizen mode:", error);
+  }
+}
+/**
+ * Switch to actual role
+ */
+
+export async function switchToActualRole() {
+  try {
+    // Get current role info to determine actual role
+    const roleResponse = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const roleResult = await roleResponse.json();
+    const actualRole =
+      roleResult.data?.base_role || roleResult.data?.actual_role || "lgu";
+    const response = await fetch("/api/user/switch-role", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        targetRole: actualRole,
+      }),
+    });
+    const result = await response.json();
+    if (result.success) {
+      window.location.reload();
+    } else {
+      console.error("Failed to switch to actual role:", result.message);
+    }
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error switching to actual role:", error);
+  }
+}
+/**
+ * Get actual role (base role)
+ */
+
+export async function getActualRole() {
+  try {
+    // Check cache first
+    const now = Date.now();
+    if (roleInfoCache && now - roleInfoCacheTime < ROLE_INFO_CACHE_DURATION) {
+      return roleInfoCache.data.base_role || roleInfoCache.data.actual_role;
+    }
+    const response = await fetch("/api/user/role-info", {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await response.json();
+    if (!result.success) {
+      return null;
+    }
+    // Cache the result
+    roleInfoCache = result;
+    roleInfoCacheTime = now;
+    return result.data.base_role || result.data.actual_role;
+  } catch (error) {
+    console.error("[ROLE_TOGGLE] Error getting actual role:", error);
+    return null;
+  }
+}
+// Auto-initialize if DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeRoleToggle);
+} else {
+  initializeRoleToggle();
+}
+// Default export
+
+export default {
+  canSwitchToCitizen,
+  getActiveRole,
+  switchToCitizenMode,
+  switchToActualRole,
+  isInCitizenMode,
+  getActualRole,
+  initializeRoleToggle,
+};

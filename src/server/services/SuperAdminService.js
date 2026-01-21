@@ -1,36 +1,33 @@
-const RoleManagementService = require('./RoleManagementService');
-const { USER_ROLES } = require('../../shared/constants');
-const Database = require('../config/database');
+const RoleManagementService = require("./RoleManagementService");
+const { USER_ROLES } = require("../../shared/constants");
+const Database = require("../config/database");
 
 /**
-* SuperAdminService
-* Handles Super Admin operations: role swaps, department transfers, system logs
-*/
+ * SuperAdminService
+ * Handles Super Admin operations: role swaps, department transfers, system logs
+ */
 class SuperAdminService {
   constructor() {
     this.roleService = new RoleManagementService();
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
-
   /**
-  * Role Swap: Assign any role to any user
-  * Super Admin can change anyone's role (except other super admins)
-  */
+   * Role Swap: Assign any role to any user
+   * Super Admin can change anyone's role (except other super admins)
+   */
   async roleSwap(userId, newRole, superAdminId, reason) {
     try {
       // Validate super admin
       const adminRole = await this.roleService.getUserRole(superAdminId);
-      if (adminRole !== 'super-admin') {
-        throw new Error('Only Super Admin can perform role swaps');
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can perform role swaps");
       }
-
       // Get current role
       const currentRole = await this.roleService.getUserRole(userId);
-
       // Can't change other super admins (unless it's yourself stepping down)
-      if (currentRole === 'super-admin' && userId !== superAdminId) {
-        throw new Error('Cannot change another Super Admin\'s role');
+      if (currentRole === "super-admin" && userId !== superAdminId) {
+        throw new Error("Cannot change another Super Admin's role");
       }
 
       // Validate new role
@@ -39,58 +36,97 @@ class SuperAdminService {
         throw new Error(`Invalid role: ${newRole}`);
       }
 
+      // Prepare metadata - clear department if demoting to citizen
+      const metadata = {
+        reason: reason || "Role swap by Super Admin",
+        swap_type: "super_admin_role_swap",
+      };
+
+      // If demoting to citizen, explicitly clear the department
+      if (newRole === "citizen") {
+        metadata.department = null;
+        metadata.clear_department = true;
+      }
+
+      console.log("[SUPER_ADMIN] Role swap - calling updateUserRole:", {
+        userId,
+        newRole,
+        superAdminId,
+        currentRole,
+        metadata,
+      });
+
       // Perform role swap
       const result = await this.roleService.updateUserRole(
         userId,
         newRole,
         superAdminId,
-        {
-          reason: reason || 'Role swap by Super Admin',
-          swap_type: 'super_admin_role_swap'
-        }
+        metadata
       );
+
+      console.log("[SUPER_ADMIN] Role swap - updateUserRole result:", result);
+
+      // Verify the role was actually changed
+      const verifyRole = await this.roleService.getUserRole(userId);
+      console.log(
+        "[SUPER_ADMIN] Role swap - verified role after update:",
+        verifyRole
+      );
+
+      if (verifyRole !== newRole) {
+        console.error(
+          "[SUPER_ADMIN] WARNING: Role update may have failed. Expected:",
+          newRole,
+          "Got:",
+          verifyRole
+        );
+      }
 
       return {
         success: true,
         message: `User role changed from ${currentRole} to ${newRole}`,
-        ...result
+        verified_role: verifyRole,
+        ...result,
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Role swap error:', error);
+      console.error("[SUPER_ADMIN] Role swap error:", error);
       throw error;
     }
   }
-
   /**
-  * Transfer user between departments
-  * Can transfer officers, admins, coordinators, HR across departments
-  */
-  async transferUserBetweenDepartments(userId, fromDepartment, toDepartment, superAdminId, reason) {
+   * Transfer user between departments
+   * Can transfer officers, admins, coordinators, HR across departments
+   */
+  async transferUserBetweenDepartments(
+    userId,
+    fromDepartment,
+    toDepartment,
+    superAdminId,
+    reason
+  ) {
     try {
       // Validate super admin
       const adminRole = await this.roleService.getUserRole(superAdminId);
-      if (adminRole !== 'super-admin') {
-        throw new Error('Only Super Admin can transfer between departments');
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can transfer between departments");
       }
-
       // Get current role - must be staff role
       const currentRole = await this.roleService.getUserRole(userId);
-
       // Check if role is transferable (LGU officers, admins, coordinators, HR)
       const isLguOfficer = /^lgu-(?!admin|hr)/.test(currentRole);
       const isLguAdmin = /^lgu-admin/.test(currentRole);
       const isLguHR = /^lgu-hr/.test(currentRole);
-      const isCoordinator = currentRole === 'complaint-coordinator';
-      const isTransferable = isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
-
+      const isCoordinator = currentRole === "complaint-coordinator";
+      const isTransferable =
+        isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
       if (!isTransferable) {
-        throw new Error('Can only transfer staff members (LGU officers, admins, HR, coordinators) between departments');
+        throw new Error(
+          "Can only transfer staff members (LGU officers, admins, HR, coordinators) between departments"
+        );
       }
-
       if (!reason) {
-        throw new Error('Reason is required for department transfer');
+        throw new Error("Reason is required for department transfer");
       }
-
       // Perform transfer
       const result = await this.roleService.transferDepartment(
         userId,
@@ -99,202 +135,441 @@ class SuperAdminService {
         superAdminId,
         reason
       );
-
       return {
         success: true,
         message: `User transferred from ${fromDepartment} to ${toDepartment}`,
-        ...result
+        ...result,
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Department transfer error:', error);
+      console.error("[SUPER_ADMIN] Department transfer error:", error);
       throw error;
     }
   }
-
   /**
-  * Promote citizen to any department
-  */
-  async assignCitizenToDepartment(userId, role, departmentId, superAdminId, reason) {
+   * Promote citizen to any department
+   */
+  async assignCitizenToDepartment(
+    userId,
+    role,
+    departmentId,
+    superAdminId,
+    reason
+  ) {
     try {
       // Validate super admin
       const adminRole = await this.roleService.getUserRole(superAdminId);
-      if (adminRole !== 'super-admin') {
-        throw new Error('Only Super Admin can assign citizens to departments');
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can assign citizens to departments");
       }
-
       // Get current role - must be citizen
       const currentRole = await this.roleService.getUserRole(userId);
-      if (currentRole !== 'citizen') {
-        throw new Error('Can only assign citizens to departments');
+      if (currentRole !== "citizen") {
+        throw new Error("Can only assign citizens to departments");
       }
+      // Validate target role - must be LGU officer, admin, HR, coordinator, or super-admin
+      // Note: Roles should NOT include department suffix (e.g., use 'lgu-officer' not 'lgu-ceeo')
+      const isLguOfficer = role === "lgu-officer" || role === "lgu";
+      const isLguAdmin = role === "lgu-admin";
+      const isLguHR = role === "lgu-hr";
+      const isCoordinator = role === "complaint-coordinator";
+      const isSuperAdmin = role === "super-admin";
+      const isValidRole =
+        isLguOfficer || isLguAdmin || isLguHR || isCoordinator || isSuperAdmin;
 
-      // Validate target role - must be LGU officer, admin, HR, or coordinator
-      const isLguOfficer = /^lgu-(?!admin|hr)/.test(role);
-      const isLguAdmin = /^lgu-admin/.test(role);
-      const isLguHR = /^lgu-hr/.test(role);
-      const isCoordinator = role === 'complaint-coordinator';
-      const isValidRole = isLguOfficer || isLguAdmin || isLguHR || isCoordinator;
+      console.log("[SUPER_ADMIN] Role validation:", {
+        role,
+        isLguOfficer,
+        isLguAdmin,
+        isLguHR,
+        isCoordinator,
+        isSuperAdmin,
+        isValidRole,
+      });
 
       if (!isValidRole) {
-        throw new Error('Invalid department role. Must be LGU officer (lgu-*), lgu-admin, lgu-hr, or complaint-coordinator');
+        throw new Error(
+          `Invalid role: "${role}". Must be lgu-officer, lgu-admin, lgu-hr, complaint-coordinator, or super-admin`
+        );
+      }
+      console.log("[SUPER_ADMIN] Assign citizen - calling updateUserRole:", {
+        userId,
+        role,
+        departmentId,
+        superAdminId,
+        currentRole,
+      });
+
+      // Update role and assign department (if not super-admin or complaint-coordinator)
+      const rolesWithoutDept = ["super-admin", "complaint-coordinator"];
+      const needsDepartment = !rolesWithoutDept.includes(role);
+
+      let modificationReason = reason;
+      if (!modificationReason) {
+        if (role === "super-admin") {
+          modificationReason = "Promoted to Super Admin";
+        } else if (role === "complaint-coordinator") {
+          modificationReason = "Promoted to Complaint Coordinator";
+        } else {
+          modificationReason = `Assigned to ${departmentId} as ${role}`;
+        }
       }
 
-      // Update role and assign department
+      const metadata = {
+        reason: modificationReason,
+        assigned_by_super_admin: true,
+      };
+
+      // Only assign department if role requires it
+      if (needsDepartment && departmentId) {
+        metadata.department = departmentId;
+      } else if (!needsDepartment) {
+        // Explicitly clear department for roles that don't need it
+        metadata.department = null;
+        metadata.clear_department = true;
+      }
+
       const result = await this.roleService.updateUserRole(
         userId,
         role,
         superAdminId,
-        {
-          department: departmentId,
-          reason: reason || `Assigned to ${departmentId} as ${role}`,
-          assigned_by_super_admin: true
-        }
+        metadata
       );
+
+      console.log(
+        "[SUPER_ADMIN] Assign citizen - updateUserRole result:",
+        result
+      );
+
+      // Verify the role was actually changed
+      const verifyRole = await this.roleService.getUserRole(userId);
+      console.log(
+        "[SUPER_ADMIN] Assign citizen - verified role after update:",
+        verifyRole
+      );
+
+      if (verifyRole !== role) {
+        console.error(
+          "[SUPER_ADMIN] WARNING: Role update may have failed. Expected:",
+          role,
+          "Got:",
+          verifyRole
+        );
+        // Still return success but with warning
+      }
 
       return {
         success: true,
         message: `Citizen assigned to ${departmentId} as ${role}`,
-        ...result
+        verified_role: verifyRole,
+        ...result,
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Assign citizen error:', error);
+      console.error("[SUPER_ADMIN] Assign citizen error:", error);
       throw error;
     }
   }
-
   /**
-  * Get all system logs
-  */
+   * Get all system logs
+   */
   async getSystemLogs(superAdminId, options = {}) {
     try {
       // Validate super admin
       const adminRole = await this.roleService.getUserRole(superAdminId);
-      if (adminRole !== 'super-admin') {
-        throw new Error('Only Super Admin can view system logs');
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can view system logs");
       }
-
       const {
-        log_type = 'all', // 'role_changes', 'department_transfers', 'complaint_workflow', 'all'
+        log_type = "all", // 'role_changes', 'department_transfers', 'complaint_workflow', 'all'
         limit = 100,
         offset = 0,
         date_from,
-        date_to
+        date_to,
       } = options;
-
       const logs = {};
-
       // Get role changes
-      if (log_type === 'all' || log_type === 'role_changes') {
-        let query = this.supabase
-          .from('role_changes')
-          .select(`
-            *,
-            user:user_id (email, raw_user_meta_data),
-            performer:performed_by (email, raw_user_meta_data)
-          `)
-          .order('created_at', { ascending: false });
-
-        if (date_from) query = query.gte('created_at', date_from);
-        if (date_to) query = query.lte('created_at', date_to);
-
-        const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-
-        if (error) throw error;
-        logs.role_changes = data || [];
+      if (log_type === "all" || log_type === "role_changes") {
+        try {
+          let query = this.supabase
+            .from("role_changes")
+            .select(
+              `
+              *,
+              user:user_id (email, raw_user_meta_data),
+              performer:changed_by (email, raw_user_meta_data)
+            `
+            )
+            .order("created_at", { ascending: false });
+          if (date_from) query = query.gte("created_at", date_from);
+          if (date_to) query = query.lte("created_at", date_to);
+          const { data, error } = await query
+            .limit(limit)
+            .range(offset, offset + limit - 1);
+          if (error) {
+            // Fallback: get role changes without joins
+            const { data: fallbackData, error: fallbackError } =
+              await this.supabase
+                .from("role_changes")
+                .select("*")
+                .order("created_at", { ascending: false })
+                .limit(limit)
+                .range(offset, offset + limit - 1);
+            if (fallbackError) throw fallbackError;
+            logs.role_changes = fallbackData || [];
+          } else {
+            logs.role_changes = data || [];
+          }
+        } catch (error) {
+          logs.role_changes = [];
+        }
       }
-
       // Get department transfers
-      if (log_type === 'all' || log_type === 'department_transfers') {
-        let query = this.supabase
-          .from('department_transfers')
-          .select(`
-            *,
-            user:user_id (email, raw_user_meta_data),
-            performer:performed_by (email, raw_user_meta_data)
-          `)
-          .order('created_at', { ascending: false });
-
-        if (date_from) query = query.gte('created_at', date_from);
-        if (date_to) query = query.lte('created_at', date_to);
-
-        const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-
-        if (error) throw error;
-        logs.department_transfers = data || [];
+      if (log_type === "all" || log_type === "department_transfers") {
+        try {
+          let query = this.supabase
+            .from("department_transfers")
+            .select(
+              `
+              *,
+              user:user_id (email, raw_user_meta_data),
+              performer:performed_by (email, raw_user_meta_data)
+            `
+            )
+            .order("created_at", { ascending: false });
+          if (date_from) query = query.gte("created_at", date_from);
+          if (date_to) query = query.lte("created_at", date_to);
+          const { data, error } = await query
+            .limit(limit)
+            .range(offset, offset + limit - 1);
+          if (error) {
+            // Fallback: get department transfers without joins
+            const { data: fallbackData, error: fallbackError } =
+              await this.supabase
+                .from("department_transfers")
+                .select("*")
+                .order("created_at", { ascending: false })
+                .limit(limit)
+                .range(offset, offset + limit - 1);
+            if (fallbackError) throw fallbackError;
+            logs.department_transfers = fallbackData || [];
+          } else {
+            logs.department_transfers = data || [];
+          }
+        } catch (error) {
+          logs.department_transfers = [];
+        }
       }
-
       // Get complaint workflow logs
-      if (log_type === 'all' || log_type === 'complaint_workflow') {
+      if (log_type === "all" || log_type === "complaint_workflow") {
         let query = this.supabase
-          .from('complaint_workflow_logs')
-          .select('*')
-          .order('created_at', { ascending: false});
-
-        if (date_from) query = query.gte('created_at', date_from);
-        if (date_to) query = query.lte('created_at', date_to);
-
-        const { data, error } = await query.limit(limit).range(offset, offset + limit - 1);
-
+          .from("complaint_workflow_logs")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (date_from) query = query.gte("created_at", date_from);
+        if (date_to) query = query.lte("created_at", date_to);
+        const { data, error } = await query
+          .limit(limit)
+          .range(offset, offset + limit - 1);
         if (error) throw error;
         logs.complaint_workflow = data || [];
       }
-
       return {
         success: true,
         logs,
-        filters: options
+        filters: options,
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Get logs error:', error);
+      console.error("[SUPER_ADMIN] Get logs error:", error);
       throw error;
     }
   }
-
   /**
-  * Get system statistics
-  */
+   * Get system statistics
+   */
   async getSystemStatistics(superAdminId) {
     try {
       // Validate super admin
       const adminRole = await this.roleService.getUserRole(superAdminId);
-      if (adminRole !== 'super-admin') {
-        throw new Error('Only Super Admin can view system statistics');
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can view system statistics");
       }
-
       // Get counts for different entities
-      const [
-        complaintsCount,
-        roleChangesCount,
-        departmentTransfersCount
-      ] = await Promise.all([
-        this.getCount('complaints'),
-        this.getCount('role_changes'),
-        this.getCount('department_transfers')
-      ]);
-
+      const [complaintsCount, roleChangesCount, departmentTransfersCount] =
+        await Promise.all([
+          this.getCount("complaints"),
+          this.getCount("role_changes").catch(() => 0),
+          this.getCount("department_transfers").catch(() => 0),
+        ]);
       return {
         success: true,
         statistics: {
           total_complaints: complaintsCount,
           total_role_changes: roleChangesCount,
-          total_department_transfers: departmentTransfersCount
-        }
+          total_department_transfers: departmentTransfersCount,
+        },
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Get statistics error:', error);
+      console.error("[SUPER_ADMIN] Get statistics error:", error);
       throw error;
     }
   }
-
   /**
-  * Helper: Get count from table
-  */
+   * Get latest registered users (with confirmed emails or OAuth)
+   */
+  async getLatestRegisteredUsers(superAdminId, limit = 5) {
+    try {
+      // Validate super admin
+      const adminRole = await this.roleService.getUserRole(superAdminId);
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can view latest registered users");
+      }
+
+      const userService = require("./UserService");
+
+      // Get all users (we'll filter for confirmed emails/OAuth)
+      const result = await userService.getUsers(
+        { includeInactive: false },
+        { page: 1, limit: 1000 }
+      );
+      const allUsers = result.users || [];
+
+      // Filter users with confirmed emails or OAuth providers
+      // OAuth users typically have email_confirmed_at set automatically
+      // We need to check the raw auth user data for email_confirmed_at
+      const Database = require("../config/database");
+      const supabase = Database.getClient();
+
+      let confirmedUsers = [];
+      try {
+        // Get users with confirmed emails using admin API
+        const { data: authUsers, error } = await supabase.auth.admin.listUsers({
+          perPage: 1000,
+        });
+
+        if (!error && authUsers && authUsers.users) {
+          // Filter users with confirmed emails (email_confirmed_at is not null)
+          // OAuth users typically have email_confirmed_at set automatically
+          const confirmedAuthUsers = authUsers.users.filter(
+            (user) =>
+              user.email_confirmed_at !== null &&
+              user.email_confirmed_at !== void 0
+          );
+
+          // Map to our user format and sort by created_at (newest first)
+          confirmedUsers = confirmedAuthUsers
+            .map((authUser) => {
+              const formattedUser = userService.formatUserResponse(authUser);
+              return {
+                ...formattedUser,
+                created_at: authUser.created_at,
+                email_confirmed_at: authUser.email_confirmed_at,
+                is_oauth: Boolean(
+                  authUser.app_metadata?.provider &&
+                    authUser.app_metadata.provider !== "email"
+                ),
+              };
+            })
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, limit);
+        }
+      } catch (err) {
+        console.error("[SUPER_ADMIN] Error fetching confirmed users:", err);
+        // Fallback: return users from UserService (may not have confirmation status)
+        confirmedUsers = allUsers
+          .sort(
+            (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+          )
+          .slice(0, limit);
+      }
+
+      return {
+        success: true,
+        users: confirmedUsers,
+      };
+    } catch (error) {
+      console.error("[SUPER_ADMIN] Get latest registered users error:", error);
+      throw error;
+    }
+  }
+  /**
+   * Get role distribution for pie chart (super admin)
+   * Returns: citizen, hr, officer, admin (excluding super-admin)
+   */
+  async getRoleDistribution(superAdminId) {
+    try {
+      // Validate super admin
+      const adminRole = await this.roleService.getUserRole(superAdminId);
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can view role distribution");
+      }
+
+      const userService = require("./UserService");
+      const result = await userService.getUsers(
+        { includeInactive: false },
+        { page: 1, limit: 10000 }
+      );
+      const users = result.users || [];
+
+      // Count roles
+      let citizens = 0;
+      let hr = 0;
+      let officers = 0;
+      let admins = 0;
+
+      users.forEach((user) => {
+        const role = String(user.role || "").toLowerCase();
+        const normalizedRole = String(
+          user.normalizedRole || role
+        ).toLowerCase();
+
+        // Exclude super-admin
+        if (role === "super-admin" || normalizedRole === "super-admin") {
+          return;
+        }
+
+        // Count citizens
+        if (role === "citizen" || normalizedRole === "citizen") {
+          citizens++;
+        }
+        // Count HR
+        else if (
+          role === "lgu-hr" ||
+          normalizedRole === "lgu-hr" ||
+          /^lgu-hr/.test(role)
+        ) {
+          hr++;
+        }
+        // Count admins (LGU admins only, excluding super-admin)
+        else if (/^lgu-admin/.test(role) || /^lgu-admin/.test(normalizedRole)) {
+          admins++;
+        }
+        // Count officers (simplified 'lgu' and lgu-* excluding admin/hr)
+        else if (role === "lgu" || /^lgu-(?!admin|hr)/.test(role)) {
+          officers++;
+        }
+      });
+
+      return {
+        success: true,
+        distribution: {
+          citizens,
+          hr,
+          officers,
+          admins,
+        },
+      };
+    } catch (error) {
+      console.error("[SUPER_ADMIN] Get role distribution error:", error);
+      throw error;
+    }
+  }
+  /**
+   * Helper: Get count from table
+   */
   async getCount(tableName) {
     try {
       const { count, error } = await this.supabase
         .from(tableName)
-        .select('*', { count: 'exact', head: true });
-
+        .select("*", { count: "exact", head: true });
       if (error) throw error;
       return count || 0;
     } catch (error) {
@@ -302,30 +577,112 @@ class SuperAdminService {
       return 0;
     }
   }
-
   /**
-  * Get Super Admin dashboard
-  */
+   * Get Super Admin dashboard
+   */
   async getDashboard(superAdminId) {
     try {
       const [stats, recentLogs] = await Promise.all([
         this.getSystemStatistics(superAdminId),
-        this.getSystemLogs(superAdminId, { limit: 10 })
+        this.getSystemLogs(superAdminId, { limit: 10 }),
       ]);
-
       return {
         success: true,
         dashboard: {
           statistics: stats.statistics,
-          recent_logs: recentLogs.logs
-        }
+          recent_logs: recentLogs.logs,
+        },
       };
     } catch (error) {
-      console.error('[SUPER_ADMIN] Get dashboard error:', error);
+      console.error("[SUPER_ADMIN] Get dashboard error:", error);
+      throw error;
+    }
+  }
+  /**
+   * Get platform growth trends (users and complaints for last 7 days)
+   */
+  async getGrowthTrends(superAdminId) {
+    try {
+      // Validate super admin
+      const adminRole = await this.roleService.getUserRole(superAdminId);
+      if (adminRole !== "super-admin") {
+        throw new Error("Only Super Admin can view growth trends");
+      }
+
+      const days = 7;
+      const dates = [];
+      const userCounts = [];
+      const complaintCounts = [];
+
+      // Generate last 7 days dates (Mon, Tue, etc.)
+      const today = new Date();
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        dates.push(d.toISOString().split("T")[0]); // YYYY-MM-DD
+      }
+
+      // 1. Get raw counts per day
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const strSevenDaysAgo = sevenDaysAgo.toISOString();
+
+      const {
+        data: { users },
+        error: userError,
+      } = await this.supabase.auth.admin.listUsers({ perPage: 1000 });
+      if (userError) throw userError;
+
+      // Aggregate Users by Date
+      const userDaily = {};
+      users.forEach((u) => {
+        if (u.created_at) {
+          const date = u.created_at.split("T")[0];
+          userDaily[date] = (userDaily[date] || 0) + 1;
+        }
+      });
+
+      // Aggregate Complaints by Date
+      // Note: usage of submitted_at is correct as per schema
+      const { data: complaints, error: complaintError } = await this.supabase
+        .from("complaints")
+        .select("submitted_at")
+        .gte("submitted_at", strSevenDaysAgo);
+
+      if (complaintError) {
+        // Fallback or retry logic could go here, but for now throw
+        throw complaintError;
+      }
+
+      const complaintDaily = {};
+      complaints.forEach((c) => {
+        if (c.submitted_at) {
+          const date = c.submitted_at.split("T")[0];
+          complaintDaily[date] = (complaintDaily[date] || 0) + 1;
+        }
+      });
+
+      // Fill arrays
+      dates.forEach((date) => {
+        userCounts.push(userDaily[date] || 0);
+        complaintCounts.push(complaintDaily[date] || 0);
+      });
+
+      return {
+        success: true,
+        trends: {
+          labels: dates, // ["2024-01-01", ...]
+          datasets: {
+            users: userCounts,
+            complaints: complaintCounts,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("[SUPER_ADMIN] Get growth trends error:", error);
       throw error;
     }
   }
 }
 
 module.exports = SuperAdminService;
-

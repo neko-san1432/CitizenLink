@@ -1,2 +1,1 @@
-document.getElementById('try-again')?.addEventListener('click', () => window.location.reload());
-
+document.getElementById("try-again")?.addEventListener("click", () => window.location.reload());

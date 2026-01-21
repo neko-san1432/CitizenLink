@@ -1,298 +1,337 @@
-import { getUserRole } from '../auth/authChecker.js';
-import { brandConfig, apiClient } from '../config/index.js';
-import { getActiveRole, isInCitizenMode } from '../auth/roleToggle.js';
+import { getUserRole } from "../auth/authChecker.js";
+import { brandConfig } from "../config/brand.js";
+import { getMenuIcon, getIcon } from "../utils/icons.js";
 
-const root = '';
-const _sidebarEl = document.getElementById('sidebar');
+const _sidebarEl = document.getElementById("sidebar");
+const root = window.location.origin;
+let backdropEl = null;
 
-// Sidebar close button functionality (menu-toggle is handled in header.js)
-function initializeSidebarClose() {
-  const sidebar = document.getElementById('sidebar');
-  const sidebarClose = document.getElementById('sidebar-close');
+// Initialize sidebar
+if (_sidebarEl) {
+  initializeSidebar();
+}
 
-  if (sidebarClose && sidebar) {
-    sidebarClose.addEventListener('click', function() {
-      sidebar.classList.remove('open');
-    });
-    // console.log removed for security
+function initializeSidebar() {
+  initializeSidebarClose();
+  // Theme toggle is handled by header.js
+  setTimeout(setSidebarRole, 500); // Wait 500ms for auth to complete
+  setActiveMenuItem();
+  // Add accessibility attributes
+  if (_sidebarEl) {
+    _sidebarEl.setAttribute("role", "navigation");
+    _sidebarEl.setAttribute("aria-label", "Main navigation");
+    _sidebarEl.setAttribute("aria-expanded", "false");
+  }
+  // Add Esc key handler
+  document.addEventListener("keydown", handleEscKey);
+}
+
+function handleEscKey(e) {
+  if (e.key === "Escape" && _sidebarEl && _sidebarEl.classList.contains("open")) {
+    closeSidebar();
   }
 }
 
-// Icon mapping for menu items
-const menuIcons = {
-  'dashboard': '📊',
-  'fileComplaint': '📝',
-  'myProfile': '👤',
-  'appointAdmins': '🔐',
-  'departments': '🏢',
-  'role-changer': '🛠️',
-  'link-generator': '🔗',
-  'review-queue': '📋',
-  'assignments': '📋',
-  'heatmap': '🗺️',
-  'publish': '📢',
-  'taskAssigned': '📝',
-  'signout': '🚪'
-};
+function createBackdrop() {
+  if (!backdropEl) {
+    backdropEl = document.createElement("div");
+    backdropEl.className = "sidebar-backdrop";
+    backdropEl.setAttribute("aria-hidden", "true");
+    document.body.appendChild(backdropEl);
 
-if (_sidebarEl) _sidebarEl.innerHTML=`
-<div class="sidebar-brand">
-  <div class="brand-logo">
-    <div class="brand-icon">CL</div>
-    <div class="brand-text">
-      <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name}</a>
-      <div class="brand-subtitle">web designer</div>
-    </div>
-  </div>
-  <button id="sidebar-close" class="sidebar-close">×</button>
-</div>
-<div class="sidebar-search">
-  <div class="search-container">
-    <div class="search-icon">🔍</div>
-    <input type="text" class="search-input" placeholder="Search..." id="sidebar-search-input">
-  </div>
-</div>
-<div class="sidebar-menu">
-  <a href="${root}/dashboard" data-icon="dashboard">
-    <span class="menu-icon">📊</span>
-    <span>Dashboard</span>
-  </a>
-  <a href="${root}/citizen/fileComplaint" data-icon="fileComplaint">
-    <span class="menu-icon">📝</span>
-    <span>File Complaint</span>
-  </a>
-  <a href="${root}/myProfile" data-icon="myProfile">
-    <span class="menu-icon">👤</span>
-    <span>My Profile</span>
-  </a>
-</div>
-<div class="sidebar-bottom">
-  <div class="theme-toggle" id="theme-toggle">
-    <div class="theme-toggle-label">
-      <span class="menu-icon">🌙</span>
-      <span>Dark Mode</span>
-    </div>
-    <div class="toggle-switch" id="toggle-switch"></div>
-  </div>
-</div>
-`;
+    // Add click handler to close sidebar
+    backdropEl.addEventListener("click", () => {
+      closeSidebar();
+    });
+  }
+  // Activate backdrop
+  backdropEl.classList.add("active");
+  backdropEl.setAttribute("aria-hidden", "false");
+}
 
+function removeBackdrop() {
+  if (backdropEl) {
+    backdropEl.classList.remove("active");
+    backdropEl.setAttribute("aria-hidden", "true");
+    // Remove backdrop after transition
+    setTimeout(() => {
+      if (backdropEl && !backdropEl.classList.contains("active")) {
+        backdropEl.remove();
+        backdropEl = null;
+      }
+    }, 300);
+  }
+}
+
+function openSidebar() {
+  if (_sidebarEl) {
+    _sidebarEl.classList.add("open");
+    _sidebarEl.setAttribute("aria-expanded", "true");
+    createBackdrop();
+  }
+}
+
+function closeSidebar() {
+  if (_sidebarEl) {
+    _sidebarEl.classList.remove("open");
+    _sidebarEl.setAttribute("aria-expanded", "false");
+    removeBackdrop();
+  }
+}
+
+function initializeSidebarClose() {
+  const closeBtn = document.getElementById("sidebar-close");
+  if (closeBtn) {
+    closeBtn.setAttribute("aria-label", "Close sidebar");
+    closeBtn.addEventListener("click", () => {
+      closeSidebar();
+    });
+  }
+}
+// Icon mapping now uses SVG icons from icons.js utility
 async function setSidebarRole() {
   try {
-    const roleRaw = await getUserRole({ refresh: true });
-    const role = (roleRaw == null ? '' : String(roleRaw)).trim().toLowerCase();
-
-    // Check if user can file complaints (citizen or in citizen mode)
-    const activeRole = getActiveRole();
-    const inCitizenMode = isInCitizenMode();
-    const canFileComplaint = activeRole === 'citizen' || inCitizenMode;
-
-    const isLguPrefixed = /^lgu-/.test(role || '');
-    const afterPrefix = isLguPrefixed ? role.replace(/^lgu-/, '') : '';
-    const firstSegment = isLguPrefixed ? (afterPrefix.split('-')[0] || '') : '';
-    const isLguAdmin = role === 'lgu-admin' || /^lgu-admin-/.test(role);
-    const isLguOfficer = /^lgu-(?!admin|hr)/.test(role); // Matches lgu-wst, lgu-engineering, etc. but NOT lgu-admin-* or lgu-hr-*
-    const isCoordinator = role === 'complaint-coordinator';
-    const isHR = role === 'lgu-hr' || /^lgu-hr-/.test(role); // Support lgu-hr-wst, lgu-hr-engineering, etc.
-    const isSuperAdmin = role === 'super-admin';
-
-    // Debug logging
     // console.log removed for security
-
-    // Update localStorage with the correct role for future use
-    if (roleRaw) {
-      const { saveUserMeta } = await import('../auth/authChecker.js');
-      saveUserMeta({ role: roleRaw });
-    }
-
-    const links = [];
-
-    // Role-specific links (feature-specific pages, not dashboards)
-    if (isSuperAdmin) {
-      links.push({ href: `${root}/appointAdmins`, label: 'Appoint Admins', icon: 'appointAdmins' });
-      links.push({ href: `${root}/admin/departments`, label: 'Departments', icon: 'departments' });
-      links.push({ href: `${root}/admin/department-structure`, label: 'Department Structure', icon: 'departments' });
-      links.push({ href: `${root}/super-admin/role-changer`, label: 'Role Changer', icon: 'role-changer' });
-    } else if (isHR) {
-      links.push({ href: `${root}/hr/role-changer`, label: 'Role Changer', icon: 'role-changer' });
-      links.push({ href: `${root}/hr/link-generator`, label: 'Link Generator', icon: 'link-generator' });
-    } else if (isCoordinator) {
-      links.push({ href: `${root}/coordinator/review-queue`, label: 'Review Queue', icon: 'review-queue' });
-      links.push({ href: `${root}/hr/link-generator`, label: 'Link Generator', icon: 'link-generator' });
-    } else if (isLguAdmin) {
+    // Get user role with better error handling
+    let role = null;
+    try {
+      role = await getUserRole({ refresh: true });
       // console.log removed for security
-      links.push({ href: `${root}/lgu-admin/assignments`, label: 'Department Assignments', icon: 'assignments' });
-      links.push({ href: `${root}/heatmap`, label: 'Heatmap', icon: 'heatmap' });
-      links.push({ href: `${root}/publish`, label: 'Publish Content', icon: 'publish' });
-    } else if (isLguOfficer) {
-      // console.log removed for security
-      links.push({ href: `${root}/taskAssigned`, label: 'Assigned Tasks', icon: 'taskAssigned' });
+    } catch (error) {
+      console.error("Failed to get user role:", error);
+      // Try to get role from session as fallback
+      try {
+        const { supabase } = await import("../config/config.js");
+        const { data: { session } } = await supabase.auth.getSession();
+        // console.log removed for security
+        if (session?.user) {
+          const metadata = session.user.raw_user_meta_data || session.user.user_metadata || {};
+          // console.log removed for security
+          role = metadata.role || metadata.normalized_role;
+          // console.log removed for security
+        }
+      } catch (sessionError) {
+        console.error("Failed to get role from session:", sessionError);
+      }
     }
-
-    // Sign out link
-    links.push({ href: `${root}/__signout__`, label: 'Sign out', icon: 'signout', action: 'signout' });
-
-    const html = links.map(l => `
-      <a href="${l.href}" data-action="${l.action || ''}" data-icon="${l.icon}">
-        <span class="menu-icon">${menuIcons[l.icon] || '📄'}</span>
-        <span>${l.label}</span>
-      </a>
-    `).join('\n');
-
-    // Build sidebar HTML - only show File Complaint if user is citizen or in citizen mode
-    const fileComplaintLink = canFileComplaint
-      ? `<a href="${root}/citizen/fileComplaint" data-icon="fileComplaint">
-           <span class="menu-icon">${menuIcons.fileComplaint}</span>
-           <span>File Complaint</span>
-         </a>`
-      : '';
-
-    if (_sidebarEl) _sidebarEl.innerHTML = `
+    // If still no role, try to get it from localStorage
+    if (!role) {
+      try {
+        const { getUserMeta } = await import("../auth/authChecker.js");
+        const userMeta = getUserMeta();
+        role = userMeta?.role;
+        // console.log removed for security
+      } catch (error) {
+        console.error("Failed to get role from localStorage:", error);
+      }
+    }
+    if (!role) {
+      console.error("No role found, redirecting to login");
+      window.location.href = `/login?message=${  encodeURIComponent("Unable to determine user role. Please log in again.")  }&type=error`;
+      return;
+    }
+    const roleLower = role.toLowerCase();
+    // console.log removed for security
+    // Define menu items based on role
+    const menuItems = getMenuItemsForRole(roleLower);
+    // console.log removed for security
+    // Build sidebar HTML
+    if (_sidebarEl) {
+      _sidebarEl.innerHTML = `
 <div class="sidebar-brand">
   <div class="brand-logo">
     <div class="brand-icon">CL</div>
     <div class="brand-text">
       <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name}</a>
-      <div class="brand-subtitle">web designer</div>
+              <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
-  <button id="sidebar-close" class="sidebar-close">×</button>
+  <button id="sidebar-close" class="sidebar-close" aria-label="Close sidebar">×</button>
 </div>
-<div class="sidebar-search">
-  <div class="search-container">
-    <div class="search-icon">🔍</div>
-    <input type="text" class="search-input" placeholder="Search..." id="sidebar-search-input">
-  </div>
-</div>
+        
 <div class="sidebar-menu">
-  <a href="${root}/dashboard" data-icon="dashboard">
-    <span class="menu-icon">${menuIcons.dashboard}</span>
-    <span>Dashboard</span>
-  </a>
-  ${fileComplaintLink}
-  ${html}
-  <a href="${root}/myProfile" data-icon="myProfile">
-    <span class="menu-icon">${menuIcons.myProfile}</span>
-    <span>My Profile</span>
-  </a>
+          ${menuItems.map(item => `
+            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label}">
+              <span class="menu-icon">${getMenuIcon(item.icon, { size: 20 })}</span>
+              <span>${item.label}</span>
+            </a>
+          `).join("")}
 </div>
+        
 <div class="sidebar-bottom">
   <div class="theme-toggle" id="theme-toggle">
     <div class="theme-toggle-label">
-      <span class="menu-icon">🌙</span>
+      <span class="menu-icon">${getIcon("darkMode", { size: 20 })}</span>
       <span>Dark Mode</span>
     </div>
     <div class="toggle-switch" id="toggle-switch"></div>
   </div>
+          <div class="sidebar-footer">
+            <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
+              <span class="menu-icon">${getMenuIcon("signout", { size: 20 })}</span>
+              <span>Sign Out</span>
+            </a>
+          </div>
+        </div>
+      `;
+
+      // Re-initialize event listeners after HTML update
+      initializeSidebarClose();
+      // Theme toggle is handled by header.js
+      initializeLogout();
+      // Update active menu items with aria-current
+      setActiveMenuItem();
+
+      // console.log removed for security
+    }
+  } catch (error) {
+    console.error("Failed to set sidebar role:", error);
+    // Show error message to user
+    if (_sidebarEl) {
+      _sidebarEl.innerHTML = `
+        <div class="sidebar-error">
+          <div class="error-message">
+            <h3>${getIcon("alert", { size: 24 })} Error</h3>
+            <p>Failed to load sidebar. Please refresh the page.</p>
+            <button onclick="window.location.reload()" class="retry-btn">Retry</button>
+          </div>
 </div>
 `;
-    // Wire sign out
-    try {
-      const signoutLink = _sidebarEl.querySelector('a[data-action="signout"]');
-      if (signoutLink) {
-        signoutLink.addEventListener('click', async (e) => {
-          e.preventDefault();
-          try {
-            // Client-side sign out
-            await apiClient.supabase.auth.signOut();
-          } catch {}
-          try { await fetch('/auth/session', { method: 'DELETE' }); } catch {}
-          window.location.href = '/login';
-        });
-      }
-    } catch {}
-
-    // Re-initialize sidebar close button after HTML is updated
-    initializeSidebarClose();
-    
-    // Initialize search functionality
-    initializeSidebarSearch();
-    
-    // Initialize theme toggle
-    initializeThemeToggle();
-    
-    // Set active menu item
-    setActiveMenuItem();
-  } catch {}
-}
-
-// Search functionality
-function initializeSidebarSearch() {
-  const searchInput = document.getElementById('sidebar-search-input');
-  const menuItems = document.querySelectorAll('#sidebar .sidebar-menu a');
-  
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const searchTerm = e.target.value.toLowerCase();
-      
-      menuItems.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        const shouldShow = text.includes(searchTerm);
-        
-        item.style.display = shouldShow ? 'flex' : 'none';
-        item.style.animation = shouldShow ? 'fadeIn 0.3s ease-out' : 'none';
-      });
-    });
-  }
-}
-
-// Theme toggle functionality
-function initializeThemeToggle() {
-  const themeToggle = document.getElementById('theme-toggle');
-  const toggleSwitch = document.getElementById('toggle-switch');
-  
-  if (themeToggle && toggleSwitch) {
-    // Check current theme
-    const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
-      toggleSwitch.classList.add('active');
     }
-    
-    themeToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.contains('dark');
-      
-      if (isDark) {
-        document.documentElement.classList.remove('dark');
-        toggleSwitch.classList.remove('active');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.add('dark');
-        toggleSwitch.classList.add('active');
-        localStorage.setItem('theme', 'dark');
+  }
+}
+function getMenuItemsForRole(role) {
+  // Import normalization function
+  const { normalizeRole } = require("../utils/roleUtils");
+
+  // Normalize role using general normalization function
+  const originalRole = role;
+  role = normalizeRole(role);
+  if (originalRole !== role) {
+    console.log("[SIDEBAR] Normalizing role from", originalRole, "to", role, "for menu items");
+  }
+
+  // console.log removed for security
+  const menuItems = {
+    "citizen": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
+      { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
+      { url: "/departments", icon: "departments", label: "Departments" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ],
+    "super-admin": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/super-admin/pending-signups", icon: "review-queue", label: "Pending Signups" },
+      { url: "/super-admin/user-manager", icon: "role-changer", label: "User Manager" },
+      { url: "/super-admin/link-generator", icon: "link-generator", label: "Link Generator" },
+      { url: "/super-admin/server-logs", icon: "server-logs", label: "Server logs" },
+      { url: "/departments", icon: "departments", label: "Departments" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ],
+    "lgu-hr": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/link-generator", icon: "link-generator", label: "Link Generator" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ],
+    "complaint-coordinator": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
+      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ],
+    "lgu-admin": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/assignments", icon: "assignments", label: "Assignments" },
+      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/publish", icon: "publish", label: "Publish" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ]
+  };
+  // Handle simplified LGU roles
+  if (role === "lgu-hr") {
+    return menuItems["lgu-hr"] || [];
+  }
+  if (role === "lgu-admin") {
+    return menuItems["lgu-admin"] || [];
+  }
+  if (role === "lgu") {
+    return [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/task-assigned", icon: "taskAssigned", label: "Task Assigned" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ];
+  }
+  // Return menu items for exact role match
+  const items = menuItems[role] || [];
+  console.log("[SIDEBAR] Menu items for role:", role, "found", items.length, "items");
+  return items;
+}
+// Sidebar search removed per requirements
+// Theme toggle is handled by header.js - removed duplicate implementation
+// But we need applyTheme function for compatibility
+function applyTheme(theme) {
+
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+}
+function updateToggleSwitch(isDark) {
+  const toggleSwitch = document.getElementById("toggle-switch");
+  if (toggleSwitch) {
+
+    if (isDark) {
+      toggleSwitch.classList.add("active");
+    } else {
+      toggleSwitch.classList.remove("active");
+    }
+  }
+}
+function initializeLogout() {
+  const logoutLink = document.querySelector(".logout-link");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        // Clear server session
+        await fetch("/auth/session", { method: "DELETE" });
+        // Clear Supabase session
+        const { supabase } = await import("../config/config.js");
+        await supabase.auth.signOut();
+        // Clear local storage
+        localStorage.clear();
+        // Redirect to login
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Logout error:", error);
+        // Force redirect even if logout fails
+        window.location.href = "/login";
       }
     });
   }
 }
-
 // Set active menu item based on current page
 function setActiveMenuItem() {
   const currentPath = window.location.pathname;
-  const menuItems = document.querySelectorAll('#sidebar .sidebar-menu a');
-  
+  const menuItems = document.querySelectorAll(".sidebar-menu a");
   menuItems.forEach(item => {
-    item.classList.remove('active');
-    
-    const href = item.getAttribute('href');
-    if (href && currentPath.includes(href.replace(root, ''))) {
-      item.classList.add('active');
+    const href = item.getAttribute("href");
+    if (href && currentPath.includes(href.replace(root, ""))) {
+      item.classList.add("active");
+      item.setAttribute("aria-current", "page");
+    } else {
+      item.classList.remove("active");
+      item.removeAttribute("aria-current");
     }
   });
 }
-
 // Initialize theme on page load
-function initializeTheme() {
-  const savedTheme = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
-  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-    document.documentElement.classList.add('dark');
-  }
-}
-
-setSidebarRole();
-
-// Initialize sidebar close button when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  initializeSidebarClose();
-  initializeTheme();
+document.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme") || "light";
+  applyTheme(savedTheme);
+  updateToggleSwitch(savedTheme === "dark");
 });
+
+export { initializeSidebar, setActiveMenuItem, openSidebar, closeSidebar };

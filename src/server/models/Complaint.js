@@ -3,19 +3,21 @@ class Complaint {
     this.id = data.id;
     this.submitted_by = data.submitted_by;
     this.title = data.title;
-    this.type = data.type;
-    this.subtype = data.subtype;
     this.descriptive_su = data.descriptive_su;
     this.location_text = data.location_text;
     this.latitude = data.latitude;
     this.longitude = data.longitude;
     this.department_r = data.department_r || [];
-    this.status = data.status || 'pending review';
-    this.workflow_status = data.workflow_status || 'new';
-    this.priority = data.priority || 'low';
-    this.evidence = data.evidence || [];
-    this.primary_department = data.primary_department;
-    this.secondary_departments = data.secondary_departments || [];
+    this.preferred_departments = data.preferred_departments || [];
+    this.category = data.category;
+    this.subcategory = data.subcategory;
+    this.workflow_status = data.workflow_status || "new";
+    this.priority = data.priority || "low";
+    this.urgency_level = data.urgency_level || "low";
+    // Evidence is now handled separately - not stored in complaints table
+    // this.evidence = data.evidence || [];
+    // this.primary_department = data.primary_department; // Removed - derived from department_r
+    // this.secondary_departments = data.secondary_departments || []; // Removed - derived from department_r
     this.assigned_coordinator_id = data.assigned_coordinator_id;
     this.response_deadline = data.response_deadline;
     this.citizen_satisfaction_rating = data.citizen_satisfaction_rating;
@@ -26,93 +28,133 @@ class Complaint {
     this.estimated_resolution_date = data.estimated_resolution_date;
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
+    this.upvote_count = data.upvote_count || 0;
   }
-
   static validate(data) {
+    const { isWithinDigosBoundary } = require("../../shared/boundaryValidator");
     const errors = [];
-
     if (!data.title || data.title.trim().length < 5) {
-      errors.push('Title must be at least 5 characters');
+      errors.push("Title must be at least 5 characters");
     }
-
     if (!data.descriptive_su || data.descriptive_su.trim().length < 10) {
-      errors.push('Description must be at least 10 characters');
+      errors.push("Description must be at least 10 characters");
     }
-
     if (!data.location_text || data.location_text.trim().length < 5) {
-      errors.push('Location must be at least 5 characters');
+      errors.push("Location must be at least 5 characters");
     }
-
     if (data.latitude && (data.latitude < -90 || data.latitude > 90)) {
-      errors.push('Invalid latitude value');
+      errors.push("Invalid latitude value");
     }
-
     if (data.longitude && (data.longitude < -180 || data.longitude > 180)) {
-      errors.push('Invalid longitude value');
+      errors.push("Invalid longitude value");
     }
+    // Validate coordinates are within Digos City boundary
+    if (data.latitude && data.longitude) {
+      // Ensure coordinates are numbers (they might come as strings from form data)
+      const lat =
+        typeof data.latitude === "string"
+          ? parseFloat(data.latitude)
+          : data.latitude;
+      const lng =
+        typeof data.longitude === "string"
+          ? parseFloat(data.longitude)
+          : data.longitude;
 
-    const validStatuses = ['pending review', 'in progress', 'resolved', 'closed', 'rejected'];
+      // Check if parsing was successful
+      if (isNaN(lat) || isNaN(lng)) {
+        errors.push("Invalid coordinate values");
+      } else {
+        const isValid = isWithinDigosBoundary(lat, lng);
+        if (!isValid) {
+          console.log("[COMPLAINT VALIDATION] Coordinates outside boundary:", {
+            lat: "[REDACTED]",
+            lng: "[REDACTED]",
+            location_text: "[REDACTED]",
+            original_lat: "[REDACTED]",
+            original_lng: "[REDACTED]",
+          });
+          errors.push(
+            "Complaint location must be within Digos City boundaries"
+          );
+        }
+      }
+    }
+    const validStatuses = [
+      "pending review",
+      "in progress",
+      "resolved",
+      "closed",
+      "rejected",
+    ];
     if (data.status && !validStatuses.includes(data.status)) {
-      errors.push('Invalid status');
+      errors.push("Invalid status");
     }
-
-    const validWorkflowStatuses = ['new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled'];
-    if (data.workflow_status && !validWorkflowStatuses.includes(data.workflow_status)) {
-      errors.push('Invalid workflow status');
+    const validWorkflowStatuses = [
+      "new",
+      "assigned",
+      "in_progress",
+      "pending_approval",
+      "completed",
+      "cancelled",
+    ];
+    if (
+      data.workflow_status &&
+      !validWorkflowStatuses.includes(data.workflow_status)
+    ) {
+      errors.push("Invalid workflow status");
     }
-
-    const validPriorities = ['low', 'medium', 'high', 'urgent'];
+    const validPriorities = ["low", "medium", "high", "urgent", "critical"];
     if (data.priority && !validPriorities.includes(data.priority)) {
-      errors.push('Invalid priority');
+      errors.push("Invalid priority");
     }
-
+    const validUrgencies = ["low", "medium", "high", "urgent"];
+    if (data.urgency_level && !validUrgencies.includes(data.urgency_level)) {
+      errors.push("Invalid urgency level");
+    }
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
-
   sanitizeForInsert() {
     return {
       submitted_by: this.submitted_by,
       title: this.title?.trim(),
-      type: this.type || null,
-      subtype: this.subtype || null,
       descriptive_su: this.descriptive_su?.trim(),
       location_text: this.location_text?.trim(),
       latitude: this.latitude ? parseFloat(this.latitude) : null,
       longitude: this.longitude ? parseFloat(this.longitude) : null,
       department_r: Array.isArray(this.department_r) ? this.department_r : [],
-      status: this.status || 'pending review',
-      workflow_status: this.workflow_status || 'new',
-      priority: this.priority || 'low',
-      evidence: this.evidence || [],
-      primary_department: this.primary_department || null,
-      secondary_departments: this.secondary_departments || [],
+      preferred_departments: Array.isArray(this.preferred_departments)
+        ? this.preferred_departments
+        : [],
+      category: this.category,
+      subcategory: this.subcategory,
+      workflow_status: this.workflow_status || "new",
+      priority: this.priority || "low",
+      urgency_level: this.urgency_level || "low",
       assigned_coordinator_id: this.assigned_coordinator_id || null,
       response_deadline: this.response_deadline || null,
-      submitted_at: this.submitted_at || new Date().toISOString()
+      submitted_at: this.submitted_at || new Date().toISOString(),
+      upvote_count: this.upvote_count || 0,
     };
   }
-
   toJSON() {
     return {
       id: this.id,
       submitted_by: this.submitted_by,
       title: this.title,
-      type: this.type,
-      subtype: this.subtype,
       descriptive_su: this.descriptive_su,
       location_text: this.location_text,
       latitude: this.latitude,
       longitude: this.longitude,
       department_r: this.department_r,
-      status: this.status,
+      preferred_departments: this.preferred_departments,
+      category: this.category,
+      subcategory: this.subcategory,
       workflow_status: this.workflow_status,
       priority: this.priority,
-      evidence: this.evidence,
-      primary_department: this.primary_department,
-      secondary_departments: this.secondary_departments,
+      urgency_level: this.urgency_level,
       assigned_coordinator_id: this.assigned_coordinator_id,
       response_deadline: this.response_deadline,
       citizen_satisfaction_rating: this.citizen_satisfaction_rating,
@@ -122,10 +164,10 @@ class Complaint {
       coordinator_notes: this.coordinator_notes,
       estimated_resolution_date: this.estimated_resolution_date,
       submitted_at: this.submitted_at,
-      updated_at: this.updated_at
+      updated_at: this.updated_at,
+      upvote_count: this.upvote_count,
     };
   }
 }
 
 module.exports = Complaint;
-

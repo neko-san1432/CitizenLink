@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Manager - Super Admin</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/super-admin-users.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
+    <style>
+      .action-card {
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+
+      <div id="app" class="collapsible superadmin-dashboard">
+        <div class="dashboard-header-section">
+          <div class="dashboard-title-group">
+            <h1>👥 User Manager</h1>
+            <p class="dashboard-subtitle">Manage users, roles, and bans</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid role-manager-grid">
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">Users</h2>
+              <div class="section-controls">
+                <input
+                  id="um-search"
+                  class="filter-select"
+                  placeholder="Search name or email..."
+                />
+                <select id="um-filter" class="filter-select">
+                  <option value="all">All</option>
+                  <option value="citizen">Citizen</option>
+                  <option value="staff">Staff</option>
+                  <option value="banned">Banned</option>
+                </select>
+                <button
+                  class="btn btn-info"
+                  id="um-refresh"
+                  title="Refresh List"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path
+                      d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="um-user-list" class="user-list"></div>
+          </div>
+
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">Selected User</h2>
+            </div>
+            <div id="um-user-details" class="user-details">
+              <p class="empty-state">Select a user to manage.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promotion Modal -->
+    <div
+      id="promotion-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="action-card" style="max-width: 520px; width: 92%">
+        <div
+          class="action-card-header"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3>Promote Citizen</h3>
+          <button id="promotion-close" class="btn btn-secondary">Close</button>
+        </div>
+        <form id="promotion-form" class="action-form">
+          <div class="form-group">
+            <label>Citizen</label>
+            <input id="promotion-user-label" type="text" disabled />
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="promotion-role" required>
+              <option value="">Select role</option>
+              <option value="lgu-officer">LGU Officer</option>
+              <option value="lgu-admin">LGU Admin</option>
+              <option value="lgu-hr">LGU HR</option>
+              <option value="complaint-coordinator">
+                Complaint Coordinator
+              </option>
+              <option value="super-admin">Super Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Office <span id="dept-required-indicator">*</span></label>
+            <select id="promotion-dept">
+              <option value="">Select office</option>
+            </select>
+            <small
+              id="dept-help-text"
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                display: block;
+                margin-top: 4px;
+              "
+              >Required for all roles except Super Admin</small
+            >
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <textarea
+              id="promotion-reason"
+              rows="3"
+              placeholder="Reason for promotion"
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Promote</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Ban Modal -->
+    <div
+      id="ban-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="action-card" style="max-width: 520px; width: 92%">
+        <div
+          class="action-card-header"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3>Ban User</h3>
+          <button id="ban-close" class="btn btn-secondary">Close</button>
+        </div>
+        <form id="ban-form" class="action-form">
+          <div class="form-group">
+            <label>User</label>
+            <input id="ban-user-label" type="text" disabled />
+          </div>
+          <div class="form-group">
+            <label>Ban Type</label>
+            <select id="ban-type" required>
+              <option value="">Select ban type</option>
+              <option value="temporary">Temporary</option>
+              <option value="permanent">Permanent</option>
+            </select>
+          </div>
+          <div class="form-group" id="ban-duration-group" style="display: none">
+            <label>Duration (hours)</label>
+            <input
+              id="ban-duration"
+              type="number"
+              min="1"
+              placeholder="e.g., 24, 48, 168 (1 week)"
+            />
+            <small
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                display: block;
+                margin-top: 4px;
+              "
+              >Enter duration in hours</small
+            >
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <textarea
+              id="ban-reason"
+              rows="3"
+              placeholder="Reason for ban"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger">Ban Now</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div
+      id="delete-user-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="action-card" style="max-width: 540px; width: 92%">
+        <div
+          class="action-card-header"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3>Delete User Account</h3>
+          <button id="delete-user-close" class="btn btn-secondary">
+            Close
+          </button>
+        </div>
+        <div
+          style="
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            color: #991b1b;
+          "
+        >
+          <strong>Danger:</strong> This permanently deletes the account, removes
+          linked sessions, and anonymizes filed complaints. This action cannot
+          be undone.
+        </div>
+        <ul
+          style="
+            margin-bottom: 1rem;
+            color: #4b5563;
+            font-size: 0.9rem;
+            padding-left: 1.2rem;
+          "
+        >
+          <li>All sessions and notifications are removed immediately.</li>
+          <li>
+            Open assignments linked to this user will no longer show the
+            officer/admin name.
+          </li>
+          <li>
+            Filed complaints stay in the system but are anonymized for auditing.
+          </li>
+        </ul>
+        <form id="delete-user-form" class="action-form">
+          <div class="form-group">
+            <label>Selected User</label>
+            <p style="margin: 0; color: #1f2937">
+              <strong id="delete-user-name">—</strong><br />
+              <span
+                id="delete-user-email"
+                style="color: #6b7280; font-size: 0.9rem"
+                >—</span
+              >
+            </p>
+          </div>
+          <div class="form-group">
+            <label>Type the user's email to confirm</label>
+            <input
+              id="delete-user-confirm-input"
+              type="text"
+              placeholder="user@example.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Reason for deletion</label>
+            <textarea
+              id="delete-user-reason"
+              rows="3"
+              placeholder="e.g., Duplicate account, requested by LGU admin"
+              required
+            ></textarea>
+            <small style="color: #6b7280"
+              >Provide at least 10 characters for auditing purposes.</small
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 0.5rem;
+              flex-wrap: wrap;
+              margin-top: 1rem;
+            "
+          >
+            <button
+              type="submit"
+              class="btn btn-danger"
+              id="delete-user-submit"
+            >
+              Delete User
+            </button>
+            <button class="btn btn-secondary" id="delete-user-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    <!-- Transfer User Modal -->
+    <div
+      id="transfer-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="action-card" style="max-width: 520px; width: 92%">
+        <div
+          class="action-card-header"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3>Transfer Department</h3>
+          <button id="transfer-close" class="btn btn-secondary">Close</button>
+        </div>
+        <form id="transfer-form" class="action-form">
+          <div class="form-group">
+            <label>User</label>
+            <input id="transfer-user-label" type="text" disabled />
+          </div>
+          <div class="form-group">
+            <label>Current Department</label>
+            <input id="transfer-current-dept" type="text" disabled />
+          </div>
+          <div class="form-group">
+            <label>New Department</label>
+            <select id="transfer-new-dept" required>
+              <option value="">Select new department</option>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <textarea
+              id="transfer-reason"
+              rows="3"
+              placeholder="Reason for transfer"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-warning">Transfer User</button>
+        </form>
+      </div>
+    </div>
+
+
+    <div id="toast-container" class="toast-container"></div>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script type="module" src="/js/super-admin/user-manager.js"></script>
+  </body>
+</html>

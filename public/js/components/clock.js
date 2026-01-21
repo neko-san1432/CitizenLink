@@ -1,24 +1,46 @@
-function formatTwo(n) { return n < 10 ? '0' + n : String(n); }
+/**
+ * Simple real-time clock component for the dashboard
+ */
 
-function renderClock() {
-  const el = document.getElementById('dashboard-clock');
-  if (!el) return;
-  const now = new Date();
-  const h = formatTwo(now.getHours());
-  const m = formatTwo(now.getMinutes());
-  const s = formatTwo(now.getSeconds());
-  const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-  el.innerHTML = '<span class="time">' + h + ':' + m + ':' + s + '</span><span class="date">' + dateStr + '</span>';
+export function initClock() {
+  const clockContainer = document.getElementById("dashboard-clock");
+  if (!clockContainer) return;
+
+  function updateClock() {
+    const now = new Date();
+
+    // Format: Day, Month Date, Year · HH:MM:SS AM/PM
+    const dateOptions = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    };
+    const timeOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    };
+
+    const dateStr = now.toLocaleDateString("en-US", dateOptions);
+    const timeStr = now.toLocaleTimeString("en-US", timeOptions);
+
+    clockContainer.innerHTML = `
+      <span class="date">${dateStr}</span>
+      <span class="separator">·</span>
+      <span class="time">${timeStr}</span>
+    `;
+  }
+
+  // Update immediately and then every second
+  updateClock();
+  setInterval(updateClock, 1000);
 }
 
-export function initDashboardClock() {
-  if (!document.getElementById('dashboard-clock')) return;
-  renderClock();
-  setInterval(renderClock, 1000);
+// Auto-initialize if the script is loaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initClock);
+} else {
+  initClock();
 }
-
-// auto-init if included directly
-document.addEventListener('DOMContentLoaded', () => {
-  initDashboardClock();
-});
-

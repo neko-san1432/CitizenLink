@@ -1,0 +1,59 @@
+/* Barangay Prioritization Widget Styles */
+
+.barangay-prioritization-widget {
+  width: 100%;
+}
+
+.barangay-prioritization-widget h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.bp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bp-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.dark .bp-item {
+  background-color: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.bp-item:hover {
+  transform: translateX(4px);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .bp-item:hover {
+  background-color: rgba(30, 41, 59, 0.8);
+}
+
+.bp-name {
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+}
+
+.bp-score {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-color, #3b82f6);
+  background: rgba(59, 130, 246, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+}

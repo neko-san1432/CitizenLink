@@ -1,0 +1,622 @@
+/* Profile Page Revamp - Hero & Grid Layout */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  --glass-blur: blur(16px);
+
+  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --cover-gradient: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+}
+
+html.dark {
+  --glass-bg: rgba(17, 24, 39, 0.8);
+  --glass-border: rgba(55, 65, 81, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --cover-gradient: linear-gradient(120deg, #1e3a8a 0%, #3b82f6 100%);
+
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --text-light: #6b7280;
+}
+
+/* Page Setup */
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* Removed fixed height/overflow to respect App Container flow */
+  background-color: transparent;
+  background-image: none; /* Let the global background show or set if needed */
+  padding: 1.5rem 0; /* Reduced padding, App Container handles outer spacing */
+  gap: 1.5rem;
+}
+
+html.dark .profile-page {
+  background-color: #0f172a;
+}
+
+/* Glass Panel Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 20px;
+}
+
+/* --- Hero Section --- */
+.profile-header-section {
+  position: relative;
+  overflow: visible; /* Changed to visible so padding adjustments don't cut content */
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.profile-cover-image {
+  height: 160px;
+  width: 100%;
+  background: var(--cover-gradient);
+  position: relative;
+  border-radius: 20px 20px 0 0;
+}
+
+/* Decorative pattern on cover */
+.profile-cover-image::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.2) 2px,
+    transparent 2px
+  );
+  background-size: 20px 20px;
+  opacity: 0.5;
+}
+
+.profile-header-content {
+  padding: 0 2rem 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  position: relative;
+  margin-top: -60px; /* Pull content up over cover */
+}
+
+.profile-identity-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.profile-avatar-large {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 6px solid var(--glass-bg); /* Use glass bg color for seamless border */
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 700;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+html.dark .profile-avatar-large {
+  border-color: #1e293b; /* Match dark theme card bg if needed, but glass-bg handles it */
+}
+
+.profile-status-pill {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #10b981;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+  border: 3px solid var(--glass-bg);
+}
+
+.profile-main-info {
+  padding-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-real-name {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.profile-role-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.role-badge {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.email-text {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Edit Icons */
+.edit-icon-lg,
+.edit-icon-sm {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s, transform 0.2s;
+  font-size: 1rem;
+}
+.edit-icon-lg:hover,
+.edit-icon-sm:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Actions */
+.profile-header-actions {
+  padding-bottom: 0.75rem;
+}
+
+/* --- Grid Layout --- */
+.profile-grid-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0; /* Prevent grid blowout */
+}
+
+/* Left Column */
+.profile-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+html.dark .card-header {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-subtitle {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-weight: normal;
+}
+
+/* Info List */
+.info-list {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.info-val {
+  font-size: 1rem;
+  color: var(--text-main);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 0.5rem 0;
+}
+html.dark .info-divider {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.address-box {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+html.dark .address-box {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.addr-line {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+/* Security Card Form */
+.security-card form {
+  padding: 1.5rem;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* --- Right Column (History/Complaints) --- */
+.profile-right-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.history-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 0 2rem;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+html.dark .panel-header {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.tab-filters {
+  display: flex;
+  gap: 1.5rem;
+}
+.tab {
+  padding: 1.5rem 0;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+.tab.active {
+  color: #6366f1;
+}
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #6366f1;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Complaints List Styles (Adapting existing IDs) */
+.complaints-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Reuse existing table styles but scoped nicely */
+#my-complaints table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+#my-complaints th {
+  position: sticky;
+  top: 0;
+  background: rgba(249, 250, 251, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+html.dark #my-complaints th {
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+#my-complaints td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+}
+html.dark #my-complaints td {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Empty State */
+.complaints-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* UI Elements */
+.btn-primary,
+.btn-secondary {
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+html.dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+.btn-text {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-text:hover {
+  text-decoration: underline;
+}
+
+.input {
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 0.7rem 1rem;
+  width: 100%;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+html.dark .input {
+  background: rgba(0, 0, 0, 0.2);
+}
+.input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .profile-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .profile-left-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .profile-left-col > * {
+    flex: 1;
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 1rem; /* Use consistent padding, top padding handled by body/app main margin */
+    gap: 1rem; /* Reduce gap on mobile */
+  }
+
+  .profile-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -60px; /* Keep the pull-up effect */
+    padding-bottom: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .profile-identity-group {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .profile-avatar-large {
+    width: 120px; /* Slightly smaller avatar on mobile */
+    height: 120px;
+    font-size: 3rem;
+    border-width: 5px;
+  }
+
+  .profile-main-info {
+    align-items: center;
+    width: 100%;
+  }
+
+  .profile-name-row {
+    flex-direction: column; /* Stack name and edit icon if needed, or keep row but center */
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .profile-real-name {
+    font-size: 1.75rem; /* Smaller font for name */
+  }
+
+  .profile-role-row {
+    justify-content: center;
+  }
+
+  .profile-header-actions {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0 1rem; /* Add padding to match content */
+  }
+  .profile-header-actions .btn-primary {
+    width: 100%;
+    display: block;
+  }
+
+  /* Reset min-width for left col items to avoid overflow */
+  .profile-left-col {
+    flex-direction: column;
+  }
+  .profile-left-col > * {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Adjust charts for mobile */
+  .chart-section {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 0.5rem;
+  }
+  .profile-header-content {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+  .profile-real-name {
+    font-size: 1.5rem;
+  }
+}
+
+/* Edit Form States */
+.inline-edit-form {
+  background: rgba(0, 0, 0, 0.03);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}
+html.dark .inline-edit-form {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.input-group-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.action-buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

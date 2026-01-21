@@ -1,94 +1,273 @@
-const express = require('express');
-const multer = require('multer');
-const ComplaintController = require('../controllers/ComplaintController');
-const { authenticateUser, requireRole } = require('../middleware/auth');
-const { csrfProtection } = require('../middleware/csrf');
-const { complaintLimiter, uploadLimiter } = require('../middleware/rateLimiting');
+const express = require("express");
+const multer = require("multer");
+const ComplaintController = require("../controllers/ComplaintController");
+const { authenticateUser, requireRole } = require("../middleware/auth");
+const { csrfProtection } = require("../middleware/csrf");
+const {
+  complaintLimiter,
+  _uploadLimiter,
+} = require("../middleware/rateLimiting");
+const { ErrorHandler } = require("../middleware/errorHandler");
+const { validate, schemas } = require("../middleware/validation");
 
 const router = express.Router();
 const complaintController = new ComplaintController();
+// Helper to wrap controller methods with error handling and context binding
+const wrap = (method) =>
+  ErrorHandler.asyncWrapper(method.bind(complaintController));
 
 // Configure multer to handle both files and form fields
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024,
-    files: 5
+    files: 5,
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "video/mp4",
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'), false);
+      cb(new Error("Invalid file type"), false);
     }
-  }
+  },
 }).fields([
-  { name: 'evidenceFiles', maxCount: 5 },
-  { name: '_csrf', maxCount: 1 }
+  { name: "evidenceFiles", maxCount: 5 },
+  { name: "_csrf", maxCount: 1 },
 ]);
 
-router.post('/',
+router.get(
+  "/check-duplicates",
+  authenticateUser,
+  wrap(complaintController.checkDuplicates)
+);
+
+router.post(
+  "/",
   authenticateUser,
   complaintLimiter,
   upload,
   csrfProtection,
-  (req, res) => complaintController.createComplaint(req, res)
+  validate(schemas.createComplaint),
+  wrap(complaintController.createComplaint)
 );
 
-router.get('/my',
+router.get(
+  "/my",
   authenticateUser,
-  requireRole(['citizen']),
-  (req, res) => complaintController.getMyComplaints(req, res)
+  requireRole(["citizen"]),
+  wrap(complaintController.getMyComplaints)
 );
 
-router.get('/stats',
+router.get(
+  "/my-statistics",
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
-  (req, res) => complaintController.getComplaintStats(req, res)
+  requireRole(["citizen"]),
+  wrap(complaintController.getMyStatistics)
 );
 
-router.get('/locations',
+router.get(
+  "/stats",
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
-  (req, res) => complaintController.getComplaintLocations(req, res)
+  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  wrap(complaintController.getComplaintStats)
 );
 
-router.get('/',
+router.get(
+  "/locations",
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
-  (req, res) => complaintController.getAllComplaints(req, res)
+  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  wrap(complaintController.getComplaintLocations)
 );
 
-router.get('/:id',
+router.get(
+  "/",
   authenticateUser,
-  (req, res) => complaintController.getComplaintById(req, res)
+  requireRole([/^lgu-/, "super-admin"]),
+  wrap(complaintController.getAllComplaints)
 );
 
-router.patch('/:id/status',
+router.get(
+  "/:complaintId/evidence",
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin']),
-  (req, res) => complaintController.updateComplaintStatus(req, res)
+  requireRole([
+    "citizen",
+    "coordinator",
+    "lgu-admin",
+    "lgu-officer",
+    "hr",
+    "super-admin",
+  ]),
+  wrap(complaintController.getComplaintEvidence)
+);
+
+router.get(
+  "/:id",
+  authenticateUser,
+  wrap(complaintController.getComplaintById)
+);
+
+router.patch(
+  "/:id/status",
+  authenticateUser,
+  requireRole([/^lgu-/, "super-admin"]),
+  requireRole([/^lgu-/, "super-admin"]),
+  validate(schemas.updateStatus),
+  wrap(complaintController.updateComplaintStatus)
 );
 
 // Human confirmation workflow transitions (officer -> admin -> citizen)
-router.patch('/:id/transition',
+router.patch(
+  "/:id/transition",
   authenticateUser,
-  requireRole([/^lgu-/, 'super-admin', 'citizen']),
+  requireRole([/^lgu-/, "super-admin", "citizen"]),
   upload, // allow evidence on transition
-  (req, res) => complaintController.transitionStatus(req, res)
+  wrap(complaintController.transitionStatus)
 );
 
-router.patch('/:id/assign-coordinator',
+router.patch(
+  "/:id/assign-coordinator",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
-  (req, res) => complaintController.assignCoordinator(req, res)
+  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu-admin", "super-admin"]),
+  validate(schemas.assignCoordinator),
+  wrap(complaintController.assignCoordinator)
 );
 
-router.patch('/:id/transfer',
+router.patch(
+  "/:id/transfer",
   authenticateUser,
-  requireRole(['lgu-admin', 'super-admin']),
-  (req, res) => complaintController.transferComplaint(req, res)
+  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu-admin", "super-admin"]),
+  validate(schemas.transferComplaint),
+  wrap(complaintController.transferComplaint)
+);
+
+// Citizen-specific endpoints
+router.post(
+  "/:id/cancel",
+  authenticateUser,
+  requireRole(["citizen"]),
+  requireRole(["citizen"]),
+  validate(schemas.cancelComplaint),
+  wrap(complaintController.cancelComplaint)
+);
+
+router.post(
+  "/:id/remind",
+  authenticateUser,
+  requireRole(["citizen"]),
+  requireRole(["citizen"]),
+  validate(schemas.sendReminder),
+  wrap(complaintController.sendReminder)
+);
+
+router.post(
+  "/:id/confirm-resolution",
+  authenticateUser,
+  requireRole(["citizen"]),
+  requireRole(["citizen"]),
+  validate(schemas.confirmResolution),
+  wrap(complaintController.confirmResolution)
+);
+
+// Configure multer for completion evidence uploads
+const completionUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+    files: 5,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "video/mp4",
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type"), false);
+    }
+  },
+}).fields([{ name: "completionEvidence", maxCount: 5 }]);
+
+// LGU Officer/Admin endpoints for assignment completion
+// Admins can also complete assignments they've created
+router.post(
+  "/:id/mark-complete",
+  authenticateUser,
+  requireRole(["lgu", /^lgu-(?!hr)/]), // Allow both officers and admins
+  completionUpload,
+  wrap(complaintController.markAssignmentComplete)
+);
+
+// Get confirmation message for any user
+router.get(
+  "/:id/confirmation-message",
+  authenticateUser,
+  wrap(complaintController.getConfirmationMessage)
+);
+
+// False complaint endpoints (coordinator only)
+router.post(
+  "/:id/mark-false",
+  authenticateUser,
+  requireRole(["complaint-coordinator"]),
+  requireRole(["complaint-coordinator"]),
+  validate(schemas.markAsFalse),
+  wrap(complaintController.markAsFalseComplaint)
+);
+
+// Admin Tool: Check for duplicates for a specific ticket
+router.get(
+  "/:id/potential-duplicates",
+  authenticateUser,
+  wrap(complaintController.getPotentialDuplicatesForId)
+);
+
+// Admin Tool: Bulk Merge
+router.post(
+  "/:id/bulk-merge",
+  authenticateUser,
+  wrap(complaintController.bulkMergeComplaints)
+);
+
+router.post(
+  "/:id/mark-duplicate",
+  authenticateUser,
+  requireRole(["complaint-coordinator"]),
+  requireRole(["complaint-coordinator"]),
+  validate(schemas.markAsDuplicate),
+  wrap(complaintController.markAsDuplicate)
+);
+
+router.post(
+  "/:id/upvote",
+  authenticateUser,
+  wrap(complaintController.upvoteComplaint)
+);
+
+router.get(
+  "/false-reports",
+  authenticateUser,
+  requireRole(["complaint-coordinator", "super-admin"]),
+  wrap(complaintController.getFalseComplaints)
+);
+
+router.get(
+  "/false-reports/statistics",
+  authenticateUser,
+  requireRole(["complaint-coordinator", "super-admin"]),
+  wrap(complaintController.getFalseComplaintStatistics)
 );
 
 module.exports = router;

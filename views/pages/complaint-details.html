@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Complaint Details - CitizenLink</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/complaint-details.css" />
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <header id="header" class="header-container"></header>
+
+      <!-- Sidebar -->
+      <div id="sidebar" class="collapsible"></div>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="container">
+          <!-- Breadcrumb -->
+          <nav class="breadcrumb">
+            <a href="#" id="return-link" class="breadcrumb-link">
+              <i class="icon-arrow-left"></i>
+              <span id="return-text">Back</span>
+            </a>
+          </nav>
+
+          <!-- Loading State -->
+          <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading complaint details...</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="error-state" class="error-state" style="display: none">
+            <h2>Error Loading Complaint</h2>
+            <p id="error-message">Unable to load complaint details.</p>
+            <button class="btn btn-primary" onclick="location.reload()">
+              Retry
+            </button>
+          </div>
+
+          <!-- Complaint Details -->
+          <div
+            id="complaint-details"
+            class="complaint-details animate-fade-in"
+            style="display: none"
+          >
+            <!-- Complaint Header -->
+            <div class="complaint-header glass-panel p-6 rounded-xl mb-6">
+              <div class="complaint-title-section">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <!-- Category Badge as Main Header -->
+                  <span
+                    id="complaint-category-badge"
+                    style="
+                      background: #3b82f6;
+                      color: white;
+                      padding: 4px 12px;
+                      border-radius: 20px;
+                      font-weight: 700;
+                      font-size: 0.9rem;
+                      text-transform: uppercase;
+                      letter-spacing: 0.05em;
+                    "
+                    >CATEGORY</span
+                  >
+
+                  <span
+                    id="complaint-id"
+                    class="complaint-id text-gray-500 font-mono text-sm"
+                    >#12345</span
+                  >
+                </div>
+
+                <h1
+                  id="complaint-title"
+                  class="complaint-title text-xl font-semibold text-gray-700"
+                  style="margin: 0; line-height: 1.4"
+                >
+                  Complaint Title
+                </h1>
+
+                <div
+                  class="complaint-meta mt-3 flex gap-3 flex-wrap items-center"
+                >
+                  <span
+                    id="complaint-status"
+                    class="complaint-status status-pending"
+                    >Pending</span
+                  >
+                  <span
+                    id="complaint-priority"
+                    class="complaint-priority priority-medium"
+                    >Medium</span
+                  >
+                  <span id="complaint-date" class="text-sm text-gray-500">
+                    <!-- Date -->
+                  </span>
+                </div>
+              </div>
+              <div class="complaint-actions" id="complaint-actions">
+                <!-- Role-specific actions will be populated here -->
+              </div>
+            </div>
+
+            <!-- Status Timeline - Horizontal Stepper -->
+            <div class="status-timeline glass-panel p-6 rounded-xl mb-6">
+              <h3 class="text-lg font-bold mb-4">Status Progress</h3>
+              <div id="timeline-items" class="progress-stepper">
+                <!-- Progress stepper will be populated here -->
+              </div>
+            </div>
+
+            <!-- Complaint Content -->
+            <div class="complaint-content grid gap-6">
+              <div class="content-section glass-panel p-6 rounded-xl">
+                <h3 class="text-lg font-bold mb-2">Description</h3>
+                <p id="complaint-description" class="text-gray-700">
+                  Complaint description will be loaded here...
+                </p>
+              </div>
+
+              <div class="content-section glass-panel p-6 rounded-xl">
+                <h3 class="text-lg font-bold mb-2">Location</h3>
+                <div id="complaint-location" class="location-info">
+                  <!-- Location details will be populated here -->
+                </div>
+              </div>
+
+              <!-- Complainant Information (Only visible to admin, officers, and coordinators) -->
+              <div
+                id="complainant-section"
+                class="content-section glass-panel p-6 rounded-xl"
+                style="display: none"
+              >
+                <h3 class="text-lg font-bold mb-2">
+                  👤 Complainant Information
+                </h3>
+                <div id="complainant-info" class="complainant-info">
+                  <!-- Complainant details will be populated here -->
+                </div>
+              </div>
+
+              <div class="content-section glass-panel p-6 rounded-xl">
+                <h3 class="text-lg font-bold mb-2">Attachments</h3>
+                <div id="complaint-attachments" class="attachments-list">
+                  <!-- Attachments will be populated here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Role-specific sections -->
+            <div id="role-specific-content" class="mt-6">
+              <!-- Content will be populated based on user role -->
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer id="footer"></footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <!-- Leaflet Routing Machine - DISABLED -->
+    <!-- <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script> -->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" /> -->
+    <script type="module" src="/js/pages/complaint-details.js"></script>
+  </body>
+</html>

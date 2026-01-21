@@ -1,104 +1,68 @@
-const Database = require('../config/database');
-const NotificationService = require('../services/NotificationService');
-
-const db = new Database();
-const supabase = db.getClient();
-const notificationService = new NotificationService();
+const LguOfficerService = require("../services/LguOfficerService");
+const { ErrorHandler } = require("../middleware/errorHandler");
 
 class LguOfficerController {
+  constructor() {
+    this.officerService = new LguOfficerService();
+  }
+
+  /**
+   * Get assigned tasks for officer
+   */
+  async getAssignedTasks(req, res) {
+    try {
+      const userId = req.user.id;
+      const { status, priority, limit } = req.query;
+
+      const tasks = await this.officerService.getAssignedTasks(userId, { status, priority, limit });
+
+      return res.json({
+        success: true,
+        data: tasks
+      });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Get assigned tasks error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
+  /**
+   * Mark complaint as resolved
+   */
+  async markAsResolved(req, res) {
+    try {
+      const { complaintId } = req.params;
+      const { resolution_notes } = req.body;
+      const userId = req.user.id;
+
+      const complaint = await this.officerService.markAsResolved(complaintId, userId, resolution_notes);
+
+      return res.json({
+        success: true,
+        message: "Complaint marked as resolved successfully",
+        complaint
+      });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Mark as resolved error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
   /**
    * Get all tasks assigned to the current officer
    */
   async getMyTasks(req, res) {
     try {
       const userId = req.user.id;
-
-      // console.log removed for security
-
-      // Get all assignments for this officer
-      const { data: assignments, error: assignmentError } = await supabase
-        .from('complaint_assignments')
-        .select(`
-          id,
-          complaint_id,
-          assigned_by,
-          status,
-          notes,
-          priority,
-          deadline,
-          created_at,
-          updated_at,
-          completed_at,
-          complaints:complaint_id (
-            id,
-            title,
-            descriptive_su,
-            type,
-            status,
-            submitted_at,
-            location,
-            primary_department
-          )
-        `)
-        .eq('assigned_to', userId)
-        .order('created_at', { ascending: false });
-
-      if (assignmentError) {
-        console.error('[LGU_OFFICER] Error fetching assignments:', assignmentError);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to fetch assignments'
-        });
-      }
-
-      // Get assigned_by user info for each assignment
-      const assignmentsWithUsers = await Promise.all(
-        (assignments || []).map(async (assignment) => {
-          let assignedByName = 'Unknown';
-
-          if (assignment.assigned_by) {
-            const { data: assignedByUser } = await supabase.auth.admin.getUserById(assignment.assigned_by);
-            if (assignedByUser?.user) {
-              assignedByName = assignedByUser.user.user_metadata?.name || assignedByUser.user.email;
-            }
-          }
-
-          return {
-            id: assignment.id,
-            complaint_id: assignment.complaint_id,
-            complaint_title: assignment.complaints?.title || 'Untitled',
-            complaint_description: assignment.complaints?.descriptive_su || '',
-            complaint_type: assignment.complaints?.type || '',
-            complaint_status: assignment.complaints?.status || '',
-            complaint_location: assignment.complaints?.location || '',
-            complaint_submitted_at: assignment.complaints?.submitted_at,
-            assignment_status: assignment.status,
-            assigned_by: assignment.assigned_by,
-            assigned_by_name: assignedByName,
-            notes: assignment.notes,
-            priority: assignment.priority || 'medium',
-            deadline: assignment.deadline,
-            assigned_at: assignment.created_at,
-            updated_at: assignment.updated_at,
-            completed_at: assignment.completed_at
-          };
-        })
-      );
+      const tasks = await this.officerService.getMyTasks(userId);
 
       return res.json({
         success: true,
-        data: assignmentsWithUsers
+        data: tasks
       });
-
     } catch (error) {
-      console.error('[LGU_OFFICER] Get tasks error:', error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      console.error("[LGU_OFFICER] Get tasks error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
-
   /**
    * Update task status (accept, start, complete, etc.)
    */
@@ -108,101 +72,17 @@ class LguOfficerController {
       const { status, notes } = req.body;
       const userId = req.user.id;
 
-      // console.log removed for security
-
-      // Verify this assignment belongs to the officer
-      const { data: assignment, error: fetchError } = await supabase
-        .from('complaint_assignments')
-        .select('*, complaints:complaint_id(id, title, status)')
-        .eq('id', assignmentId)
-        .eq('assigned_to', userId)
-        .single();
-
-      if (fetchError || !assignment) {
-        return res.status(404).json({
-          success: false,
-          error: 'Assignment not found'
-        });
-      }
-
-      // Prepare update data
-      const updateData = {
-        status,
-        updated_at: new Date().toISOString()
-      };
-
-      if (notes) {
-        updateData.notes = notes;
-      }
-
-      // If completing, set completed_at
-      if (status === 'completed') {
-        updateData.completed_at = new Date().toISOString();
-      }
-
-      // Update the assignment
-      const { error: updateError } = await supabase
-        .from('complaint_assignments')
-        .update(updateData)
-        .eq('id', assignmentId);
-
-      if (updateError) {
-        console.error('[LGU_OFFICER] Error updating assignment:', updateError);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to update assignment'
-        });
-      }
-
-      // Update complaint status based on assignment status
-      let complaintStatus = assignment.complaints.status;
-      if (status === 'in_progress' && complaintStatus === 'pending review') {
-        complaintStatus = 'in progress';
-      } else if (status === 'completed') {
-        complaintStatus = 'resolved';
-      }
-
-      await supabase
-        .from('complaints')
-        .update({
-          status: complaintStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', assignment.complaint_id);
-
-      // Send notification to admin about status change
-      if (assignment.assigned_by) {
-        await notificationService.createNotification({
-          userId: assignment.assigned_by,
-          title: 'Task Status Updated',
-          message: `Officer updated task status to "${status}" for: ${assignment.complaints?.title}`,
-          type: 'task_update',
-          priority: 'info',
-          link: '/lgu-admin/assignments',
-          metadata: {
-            assignment_id: assignmentId,
-            complaint_id: assignment.complaint_id,
-            new_status: status
-          }
-        });
-      }
-
-      // console.log removed for security
+      await this.officerService.updateTaskStatus(assignmentId, userId, status, notes);
 
       return res.json({
         success: true,
-        message: 'Task status updated successfully'
+        message: "Task status updated successfully"
       });
-
     } catch (error) {
-      console.error('[LGU_OFFICER] Update task status error:', error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      console.error("[LGU_OFFICER] Update task status error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
-
   /**
    * Add progress update/note to a task
    */
@@ -212,72 +92,72 @@ class LguOfficerController {
       const { message, isPublic } = req.body;
       const userId = req.user.id;
 
-      // console.log removed for security
-
-      // Verify assignment belongs to officer
-      const { data: assignment, error: fetchError } = await supabase
-        .from('complaint_assignments')
-        .select('*, complaints:complaint_id(id, title, submitted_by)')
-        .eq('id', assignmentId)
-        .eq('assigned_to', userId)
-        .single();
-
-      if (fetchError || !assignment) {
-        return res.status(404).json({
-          success: false,
-          error: 'Assignment not found'
-        });
-      }
-
-      // Add to complaint history
-      const { error: historyError } = await supabase
-        .from('complaint_history')
-        .insert({
-          complaint_id: assignment.complaint_id,
-          action: 'officer_update',
-          performed_by: userId,
-          details: {
-            message,
-            is_public: isPublic || false,
-            assignment_id: assignmentId
-          }
-        });
-
-      if (historyError) {
-        console.error('[LGU_OFFICER] Error adding history:', historyError);
-      }
-
-      // If public, notify the citizen
-      if (isPublic && assignment.complaints?.submitted_by) {
-        await notificationService.createNotification({
-          userId: assignment.complaints.submitted_by,
-          title: 'Update on Your Complaint',
-          message: `Officer added an update: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`,
-          type: 'officer_update',
-          priority: 'info',
-          link: `/complaint/${assignment.complaint_id}`,
-          metadata: {
-            complaint_id: assignment.complaint_id,
-            assignment_id: assignmentId
-          }
-        });
-      }
-
-      // console.log removed for security
+      await this.officerService.addProgressUpdate(assignmentId, userId, message, isPublic);
 
       return res.json({
         success: true,
-        message: 'Progress update added successfully'
+        message: "Progress update added successfully"
       });
-
     } catch (error) {
-      console.error('[LGU_OFFICER] Add progress update error:', error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
+      console.error("[LGU_OFFICER] Add progress update error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
+  /**
+   * Get officer statistics
+   */
+  async getStatistics(req, res) {
+    try {
+      const userId = req.user.id;
+      const statistics = await this.officerService.getStatistics(userId);
+
+      return res.json({
+        success: true,
+        data: statistics
       });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Get statistics error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
+  /**
+   * Get officer activities
+   */
+  async getActivities(req, res) {
+    try {
+      const userId = req.user.id;
+      const { limit = 10 } = req.query;
+
+      const activities = await this.officerService.getActivities(userId, limit);
+
+      return res.json({
+        success: true,
+        data: activities
+      });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Get activities error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
+  /**
+   * Get department updates
+   */
+  async getUpdates(req, res) {
+    try {
+      const userId = req.user.id;
+      const { limit = 10 } = req.query;
+
+      const updates = await this.officerService.getUpdates(userId, limit);
+
+      return res.json({
+        success: true,
+        data: updates
+      });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Get updates error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
 }
 
-module.exports = new LguOfficerController();
+module.exports = LguOfficerController;

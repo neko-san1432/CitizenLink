@@ -1,257 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>HR Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../../css/toast.css">
-    <link rel="stylesheet" href="../../css/components/clock.css">
-    <link rel="stylesheet" href="../../css/components/sidebar.css">
-    <link rel="stylesheet" href="../../css/app.css">
-    <link rel="stylesheet" href="../../css/header-redesign.css">
-    <link rel="stylesheet" href="../../css/pages/hr-dashboard.css">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+    <link rel="stylesheet" href="/css/pages/hr-dashboard.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
     <style>
-        .department-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .dept-stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6;
-        }
-        .dept-stat-card h3 {
-            margin: 0 0 15px 0;
-            color: #2c3e50;
-            font-size: 1.2rem;
-        }
-        .dept-counts {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        .dept-count {
-            text-align: center;
-            flex: 1;
-        }
-        .dept-count-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 5px 0;
-        }
-        .dept-count-label {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      .office-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .dept-stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3b82f6;
+      }
+      .dept-stat-card h3 {
+        margin: 0 0 15px 0;
+        color: #2c3e50;
+        font-size: 1.2rem;
+      }
+      .dept-counts {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      .dept-count {
+        text-align: center;
+        flex: 1;
+      }
+      .dept-count-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 5px 0;
+      }
+      .dept-count-label {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        
-        <div id="app" class="collapsible hr-dashboard">
-            <h1>HR Dashboard</h1>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">Manage staff roles, promotions, demotions, and department assignments</p>
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
 
-            <!-- Statistics -->
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Officers</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-officers">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Admins</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-admins">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Promotions This Month</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-promotions">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Demotions This Month</div>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;" id="stat-demotions">0</div>
-                </div>
-            </div>
-
-            <!-- Department Statistics -->
-            <div class="section-header">
-                <h2 class="section-title">Department Breakdown</h2>
-            </div>
-            <div id="department-stats" class="department-stats-grid">
-                <div class="loading-placeholder">
-                    <p style="color: #7f8c8d; text-align: center; padding: 20px;">Loading department statistics...</p>
-                </div>
-            </div>
-
-            <!-- Actions Section -->
-            <div class="section-header">
-                <h2 class="section-title">HR Actions</h2>
-            </div>
-
-            <div class="actions-grid">
-                <!-- Promote to Officer -->
-                <div class="action-card">
-                    <h3>🎖️ Promote to LGU Officer</h3>
-                    <form id="promote-officer-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="promote-officer-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be a citizen</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Department</label>
-                            <input type="text" id="promote-officer-dept" placeholder="e.g., engineering" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Optional)</label>
-                            <textarea id="promote-officer-reason" placeholder="Enter reason for promotion"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success">Promote to Officer</button>
-                    </form>
-                </div>
-
-                <!-- Promote to Admin -->
-                <div class="action-card">
-                    <h3>👔 Promote to LGU Admin</h3>
-                    <form id="promote-admin-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="promote-admin-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be an LGU Officer</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Department</label>
-                            <input type="text" id="promote-admin-dept" placeholder="e.g., engineering">
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Optional)</label>
-                            <textarea id="promote-admin-reason" placeholder="Enter reason for promotion"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Promote to Admin</button>
-                    </form>
-                </div>
-
-                <!-- Demote to Officer -->
-                <div class="action-card">
-                    <h3>⬇️ Demote Admin to Officer</h3>
-                    <form id="demote-officer-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="demote-officer-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">User must be an LGU Admin</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason</label>
-                            <textarea id="demote-officer-reason" placeholder="Enter reason for demotion" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-warning">Demote to Officer</button>
-                    </form>
-                </div>
-
-                <!-- Strip Titles -->
-                <div class="action-card">
-                    <h3>🚫 Strip All Titles</h3>
-                    <form id="strip-titles-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="strip-titles-user" placeholder="Enter user ID or email" required>
-                            <div class="help-text">Revert user to citizen status</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason (Required)</label>
-                            <textarea id="strip-titles-reason" placeholder="Enter detailed reason for stripping titles" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-danger">Strip Titles</button>
-                    </form>
-                </div>
-
-                <!-- Assign Department -->
-                <div class="action-card">
-                    <h3>🏢 Assign to Department</h3>
-                    <form id="assign-dept-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="assign-dept-user" placeholder="Enter user ID or email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Department ID</label>
-                            <input type="text" id="assign-dept-id" placeholder="e.g., engineering" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Assign Department</button>
-                    </form>
-                </div>
-
-                <!-- View Role History -->
-                <div class="action-card">
-                    <h3>📜 View Role History</h3>
-                    <form id="role-history-form">
-                        <div class="form-group">
-                            <label>User ID / Email</label>
-                            <input type="text" id="role-history-user" placeholder="Enter user ID or email" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">View History</button>
-                    </form>
-                    <div id="role-history-results" style="margin-top: 20px;"></div>
-                </div>
-            </div>
-
-            <!-- User Management -->
-            <div class="section-header">
-                <h2 class="section-title">User Management</h2>
-            </div>
-            <div class="user-grid">
-                <!-- Search & List -->
-                <div class="user-panel">
-                    <h3 style="margin-top:0;">Search Users</h3>
-                    <div class="form-group">
-                        <label>Search by name or email</label>
-                        <input type="text" id="user-search-input" placeholder="Type a name or email...">
-                    </div>
-                    <div class="form-group">
-                        <label>Barangay</label>
-                        <input type="text" id="user-filter-barangay" placeholder="e.g., Barangay 123">
-                    </div>
-                    <div class="form-group">
-                        <button id="user-search-btn" class="btn btn-primary">Search</button>
-                    </div>
-                    <div id="user-list" class="user-list"></div>
-                </div>
-
-                <!-- Details -->
-                <div class="user-panel">
-                    <h3 style="margin-top:0;">User Details</h3>
-                    <div id="user-details" class="user-details">
-                        <p style="color:#7f8c8d;">Select a user to view details</p>
-                    </div>
-                    <div style="margin-top:20px;">
-                        <h4>Complaints</h4>
-                        <div id="user-complaints"></div>
-                    </div>
-                </div>
-            </div>
+      <div id="app" class="collapsible hr-dashboard">
+        <!-- Welcome Section -->
+        <div class="dashboard-header-section">
+          <h1 class="text-2xl font-bold text-gray-800">HR Dashboard</h1>
+          <p class="text-gray-600">
+            Overview of personnel and internal affairs.
+          </p>
         </div>
+
+        <!-- Main Content Grid -->
+        <div class="dashboard-content gap-6 p-6">
+          <!-- Stats Row -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+          >
+            <!-- Staff Complaints -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-sm text-gray-500 font-medium">
+                  Staff Complaints
+                </p>
+                <h3
+                  class="text-2xl font-bold text-gray-800"
+                  id="stat-staff-complaints"
+                >
+                  -
+                </h3>
+              </div>
+              <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Internal Cases -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Internal Cases</p>
+                <h3 class="text-2xl font-bold text-red-600" id="stat-internal">
+                  -
+                </h3>
+              </div>
+              <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Pending Review -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Pending Review</p>
+                <h3
+                  class="text-2xl font-bold text-orange-600"
+                  id="stat-pending"
+                >
+                  -
+                </h3>
+              </div>
+              <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Resolved -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Resolved</p>
+                <h3
+                  class="text-2xl font-bold text-green-600"
+                  id="stat-resolved"
+                >
+                  -
+                </h3>
+              </div>
+              <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+          >
+            <!-- Trend Chart -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1 md:col-span-2 lg:col-span-3"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Case Volume Trend
+              </h3>
+              <div style="height: 300px; position: relative">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Distribution Chart -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Case Types
+              </h3>
+              <div style="height: 300px; position: relative">
+                <canvas id="distributionChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Lists Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Activity -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            >
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                  Recent Cases
+                </h3>
+                <a
+                  href="#"
+                  class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >View All</a
+                >
+              </div>
+              <div id="recent-activity-list" class="space-y-3">
+                <!-- Loading State -->
+                <div class="animate-pulse space-y-3">
+                  <div class="h-16 bg-gray-100 rounded-lg"></div>
+                  <div class="h-16 bg-gray-100 rounded-lg"></div>
+                  <div class="h-16 bg-gray-100 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Quick Actions
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                >
+                  <div
+                    class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="font-medium text-gray-900">Manage Staff</h4>
+                  <p class="text-sm text-gray-500 mt-1">Directory & Records</p>
+                </button>
+
+                <button
+                  class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                >
+                  <div
+                    class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="font-medium text-gray-900">View Reports</h4>
+                  <p class="text-sm text-gray-500 mt-1">HR specific reports</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
-    <script type="module" src="../../js/auth/roleToggle.js"></script>
-    <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/hr/dashboard.js"></script>
-</body>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script src="https://unpkg.com/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="/js/hr/dashboard.js"></script>
+  </body>
 </html>

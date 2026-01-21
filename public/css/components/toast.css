@@ -1,0 +1,237 @@
+/* Toast Notification Styles */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: var(--z-toast, 99999) !important; /* Highest z-index to ensure toasts appear above all modals */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 10px);
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--gray-50, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid var(--primary-600, #3b82f6);
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast-show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-hide {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 12px;
+}
+
+.toast-icon {
+  font-size: 20px;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--gray-900, #1f2937);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: var(--gray-600, #4b5563);
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.toast-metadata {
+  font-size: 11px;
+  color: var(--gray-500, #6b7280);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--gray-400, #9ca3af);
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.toast-close:hover {
+  background: var(--gray-200, #f3f4f6);
+  color: var(--gray-700, #374151);
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--primary-600, #3b82f6);
+  animation: toast-progress linear;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Toast Types */
+.toast-success {
+  border-left-color: var(--success-500, #10b981);
+}
+
+.toast-success .toast-icon {
+  color: var(--success-500, #10b981);
+}
+
+.toast-success .toast-progress {
+  background: var(--success-500, #10b981);
+}
+
+.toast-error {
+  border-left-color: var(--error-500, #ef4444);
+}
+
+.toast-error .toast-icon {
+  color: var(--error-500, #ef4444);
+}
+
+.toast-error .toast-progress {
+  background: var(--error-500, #ef4444);
+}
+
+.toast-warning {
+  border-left-color: var(--warning-500, #f59e0b);
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning-500, #f59e0b);
+}
+
+.toast-warning .toast-progress {
+  background: var(--warning-500, #f59e0b);
+}
+
+.toast-urgent {
+  border-left-color: var(--error-600, #dc2626);
+  background: var(--error-50, #fef2f2);
+}
+
+.toast-urgent .toast-icon {
+  color: var(--error-600, #dc2626);
+}
+
+.toast-urgent .toast-progress {
+  background: var(--error-600, #dc2626);
+}
+
+.toast-info {
+  border-left-color: var(--info-500, #3b82f6);
+}
+
+.toast-info .toast-icon {
+  color: var(--info-500, #3b82f6);
+}
+
+.toast-info .toast-progress {
+  background: var(--info-500, #3b82f6);
+}
+
+/* Clickable toast */
+.toast-clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toast-clickable:hover {
+  transform: translateX(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Progress bar animation */
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .toast {
+    min-width: auto;
+    max-width: none;
+  }
+}
+
+/* Dark mode support */
+html.dark .toast {
+  background: var(--gray-100, #1f2937);
+  color: var(--gray-100, #f9fafb);
+}
+
+html.dark .toast-title {
+  color: var(--gray-100, #f9fafb);
+}
+
+html.dark .toast-message {
+  color: var(--gray-400, #d1d5db);
+}
+
+html.dark .toast-metadata {
+  color: var(--gray-500, #9ca3af);
+}
+
+html.dark .toast-close {
+  color: var(--gray-500, #9ca3af);
+}
+
+html.dark .toast-close:hover {
+  background: var(--gray-200, #374151);
+  color: var(--gray-100, #f9fafb);
+}

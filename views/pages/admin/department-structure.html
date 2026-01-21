@@ -1,32 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet">
     <title>Department Structure Management</title>
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../../css/toast.css">
-    <link rel="stylesheet" href="../../css/components/sidebar.css">
-    <link rel="stylesheet" href="../../css/app.css">
-    <link rel="stylesheet" href="../../css/header-redesign.css">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
     <style>
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .section-card {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             overflow: hidden;
         }
-        
+
         .section-header {
             background: #f8f9fa;
             padding: 15px 20px;
@@ -35,13 +37,13 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .section-title {
             margin: 0;
             color: #495057;
             font-size: 1.1rem;
         }
-        
+
         .add-btn {
             background: #007bff;
             color: white;
@@ -51,27 +53,27 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-        
+
         .add-btn:hover {
             background: #0056b3;
         }
-        
+
         .section-content {
             padding: 20px;
         }
-        
+
         .hierarchy-tree {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        
+
         .category-item {
             border: 1px solid #dee2e6;
             border-radius: 6px;
             background: #f8f9fa;
         }
-        
+
         .category-header {
             padding: 15px;
             background: #e9ecef;
@@ -81,19 +83,19 @@
             align-items: center;
             cursor: pointer;
         }
-        
+
         .category-title {
             margin: 0;
             color: #495057;
             font-size: 1rem;
             font-weight: 600;
         }
-        
+
         .category-actions {
             display: flex;
             gap: 8px;
         }
-        
+
         .btn-sm {
             padding: 4px 8px;
             font-size: 0.8rem;
@@ -101,33 +103,33 @@
             border-radius: 3px;
             cursor: pointer;
         }
-        
+
         .btn-edit {
             background: #ffc107;
             color: #212529;
         }
-        
+
         .btn-delete {
             background: #dc3545;
             color: white;
         }
-        
+
         .subcategories-container {
             padding: 15px;
             display: none;
         }
-        
+
         .subcategories-container.expanded {
             display: block;
         }
-        
+
         .subcategory-item {
             margin-bottom: 15px;
             border: 1px solid #dee2e6;
             border-radius: 4px;
             background: white;
         }
-        
+
         .subcategory-header {
             padding: 12px 15px;
             background: #f8f9fa;
@@ -136,23 +138,23 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .subcategory-title {
             margin: 0;
             color: #495057;
             font-size: 0.9rem;
             font-weight: 500;
         }
-        
+
         .departments-container {
             padding: 15px;
             display: none;
         }
-        
+
         .departments-container.expanded {
             display: block;
         }
-        
+
         .department-item {
             padding: 8px 12px;
             margin-bottom: 8px;
@@ -162,40 +164,40 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .department-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        
+
         .department-name {
             font-weight: 500;
             color: #495057;
         }
-        
+
         .department-details {
             font-size: 0.8rem;
             color: #6c757d;
         }
-        
+
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-        
+
         .modal.show {
             display: flex;
         }
-        
+
         .modal-content {
             background: white;
             border-radius: 8px;
@@ -205,7 +207,7 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -214,12 +216,12 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #dee2e6;
         }
-        
+
         .modal-title {
             margin: 0;
             color: #495057;
         }
-        
+
         .close-btn {
             background: none;
             border: none;
@@ -227,18 +229,18 @@
             cursor: pointer;
             color: #6c757d;
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 5px;
             color: #495057;
             font-weight: 500;
         }
-        
+
         .form-input {
             width: 100%;
             padding: 8px 12px;
@@ -246,7 +248,7 @@
             border-radius: 4px;
             font-size: 0.9rem;
         }
-        
+
         .form-textarea {
             width: 100%;
             padding: 8px 12px;
@@ -256,14 +258,14 @@
             resize: vertical;
             min-height: 80px;
         }
-        
+
         .form-actions {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
             margin-top: 20px;
         }
-        
+
         .btn {
             padding: 8px 16px;
             border: none;
@@ -271,29 +273,30 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-        
+
         .btn-primary {
             background: #007bff;
             color: white;
         }
-        
+
         .btn-secondary {
             background: #6c757d;
             color: white;
         }
-        
+
         .loading {
             text-align: center;
             padding: 20px;
             color: #6c757d;
         }
-        
+
         .error {
             color: #dc3545;
             font-size: 0.9rem;
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <div class="header-container"></div>
@@ -301,8 +304,9 @@
         <div id="app" class="collapsible">
             <div class="admin-container">
                 <h1>Department Structure Management</h1>
-                <p style="color: #6c757d; margin-bottom: 30px;">Manage categories, subcategories, and departments for complaint routing.</p>
-                
+                <p style="color: #6c757d; margin-bottom: 30px;">Manage categories, subcategories, and departments for
+                    complaint routing.</p>
+
                 <!-- Categories Section -->
                 <div class="section-card">
                     <div class="section-header">
@@ -315,33 +319,11 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Quick Stats -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2 class="section-title">Quick Stats</h2>
-                    </div>
-                    <div class="section-content">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            <div>
-                                <strong>Total Categories:</strong> <span id="total-categories">-</span>
-                            </div>
-                            <div>
-                                <strong>Total Subcategories:</strong> <span id="total-subcategories">-</span>
-                            </div>
-                            <div>
-                                <strong>Total Departments:</strong> <span id="total-departments">-</span>
-                            </div>
-                            <div>
-                                <strong>Active Departments:</strong> <span id="active-departments">-</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
-    
+
     <!-- Modals -->
     <div id="category-modal" class="modal">
         <div class="modal-content">
@@ -377,7 +359,7 @@
             </form>
         </div>
     </div>
-    
+
     <div id="subcategory-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -414,7 +396,7 @@
             </form>
         </div>
     </div>
-    
+
     <div id="department-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -462,14 +444,16 @@
             </form>
         </div>
     </div>
-    
+
     <div id="toast-container" class="toast-container"></div>
-    
+
     <!-- Scripts -->
-    <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
-    <script type="module" src="../../js/pages/admin/department-structure.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/pages/admin/department-structure.js"></script>
 </body>
+
 </html>

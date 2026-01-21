@@ -1,89 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <title>Coordinator Dashboard - CitizenLink</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/toast.css">
-    <link rel="stylesheet" href="/css/components/clock.css">
-    <link rel="stylesheet" href="/css/components/sidebar.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/header-redesign.css">
-    <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title>Coordinator Dashboard - CitizenLink</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/clock.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/header-redesign.css" />
+  <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+  <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css" />
+  <link rel="stylesheet" href="/css/viewport-fix.css" />
 </head>
+
 <body>
-    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
-    <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        
-        <div id="app" class="collapsible coordinator-dashboard">
-            <h1>Coordinator Dashboard</h1>
+  <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
 
-            <!-- Statistics Cards -->
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card urgent">
-                    <div class="stat-label">Pending Reviews</div>
-                    <div class="stat-value" id="stat-pending">-</div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-label">Reviews (7 days)</div>
-                    <div class="stat-value" id="stat-reviews">-</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-label">Duplicates Merged</div>
-                    <div class="stat-value" id="stat-duplicates">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Assignments Made</div>
-                    <div class="stat-value" id="stat-assignments">-</div>
-                </div>
-            </div>
+    <div id="app" class="collapsible coordinator-dashboard">
+      <!-- Welcome Section -->
+      <div class="dashboard-header-section">
+        <h1 class="text-2xl font-bold text-gray-800">Coordinator Dashboard</h1>
+        <p class="text-gray-600">
+          Review and assign incoming reports.
+        </p>
+      </div>
 
-            <!-- Review Queue Section -->
-            <div class="section-header">
-                <h2 class="section-title">Review Queue</h2>
-                <button class="btn btn-primary" onclick="window.location.href='/coordinator/review'">
-                    View Full Queue
-                </button>
+      <!-- Main Content Grid -->
+      <div class="dashboard-content gap-6 p-6">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <!-- Incoming -->
+          <div
+            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Incoming Reports</p>
+              <h3 class="text-2xl font-bold text-gray-800" id="stat-incoming">-</h3>
             </div>
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </div>
+          </div>
 
-            <div id="review-queue-container">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading review queue...</p>
-                </div>
+          <!-- Unverified -->
+          <div
+            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Unverified</p>
+              <h3 class="text-2xl font-bold text-red-600" id="stat-unverified">-</h3>
             </div>
+            <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
 
-            <!-- Active Clusters Section -->
-            <div class="section-header" style="margin-top: 40px;">
-                <h2 class="section-title">Active Complaint Clusters</h2>
-                <button class="btn btn-secondary" onclick="detectNewClusters()">
-                    Detect New Clusters
-                </button>
+          <!-- Assigned -->
+          <div
+            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Assigned</p>
+              <h3 class="text-2xl font-bold text-green-600" id="stat-assigned">-</h3>
             </div>
+            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+          </div>
 
-            <div id="clusters-container">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading clusters...</p>
-                </div>
+          <!-- Escalated -->
+          <div
+            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Escalated</p>
+              <h3 class="text-2xl font-bold text-yellow-600" id="stat-escalated">-</h3>
             </div>
+            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </div>
         </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <!-- Trend Chart -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1 md:col-span-2 lg:col-span-3">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Incoming Volume</h3>
+            <div style="height: 300px; position: relative">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Distribution Chart -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Category Distribution</h3>
+            <div style="height: 300px; position: relative">
+              <canvas id="distributionChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Lists Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Recent Activity -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+              <a href="/coordinator/reports" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
+            </div>
+            <div id="recent-activity-list" class="space-y-3">
+              <!-- Loading State -->
+              <div class="animate-pulse space-y-3">
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group">
+                <div
+                  class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h4 class="font-medium text-gray-900">Verify Reports</h4>
+                <p class="text-sm text-gray-500 mt-1">Review incoming data</p>
+              </button>
+
+              <button
+                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group">
+                <div
+                  class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </div>
+                <h4 class="font-medium text-gray-900">Assign Tasks</h4>
+                <p class="text-sm text-gray-500 mt-1">Delegate to departments</p>
+              </button>
+
+              <a href="/coordinator/heatmap"
+                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group block">
+                <div
+                  class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </div>
+                <h4 class="font-medium text-gray-900">Heatmap Analysis</h4>
+                <p class="text-sm text-gray-500 mt-1">View critical zones</p>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/services/toastNotificationService.js"></script>
 
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/coordinator/dashboard.js"></script>
+    <script type="module" src="/js/coordinator/dashboard.js"></script>
+
+    <script type="module">
+      // Initialize toast notification service
+      import toastNotificationService from "../../js/services/toastNotificationService.js";
+
+      // Start listening for real-time notifications
+      toastNotificationService.startListening();
+
+      // Clean up on page unload
+      window.addEventListener("beforeunload", () => {
+        toastNotificationService.stopListening();
+      });
+    </script>
+    <!-- Quick Classification & Assignment Modal -->
+    <div id="quick-action-modal" class="modal-overlay hidden">
+      <div class="modal-container glass-panel animate-scale-in">
+        <div class="modal-header">
+          <h3 id="modal-title">Quick Classification & Assignment</h3>
+          <button class="close-modal-btn" id="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="quick-action-form">
+            <input type="hidden" id="modal-complaint-id" />
+
+            <div class="form-group mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+              <label class="form-label text-blue-800 font-bold mb-1">Citizen Reported Urgency</label>
+              <div id="modal-citizen-urgency" class="text-lg font-bold capitalize">
+                -
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Classification Verification</label>
+              <select id="modal-category" class="form-control" required>
+                <option value="">Select Category</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="sanitation">Sanitation</option>
+                <option value="security">Security</option>
+                <option value="health">Health</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Official Urgency Level</label>
+              <div class="priority-selector flex gap-2">
+                <input type="radio" name="urgency" value="low" id="u-low" class="hidden-radio" />
+                <label for="u-low" class="priority-btn p-low">Low</label>
+
+                <input type="radio" name="urgency" value="medium" id="u-medium" class="hidden-radio" checked />
+                <label for="u-medium" class="priority-btn p-medium">Medium</label>
+
+                <input type="radio" name="urgency" value="high" id="u-high" class="hidden-radio" />
+                <label for="u-high" class="priority-btn p-high">High</label>
+
+                <input type="radio" name="urgency" value="urgent" id="u-urgent" class="hidden-radio" />
+                <label for="u-urgent" class="priority-btn p-urgent">Urgent</label>
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Assign to Department/Officer</label>
+              <select id="modal-assignment" class="form-control" required>
+                <option value="">Select Department/Officer</option>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Set Deadline</label>
+              <input type="date" id="modal-deadline" class="form-control" required />
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Coordinator Remarks</label>
+              <textarea id="modal-remarks" class="form-control" rows="3"
+                placeholder="Add your notes here..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">
+              Confirm & Assign
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
 </body>
+
 </html>

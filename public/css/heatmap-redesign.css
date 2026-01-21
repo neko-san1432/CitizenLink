@@ -5,12 +5,10 @@
   right: 0;
   bottom: 0;
   width: 100%;
-  height: 100vh;
-}
+  height: 100vh}
 
 #map {
-  height: 100%;
-}
+  height: 100%}
 
 .heatmap-menu-btn {
   position: fixed;
@@ -30,22 +28,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
+  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15)}
 
 .heatmap-menu-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2)}
 
+/* Active state subtle feedback */
 .heatmap-menu-btn:active {
+  transform: scale(0.98);
 }
 
 #sidebar.open ~ .heatmap-menu-btn {
   opacity: 0;
-  pointer-events: none;
-}
+  pointer-events: none}
 
 .map-controls {
   position: fixed;
@@ -62,13 +59,11 @@
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 1;
-}
+  
+  opacity: 1}
 
 .map-controls.collapsed {
-  opacity: 0;
-}
+  opacity: 0}
 
 .control-section h3 {
   margin: 0 0 16px 0;
@@ -78,29 +73,25 @@
   border-bottom: 2px solid #667eea;
   padding-bottom: 10px;
   display: flex;
-  gap: 8px;
-}
+  gap: 8px}
 
 .control-section h3::before {
   content: '';
   width: 4px;
   height: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 2px;
-}
+  border-radius: 2px}
 
 .control-group {
   margin-bottom: 16px;
   padding: 14px;
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
   border-radius: 10px;
-  border: 1px solid rgba(102, 126, 234, 0.1);
-}
+  border: 1px solid rgba(102, 126, 234, 0.1)}
 
 .control-group:hover {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-  border-color: rgba(102, 126, 234, 0.2);
-}
+  border-color: rgba(102, 126, 234, 0.2)}
 
 .control-group label {
   display: block;
@@ -108,9 +99,7 @@
   margin-bottom: 8px;
   color: #495057;
   font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+  letter-spacing: 0.5px}
 
 .control-group select,
 .control-group input[type="date"] {
@@ -119,15 +108,13 @@
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 14px;
-  background: white;
-}
+  background: white}
 
 .control-group select:focus,
 .control-group input[type="date"]:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1)}
 
 input[type="range"] {
   width: 100%;
@@ -136,8 +123,7 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
+  border-radius: 3px}
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -148,12 +134,10 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   background: white;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2)}
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
-}
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4)}
 
 input[type="range"]::-moz-range-thumb {
   width: 18px;
@@ -161,8 +145,7 @@ input[type="range"]::-moz-range-thumb {
   border: 3px solid #667eea;
   border-radius: 50%;
   background: white;
-  cursor: pointer;
-}
+  cursor: pointer}
 
 .control-group span {
   color: #667eea;
@@ -170,8 +153,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 4px 10px;
   border-radius: 6px;
   display: inline-block;
-  margin-left: 8px;
-}
+  margin-left: 8px}
 
 .control-group button,
 .btn-primary,
@@ -181,53 +163,43 @@ input[type="range"]::-moz-range-thumb {
   border: none;
   border-radius: 8px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+  cursor: pointer}
 
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3)}
 
 .control-group button:hover,
 .btn-primary:hover {
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4)}
 
 .control-group button:active,
 .btn-primary:active {
-  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
-}
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2)}
 
 .btn-secondary {
   background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
-}
+  box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3)}
 
 .btn-secondary:hover {
-  box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
-}
+  box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4)}
 
 .btn-small {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
   padding: 8px 14px;
   font-size: 12px;
-  box-shadow: 0 3px 12px rgba(231, 76, 60, 0.3);
-}
+  box-shadow: 0 3px 12px rgba(231, 76, 60, 0.3)}
 
 .btn-small:hover {
-  box-shadow: 0 5px 18px rgba(231, 76, 60, 0.4);
-}
+  box-shadow: 0 5px 18px rgba(231, 76, 60, 0.4)}
 
 .view-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-}
+  flex-wrap: wrap}
 
 .view-btn {
   flex: 1;
@@ -236,111 +208,90 @@ input[type="range"]::-moz-range-thumb {
   background: white;
   color: #495057;
   border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+  cursor: pointer}
 
 .view-btn:hover {
   background: rgba(102, 126, 234, 0.05);
-  border-color: #667eea;
-}
+  border-color: #667eea}
 
 .view-btn.active {
   background: #667eea;
   color: white;
-  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
-}
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3)}
 
 .clustering-controls {
   border-top: 2px solid rgba(102, 126, 234, 0.2);
   padding-top: 16px;
-  margin-top: 16px;
-}
+  margin-top: 16px}
 
 .clustering-params {
-  margin-top: 12px;
-}
+  margin-top: 12px}
 
 .stats-section {
   border-top: 2px solid rgba(46, 204, 113, 0.2);
   background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, rgba(39, 174, 96, 0.05) 100%);
   padding: 16px;
   border-radius: 8px;
-  margin-top: 16px;
-}
+  margin-top: 16px}
 
 .stats-section h4 {
   margin: 0 0 12px 0;
   color: #2c3e50;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700}
 
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+  gap: 10px}
 
 .stat-item {
   text-align: center;
   padding: 12px;
   background: white;
   border: 1px solid rgba(46, 204, 113, 0.2);
-  border-radius: 6px;
-}
+  border-radius: 6px}
 
 .stat-value {
   font-size: 18px;
   font-weight: 700;
-  color: #2ecc71;
-}
+  color: #2ecc71}
 
 .stat-label {
   font-size: 11px;
   color: #7f8c8d;
-  margin-top: 4px;
-}
+  margin-top: 4px}
 
 small {
   display: block;
   margin-top: 6px;
   color: #95a5a6;
   line-height: 1.4;
-  font-style: italic;
-}
+  font-style: italic}
 
 .map-controls::-webkit-scrollbar {
-  width: 8px;
-}
+  width: 8px}
 
 .map-controls::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-}
+  border-radius: 4px}
 
 .map-controls::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  border-radius: 4px;
-}
+  border-radius: 4px}
 
 .map-controls::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)}
 
 @media (max-width: 768px) {
   .map-controls {
     width: calc(100% - 40px);
     left: 20px;
-    right: 20px;
-  }
+    right: 20px}
 
   #menu-toggle.heatmap-menu {
     top: 15px;
-    left: 15px;
-  }
+    left: 15px}
 }
 
-
-.map-controls {
-}
+/* removed empty rule */

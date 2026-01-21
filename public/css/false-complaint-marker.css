@@ -1,0 +1,221 @@
+/* False Complaint Marker Styles */
+
+.false-complaint-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.false-complaint-content {
+  background: var(--gray-50, #ffffff);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.false-complaint-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.false-complaint-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+}
+
+.false-complaint-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-900, #2d3748);
+}
+
+.false-complaint-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700, #4a5568);
+  margin-bottom: 0.5rem;
+}
+
+.form-select {
+  padding: 0.75rem;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--gray-50, #ffffff);
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary-500, #3182ce);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-500, #3182ce);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.false-complaint-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.btn-secondary {
+  background: var(--gray-100, #e2e8f0);
+  color: var(--gray-700, #4a5568);
+}
+
+.btn-secondary:hover {
+  background: var(--gray-200, #cbd5e0);
+}
+
+.btn-danger {
+  background: #c53030; /* Darker red for better contrast with white text */
+  color: white;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--error-500) 75%, black 25%);
+}
+
+.warning-message {
+  background: color-mix(in srgb, var(--warning-500, #f59e0b) 6%, white 94%);
+  color: #5f370e; /* Darker brown for better contrast */
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--warning-500, #ed8936);
+  margin-bottom: 1rem;
+}
+
+.warning-icon {
+  margin-right: 0.5rem;
+}
+
+.false-complaint-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reason-option:hover {
+  background: var(--gray-50, #f7fafc);
+  border-color: var(--primary-500, #3182ce);
+}
+
+.reason-option.selected {
+  background: color-mix(in srgb, var(--primary-500, #3182ce) 8%, white 92%);
+  border-color: var(--primary-500, #3182ce);
+}
+
+.reason-radio {
+  margin-right: 0.75rem;
+}
+
+.reason-text {
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.reason-description {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+/* Loading States */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--gray-200, #e2e8f0);
+  border-top-color: var(--primary-500, #3182ce);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.75rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .false-complaint-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .false-complaint-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

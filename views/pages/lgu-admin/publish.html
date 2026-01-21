@@ -1,39 +1,205 @@
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <title>Publish</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/toast.css">
-    <link rel="stylesheet" href="/css/components/sidebar.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/header-redesign.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Publish Content - CitizenLink</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/pages/publish-tailwind-config.js"></script>
+  </head>
+  <body
+    class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+  >
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+
     <div class="app-container">
-        <div class="header-container"></div>
-        <div id="sidebar" class="collapsible"></div>
-        <div id="app" class="collapsible">
-            <h1>Publish</h1>
-            <section id="publish-controls">
-                <label for="content-type" class="form-label">Content Type</label>
-                <select id="content-type" class="select">
-                    <option value="news">News</option>
-                    <option value="events">Upcoming Event</option>
-                    <option value="notices">Notice</option>
-                </select>
-            </section>
-            <section id="publish-form"></section>
+      <!-- Header -->
+      <div class="header-container"></div>
+
+      <!-- Sidebar -->
+      <div id="sidebar" class="collapsible"></div>
+
+      <!-- Main Content -->
+      <div id="app" class="collapsible p-6 overflow-y-auto w-full">
+        <div class="max-w-6xl mx-auto">
+          <!-- Page Header -->
+          <div class="mb-8">
+            <h1
+              class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight"
+            >
+              Publish Content
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">
+              Create and manage news, events, and important notices for the
+              community.
+            </p>
+          </div>
+
+          <div class="flex flex-col xl:flex-row gap-8">
+            <!-- Main Form Area -->
+            <div class="flex-1 min-w-0">
+              <!-- Controls Card -->
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 transition-colors duration-200"
+              >
+                <section id="publish-controls">
+                  <label
+                    for="content-type"
+                    class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider"
+                  >
+                    Content Type
+                  </label>
+                  <select
+                    id="content-type"
+                    class="w-full sm:w-1/2 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-base rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block transition-colors duration-200"
+                  >
+                    <option value="news">News Update</option>
+                    <option value="events">Community Event</option>
+                    <option value="notices">Public Notice</option>
+                  </select>
+                </section>
+              </div>
+
+              <!-- Dynamic Form Area -->
+              <div
+                class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 min-h-[500px] transition-colors duration-200 relative"
+              >
+                <section id="publish-form">
+                  <!-- Form content injected by JS -->
+                  <div
+                    class="flex flex-col items-center justify-center h-80 text-gray-400 dark:text-gray-500"
+                  >
+                    <div
+                      class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full mb-4"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-10 w-10 opacity-50"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </div>
+                    <p class="text-base font-medium">
+                      Select a content type above to begin.
+                    </p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <!-- Sidebar / Help / Tips -->
+            <div class="w-full xl:w-80 shrink-0 space-y-6">
+              <!-- Publishing Tips Card -->
+              <div
+                class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800/30"
+              >
+                <h3
+                  class="font-bold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Pro Tips
+                </h3>
+                <ul
+                  class="space-y-4 text-sm text-blue-800 dark:text-blue-200/90"
+                >
+                  <li class="flex items-start gap-3">
+                    <span
+                      class="bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5"
+                      >1</span
+                    >
+                    <span class="leading-relaxed"
+                      >Keep titles <strong>short and catchy</strong> to grab
+                      attention immediately.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span
+                      class="bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5"
+                      >2</span
+                    >
+                    <span class="leading-relaxed"
+                      >Use <strong>high-quality images</strong>. Visuals
+                      increase engagement by up to 94%.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span
+                      class="bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5"
+                      >3</span
+                    >
+                    <span class="leading-relaxed"
+                      >Proofread for typos. Credibility is key for official
+                      announcements.</span
+                    >
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Quick Stats or Info (Optional Placeholder) -->
+              <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden xl:block"
+              >
+                <h4
+                  class="font-semibold text-gray-900 dark:text-white mb-2 text-sm uppercase tracking-wide"
+                >
+                  Draft Status
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Content saved as draft will not be visible to the public until
+                  published.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Toast Container -->
+    <div
+      id="toast-container"
+      class="toast-container fixed bottom-4 right-4 z-50 flex flex-col gap-2"
+    ></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/components/clock.js"></script>
     <script type="module" src="../../js/pages/lgu-admin/publish.js"></script>
-</body>
+  </body>
 </html>

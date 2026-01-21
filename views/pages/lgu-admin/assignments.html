@@ -1,652 +1,575 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Department Assignments - CitizenLink</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/toast.css">
-  <link rel="stylesheet" href="/css/components/sidebar.css">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/header-redesign.css">
-  <link rel="stylesheet" href="/css/pages/lgu-admin-assignments.css">
-  <style>
-    .assignments-container {
-      padding: 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .assignments-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .assignments-title {
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: #1a202c;
-    }
-
-    .assignments-filters {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .filter-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #4a5568;
-      white-space: nowrap;
-    }
-
-    .filter-btn {
-      padding: 0.5rem 1rem;
-      border: 1px solid #e2e8f0;
-      background: white;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.875rem;
-    }
-
-    .filter-btn:hover {
-      background: #f7fafc;
-    }
-
-    .filter-btn.active {
-      background: #3182ce;
-      color: white;
-      border-color: #3182ce;
-    }
-
-    .filter-select {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #e2e8f0;
-      background: white;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.875rem;
-      min-width: 120px;
-    }
-
-    .filter-select:hover {
-      border-color: #cbd5e0;
-    }
-
-    .filter-select:focus {
-      outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-    }
-
-    .assignments-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #718096;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2d3748;
-    }
-
-    .stat-card.urgent {
-      border-left: 4px solid #f56565;
-    }
-
-    .stat-card.high {
-      border-left: 4px solid #ed8936;
-    }
-
-    .stat-card.unassigned {
-      border-left: 4px solid #3182ce;
-    }
-
-    .assignments-list {
-      background: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-
-    .assignment-item {
-      border-bottom: 1px solid #e2e8f0;
-      padding: 1.5rem;
-      transition: background 0.2s;
-    }
-
-    .assignment-item:hover {
-      background: #f7fafc;
-    }
-
-    .assignment-item:last-child {
-      border-bottom: none;
-    }
-
-    .assignment-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-    }
-
-    .assignment-title-section {
-      flex: 1;
-    }
-
-    .assignment-id {
-      font-size: 0.75rem;
-      color: #a0aec0;
-      margin-bottom: 0.25rem;
-    }
-
-    .assignment-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #2d3748;
-      margin-bottom: 0.5rem;
-    }
-
-    .assignment-meta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      font-size: 0.875rem;
-      color: #718096;
-    }
-
-    .assignment-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .priority-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .priority-urgent {
-      background: #fed7d7;
-      color: #9b2c2c;
-    }
-
-    .priority-high {
-      background: #feebc8;
-      color: #9c4221;
-    }
-
-    .priority-medium {
-      background: #bee3f8;
-      color: #2c5282;
-    }
-
-    .priority-low {
-      background: #e6fffa;
-      color: #234e52;
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .status-unassigned {
-      background: #e6fffa;
-      color: #234e52;
-    }
-
-    .status-assigned {
-      background: #bee3f8;
-      color: #2c5282;
-    }
-
-    .assignment-details {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: #f7fafc;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      color: #4a5568;
-    }
-
-    .assignment-footer {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.875rem;
-      color: #718096;
-    }
-
-    .assigned-officer {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .officer-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #3182ce;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-    }
-
-    .btn-primary {
-      padding: 0.5rem 1rem;
-      background: #3182ce;
-      color: white;
-      border: none;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-
-    .btn-primary:hover {
-      background: #2c5282;
-    }
-
-    .btn-secondary {
-      padding: 0.5rem 1rem;
-      background: white;
-      color: #4a5568;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: #f7fafc;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: #a0aec0;
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-    }
-
-    .empty-state-text {
-      font-size: 1.125rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .loading-container {
-      text-align: center;
-      padding: 4rem 2rem;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #e2e8f0;
-      border-top-color: #3182ce;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Assignment Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background-color: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      max-width: 500px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1a202c;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: #a0aec0;
-      padding: 0;
-      width: 2rem;
-      height: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-close:hover {
-      color: #4a5568;
-    }
-
-    .modal-body {
-      padding: 1.5rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-      display: block;
-      font-weight: 500;
-      color: #4a5568;
-      margin-bottom: 0.5rem;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-    }
-
-    .complaint-summary {
-      background: #f7fafc;
-      padding: 1rem;
-      border-radius: 0.375rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .complaint-summary-title {
-      font-weight: 600;
-      color: #1a202c;
-      margin-bottom: 0.5rem;
-    }
-
-    .complaint-summary-detail {
-      font-size: 0.875rem;
-      color: #4a5568;
-      margin-bottom: 0.25rem;
-    }
-
-    .btn-primary {
-      background: #3182ce;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    .btn-primary:hover {
-      background: #2c5aa0;
-    }
-
-    .btn-secondary {
-      background: #e2e8f0;
-      color: #4a5568;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-weight: 500;
-      margin-right: 0.5rem;
-      transition: background-color 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: #cbd5e0;
-    }
-
-    .complaint-summary {
-      padding: 1rem;
-      background: #f7fafc;
-      border-radius: 0.375rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.875rem;
-    }
-
-    .complaint-summary-title {
-      font-weight: 600;
-      color: #2d3748;
-      margin-bottom: 0.5rem;
-    }
-
-    .complaint-summary-detail {
-      color: #4a5568;
-      margin-bottom: 0.25rem;
-    }
-  </style>
-</head>
-<body>
-  <div id="toast-container"></div>
-  
-  <div class="app-container">
-    <div class="header-container"></div>
-    <div id="sidebar" class="collapsible"></div>
-    
-    <main class="main-content collapsible">
-    <div class="assignments-container">
-      <!-- Header -->
-      <div class="assignments-header">
-        <h1 class="assignments-title">Department Assignments</h1>
-        <div class="assignments-filters">
-          <!-- Assignment Status Filters -->
-          <div class="filter-group">
-            <label class="filter-label">Assignment:</label>
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="unassigned">Unassigned</button>
-            <button class="filter-btn" data-filter="assigned">Assigned</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Office Assignments - CitizenLink</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/dark-mode.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      /* Keeping minimal styles for specific overrides if needed, most moved to Tailwind */
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #3182ce;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+      .dark .loading-spinner {
+        border-color: #4b5563; /* gray-600 */
+        border-top-color: #60a5fa; /* blue-400 */
+      }
+      /* Filter Button Styles */
+      .filter-btn {
+        background-color: transparent;
+        border: 1px solid transparent !important; /* Ensure no visible border but keep layout stable */
+        color: #6b7280; /* text-gray-500 */
+        transition: all 0.2s ease-in-out;
+        outline: none !important;
+      }
+      .filter-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #374151; /* text-gray-700 */
+      }
+      .filter-btn.active {
+        background-color: #ffffff;
+        color: #0f172a; /* text-slate-900 */
+        font-weight: 600;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        border-color: transparent !important;
+      }
+      /* Dark mode */
+      .dark .filter-btn {
+        color: #9ca3af; /* text-gray-400 */
+      }
+      .dark .filter-btn:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f3f4f6; /* text-gray-100 */
+      }
+      .dark .filter-btn.active {
+        background-color: #374151; /* bg-gray-700 */
+        color: #ffffff;
+        box-shadow: none;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast-container"></div>
+
+    <div class="app-container">
+      <div class="header-container"></div>
+      <div id="sidebar" class="collapsible"></div>
+
+      <main class="main-content collapsible">
+        <div id="assignments-container" class="assignments-container p-6">
+          <!-- Header Section -->
+          <!-- Header Section with Integrated Filters -->
+          <div class="mb-6 space-y-4">
+            <!-- Header Title -->
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                Office Assignments
+              </h1>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Manage and track complaint assignments for your department.
+              </p>
+            </div>
+
+          <!-- Stats Overview -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+            id="assignments-stats"
+          >
+            <!-- Unassigned Card -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-colors duration-200"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                >
+                  Unassigned
+                </p>
+                <h3
+                  class="text-2xl font-bold text-gray-900 dark:text-white"
+                  id="stat-unassigned"
+                >
+                  0
+                </h3>
+              </div>
+            </div>
+
+            <!-- Urgent Card -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-colors duration-200"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                >
+                  Urgent Priority
+                </p>
+                <h3
+                  class="text-2xl font-bold text-gray-900 dark:text-white"
+                  id="stat-urgent"
+                >
+                  0
+                </h3>
+              </div>
+            </div>
+
+            <!-- High Card -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-colors duration-200"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                >
+                  High Priority
+                </p>
+                <h3
+                  class="text-2xl font-bold text-gray-900 dark:text-white"
+                  id="stat-high"
+                >
+                  0
+                </h3>
+              </div>
+            </div>
           </div>
-          
-          <!-- Complaint Status Filters -->
-          <div class="filter-group">
-            <label class="filter-label">Status:</label>
-            <select id="status-filter" class="filter-select">
-              <option value="all">All Status</option>
-              <option value="pending review">Pending Review</option>
-              <option value="in progress">In Progress</option>
-            </select>
+
+          <!-- Unified Control Bar -->
+          <div
+            class="flex flex-col xl:flex-row flex-wrap items-stretch xl:items-center gap-4 bg-white dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 w-full mb-6"
+          >
+            <!-- Assignment Group -->
+            <div class="flex items-center gap-3">
+              <span
+                class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider hidden md:block"
+                >Assignment</span
+              >
+              <div
+                class="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg transition-colors duration-200"
+              >
+                <button
+                  class="filter-btn active px-4 py-1.5 text-sm font-medium rounded-md"
+                  data-filter="all"
+                  id="btn-all"
+                >
+                  All
+                </button>
+                <button
+                  class="filter-btn px-4 py-1.5 text-sm font-medium rounded-md"
+                  data-filter="unassigned"
+                  id="btn-unassigned"
+                >
+                  Unassigned
+                </button>
+                <button
+                  class="filter-btn px-4 py-1.5 text-sm font-medium rounded-md"
+                  data-filter="assigned"
+                  id="btn-assigned"
+                >
+                  Assigned
+                </button>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div
+              class="w-px h-8 bg-gray-200 dark:bg-gray-700 hidden xl:block"
+            ></div>
+
+            <!-- Filters Group -->
+            <div class="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-2 w-full xl:w-auto">
+              <!-- Date Filter -->
+              <div class="grid grid-cols-[1fr_auto_1fr] md:flex md:items-center gap-2 w-full md:w-auto">
+                <input
+                  type="date"
+                  id="date-start"
+                  class="form-input w-full md:w-32 text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-3 transition-colors duration-200"
+                  placeholder="Start"
+                />
+                <span
+                  class="text-gray-400 dark:text-gray-500 text-sm font-medium"
+                  >to</span
+                >
+                <input
+                  type="date"
+                  id="date-end"
+                  class="form-input w-full md:w-32 text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-3 transition-colors duration-200"
+                  placeholder="End"
+                />
+              </div>
+
+              <!-- Divider (Mobile/Small Break) -->
+              <div
+                class="w-px h-8 bg-gray-200 dark:bg-gray-700 hidden lg:block mx-1"
+              ></div>
+
+              <!-- Dropdowns -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-2 flex-wrap items-center w-full lg:w-auto">
+                <select
+                  id="status-filter"
+                  class="form-select w-full lg:w-auto text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-3 pr-8 transition-colors duration-200"
+                >
+                  <option value="all">Complaint Status: All</option>
+                  <option value="new">New</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+
+                <select
+                  id="subtype-filter"
+                  class="form-select w-full lg:w-auto text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-3 pr-8 transition-colors duration-200 min-w-[140px]"
+                >
+                  <option value="all">Subcategory: All</option>
+                </select>
+
+                <select
+                  id="priority-filter"
+                  class="form-select w-full lg:w-auto text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-3 pr-8 transition-colors duration-200"
+                >
+                  <option value="all">Priority: All</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
           </div>
-          
-          <!-- Sub Type Filters -->
-          <div class="filter-group">
-            <label class="filter-label">Type:</label>
-            <select id="subtype-filter" class="filter-select">
-              <option value="all">All Types</option>
-              <option value="Street Lighting">Street Lighting</option>
-              <option value="Water Supply">Water Supply</option>
-              <option value="Road Repair">Road Repair</option>
-              <option value="Drainage">Drainage</option>
-              <option value="Garbage Collection">Garbage Collection</option>
-              <option value="Public Safety">Public Safety</option>
-              <option value="Health Services">Health Services</option>
-              <option value="Other">Other</option>
-            </select>
+
+          <!-- Loading State -->
+          <div class="loading-container dark:text-gray-400" id="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading assignments...</p>
           </div>
-          
-          <!-- Priority Filters -->
-          <div class="filter-group">
-            <label class="filter-label">Priority:</label>
-            <select id="priority-filter" class="filter-select">
-              <option value="all">All Priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
+
+          <!-- Assignments Table -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hidden transition-colors duration-200"
+            id="assignments-table-container"
+          >
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[1000px]">
+                <thead
+                  class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700"
+                >
+                  <tr>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24"
+                    >
+                      ID
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Complaint
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Complainant
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Assigned To
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Priority
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center w-32"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="assignments-table-body"
+                  class="divide-y divide-gray-100"
+                >
+                  <!-- Rows populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div
+              id="pagination-controls"
+              class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 transition-colors duration-200"
+            >
+              <div class="flex flex-1 justify-between sm:hidden">
+                <button
+                  id="prev-btn-mobile"
+                  class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                <button
+                  id="next-btn-mobile"
+                  class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div
+                class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing
+                    <span class="font-medium" id="page-start">1</span>
+                    to
+                    <span class="font-medium" id="page-end">10</span>
+                    of
+                    <span class="font-medium" id="total-items">0</span>
+                    results
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    class="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      id="prev-btn"
+                      class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Previous</span>
+                      <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                    <span
+                      id="current-page-display"
+                      class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:outline-offset-0"
+                    >
+                      Page 1
+                    </span>
+                    <button
+                      id="next-btn"
+                      class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Next</span>
+                      <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+    </div>
 
-      <!-- Stats -->
-      <div class="assignments-stats" id="assignments-stats">
-        <div class="stat-card unassigned">
-          <div class="stat-label">Unassigned</div>
-          <div class="stat-value" id="stat-unassigned">0</div>
+    <!-- Assignment Modal -->
+    <div
+      id="assignment-modal"
+      class="modal fixed inset-0 z-[10001] hidden items-center justify-center bg-black/50 backdrop-blur-sm"
+    >
+      <div
+        class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-[500px] w-[90%] max-h-[90vh] overflow-y-auto"
+      >
+        <div
+          class="modal-header flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700"
+        >
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white m-0">
+            Assign to Officer
+          </h2>
+          <button
+            class="modal-close text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none bg-transparent border-none cursor-pointer"
+            id="close-assignment-modal"
+          >
+            &times;
+          </button>
         </div>
-        <div class="stat-card urgent">
-          <div class="stat-label">Urgent Priority</div>
-          <div class="stat-value" id="stat-urgent">0</div>
+        <div class="modal-body p-6">
+          <div
+            class="complaint-summary bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md mb-6"
+            id="complaint-summary"
+          >
+            <!-- Complaint details will be populated here -->
+          </div>
+
+          <form id="assignment-form">
+            <div class="form-group mb-6">
+              <label
+                class="form-label block mb-2 font-medium text-gray-600 dark:text-gray-300"
+                >Select Officer(s) *</label
+              >
+              <div
+                id="officer-checkboxes"
+                class="officer-checkboxes border border-gray-200 dark:border-gray-600 rounded-md p-2 bg-gray-50 dark:bg-gray-700/30 max-h-[200px] overflow-y-auto"
+              >
+                <!-- Officer checkboxes will be populated here -->
+              </div>
+              <div class="officer-selection-info mt-2">
+                <small class="text-gray-500 dark:text-gray-400 text-xs"
+                  >You can select one or multiple officers for this
+                  assignment.</small
+                >
+              </div>
+            </div>
+
+            <div class="form-group mb-6">
+              <label
+                class="form-label block mb-2 font-medium text-gray-600 dark:text-gray-300"
+                for="deadline-input"
+                >Deadline (Optional)</label
+              >
+              <input
+                type="datetime-local"
+                id="deadline-input"
+                class="form-control w-full p-3 border border-gray-200 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+
+            <div class="form-group mb-6">
+              <label
+                class="form-label block mb-2 font-medium text-gray-600 dark:text-gray-300"
+                for="notes-input"
+                >Notes (Optional)</label
+              >
+              <textarea
+                id="notes-input"
+                class="form-control w-full p-3 border border-gray-200 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500"
+                rows="3"
+                placeholder="Add any special instructions..."
+              ></textarea>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button
+                type="button"
+                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors pointer-cursor font-medium"
+                id="cancel-assignment"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors pointer-cursor font-medium shadow-sm"
+              >
+                Assign Task
+              </button>
+            </div>
+          </form>
         </div>
-        <div class="stat-card high">
-          <div class="stat-label">High Priority</div>
-          <div class="stat-value" id="stat-high">0</div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div class="loading-container" id="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Loading assignments...</p>
-      </div>
-
-      <!-- Assignments List -->
-      <div class="assignments-list" id="assignments-list" style="display: none;">
-        <!-- Assignments will be populated here -->
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" id="empty-state" style="display: none;">
-        <div class="empty-state-icon">📋</div>
-        <div class="empty-state-text">No assignments found</div>
-        <p>Complaints assigned to your department will appear here</p>
       </div>
     </div>
-    </main>
-  </div>
 
-  <!-- Assignment Modal -->
-  <div id="assignment-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Assign to Officer</h2>
-        <button class="modal-close" id="close-assignment-modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="complaint-summary" id="complaint-summary">
-          <!-- Complaint details will be populated here -->
-        </div>
-        
-        <form id="assignment-form">
-          <div class="form-group">
-            <label class="form-label" for="officer-select">Select Officer *</label>
-            <select id="officer-select" class="form-control" required>
-              <option value="">-- Select an officer --</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="priority-select">Priority *</label>
-            <select id="priority-select" class="form-control" required>
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="deadline-input">Deadline *</label>
-            <input type="datetime-local" id="deadline-input" class="form-control" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="notes-input">Notes (Optional)</label>
-            <textarea id="notes-input" class="form-control" rows="3" placeholder="Add any special instructions..."></textarea>
-          </div>
-
-          <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-            <button type="button" class="btn-secondary" id="cancel-assignment">Cancel</button>
-            <button type="submit" class="btn-primary">Assign Task</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="/js/components/header.js"></script>
-  <script type="module" src="/js/components/sidebar.js"></script>
-  <script type="module" src="/js/auth/authChecker.js"></script>
-  <script type="module" src="/js/auth/roleToggle.js"></script>
-  <script type="module" src="/js/components/toast.js"></script>
-  <script type="module" src="/js/pages/lgu-admin/assignments.js"></script>
-</body>
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/pages/lgu-admin/assignments.js"></script>
+  </body>
 </html>
-

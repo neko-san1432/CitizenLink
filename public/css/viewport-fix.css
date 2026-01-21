@@ -1,0 +1,372 @@
+/* Viewport Fix - Ensures all dashboard components fit within 100% viewport */
+
+/* Global viewport constraints */
+html,
+body {
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* App container viewport optimization */
+.app-container {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Main app area - fits remaining viewport after header */
+#app {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure dashboard content sits below fixed header on all viewports */
+#app.citizen-dashboard {
+  margin-top: 0;
+  max-height: 100%;
+}
+
+/* Dashboard containers - fit within available space */
+.citizen-dashboard,
+.coordinator-dashboard,
+.hr-dashboard,
+.lgu-admin-dashboard,
+.superadmin-dashboard,
+.lgu-officer-dashboard {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding-left: 1%;
+  padding-right: 1%;
+  margin: 0;
+}
+
+/* Coordinator dashboard needs minimal top padding for fixed header */
+#app.coordinator-dashboard,
+.coordinator-dashboard {
+  padding-top: 1rem; /* Minimal padding - header already has its own spacing */
+}
+
+/* Exclude heatmap pages from responsive padding (they need full-width for map) */
+.lgu-admin-dashboard.heatmap-page,
+[class*="heatmap"],
+#map {
+  padding: 0 !important;
+}
+
+/* Apply citizen dashboard padding to all dashboards except heatmap/map pages */
+.coordinator-dashboard:not(.heatmap-page),
+.hr-dashboard:not(.heatmap-page),
+.lgu-admin-dashboard:not(.heatmap-page),
+.superadmin-dashboard:not(.heatmap-page),
+.lgu-officer-dashboard:not(.heatmap-page) {
+  padding: 0 1%;
+}
+
+/* Responsive page margins - apply citizen dashboard padding to all dashboards except heatmap/map pages */
+@media (min-width: 320px) and (max-width: 479px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 700px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1024px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 1440px) and (max-width: 1920px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 80px;
+    padding-right: 80px;
+  }
+}
+
+/* For very small and very large screens, fall back to closest rule */
+@media (max-width: 319px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (min-width: 1921px) {
+  .citizen-dashboard,
+  .coordinator-dashboard:not(.heatmap-page),
+  .hr-dashboard:not(.heatmap-page),
+  .lgu-admin-dashboard:not(.heatmap-page),
+  .superadmin-dashboard:not(.heatmap-page),
+  .lgu-officer-dashboard:not(.heatmap-page) {
+    padding-left: 120px;
+    padding-right: 120px;
+  }
+}
+
+/* Dashboard grids - prevent overflow */
+.dashboard-grid {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Dashboard cards - prevent overflow */
+.dashboard-card,
+.dashboard-section {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Quick actions panel - prevent overflow */
+.quick-actions-panel {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Quick actions grid - responsive and contained */
+.quick-actions-grid {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Stats grid - prevent overflow */
+.stats-grid {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Content containers - scrollable within bounds */
+.content-container {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0 var(--space-2);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  /* Ensure proper header spacing on mobile (already handled globally) */
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0 var(--space-1);
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Extra small screens */
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .quick-action-btn {
+    min-height: 60px;
+    padding: var(--space-2);
+  }
+
+  .quick-action-icon {
+    font-size: 1.2rem;
+  }
+
+  .quick-action-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Ensure no horizontal scrollbars */
+body {
+  overflow-x: hidden;
+}
+
+/* Fix for any potential overflow issues */
+.dashboard-header,
+.section-header,
+.quick-actions-panel,
+.dashboard-card,
+.dashboard-section {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure proper flex behavior */
+.dashboard-grid,
+.quick-actions-grid,
+.stats-grid {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Fix for any absolute positioned elements */
+.dashboard-card-actions,
+.section-controls {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Ensure proper text overflow handling */
+.dashboard-title,
+.section-title,
+.task-title {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Additional viewport constraints */
+.dashboard-header {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure all dashboard elements respect viewport bounds */
+.dashboard-card,
+.dashboard-section,
+.quick-actions-panel,
+.stats-grid,
+.dashboard-grid {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Fix for any potential horizontal scroll issues */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Ensure app container never exceeds viewport */
+.app-container {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Fix for any absolute positioned elements that might cause overflow */
+.dashboard-card-actions,
+.section-controls,
+.quick-action-btn {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure proper flex behavior for all containers */
+.dashboard-grid,
+.quick-actions-grid,
+.stats-grid,
+.content-container {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix for any potential margin/padding issues */
+.dashboard-container,
+.dashboard-header,
+.dashboard-grid,
+.dashboard-card {
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+}

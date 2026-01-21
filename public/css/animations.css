@@ -1,0 +1,406 @@
+/* ============================================================================
+   ANIMATIONS & INTERACTIONS
+   ============================================================================ */
+
+/* Smooth Transitions */
+* {
+  transition: background-color var(--transition-sm), color var(--transition-sm), border-color var(--transition-sm);
+}
+
+/* Disable transitions for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide In Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Shake Animation */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Scale Up Animation */
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Rotate Animation */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Spin Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading Spinner */
+@keyframes spinner {
+  0% {
+    border-top-color: var(--primary-500);
+    transform: rotate(0deg);
+  }
+  100% {
+    border-top-color: transparent;
+    transform: rotate(360deg);
+  }
+}
+
+/* Glow Animation */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--primary-500);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--primary-500);
+  }
+}
+
+/* Utility Animation Classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-md) ease-in-out;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--transition-md) ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown var(--transition-md) ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--transition-md) ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-md) ease-out;
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-scale {
+  animation: scaleUp var(--transition-md) ease-out;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform var(--transition-sm), box-shadow var(--transition-sm);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-grow {
+  transition: transform var(--transition-sm);
+}
+
+.hover-grow:hover {
+  transform: scale(1.05);
+}
+
+.hover-opacity {
+  transition: opacity var(--transition-sm);
+}
+
+.hover-opacity:hover {
+  opacity: 0.8;
+}
+
+.hover-shadow {
+  transition: box-shadow var(--transition-sm);
+}
+
+.hover-shadow:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-color {
+  transition: color var(--transition-sm);
+}
+
+.hover-color:hover {
+  color: var(--primary-600);
+}
+
+.hover-bg {
+  transition: background-color var(--transition-sm);
+}
+
+.hover-bg:hover {
+  background-color: var(--gray-100);
+}
+
+/* Group Hover Effects */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.group:hover .group-hover\:opacity-50 {
+  opacity: 0.5;
+}
+
+.group:hover .group-hover\:translate-x-1 {
+  transform: translateX(4px);
+}
+
+/* Focus Effects */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-500), 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.focus-visible:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* Active States */
+.active-underline.active {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 8px;
+}
+
+.active-bg.active {
+  background-color: var(--primary-100);
+  color: var(--primary-800);
+}
+
+.active-border.active {
+  border-bottom: 3px solid var(--primary-600);
+}
+
+/* Disabled Styles */
+:disabled,
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading States */
+.is-loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.is-loading::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Transition Utilities */
+.transition-none {
+  transition: none;
+}
+
+.transition-all {
+  transition: all var(--transition-md);
+}
+
+.transition-colors {
+  transition: color var(--transition-md), background-color var(--transition-md), border-color var(--transition-md);
+}
+
+.transition-transform {
+  transition: transform var(--transition-md);
+}
+
+.transition-shadow {
+  transition: box-shadow var(--transition-md);
+}
+
+.transition-opacity {
+  transition: opacity var(--transition-md);
+}
+
+/* Duration Utilities */
+.duration-75 { transition-duration: 75ms; }
+.duration-100 { transition-duration: 100ms; }
+.duration-150 { transition-duration: 150ms; }
+.duration-200 { transition-duration: 200ms; }
+.duration-300 { transition-duration: 300ms; }
+.duration-500 { transition-duration: 500ms; }
+.duration-700 { transition-duration: 700ms; }
+.duration-1000 { transition-duration: 1000ms; }
+
+/* Timing Functions */
+.ease-linear { transition-timing-function: linear; }
+.ease-in { transition-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+.ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Transform Utilities */
+.scale-0 { transform: scale(0); }
+.scale-75 { transform: scale(0.75); }
+.scale-90 { transform: scale(0.9); }
+.scale-95 { transform: scale(0.95); }
+.scale-100 { transform: scale(1); }
+.scale-105 { transform: scale(1.05); }
+.scale-110 { transform: scale(1.1); }
+.scale-125 { transform: scale(1.25); }
+.scale-150 { transform: scale(1.5); }
+
+.rotate-0 { transform: rotate(0deg); }
+.rotate-45 { transform: rotate(45deg); }
+.rotate-90 { transform: rotate(90deg); }
+.rotate-180 { transform: rotate(180deg); }
+.-rotate-45 { transform: rotate(-45deg); }
+
+.translate-x-0 { transform: translateX(0); }
+.translate-x-1 { transform: translateX(4px); }
+.translate-x-2 { transform: translateX(8px); }
+.-translate-x-1 { transform: translateX(-4px); }
+
+.translate-y-0 { transform: translateY(0); }
+.translate-y-1 { transform: translateY(4px); }
+.translate-y-2 { transform: translateY(8px); }
+.-translate-y-1 { transform: translateY(-4px); }
+
+.skew-x-0 { transform: skewX(0deg); }
+.skew-x-3 { transform: skewX(3deg); }
+.skew-y-3 { transform: skewY(3deg); }
