@@ -66,7 +66,7 @@ router.post("/switch-role", authenticateUser, async (req, res) => {
       });
     }
 
-    const targetRole = req.body.targetRole;
+    const {targetRole} = req.body;
     const isCitizenMode = targetRole === "citizen";
 
     // Set cookie options
