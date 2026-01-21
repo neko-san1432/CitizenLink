@@ -1,7 +1,0 @@
-node_modules
-.env
-codeql-results
-eng.traineddata
-/implementation_plans
-emails
-separate_module
