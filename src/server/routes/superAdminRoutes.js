@@ -42,10 +42,10 @@ router.get("/users", authenticateUser, requireSuperAdmin, async (req, res) => {
     const result = await UserService.getUsers(filters, pagination);
     const filteredUsers = barangay
       ? (result.users || []).filter(
-          (u) =>
-            (u.address?.barangay || "").toLowerCase() ===
+        (u) =>
+          (u.address?.barangay || "").toLowerCase() ===
             String(barangay).toLowerCase()
-        )
+      )
       : result.users;
     return res.json({
       success: true,

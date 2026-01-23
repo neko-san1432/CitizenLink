@@ -290,13 +290,13 @@ class ComplaintController {
     const categoryArray = Array.isArray(category)
       ? category
       : category
-      ? [category]
-      : [];
+        ? [category]
+        : [];
     let departmentArray = Array.isArray(department)
       ? department
       : department
-      ? [department]
-      : [];
+        ? [department]
+        : [];
 
     // ROLE-BASED FILTERING: Enforce department restrictions
     const userRole = req.user?.role || "citizen";
