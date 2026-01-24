@@ -24,8 +24,12 @@ const setupMiddleware = (app) => {
   app.use(enforceHTTPS);
 
   // Enhanced security headers (applied first)
-  app.use(securityHeaders);
-  app.use(customSecurityHeaders);
+  if (!config.isDevelopment) {
+    app.use(securityHeaders);
+    app.use(customSecurityHeaders);
+  } else {
+    // console.log("⚠️  Security headers disabled in development mode");
+  }
 
   // Body parsing middleware (before rate limiting to allow proper request inspection)
   app.use(cors());
