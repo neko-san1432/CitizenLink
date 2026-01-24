@@ -93,6 +93,8 @@ class ComplaintService {
           : "Untitled Complaint"),
       // Store user's preferred departments
       preferred_departments: preferredDepartments,
+      // Map location (client sends 'location', server expects 'location_text')
+      location_text: complaintData.location || complaintData.location_text,
       // Initially empty - will be populated by coordinator assignment
       department_r: [],
       // Store Nlp Metadata if available
@@ -1509,7 +1511,7 @@ class ComplaintService {
   async cancelComplaint(complaintId, userId, reason) {
     try {
       // Get complaint and verify ownership
-      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error("Complaint not found");
       }
@@ -1521,9 +1523,21 @@ class ComplaintService {
       if (!cancellableStatuses.includes(complaint.workflow_status)) {
         throw new Error("Complaint cannot be cancelled in its current status");
       }
+      // Use Service Role client to bypass RLS recursion during update
+      const { createClient } = require("@supabase/supabase-js");
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      const adminClient = createClient(supabaseUrl, serviceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
       // Update complaint status
       const { data: updatedComplaint, error: updateError } =
-        await this.complaintRepo.supabase
+        await adminClient
           .from("complaints")
           .update({
             workflow_status: "cancelled",
@@ -1622,7 +1636,7 @@ class ComplaintService {
   async sendReminder(complaintId, userId) {
     try {
       // Get complaint and verify ownership
-      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error("Complaint not found");
       }
@@ -2056,7 +2070,7 @@ class ComplaintService {
    */
   async markAsFalseComplaint(complaintId, userId, reason) {
     try {
-      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error("Complaint not found");
       }
@@ -2111,12 +2125,12 @@ class ComplaintService {
    */
   async markAsDuplicate(complaintId, masterComplaintId, userId) {
     try {
-      const complaint = await this.complaintRepo.getComplaintById(complaintId);
+      const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error("Complaint not found");
       }
 
-      const masterComplaint = await this.complaintRepo.getComplaintById(
+      const masterComplaint = await this.complaintRepo.findById(
         masterComplaintId
       );
       if (!masterComplaint) {

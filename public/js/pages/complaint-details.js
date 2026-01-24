@@ -453,24 +453,21 @@ class ComplaintDetails {
       .map(
         (d) => `
         <div class="merge-item" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start;">
-            <input type="checkbox" class="merge-checkbox" value="${
-              d.id
-            }" id="chk-${d.id}" style="margin-top: 4px;">
+            <input type="checkbox" class="merge-checkbox" value="${d.id
+          }" id="chk-${d.id}" style="margin-top: 4px;">
             <label for="chk-${d.id}" style="flex: 1; cursor: pointer;">
-                <div style="font-weight: 600; color: #374151;">${
-                  d.title || "Untitled"
-                }</div>
+                <div style="font-weight: 600; color: #374151;">${d.title || "Untitled"
+          }</div>
                 <div style="font-size: 0.85rem; color: #6b7280;">
                     ${new Date(d.submitted_at).toLocaleDateString()} • ${(
-          d.distance * 1000
-        ).toFixed(0)}m away
+            d.distance * 1000
+          ).toFixed(0)}m away
                 </div>
                 <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px;">
-                    ${
-                      d.description
-                        ? d.description.substring(0, 60) + "..."
-                        : ""
-                    }
+                    ${d.description
+            ? d.description.substring(0, 60) + "..."
+            : ""
+          }
                 </div>
             </label>
         </div>
@@ -484,9 +481,9 @@ class ComplaintDetails {
             <h3 style="margin: 0; color: #9a3412;">Merge Duplicates</h3>
             <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #7c2d12;">
                 Select complaints to merge into THIS complaint (<span style="font-family: monospace;">#${this.complaintId.substring(
-                  0,
-                  8
-                )}</span>).
+      0,
+      8
+    )}</span>).
                 <br/>
                 Merged complaints will be closed and their upvotes transferred here.
             </p>
@@ -627,55 +624,52 @@ class ComplaintDetails {
                     <div class="complainant-field">
                         <span class="field-label">Name:</span>
                         <span class="field-value">${this.escapeHtml(
-                          name
-                        )}</span>
+        name
+      )}</span>
                     </div>
-                    ${
-                      firstName || lastName
-                        ? `
+                    ${firstName || lastName
+          ? `
                     <div class="complainant-field">
                         <span class="field-label">Full Name:</span>
                         <span class="field-value">${this.escapeHtml(
-                          `${firstName} ${lastName}`.trim() || name
-                        )}</span>
+            `${firstName} ${lastName}`.trim() || name
+          )}</span>
                     </div>
                     `
-                        : ""
-                    }
+          : ""
+        }
                     <div class="complainant-field">
                         <span class="field-label">Email:</span>
                         <span class="field-value">
                             <a href="mailto:${this.escapeHtml(
-                              email
-                            )}" class="complainant-link">${this.escapeHtml(
-        email
-      )}</a>
+          email
+        )}" class="complainant-link">${this.escapeHtml(
+          email
+        )}</a>
                         </span>
                     </div>
                     <div class="complainant-field">
                         <span class="field-label">Phone Number:</span>
                         <span class="field-value">
-                            ${
-                              phoneNumber
-                                ? `
+                            ${phoneNumber
+          ? `
                             <a href="tel:${this.escapeHtml(
-                              phoneNumber
-                            )}" class="complainant-link">${this.escapeHtml(
-                                    phoneNumber
-                                  )}</a>
+            phoneNumber
+          )}" class="complainant-link">${this.escapeHtml(
+            phoneNumber
+          )}</a>
                             `
-                                : '<span style="color: #9ca3af;">Not provided</span>'
-                            }
+          : '<span style="color: #9ca3af;">Not provided</span>'
+        }
                         </span>
                     </div>
                     <div class="complainant-field">
                         <span class="field-label">Address:</span>
                         <span class="field-value">
-                            ${
-                              fullAddress
-                                ? this.escapeHtml(fullAddress)
-                                : '<span style="color: #9ca3af;">Not provided</span>'
-                            }
+                            ${fullAddress
+          ? this.escapeHtml(fullAddress)
+          : '<span style="color: #9ca3af;">Not provided</span>'
+        }
                         </span>
                     </div>
                 </div>
@@ -747,20 +741,16 @@ class ComplaintDetails {
       const progressBar = `
                 <div class="progress-container">
                     <div class="progress-info">
-                        <span class="progress-text">${
-                          progress.progressText
-                        }</span>
-                        <span class="progress-percentage">${
-                          progress.progressPercentage
-                        }%</span>
+                        <span class="progress-text">${progress.progressText
+        }</span>
+                        <span class="progress-percentage">${progress.progressPercentage
+        }%</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill ${
-                          isCompleted ? "completed" : ""
-                        }"
-                             style="width: ${
-                               progress.progressPercentage
-                             }%"></div>
+                        <div class="progress-fill ${isCompleted ? "completed" : ""
+        }"
+                             style="width: ${progress.progressPercentage
+        }%"></div>
                     </div>
                 </div>
             `;
@@ -870,54 +860,77 @@ class ComplaintDetails {
   renderLocation() {
     const locationContainer = document.getElementById("complaint-location");
     if (!locationContainer) return;
-    if (this.complaint.location_text) {
-      const hasCoordinates =
-        this.complaint.latitude && this.complaint.longitude;
+
+    // Check if we have valid coordinates
+    const hasCoordinates =
+      this.complaint.latitude !== null &&
+      this.complaint.longitude !== null &&
+      !isNaN(parseFloat(this.complaint.latitude)) &&
+      !isNaN(parseFloat(this.complaint.longitude));
+
+    // Check if we have text
+    const hasText = this.complaint.location_text && this.complaint.location_text.trim().length > 0;
+
+    if (hasText || hasCoordinates) {
       const canUseBoundaryToggle = this.canUseBoundaryToggle();
+
+      let addressHtml = '';
+      if (hasText) {
+        addressHtml = `<div class="location-address">${this.complaint.location_text}</div>`;
+      } else {
+        addressHtml = `<div class="location-address" style="color: #6b7280; font-style: italic;">Location pinned on map</div>`;
+      }
+
       locationContainer.innerHTML = `
-        <div class="location-address">${this.complaint.location_text}</div>
-        ${
-          hasCoordinates
-            ? `
-          <div class="location-coordinates">${this.complaint.latitude}, ${
-                this.complaint.longitude
-              }</div>
+        ${addressHtml}
+        ${hasCoordinates
+          ? `
+          <div class="location-coordinates" style="color: #6b7280; font-size: 0.85rem; margin-top: 4px;">
+              ${parseFloat(this.complaint.latitude).toFixed(6)}, ${parseFloat(this.complaint.longitude).toFixed(6)}
+          </div>
           <div class="location-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-            ${
-              canUseBoundaryToggle
-                ? `
+            ${canUseBoundaryToggle
+            ? `
               <button id="toggle-boundary-btn" class="btn btn-secondary" type="button">
                 Show Digos City Boundary
               </button>
             `
-                : ""
-            }
+            : ""
+          }
             <button id="show-map-modal-btn" class="btn btn-secondary" type="button">
               📍 View on Map
             </button>
           </div>
-          <div id="complaint-map" class="complaint-map"></div>
+          <div id="complaint-map" class="complaint-map" style="margin-top: 10px; border-radius: 8px; overflow: hidden;"></div>
         `
-            : ""
+          : ""
         }
       `;
 
       // Initialize map if coordinates are available
       if (hasCoordinates) {
-        this.initializeMap();
-        if (this.canUseBoundaryToggle()) {
-          this.setupBoundaryToggle();
-        }
-        // Setup map modal button
-        const mapModalBtn = document.getElementById("show-map-modal-btn");
-        if (mapModalBtn) {
-          mapModalBtn.addEventListener("click", () => {
-            this.showMapModal();
-          });
-        }
+        // slight delay to ensure container size
+        setTimeout(() => {
+          this.initializeMap();
+          if (this.canUseBoundaryToggle()) {
+            this.setupBoundaryToggle();
+          }
+          // Setup map modal button
+          const mapModalBtn = document.getElementById("show-map-modal-btn");
+          if (mapModalBtn) {
+            mapModalBtn.addEventListener("click", () => {
+              this.showMapModal();
+            });
+          }
+        }, 50);
       }
     } else {
-      locationContainer.innerHTML = "<p>No location information provided</p>";
+      locationContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: #9ca3af; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📍</div>
+            <p>No location information provided</p>
+        </div>
+      `;
     }
   }
 
@@ -1087,12 +1100,10 @@ class ComplaintDetails {
         <div class="modal-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
           <div id="modal-map" style="width: 100%; height: 500px; border-radius: 8px; margin-bottom: 1rem;"></div>
           <div style="margin-top: 10px; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-            <div style="margin-bottom: 0.5rem;"><strong>Address:</strong> ${
-              this.complaint.location_text || "N/A"
-            }</div>
-            <div><strong>Coordinates:</strong> ${this.complaint.latitude}, ${
-      this.complaint.longitude
-    }</div>
+            <div style="margin-bottom: 0.5rem;"><strong>Address:</strong> ${this.complaint.location_text || "N/A"
+      }</div>
+            <div><strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude
+      }</div>
           </div>
         </div>
       </div>
@@ -1209,8 +1220,7 @@ class ComplaintDetails {
         L.marker([lat, lng])
           .addTo(map)
           .bindPopup(
-            `<strong>${this.complaint.title || "Complaint"}</strong><br>${
-              this.complaint.location_text || ""
+            `<strong>${this.complaint.title || "Complaint"}</strong><br>${this.complaint.location_text || "Location pinned on map"
             }`
           )
           .openPopup();
@@ -1297,17 +1307,17 @@ class ComplaintDetails {
       complaintMarker
         .bindPopup(
           `
-                    <div class="map-popup">
+          <div class="map-popup">
           <h4>${this.escapeHtml(
             this.complaint.title || "Complaint Location"
           )}</h4>
           <p><strong>Address:</strong> ${this.escapeHtml(
-            this.complaint.location_text || "N/A"
+            this.complaint.location_text || "Location pinned on map"
           )}</p>
           <p><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(
             6
           )}</p>
-                    </div>
+          </div>
                 `
         )
         .openPopup();
@@ -1551,12 +1561,10 @@ class ComplaintDetails {
             }),
           }).bindPopup(`
                             <div class="map-popup">
-                                <h4>${
-                                  this.complaint.title || "Complaint Location"
-                                }</h4>
-                                <p><strong>Address:</strong> ${
-                                  this.complaint.location_text
-                                }</p>
+                                <h4>${this.complaint.title || "Complaint Location"
+            }</h4>
+                                <p><strong>Address:</strong> ${this.complaint.location_text
+            }</p>
                             </div>
                         `);
         }.bind(this),
@@ -1631,22 +1639,20 @@ class ComplaintDetails {
                     <h4 class="evidence-type-title">📎 Initial Evidence (Submitted with Complaint)</h4>
                     <div class="evidence-list">
                         ${initialEvidence
-                          .map(
-                            (attachment) => `
-                            <a href="${
-                              attachment.url
-                            }" class="attachment-item" target="_blank" rel="noopener noreferrer">
+          .map(
+            (attachment) => `
+                            <a href="${attachment.url
+              }" class="attachment-item" target="_blank" rel="noopener noreferrer">
                                 <span class="attachment-icon">📎</span>
-                                <span class="attachment-name">${
-                                  attachment.name || "Attachment"
-                                }</span>
+                                <span class="attachment-name">${attachment.name || "Attachment"
+              }</span>
                                 <span class="attachment-size">${this.formatFileSize(
-                                  attachment.size || 0
-                                )}</span>
+                attachment.size || 0
+              )}</span>
                             </a>
                         `
-                          )
-                          .join("")}
+          )
+          .join("")}
                     </div>
                 </div>
             `;
@@ -1659,22 +1665,20 @@ class ComplaintDetails {
                     <h4 class="evidence-type-title">✅ Completion Evidence (Uploaded by Officers/Admins)</h4>
                     <div class="evidence-list">
                         ${completionEvidence
-                          .map(
-                            (attachment) => `
-                            <a href="${
-                              attachment.url
-                            }" class="attachment-item completion-evidence" target="_blank" rel="noopener noreferrer">
+          .map(
+            (attachment) => `
+                            <a href="${attachment.url
+              }" class="attachment-item completion-evidence" target="_blank" rel="noopener noreferrer">
                                 <span class="attachment-icon">✅</span>
-                                <span class="attachment-name">${
-                                  attachment.name || "Attachment"
-                                }</span>
+                                <span class="attachment-name">${attachment.name || "Attachment"
+              }</span>
                                 <span class="attachment-size">${this.formatFileSize(
-                                  attachment.size || 0
-                                )}</span>
+                attachment.size || 0
+              )}</span>
                             </a>
                         `
-                          )
-                          .join("")}
+          )
+          .join("")}
                     </div>
                 </div>
             `;
@@ -1685,16 +1689,14 @@ class ComplaintDetails {
       html = attachments
         .map(
           (attachment) => `
-                <a href="${
-                  attachment.url
-                }" class="attachment-item" target="_blank" rel="noopener noreferrer">
+                <a href="${attachment.url
+            }" class="attachment-item" target="_blank" rel="noopener noreferrer">
                     <span class="attachment-icon">📎</span>
-                    <span class="attachment-name">${
-                      attachment.name || "Attachment"
-                    }</span>
+                    <span class="attachment-name">${attachment.name || "Attachment"
+            }</span>
                     <span class="attachment-size">${this.formatFileSize(
-                      attachment.size || 0
-                    )}</span>
+              attachment.size || 0
+            )}</span>
                 </a>
             `
         )
@@ -1729,8 +1731,8 @@ class ComplaintDetails {
     const currentStep = isCancelled
       ? -1
       : statusStepMap[workflowStatus] !== void 0
-      ? statusStepMap[workflowStatus]
-      : 0;
+        ? statusStepMap[workflowStatus]
+        : 0;
 
     // Step labels
     const stepLabels = [
@@ -1754,8 +1756,8 @@ class ComplaintDetails {
       const nodeColor = isCancelled
         ? "#9ca3af"
         : isActive
-        ? nodeColors[i]
-        : "#9ca3af";
+          ? nodeColors[i]
+          : "#9ca3af";
       // Determine connector line style
       let connectorStyle = "";
       if (i < 4) {
@@ -1774,13 +1776,12 @@ class ComplaintDetails {
       stepperHTML += `
                 <div class="stepper-step ${isActive ? "active" : ""}">
                     <div class="stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
-                    ${
-                      i < 4
-                        ? `
+                    ${i < 4
+          ? `
                     <div class="stepper-connector" style="background: ${connectorStyle};"></div>
                     `
-                        : ""
-                    }
+          : ""
+        }
                 </div>
             `;
     }
@@ -1790,9 +1791,8 @@ class ComplaintDetails {
     for (let i = 0; i < 5; i++) {
       const isActive = !isCancelled && i <= currentStep;
       stepperHTML += `
-                <div class="stepper-label-item ${isActive ? "active" : ""}">${
-        stepLabels[i]
-      }</div>
+                <div class="stepper-label-item ${isActive ? "active" : ""}">${stepLabels[i]
+        }</div>
             `;
     }
     stepperHTML += "</div>";
@@ -1806,10 +1806,10 @@ class ComplaintDetails {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? [
-          parseInt(result[1], 16),
-          parseInt(result[2], 16),
-          parseInt(result[3], 16),
-        ]
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16),
+      ]
       : [0, 0, 0];
   }
   getNextColor(currentColor) {
