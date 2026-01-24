@@ -58,6 +58,9 @@ export function initProgressiveForm() {
                 if (step.id === "step-location" || step.querySelector("#complaint-map")) {
                     setTimeout(() => {
                         window.dispatchEvent(new Event("resize"));
+                        if (window.complaintMap) {
+                            window.complaintMap.invalidateSize();
+                        }
                     }, 100);
                 }
             } else {
@@ -136,9 +139,8 @@ export function initProgressiveForm() {
         if (stepIndex === 2) { // Basic Info
             const cat = document.getElementById("complaintCategory");
             const subcat = document.getElementById("complaintSubcategory");
-            const urgency = document.getElementById("urgencyLevel");
 
-            if (!cat.value || !subcat.value || !urgency.value) {
+            if (!cat.value || !subcat.value) {
                 isValid = false;
                 // Highlight or show toast
                 // For simplicity, rely on html5 reportValidity above if they are required

@@ -39,9 +39,7 @@ class Complaint {
     if (!data.descriptive_su || data.descriptive_su.trim().length < 10) {
       errors.push("Description must be at least 10 characters");
     }
-    if (!data.location_text || data.location_text.trim().length < 5) {
-      errors.push("Location must be at least 5 characters");
-    }
+    // Location check removed to allow frontend flexibility
     if (data.latitude && (data.latitude < -90 || data.latitude > 90)) {
       errors.push("Invalid latitude value");
     }

@@ -179,8 +179,7 @@ export const validateFileUpload = (files, options = {}) => {
     }
     if (!allowedTypes.includes(file.type)) {
       errors.push(
-        `File ${
-          file.name
+        `File ${file.name
         } has unsupported type. Allowed types: ${allowedTypes.join(", ")}`
       );
     }
@@ -265,7 +264,7 @@ export const setupRealtimeValidation = (form) => {
     if (!message) return;
     try {
       input.reportValidity();
-    } catch {}
+    } catch { }
   };
   const rules = {
     "#complaintTitle": { required: true, minLength: 3 },
@@ -273,7 +272,6 @@ export const setupRealtimeValidation = (form) => {
     "#location": { required: true },
     "#complaintCategory": { required: true },
     "#complaintSubcategory": { required: true },
-    "#urgencyLevel": { required: true },
   };
   const validateTarget = (selector) => {
     const input = form.querySelector(selector);
@@ -338,8 +336,10 @@ export const extractComplaintFormData = (formElement) => {
     location_text: getVal("#location"),
     latitude: parseNum("#latitude"),
     longitude: parseNum("#longitude"),
-    urgency_level: getVal("#urgencyLevel"),
-    departments,
+    latitude: parseNum("#latitude"),
+    longitude: parseNum("#longitude"),
+    urgency_level: "low", // Default to low
+    departments: [], // Departments are auto-assigned by NLP
   };
 };
 
@@ -397,11 +397,9 @@ export const validateComplaintForm = (data) => {
   // Validate hierarchical form fields
   if (!category) errors.push("Category is required");
   if (!subcategory) errors.push("Subcategory is required");
-  if (!data.urgency_level) errors.push("Urgency level is required");
-  // Validate departments
-  if (!data.departments || data.departments.length === 0) {
-    errors.push("At least one department must be selected");
-  }
+  if (!category) errors.push("Category is required");
+  if (!subcategory) errors.push("Subcategory is required");
+  // Urgency and departments are handled automatically now
   // If one coordinate is provided, both should be valid numbers
   const hasLat = data.latitude !== null && data.latitude !== void 0;
   const hasLng = data.longitude !== null && data.longitude !== void 0;

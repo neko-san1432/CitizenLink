@@ -29,11 +29,13 @@ async function initializeComplaintLocationPicker(
     // Check if container has dimensions
     const rect = mapContainer.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
-      setTimeout(
-        () => initializeComplaintLocationPicker(containerId, options),
-        100
-      );
-      return null;
+      // Return a promise that resolves when the map is visible
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          const map = await initializeComplaintLocationPicker(containerId, options);
+          resolve(map);
+        }, 500); // Check every 500ms
+      });
     }
     // Default map options - restricted to Digos City boundaries
     const defaultOptions = {
@@ -73,6 +75,10 @@ async function initializeComplaintLocationPicker(
       maxBounds: mapOptions.maxBounds,
       maxBoundsViscosity: mapOptions.maxBoundsViscosity || 1.0,
     });
+
+    // Ensure map container handles inputs
+    mapContainer.style.zIndex = "1";
+    mapContainer.style.pointerEvents = "auto";
     // Set initial view
     map.setView(mapOptions.center, mapOptions.zoom);
     // Add OpenStreetMap tile layer
@@ -195,8 +201,9 @@ function setupLocationPicker(map) {
   const initialCenter = map.getCenter();
   marker = L.marker([initialCenter.lat, initialCenter.lng], {
     draggable: true,
+    zIndexOffset: 1000, // Ensure marker is always on top
     icon: L.divIcon({
-      html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); width: 36px; height: 36px; display: block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
       className: "valid-location-marker",
       iconSize: [36, 36],
       iconAnchor: [18, 36],
@@ -283,10 +290,12 @@ function setupLocationPicker(map) {
 
   // Update coordinates function with boundary validation
   async function updateCoordinates(lat, lng, showWarning = true) {
-    // Use higher precision (8 decimal places) for better accuracy
-    // This ensures the exact marker position is captured
-    latInput.value = parseFloat(lat.toFixed(8)).toString();
-    lngInput.value = parseFloat(lng.toFixed(8)).toString();
+    // Re-query inputs to be safe
+    const latInput = document.getElementById("latitude");
+    const lngInput = document.getElementById("longitude");
+
+    if (latInput) latInput.value = parseFloat(lat.toFixed(8)).toString();
+    if (lngInput) lngInput.value = parseFloat(lng.toFixed(8)).toString();
 
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
@@ -301,7 +310,7 @@ function setupLocationPicker(map) {
       if (marker) {
         marker.setIcon(
           L.divIcon({
-            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`,
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); width: 36px; height: 36px; display: block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`,
             className: "invalid-location-marker",
             iconSize: [36, 36],
             iconAnchor: [18, 36],
@@ -314,7 +323,7 @@ function setupLocationPicker(map) {
       if (marker) {
         marker.setIcon(
           L.divIcon({
-            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); width: 36px; height: 36px; display: block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>`,
             className: "valid-location-marker",
             iconSize: [36, 36],
             iconAnchor: [18, 36],
@@ -346,7 +355,13 @@ function setupLocationPicker(map) {
   }
   // Update location text function
   async function updateLocationText(lat, lng) {
+    const locationInput = document.getElementById("location");
     if (!locationInput) return;
+
+    // Set immediate placeholder to ensure field is not empty
+    const coordString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    locationInput.value = coordString;
+
     try {
       // console.log removed for security
       // Use server-side reverse geocoding endpoint to avoid CORS issues
@@ -414,7 +429,7 @@ function setupLocationPicker(map) {
   });
   // Map click events with boundary validation
   map.on("click", async (e) => {
-    if (isUserInteracting) return;
+    // if (isUserInteracting) return; // Removed to prevent stuck state preventing clicks
     const { lat, lng } = e.latlng;
     // Set marker position first, then get exact position from marker
     marker.setLatLng([lat, lng]);

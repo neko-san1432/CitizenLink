@@ -55,10 +55,6 @@
             <div class="step-number">3</div>
             <div class="step-label">Basic Info</div>
           </div>
-          <div class="step-indicator">
-            <div class="step-number">4</div>
-            <div class="step-label">Review</div>
-          </div>
         </div>
 
         <form id="complaintForm" class="complaint-form wizard-mode">
@@ -212,53 +208,10 @@
                   </div>
                 </div>
 
-                <div class="form-group full-width required-field">
-                  <label for="urgencyLevel">Urgency Level <span class="required">*</span></label>
-                  <div class="urgency-container">
-                    <div class="select-wrapper">
-                      <select id="urgencyLevel" name="urgencyLevel" class="premium-select urgency-select" required>
-                        <option value="low">Low - Routine issue</option>
-                        <option value="medium">
-                          Medium - Requires attention
-                        </option>
-                        <option value="high">High - Serious issue</option>
-                        <option value="urgent">
-                          Urgent - Critical situation
-                        </option>
-                      </select>
-                    </div>
-                    <small class="form-hint">How critical is this issue?</small>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          <!-- STEP 4: Review & Departments -->
-          <div id="step-review" class="form-step">
-            <div class="form-section card-glass">
-              <div class="section-header">
-                <div class="section-icon">🏢</div>
-                <h3>Relevant Departments</h3>
-              </div>
-
-              <div class="department-selection-info">
-                <p>
-                  Select specific offices if known. Otherwise, we will route
-                  it automatically.
-                </p>
-              </div>
-
-              <div class="form-group">
-                <div id="departmentCheckboxes" class="department-grid-compact">
-                  <div class="loading-state">
-                    <div class="spinner"></div>
-                    <span>Loading...</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
       </div>
 
       <!-- Wizard Actions -->

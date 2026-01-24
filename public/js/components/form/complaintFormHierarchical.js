@@ -55,7 +55,6 @@ export async function initializeComplaintForm() {
     form,
     categorySelect: form.querySelector("#complaintCategory"),
     subcategorySelect: form.querySelector("#complaintSubcategory"),
-    departmentCheckboxes: form.querySelector("#departmentCheckboxes"),
     fileDropZone: form.querySelector("#fileDropZone"),
     fileInput: form.querySelector("#evidenceFiles"),
     filePreview: form.querySelector("#filePreview"),
@@ -94,8 +93,7 @@ export async function initializeComplaintForm() {
   // Setup form functionality
   setupHierarchicalSelection(elements);
   setupFileHandling(elements.fileDropZone, elements.fileInput, fileHandler);
-  // Load ALL departments immediately (regardless of category selection)
-  loadAllDepartments(elements.departmentCheckboxes);
+  // Departments are now auto-assigned by NLP
   setupFormValidation(elements.form);
   setupFormSubmission(elements.form, fileHandler);
   loadCategories();
@@ -171,8 +169,7 @@ function setupDuplicateDetection(form) {
 
     try {
       const { data, error } = await apiClient.get(
-        `/api/complaints/check-duplicates?latitude=${latitude}&longitude=${longitude}&category=${category}&subcategory=${
-          subcategory || ""
+        `/api/complaints/check-duplicates?latitude=${latitude}&longitude=${longitude}&category=${category}&subcategory=${subcategory || ""
         }`
       );
 
@@ -243,9 +240,8 @@ function renderDuplicateWarning(
             <h4 class="warning-title">Potential Duplicates Found</h4>
         </div>
         <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #431407;">
-            We found ${
-              duplicates.length
-            } similar report(s) near this location. Please check if your issue is already listed.
+            We found ${duplicates.length
+    } similar report(s) near this location. Please check if your issue is already listed.
             If matched, you can click <strong>"Me Too"</strong> to support the existing report instead of creating a new one.
         </p>
         <div class="duplicate-list">
@@ -292,18 +288,17 @@ function renderBlockingUI(container, duplicates, form) {
             <h4 class="warning-title" style="color: #b91c1c;">Report Submission Paused</h4>
         </div>
         <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #7f1d1d; font-weight: 500;">
-            We have detected a <strong>high number of reports (${
-              duplicates.length
-            })</strong> for this issue in this area.
+            We have detected a <strong>high number of reports (${duplicates.length
+    })</strong> for this issue in this area.
             <br/><br/>
             To help our coordinators respond faster, we have paused new submissions. 
             <strong>Please UPVOTE an existing report below</strong> to add urgency to this issue.
         </p>
         <div class="duplicate-list">
             ${duplicates
-              .slice(0, 3)
-              .map((d) => renderDuplicateItem(d))
-              .join("")}
+      .slice(0, 3)
+      .map((d) => renderDuplicateItem(d))
+      .join("")}
         </div>
         <div class="dismiss-warning">
             <span style="font-size: 0.8rem; color: #6b7280;">(Submitting new reports is temporarily disabled for this area)</span>
@@ -320,23 +315,21 @@ function renderDuplicateItem(d) {
   return `
         <div class="duplicate-item">
             <div class="duplicate-info">
-                <span class="duplicate-title">${
-                  d.title || "Untitled Complaint"
-                }</span>
+                <span class="duplicate-title">${d.title || "Untitled Complaint"
+    }</span>
                 <div class="duplicate-meta">
                     <span>📅 ${new Date(
-                      d.submitted_at || d.created_at
-                    ).toLocaleDateString()}</span>
+      d.submitted_at || d.created_at
+    ).toLocaleDateString()}</span>
                     <span>•</span>
                     <span>📍 ${(d.distance * 1000).toFixed(0)}m away</span>
                     <span style="display: block; margin-top: 4px; color: #4b5563;">
-                        ${
-                          d.description
-                            ? d.description.length > 80
-                              ? d.description.substring(0, 80) + "..."
-                              : d.description
-                            : "No description"
-                        }
+                        ${d.description
+      ? d.description.length > 80
+        ? d.description.substring(0, 80) + "..."
+        : d.description
+      : "No description"
+    }
                     </span>
                 </div>
             </div>
@@ -567,30 +560,16 @@ function resetMicBtn(btn) {
  * Setup hierarchical category -> subcategory -> department selection
  */
 function setupHierarchicalSelection(elements) {
-  const { categorySelect, subcategorySelect, departmentCheckboxes } = elements;
-  if (!categorySelect || !subcategorySelect || !departmentCheckboxes) return;
+  const { categorySelect, subcategorySelect } = elements;
+  if (!categorySelect || !subcategorySelect) return;
   // Category selection handler
   categorySelect.addEventListener("change", async (e) => {
     const categoryId = e.target.value;
     await loadSubcategories(categoryId, subcategorySelect);
-    // Clear departments when category changes
-    departmentCheckboxes.innerHTML =
-      '<div class="loading-placeholder">Select a subcategory to see relevant departments</div>';
   });
   // Subcategory selection handler
   subcategorySelect.addEventListener("change", async (e) => {
-    const subcategoryId = e.target.value;
-    if (subcategoryId) {
-      // First load all departments, then auto-select appropriate ones
-      await loadAllDepartments(departmentCheckboxes);
-      await autoSelectAppropriateDepartments(
-        subcategoryId,
-        departmentCheckboxes
-      );
-    } else {
-      // If no subcategory selected, just load all departments without auto-selection
-      await loadAllDepartments(departmentCheckboxes);
-    }
+    // No explicit action needed when subcategory changes, as departments are NLP assigned
   });
 }
 /**
@@ -813,12 +792,8 @@ function createDepartmentCheckbox(department) {
   const codeSpan = document.createElement("span");
   codeSpan.className = "dept-code";
   codeSpan.textContent = ` (${department.code})`;
-  const responseTimeSpan = document.createElement("span");
-  responseTimeSpan.className = "response-time";
-  responseTimeSpan.textContent = ` - ${department.response_time_hours}h response`;
   // All departments are shown equally - no special indicators
   labelText.appendChild(codeSpan);
-  labelText.appendChild(responseTimeSpan);
   label.appendChild(labelText);
   wrapper.appendChild(checkbox);
   wrapper.appendChild(label);
@@ -864,6 +839,21 @@ function setupFormSubmission(form, fileHandler) {
   if (!form) return;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    // [FIX] Immediately disable submit button to prevent double-click/spam updates
+    const submitBtn = form.querySelector(".submit-btn") || form.querySelector("button[type='submit']");
+    if (submitBtn) {
+      if (submitBtn.disabled || submitBtn.getAttribute("data-submitting") === "true") {
+        return; // Already submitting
+      }
+      submitBtn.disabled = true;
+      submitBtn.setAttribute("data-submitting", "true");
+      // Optional: show loading text immediately if not handled downstream quickly enough
+      if (!submitBtn.textContent.includes("...")) {
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = "Processing...";
+      }
+    }
     // Get selected departments (optional)
     const selectedDepartments = Array.from(
       form.querySelectorAll('input[name="departments"]:checked')
@@ -923,6 +913,15 @@ function setupFormSubmission(form, fileHandler) {
       }, 2000);
     } catch (error) {
       console.error("Error submitting complaint:", error);
+      // Re-enable button on error
+      const submitBtn = form.querySelector(".submit-btn") || form.querySelector("button[type='submit']");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute("data-submitting");
+        if (submitBtn.dataset.originalText) {
+          submitBtn.textContent = submitBtn.dataset.originalText;
+        }
+      }
       // Error message is already shown in handleComplaintSubmit
     }
   });

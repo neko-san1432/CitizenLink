@@ -11,6 +11,10 @@ const {
 } = require("../utils/complaintUtils");
 const { isPotentialDuplicate } = require("../utils/similarityUtils");
 
+const AdvancedDecisionEngine = require("./AdvancedDecisionEngine");
+
+// ... (existing imports)
+
 class ComplaintService {
   constructor(
     complaintRepo,
@@ -25,7 +29,34 @@ class ComplaintService {
   }
   async createComplaint(userId, complaintData, files = [], token = null) {
     // Debug: Log received complaint data
-    // Debug: Log received complaint data
+
+    // 1. NLP INTELLIGENCE INTEGRATION
+    // Ensure text analysis runs first to populate category/scoring if missing
+    let nlpResult = null;
+    const complaintText = complaintData.description || complaintData.descriptive_su;
+
+    if (complaintText && (!complaintData.category || !complaintData.urgency_score)) {
+      try {
+        console.log('[COMPLAINT] 🧠 Running Advanced Decision Engine...');
+        nlpResult = await AdvancedDecisionEngine.classify(complaintText);
+
+        // Auto-fill category if missing
+        if (!complaintData.category && nlpResult.category && nlpResult.category !== 'Others') {
+          console.log(`[COMPLAINT] Auto-categorized: ${nlpResult.category} (${nlpResult.method})`);
+          complaintData.category = nlpResult.category;
+          complaintData.subcategory = nlpResult.subcategory;
+        }
+
+        // Auto-score urgency
+        if (!complaintData.urgency_score) {
+          complaintData.urgency_score = nlpResult.urgency || 30;
+        }
+
+      } catch (nlpError) {
+        console.warn('[COMPLAINT] NLP Classification failed:', nlpError.message);
+      }
+    }
+
     // Parse preferred_departments - handle both array and individual values
     let preferredDepartments = complaintData.preferred_departments || [];
     // If preferred_departments is a string, check if it's JSON or just a single value
@@ -34,7 +65,6 @@ class ComplaintService {
       try {
         preferredDepartments = JSON.parse(preferredDepartments);
       } catch (e) {
-        // If JSON parsing fails, treat it as a single department code
         // If JSON parsing fails, treat it as a single department code
         preferredDepartments = [preferredDepartments].filter(Boolean);
       }
@@ -65,6 +95,13 @@ class ComplaintService {
       preferred_departments: preferredDepartments,
       // Initially empty - will be populated by coordinator assignment
       department_r: [],
+      // Store Nlp Metadata if available
+      nlp_metadata: nlpResult ? {
+        method: nlpResult.method,
+        confidence: nlpResult.confidence,
+        original_category: nlpResult.category,
+        matched_term: nlpResult.matched_term
+      } : null,
       // Note: category and subcategory fields are passed through as-is (UUIDs from categories/subcategories tables)
     };
 
@@ -209,9 +246,19 @@ class ComplaintService {
       const lookbackDate = new Date();
       lookbackDate.setHours(lookbackDate.getHours() - 48);
 
-      // Query active complaints
-      // Fetch broadly based on time and roughly on location first
-      let query = this.complaintRepo.supabase
+      // [FIX] Force Service Role client to bypass RLS recursion in duplicate check
+      const { createClient } = require("@supabase/supabase-js");
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      let client = this.complaintRepo.supabase;
+
+      if (serviceKey) {
+        client = createClient(supabaseUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
+      }
+
+      let query = client
         .from("complaints")
         .select(
           "id, title, description:descriptive_su, latitude, longitude, submitted_at, workflow_status, category, subcategory, upvote_count"

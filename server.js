@@ -35,7 +35,17 @@ const CitizenLinkApp = require("./src/server/app");
 
 const app = new CitizenLinkApp();
 console.log("🔄 Starting server on port", config.port);
-app.start(config.port).catch(error => {
+app.start(config.port).then(() => {
+  // Start the automated reporting scheduler
+  const SchedulerService = require('./src/server/services/SchedulerService');
+  SchedulerService.start();
+
+  // [OPTIMIZATION] Pre-load AI Engine to prevent delay on first complaint submission
+  const AdvancedDecisionEngine = require('./src/server/services/AdvancedDecisionEngine');
+  AdvancedDecisionEngine.initialize().catch(err => {
+    console.error("⚠️ AI Engine failed to preload (will retry on demand):", err.message);
+  });
+}).catch(error => {
   console.error("💥 Failed to start server:", error);
   process.exit(1);
 });

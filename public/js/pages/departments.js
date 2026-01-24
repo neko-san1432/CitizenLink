@@ -145,7 +145,7 @@ function createDepartmentCard(department) {
 
   return `
     <div class="department-card-premium">
-        <div class="dept-badge">${level}</div>
+        ${level !== 'N/A' ? `<div class="dept-badge">${level}</div>` : ''}
         
         <div class="department-header-premium">
             <div class="dept-icon-circle" style="background-color: ${bgColor};">
@@ -156,18 +156,13 @@ function createDepartmentCard(department) {
         </div>
         
         <div class="dept-description">
-            ${
-              description.length > 120
-                ? description.substring(0, 120) + "..."
-                : description
-            }
+            ${description.length > 120
+      ? description.substring(0, 120) + "..."
+      : description
+    }
         </div>
         
         <div class="dept-meta-grid">
-            <div class="dept-meta-item">
-                <span class="dept-meta-label">Response Time</span>
-                <span class="dept-meta-value">${responseTime}h</span>
-            </div>
              <div class="dept-meta-item">
                 <span class="dept-meta-label">Status</span>
                 <span class="dept-meta-value" style="color: #059669;">● Active</span>

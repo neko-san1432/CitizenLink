@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink: Analytics Dashboard</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/pages/analytics.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header analytics-header">
+        <div class="header-left">
+            <h1><i class="fas fa-chart-line"></i> Technical Analytics Node</h1>
+            <span class="version">Live System v2.0</span>
+        </div>
+        <div class="header-right">
+            <button id="exportPDF" class="btn btn-secondary" title="Export to PDF">
+                <i class="fas fa-file-pdf"></i> PDF REPORT
+            </button>
+            <button id="exportCSV" class="btn btn-secondary" title="Export to CSV">
+                <i class="fas fa-file-csv"></i> CSV DATA
+            </button>
+            <a href="/dashboard" class="btn btn-outline" title="Back to Dashboard">
+                <i class="fas fa-arrow-left"></i> RETURN TO CORE
+            </a>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="overview">
+            <i class="fas fa-tachometer-alt"></i> <span>Synthesis</span>
+        </button>
+        <button class="nav-tab" data-tab="temporal">
+            <i class="fas fa-clock"></i> <span>Temporal Sequences</span>
+        </button>
+        <button class="nav-tab" data-tab="categories">
+            <i class="fas fa-tags"></i> <span>Categorical Vectors</span>
+        </button>
+        <button class="nav-tab" data-tab="clusters">
+            <i class="fas fa-map-marked-alt"></i> <span>Geospatial Clusters</span>
+        </button>
+        <button class="nav-tab" data-tab="data-table">
+            <i class="fas fa-table"></i> <span>Dataset Schema</span>
+        </button>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Executing Heuristic Feature Extraction...</p>
+            <p class="loading-detail">Initializing Analytics Engine...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- ==================== OVERVIEW TAB ==================== -->
+        <section id="overview" class="tab-content active">
+            <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Executive Synthesis</h2>
+
+            <!-- Descriptive Analysis Box -->
+            <div class="narrative-box">
+                <h3><i class="fas fa-robot"></i> AI Descriptive Analysis</h3>
+                <p class="narrative-text" id="narrativeText">Loading analysis...</p>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="metric-value" id="totalComplaints">-</div>
+                    <div class="metric-label">Total Volume</div>
+                </div>
+                <div class="metric-card danger">
+                    <div class="metric-icon"><i class="fas fa-fire"></i></div>
+                    <div class="metric-value" id="criticalCount">-</div>
+                    <div class="metric-label">Critical Issues</div>
+                </div>
+                <div class="metric-card success">
+                    <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="metric-value" id="resolutionRate">-</div>
+                    <div class="metric-label">Resolution Rate</div>
+                </div>
+                <div class="metric-card warning">
+                    <div class="metric-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="metric-value" id="activeClusters">-</div>
+                    <div class="metric-label">Active Clusters</div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="chart-row">
+                <div class="chart-container half">
+                    <h3><i class="fas fa-chart-line"></i> Volume Trend (30 Days)</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="chart-container half">
+                    <h3><i class="fas fa-chart-bar"></i> Top Categories</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TEMPORAL TAB ==================== -->
+        <section id="temporal" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-clock"></i> Temporal Sequence Analysis</h2>
+            <div class="chart-container full">
+                <h3><i class="fas fa-calendar-alt"></i> Daily Submission Volume</h3>
+                <canvas id="dailyVolumeChart"></canvas>
+            </div>
+        </section>
+
+        <!-- ==================== CATEGORIES TAB ==================== -->
+        <section id="categories" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-tags"></i> Domain Vector Analysis</h2>
+            <div class="chart-row">
+                <div class="chart-container full">
+                    <h3><i class="fas fa-chart-pie"></i> Complaint Distribution by Category</h3>
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== CLUSTERS TAB ==================== -->
+        <section id="clusters" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-map-marked-alt"></i> Geospatial Clusters</h2>
+            <p class="section-description">Adaptive DBSCAN analysis of complaint density.</p>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Cluster ID</th>
+                            <th>Dominant Category</th>
+                            <th>Size</th>
+                            <th>Urgency (Avg)</th>
+                            <th>Centroid (Lat, Lng)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clustersTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==================== DATA TABLE TAB ==================== -->
+        <section id="data-table" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-table"></i> Complaint Data Explorer</h2>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Barangay</th>
+                            <th>Status</th>
+                            <th>Urgency</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="padding: 2rem; text-align: center; color: #6c757d;">
+        <p><strong>CitizenLink Analytics</strong> | Powered by Adaptive DBSCAN & NLP Engine</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/analytics/analytics-client.js"></script>
+</body>
+
+</html>

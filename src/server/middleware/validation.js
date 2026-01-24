@@ -39,9 +39,9 @@ const schemas = {
   createComplaint: Joi.object({
     title: Joi.string().trim().min(5).max(100).required(),
     description: Joi.string().trim().min(10).max(2000).required(),
-    type: Joi.string().trim().required(), // Category/Type
-    category: Joi.string().trim().optional(),
-    subcategory: Joi.string().trim().optional(),
+    // type: Joi.string().trim().required(), // REMOVED: Obsolete
+    category: Joi.string().trim().required(),
+    subcategory: Joi.string().trim().required(),
     preferred_departments: Joi.alternatives()
       .try(Joi.array().items(Joi.string()), Joi.string())
       .optional(),

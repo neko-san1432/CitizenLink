@@ -186,7 +186,7 @@ const passwordResetLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLim
 // Rate limiting for file uploads - 5x limits in development (100 vs 20)
 const uploadLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(20, 15 * 60 * 1000); // 20 uploads per 15 minutes (100 in dev)
 // Rate limiting for complaint submissions - 5x limits in development (50 vs 10)
-const complaintLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(10, 60 * 60 * 1000); // 10 complaints per hour (50 in dev)
+const complaintLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(100, 15 * 60 * 1000); // 100 complaints per 15 mins
 // Utility function to clear rate limits for a specific IP or all IPs
 function clearRateLimit(ip = null) {
 

@@ -381,6 +381,11 @@
   box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
 }
 
+.btn-submit-premium svg {
+  width: 20px;
+  height: 20px;
+}
+
 .btn-submit-premium:disabled {
   background: #9ca3af;
   cursor: not-allowed;
