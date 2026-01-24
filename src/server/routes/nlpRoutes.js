@@ -1,60 +1,134 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const AdvancedDecisionEngine = require('../services/AdvancedDecisionEngine');
-const Database = require('../config/database');
+const NlpProposalController = require("../controllers/NlpProposalController");
+const NlpManagementController = require("../controllers/NlpManagementController");
+const { authenticateUser, requireRole } = require("../middleware/auth");
 
-// Middleware to check for Super Admin role (Simplified for now)
-const requireSuperAdmin = async (req, res, next) => {
-    // TODO: Integrate with actual Auth middleware
-    // For now, proceed if authenticated
-    next();
-};
+// ============ PROPOSAL WORKFLOW ROUTES ============
 
-// GET /api/nlp/keywords
-router.get('/keywords', requireSuperAdmin, async (req, res) => {
-    try {
-        const supabase = Database.getClient();
-        const { data, error } = await supabase.from('nlp_keywords').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// Get proposals (All authenticated staff can view status, but filtering might be useful)
+router.get(
+    "/proposals",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpProposalController.getProposals
+);
 
-// POST /api/nlp/keywords
-router.post('/keywords', requireSuperAdmin, async (req, res) => {
-    try {
-        const supabase = Database.getClient();
-        const { term, category, subcategory, confidence } = req.body;
-        const { data, error } = await supabase
-            .from('nlp_keywords')
-            .insert({ term, category, subcategory, confidence })
-            .select()
-            .single();
+// Get Stats (Counts)
+router.get(
+    "/stats",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpProposalController.getStats
+);
 
-        if (error) throw error;
+// Submit Proposal (LGU Admin)
+router.post(
+    "/proposals",
+    authenticateUser,
+    requireRole(["lgu-admin"]),
+    NlpProposalController.createProposal
+);
 
-        // Reload engine to apply changes
-        await AdvancedDecisionEngine.initialize();
+// Approve by Coordinator
+router.post(
+    "/proposals/:id/approve-coordinator",
+    authenticateUser,
+    requireRole(["complaint-coordinator"]),
+    NlpProposalController.approveByCoordinator
+);
 
-        res.status(201).json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// Approve by Super Admin (Final)
+router.post(
+    "/proposals/:id/approve-admin",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpProposalController.approveBySuperAdmin
+);
 
-// POST /api/nlp/classify-test (For testing/debugging)
-router.post('/classify-test', async (req, res) => {
-    try {
-        const { text } = req.body;
-        if (!text) return res.status(400).json({ error: 'Text required' });
+// Reject Proposal (Both can reject)
+router.post(
+    "/proposals/:id/reject",
+    authenticateUser,
+    requireRole(["complaint-coordinator", "super-admin"]),
+    NlpProposalController.rejectProposal
+);
 
-        const result = await AdvancedDecisionEngine.classify(text);
-        res.json(result);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// ============ SUPER ADMIN DIRECT MANAGEMENT ROUTES ============
+
+// Management Stats
+router.get(
+    "/management/stats",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.getManagementStats
+);
+
+// Keywords CRUD
+router.get(
+    "/keywords",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.getKeywords
+);
+
+router.post(
+    "/keywords",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.addKeyword
+);
+
+router.delete(
+    "/keywords/:id",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.deleteKeyword
+);
+
+// Categories CRUD
+router.get(
+    "/categories",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.getCategories
+);
+
+router.post(
+    "/categories",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.addCategory
+);
+
+router.delete(
+    "/categories/:category",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.deleteCategory
+);
+
+// Anchors CRUD
+router.get(
+    "/anchors",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.getAnchors
+);
+
+router.post(
+    "/anchors",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.addAnchor
+);
+
+router.delete(
+    "/anchors/:id",
+    authenticateUser,
+    requireRole(["super-admin"]),
+    NlpManagementController.deleteAnchor
+);
 
 module.exports = router;
+

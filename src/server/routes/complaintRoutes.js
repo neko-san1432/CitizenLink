@@ -154,9 +154,23 @@ router.post(
   "/:id/cancel",
   authenticateUser,
   requireRole(["citizen"]),
-  requireRole(["citizen"]),
   validate(schemas.cancelComplaint),
   wrap(complaintController.cancelComplaint)
+);
+
+// [DEBUG] Handle GET requests to cancel endpoint with specific error
+router.get(
+  "/:id/cancel",
+  (req, res) => {
+    res.status(405).json({
+      success: false,
+      error: "Method Not Allowed. Use POST to cancel complaint.",
+      debug: {
+        method: req.method,
+        path: req.path
+      }
+    });
+  }
 );
 
 router.post(

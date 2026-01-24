@@ -19,6 +19,27 @@ router.get("/role", authenticateUser, (req, res) => {
 });
 
 /**
+ * @route   GET /api/user/profile
+ * @desc    Get current user's full profile
+ * @access  Private
+ */
+router.get("/profile", authenticateUser, (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.user_metadata?.name || req.user.name,
+      role: req.user.role,
+      department: req.user.department,
+      phone: req.user.user_metadata?.phone,
+      base_role: req.user.raw_user_meta_data?.base_role,
+      permissions: req.user.app_metadata?.permissions || [],
+    },
+  });
+});
+
+/**
  * @route   GET /api/user/role-info
  * @desc    Get detailed role info and capabilities
  * @access  Private

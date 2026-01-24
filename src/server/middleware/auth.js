@@ -220,6 +220,12 @@ const requireRole = (allowedRoles) => {
     const baseRole = req.user?.raw_user_meta_data?.base_role;
 
     if (!userRole) {
+      if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
+        return res.status(401).json({
+          success: false,
+          error: "Authentication incomplete: missing role.",
+        });
+      }
       return res.redirect(
         `/login?message=${encodeURIComponent(
           "Authentication incomplete: missing role. Please contact support."
@@ -280,10 +286,10 @@ const requireRole = (allowedRoles) => {
           debug:
             process.env.NODE_ENV === "development"
               ? {
-                  userRole,
-                  allowedRoles,
-                  path: req.path,
-                }
+                userRole,
+                allowedRoles,
+                path: req.path,
+              }
               : null,
         });
       }

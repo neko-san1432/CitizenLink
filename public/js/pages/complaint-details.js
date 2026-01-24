@@ -1979,7 +1979,7 @@ class ComplaintDetails {
     actionsContainer.innerHTML = filteredActions
       .map(
         (action) => `
-            <button class="${action.class}" data-action="${action.action}">
+            <button type="button" class="${action.class}" data-action="${action.action}">
                 ${action.text}
             </button>
         `

@@ -3,18 +3,20 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-fixed);
+  z-index: 1000;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--gray-200);
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 8px rgba(0, 0, 0, 0.04);
   overflow: visible;
-  min-height: 70px; /* Reduced from 90px */
+  min-height: 70px;
+  /* Reduced from 90px */
   max-height: 70px;
   box-sizing: border-box;
   transition: all var(--transition-normal, 200ms);
 }
+
 .header-container.scrolled {
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1), 0px 4px 16px rgba(0, 0, 0, 0.06);
@@ -24,14 +26,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px; /* Reduced from 90px */
+  height: 70px;
+  /* Reduced from 90px */
   padding: 0 var(--space-4);
   width: 100%;
   position: relative;
   overflow: visible;
   min-width: 0;
   box-sizing: border-box;
-  transform: translateY(0) !important; /* Always keep header visible */
+  transform: translateY(0) !important;
+  /* Always keep header visible */
   transition: transform 0.3s ease;
 }
 
@@ -129,7 +133,8 @@
   max-width: 100%;
   flex-wrap: nowrap;
   box-sizing: border-box;
-  margin-left: auto; /* Push to the right */
+  margin-left: auto;
+  /* Push to the right */
   align-self: center;
 }
 
@@ -163,15 +168,20 @@
   font-weight: 500;
   font-family: var(--font-family);
   min-width: 100px;
-  width: auto; /* Allow automatic width */
-  max-width: none; /* Remove maximum restriction */
-  height: 40px; /* Match button height */
+  width: auto;
+  /* Allow automatic width */
+  max-width: none;
+  /* Remove maximum restriction */
+  height: 40px;
+  /* Match button height */
   font-size: 0.875rem;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
+  /* Prevent shrinking */
   overflow: visible;
   white-space: nowrap;
   box-sizing: border-box;
-  border: 1px solid transparent; /* Maintain box model consistency */
+  border: 1px solid transparent;
+  /* Maintain box model consistency */
 }
 
 .header-action:hover {
@@ -289,9 +299,12 @@
   border-color: transparent;
   color: var(--warning-700);
   transition: all var(--transition-sm, 150ms);
-  box-sizing: border-box; /* Ensure border is included in width/height */
-  border: 1px solid transparent; /* Restate border explicitly */
-  display: flex !important; /* Force flex display to center content */
+  box-sizing: border-box;
+  /* Ensure border is included in width/height */
+  border: 1px solid transparent;
+  /* Restate border explicitly */
+  display: flex !important;
+  /* Force flex display to center content */
 }
 
 #theme-toggle svg {
@@ -311,7 +324,8 @@
 
 /* Clock positioning in header-right */
 .header-right .dashboard-clock {
-  order: -1; /* Ensure clock appears first */
+  order: -1;
+  /* Ensure clock appears first */
 }
 
 .dashboard-clock svg {
@@ -417,7 +431,8 @@
 }
 
 .profile-panel {
-  width: 260px; /* Smaller width for profile menu */
+  width: 260px;
+  /* Smaller width for profile menu */
 }
 
 .notification-panel.show,
@@ -806,7 +821,8 @@
   }
 
   .dashboard-clock .date {
-    display: none; /* Hide date on very small screens */
+    display: none;
+    /* Hide date on very small screens */
   }
 
   .menu-toggle,
@@ -973,11 +989,9 @@ html.dark .dropdown-item.logout-btn {
 }
 
 html.dark .dropdown-item.logout-btn:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(239, 68, 68, 0.2),
-    rgba(220, 38, 38, 0.2)
-  );
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.2),
+      rgba(220, 38, 38, 0.2));
   color: var(--error-300);
 }
 
@@ -999,11 +1013,9 @@ html.dark .notification-item:hover {
 /* Consistently styled unread notifications */
 .dark .notification-item.unread,
 html.dark .notification-item.unread {
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 0.15),
-    rgba(29, 78, 216, 0.15)
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(37, 99, 235, 0.15),
+      rgba(29, 78, 216, 0.15)) !important;
   border-left: 3px solid var(--primary-500) !important;
 }
 
@@ -1081,6 +1093,7 @@ html.dark .profile-btn:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .header-container,
   .header-action,
   .brand-logo,
@@ -1096,6 +1109,7 @@ html.dark .profile-btn:hover {
 }
 
 @media (prefers-contrast: high) {
+
   .header-action,
   .menu-toggle {
     border-width: 2px;
@@ -1107,24 +1121,28 @@ html.dark .profile-btn:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Space between icon and text */
+  gap: 8px;
+  /* Space between icon and text */
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 12px; /* Smoother radius */
+  border-radius: 12px;
+  /* Smoother radius */
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   margin-left: 10px;
   transition: all 0.2s ease;
-  height: 40px; /* Consistent height with other header actions */
+  height: 40px;
+  /* Consistent height with other header actions */
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-family: inherit;
 }
 
 .role-toggle-btn.btn-staff-mode {
-  background: #007bff; /* Primary Blue */
+  background: #007bff;
+  /* Primary Blue */
 }
 
 .role-toggle-btn.btn-staff-mode:hover {
@@ -1134,7 +1152,8 @@ html.dark .profile-btn:hover {
 }
 
 .role-toggle-btn.btn-citizen-mode {
-  background: #28a745; /* Success Green */
+  background: #28a745;
+  /* Success Green */
 }
 
 .role-toggle-btn.btn-citizen-mode:hover {
@@ -1153,19 +1172,23 @@ html.dark .profile-btn:hover {
 @media (max-width: 768px) {
   .role-toggle-btn {
     padding: 0;
-    width: 40px; /* Make it square/circle on mobile */
+    width: 40px;
+    /* Make it square/circle on mobile */
     height: 40px;
     margin-left: 8px;
-    border-radius: 12px; /* Match header-action radius */
+    border-radius: 12px;
+    /* Match header-action radius */
     justify-content: center;
   }
 
   .role-text {
-    display: none; /* Hide text on mobile */
+    display: none;
+    /* Hide text on mobile */
   }
 
   .role-icon {
-    font-size: 20px; /* Larger icon for touch target */
+    font-size: 20px;
+    /* Larger icon for touch target */
     margin: 0;
   }
 

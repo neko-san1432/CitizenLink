@@ -41,6 +41,9 @@ class AppConfig {
     this.security = {
       bcryptRounds: 12,
     };
+    this.features = {
+      duplicateDetection: process.env.ENABLE_DUPLICATE_DETECTION === "true",
+    };
   }
   get isDevelopment() {
     return this.env === "development";

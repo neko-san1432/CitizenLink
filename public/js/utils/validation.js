@@ -339,7 +339,7 @@ export const extractComplaintFormData = (formElement) => {
     latitude: parseNum("#latitude"),
     longitude: parseNum("#longitude"),
     urgency_level: "low", // Default to low
-    departments: [], // Departments are auto-assigned by NLP
+    departments: departments, // User selected departments (will be merged with NLP suggestions)
   };
 };
 

@@ -28,7 +28,13 @@ class Complaint {
     this.estimated_resolution_date = data.estimated_resolution_date;
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
+    this.submitted_at = data.submitted_at;
+    this.updated_at = data.updated_at;
     this.upvote_count = data.upvote_count || 0;
+    // Audit fields
+    this.submitted_by_snapshot = data.submitted_by_snapshot;
+    this.original_submitter_id = data.original_submitter_id;
+    this.account_preservation_data = data.account_preservation_data;
   }
   static validate(data) {
     const { isWithinDigosBoundary } = require("../../shared/boundaryValidator");
@@ -135,6 +141,10 @@ class Complaint {
       response_deadline: this.response_deadline || null,
       submitted_at: this.submitted_at || new Date().toISOString(),
       upvote_count: this.upvote_count || 0,
+      // Audit fields
+      submitted_by_snapshot: this.submitted_by_snapshot || null,
+      original_submitter_id: this.original_submitter_id || null,
+      account_preservation_data: this.account_preservation_data || null,
     };
   }
   toJSON() {
@@ -164,6 +174,8 @@ class Complaint {
       submitted_at: this.submitted_at,
       updated_at: this.updated_at,
       upvote_count: this.upvote_count,
+      original_submitter_id: this.original_submitter_id,
+      // Note: we usually don't expose full snapshots in toJSON unless needed for admin views
     };
   }
 }

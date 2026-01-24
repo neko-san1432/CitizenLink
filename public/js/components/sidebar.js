@@ -17,6 +17,12 @@ function initializeSidebar() {
   // Theme toggle is handled by header.js
   setTimeout(setSidebarRole, 500); // Wait 500ms for auth to complete
   setActiveMenuItem();
+
+  // FORCE Z-INDEX to ensure it stays on top
+  if (_sidebarEl) {
+    _sidebarEl.style.zIndex = "9999";
+  }
+
   // Add accessibility attributes
   if (_sidebarEl) {
     _sidebarEl.setAttribute("role", "navigation");
@@ -150,13 +156,11 @@ async function setSidebarRole() {
       _sidebarEl.innerHTML = `
 <div class="sidebar-brand">
   <div class="brand-logo">
-    <img src="${brandConfig.logo.imageUrl}" alt="${
-        brandConfig.name
-      } Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
+    <img src="${brandConfig.logo.imageUrl}" alt="${brandConfig.name
+        } Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
     <div class="brand-text">
-      <a href="${brandConfig.dashboardUrl}" class="brand-link">${
-        brandConfig.name
-      }</a>
+      <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name
+        }</a>
       <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
@@ -165,10 +169,9 @@ async function setSidebarRole() {
         
 <div class="sidebar-menu">
           ${menuItems
-            .map(
-              (item) => `
-            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${
-                item.label
+          .map(
+            (item) => `
+            <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label
               }">
               <span class="menu-icon">${getMenuIcon(item.icon, {
                 size: 20,
@@ -176,8 +179,8 @@ async function setSidebarRole() {
               <span>${item.label}</span>
             </a>
           `
-            )
-            .join("")}
+          )
+          .join("")}
 </div>
         
 <div class="sidebar-bottom">
@@ -191,8 +194,8 @@ async function setSidebarRole() {
           <div class="sidebar-footer">
             <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
               <span class="menu-icon">${getMenuIcon("signout", {
-                size: 20,
-              })}</span>
+            size: 20,
+          })}</span>
               <span>Sign Out</span>
             </a>
           </div>
@@ -274,6 +277,11 @@ function getMenuItemsForRole(role) {
         icon: "server-logs",
         label: "Server logs",
       },
+      {
+        url: "/admin/nlp-training",
+        icon: "analytics",
+        label: "NLP Training",
+      },
       { url: "/departments", icon: "departments", label: "Departments" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
@@ -290,6 +298,11 @@ function getMenuItemsForRole(role) {
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      {
+        url: "/admin/nlp-training",
+        icon: "analytics",
+        label: "NLP Training",
+      },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
     "lgu-admin": [
@@ -297,6 +310,11 @@ function getMenuItemsForRole(role) {
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       { url: "/publish", icon: "publish", label: "Publish" },
+      {
+        url: "/admin/nlp-training",
+        icon: "analytics",
+        label: "NLP Training",
+      },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ],
   };

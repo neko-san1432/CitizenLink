@@ -57,6 +57,8 @@ router.use("/health", healthRoutes);
 router.use("/department-structure", departmentStructureRoutes);
 router.use("/compliance", complianceRoutes);
 router.use("/office-confirmation", officeConfirmationRoutes);
+// NLP Routes
+router.use("/nlp", require("./nlpRoutes"));
 // Public API routes (boundaries, geocoding)
 router.use("/", publicApiRoutes);
 // User routes (roles, profile info)

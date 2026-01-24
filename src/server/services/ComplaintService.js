@@ -95,6 +95,10 @@ class ComplaintService {
       preferred_departments: preferredDepartments,
       // Map location (client sends 'location', server expects 'location_text')
       location_text: complaintData.location || complaintData.location_text,
+      // Audit / Safe deletion columns
+      submitted_by_snapshot: null, // Will be populated below
+      original_submitter_id: userId,
+      account_preservation_data: null, // Will be populated below
       // Initially empty - will be populated by coordinator assignment
       department_r: [],
       // Store Nlp Metadata if available
@@ -106,6 +110,57 @@ class ComplaintService {
       } : null,
       // Note: category and subcategory fields are passed through as-is (UUIDs from categories/subcategories tables)
     };
+
+    // [FIX] Ensure location_text is not null if coordinates exist
+    if ((!mappedData.location_text || mappedData.location_text.trim() === "") && mappedData.latitude && mappedData.longitude) {
+      try {
+        console.log(`[COMPLAINT] Location text missing, attempting reverse geocode for ${mappedData.latitude}, ${mappedData.longitude}`);
+        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${mappedData.latitude}&lon=${mappedData.longitude}&zoom=18&addressdetails=1`;
+        const response = await fetch(nominatimUrl, {
+          headers: { "User-Agent": "CitizenLink/1.0 (https://citizenlink.local)" }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.display_name) {
+            mappedData.location_text = data.display_name;
+            console.log(`[COMPLAINT] Recovered location text: ${mappedData.location_text}`);
+          }
+        }
+      } catch (geoError) {
+        console.warn("[COMPLAINT] Failed to reverse geocode fallback:", geoError.message);
+      }
+
+      // Final fallback if geocoding failed
+      if (!mappedData.location_text) {
+        mappedData.location_text = `${mappedData.latitude.toFixed(6)}, ${mappedData.longitude.toFixed(6)}`;
+      }
+    }
+
+    // [AUDIT] Populate User Snapshot
+    try {
+      const { data: { user: userInfo }, error: userError } = await this.complaintRepo.supabase.auth.admin.getUserById(userId);
+      if (userInfo) {
+        const snapshot = {
+          id: userInfo.id,
+          email: userInfo.email,
+          phone: userInfo.phone,
+          user_metadata: userInfo.user_metadata,
+          role: userInfo.role,
+          created_at: userInfo.created_at,
+          last_sign_in_at: userInfo.last_sign_in_at
+        };
+        mappedData.submitted_by_snapshot = snapshot;
+        mappedData.account_preservation_data = {
+          preserved_at: new Date().toISOString(),
+          source: 'complaint_submission'
+        };
+      } else {
+        console.warn("[COMPLAINT] Could not fetch user details for snapshot:", userError ? userError.message : "User not found");
+      }
+    } catch (snapshotError) {
+      console.warn("[COMPLAINT] Failed to create user snapshot:", snapshotError.message);
+    }
+
 
     // Prepare data for insertion using utility functions
     const preparedData = prepareComplaintForInsert(mappedData);

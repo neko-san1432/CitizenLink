@@ -50,7 +50,7 @@ class ComplaintController {
    * Cancel complaint
    */
   async cancelComplaint(req, res) {
-    const { complaintId } = req.params;
+    const { id: complaintId } = req.params;
     const { reason } = req.body;
     const userId = req.user.id;
 
@@ -70,7 +70,7 @@ class ComplaintController {
    * Send reminder for complaint
    */
   async sendReminder(req, res) {
-    const { complaintId } = req.params;
+    const { id: complaintId } = req.params;
     const userId = req.user.id;
     const result = await this.complaintService.sendReminder(
       complaintId,
@@ -290,13 +290,13 @@ class ComplaintController {
     const categoryArray = Array.isArray(category)
       ? category
       : category
-      ? [category]
-      : [];
+        ? [category]
+        : [];
     let departmentArray = Array.isArray(department)
       ? department
       : department
-      ? [department]
-      : [];
+        ? [department]
+        : [];
 
     // ROLE-BASED FILTERING: Enforce department restrictions
     const userRole = req.user?.role || "citizen";
@@ -429,6 +429,12 @@ class ComplaintController {
    * Check for duplicate complaints
    */
   async checkDuplicates(req, res) {
+    // Feature Flag Check
+    const config = require("../config/app");
+    if (!config.features || !config.features.duplicateDetection) {
+      return res.json({ success: true, data: [] });
+    }
+
     const { latitude, longitude, category, subcategory } = req.query;
 
     // Validate inputs

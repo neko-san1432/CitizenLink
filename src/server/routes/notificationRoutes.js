@@ -14,6 +14,8 @@ const notificationController = new NotificationController();
 router.use(authenticateUser);
 // Get unread notifications
 router.get("/unread", notificationController.getUnreadNotifications.bind(notificationController));
+// Get recent notifications (alias for all)
+router.get("/latest", notificationController.getAllNotifications.bind(notificationController));
 // Get all notifications (paginated)
 router.get("/", notificationController.getAllNotifications.bind(notificationController));
 // Get notification count

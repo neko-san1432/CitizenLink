@@ -211,6 +211,23 @@ router.get(
 );
 
 router.get(
+  "/admin/nlp-training",
+  authenticateUser,
+  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "views",
+        "pages",
+        "admin",
+        "nlp-training.html"
+      )
+    );
+  }
+);
+
+router.get(
   "/role-changer",
   authenticateUser,
   requireRole(["super-admin", "lgu-hr"]),

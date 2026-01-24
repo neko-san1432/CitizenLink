@@ -62,7 +62,8 @@ html.dark {
   top: 0;
   bottom: 0;
   width: 260px;
-  z-index: 2000 !important; /* Ensure sidebar is above header (1030) */
+  z-index: 9999 !important;
+  /* Ensure sidebar is above everything */
   overflow-y: auto;
   overflow-x: hidden;
   display: flex !important;
