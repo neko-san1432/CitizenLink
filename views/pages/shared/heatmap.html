@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink: City Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
+</head>
+<body>
+    <div class="container">
+        <header class="control-panel">
+            <div class="control-panel-brand">
+                <div class="logo-mini">
+                    <i class="fas fa-city"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>CitizenLink</h1>
+                    <p>City Analytics Dashboard</p>
+                </div>
+            </div>
+            <div class="control-panel-actions">
+                <button class="control-btn primary" id="loadCityData">
+                    <i class="fas fa-database"></i>
+                    <span>Load City Data</span>
+                </button>
+                <div class="map-layers-dropdown" id="mapLayersDropdown">
+                    <button class="control-btn layers-btn" id="mapLayersToggle">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Map Layers</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="layers-dropdown-menu" id="layersDropdownMenu">
+                        <div class="layers-dropdown-header">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Visualization Options</span>
+                        </div>
+                        <div class="layer-toggle-item" id="toggleHeatmapItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-fire" style="color: #ef4444;"></i>
+                                <span>Heatmap Layer</span>
+                            </div>
+                            <div class="layer-toggle-switch">
+                                <input type="checkbox" id="heatmapSwitch" class="layer-switch">
+                                <label for="heatmapSwitch" class="layer-switch-label"></label>
+                            </div>
+                        </div>
+                        <div class="layer-toggle-item" id="toggleClustersItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
+                                <span>Glass Box Clusters</span>
+                            </div>
+                            <div class="layer-toggle-switch">
+                                <input type="checkbox" id="clustersSwitch" class="layer-switch" checked>
+                                <label for="clustersSwitch" class="layer-switch-label"></label>
+                            </div>
+                        </div>
+                        <div class="layers-dropdown-divider"></div>
+                        <div class="layer-toggle-item action-item" id="causalAnalysisItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-link" style="color: #a855f7;"></i>
+                                <span>Causal Analysis</span>
+                            </div>
+                            <span class="layer-action-badge">Phase 2</span>
+                        </div>
+                        <div class="layer-toggle-item action-item" id="emergencyPanelItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                                <span>Emergency Panel</span>
+                            </div>
+                            <span class="emergency-count-badge" id="emergencyCountDropdown">0</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/brain-analytics-page#dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dictionary</span>
+                </a>
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="complaintSearch" class="complaint-search-input" placeholder="Search by Complaint ID..." autocomplete="off">
+                        <button class="search-clear-btn" id="searchClearBtn" title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="control-btn search-btn" id="searchBtn">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>Locate</span>
+                    </button>
+                    <div class="search-results-dropdown" id="searchResultsDropdown"></div>
+                </div>
+                <div class="control-dropdown">
+                    <label for="categoryFilter">
+                        <i class="fas fa-filter"></i> Filter:
+                    </label>
+                    <select id="categoryFilter" class="category-select">
+                        <option value="all">All Categories</option>
+                        <option value="Infrastructure">Infrastructure</option>
+                        <option value="Sanitation">Sanitation</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Environment">Environment</option>
+                        <option value="Traffic">Traffic</option>
+                        <option value="Public Safety">Public Safety</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot"></div>
+                    <span>Ready</span>
+                </div>
+            </div>
+        </header>
+        <div class="main-content">
+            <main class="map-container">
+                <div id="map"></div>
+                <div class="export-button-container">
+                    <button class="export-excel-btn" id="exportExcelBtn" title="Export Analysis to Excel" disabled>
+                        <i class="fas fa-file-excel"></i>
+                        <span>Export to Excel</span>
+                    </button>
+                </div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                    <p class="loading-text">Processing city data...</p>
+                    <p class="loading-subtext" id="loadingProgress">0 / 0 records analyzed</p>
+                </div>
+            </main>
+            <aside class="emergency-panel" id="emergencyPanel">
+                <div class="emergency-header">
+                    <div class="emergency-title">
+                        <i class="fas fa-exclamation-triangle pulse-icon"></i>
+                        <h2>ACTIVE EMERGENCIES</h2>
+                    </div>
+                    <div class="emergency-count">
+                        <span id="emergencyCount">0</span>
+                    </div>
+                    <button class="emergency-minimize" id="emergencyMinimize" title="Minimize Panel">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="emergency-content" id="emergencyContent">
+                    <div class="emergency-placeholder">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>No active emergencies</p>
+                        <span>Critical reports will appear here</span>
+                    </div>
+                </div>
+            </aside>
+            <aside class="insights-panel">
+                <div class="insights-header">
+                    <h2>
+                        <i class="fas fa-broadcast-tower"></i>
+                        COMMAND CENTER
+                    </h2>
+                    <button class="refresh-insights" id="refreshInsights" title="Refresh Intelligence">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" title="Total raw signals received from the public">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="totalComplaints">--</span>
+                            <span class="stat-label">CITIZEN INPUTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Clusters confirmed as valid issues requiring action">
+                        <div class="stat-icon green">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="totalClusters">--</span>
+                            <span class="stat-label">VERIFIED INCIDENTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="High-density clusters requiring immediate attention">
+                        <div class="stat-icon red">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="criticalHotspots">--</span>
+                            <span class="stat-label">PRIORITY ZONES</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Percentage of duplicate reports compressed - saves city resources">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="efficiencyScore">--</span>
+                            <span class="stat-label">NOISE REDUCTION</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as currently active via temporal_present">
+                        <div class="stat-icon red">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="activeIncidentsCount">--</span>
+                            <span class="stat-label">ACTIVE INCIDENTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as past/resolved via temporal_past">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-clock-rotate-left"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="historyLogsCount">--</span>
+                            <span class="stat-label">HISTORY / LOGS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as future advisory via temporal_future">
+                        <div class="stat-icon green">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="advisoriesCount">--</span>
+                            <span class="stat-label">ADVISORIES</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="insights-content" id="insightsContent">
+                    <div class="insight-placeholder">
+                        <i class="fas fa-satellite-dish"></i>
+                        <p>Awaiting field intelligence...</p>
+                        <span class="placeholder-hint">Run analysis to generate dispatch orders</span>
+                    </div>
+                </div>
+                <div class="category-distribution">
+                    <h3>
+                        <i class="fas fa-chart-bar"></i>
+                        INCIDENT BREAKDOWN
+                    </h3>
+                    <div class="category-bars" id="categoryBars"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="/brain-dashboard/shared/taxonomy.js"></script>
+    <script src="/brain-dashboard/nlp-processor.js"></script>
+    <script src="/brain-dashboard/causality-manager.js"></script>
+    <script src="/brain-dashboard/simulation-engine.js"></script>
+    <script src="/brain-dashboard/live-sync.js"></script>
+    <script src="/brain-dashboard/dashboard_production.js"></script>
+    <script src="/brain-dashboard/statistical-analysis.js"></script>
+    <script src="/brain-dashboard/statistical-excel-export.js"></script>
+</body>
+</html>

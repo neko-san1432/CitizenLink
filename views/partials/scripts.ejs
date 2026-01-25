@@ -1,0 +1,20 @@
+<!-- Core Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Supabase & Auth -->
+<script type="module" src="/js/lib/supabase-boot.js"></script>
+<script type="module" src="/js/auth/authChecker.js"></script>
+<script type="module" src="/js/auth/roleToggle.js"></script>
+
+<!-- UI Components -->
+<script type="module" src="/js/components/toast.js"></script>
+<script type="module" src="/js/components/header.js"></script>
+<script type="module" src="/js/components/sidebar.js"></script>
+<script type="module" src="/js/components/clock.js"></script>
+
+<!-- Page Specific Scripts -->
+<% if (locals.scriptPaths) { %>
+    <% scriptPaths.forEach(function(script) { %>
+        <script type="module" src="<%= script %>"></script>
+        <% }); %>
+            <% } %>

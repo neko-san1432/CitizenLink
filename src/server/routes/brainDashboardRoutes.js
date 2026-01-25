@@ -2,8 +2,8 @@ const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
 const ComplaintService = require("../services/ComplaintService");
 const { authenticateUser, requireRole } = require("../middleware/auth");
-const fs = require("fs");
 const path = require("path");
+// const fs = require("fs"); // Unused if mock loading is removed
 
 const router = express.Router();
 
@@ -74,28 +74,7 @@ router.get(
           : [];
       let complaints = rows.map(mapBodyRowToBrainComplaint);
 
-      if (
-        complaints.length === 0 &&
-        String(process.env.NODE_ENV || "").toLowerCase() === "development"
-      ) {
-        try {
-          const mockPath = path.join(
-            __dirname,
-            "..",
-            "..",
-            "..",
-            "public",
-            "data",
-            "complaints",
-            "mock_complaints.json"
-          );
-          const raw = fs.readFileSync(mockPath, "utf8");
-          const parsed = JSON.parse(raw);
-          const base = Array.isArray(parsed) ? parsed : parsed?.complaints;
-          const fallbackRows = Array.isArray(base) ? base : [];
-          complaints = fallbackRows.map(mapBodyRowToBrainComplaint);
-        } catch {}
-      }
+
 
       res.json({
         success: true,

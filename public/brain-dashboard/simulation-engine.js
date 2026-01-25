@@ -6560,52 +6560,7 @@ function filterClustersByRecency(clusters, daysBack = 30) {
 }
 
 
-// ==================== DATA LOADER ====================
 
-/**
- * Load mock complaints data from JSON file.
- * @returns {Promise<Object>} Parsed JSON with metadata and complaints
- */
-async function loadMockData() {
-    try {
-        // Add cache-busting parameter to force fresh data load
-        const cacheBuster = `?t=${Date.now()}`;
-
-        // Try multiple paths for the data file (supports different folder structures)
-        const possiblePaths = [
-            'mock_complaints.json',                       // Root directory (actual location)
-            'data/complaints/mock_complaints.json',       // Subdirectory
-            '../data/complaints/mock_complaints.json',    // From src subdirectory
-            '/data/complaints/mock_complaints.json'       // Absolute from root
-        ];
-
-        let data = null;
-        let lastError = null;
-
-        for (const path of possiblePaths) {
-            try {
-                const response = await fetch(`${path}${cacheBuster}`);
-                if (response.ok) {
-                    data = await response.json();
-                    console.log(`[DATA LOADER] Loaded from: ${path}`);
-                    break;
-                }
-            } catch (e) {
-                lastError = e;
-            }
-        }
-
-        if (!data) {
-            throw lastError || new Error('Could not find mock_complaints_2_modified.json in any expected location');
-        }
-
-        console.log('[DATA LOADER] Loaded data:', data.metadata.total_records, 'total records');
-        return data;
-    } catch (error) {
-        console.error('[DATA LOADER] Failed:', error);
-        throw error;
-    }
-}
 
 /**
  * Filter complaints by scenario prefix.
@@ -6730,22 +6685,23 @@ class SimulationEngine {
                 }
             }
 
-            const data = await loadMockData();
-            this.metadata = data.metadata;
-            this.complaints = data.complaints;
+            // V3.9 UPDATE: Mock data loading removed. Data is now injected via dashboard_production.js
+            // using fetchServerComplaints() and real-time SSE stream.
 
-            this.addLog(`[DATA] Loaded ${this.complaints.length} complaint records`, 'info');
-            this.addLog(`[DATA] Dataset: ${this.metadata.base_location.city}`, 'info');
+            this.metadata = { base_location: { city: "Digos City (Live)" } };
+            this.complaints = [];
+
+            this.addLog(`[SYSTEM] Simulation Engine Ready - Waiting for live stream...`, 'info');
 
             // Load and display barangay boundaries
             await this.loadBarangayBoundaries();
 
-            // Update stats panel with real data
+            // Stats will be updated when data arrives via dashboard_production.js
             this.updateStats({
-                datasetName: `${this.metadata.base_location.city} Dataset`,
-                totalRecords: this.complaints.length,
-                pendingValidation: this.complaints.filter(c => c.status === 'PENDING').length,
-                densityScore: this.calculateDensityScore(),
+                datasetName: `Live Data Feed`,
+                totalRecords: 0,
+                pendingValidation: 0,
+                densityScore: "Low",
                 processingMode: 'global'
             });
 

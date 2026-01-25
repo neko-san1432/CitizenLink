@@ -1,0 +1,27 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>
+    <%= title %> - CitizenLink
+</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+
+<!-- Core CSS -->
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/toast.css" />
+<link rel="stylesheet" href="/css/components/clock.css" />
+<link rel="stylesheet" href="/css/components/sidebar.css" />
+<link rel="stylesheet" href="/css/app.css" />
+<link rel="stylesheet" href="/css/header-redesign.css" />
+<link rel="stylesheet" href="/css/viewport-fix.css" />
+
+<!-- Page Specific CSS -->
+<% if (locals.cssPaths) { %>
+    <% cssPaths.forEach(function(css) { %>
+        <link rel="stylesheet" href="<%= css %>" />
+        <% }); %>
+            <% } %>
