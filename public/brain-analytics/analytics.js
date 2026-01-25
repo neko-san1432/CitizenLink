@@ -509,6 +509,16 @@ function renderOverview(stats) {
     catTop.map(([, v]) => v),
     "#4472C4"
   );
+  
+  // Overview Category Pie Chart (top 8 categories)
+  const catPieTop = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const catPieColors = ["#4472C4", "#ED7D31", "#A5A5A5", "#FFC000", "#5B9BD5", "#70AD47", "#7030A0", "#C00000"];
+  renderPieChart(
+    "overviewCategoryPie",
+    catPieTop.map(([k]) => k),
+    catPieTop.map(([, v]) => v),
+    catPieColors.slice(0, catPieTop.length)
+  );
 
   const brgyTop = [...stats.byBarangay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
   renderBarChart(
@@ -587,6 +597,48 @@ function renderOverview(stats) {
 }
 
 function renderTemporal(stats) {
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  
+  // Calculate temporal summary metrics
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = stats.byDay.get(today) || 0;
+  
+  // Calculate week count (last 7 days)
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  let weekCount = 0;
+  for (const [day, count] of stats.byDay.entries()) {
+    if (new Date(day) >= weekAgo) weekCount += count;
+  }
+  
+  // Calculate month count (last 30 days)
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
+  let monthCount = 0;
+  for (const [day, count] of stats.byDay.entries()) {
+    if (new Date(day) >= monthAgo) monthCount += count;
+  }
+  
+  // Find peak hour
+  let peakHour = 0;
+  let peakHourCount = 0;
+  for (const [hour, count] of stats.byHour.entries()) {
+    if (count > peakHourCount) {
+      peakHourCount = count;
+      peakHour = hour;
+    }
+  }
+  const peakHourStr = peakHour < 12 ? `${peakHour || 12} AM` : `${peakHour === 12 ? 12 : peakHour - 12} PM`;
+  
+  // Update summary cards
+  set("todayCount", todayCount.toLocaleString());
+  set("weekCount", weekCount.toLocaleString());
+  set("monthCount", monthCount.toLocaleString());
+  set("peakHour", peakHourStr);
+
   const byDay = [...stats.byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   renderLineChart(
     "timeTrendChart",
@@ -610,15 +662,103 @@ function renderTemporal(stats) {
     byHour.map(([, v]) => v),
     "#7030A0"
   );
+  
+  // Day of Week chart
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const byDayOfWeek = new Array(7).fill(0);
+  for (const [day] of stats.byDay.entries()) {
+    const d = new Date(day);
+    if (!isNaN(d.getTime())) {
+      byDayOfWeek[d.getDay()] += stats.byDay.get(day) || 0;
+    }
+  }
+  renderBarChart(
+    "dayOfWeekChart",
+    dayNames,
+    byDayOfWeek,
+    "#00897B"
+  );
+  
+  // Priority trend chart (tier distribution over months)
+  const tierByMonth = new Map();
+  for (const c of processedComplaints) {
+    const d = parseISODate(c.timestamp);
+    if (d) {
+      const monthKey = d.toISOString().slice(0, 7);
+      const tierData = tierByMonth.get(monthKey) || { tier1: 0, tier2: 0, tier3: 0 };
+      if (c.tier === 1) tierData.tier1++;
+      else if (c.tier === 2) tierData.tier2++;
+      else tierData.tier3++;
+      tierByMonth.set(monthKey, tierData);
+    }
+  }
+  const sortedMonths = [...tierByMonth.keys()].sort();
+  const priorityTrendEl = document.getElementById("priorityTrendChart");
+  if (priorityTrendEl) {
+    destroyChart("priorityTrendChart");
+    charts["priorityTrendChart"] = new Chart(priorityTrendEl, {
+      type: "line",
+      data: {
+        labels: sortedMonths,
+        datasets: [
+          { label: "Tier 1", data: sortedMonths.map(m => tierByMonth.get(m)?.tier1 || 0), borderColor: "#C00000", backgroundColor: "rgba(192,0,0,0.1)", fill: true, tension: 0.3 },
+          { label: "Tier 2", data: sortedMonths.map(m => tierByMonth.get(m)?.tier2 || 0), borderColor: "#FFC000", backgroundColor: "rgba(255,192,0,0.1)", fill: true, tension: 0.3 },
+          { label: "Tier 3", data: sortedMonths.map(m => tierByMonth.get(m)?.tier3 || 0), borderColor: "#70AD47", backgroundColor: "rgba(112,173,71,0.1)", fill: true, tension: 0.3 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } },
+      },
+    });
+  }
 }
 
 function renderCategories(stats) {
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  
+  // Calculate categories summary metrics
+  const uniqueCategoryCount = stats.byCategory.size;
+  const topCategory = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topCategoryName = topCategory ? topCategory[0] : '-';
+  
+  // Calculate NLP confidence average
+  let totalConf = 0;
+  let confCount = 0;
+  let reclassifiedCount = 0;
+  for (const c of processedComplaints) {
+    if (c.intelligence?.confidence) {
+      totalConf += c.intelligence.confidence;
+      confCount++;
+    }
+    if (c.intelligence?.ai_reclassified || c.intelligence?.ai_downgraded) {
+      reclassifiedCount++;
+    }
+  }
+  const avgNlpConf = confCount > 0 ? Math.round((totalConf / confCount) * 100) : 0;
+  
+  // Update summary cards
+  set("uniqueCategoryCount", uniqueCategoryCount);
+  set("topCategoryName", topCategoryName.length > 18 ? topCategoryName.slice(0, 16) + '...' : topCategoryName);
+  set("nlpAccuracy", avgNlpConf + "%");
+  set("reclassifiedCount", reclassifiedCount);
+
   const dist = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16);
-  renderBarChart(
+  
+  // Category Distribution as pie chart
+  const catColors = [
+    "#4472C4", "#ED7D31", "#A5A5A5", "#FFC000", "#5B9BD5", "#70AD47", "#7030A0", "#C00000",
+    "#00B0F0", "#00B050", "#BF8F00", "#9933FF", "#FF6699", "#336699", "#669999", "#CC9966"
+  ];
+  renderPieChart(
     "categoryDistChart",
     dist.map(([k]) => k),
     dist.map(([, v]) => v),
-    "#4472C4"
+    catColors.slice(0, dist.length)
   );
 
   const priorityLabels = dist.map(([k]) => k);
@@ -646,6 +786,35 @@ function renderCategories(stats) {
       },
     });
   }
+  
+  // Subcategory breakdown chart (top 12 subcategories)
+  const subDist = new Map();
+  for (const c of processedComplaints) {
+    const sub = c.subcategory || 'Unclassified';
+    subDist.set(sub, (subDist.get(sub) || 0) + 1);
+  }
+  const topSubs = [...subDist.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  renderBarChart(
+    "subcategoryChart",
+    topSubs.map(([k]) => k),
+    topSubs.map(([, v]) => v),
+    "#5B9BD5"
+  );
+  
+  // NLP Method distribution (confidence levels)
+  const confBuckets = { 'High (80%+)': 0, 'Medium (50-79%)': 0, 'Low (<50%)': 0 };
+  for (const c of processedComplaints) {
+    const conf = c.intelligence?.confidence || 0;
+    if (conf >= 0.8) confBuckets['High (80%+)']++;
+    else if (conf >= 0.5) confBuckets['Medium (50-79%)']++;
+    else confBuckets['Low (<50%)']++;
+  }
+  renderPieChart(
+    "nlpMethodChart",
+    Object.keys(confBuckets),
+    Object.values(confBuckets),
+    ["#70AD47", "#FFC000", "#C00000"]
+  );
 
   const cloud = document.getElementById("keywordCloud");
   if (cloud) {
@@ -757,6 +926,19 @@ function renderEdgeCases() {
   setCount("speculationCount", speculation.length);
   setCount("mismatchCount", mismatches.length);
   setCount("alertCount", alerts.length);
+  
+  // Update Smart Detection summary metrics
+  setCount("totalMetaphors", metaphors.length);
+  setCount("totalSpeculation", speculation.length);
+  setCount("totalMismatch", mismatches.length);
+  
+  // Calculate edge case rate
+  const totalEdgeCases = metaphors.length + speculation.length + mismatches.length;
+  const edgeCaseRate = processedComplaints.length > 0 
+    ? Math.round((totalEdgeCases / processedComplaints.length) * 100) 
+    : 0;
+  const rateEl = document.getElementById("edgeCaseRate");
+  if (rateEl) rateEl.textContent = edgeCaseRate + "%";
 
   const renderList = (id, items, type) => {
     const el = document.getElementById(id);

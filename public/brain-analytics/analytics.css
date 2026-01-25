@@ -277,6 +277,41 @@ body{
 .badge-user-cat{background:var(--gray-200);color:var(--gray-700,#495057)}
 .badge-nlp-cat{background:var(--primary-light,#6B9AE8);color:#fff}
 .badge-different{background:#FFF9C4;color:#F57F17}
+.badge-danger{background:var(--danger-light,#FF6666);color:var(--danger)}
+.badge-warning{background:var(--warning-light,#FFE066);color:#996600}
+.badge-info{background:var(--info-light,#9DC3E6);color:var(--primary-dark,#2E5A9C)}
+.badge-success{background:var(--success-light,#A8D08D);color:#2D6A2D}
+
+/* Edge Case Card Enhancements */
+.edge-case-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.edge-case-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.edge-case-list::-webkit-scrollbar {
+  width: 6px;
+}
+.edge-case-list::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 3px;
+}
+.edge-case-list::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 3px;
+}
+.edge-case-list::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+.edge-case-item:hover {
+  background: var(--gray-100);
+  border-radius: 8px;
+}
 
 .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--gray-200);background:var(--gray-100)}
 .modal-header h3{font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px;margin:0}

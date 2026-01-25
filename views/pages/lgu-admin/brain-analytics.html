@@ -130,7 +130,7 @@
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Category Breakdown</h4>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <div id="categoryPieChart" style="width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--danger) 0deg 90deg, var(--warning) 90deg 180deg, var(--info) 180deg 270deg, var(--success) 270deg 360deg);"></div>
+                        <canvas id="overviewCategoryPie" style="max-width: 120px; max-height: 120px;"></canvas>
                         <div id="categoryLegend" style="flex: 1; font-size: 0.85em;">
                             <div style="padding: 10px; color: var(--gray-500); text-align: center;">Loading...</div>
                         </div>
@@ -221,9 +221,34 @@
         <section id="temporal" class="tab-content">
             <h2 class="section-title"><i class="fas fa-clock"></i> Time Trend Analysis</h2>
             <p class="section-description">Analyze complaint patterns over time to identify peak periods and seasonal trends.</p>
+            
+            <!-- Time Summary Cards -->
+            <div class="metric-cards" style="margin-bottom: 20px;">
+                <div class="metric-card info">
+                    <div class="metric-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="metric-value" id="todayCount">-</div>
+                    <div class="metric-label">Today's Complaints</div>
+                </div>
+                <div class="metric-card warning">
+                    <div class="metric-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="metric-value" id="weekCount">-</div>
+                    <div class="metric-label">This Week</div>
+                </div>
+                <div class="metric-card success">
+                    <div class="metric-icon"><i class="fas fa-calendar"></i></div>
+                    <div class="metric-value" id="monthCount">-</div>
+                    <div class="metric-label">This Month</div>
+                </div>
+                <div class="metric-card accent">
+                    <div class="metric-icon"><i class="fas fa-fire-alt"></i></div>
+                    <div class="metric-value" id="peakHour">-</div>
+                    <div class="metric-label">Peak Hour</div>
+                </div>
+            </div>
+            
             <div class="chart-row">
                 <div class="chart-container full">
-                    <h3><i class="fas fa-chart-line"></i> Complaints Over Time</h3>
+                    <h3><i class="fas fa-chart-line"></i> Complaints Over Time (Last 30 Days)</h3>
                     <canvas id="timeTrendChart"></canvas>
                 </div>
             </div>
@@ -233,18 +258,53 @@
                     <canvas id="monthlyChart"></canvas>
                 </div>
                 <div class="chart-container half">
-                    <h3><i class="fas fa-clock"></i> Complaints by Hour</h3>
+                    <h3><i class="fas fa-clock"></i> Complaints by Hour of Day</h3>
                     <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-container half">
+                    <h3><i class="fas fa-calendar-week"></i> Day of Week Pattern</h3>
+                    <canvas id="dayOfWeekChart"></canvas>
+                </div>
+                <div class="chart-container half">
+                    <h3><i class="fas fa-chart-area"></i> Priority Trend Over Time</h3>
+                    <canvas id="priorityTrendChart"></canvas>
                 </div>
             </div>
         </section>
 
         <section id="categories" class="tab-content">
             <h2 class="section-title"><i class="fas fa-tags"></i> Category Intelligence</h2>
-            <p class="section-description">Deep dive into complaint categories, priority levels, and keyword analysis.</p>
+            <p class="section-description">Deep dive into complaint categories, priority levels, and keyword analysis powered by NLP.</p>
+            
+            <!-- Category Summary Cards -->
+            <div class="metric-cards" style="margin-bottom: 20px;">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fas fa-folder-open"></i></div>
+                    <div class="metric-value" id="uniqueCategoryCount">-</div>
+                    <div class="metric-label">Active Categories</div>
+                </div>
+                <div class="metric-card danger">
+                    <div class="metric-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="metric-value" id="topCategoryName">-</div>
+                    <div class="metric-label">Top Category</div>
+                </div>
+                <div class="metric-card info">
+                    <div class="metric-icon"><i class="fas fa-robot"></i></div>
+                    <div class="metric-value" id="nlpAccuracy">-</div>
+                    <div class="metric-label">NLP Confidence</div>
+                </div>
+                <div class="metric-card warning">
+                    <div class="metric-icon"><i class="fas fa-sync-alt"></i></div>
+                    <div class="metric-value" id="reclassifiedCount">-</div>
+                    <div class="metric-label">AI Reclassified</div>
+                </div>
+            </div>
+            
             <div class="chart-row">
                 <div class="chart-container half">
-                    <h3><i class="fas fa-tag"></i> Category Distribution</h3>
+                    <h3><i class="fas fa-chart-pie"></i> Category Distribution</h3>
                     <canvas id="categoryDistChart"></canvas>
                 </div>
                 <div class="chart-container half">
@@ -254,35 +314,82 @@
             </div>
             <div class="chart-row">
                 <div class="chart-container full">
-                    <h3><i class="fas fa-key"></i> Top Keywords Detected</h3>
-                    <div id="keywordCloud" class="keyword-cloud"></div>
+                    <h3><i class="fas fa-key"></i> Top Keywords Detected by NLP</h3>
+                    <div id="keywordCloud" class="keyword-cloud" style="padding: 20px; min-height: 120px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;"></div>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-container half">
+                    <h3><i class="fas fa-chart-bar"></i> Subcategory Breakdown</h3>
+                    <canvas id="subcategoryChart"></canvas>
+                </div>
+                <div class="chart-container half">
+                    <h3><i class="fas fa-brain"></i> NLP Detection Methods</h3>
+                    <canvas id="nlpMethodChart"></canvas>
                 </div>
             </div>
         </section>
 
         <section id="edge-cases" class="tab-content">
             <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Smart Detection Analysis</h2>
-            <p class="section-description">Review edge cases where NLP detected figurative language, conditional statements, or category mismatches.</p>
-            <div class="edge-case-grid">
-                <div class="edge-case-card">
-                    <h3><i class="fas fa-theater-masks"></i> Figurative Language</h3>
-                    <div class="edge-case-count" id="metaphorCount">0</div>
-                    <div class="edge-case-list" id="metaphorList"></div>
+            <p class="section-description">Review edge cases where NLP detected figurative language, conditional statements, or category mismatches that need human review.</p>
+            
+            <!-- Smart Detection Summary -->
+            <div class="metric-cards" style="margin-bottom: 20px;">
+                <div class="metric-card info">
+                    <div class="metric-icon"><i class="fas fa-theater-masks"></i></div>
+                    <div class="metric-value" id="totalMetaphors">0</div>
+                    <div class="metric-label">Figurative Detected</div>
                 </div>
-                <div class="edge-case-card">
-                    <h3><i class="fas fa-question-circle"></i> Conditional Reports</h3>
-                    <div class="edge-case-count" id="speculationCount">0</div>
-                    <div class="edge-case-list" id="speculationList"></div>
+                <div class="metric-card warning">
+                    <div class="metric-icon"><i class="fas fa-question-circle"></i></div>
+                    <div class="metric-value" id="totalSpeculation">0</div>
+                    <div class="metric-label">Conditional Reports</div>
                 </div>
-                <div class="edge-case-card">
-                    <h3><i class="fas fa-not-equal"></i> Category Mismatches</h3>
-                    <div class="edge-case-count" id="mismatchCount">0</div>
-                    <div class="edge-case-list" id="mismatchList"></div>
+                <div class="metric-card danger">
+                    <div class="metric-icon"><i class="fas fa-not-equal"></i></div>
+                    <div class="metric-value" id="totalMismatch">0</div>
+                    <div class="metric-label">Mismatches Found</div>
                 </div>
-                <div class="edge-case-card">
-                    <h3><i class="fas fa-exclamation-circle"></i> Critical Alerts</h3>
-                    <div class="edge-case-count" id="alertCount">0</div>
-                    <div class="edge-case-list" id="alertList"></div>
+                <div class="metric-card success">
+                    <div class="metric-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="metric-value" id="edgeCaseRate">0%</div>
+                    <div class="metric-label">Edge Case Rate</div>
+                </div>
+            </div>
+            
+            <div class="edge-case-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #f3e5f5 100%); border-left: 4px solid #7B1FA2;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-theater-masks" style="color: #7B1FA2;"></i> Figurative Language</h3>
+                        <span class="badge" style="background: #E1BEE7; color: #7B1FA2; font-size: 16px; padding: 4px 12px;" id="metaphorCount">0</span>
+                    </div>
+                    <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Metaphors, similes, and figurative expressions detected</p>
+                    <div class="edge-case-list" id="metaphorList" style="max-height: 280px; overflow-y: auto;"></div>
+                </div>
+                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #fff3e0 100%); border-left: 4px solid #E65100;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-question-circle" style="color: #E65100;"></i> Conditional Reports</h3>
+                        <span class="badge" style="background: #FFE0B2; color: #E65100; font-size: 16px; padding: 4px 12px;" id="speculationCount">0</span>
+                    </div>
+                    <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Speculative or future-tense statements requiring verification</p>
+                    <div class="edge-case-list" id="speculationList" style="max-height: 280px; overflow-y: auto;"></div>
+                </div>
+                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #ffebee 100%); border-left: 4px solid #C62828;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-not-equal" style="color: #C62828;"></i> Category Mismatches</h3>
+                        <span class="badge" style="background: #FFCDD2; color: #C62828; font-size: 16px; padding: 4px 12px;" id="mismatchCount">0</span>
+                    </div>
+                    <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">AI detected different category than user selected</p>
+                    <div class="edge-case-list" id="mismatchList" style="max-height: 280px; overflow-y: auto;"></div>
+                </div>
+                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #ffebee 100%); border-left: 4px solid var(--danger);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Critical Alerts</h3>
+                        <span class="badge" style="background: var(--danger-light); color: var(--danger); font-size: 16px; padding: 4px 12px;" id="alertCount">0</span>
+                    </div>
+                    <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">High-priority emergencies requiring immediate attention</p>
+                    <div class="edge-case-list" id="alertList" style="max-height: 280px; overflow-y: auto;"></div>
                 </div>
             </div>
         </section>
@@ -399,6 +506,30 @@
         <section id="system-training" class="tab-content">
             <h2 class="section-title"><i class="fas fa-brain"></i> Train the System</h2>
             <p class="section-description">Help improve the system by reviewing complaints it wasn't sure about. Your corrections teach it to be more accurate.</p>
+            
+            <!-- Training Stats Summary -->
+            <div class="metric-cards" style="margin-bottom: 20px;">
+                <div class="metric-card warning">
+                    <div class="metric-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="metric-value" id="pendingTrainCount">0</div>
+                    <div class="metric-label">Pending Review</div>
+                </div>
+                <div class="metric-card success">
+                    <div class="metric-icon"><i class="fas fa-check-double"></i></div>
+                    <div class="metric-value" id="trainedTodayCount">0</div>
+                    <div class="metric-label">Trained Today</div>
+                </div>
+                <div class="metric-card info">
+                    <div class="metric-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="metric-value" id="avgConfidenceScore">-</div>
+                    <div class="metric-label">Avg Confidence</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="metric-value" id="modelAccuracy">-</div>
+                    <div class="metric-label">Model Accuracy</div>
+                </div>
+            </div>
             
             <div class="train-system-layout">
                 <!-- Left Panel: List of Items to Train -->
