@@ -220,28 +220,45 @@ function extractBarangay(complaint) {
   return getBarangayFromCoordinates(lat, lng);
 }
 
+/**
+ * Compute triage score and extract full NLP intelligence data.
+ * Returns the complete intelligence object from the NLP processor.
+ */
 function computeTriage(point) {
   if (typeof window.analyzeComplaintIntelligence === "function") {
     try {
       const res = window.analyzeComplaintIntelligence(point);
       const score = Number(res?.urgencyScore || 0);
       const tier = score >= 70 ? 1 : score >= 40 ? 2 : 3;
-      return { score, tier, breakdown: res?.breakdown || null };
-    } catch {
-      return { score: 0, tier: 3, breakdown: null };
+      return { 
+        score, 
+        tier, 
+        breakdown: res?.breakdown || null,
+        // Extract full NLP intelligence for smart detection
+        intelligence: res || null
+      };
+    } catch (err) {
+      console.error('[ANALYTICS] NLP intelligence error:', err);
+      return { score: 0, tier: 3, breakdown: null, intelligence: null };
     }
   }
-  return { score: 0, tier: 3, breakdown: null };
+  return { score: 0, tier: 3, breakdown: null, intelligence: null };
 }
 
-function isMetaphor(text) {
+/**
+ * Fallback metaphor detection (used when NLP intelligence not available)
+ */
+function isMetaphorFallback(text) {
   const t = safeText(text).toLowerCase();
-  return /\b(parang|like)\b/.test(t);
+  return /\b(parang|like|murag|daw|seems|looks like)\b/.test(t);
 }
 
-function isSpeculation(text) {
+/**
+ * Fallback speculation detection (used when NLP intelligence not available)
+ */
+function isSpeculationFallback(text) {
   const t = safeText(text).toLowerCase();
-  return /\b(maybe|baka|siguro|if|kung)\b/.test(t);
+  return /\b(maybe|baka|siguro|if|kung|possible|might|could be|tingali)\b/.test(t);
 }
 
 function isEmergency(category, subcategory) {
@@ -254,6 +271,14 @@ function isEmergency(category, subcategory) {
   return false;
 }
 
+/**
+ * Process a complaint and extract NLP intelligence for analytics.
+ * Integrates with the simulation-engine.js NLP processor for:
+ * - Metaphor detection
+ * - Speculation detection
+ * - Category mismatch detection
+ * - Confidence scoring
+ */
 function processComplaint(input) {
   const description = safeText(input.description || input.descriptive_su || input.title || input.location_text);
   const normalized = normalizeCategoryPair(input.category, input.subcategory);
@@ -266,27 +291,72 @@ function processComplaint(input) {
 
   const triage = computeTriage(point);
   const keywords = extractKeywords(description, 18);
-  const emergency = isEmergency(point.category, point.subcategory) || triage.tier === 1;
-  const timestamp =
-    safeText(input.timestamp || input.submitted_at || input.created_at) || new Date().toISOString();
+  const intelligence = triage.intelligence || {};
+  
+  // Extract NLP intelligence flags (with fallbacks for robustness)
+  const isMetaphorical = Boolean(intelligence.isMetaphorical) || isMetaphorFallback(description);
+  const isSpeculative = Boolean(intelligence.isSpeculative) || isSpeculationFallback(description);
+  
+  // Category mismatch detection from NLP auto-categorization
+  const hasMismatch = Boolean(point.ai_reclassified) || Boolean(point.ai_downgraded) || 
+                      Boolean(intelligence.breakdown?.emergencyBoost) ||
+                      (intelligence.confidence && intelligence.confidence < 0.5 && point.category !== 'Others');
+  
+  // Emergency detection from taxonomy + NLP
+  const emergency = isEmergency(point.category, point.subcategory) || 
+                    triage.tier === 1 || 
+                    Boolean(intelligence.isCritical);
+  
+  const timestamp = safeText(input.timestamp || input.submitted_at || input.created_at) || new Date().toISOString();
 
   const processed = {
     ...input,
     description,
-    category: point.category,
-    subcategory: normalized.subcategory,
+    original_text: description,  // For train-system.js
+    category: point.ai_reclassified ? point.category : (point.category || normalized.category),
+    subcategory: point.ai_reclassified ? point.subcategory : normalized.subcategory,
     timestamp,
     barangay: extractBarangay(input),
     triage_score: triage.score,
     tier: triage.tier,
     triage_breakdown: triage.breakdown,
     keywords,
+    // Full NLP intelligence for smart detection & training
+    intelligence: {
+      confidence: intelligence.confidence || 0.5,
+      is_speculation: isSpeculative,
+      metaphor_score: isMetaphorical ? 0.85 : 0,
+      category_mismatch: hasMismatch,
+      sentiment_score: intelligence.sentiment_score || 0,
+      veracity_score: intelligence.veracityScore || 0,
+      nlp_keywords: intelligence.breakdown?.matchedKeywords || [],
+      temporal_tag: intelligence.temporalTag || null,
+      temporal_status: intelligence.temporalStatus || null,
+      is_capped: intelligence.breakdown?.isCapped || false,
+      override_type: intelligence.breakdown?.overrideType || null,
+      ai_reclassified: Boolean(point.ai_reclassified),
+      ai_downgraded: Boolean(point.ai_downgraded),
+      original_category: point.original_category || null,
+      reclassified_reason: point.ai_reclassified_reason || point.ai_downgraded_reason || null
+    },
+    // Legacy flags for backward compatibility
     flags: {
       emergency,
-      metaphor: isMetaphor(description),
-      speculation: isSpeculation(description),
-      mismatch: false,
+      metaphor: isMetaphorical,
+      speculation: isSpeculative,
+      mismatch: hasMismatch,
     },
+    // For train-system.js compatibility
+    category_mismatch: hasMismatch ? {
+      has_mismatch: true,
+      original: point.original_category,
+      detected: point.category,
+      reason: point.ai_reclassified_reason || point.ai_downgraded_reason
+    } : null,
+    nlp: {
+      keywords: keywords.map(k => k.term),
+      confidence: intelligence.confidence || 0.5
+    }
   };
 
   return processed;
@@ -599,19 +669,50 @@ function openModal(item) {
   const modal = document.getElementById("complaintModal");
   const body = document.getElementById("modalBody");
   if (!modal || !body) return;
+  
+  // Build NLP Intelligence section
+  const intel = item.intelligence || {};
+  const flags = item.flags || {};
+  
+  let nlpSection = '';
+  if (intel.confidence || flags.metaphor || flags.speculation || flags.mismatch) {
+    const badges = [];
+    if (flags.emergency) badges.push('<span class="badge badge-danger">Emergency</span>');
+    if (flags.metaphor) badges.push('<span class="badge badge-info">Metaphor Detected</span>');
+    if (flags.speculation) badges.push('<span class="badge badge-warning">Speculation</span>');
+    if (flags.mismatch) badges.push('<span class="badge badge-warning">Category Mismatch</span>');
+    if (intel.ai_reclassified) badges.push('<span class="badge badge-success">AI Reclassified</span>');
+    if (intel.ai_downgraded) badges.push('<span class="badge badge-danger">AI Downgraded</span>');
+    if (intel.temporal_tag) badges.push(`<span class="badge badge-info">Temporal: ${intel.temporal_tag}</span>`);
+    
+    nlpSection = `
+      <div style="margin-top:12px;padding:12px;background:var(--gray-100);border-radius:8px;">
+        <div style="font-weight:700;margin-bottom:8px;"><i class="fas fa-brain" style="margin-right:6px;color:var(--primary);"></i>NLP Intelligence</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:13px;">
+          <div><strong>Confidence:</strong> ${intel.confidence ? Math.round(intel.confidence * 100) + '%' : '-'}</div>
+          <div><strong>Veracity:</strong> ${intel.veracity_score ? Math.round(intel.veracity_score) + '%' : '-'}</div>
+          ${intel.original_category ? `<div><strong>Original Category:</strong> ${intel.original_category}</div>` : ''}
+          ${intel.reclassified_reason ? `<div style="grid-column:1/-1;"><strong>Reason:</strong> ${intel.reclassified_reason}</div>` : ''}
+        </div>
+        ${badges.length > 0 ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">${badges.join('')}</div>` : ''}
+      </div>
+    `;
+  }
+  
   body.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div><div style="font-weight:900;font-size:16px;">${safeText(item.subcategory || item.category)}</div><div style="color:var(--gray-600);">${safeText(item.id)}</div></div>
         <div style="text-align:right;"><div style="font-weight:900;">Score: ${Math.round(item.triage_score || 0)}</div><div style="color:var(--gray-600);">Tier ${item.tier}</div></div>
       </div>
-      <div style="white-space:pre-wrap;">${safeText(item.description)}</div>
+      <div style="white-space:pre-wrap;padding:12px;background:var(--gray-50);border-radius:8px;border-left:4px solid var(--primary);">${safeText(item.description)}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
         <div><strong>Barangay:</strong> ${safeText(item.barangay)}</div>
         <div><strong>Location:</strong> ${safeText(item.location_text)}</div>
         <div><strong>Status:</strong> ${safeText(item.workflow_status || item.status)}</div>
         <div><strong>Priority:</strong> ${safeText(item.priority)}</div>
       </div>
+      ${nlpSection}
     </div>
   `;
   modal.classList.add("active");
@@ -622,11 +723,31 @@ function closeModal() {
   if (modal) modal.classList.remove("active");
 }
 
+/**
+ * Render edge cases detected by the NLP intelligence.
+ * Smart Detection shows: Metaphors, Speculation, Category Mismatches, and Critical Alerts.
+ */
 function renderEdgeCases() {
-  const metaphors = processedComplaints.filter((c) => c.flags?.metaphor).slice(0, 25);
-  const speculation = processedComplaints.filter((c) => c.flags?.speculation).slice(0, 25);
-  const mismatches = processedComplaints.filter((c) => c.flags?.mismatch).slice(0, 25);
-  const alerts = processedComplaints.filter((c) => c.flags?.emergency).slice(0, 25);
+  // Filter by NLP intelligence data (with fallback to flags)
+  const metaphors = processedComplaints.filter((c) => 
+    c.flags?.metaphor || (c.intelligence?.metaphor_score && c.intelligence.metaphor_score > 0.5)
+  ).slice(0, 25);
+  
+  const speculation = processedComplaints.filter((c) => 
+    c.flags?.speculation || c.intelligence?.is_speculation || c.intelligence?.temporal_tag === 'future'
+  ).slice(0, 25);
+  
+  const mismatches = processedComplaints.filter((c) => 
+    c.flags?.mismatch || 
+    c.intelligence?.category_mismatch || 
+    c.intelligence?.ai_reclassified || 
+    c.intelligence?.ai_downgraded ||
+    (c.intelligence?.confidence && c.intelligence.confidence < 0.4 && c.category !== 'Others')
+  ).slice(0, 25);
+  
+  const alerts = processedComplaints.filter((c) => 
+    c.flags?.emergency || c.tier === 1 || (c.triage_score && c.triage_score >= 70)
+  ).slice(0, 25);
 
   const setCount = (id, value) => {
     const el = document.getElementById(id);
@@ -637,20 +758,43 @@ function renderEdgeCases() {
   setCount("mismatchCount", mismatches.length);
   setCount("alertCount", alerts.length);
 
-  const renderList = (id, items) => {
+  const renderList = (id, items, type) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (items.length === 0) {
-      el.innerHTML = `<div style="color:var(--gray-600);padding:10px;">No results</div>`;
+      el.innerHTML = `<div style="color:var(--gray-600);padding:10px;text-align:center;">
+        <i class="fas fa-check-circle" style="color:var(--success);margin-right:6px;"></i>No results
+      </div>`;
       return;
     }
     el.innerHTML = items
-      .map(
-        (c) => `<div class="edge-case-item" data-id="${safeText(c.id)}">
-          <div style="font-weight:900;">${safeText(c.subcategory || c.category)}</div>
-          <div style="color:var(--gray-600);font-size:12px;">${safeText(c.description).slice(0, 90)}</div>
-        </div>`
-      )
+      .map((c) => {
+        // Build badge based on type
+        let badge = '';
+        let detail = '';
+        if (type === 'mismatch' && c.intelligence) {
+          if (c.intelligence.ai_reclassified) {
+            badge = `<span class="badge badge-warning" style="font-size:10px;">AI Reclassified</span>`;
+            detail = c.intelligence.original_category ? `From: ${c.intelligence.original_category}` : '';
+          } else if (c.intelligence.ai_downgraded) {
+            badge = `<span class="badge badge-danger" style="font-size:10px;">AI Downgraded</span>`;
+            detail = c.intelligence.reclassified_reason || '';
+          } else if (c.intelligence.confidence < 0.4) {
+            badge = `<span class="badge badge-info" style="font-size:10px;">Low Confidence: ${Math.round(c.intelligence.confidence * 100)}%</span>`;
+          }
+        } else if (type === 'speculation' && c.intelligence?.temporal_tag) {
+          badge = `<span class="badge badge-info" style="font-size:10px;">Temporal: ${c.intelligence.temporal_tag}</span>`;
+        }
+        
+        return `<div class="edge-case-item" data-id="${safeText(c.id)}" style="cursor:pointer;padding:10px;border-bottom:1px solid var(--gray-200);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-weight:700;font-size:13px;">${safeText(c.subcategory || c.category)}</span>
+            ${badge}
+          </div>
+          <div style="color:var(--gray-600);font-size:12px;line-height:1.4;">${safeText(c.description).slice(0, 100)}${c.description?.length > 100 ? '...' : ''}</div>
+          ${detail ? `<div style="color:var(--gray-500);font-size:11px;margin-top:4px;font-style:italic;">${detail}</div>` : ''}
+        </div>`;
+      })
       .join("");
 
     el.querySelectorAll(".edge-case-item").forEach((node) => {
@@ -662,10 +806,10 @@ function renderEdgeCases() {
     });
   };
 
-  renderList("metaphorList", metaphors);
-  renderList("speculationList", speculation);
-  renderList("mismatchList", mismatches);
-  renderList("alertList", alerts);
+  renderList("metaphorList", metaphors, 'metaphor');
+  renderList("speculationList", speculation, 'speculation');
+  renderList("mismatchList", mismatches, 'mismatch');
+  renderList("alertList", alerts, 'alert');
 }
 
 function applyFilters() {
@@ -826,8 +970,9 @@ function setupListeners() {
       document.getElementById(tabId)?.classList.add("active");
       
       // Auto-render logic for specific tabs
-      if (tabId === 'tab-smart-detection') {
+      if (tabId === 'tab-smart-detection' || tabId === 'edge-cases') {
         renderEdgeCases();
+        renderEdgeCasesCards();  // Also render card layout if available
       }
       
       if (history && typeof history.replaceState === "function") {
@@ -839,17 +984,20 @@ function setupListeners() {
   });
 
   // --- SMART DETECTION RENDERER (EDGE CASES) ---
-  function renderEdgeCases() {
+  // Note: This is for the card-based layout targeting 'edge-cases-list' element
+  // The main renderEdgeCases function (defined earlier) handles the list-based layout
+  function renderEdgeCasesCards() {
     const list = document.getElementById('edge-cases-list');
     
     if (!list) return;
     
-    // Find "Edge Cases" from processedComplaints
+    // Find "Edge Cases" from processedComplaints using NLP intelligence
     const edgeCases = processedComplaints.filter(c => {
-        const hasMetaphor = c.intelligence && c.intelligence.metaphor_score > 0.7;
-        const isSpeculation = c.intelligence && c.intelligence.is_speculation;
-        const mismatch = c.intelligence && c.intelligence.category_mismatch;
-        const highRiskUnsure = c.intelligence && c.intelligence.sentiment_score < -0.7 && c.intelligence.confidence < 0.6;
+        const intel = c.intelligence || {};
+        const hasMetaphor = intel.metaphor_score > 0.5 || c.flags?.metaphor;
+        const isSpeculation = intel.is_speculation || c.flags?.speculation;
+        const mismatch = intel.category_mismatch || c.flags?.mismatch;
+        const highRiskUnsure = intel.confidence && intel.confidence < 0.5 && c.triage_score >= 50;
         
         return hasMetaphor || isSpeculation || mismatch || highRiskUnsure;
     });
@@ -859,28 +1007,44 @@ function setupListeners() {
             <div style="text-align:center; padding: 40px; color: var(--gray-500); grid-column: 1 / -1;">
                 <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; color: var(--success);"></i>
                 <h3>No Anomalies Detected</h3>
-                <p>The system hasn't found any significant edge cases or anomalies in the current dataset.</p>
+                <p>The NLP system hasn't found any significant edge cases or anomalies in the current dataset.</p>
             </div>
         `;
         return;
     }
 
-    list.innerHTML = edgeCases.map(c => `
-        <div class="edge-case-card" onclick="openComplaintModal('${c.id}')">
+    list.innerHTML = edgeCases.map(c => {
+        const intel = c.intelligence || {};
+        const hasMetaphor = intel.metaphor_score > 0.5 || c.flags?.metaphor;
+        const isSpeculation = intel.is_speculation || c.flags?.speculation;
+        const mismatch = intel.category_mismatch || c.flags?.mismatch;
+        
+        return `
+        <div class="edge-case-card" data-id="${c.id}" style="cursor:pointer;">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                <span class="badge ${c.intelligence.category_mismatch ? 'badge-mismatch' : 'badge-keyword'}">
+                <span class="badge ${mismatch ? 'badge-warning' : 'badge-primary'}">
                     ${c.category}
                 </span>
                 <span style="font-size:12px; color:var(--gray-500);">${new Date(c.timestamp).toLocaleDateString()}</span>
             </div>
-            <p style="margin:0 0 10px; font-size:14px; line-height:1.5;">"${c.original_text}"</p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.5;">"${safeText(c.original_text || c.description).slice(0, 120)}${(c.original_text || c.description)?.length > 120 ? '...' : ''}"</p>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                ${c.intelligence.metaphor_score > 0.7 ? '<span class="badge badge-metaphor">Metaphor</span>' : ''}
-                ${c.intelligence.is_speculation ? '<span class="badge badge-speculation">Speculation</span>' : ''}
-                ${c.intelligence.category_mismatch ? '<span class="badge badge-warning">Mismatch</span>' : ''}
+                ${hasMetaphor ? '<span class="badge badge-info">Metaphor</span>' : ''}
+                ${isSpeculation ? '<span class="badge badge-warning">Speculation</span>' : ''}
+                ${mismatch ? '<span class="badge badge-danger">Mismatch</span>' : ''}
+                ${intel.confidence && intel.confidence < 0.5 ? `<span class="badge badge-secondary">Low Conf: ${Math.round(intel.confidence * 100)}%</span>` : ''}
             </div>
         </div>
-    `).join('');
+    `}).join('');
+    
+    // Add click handlers
+    list.querySelectorAll('.edge-case-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-id');
+            const found = processedComplaints.find(c => safeText(c.id) === safeText(id));
+            if (found) openModal(found);
+        });
+    });
   }
 
   const initialHash = (window.location.hash || "").replace("#", "").trim();
@@ -892,8 +1056,11 @@ function setupListeners() {
       document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       initialBtn.classList.add("active");
       initialSection.classList.add("active");
-      // Auto-render if initial load is edge cases
-      if (initialHash === 'tab-smart-detection') renderEdgeCases();
+      // Auto-render if initial load is edge cases/smart detection
+      if (initialHash === 'tab-smart-detection' || initialHash === 'edge-cases') {
+        renderEdgeCases();
+        renderEdgeCasesCards();
+      }
     }
   }
 }

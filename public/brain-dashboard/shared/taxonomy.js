@@ -107,6 +107,25 @@
         return { category: 'Others', subcategory: null };
     }
 
+    async function fetchJsonWithTimeout(url, timeoutMs) {
+        const ms = Number(timeoutMs);
+        if (!Number.isFinite(ms) || ms <= 0) {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        }
+
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), ms);
+        try {
+            const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } finally {
+            clearTimeout(t);
+        }
+    }
+
     async function loadTaxonomy(options = {}) {
         if (cachedTaxonomy) return cachedTaxonomy;
         if (cachedPromise) return cachedPromise;
@@ -120,22 +139,18 @@
                 const filePath = resolved.filePath || path.join(process.cwd(), DEFAULT_TAXONOMY_FILE);
                 taxonomy = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             } else {
-                const configUrl = resolved.configUrl || DEFAULT_CONFIG_URL;
-                let configResponse = null;
-                try {
-                    configResponse = await fetch(configUrl, { cache: 'no-store' });
-                } catch (_e) {
-                    configResponse = null;
-                }
-
-                if (configResponse && configResponse.ok) {
-                    const config = await configResponse.json();
-                    if (config && typeof config === 'object') {
-                        root.CitizenLinkBrainConfig = config;
-                        if (config.taxonomy) {
-                            taxonomy = config.taxonomy;
+                if (!resolved.skipConfig) {
+                    const configUrl = resolved.configUrl || DEFAULT_CONFIG_URL;
+                    const configTimeoutMs = resolved.configTimeoutMs === undefined ? 1500 : resolved.configTimeoutMs;
+                    try {
+                        const config = await fetchJsonWithTimeout(configUrl, configTimeoutMs);
+                        if (config && typeof config === 'object') {
+                            root.CitizenLinkBrainConfig = config;
+                            if (config.taxonomy && typeof config.taxonomy === 'object') {
+                                taxonomy = config.taxonomy;
+                            }
                         }
-                    }
+                    } catch (_e) {}
                 }
 
                 if (!taxonomy) {

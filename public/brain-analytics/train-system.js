@@ -131,27 +131,51 @@ async function loadLowConfidenceItems() {
   // Get items
   const processed = getProcessedComplaints();
   
-  // Build Pending List
+  // Build Pending List using NLP intelligence
   pendingReviews = processed.filter((item) => {
     if (!item?.id) return false;
     if (trainedComplaintIds.has(item.id)) return false;
+    
     const triage = Number(item?.triage_score ?? item?.triage?.score ?? 0);
     const isOthers = safeText(item?.category) === "Others" || safeText(item?.subcategory) === "Others";
     const keywords = Array.isArray(item?.keywords) ? item.keywords : Array.isArray(item?.nlp?.keywords) ? item.nlp.keywords : [];
     const noKeywords = keywords.length === 0;
-    const mismatch = Boolean(item?.category_mismatch?.has_mismatch);
     
-    // Logic: Low triage score (low confidence usually correlates), or Others, or No Keywords
-    return (triage < 30 || isOthers || noKeywords) && !mismatch;
-  }).slice(0, 50).map(item => ({
+    // Use NLP intelligence for better detection
+    const intel = item.intelligence || {};
+    const lowConfidence = intel.confidence && intel.confidence < 0.6;
+    const hasMismatch = Boolean(item?.category_mismatch?.has_mismatch) || Boolean(intel.category_mismatch);
+    const isSpeculative = Boolean(intel.is_speculation) || Boolean(item?.flags?.speculation);
+    const isMetaphorical = Boolean(intel.metaphor_score && intel.metaphor_score > 0.5) || Boolean(item?.flags?.metaphor);
+    const wasReclassified = Boolean(intel.ai_reclassified) || Boolean(intel.ai_downgraded);
+    
+    // Training candidates: Low confidence, Others category, No keywords, Speculative, or Reclassified
+    // Exclude items with confirmed mismatches (already handled by AI)
+    const needsTraining = (
+      lowConfidence || 
+      isOthers || 
+      noKeywords || 
+      (isSpeculative && triage < 50) ||
+      (isMetaphorical && triage < 50)
+    ) && !wasReclassified; // Don't train items AI already corrected
+    
+    return needsTraining;
+  }).slice(0, 50).map(item => {
+    const intel = item.intelligence || {};
+    return {
       id: item.id,
       text: safeText(item.original_text || item.description),
       ai_suggestion: safeText(item.category || "Others"),
       subcategory: safeText(item.subcategory),
-      confidence: (item.intelligence?.confidence || 0.5),
+      confidence: intel.confidence || 0.5,
       created_at: item.timestamp,
-      status: 'pending'
-  }));
+      status: 'pending',
+      // Additional NLP context for training UI
+      is_speculation: Boolean(intel.is_speculation),
+      is_metaphor: Boolean(intel.metaphor_score && intel.metaphor_score > 0.5),
+      temporal_tag: intel.temporal_tag || null
+    };
+  });
 
   updateHITLStats();
   renderTrainingList();
@@ -166,23 +190,41 @@ function renderTrainingList() {
             <div style="padding: 40px; text-align: center; color: var(--success);">
                 <i class="fas fa-check-double" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
                 <p>All clear! No items to review.</p>
+                <p style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">The NLP system has high confidence on all current complaints.</p>
             </div>
         `;
         resetForm();
         return;
     }
 
-    listContainer.innerHTML = pendingReviews.map(c => `
+    listContainer.innerHTML = pendingReviews.map(c => {
+        // Build NLP context badges
+        let nlpBadges = '';
+        if (c.is_speculation) {
+            nlpBadges += '<span class="badge badge-info" style="font-size:9px;margin-right:4px;">Speculation</span>';
+        }
+        if (c.is_metaphor) {
+            nlpBadges += '<span class="badge badge-warning" style="font-size:9px;margin-right:4px;">Metaphor</span>';
+        }
+        if (c.temporal_tag) {
+            nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;">${c.temporal_tag}</span>`;
+        }
+        
+        return `
         <div class="train-item" onclick="window.selectTrainingItem('${c.id}')" id="train-item-${c.id}">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <span style="font-weight:600; font-size:13px;">${c.id.substring(0,8)}...</span>
                 <span class="badge ${getConfidenceBadge(c.confidence)}">${Math.round(c.confidence * 100)}%</span>
             </div>
+            ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ''}
             <div style="font-size:12px; color:var(--gray-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 ${c.text}
             </div>
+            <div style="font-size:11px; color:var(--gray-400); margin-top:3px;">
+                Suggested: <strong>${c.ai_suggestion}</strong>${c.subcategory ? ` › ${c.subcategory}` : ''}
+            </div>
         </div>
-    `).join('');
+    `}).join('');
     
     // Auto-select first
     if (pendingReviews.length > 0 && !currentTrainingItem) {

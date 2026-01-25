@@ -5,6 +5,25 @@
 
 const Database = require('../config/database');
 
+function normalizeConfidence(raw, defaultValue = 0.8) {
+    if (raw === null || raw === undefined || raw === '') return defaultValue;
+
+    if (typeof raw === 'string') {
+        const s = raw.trim();
+        if (/^0\d$/.test(s)) {
+            const v = Number(s[1]) / 10;
+            if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
+        }
+    }
+
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return defaultValue;
+
+    if (n >= 0 && n <= 1) return n;
+    if (n > 1 && n <= 100) return n / 100;
+    return 1;
+}
+
 class NlpManagementService {
     get supabase() {
         return Database.getClient();
@@ -51,7 +70,7 @@ class NlpManagementService {
                 category,
                 subcategory: subcategory || null,
                 language: language || 'all',
-                confidence: parseFloat(confidence) || 0.8
+                confidence: normalizeConfidence(confidence, 0.8)
             })
             .select()
             .single();
@@ -75,7 +94,8 @@ class NlpManagementService {
         
         for (const key of allowedUpdates) {
             if (updates[key] !== undefined) {
-                payload[key] = updates[key];
+                if (key === 'confidence') payload[key] = normalizeConfidence(updates[key], 0.8);
+                else payload[key] = updates[key];
             }
         }
 
