@@ -1,5 +1,7 @@
 const ComplaintService = require("../services/ComplaintService");
 const { getWorkflowFromStatus } = require("../utils/complaintUtils");
+const fs = require("fs");
+const path = require("path");
 
 class ComplaintController {
   constructor() {
@@ -364,6 +366,67 @@ class ComplaintController {
     const locations = await this.complaintService.getComplaintLocations(
       serviceFilters
     );
+
+    if (
+      Array.isArray(locations) &&
+      locations.length === 0 &&
+      String(process.env.NODE_ENV || "").toLowerCase() === "development"
+    ) {
+      try {
+        const mockPath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "..",
+          "public",
+          "data",
+          "complaints",
+          "mock_complaints.json"
+        );
+        const raw = fs.readFileSync(mockPath, "utf8");
+        const parsed = JSON.parse(raw);
+        const complaints = Array.isArray(parsed) ? parsed : parsed?.complaints;
+        const fallback = Array.isArray(complaints)
+          ? complaints
+              .map((c) => {
+                const lat = Number.parseFloat(c.latitude);
+                const lng = Number.parseFloat(c.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+                const departments = Array.isArray(c.department_r)
+                  ? c.department_r
+                  : c.department_r
+                    ? [c.department_r]
+                    : [];
+                return {
+                  id: c.id,
+                  title: c.title || null,
+                  status: c.workflow_status || "new",
+                  priority: c.priority || "medium",
+                  lat,
+                  lng,
+                  location: c.location_text || "",
+                  submittedAt: c.submitted_at || null,
+                  department: departments.length > 0 ? departments[0] : "Unknown",
+                  departments,
+                  secondaryDepartments: departments.length > 1 ? departments.slice(1) : [],
+                  type: c.category || "General",
+                  category: c.category || null,
+                  subcategory: c.subcategory || null,
+                  department_r: departments,
+                };
+              })
+              .filter(Boolean)
+          : [];
+
+        res.json({
+          success: true,
+          data: fallback,
+          count: fallback.length,
+        });
+        return;
+      } catch (e) {
+      }
+    }
 
     res.json({
       success: true,

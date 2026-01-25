@@ -51,7 +51,7 @@ class NlpManagementService {
                 category,
                 subcategory: subcategory || null,
                 language: language || 'all',
-                confidence: confidence || 0.8
+                confidence: parseFloat(confidence) || 0.8
             })
             .select()
             .single();
@@ -223,6 +223,64 @@ class NlpManagementService {
         return data;
     }
 
+    async getMetaphors(filters = {}) {
+        let query = this.supabase
+            .from('nlp_metaphors')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (filters.search) {
+            query = query.ilike('pattern', `%${filters.search}%`);
+        }
+
+        const { data, error } = await query;
+        if (error) throw new Error(`Failed to fetch metaphors: ${error.message}`);
+        return data;
+    }
+
+    async addMetaphor(metaphorData) {
+        const { pattern, literal_meaning, actual_meaning, filter_type, is_emergency } = metaphorData;
+
+        if (!pattern) {
+            throw new Error('Pattern is required');
+        }
+
+        const payload = {
+            pattern: String(pattern).trim(),
+            literal_meaning: literal_meaning || null,
+            actual_meaning: actual_meaning || null,
+            filter_type: filter_type || null,
+            is_emergency: is_emergency === true
+        };
+
+        const { data, error } = await this.supabase
+            .from('nlp_metaphors')
+            .insert(payload)
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === '23505') {
+                throw new Error(`Metaphor "${pattern}" already exists`);
+            }
+            throw new Error(`Failed to add metaphor: ${error.message}`);
+        }
+
+        return data;
+    }
+
+    async deleteMetaphor(id) {
+        const { data, error } = await this.supabase
+            .from('nlp_metaphors')
+            .delete()
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw new Error(`Failed to delete metaphor: ${error.message}`);
+        return data;
+    }
+
     /**
      * Get summary stats for management view
      */
@@ -239,6 +297,157 @@ class NlpManagementService {
             anchors: anchors.count || 0
         };
     }
+
+    async getDictionaryRules(filters = {}) {
+        let query = this.supabase
+            .from('nlp_dictionary_rules')
+            .select('*')
+            .order('rule_type', { ascending: true })
+            .order('pattern', { ascending: true });
+
+        if (filters.rule_type) {
+            query = query.eq('rule_type', filters.rule_type);
+        }
+        if (filters.search) {
+            query = query.ilike('pattern', `%${filters.search}%`);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+            const msg = error.message || '';
+            if (msg.includes("schema cache") || msg.includes("Could not find the table")) {
+                throw new Error('Dictionary rules table is not available. Apply the nlp_dictionary_rules migration in Supabase.');
+            }
+            throw new Error(`Failed to fetch dictionary rules: ${error.message}`);
+        }
+        return data;
+    }
+
+    async addDictionaryRule(ruleData, userRole, userId) {
+        const {
+            rule_type,
+            pattern,
+            translation,
+            multiplier,
+            action,
+            is_current_emergency
+        } = ruleData;
+
+        if (!rule_type || !pattern) {
+            throw new Error('rule_type and pattern are required');
+        }
+
+        const isModifierRule = rule_type === 'severity_amplifier' || rule_type === 'severity_diminisher';
+        if (isModifierRule && userRole !== 'super-admin') {
+            throw new Error('Modifier rules require Super Admin verification. Submit a proposal instead.');
+        }
+        if (isModifierRule && (multiplier === undefined || multiplier === null || multiplier === '')) {
+            throw new Error('Multiplier is required for modifier rules');
+        }
+
+        const payload = {
+            rule_type,
+            pattern: String(pattern).trim(),
+            translation: translation || null,
+            multiplier: multiplier !== undefined && multiplier !== null && multiplier !== '' ? multiplier : null,
+            action: action || null,
+            is_current_emergency: is_current_emergency === true,
+            created_by: userId || null,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data, error } = await this.supabase
+            .from('nlp_dictionary_rules')
+            .insert(payload)
+            .select()
+            .single();
+
+        if (error) {
+            const msg = error.message || '';
+            if (msg.includes("schema cache") || msg.includes("Could not find the table")) {
+                throw new Error('Dictionary rules table is not available. Apply the nlp_dictionary_rules migration in Supabase.');
+            }
+            if (error.code === '23505') {
+                throw new Error(`Rule "${rule_type}:${pattern}" already exists`);
+            }
+            throw new Error(`Failed to add dictionary rule: ${error.message}`);
+        }
+
+        return data;
+    }
+
+    async deleteDictionaryRule(id, userRole) {
+        if (userRole !== 'super-admin') {
+            const { data: existing, error: existingError } = await this.supabase
+                .from('nlp_dictionary_rules')
+                .select('rule_type')
+                .eq('id', id)
+                .single();
+            if (existingError) throw new Error(`Failed to delete dictionary rule: ${existingError.message}`);
+            const ruleType = existing?.rule_type;
+            if (ruleType === 'severity_amplifier' || ruleType === 'severity_diminisher') {
+                throw new Error('Only Super Admin can delete modifier rules');
+            }
+        }
+
+        const { data, error } = await this.supabase
+            .from('nlp_dictionary_rules')
+            .delete()
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            const msg = error.message || '';
+            if (msg.includes("schema cache") || msg.includes("Could not find the table")) {
+                throw new Error('Dictionary rules table is not available. Apply the nlp_dictionary_rules migration in Supabase.');
+            }
+            throw new Error(`Failed to delete dictionary rule: ${error.message}`);
+        }
+        return data;
+    }
+
+    /**
+     * Get complete dictionary for NLP engine (Client Consumption)
+     */
+    async getCompleteDictionary() {
+        const keywords = await this.getKeywords();
+        
+        const dictionary = {
+            _metadata: {
+                version: '1.0.0',
+                generated_at: new Date().toISOString(),
+                total_entries: keywords.length
+            },
+            filipino_keywords: {},
+            english_keywords: {}
+        };
+
+        // Helper to add to nested structure
+        const addToDict = (langObj, category, keywordObj) => {
+            if (!langObj[category]) langObj[category] = [];
+            langObj[category].push({
+                term: keywordObj.term,
+                category: keywordObj.category,
+                subcategory: keywordObj.subcategory,
+                confidence: keywordObj.confidence
+            });
+        };
+
+        for (const k of keywords) {
+            // Map 'all', 'cebuano', 'tagalog' to filipino_keywords for now as per legacy structure
+            // or put them in english if language is english
+            if (k.language === 'english') {
+                addToDict(dictionary.english_keywords, k.category, k);
+            } else {
+                // Default to filipino bucket for tagalog, cebuano, and all
+                addToDict(dictionary.filipino_keywords, k.category, k);
+            }
+        }
+
+        return dictionary;
+    }
 }
+
 
 module.exports = new NlpManagementService();

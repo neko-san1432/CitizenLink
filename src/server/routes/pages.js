@@ -291,6 +291,22 @@ router.get(
   }
 );
 router.get(
+  "/brain-analytics-page",
+  authenticateUser,
+  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "views",
+        "pages",
+        "lgu-admin",
+        "brain-analytics.html"
+      )
+    );
+  }
+);
+router.get(
   "/publish",
   authenticateUser,
   requireRole(["lgu-admin"]),

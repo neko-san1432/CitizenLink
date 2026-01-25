@@ -1,341 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LGU Admin - Heatmap | CitizenLink</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: { "50": "#eff6ff", "100": "#dbeafe", "200": "#bfdbfe", "300": "#93c5fd", "400": "#60a5fa", "500": "#3b82f6", "600": "#2563eb", "700": "#1d4ed8", "800": "#1e40af", "900": "#1e3a8a", "950": "#172554" }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="../../css/style.css">
-  <link rel="stylesheet" href="../../css/pages/heatmap.css">
-  <link rel="stylesheet" href="/css/pages/heatmap-advanced.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenLink: City Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
 </head>
-
-<body class="bg-gray-100">
-  <div class="heatmap-container relative h-screen w-full overflow-hidden">
-
-    <!-- Sidebar Toggle (Mobile) -->
-    <button id="sidebarToggle" class="absolute top-4 left-4 z-50 bg-white p-2 rounded-md shadow-lg md:hidden">
-      <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar -->
-    <div id="sidebar" class="collapsible z-[9999]"></div>
-    <div id="sidebar-container" class="leaflet-control-container"></div>
-
-    <!-- Top Bar Overlay -->
-    <div
-      class="absolute top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-[50] flex flex-col md:flex-row justify-between items-stretch md:items-start gap-2 md:gap-3 pointer-events-none">
-      <!-- Left: Title & Menu PC -->
-      <div
-        class="pointer-events-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-100 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3">
-        <button id="menu-toggle"
-          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors md:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <div>
-          <h1 class="font-bold text-gray-900 dark:text-gray-100 leading-tight">
-            Complaint Heatmap
-          </h1>
-          <p class="text-xs text-gray-500 dark:text-gray-400 hidden md:block">
-            Geospatial analysis of reports
-          </p>
-        </div>
-      </div>
-
-      <!-- Right: Map Controls Toolbar -->
-      <div
-        class="pointer-events-auto flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-visible w-full md:w-auto px-1 pb-1 md:pb-0 justify-start md:justify-end items-center md:items-start custom-scroll">
-        <!-- Reset View -->
-        <button id="reset-view-btn"
-          class="bg-white dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all font-medium flex items-center gap-2"
-          title="Reset View">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-        </button>
-
-        <!-- Separator -->
-        <div class="hidden md:block w-px h-8 bg-gray-300 dark:bg-gray-600 mx-1 self-center"></div>
-
-        <!-- Toolbar: Display -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-display-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Display</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-display-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-56 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div class="space-y-2">
-              <button id="toggle-heatmap-btn"
-                class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg text-left flex justify-between items-center group">
-                Toggle Heatmap
-                <span class="w-2 h-2 rounded-full bg-gray-400 group-hover:bg-blue-500 transition-colors"></span>
-              </button>
-              <button id="toggle-markers-btn"
-                class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg text-left flex justify-between items-center group">
-                Toggle Markers
-                <span class="w-2 h-2 rounded-full bg-gray-400 group-hover:bg-blue-500 transition-colors"></span>
-              </button>
-              <label
-                class="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                <input type="checkbox" id="include-resolved" checked
-                  class="w-4 h-4 text-blue-600 rounded border-gray-300" />
-                <span class="text-xs text-gray-700 dark:text-gray-300 font-medium">Include Resolved</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Toolbar: Date -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-date-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Date</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-date-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div class="space-y-2">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <span class="text-[10px] text-gray-500 dark:text-gray-400 block mb-1">From</span>
-                  <input type="date" id="date-range-start"
-                    class="w-full text-xs border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg py-1.5" />
+<body>
+    <div class="container">
+        <header class="control-panel">
+            <div class="control-panel-brand">
+                <div class="logo-mini">
+                    <i class="fas fa-city"></i>
                 </div>
-                <div>
-                  <span class="text-[10px] text-gray-500 dark:text-gray-400 block mb-1">To</span>
-                  <input type="date" id="date-range-end"
-                    class="w-full text-xs border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg py-1.5" />
+                <div class="brand-text">
+                    <h1>CitizenLink</h1>
+                    <p>City Analytics Dashboard</p>
                 </div>
-              </div>
-              <div class="flex gap-2 pt-1">
-                <button id="apply-date-filter-btn"
-                  class="flex-1 py-1.5 px-3 bg-blue-600 text-white text-xs font-medium rounded-lg shadow-sm">
-                  Apply
+            </div>
+            <div class="control-panel-actions">
+                <button class="control-btn primary" id="loadCityData">
+                    <i class="fas fa-database"></i>
+                    <span>Load City Data</span>
                 </button>
-                <button id="clear-date-range"
-                  class="flex-1 py-1.5 px-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600">
-                  Clear
-                </button>
-              </div>
+                <div class="map-layers-dropdown" id="mapLayersDropdown">
+                    <button class="control-btn layers-btn" id="mapLayersToggle">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Map Layers</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="layers-dropdown-menu" id="layersDropdownMenu">
+                        <div class="layers-dropdown-header">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Visualization Options</span>
+                        </div>
+                        <div class="layer-toggle-item" id="toggleHeatmapItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-fire" style="color: #ef4444;"></i>
+                                <span>Heatmap Layer</span>
+                            </div>
+                            <div class="layer-toggle-switch">
+                                <input type="checkbox" id="heatmapSwitch" class="layer-switch">
+                                <label for="heatmapSwitch" class="layer-switch-label"></label>
+                            </div>
+                        </div>
+                        <div class="layer-toggle-item" id="toggleClustersItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
+                                <span>Glass Box Clusters</span>
+                            </div>
+                            <div class="layer-toggle-switch">
+                                <input type="checkbox" id="clustersSwitch" class="layer-switch" checked>
+                                <label for="clustersSwitch" class="layer-switch-label"></label>
+                            </div>
+                        </div>
+                        <div class="layers-dropdown-divider"></div>
+                        <div class="layer-toggle-item action-item" id="causalAnalysisItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-link" style="color: #a855f7;"></i>
+                                <span>Causal Analysis</span>
+                            </div>
+                            <span class="layer-action-badge">Phase 2</span>
+                        </div>
+                        <div class="layer-toggle-item action-item" id="emergencyPanelItem">
+                            <div class="layer-toggle-left">
+                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                                <span>Emergency Panel</span>
+                            </div>
+                            <span class="emergency-count-badge" id="emergencyCountDropdown">0</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/brain-analytics-page#dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dictionary</span>
+                </a>
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="complaintSearch" class="complaint-search-input" placeholder="Search by Complaint ID..." autocomplete="off">
+                        <button class="search-clear-btn" id="searchClearBtn" title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="control-btn search-btn" id="searchBtn">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>Locate</span>
+                    </button>
+                    <div class="search-results-dropdown" id="searchResultsDropdown"></div>
+                </div>
+                <div class="control-dropdown">
+                    <label for="categoryFilter">
+                        <i class="fas fa-filter"></i> Filter:
+                    </label>
+                    <select id="categoryFilter" class="category-select">
+                        <option value="all">All Categories</option>
+                        <option value="Infrastructure">Infrastructure</option>
+                        <option value="Sanitation">Sanitation</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Environment">Environment</option>
+                        <option value="Traffic">Traffic</option>
+                        <option value="Public Safety">Public Safety</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot"></div>
+                    <span>Ready</span>
+                </div>
             </div>
-          </div>
+        </header>
+        <div class="main-content">
+            <main class="map-container">
+                <div id="map"></div>
+                <div class="export-button-container">
+                    <button class="export-excel-btn" id="exportExcelBtn" title="Export Analysis to Excel" disabled>
+                        <i class="fas fa-file-excel"></i>
+                        <span>Export to Excel</span>
+                    </button>
+                </div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                    <p class="loading-text">Processing city data...</p>
+                    <p class="loading-subtext" id="loadingProgress">0 / 0 records analyzed</p>
+                </div>
+            </main>
+            <aside class="emergency-panel" id="emergencyPanel">
+                <div class="emergency-header">
+                    <div class="emergency-title">
+                        <i class="fas fa-exclamation-triangle pulse-icon"></i>
+                        <h2>ACTIVE EMERGENCIES</h2>
+                    </div>
+                    <div class="emergency-count">
+                        <span id="emergencyCount">0</span>
+                    </div>
+                    <button class="emergency-minimize" id="emergencyMinimize" title="Minimize Panel">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="emergency-content" id="emergencyContent">
+                    <div class="emergency-placeholder">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>No active emergencies</p>
+                        <span>Critical reports will appear here</span>
+                    </div>
+                </div>
+            </aside>
+            <aside class="insights-panel">
+                <div class="insights-header">
+                    <h2>
+                        <i class="fas fa-broadcast-tower"></i>
+                        COMMAND CENTER
+                    </h2>
+                    <button class="refresh-insights" id="refreshInsights" title="Refresh Intelligence">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" title="Total raw signals received from the public">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="totalComplaints">--</span>
+                            <span class="stat-label">CITIZEN INPUTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Clusters confirmed as valid issues requiring action">
+                        <div class="stat-icon green">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="totalClusters">--</span>
+                            <span class="stat-label">VERIFIED INCIDENTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="High-density clusters requiring immediate attention">
+                        <div class="stat-icon red">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="criticalHotspots">--</span>
+                            <span class="stat-label">PRIORITY ZONES</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Percentage of duplicate reports compressed - saves city resources">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="efficiencyScore">--</span>
+                            <span class="stat-label">NOISE REDUCTION</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as currently active via temporal_present">
+                        <div class="stat-icon red">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="activeIncidentsCount">--</span>
+                            <span class="stat-label">ACTIVE INCIDENTS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as past/resolved via temporal_past">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-clock-rotate-left"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="historyLogsCount">--</span>
+                            <span class="stat-label">HISTORY / LOGS</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" title="Items tagged as future advisory via temporal_future">
+                        <div class="stat-icon green">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-value" id="advisoriesCount">--</span>
+                            <span class="stat-label">ADVISORIES</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="insights-content" id="insightsContent">
+                    <div class="insight-placeholder">
+                        <i class="fas fa-satellite-dish"></i>
+                        <p>Awaiting field intelligence...</p>
+                        <span class="placeholder-hint">Run analysis to generate dispatch orders</span>
+                    </div>
+                </div>
+                <div class="category-distribution">
+                    <h3>
+                        <i class="fas fa-chart-bar"></i>
+                        INCIDENT BREAKDOWN
+                    </h3>
+                    <div class="category-bars" id="categoryBars"></div>
+                </div>
+            </aside>
         </div>
-
-        <!-- Toolbar: Status -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-status-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Status</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-status-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div id="status-filters"
-              class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Toolbar: Category -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-category-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Category</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-category-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div id="category-filter-group"
-              class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll">
-              <p id="category-loading" class="text-xs text-gray-400 italic">
-                Loading...
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Toolbar: Office -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-office-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Office</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-office-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-xs md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div id="department-filter-group"
-              class="space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scroll">
-              <p id="department-loading" class="text-xs text-gray-400 italic">
-                Loading...
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Toolbar: Stats -->
-        <div class="relative group-dropdown">
-          <button id="toolbar-stats-btn"
-            class="toolbar-trigger bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-sm font-medium flex items-center gap-2">
-            <span>Stats</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="toolbar-stats-dropdown"
-            class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm md:w-64 md:absolute md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 glass-panel rounded-xl shadow-xl p-3 hidden z-[60] bg-white/95 dark:bg-gray-800/95 backdrop-blur">
-            <div class="grid grid-cols-2 gap-2">
-              <div class="bg-gray-50 p-2 rounded-lg border border-gray-100 text-center">
-                <span id="total-complaints-stat" class="block font-bold text-gray-900 dark:text-white text-lg">0</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Total</span>
-              </div>
-              <div class="bg-gray-50 p-2 rounded-lg border border-gray-100 text-center">
-                <span id="visible-markers-stat"
-                  class="block font-bold text-gray-900 dark:text-white text-lg text-blue-600 dark:text-blue-400">0</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Visible</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Insights Button (Advanced Features) -->
-        <button id="toolbar-insights-btn"
-          class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium flex items-center gap-2 hidden">
-          <span>Insights</span>
-          <i class="fas fa-magic"></i>
-        </button>
-
-        <!-- Reset Filter -->
-        <button id="reset-filters-btn"
-          class="bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-sm font-medium"
-          title="Reset Filters">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
     </div>
-
-    <!-- 🚨 EMERGENCY PANEL (Ported) -->
-    <aside class="emergency-panel hidden" id="emergencyPanel">
-      <div class="emergency-header">
-        <div class="emergency-title">
-          <i class="fas fa-exclamation-triangle pulse-icon"></i>
-          <h2>ACTIVE EMERGENCIES</h2>
-        </div>
-        <div class="emergency-count">
-          <span id="emergencyCount">0</span>
-        </div>
-      </div>
-      <div class="emergency-content" id="emergencyContent">
-        <!-- Dynamic Content -->
-      </div>
-    </aside>
-
-    <!-- INSIGHTS PANEL (Command Center) -->
-    <aside class="insights-panel hidden" id="insightsPanel">
-      <div class="insights-header">
-        <div class="insights-title">
-          <i class="fas fa-chart-line"></i>
-          <h2>COMMAND CENTER</h2>
-        </div>
-        <button id="refreshInsights" class="text-white hover:text-cyan-200">
-          <i class="fas fa-sync-alt"></i>
-        </button>
-      </div>
-      <div class="insights-content" id="insightsContent">
-        <!-- Will be populated by advancedFeatures.js -->
-        <div class="p-4 text-center text-gray-400">
-          <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-          <p>Analyzing data...</p>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Map Container -->
-    <div id="map" class="h-full w-full bg-gray-100 dark:bg-gray-800 absolute inset-0 z-0"></div>
-
-  </div>
-
-  <!-- Hidden Elements needed by JS logic but not shown directly -->
-  <div class="hidden">
-    <button class="toolbar-btn" data-target="display"></button>
-    <button class="toolbar-btn" data-target="date"></button>
-    <button class="toolbar-btn" data-target="status"></button>
-    <button class="toolbar-btn" data-target="office"></button>
-    <button class="toolbar-btn" data-target="stats"></button>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-  <!-- Turf.js for Offline Point-in-Polygon -->
-  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-
-  <script src="/js/pages/heatmap-leaflet-check.js"></script>
-  <script type="module" src="/js/lib/supabase-boot.js"></script>
-  <script src="../../js/components/map/map-generator.js"></script>
-  <script src="../../js/components/map/dbscan.js"></script>
-  <script src="/js/components/map/adaptive-dbscan.js"></script>
-  <script src="/js/utils/complaint-intelligence.js"></script>
-
-  <!-- Advanced Features Module -->
-  <script type="module">
-    import { AdvancedFeatures } from '/js/components/map/advancedFeatures.js?v=16';
-    window.AdvancedFeatures = AdvancedFeatures;
-  </script>
-
-  <script src="../../js/components/map/heatmapVisualization.js?v=8"></script>
-  <script src="../../js/components/map/heatmapController.js"></script>
-  <script type="module" src="../../js/components/sidebar.js"></script>
-  <script type="module" src="../../js/auth/authChecker.js"></script>
-  <script src="/js/pages/heatmap-init.js?v=7"></script>
-  <script type="module" src="../../js/components/map/boundaryGenerator.js?v=7"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="/brain-dashboard/shared/taxonomy.js"></script>
+    <script src="/brain-dashboard/nlp-processor.js"></script>
+    <script src="/brain-dashboard/causality-manager.js"></script>
+    <script src="/brain-dashboard/simulation-engine.js"></script>
+    <script src="/brain-dashboard/live-sync.js"></script>
+    <script src="/brain-dashboard/dashboard_production.js"></script>
+    <script src="/brain-dashboard/statistical-analysis.js"></script>
+    <script src="/brain-dashboard/statistical-excel-export.js"></script>
 </body>
-
 </html>

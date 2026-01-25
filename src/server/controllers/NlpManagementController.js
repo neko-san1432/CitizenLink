@@ -23,11 +23,18 @@ class NlpManagementController {
 
     async addKeyword(req, res) {
         try {
+            console.log('[NlpController] Adding keyword:', req.body);
             const keyword = await NlpManagementService.addKeyword(req.body);
             res.status(201).json({ success: true, data: keyword });
         } catch (error) {
-            const status = error.message.includes('already exists') ? 409 : 500;
-            res.status(status).json({ success: false, error: error.message });
+            console.error('[NlpController] Error adding keyword:', error);
+            const msg = String(error.message || "");
+            const status = msg.includes("already exists")
+                ? 409
+                : msg.includes("required")
+                    ? 400
+                    : 500;
+            res.status(status).json({ success: false, error: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined });
         }
     }
 
@@ -106,12 +113,90 @@ class NlpManagementController {
         }
     }
 
+    // =========== METAPHORS ===========
+
+    async getMetaphors(req, res) {
+        try {
+            const filters = {
+                search: req.query.search
+            };
+            const metaphors = await NlpManagementService.getMetaphors(filters);
+            res.json({ success: true, data: metaphors });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async addMetaphor(req, res) {
+        try {
+            const metaphor = await NlpManagementService.addMetaphor(req.body);
+            res.status(201).json({ success: true, data: metaphor });
+        } catch (error) {
+            const status = error.message.includes('already exists') ? 409 : 500;
+            res.status(status).json({ success: false, error: error.message });
+        }
+    }
+
+    async deleteMetaphor(req, res) {
+        try {
+            const { id } = req.params;
+            const deleted = await NlpManagementService.deleteMetaphor(id);
+            res.json({ success: true, data: deleted });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
     // =========== STATS ===========
 
     async getManagementStats(req, res) {
         try {
             const stats = await NlpManagementService.getManagementStats();
             res.json({ success: true, data: stats });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async getCompleteDictionary(req, res) {
+        try {
+            const dictionary = await NlpManagementService.getCompleteDictionary();
+            res.json(dictionary);
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    // =========== DICTIONARY RULES ===========
+
+    async getDictionaryRules(req, res) {
+        try {
+            const filters = {
+                rule_type: req.query.rule_type,
+                search: req.query.search
+            };
+            const rules = await NlpManagementService.getDictionaryRules(filters);
+            res.json({ success: true, data: rules });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async addDictionaryRule(req, res) {
+        try {
+            const rule = await NlpManagementService.addDictionaryRule(req.body, req.user.role, req.user.id);
+            res.status(201).json({ success: true, data: rule });
+        } catch (error) {
+            const status = error.message.includes('already exists') ? 409 : 500;
+            res.status(status).json({ success: false, error: error.message });
+        }
+    }
+
+    async deleteDictionaryRule(req, res) {
+        try {
+            const { id } = req.params;
+            const deleted = await NlpManagementService.deleteDictionaryRule(id, req.user.role);
+            res.json({ success: true, data: deleted });
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
         }

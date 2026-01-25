@@ -26,7 +26,7 @@ router.get(
 router.post(
     "/proposals",
     authenticateUser,
-    requireRole(["lgu-admin"]),
+    requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
     NlpProposalController.createProposal
 );
 
@@ -56,11 +56,18 @@ router.post(
 
 // ============ SUPER ADMIN DIRECT MANAGEMENT ROUTES ============
 
+// Complete Dictionary (for simulation engine)
+router.get(
+    "/dictionary",
+    authenticateUser,
+    NlpManagementController.getCompleteDictionary
+);
+
 // Management Stats
 router.get(
     "/management/stats",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.getManagementStats
 );
 
@@ -68,21 +75,21 @@ router.get(
 router.get(
     "/keywords",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.getKeywords
 );
 
 router.post(
     "/keywords",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.addKeyword
 );
 
 router.delete(
     "/keywords/:id",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.deleteKeyword
 );
 
@@ -112,22 +119,66 @@ router.delete(
 router.get(
     "/anchors",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.getAnchors
 );
 
 router.post(
     "/anchors",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.addAnchor
 );
 
 router.delete(
     "/anchors/:id",
     authenticateUser,
-    requireRole(["super-admin"]),
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
     NlpManagementController.deleteAnchor
+);
+
+// Metaphors CRUD
+router.get(
+    "/metaphors",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.getMetaphors
+);
+
+router.post(
+    "/metaphors",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.addMetaphor
+);
+
+router.delete(
+    "/metaphors/:id",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.deleteMetaphor
+);
+
+// Dictionary Rules CRUD
+router.get(
+    "/dictionary-rules",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.getDictionaryRules
+);
+
+router.post(
+    "/dictionary-rules",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.addDictionaryRule
+);
+
+router.delete(
+    "/dictionary-rules/:id",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.deleteDictionaryRule
 );
 
 module.exports = router;

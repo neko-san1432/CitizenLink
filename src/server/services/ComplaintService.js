@@ -1175,7 +1175,7 @@ class ComplaintService {
       let query = supabase
         .from("complaints")
         .select(
-          "id, title, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory",
+          "id, title, descriptive_su, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory",
           { count: "exact" }
         )
         .not("latitude", "is", null)

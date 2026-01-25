@@ -238,12 +238,14 @@ function getMenuItemsForRole(role) {
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ],
     "lgu-admin": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
       { url: "/publish", icon: "publish", label: "Publish" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ]

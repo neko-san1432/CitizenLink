@@ -54,6 +54,27 @@ const setupMiddleware = (app) => {
   app.get("/favicon.png", (req, res) => {
     res.sendFile(path.join(config.rootDir, "public", "favicon.png"));
   });
+  app.get("/digos-city-boundary.json", (req, res) => {
+    res.sendFile(
+      path.join(config.rootDir, "public", "assets", "json", "digos-city-boundary.json")
+    );
+  });
+  app.get("/data/geographic/digos-city-boundary.json", (req, res) => {
+    res.sendFile(
+      path.join(config.rootDir, "public", "assets", "json", "digos-city-boundary.json")
+    );
+  });
+  app.get("/data/geographic/brgy_boundaries_location.json", (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "public",
+        "assets",
+        "json",
+        "brgy_boundaries_location.json"
+      )
+    );
+  });
 
   // Serve static files with proper paths
   // Root public directory (for files like favicon, robots.txt, etc.)

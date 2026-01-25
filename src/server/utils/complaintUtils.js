@@ -2,6 +2,49 @@
  * Utility functions for complaint data manipulation
  * Helps reduce redundancy by providing consistent ways to derive data
  */
+const fs = require("fs");
+const path = require("path");
+
+let _taxonomyLookup = null;
+
+function _normalizeWhitespace(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function _isUuidLike(value) {
+  if (typeof value !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value.trim()
+  );
+}
+
+function _getTaxonomyLookup() {
+  if (_taxonomyLookup) return _taxonomyLookup;
+  try {
+    const filePath = path.join(process.cwd(), "public", "categories_subcategories.json");
+    const taxonomy = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const parents = Object.keys(taxonomy?.categories || {}).map(_normalizeWhitespace).filter(Boolean);
+    const subcats = [];
+    for (const parent of parents) {
+      const subs = taxonomy?.categories?.[parent]?.subcategories || [];
+      for (const s of subs) subcats.push(_normalizeWhitespace(s));
+    }
+    const aliasMap = taxonomy?.label_aliases || {};
+    const labels = new Set(["Others", ...parents, ...subcats].filter(Boolean));
+    for (const [alias, canonical] of Object.entries(aliasMap)) {
+      const a = _normalizeWhitespace(alias);
+      const c = _normalizeWhitespace(canonical);
+      if (a) labels.add(a);
+      if (c) labels.add(c);
+    }
+    _taxonomyLookup = { labels };
+    return _taxonomyLookup;
+  } catch (_e) {
+    _taxonomyLookup = { labels: new Set(["Others"]) };
+    return _taxonomyLookup;
+  }
+}
 /**
  * Get the primary department from department_r array
  * @param {Array} departmentR - Array of department codes
@@ -253,6 +296,30 @@ function validateComplaintConsistency(complaint) {
   if (complaint.primary_department && complaint.department_r && Array.isArray(complaint.department_r)) {
     if (complaint.department_r.length > 0 && complaint.primary_department !== complaint.department_r[0]) {
       errors.push(`Primary department '${complaint.primary_department}' doesn't match department_r[0] '${complaint.department_r[0]}'`);
+    }
+  }
+
+  const lookup = _getTaxonomyLookup();
+  const category = complaint.category ? String(complaint.category) : null;
+  const subcategory = complaint.subcategory ? String(complaint.subcategory) : null;
+  const categoryIsUuid = _isUuidLike(category);
+  const subcategoryIsUuid = _isUuidLike(subcategory);
+
+  if (category && subcategory && categoryIsUuid !== subcategoryIsUuid) {
+    errors.push("Category/subcategory types are mixed (UUID vs label).");
+  }
+
+  if (category && !categoryIsUuid) {
+    const label = _normalizeWhitespace(category);
+    if (label && !lookup.labels.has(label)) {
+      errors.push(`Category '${label}' is not in taxonomy labels/aliases.`);
+    }
+  }
+
+  if (subcategory && !subcategoryIsUuid) {
+    const label = _normalizeWhitespace(subcategory);
+    if (label && !lookup.labels.has(label)) {
+      errors.push(`Subcategory '${label}' is not in taxonomy labels/aliases.`);
     }
   }
   // Check if secondary_departments match department_r[1:]
