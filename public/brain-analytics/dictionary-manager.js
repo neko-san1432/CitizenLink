@@ -239,12 +239,11 @@ function renderSubcategories(parentName, subcategories) {
              ondragleave="onDragLeave(event)"
              ondrop="dropKeyword(event, '${escapeHtml(parentName)}', '${escapeHtml(subName)}')">
           <div class="keyword-chips">
-            ${
-              filtered.length > 0
-                ? filtered
-                    .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
-                    .map(
-                      (kw) => `
+            ${filtered.length > 0
+        ? filtered
+          .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
+          .map(
+            (kw) => `
                         <span class="keyword-chip" draggable="true" ondragstart="dragKeyword(event, '${escapeHtml(kw.id)}')" ondragend="dragEndKeyword(event)"
                               title="${escapeHtml(kw.translation || "")} | ${Math.round((kw.confidence || 0.8) * 100)}% | ${escapeHtml(kw.language || "Unknown")}">
                           ${escapeHtml(kw.term)}
@@ -253,10 +252,10 @@ function renderSubcategories(parentName, subcategories) {
                           </button>
                         </span>
                       `
-                    )
-                    .join("")
-                : '<span style="color: var(--gray-500); font-style: italic;">No keywords yet (Drag items here)</span>'
-            }
+          )
+          .join("")
+        : '<span style="color: var(--gray-500); font-style: italic;">No keywords yet (Drag items here)</span>'
+      }
           </div>
           <div class="add-keyword-form" style="display:flex; gap:8px; align-items:center;">
             <input type="text" class="new-keyword-input" placeholder="Add keyword to ${escapeHtml(subName)}...">
@@ -307,39 +306,36 @@ function renderModifiersSection(modifiers) {
         <div class="accordion-content" style="display: none; padding: 15px;">
           <p style="color: var(--gray-600); font-size: 0.9em; margin-bottom: 10px;">${section.desc}</p>
           <div class="keyword-chips">
-            ${
-              filtered.length > 0
-                ? filtered
-                    .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
-                    .map((m) => {
-                      const mult = m.multiplier === null || m.multiplier === undefined ? "" : ` <small style="color: ${section.color}; font-weight: bold;">×${escapeHtml(m.multiplier)}</small>`;
-                      return `<span class="keyword-chip" title="${escapeHtml(m.translation || "")}">
+            ${filtered.length > 0
+        ? filtered
+          .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
+          .map((m) => {
+            const mult = m.multiplier === null || m.multiplier === undefined ? "" : ` <small style="color: ${section.color}; font-weight: bold;">×${escapeHtml(m.multiplier)}</small>`;
+            return `<span class="keyword-chip" title="${escapeHtml(m.translation || "")}">
                         ${escapeHtml(m.term)}${mult}
                       </span>`;
-                    })
-                    .join("")
-                : '<span style="color: var(--gray-500); font-style: italic;">No items</span>'
-            }
+          })
+          .join("")
+        : '<span style="color: var(--gray-500); font-style: italic;">No items</span>'
+      }
           </div>
           <div class="add-modifier-form" style="margin-top: 15px; display: flex; gap: 8px; align-items: center; padding-top: 10px; border-top: 1px solid var(--gray-200);">
             <input type="text" class="new-modifier-term" placeholder="New item..." style="flex: 1; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--gray-300);" ${addDisabled ? "disabled" : ""}>
-            ${
-              section.hasMultiplier
-                ? `<input type="number" class="new-modifier-multiplier" placeholder="×" value="${section.key === "amplifiers" ? "1.3" : "0.7"}" step="0.1" min="0" max="5"
+            ${section.hasMultiplier
+        ? `<input type="number" class="new-modifier-multiplier" placeholder="×" value="${section.key === "amplifiers" ? "1.3" : "0.7"}" step="0.1" min="0" max="5"
                     style="width: 70px; padding: 8px; border-radius: 4px; border: 1px solid var(--gray-300); text-align: center;" ${multiplierDisabled ? "disabled" : ""}>`
-                : ""
-            }
+        : ""
+      }
             <button class="btn btn-sm" style="background: ${section.color}; color: white;" onclick="addModifier(this, '${escapeHtml(section.rule_type)}')" ${addDisabled ? "disabled" : ""}>
               <i class="fas fa-plus"></i> Add
             </button>
           </div>
-          ${
-            section.hasMultiplier && !canEditModifiers()
-              ? `<div style="margin-top: 8px; color: var(--gray-600); font-size: 12px;">
+          ${section.hasMultiplier && !canEditModifiers()
+        ? `<div style="margin-top: 8px; color: var(--gray-600); font-size: 12px;">
                   Multiplier is set by Super Admin during verification.
                 </div>`
-              : ""
-          }
+        : ""
+      }
         </div>
       </div>
     `;
@@ -557,7 +553,7 @@ window.dropKeyword = async (event, newParent, newSub) => {
 
   // Move element
   newContainer.appendChild(draggedEl);
-  
+
   // Remove "No keywords yet" message if exists
   const noKeysMsg = newContainer.querySelector('span[style*="italic"]');
   if (noKeysMsg) noKeysMsg.remove();
@@ -569,50 +565,50 @@ window.dropKeyword = async (event, newParent, newSub) => {
     let keywordObj = null;
     let oldParent = null;
     let oldSub = null;
-    
+
     // Search in hierarchy
     outerLoop:
     for (const parent of Object.keys(dictionaryData.hierarchy)) {
-        const cats = dictionaryData.hierarchy[parent].subcategories;
-        for (const sub of Object.keys(cats)) {
-            const idx = cats[sub].findIndex(k => k.id === id);
-            if (idx !== -1) {
-                keywordObj = cats[sub][idx];
-                oldParent = parent;
-                oldSub = sub;
-                // Remove from old
-                cats[sub].splice(idx, 1);
-                break outerLoop;
-            }
+      const cats = dictionaryData.hierarchy[parent].subcategories;
+      for (const sub of Object.keys(cats)) {
+        const idx = cats[sub].findIndex(k => k.id === id);
+        if (idx !== -1) {
+          keywordObj = cats[sub][idx];
+          oldParent = parent;
+          oldSub = sub;
+          // Remove from old
+          cats[sub].splice(idx, 1);
+          break outerLoop;
         }
+      }
     }
 
     if (keywordObj) {
-        // Update object
-        keywordObj.category = newParent;
-        keywordObj.subcategory = newSub;
-        
-        // Add to new
-        if (!dictionaryData.hierarchy[newParent]) {
-             dictionaryData.hierarchy[newParent] = { totalCount: 0, subcategories: {} };
-        }
-        if (!dictionaryData.hierarchy[newParent].subcategories[newSub]) {
-            dictionaryData.hierarchy[newParent].subcategories[newSub] = [];
-        }
-        dictionaryData.hierarchy[newParent].subcategories[newSub].push(keywordObj);
-        
-        // Update counts visually
-        updateCountsUI(oldParent, oldSub, newParent, newSub);
+      // Update object
+      keywordObj.category = newParent;
+      keywordObj.subcategory = newSub;
+
+      // Add to new
+      if (!dictionaryData.hierarchy[newParent]) {
+        dictionaryData.hierarchy[newParent] = { totalCount: 0, subcategories: {} };
+      }
+      if (!dictionaryData.hierarchy[newParent].subcategories[newSub]) {
+        dictionaryData.hierarchy[newParent].subcategories[newSub] = [];
+      }
+      dictionaryData.hierarchy[newParent].subcategories[newSub].push(keywordObj);
+
+      // Update counts visually
+      updateCountsUI(oldParent, oldSub, newParent, newSub);
     }
 
     // 2. Call API
     const res = await apiClient.put(`/api/nlp/keywords/${id}`, {
-        category: newParent,
-        subcategory: newSub === "General" ? null : newSub
+      category: newParent,
+      subcategory: newSub === "General" ? null : newSub
     });
 
     if (!res.success) throw new Error(res.error || "Failed to move keyword");
-    
+
     showMessage("success", `Moved to ${newSub}`);
 
   } catch (err) {
@@ -624,30 +620,30 @@ window.dropKeyword = async (event, newParent, newSub) => {
 };
 
 function updateCountsUI(oldParent, oldSub, newParent, newSub) {
-    try {
-        // Update Old
-        if (oldParent && oldSub) {
-            const oldAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(oldParent)}"][data-subcategory="${CSS.escape(oldSub)}"]`);
-            const oldBadge = oldAccordion?.querySelector('.badge-keyword');
-            if (oldBadge) {
-                const current = parseInt(oldBadge.textContent) || 0;
-                oldBadge.textContent = Math.max(0, current - 1);
-            }
-            // Also update parent count if needed (though parent count is sum of all, might be complex if structure is different)
-        }
-
-        // Update New
-        if (newParent && newSub) {
-            const newAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(newParent)}"][data-subcategory="${CSS.escape(newSub)}"]`);
-            const newBadge = newAccordion?.querySelector('.badge-keyword');
-            if (newBadge) {
-                const current = parseInt(newBadge.textContent) || 0;
-                newBadge.textContent = current + 1;
-            }
-        }
-    } catch(e) {
-        console.warn("Failed to update counts UI", e);
+  try {
+    // Update Old
+    if (oldParent && oldSub) {
+      const oldAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(oldParent)}"][data-subcategory="${CSS.escape(oldSub)}"]`);
+      const oldBadge = oldAccordion?.querySelector('.badge-keyword');
+      if (oldBadge) {
+        const current = parseInt(oldBadge.textContent) || 0;
+        oldBadge.textContent = Math.max(0, current - 1);
+      }
+      // Also update parent count if needed (though parent count is sum of all, might be complex if structure is different)
     }
+
+    // Update New
+    if (newParent && newSub) {
+      const newAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(newParent)}"][data-subcategory="${CSS.escape(newSub)}"]`);
+      const newBadge = newAccordion?.querySelector('.badge-keyword');
+      if (newBadge) {
+        const current = parseInt(newBadge.textContent) || 0;
+        newBadge.textContent = current + 1;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to update counts UI", e);
+  }
 }
 
 function exportDictionary() {
@@ -681,6 +677,22 @@ function initDictionaryManager() {
 
   document.querySelector('[data-tab="dictionary-manager"]')?.addEventListener("click", () => {
     if (!dictionaryData) loadDictionary();
+  });
+
+  // Handle direct navigation via hash
+  if (window.location.hash === "#dictionary-manager") {
+    // Small delay to ensure tabs are initialized before loading data
+    setTimeout(() => {
+      if (!dictionaryData) loadDictionary();
+    }, 100);
+  }
+
+  // Handle in-page navigation (Sidebar clicks while already on page)
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#dictionary-manager") {
+      // Ensure tab is visually active (handled by analytics.js usually, but we ensure data load)
+      if (!dictionaryData) loadDictionary();
+    }
   });
 }
 
