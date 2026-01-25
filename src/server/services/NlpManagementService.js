@@ -67,6 +67,40 @@ class NlpManagementService {
     }
 
     /**
+     * Update a keyword by ID
+     */
+    async updateKeyword(id, updates) {
+        const allowedUpdates = ['term', 'category', 'subcategory', 'language', 'confidence', 'translation'];
+        const payload = {};
+        
+        for (const key of allowedUpdates) {
+            if (updates[key] !== undefined) {
+                payload[key] = updates[key];
+            }
+        }
+
+        if (Object.keys(payload).length === 0) {
+            throw new Error('No valid updates provided');
+        }
+
+        const { data, error } = await this.supabase
+            .from('nlp_keywords')
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === '23505') {
+                throw new Error(`Keyword already exists`);
+            }
+            throw new Error(`Failed to update keyword: ${error.message}`);
+        }
+
+        return data;
+    }
+
+    /**
      * Delete a keyword by ID
      */
     async deleteKeyword(id) {

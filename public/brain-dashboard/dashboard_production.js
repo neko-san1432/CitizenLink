@@ -94,45 +94,22 @@ function sanitizeComplaintObject(obj, fields = ['description', 'address', 'name'
 window.sanitizeHTML = sanitizeHTML;
 window.sanitizeComplaintObject = sanitizeComplaintObject;
 
-// ==================== LIVE SYNC (DEFENSE DEMO) ====================
-
-/**
- * Initialize Live Sync module for real-time complaint reception.
- * Used during thesis defense demonstration.
- * Panelists submit complaints via mobile interface → appears here in real-time.
- */
-let liveSyncInitialized = false;
+let realtimeInitialized = false;
 let liveComplaintMarkers = [];
-
-// v4.2: Live marker registry to prevent duplicate markers
-// Maps complaint ID -> marker instance for O(1) duplicate checking
 let liveMarkerRegistry = new Map();
 
-function initLiveSync() {
-    if (typeof window.LiveSync === 'undefined') {
-        console.log('[LIVE-SYNC] Module not loaded, using server-based sync');
-    }
-
-    if (liveSyncInitialized) {
-        console.log('[LIVE-SYNC] Already initialized');
-        return;
-    }
+function initRealtimeStream() {
+    if (realtimeInitialized) return;
 
     console.log('╔════════════════════════════════════════════════════════╗');
-    console.log('║           🔴 LIVE SYNC INITIALIZATION                  ║');
+    console.log('║        REAL-TIME STREAM INITIALIZATION (SSE)          ║');
     console.log('╠════════════════════════════════════════════════════════╣');
-    console.log('║ Using: Server-Side Sync (Node.js + SSE)               ║');
-    console.log('║ Server: http://localhost:3000                          ║');
+    console.log('║ Using: /api/brain/stream (Server-Sent Events)         ║');
     console.log('╚════════════════════════════════════════════════════════╝');
 
-    // Connect to Server-Sent Events for real-time updates
     initServerSync();
-
-    liveSyncInitialized = true;
-    console.log('[LIVE-SYNC] ✅ Initialized - Ready to receive live complaints from panelists');
-
-    // Add live sync indicator to header
-    addLiveSyncIndicator();
+    realtimeInitialized = true;
+    addRealtimeIndicator();
 }
 
 /**
@@ -142,7 +119,7 @@ function initLiveSync() {
  */
 function clearLiveMarkers() {
     if (liveComplaintMarkers.length > 0 || liveMarkerRegistry.size > 0) {
-        console.log(`[LIVE-SYNC] Clearing ${liveMarkerRegistry.size} tracked live markers`);
+        console.log(`[REALTIME] Clearing ${liveMarkerRegistry.size} tracked live markers`);
         liveComplaintMarkers.forEach(marker => {
             if (map && map.hasLayer(marker)) {
                 map.removeLayer(marker);
@@ -150,7 +127,7 @@ function clearLiveMarkers() {
         });
         liveComplaintMarkers = [];
         liveMarkerRegistry.clear();
-        console.log('[LIVE-SYNC] ✅ Registry cleared - ready for fresh markers');
+        console.log('[REALTIME] ✅ Registry cleared - ready for fresh markers');
     }
 }
 
@@ -162,7 +139,7 @@ function initServerSync() {
     const API_ENDPOINT = `/api/brain/complaints`;
 
     // Fetch existing complaints on load
-    fetchServerComplaints(API_ENDPOINT);
+    fetchServerComplaints(API_ENDPOINT, { silent: true });
 
     // Connect to SSE for real-time updates
     try {
@@ -201,7 +178,7 @@ function initServerSync() {
 /**
  * Fetch complaints from server
  */
-async function fetchServerComplaints(apiEndpoint) {
+async function fetchServerComplaints(apiEndpoint, options = {}) {
     try {
         const response = await fetch(apiEndpoint);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -215,7 +192,15 @@ async function fetchServerComplaints(apiEndpoint) {
 
             if (newComplaints.length > 0) {
                 console.log(`[SERVER] Found ${newComplaints.length} new complaints`);
-                newComplaints.forEach(c => handleNewServerComplaint(c));
+                if (options.silent) {
+                    newComplaints.forEach(c => ingestServerComplaint(c, { showUI: false }));
+                    if (autoReloadTimer) clearTimeout(autoReloadTimer);
+                    autoReloadTimer = setTimeout(() => {
+                        loadFullSimulation().catch(() => {});
+                    }, AUTO_RELOAD_DELAY);
+                } else {
+                    newComplaints.forEach(c => handleNewServerComplaint(c));
+                }
             }
         }
     } catch (error) {
@@ -230,6 +215,41 @@ async function fetchServerComplaints(apiEndpoint) {
 let autoReloadTimer = null;
 const AUTO_RELOAD_DELAY = 2000; // 2 seconds debounce
 
+function ingestServerComplaint(complaint, options = {}) {
+    if (!complaint) return false;
+    sanitizeComplaintObject(complaint);
+
+    if (typeof window.analyzeComplaintIntelligence === 'function') {
+        try {
+            const intelligence = window.analyzeComplaintIntelligence(complaint);
+            complaint.nlp_result = intelligence;
+        } catch {}
+    }
+
+    if (!simulationEngine || !simulationEngine.complaints) return false;
+    const exists = simulationEngine.complaints.some(c => c.id === complaint.id);
+    if (exists) return false;
+    simulationEngine.complaints.push(complaint);
+
+    if (options.showUI) {
+        if (window.RoadValidator) {
+            window.RoadValidator.validate(complaint).then(res => {
+                complaint.road_validation = res;
+                if (!res.isValid && !res.fallback) {
+                    complaint.spatial_warning = "Road Proximity Warning: No physical road detected.";
+                    complaint.road_proximity_anomaly = true;
+                }
+                addLiveComplaintMarker(complaint);
+            }).catch(() => addLiveComplaintMarker(complaint));
+        } else {
+            addLiveComplaintMarker(complaint);
+        }
+        showRealtimeNotification(complaint);
+    }
+
+    return true;
+}
+
 function handleNewServerComplaint(complaint) {
     console.log('╔════════════════════════════════════════════════════════╗');
     console.log(`║  🎉 NEW COMPLAINT RECEIVED (server)`.padEnd(57), '║');
@@ -239,69 +259,20 @@ function handleNewServerComplaint(complaint) {
     console.log('║ Description:', complaint.description.substring(0, 35).padEnd(35), '║');
     console.log('╚════════════════════════════════════════════════════════╝');
 
-    // Sanitize the complaint
-    sanitizeComplaintObject(complaint);
-
-    // ================================================================
-    // v4.0: PROCESS NLP INTELLIGENCE BEFORE ADDING TO ARRAY
-    // This ensures live complaints have nlp_result for emergency detection
-    // ================================================================
-    if (typeof window.analyzeComplaintIntelligence === 'function') {
-        const intelligence = window.analyzeComplaintIntelligence(complaint);
-        complaint.nlp_result = intelligence;
-        console.log('[LIVE-SYNC] ✅ NLP processed:', intelligence.category, 'urgency:', intelligence.urgencyScore);
-    } else {
-        console.warn('[LIVE-SYNC] ⚠️ analyzeComplaintIntelligence not available - emergency detection may fail');
+    const added = ingestServerComplaint(complaint, { showUI: true });
+    if (!added) {
+        console.log('[REALTIME] ⚠️ Duplicate complaint, skipped:', complaint.id);
+        return;
     }
+    console.log('[REALTIME] ✅ Added to complaints array, total:', simulationEngine.complaints.length);
 
-    // Add to simulation engine's complaint array
-    if (simulationEngine && simulationEngine.complaints) {
-        // Check for duplicates
-        const exists = simulationEngine.complaints.some(c => c.id === complaint.id);
-        if (!exists) {
-            simulationEngine.complaints.push(complaint);
-            console.log('[LIVE-SYNC] ✅ Added to complaints array, total:', simulationEngine.complaints.length);
-
-            // v4.0: ROAD PROXIMITY VALIDATION (ASYNC)
-            // We validate BEFORE adding the marker
-            if (window.RoadValidator) {
-                window.RoadValidator.validate(complaint).then(res => {
-                    complaint.road_validation = res;
-                    if (!res.isValid && !res.fallback) {
-                        complaint.spatial_warning = "Road Proximity Warning: No physical road detected.";
-                        complaint.road_proximity_anomaly = true;
-                    }
-
-                    // Add visual marker for the new complaint (now with validation results)
-                    addLiveComplaintMarker(complaint);
-                }).catch(err => {
-                    console.error('[LIVE-SYNC] Road validation error:', err);
-                    addLiveComplaintMarker(complaint);
-                });
-            } else {
-                addLiveComplaintMarker(complaint);
-            }
-
-            // Show notification toast
-            showLiveSyncNotification(complaint);
-
-            // v3.9.2: AUTO-RELOAD - Debounced to prevent rapid reloads
-            if (autoReloadTimer) {
-                clearTimeout(autoReloadTimer);
-            }
-            autoReloadTimer = setTimeout(() => {
-                console.log('[AUTO-RELOAD] 🔄 Triggering automatic data processing...');
-                loadFullSimulation().then(() => {
-                    console.log('[AUTO-RELOAD] ✅ City data automatically reloaded!');
-                }).catch(err => {
-                    console.error('[AUTO-RELOAD] ❌ Error:', err);
-                });
-            }, AUTO_RELOAD_DELAY);
-
-        } else {
-            console.log('[LIVE-SYNC] ⚠️ Duplicate complaint, skipped:', complaint.id);
-        }
-    }
+    if (autoReloadTimer) clearTimeout(autoReloadTimer);
+    autoReloadTimer = setTimeout(() => {
+        console.log('[AUTO-RELOAD] 🔄 Triggering automatic data processing...');
+        loadFullSimulation().then(() => {
+            console.log('[AUTO-RELOAD] ✅ City data automatically reloaded!');
+        }).catch(() => {});
+    }, AUTO_RELOAD_DELAY);
 }
 
 /**
@@ -314,7 +285,7 @@ function addLiveComplaintMarker(complaint) {
 
     // v4.2: DUPLICATE CHECK - Prevent double markers on same complaint
     if (liveMarkerRegistry.has(complaint.id)) {
-        console.log(`[LIVE-SYNC] Marker already exists for ${complaint.id}, updating position`);
+        console.log(`[REALTIME] Marker already exists for ${complaint.id}, updating position`);
         const existingMarker = liveMarkerRegistry.get(complaint.id);
         // Update marker position if it moved
         existingMarker.setLatLng([complaint.latitude, complaint.longitude]);
@@ -399,7 +370,7 @@ function addLiveComplaintMarker(complaint) {
 
     // v4.2: Register in the map for duplicate detection
     liveMarkerRegistry.set(complaint.id, marker);
-    console.log(`[LIVE-SYNC] Registered marker: ${complaint.id} (Registry size: ${liveMarkerRegistry.size})`);
+    console.log(`[REALTIME] Registered marker: ${complaint.id} (Registry size: ${liveMarkerRegistry.size})`);
 
     // Pan to the new complaint
     map.panTo([complaint.latitude, complaint.longitude], { animate: true });
@@ -408,17 +379,17 @@ function addLiveComplaintMarker(complaint) {
 /**
  * Show a notification toast for new live complaints.
  */
-function showLiveSyncNotification(complaint) {
+function showRealtimeNotification(complaint) {
     // Remove existing notification if any
-    const existing = document.querySelector('.live-sync-toast');
+    const existing = document.querySelector('.realtime-toast');
     if (existing) existing.remove();
 
     const toast = document.createElement('div');
-    toast.className = 'live-sync-toast';
+    toast.className = 'realtime-toast';
     toast.innerHTML = `
         <div class="toast-icon">📍</div>
         <div class="toast-content">
-            <div class="toast-title">New Live Report</div>
+            <div class="toast-title">New Real-Time Report</div>
             <div class="toast-message">${sanitizeHTML(complaint.category)}: ${sanitizeHTML(complaint.description).substring(0, 50)}...</div>
         </div>
     `;
@@ -438,27 +409,26 @@ function showLiveSyncNotification(complaint) {
 /**
  * Add live sync status indicator to the dashboard header.
  */
-function addLiveSyncIndicator() {
+function addRealtimeIndicator() {
     const controlPanel = document.querySelector('.control-panel');
     if (!controlPanel) return;
 
     // Check if already exists
-    if (document.querySelector('.live-sync-indicator')) return;
+    if (document.querySelector('.realtime-indicator')) return;
 
     const indicator = document.createElement('div');
-    indicator.className = 'live-sync-indicator';
+    indicator.className = 'realtime-indicator';
     indicator.innerHTML = `
         <div class="sync-dot"></div>
-        <span>LIVE MODE</span>
+        <span>REAL-TIME</span>
     `;
-    indicator.title = 'Receiving live complaints from panelists';
+    indicator.title = 'Receiving real-time complaints from the server';
 
     controlPanel.insertBefore(indicator, controlPanel.firstChild);
 }
 
-// Add CSS for live sync features
-const liveSyncStyles = document.createElement('style');
-liveSyncStyles.textContent = `
+const realtimeStyles = document.createElement('style');
+realtimeStyles.textContent = `
     /* Live Complaint Marker */
     .live-marker-container {
         background: transparent !important;
@@ -537,8 +507,7 @@ liveSyncStyles.textContent = `
         }
     }
     
-    /* Live Sync Toast Notification */
-    .live-sync-toast {
+    .realtime-toast {
         position: fixed;
         bottom: 30px;
         right: 30px;
@@ -557,7 +526,7 @@ liveSyncStyles.textContent = `
         max-width: 350px;
     }
     
-    .live-sync-toast.show {
+    .realtime-toast.show {
         transform: translateX(0);
     }
     
@@ -583,8 +552,7 @@ liveSyncStyles.textContent = `
         50% { transform: scale(1.2); }
     }
     
-    /* Live Sync Indicator */
-    .live-sync-indicator {
+    .realtime-indicator {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -612,7 +580,7 @@ liveSyncStyles.textContent = `
         50% { opacity: 0.3; }
     }
 `;
-document.head.appendChild(liveSyncStyles);
+document.head.appendChild(realtimeStyles);
 
 // ==================== v4.0 AI STATUS INDICATOR ====================
 
@@ -6258,8 +6226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ==================== LIVE SYNC INTEGRATION (DEFENSE DEMO) ====================
-    initLiveSync();
+    initRealtimeStream();
 
     // Initialize Emergency Panel (Critical Triage System)
     initEmergencyPanel();

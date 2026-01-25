@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "version": "3.9.1",
+    "version": "4.0.0",
     "system": "CitizenLink Simulation Engine",
-    "description": "Complete categories and subcategories for complaint classification system",
+    "description": "Refined taxonomy for complaint classification (categories, subcategories, aliases, clustering)",
     "language_support": [
       "English",
       "Filipino",
@@ -10,13 +10,13 @@
     ],
     "geographic_scope": "Digos City, Davao del Sur",
     "last_updated": "2026-01-25",
-    "total_categories": 10,
+    "total_categories": 11,
     "total_subcategories": 69
   },
   "categories": {
     "Infrastructure": {
       "description": "Physical structures and facilities requiring maintenance or repair",
-      "priority": 45,
+      "priority": 55,
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -27,10 +27,9 @@
         "Road Damage",
         "Bridge Collapse",
         "Broken Streetlight",
-        "Streetlight",
         "Sidewalk",
-        "Building Collapse",
-        "Illegal Construction"
+        "Illegal Construction",
+        "Clogged Drainage"
       ]
     },
     "Utilities": {
@@ -52,7 +51,7 @@
     },
     "Environment": {
       "description": "Environmental and weather-related issues affecting public safety",
-      "priority": 85,
+      "priority": 80,
       "clustering": {
         "epsilon": 60,
         "minPts": 5,
@@ -60,7 +59,6 @@
       },
       "subcategories": [
         "Flooding",
-        "Flood",
         "Flash Flood",
         "Storm Surge",
         "Landslide",
@@ -70,8 +68,8 @@
       ]
     },
     "Public Safety": {
-      "description": "Safety and security concerns requiring immediate response",
-      "priority": 88,
+      "description": "Safety, crime, and security concerns requiring enforcement or immediate response",
+      "priority": 85,
       "clustering": {
         "epsilon": 25,
         "minPts": 1,
@@ -81,12 +79,8 @@
         "Crime",
         "Theft",
         "Robbery",
-        "Holdup",
         "Harassment",
         "Accident",
-        "Stray Dog",
-        "Animal Control",
-        "Snake Sighting",
         "Reckless Driving",
         "Drunk Driving",
         "Vandalism",
@@ -99,8 +93,8 @@
       ]
     },
     "Sanitation": {
-      "description": "Waste management and cleanliness issues",
-      "priority": 30,
+      "description": "Waste management, sanitation, sewage, and cleanliness issues",
+      "priority": 40,
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -108,18 +102,16 @@
       },
       "subcategories": [
         "Trash",
-        "Garbage",
         "Illegal Dumping",
         "Overflowing Trash",
         "Bad Odor",
         "Dead Animal",
-        "Sewage Leak",
-        "Pest Infestation"
+        "Sewage Leak"
       ]
     },
     "Traffic": {
-      "description": "Traffic and transportation related issues",
-      "priority": 50,
+      "description": "Traffic, road obstructions, and transportation disruptions",
+      "priority": 45,
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -127,15 +119,15 @@
       },
       "subcategories": [
         "Road Obstruction",
-        "Traffic Jam",
-        "Congestion",
+        "Traffic Congestion",
         "Vehicle Breakdown",
-        "Construction"
+        "Road Construction",
+        "Fallen Tree"
       ]
     },
     "Health Hazard": {
-      "description": "Health and medical concerns affecting public welfare",
-      "priority": 75,
+      "description": "Public health hazards and disease risks affecting community welfare",
+      "priority": 70,
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -143,9 +135,9 @@
       },
       "subcategories": [
         "Smoke",
-        "Mosquito Breeding",
         "Dengue",
-        "Stagnant Water"
+        "Stagnant Water",
+        "Disease Outbreak"
       ]
     },
     "Emergency": {
@@ -163,16 +155,35 @@
         "Evacuation",
         "Rescue",
         "Earthquake",
-        "Medical Emergency"
+        "Medical Emergency",
+        "Building Collapse"
+      ]
+    },
+    "Pest Infestation": {
+      "description": "Animal-related incidents and pest infestations (vector risks, stray animals, infestations)",
+      "priority": 45,
+      "clustering": {
+        "epsilon": 40,
+        "minPts": 4,
+        "tier": "STANDARD_INFRASTRUCTURE"
+      },
+      "subcategories": [
+        "General Infestation",
+        "Mosquito Breeding",
+        "Rodent Infestation",
+        "Termite Infestation",
+        "Stray Dog",
+        "Animal Control",
+        "Snake Sighting"
       ]
     },
     "Noise": {
       "description": "Noise-related complaints and disturbances",
       "priority": 25,
       "clustering": {
-        "epsilon": 25,
+        "epsilon": 40,
         "minPts": 3,
-        "tier": "HIGH_PRIORITY"
+        "tier": "STANDARD_INFRASTRUCTURE"
       },
       "subcategories": [
         "Noise Complaint",
@@ -194,120 +205,56 @@
     }
   },
   "category_synonyms": {
-    "Garbage Collection": [
-      "Trash",
-      "Sanitation",
-      "Solid Waste",
-      "Illegal Dumping",
-      "Overflowing Trash"
-    ],
     "Waste Management": [
-      "Trash",
       "Sanitation",
-      "Solid Waste",
-      "Garbage Collection"
-    ],
-    "Solid Waste": [
       "Trash",
-      "Sanitation",
-      "Garbage Collection",
-      "Illegal Dumping"
+      "Illegal Dumping",
+      "Overflowing Trash",
+      "Sewage Leak"
     ],
-    "Streetlight": [
-      "Lighting",
+    "Road Maintenance": [
+      "Infrastructure",
+      "Road Damage",
+      "Pothole",
+      "Sidewalk"
+    ],
+    "Street Lighting": [
       "Infrastructure",
       "Broken Streetlight",
       "Blackout"
     ],
-    "Broken Streetlight": [
-      "Streetlight",
-      "Lighting",
-      "Infrastructure"
-    ],
-    "Road Repair": [
-      "Pothole",
-      "Road Damage",
-      "Infrastructure"
-    ],
-    "Sidewalk": [
-      "Infrastructure",
-      "Road Damage"
-    ],
-    "Stray Animals": [
-      "Stray Dog",
-      "Animal Control",
-      "Public Safety"
-    ],
-    "Stray Dog": [
-      "Stray Animals",
-      "Animal Control",
-      "Public Safety"
-    ],
-    "Animal Control": [
-      "Stray Dog",
-      "Stray Animals"
-    ],
-    "Public Transport": [
+    "Traffic Issues": [
       "Traffic",
-      "Transportation",
+      "Traffic Congestion",
       "Road Obstruction"
     ],
-    "Transportation": [
-      "Traffic",
-      "Public Transport",
-      "Road Obstruction"
-    ],
-    "Water Supply": [
-      "No Water",
-      "Utilities",
-      "Pipe Leak"
-    ],
-    "Power Outage": [
-      "Blackout",
-      "Utilities"
-    ],
-    "Blackout": [
-      "Power Outage",
-      "Utilities"
-    ],
-    "Flood": [
-      "Flooding",
-      "Environment",
-      "Pipe Leak"
-    ],
-    "Flooding": [
-      "Flood",
-      "Environment"
-    ],
-    "Fire": [
-      "Fire Incident",
-      "Emergency",
-      "Public Safety"
-    ],
-    "Fire Incident": [
-      "Fire",
-      "Emergency",
-      "Public Safety"
-    ],
-    "Accident": [
-      "Vehicular Accident",
-      "Traffic",
-      "Public Safety"
-    ],
-    "Vehicular Accident": [
-      "Accident",
-      "Traffic",
-      "Public Safety"
+    "Animals & Pests": [
+      "Pest Infestation",
+      "Stray Dog",
+      "Mosquito Breeding",
+      "Snake Sighting"
     ]
   },
   "label_aliases": {
-    "Stray Animals": "Stray Dog",
-    "Traffic Congestion": "Traffic Jam",
-    "Signal Malfunction": "Traffic Jam",
-    "Illegal Parking": "Traffic Jam",
+    "Garbage": "Trash",
+    "Garbage Collection": "Trash",
+    "Solid Waste": "Trash",
+    "Waste Management": "Sanitation",
+    "Streetlight": "Broken Streetlight",
+    "Lighting": "Broken Streetlight",
+    "Street Lighting": "Broken Streetlight",
+    "Road Repair": "Road Damage",
+    "Road Maintenance": "Road Damage",
+    "Road Hazard": "Road Damage",
+    "Hazard": "Road Damage",
+    "Traffic Jam": "Traffic Congestion",
+    "Congestion": "Traffic Congestion",
+    "Signal Malfunction": "Traffic Congestion",
+    "Illegal Parking": "Traffic Congestion",
     "Coastal Inundation": "Flooding",
     "Deep Flood": "Flooding",
     "Street Flooding": "Flooding",
+    "Flood": "Flooding",
     "Structural Fire": "Fire",
     "Grass Fire": "Fire",
     "Electrical Fire": "Fire",
@@ -318,28 +265,25 @@
     "Power Outage": "Blackout",
     "Power Fluctuation": "Blackout",
     "Water Contamination": "Water Pollution",
-    "Garbage Collection": "Trash",
     "General Concern": "Others",
     "Inquiry": "Others",
     "Suggestion": "Others",
     "Suspicious Activity": "Crime",
     "Casualty": "Accident",
     "Cleaning": "Trash",
-    "Clogged Canal": "Flooding",
-    "Clogged Drainage": "Flooding",
+    "Clogged Canal": "Clogged Drainage",
+    "Drainage": "Clogged Drainage",
     "Complaint Routing": "Others",
-    "Drainage": "Flooding",
     "Economic Enterprises": "Others",
     "Emergency Response": "Emergency",
     "Environment & Sanitation": "Sanitation",
     "Executive Oversight": "Others",
     "Facilities & Maintenance": "Infrastructure",
-    "Fallen Tree": "Road Obstruction",
+    "Fallen Tree": "Fallen Tree",
     "Finance & Revenue": "Others",
     "Financial Review": "Others",
     "Flood Control": "Flooding",
     "Frontline Assistance": "Others",
-    "Hazard": "Road Damage",
     "Health & Social Services": "Health Hazard",
     "Information & Feedback": "Others",
     "Infrastructure & Public Works": "Infrastructure",
@@ -348,7 +292,6 @@
     "Law Enforcement & Legal Affairs": "Public Safety",
     "Legal Investigation": "Crime",
     "Licensing, Permits & Business": "Others",
-    "Lighting": "Streetlight",
     "Maintenance": "Infrastructure",
     "Medical": "Medical Emergency",
     "Noise Control": "Noise Complaint",
@@ -361,19 +304,22 @@
     "Public Assistance & Communication": "Others",
     "Public Health": "Health Hazard",
     "Public Order": "Public Safety",
-    "Road Hazard": "Road Damage",
-    "Road Maintenance": "Road Damage",
     "Roads & Construction": "Road Damage",
     "Signage": "Road Obstruction",
     "Social Services": "Others",
     "Social Welfare": "Others",
     "Stranded": "Vehicle Breakdown",
+    "Holdup": "Robbery",
+    "Stray Animals": "Stray Dog",
     "Stray Animal": "Stray Dog",
+    "Pest": "General Infestation",
+    "Pests": "General Infestation",
+    "Pest Infestation": "General Infestation",
+    "Mosquito": "Mosquito Breeding",
     "Tax & Fees": "Others",
     "Tax Collection": "Others",
     "Transportation": "Traffic",
     "Vagrancy": "Loitering",
-    "Waste Management": "Sanitation",
     "Water Supply": "No Water"
   },
   "clustering_tiers": {
@@ -382,11 +328,8 @@
       "minPts": 1,
       "description": "High Priority / Emergency Response",
       "categories": [
-        "Fire",
-        "Accident",
-        "Crime",
-        "Public Safety",
-        "Emergency"
+        "Emergency",
+        "Public Safety"
       ]
     },
     "STANDARD_INFRASTRUCTURE": {
@@ -394,12 +337,13 @@
       "minPts": 4,
       "description": "Standard Infrastructure Issues",
       "categories": [
-        "Pothole",
-        "Trash",
-        "Streetlight",
-        "Road Damage",
         "Infrastructure",
-        "Sanitation"
+        "Sanitation",
+        "Traffic",
+        "Health Hazard",
+        "Pest Infestation",
+        "Noise",
+        "Others"
       ]
     },
     "LARGE_AREA": {
@@ -407,12 +351,8 @@
       "minPts": 5,
       "description": "Large Area / Utility Scale Events",
       "categories": [
-        "Flooding",
-        "No Water",
-        "Blackout",
         "Utilities",
-        "Environment",
-        "Flood"
+        "Environment"
       ]
     }
   },
@@ -421,11 +361,9 @@
     "Road Damage": "Infrastructure",
     "Bridge Collapse": "Infrastructure",
     "Broken Streetlight": "Infrastructure",
-    "Streetlight": "Infrastructure",
-    "Road Obstruction": "Traffic",
     "Sidewalk": "Infrastructure",
-    "Building Collapse": "Infrastructure",
     "Illegal Construction": "Infrastructure",
+    "Clogged Drainage": "Infrastructure",
     "No Water": "Utilities",
     "Blackout": "Utilities",
     "Pipe Leak": "Utilities",
@@ -433,7 +371,6 @@
     "Power Line Down": "Utilities",
     "Transformer Explosion": "Utilities",
     "Flooding": "Environment",
-    "Flood": "Environment",
     "Flash Flood": "Environment",
     "Storm Surge": "Environment",
     "Landslide": "Environment",
@@ -443,17 +380,8 @@
     "Crime": "Public Safety",
     "Theft": "Public Safety",
     "Robbery": "Public Safety",
-    "Holdup": "Public Safety",
     "Harassment": "Public Safety",
     "Accident": "Public Safety",
-    "Fire": "Emergency",
-    "Noise Complaint": "Noise",
-    "Stray Dog": "Public Safety",
-    "Stray Animals": "Public Safety",
-    "Animal Control": "Public Safety",
-    "Snake Sighting": "Public Safety",
-    "Explosion": "Emergency",
-    "Gas Leak": "Emergency",
     "Reckless Driving": "Public Safety",
     "Drunk Driving": "Public Safety",
     "Vandalism": "Public Safety",
@@ -464,25 +392,36 @@
     "Loitering": "Public Safety",
     "Gang Activity": "Public Safety",
     "Trash": "Sanitation",
-    "Garbage": "Sanitation",
     "Illegal Dumping": "Sanitation",
     "Overflowing Trash": "Sanitation",
     "Bad Odor": "Sanitation",
     "Dead Animal": "Sanitation",
     "Sewage Leak": "Sanitation",
-    "Pest Infestation": "Sanitation",
-    "Traffic Jam": "Traffic",
-    "Congestion": "Traffic",
+    "Road Obstruction": "Traffic",
+    "Traffic Congestion": "Traffic",
     "Vehicle Breakdown": "Traffic",
-    "Construction": "Traffic",
+    "Road Construction": "Traffic",
+    "Fallen Tree": "Traffic",
     "Smoke": "Health Hazard",
-    "Mosquito Breeding": "Health Hazard",
     "Dengue": "Health Hazard",
     "Stagnant Water": "Health Hazard",
+    "Disease Outbreak": "Health Hazard",
+    "Fire": "Emergency",
+    "Explosion": "Emergency",
+    "Gas Leak": "Emergency",
     "Evacuation": "Emergency",
     "Rescue": "Emergency",
     "Earthquake": "Emergency",
     "Medical Emergency": "Emergency",
+    "Building Collapse": "Emergency",
+    "General Infestation": "Pest Infestation",
+    "Mosquito Breeding": "Pest Infestation",
+    "Rodent Infestation": "Pest Infestation",
+    "Termite Infestation": "Pest Infestation",
+    "Stray Dog": "Pest Infestation",
+    "Animal Control": "Pest Infestation",
+    "Snake Sighting": "Pest Infestation",
+    "Noise Complaint": "Noise",
     "Loud Music": "Noise",
     "Loud Party": "Noise",
     "Karaoke": "Noise",
@@ -491,7 +430,7 @@
   "emergency_categories": [
     "Fire",
     "Flooding",
-    "Flood",
+    "Flash Flood",
     "Accident",
     "Crime",
     "Medical Emergency",
@@ -510,7 +449,7 @@
         "street",
         "sidewalk",
         "bridge",
-        "building"
+        "drainage"
       ],
       "Utilities": [
         "water",
@@ -545,15 +484,13 @@
       ],
       "Traffic": [
         "traffic",
-        "jam",
+        "congestion",
         "obstruction",
         "vehicle",
         "road"
       ],
       "Health Hazard": [
         "smoke",
-        "pest",
-        "mosquito",
         "dengue",
         "health"
       ],
@@ -563,6 +500,15 @@
         "explosion",
         "rescue",
         "evacuation"
+      ],
+      "Pest Infestation": [
+        "pest",
+        "mosquito",
+        "rodent",
+        "rat",
+        "termite",
+        "stray",
+        "snake"
       ],
       "Noise": [
         "noise",
@@ -578,7 +524,8 @@
         "daan",
         "kalsada",
         "sira",
-        "tulay"
+        "tulay",
+        "barado"
       ],
       "Utilities": [
         "tubig",
@@ -590,7 +537,6 @@
       "Environment": [
         "baha",
         "ulan",
-        "lindol",
         "polusyon"
       ],
       "Public Safety": [
@@ -613,15 +559,22 @@
       ],
       "Health Hazard": [
         "usok",
-        "peste",
-        "lamok",
-        "sakit"
+        "sakit",
+        "dengue"
       ],
       "Emergency": [
         "sunog",
         "pumutok",
         "saklolo",
         "tulong"
+      ],
+      "Pest Infestation": [
+        "peste",
+        "lamok",
+        "daga",
+        "ipis",
+        "ahas",
+        "asong gala"
       ],
       "Noise": [
         "ingay",
@@ -633,7 +586,8 @@
       "Infrastructure": [
         "lubak",
         "dalan",
-        "guba"
+        "guba",
+        "barado"
       ],
       "Utilities": [
         "tubig",
@@ -642,8 +596,7 @@
       ],
       "Environment": [
         "lunop",
-        "ulan",
-        "linog"
+        "ulan"
       ],
       "Public Safety": [
         "krimen",
@@ -661,12 +614,19 @@
         "sikit"
       ],
       "Health Hazard": [
-        "aso",
-        "peste"
+        "aso"
       ],
       "Emergency": [
         "sunog",
         "tabang"
+      ],
+      "Pest Infestation": [
+        "peste",
+        "lamok",
+        "ilaga",
+        "ipis",
+        "bitin",
+        "iro nga gala"
       ],
       "Noise": [
         "saba",
@@ -680,9 +640,12 @@
     "Crime": 25,
     "Public Safety": 25,
     "Emergency": 25,
+    "Explosion": 25,
+    "Gas Leak": 25,
+    "Medical Emergency": 25,
+    "Building Collapse": 25,
     "Pothole": 30,
     "Trash": 40,
-    "Streetlight": 40,
     "Broken Streetlight": 40,
     "Road Damage": 40,
     "Infrastructure": 40,
@@ -691,7 +654,6 @@
     "Overflowing Trash": 40,
     "Bad Odor": 40,
     "Flooding": 60,
-    "Flood": 60,
     "No Water": 60,
     "Blackout": 60,
     "Utilities": 60,
@@ -699,9 +661,24 @@
     "Pipe Leak": 60,
     "Traffic": 40,
     "Road Obstruction": 40,
-    "Noise Complaint": 25,
+    "Traffic Congestion": 40,
+    "Road Construction": 40,
+    "Fallen Tree": 40,
+    "Health Hazard": 40,
+    "Pest Infestation": 40,
+    "General Infestation": 40,
+    "Mosquito Breeding": 40,
     "Stray Dog": 40,
-    "Others": 40
+    "Snake Sighting": 40,
+    "Noise Complaint": 40,
+    "Others": 40,
+    "Streetlight": 40,
+    "Flood": 60,
+    "Garbage": 40,
+    "Traffic Jam": 40,
+    "Congestion": 40,
+    "Construction": 40,
+    "Pest": 40
   },
   "adaptive_minpts": {
     "Fire": 1,
@@ -709,9 +686,12 @@
     "Crime": 1,
     "Public Safety": 2,
     "Emergency": 1,
+    "Explosion": 1,
+    "Gas Leak": 1,
+    "Medical Emergency": 1,
+    "Building Collapse": 1,
     "Pothole": 2,
     "Trash": 4,
-    "Streetlight": 4,
     "Broken Streetlight": 4,
     "Road Damage": 4,
     "Infrastructure": 4,
@@ -720,7 +700,6 @@
     "Overflowing Trash": 4,
     "Bad Odor": 4,
     "Flooding": 5,
-    "Flood": 5,
     "No Water": 5,
     "Blackout": 5,
     "Utilities": 5,
@@ -728,8 +707,23 @@
     "Pipe Leak": 5,
     "Traffic": 4,
     "Road Obstruction": 4,
-    "Noise Complaint": 3,
+    "Traffic Congestion": 4,
+    "Road Construction": 4,
+    "Fallen Tree": 4,
+    "Health Hazard": 4,
+    "Pest Infestation": 4,
+    "General Infestation": 4,
+    "Mosquito Breeding": 4,
     "Stray Dog": 4,
-    "Others": 4
+    "Snake Sighting": 4,
+    "Noise Complaint": 3,
+    "Others": 4,
+    "Streetlight": 4,
+    "Flood": 5,
+    "Garbage": 4,
+    "Traffic Jam": 4,
+    "Congestion": 4,
+    "Construction": 4,
+    "Pest": 4
   }
 }

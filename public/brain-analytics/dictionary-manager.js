@@ -234,7 +234,10 @@ function renderSubcategories(parentName, subcategories) {
             <span class="badge badge-keyword" style="font-size: 0.75em;">${filtered.length}</span>
           </div>
         </div>
-        <div class="accordion-content" style="display: none; padding: 15px; background: white;">
+        <div class="accordion-content" style="display: none; padding: 15px; background: white;" 
+             ondragover="allowDrop(event)" 
+             ondragleave="onDragLeave(event)"
+             ondrop="dropKeyword(event, '${escapeHtml(parentName)}', '${escapeHtml(subName)}')">
           <div class="keyword-chips">
             ${
               filtered.length > 0
@@ -242,7 +245,8 @@ function renderSubcategories(parentName, subcategories) {
                     .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
                     .map(
                       (kw) => `
-                        <span class="keyword-chip" title="${escapeHtml(kw.translation || "")} | ${Math.round((kw.confidence || 0.8) * 100)}% | ${escapeHtml(kw.language || "Unknown")}">
+                        <span class="keyword-chip" draggable="true" ondragstart="dragKeyword(event, '${escapeHtml(kw.id)}')" ondragend="dragEndKeyword(event)"
+                              title="${escapeHtml(kw.translation || "")} | ${Math.round((kw.confidence || 0.8) * 100)}% | ${escapeHtml(kw.language || "Unknown")}">
                           ${escapeHtml(kw.term)}
                           <button class="chip-delete" data-keyword-id="${escapeHtml(kw.id)}" onclick="onDeleteKeywordClick(event, this)" title="Delete keyword">
                             <i class="fas fa-times"></i>
@@ -251,7 +255,7 @@ function renderSubcategories(parentName, subcategories) {
                       `
                     )
                     .join("")
-                : '<span style="color: var(--gray-500); font-style: italic;">No keywords yet</span>'
+                : '<span style="color: var(--gray-500); font-style: italic;">No keywords yet (Drag items here)</span>'
             }
           </div>
           <div class="add-keyword-form" style="display:flex; gap:8px; align-items:center;">
@@ -501,6 +505,150 @@ window.addModifier = async (buttonEl, ruleType) => {
     showMessage("error", e?.message || String(e));
   }
 };
+
+// =============================================================================
+// DRAG AND DROP HANDLERS (OPTIMIZED)
+// =============================================================================
+
+window.allowDrop = (event) => {
+  event.preventDefault();
+  const container = event.target.closest('.accordion-content');
+  if (container) {
+    container.style.background = "var(--primary-light-alpha, rgba(68, 114, 196, 0.1))";
+  }
+};
+
+window.onDragLeave = (event) => {
+  const container = event.target.closest('.accordion-content');
+  if (container) {
+    container.style.background = "white";
+  }
+};
+
+window.dragKeyword = (event, id) => {
+  event.dataTransfer.setData("text/plain", id);
+  event.dataTransfer.effectAllowed = "move";
+  // Visual touch
+  event.target.style.opacity = "0.5";
+};
+
+window.dragEndKeyword = (event) => {
+  event.target.style.opacity = "1";
+};
+
+window.dropKeyword = async (event, newParent, newSub) => {
+  event.preventDefault();
+  const id = event.dataTransfer.getData("text/plain");
+  const container = event.target.closest('.accordion-content');
+  if (container) container.style.background = "white";
+
+  if (!id) return;
+
+  // Find the original element
+  const draggedEl = document.querySelector(`.keyword-chip button[data-keyword-id="${id}"]`)?.closest('.keyword-chip');
+  if (!draggedEl) return;
+
+  // Optimistic UI Update
+  const oldContainer = draggedEl.closest('.keyword-chips');
+  const newContainer = container.querySelector('.keyword-chips');
+
+  // Don't do anything if dropped in same place
+  if (oldContainer === newContainer) return;
+
+  // Move element
+  newContainer.appendChild(draggedEl);
+  
+  // Remove "No keywords yet" message if exists
+  const noKeysMsg = newContainer.querySelector('span[style*="italic"]');
+  if (noKeysMsg) noKeysMsg.remove();
+
+  // Update State & Backend
+  try {
+    // 1. Update Local State (dictionaryData)
+    // We need to find the keyword in hierarchy and move it
+    let keywordObj = null;
+    let oldParent = null;
+    let oldSub = null;
+    
+    // Search in hierarchy
+    outerLoop:
+    for (const parent of Object.keys(dictionaryData.hierarchy)) {
+        const cats = dictionaryData.hierarchy[parent].subcategories;
+        for (const sub of Object.keys(cats)) {
+            const idx = cats[sub].findIndex(k => k.id === id);
+            if (idx !== -1) {
+                keywordObj = cats[sub][idx];
+                oldParent = parent;
+                oldSub = sub;
+                // Remove from old
+                cats[sub].splice(idx, 1);
+                break outerLoop;
+            }
+        }
+    }
+
+    if (keywordObj) {
+        // Update object
+        keywordObj.category = newParent;
+        keywordObj.subcategory = newSub;
+        
+        // Add to new
+        if (!dictionaryData.hierarchy[newParent]) {
+             dictionaryData.hierarchy[newParent] = { totalCount: 0, subcategories: {} };
+        }
+        if (!dictionaryData.hierarchy[newParent].subcategories[newSub]) {
+            dictionaryData.hierarchy[newParent].subcategories[newSub] = [];
+        }
+        dictionaryData.hierarchy[newParent].subcategories[newSub].push(keywordObj);
+        
+        // Update counts visually
+        updateCountsUI(oldParent, oldSub, newParent, newSub);
+    }
+
+    // 2. Call API
+    const res = await apiClient.put(`/api/nlp/keywords/${id}`, {
+        category: newParent,
+        subcategory: newSub === "General" ? null : newSub
+    });
+
+    if (!res.success) throw new Error(res.error || "Failed to move keyword");
+    
+    showMessage("success", `Moved to ${newSub}`);
+
+  } catch (err) {
+    console.error(err);
+    showMessage("error", "Failed to move: " + err.message);
+    // Revert UI (reload)
+    await loadDictionary();
+  }
+};
+
+function updateCountsUI(oldParent, oldSub, newParent, newSub) {
+    try {
+        // Update Old
+        if (oldParent && oldSub) {
+            const oldAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(oldParent)}"][data-subcategory="${CSS.escape(oldSub)}"]`);
+            const oldBadge = oldAccordion?.querySelector('.badge-keyword');
+            if (oldBadge) {
+                const current = parseInt(oldBadge.textContent) || 0;
+                oldBadge.textContent = Math.max(0, current - 1);
+            }
+            // Also update parent count if needed (though parent count is sum of all, might be complex if structure is different)
+        }
+
+        // Update New
+        if (newParent && newSub) {
+            const newAccordion = document.querySelector(`.sub-accordion[data-parent="${CSS.escape(newParent)}"][data-subcategory="${CSS.escape(newSub)}"]`);
+            const newBadge = newAccordion?.querySelector('.badge-keyword');
+            if (newBadge) {
+                const current = parseInt(newBadge.textContent) || 0;
+                newBadge.textContent = current + 1;
+            }
+        }
+    } catch(e) {
+        console.warn("Failed to update counts UI", e);
+    }
+}
 
 function exportDictionary() {
   if (!dictionaryData) return;

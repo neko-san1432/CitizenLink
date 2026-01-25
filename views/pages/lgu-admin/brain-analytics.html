@@ -400,66 +400,77 @@
             <h2 class="section-title"><i class="fas fa-brain"></i> Train the System</h2>
             <p class="section-description">Help improve the system by reviewing complaints it wasn't sure about. Your corrections teach it to be more accurate.</p>
             
-            <div class="metric-cards" style="margin-bottom: 20px;">
-                <div class="metric-card warning">
-                    <div class="metric-icon"><i class="fas fa-question-circle"></i></div>
-                    <div class="metric-value" id="pendingReviewCount">0</div>
-                    <div class="metric-label">Pending Reviews</div>
+            <div class="train-system-layout">
+                <!-- Left Panel: List of Items to Train -->
+                <div class="train-card">
+                    <div class="train-card-header">
+                        <h3><i class="fas fa-list-ul"></i> Pending Review Queue</h3>
+                        <div style="display:flex; gap:8px;">
+                            <button id="refreshPendingBtn" class="btn btn-sm btn-secondary" title="Refresh list">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button id="fetchLowConfidenceBtn" class="btn btn-sm btn-primary">
+                                <i class="fas fa-download"></i> Fetch Items
+                            </button>
+                        </div>
+                    </div>
+                    <div class="train-list" id="trainingList">
+                        <div style="padding: 40px; text-align: center; color: var(--gray-500);">
+                            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
+                            <p>Click "Fetch Items" to load low-confidence complaints.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="metric-card success">
-                    <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="metric-value" id="trainedCount">0</div>
-                    <div class="metric-label">Trained Today</div>
-                </div>
-                <div class="metric-card info">
-                    <div class="metric-icon"><i class="fas fa-book"></i></div>
-                    <div class="metric-value" id="dictionarySize">-</div>
-                    <div class="metric-label">Dictionary Size</div>
-                </div>
-            </div>
 
-            <div class="filter-bar">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="trainingSearchInput" placeholder="Search pending reviews...">
-                </div>
-                <button id="refreshPendingBtn" class="btn btn-secondary">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-                <button id="fetchLowConfidenceBtn" class="btn btn-primary">
-                    <i class="fas fa-download"></i> Load Low-Confidence Items
-                </button>
-            </div>
+                <!-- Right Panel: Training Form -->
+                <div class="train-card">
+                    <div class="train-card-header">
+                        <h3><i class="fas fa-edit"></i> Training Console</h3>
+                        <span id="trainingStatusBadge" class="badge badge-noise">No Item Selected</span>
+                    </div>
+                    <div class="train-form" id="trainingForm">
+                        <div class="ai-prediction-box">
+                            <div class="prediction-row">
+                                <span><strong>System Guess:</strong> <span id="lblSystemGuess">-</span></span>
+                                <span>Confidence: <strong id="lblConfidence">-</strong></span>
+                            </div>
+                            <div class="confidence-bar-bg">
+                                <div class="confidence-bar-fill" id="barConfidence"></div>
+                            </div>
+                        </div>
 
-            <div class="table-wrapper">
-                <table class="data-table" id="trainingTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Context (Raw Text)</th>
-                            <th>Date</th>
-                            <th>System Guess</th>
-                            <th>Certainty</th>
-                            <th>Keyword</th>
-                            <th>Category</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trainingTableBody">
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px; color: var(--gray-500);">
-                                <i class="fas fa-inbox" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
-                                Click "Load Low-Confidence Items" to fetch pending reviews
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                        <div class="form-group">
+                            <label>Original Complaint Text</label>
+                            <div id="lblOriginalText" style="padding: 12px; background: var(--gray-100); border-radius: 8px; font-size: 14px; color: var(--gray-800); min-height: 60px; border: 1px solid var(--gray-300);">Select an item from the left to view details.</div>
+                        </div>
 
-            <div class="edge-case-section" style="margin-top: 30px;">
-                <h3><i class="fas fa-history"></i> Recent Training Actions</h3>
-                <div id="trainingHistoryList" style="max-height: 200px; overflow-y: auto;">
-                    <p style="color: var(--gray-500); padding: 20px; text-align: center;">No training actions yet.</p>
+                        <div class="form-group">
+                            <label for="inputTrainKeyword">Identify Key Term (Entity/Issue)</label>
+                            <input type="text" id="inputTrainKeyword" placeholder="e.g., 'lubak', 'baha', 'walay tubig'" disabled>
+                            <small style="color: var(--gray-500); font-size: 11px;">Extract the specific word that defines the category.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selectTrainCategory">Correct Category</label>
+                            <select id="selectTrainCategory" disabled>
+                                <option value="">-- Select Category --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selectTrainSubcategory">Subcategory (Optional)</label>
+                            <select id="selectTrainSubcategory" disabled>
+                                <option value="">-- Select Subcategory --</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: auto;">
+                            <button id="btnSkipTrain" class="btn btn-secondary" style="flex: 1;" disabled>Skip</button>
+                            <button id="btnSaveTrain" class="btn btn-primary" style="flex: 2;" disabled>
+                                <i class="fas fa-check"></i> Save & Train
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

@@ -824,6 +824,12 @@ function setupListeners() {
       document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(tabId)?.classList.add("active");
+      
+      // Auto-render logic for specific tabs
+      if (tabId === 'tab-smart-detection') {
+        renderEdgeCases();
+      }
+      
       if (history && typeof history.replaceState === "function") {
         history.replaceState(null, "", `#${tabId}`);
       } else {
@@ -831,6 +837,51 @@ function setupListeners() {
       }
     });
   });
+
+  // --- SMART DETECTION RENDERER (EDGE CASES) ---
+  function renderEdgeCases() {
+    const list = document.getElementById('edge-cases-list');
+    
+    if (!list) return;
+    
+    // Find "Edge Cases" from processedComplaints
+    const edgeCases = processedComplaints.filter(c => {
+        const hasMetaphor = c.intelligence && c.intelligence.metaphor_score > 0.7;
+        const isSpeculation = c.intelligence && c.intelligence.is_speculation;
+        const mismatch = c.intelligence && c.intelligence.category_mismatch;
+        const highRiskUnsure = c.intelligence && c.intelligence.sentiment_score < -0.7 && c.intelligence.confidence < 0.6;
+        
+        return hasMetaphor || isSpeculation || mismatch || highRiskUnsure;
+    });
+
+    if (edgeCases.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding: 40px; color: var(--gray-500); grid-column: 1 / -1;">
+                <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; color: var(--success);"></i>
+                <h3>No Anomalies Detected</h3>
+                <p>The system hasn't found any significant edge cases or anomalies in the current dataset.</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = edgeCases.map(c => `
+        <div class="edge-case-card" onclick="openComplaintModal('${c.id}')">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span class="badge ${c.intelligence.category_mismatch ? 'badge-mismatch' : 'badge-keyword'}">
+                    ${c.category}
+                </span>
+                <span style="font-size:12px; color:var(--gray-500);">${new Date(c.timestamp).toLocaleDateString()}</span>
+            </div>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.5;">"${c.original_text}"</p>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                ${c.intelligence.metaphor_score > 0.7 ? '<span class="badge badge-metaphor">Metaphor</span>' : ''}
+                ${c.intelligence.is_speculation ? '<span class="badge badge-speculation">Speculation</span>' : ''}
+                ${c.intelligence.category_mismatch ? '<span class="badge badge-warning">Mismatch</span>' : ''}
+            </div>
+        </div>
+    `).join('');
+  }
 
   const initialHash = (window.location.hash || "").replace("#", "").trim();
   if (initialHash) {
@@ -841,6 +892,8 @@ function setupListeners() {
       document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       initialBtn.classList.add("active");
       initialSection.classList.add("active");
+      // Auto-render if initial load is edge cases
+      if (initialHash === 'tab-smart-detection') renderEdgeCases();
     }
   }
 }

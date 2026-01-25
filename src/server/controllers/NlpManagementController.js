@@ -38,6 +38,20 @@ class NlpManagementController {
         }
     }
 
+    async updateKeyword(req, res) {
+        try {
+            const { id } = req.params;
+            console.log('[NlpController] Updating keyword:', id, req.body);
+            const keyword = await NlpManagementService.updateKeyword(id, req.body);
+            res.json({ success: true, data: keyword });
+        } catch (error) {
+            console.error('[NlpController] Error updating keyword:', error);
+            const msg = String(error.message || "");
+            const status = msg.includes("already exists") ? 409 : 500;
+            res.status(status).json({ success: false, error: error.message });
+        }
+    }
+
     async deleteKeyword(req, res) {
         try {
             const { id } = req.params;

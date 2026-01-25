@@ -139,9 +139,27 @@
                 }
 
                 if (!taxonomy) {
-                    const url = resolved.url || DEFAULT_TAXONOMY_URL;
-                    const response = await fetch(url, { cache: 'no-store' });
-                    if (!response.ok) throw new Error(`Failed to load taxonomy: HTTP ${response.status}`);
+                    const possiblePaths = resolved.url ? [resolved.url] : [
+                        DEFAULT_TAXONOMY_URL,
+                        '/data/categories_subcategories.json',
+                        'categories_subcategories.json',
+                        '../categories_subcategories.json'
+                    ];
+
+                    let response = null;
+                    for (const path of possiblePaths) {
+                        try {
+                            const res = await fetch(path, { cache: 'no-store' });
+                            if (res.ok) {
+                                response = res;
+                                break;
+                            }
+                        } catch (e) {
+                            // continue
+                        }
+                    }
+
+                    if (!response) throw new Error('Failed to load taxonomy from any path');
                     taxonomy = await response.json();
                 }
             }
@@ -165,6 +183,7 @@
         normalizeCategoryPair,
         getParentForLabel,
         getParents,
+        getCategories: getParents,
         getSubcategories,
         isValidParent,
         isValidSubcategory

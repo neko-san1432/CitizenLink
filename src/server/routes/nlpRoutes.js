@@ -86,6 +86,13 @@ router.post(
     NlpManagementController.addKeyword
 );
 
+router.put(
+    "/keywords/:id",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpManagementController.updateKeyword
+);
+
 router.delete(
     "/keywords/:id",
     authenticateUser,
