@@ -2,7 +2,51 @@ const express = require("express");
 const router = express.Router();
 const NlpProposalController = require("../controllers/NlpProposalController");
 const NlpManagementController = require("../controllers/NlpManagementController");
+const NlpPendingReviewsController = require("../controllers/NlpPendingReviewsController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
+
+// ============ HITL PENDING REVIEWS (Auto-Queue) ============
+
+// Get pending reviews count
+router.get(
+    "/pending-reviews/count",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpPendingReviewsController.getCount
+);
+
+// Get all pending reviews
+router.get(
+    "/pending-reviews",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpPendingReviewsController.getAll
+);
+
+// Batch queue multiple items for review (used by analytics scan)
+// IMPORTANT: This must come BEFORE :id routes to prevent Express matching "batch" as an id
+router.post(
+    "/pending-reviews/batch",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpPendingReviewsController.batchQueue
+);
+
+// Resolve a pending review (train keyword)
+router.post(
+    "/pending-reviews/:id/resolve",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpPendingReviewsController.resolve
+);
+
+// Dismiss a pending review
+router.post(
+    "/pending-reviews/:id/dismiss",
+    authenticateUser,
+    requireRole(["super-admin", "lgu-admin", "complaint-coordinator"]),
+    NlpPendingReviewsController.dismiss
+);
 
 // ============ PROPOSAL WORKFLOW ROUTES ============
 

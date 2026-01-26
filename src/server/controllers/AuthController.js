@@ -1,4 +1,5 @@
 const UserService = require("../services/UserService");
+const LoginInitializationService = require("../services/LoginInitializationService");
 const {
   ValidationError,
   ConflictError,
@@ -337,6 +338,11 @@ class AuthController {
         authData.session.access_token,
         cookieOptions
       );
+
+      // Trigger post-login initialization (async - doesn't block response)
+      LoginInitializationService.onUserLogin(user).catch(err => {
+        console.warn("[LOGIN] Post-login initialization warning:", err.message);
+      });
 
       // SECURITY: Access token is set in HttpOnly cookie for server-side use
       // Return refresh token in response for client-side Supabase session sync (less sensitive than access token)

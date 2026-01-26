@@ -1,4 +1,3 @@
-import { openComplaintModal } from '/js/utils/complaint.js';
 import apiClient from "/js/config/apiClient.js";
 import showMessage from "/js/components/toast.js";
 
@@ -172,13 +171,48 @@ async function loadLowConfidenceItems() {
     </div>
   `;
 
-  // Get items
-  const processed = getProcessedComplaints();
+  // HYBRID APPROACH: Fetch from both database queue AND in-memory processed complaints
+  pendingReviews = [];
   
-  // Build Pending List using NLP intelligence
-  pendingReviews = processed.filter((item) => {
+  // 1. First, try to fetch from database (HITL Auto-Queue)
+  try {
+    console.log("[TRAIN] Fetching from /api/nlp/pending-reviews...");
+    const dbRes = await apiClient.get("/api/nlp/pending-reviews");
+    console.log("[TRAIN] API Response:", dbRes);
+    
+    if (dbRes?.success && Array.isArray(dbRes.data)) {
+      const dbItems = dbRes.data.map(item => ({
+        id: item.id,
+        complaint_id: item.complaint_id,
+        text: safeText(item.text),
+        ai_suggestion: safeText(item.detected_category || "Others"),
+        subcategory: safeText(item.detected_subcategory),
+        confidence: item.confidence || 0,
+        created_at: item.created_at,
+        status: item.status || 'pending',
+        method: item.method || 'UNKNOWN',
+        matched_term: item.matched_term,
+        source: 'database' // Track source for UI differentiation
+      })).filter(item => !trainedComplaintIds.has(item.id));
+      
+      pendingReviews.push(...dbItems);
+      console.log(`[TRAIN] ✅ Fetched ${dbItems.length} items from database queue`);
+    } else {
+      console.log("[TRAIN] Database queue returned empty or error:", dbRes?.error || "No data");
+    }
+  } catch (err) {
+    console.error("[TRAIN] ❌ Could not fetch from database queue:", err);
+  }
+
+  // 2. Also scan in-memory processed complaints (legacy behavior)
+  const processed = getProcessedComplaints();
+  console.log(`[TRAIN] In-memory processed complaints available: ${processed.length}`);
+  
+  const memoryItems = processed.filter((item) => {
     if (!item?.id) return false;
     if (trainedComplaintIds.has(item.id)) return false;
+    // Don't duplicate items already in database queue
+    if (pendingReviews.some(p => p.complaint_id === item.id)) return false;
     
     const triage = Number(item?.triage_score ?? item?.triage?.score ?? 0);
     const isOthers = safeText(item?.category) === "Others" || safeText(item?.subcategory) === "Others";
@@ -194,17 +228,16 @@ async function loadLowConfidenceItems() {
     const wasReclassified = Boolean(intel.ai_reclassified) || Boolean(intel.ai_downgraded);
     
     // Training candidates: Low confidence, Others category, No keywords, Speculative, or Reclassified
-    // Exclude items with confirmed mismatches (already handled by AI)
     const needsTraining = (
       lowConfidence || 
       isOthers || 
       noKeywords || 
       (isSpeculative && triage < 50) ||
       (isMetaphorical && triage < 50)
-    ) && !wasReclassified; // Don't train items AI already corrected
+    ) && !wasReclassified;
     
     return needsTraining;
-  }).slice(0, 50).map(item => {
+  }).slice(0, 30).map(item => {
     const intel = item.intelligence || {};
     return {
       id: item.id,
@@ -214,12 +247,15 @@ async function loadLowConfidenceItems() {
       confidence: intel.confidence || 0.5,
       created_at: item.timestamp,
       status: 'pending',
-      // Additional NLP context for training UI
       is_speculation: Boolean(intel.is_speculation),
       is_metaphor: Boolean(intel.metaphor_score && intel.metaphor_score > 0.5),
-      temporal_tag: intel.temporal_tag || null
+      temporal_tag: intel.temporal_tag || null,
+      source: 'memory' // Track source
     };
   });
+  
+  pendingReviews.push(...memoryItems);
+  console.log(`[TRAIN] Total pending reviews: ${pendingReviews.length} (${pendingReviews.filter(p => p.source === 'database').length} from DB, ${pendingReviews.filter(p => p.source === 'memory').length} from memory)`);
 
   updateHITLStats();
   renderTrainingList();
@@ -231,10 +267,17 @@ function renderTrainingList() {
 
     if (pendingReviews.length === 0) {
         listContainer.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: var(--success);">
-                <i class="fas fa-check-double" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                <p>All clear! No items to review.</p>
-                <p style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">The NLP system has high confidence on all current complaints.</p>
+            <div style="padding: 40px; text-align: center; color: var(--gray-600);">
+                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
+                <p style="font-weight: 600;">No items in the training queue</p>
+                <p style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">
+                    Items appear here when:<br>
+                    • New complaints are submitted with low NLP confidence (&lt;70%)<br>
+                    • Complaints are classified as "Others" or use FALLBACK method
+                </p>
+                <p style="font-size: 11px; color: var(--gray-400); margin-top: 12px;">
+                    💡 Submit a new complaint to see the auto-queue in action!
+                </p>
             </div>
         `;
         resetForm();
@@ -244,6 +287,14 @@ function renderTrainingList() {
     listContainer.innerHTML = pendingReviews.map(c => {
         // Build NLP context badges
         let nlpBadges = '';
+        
+        // Source badge (database vs memory)
+        if (c.source === 'database') {
+            nlpBadges += '<span class="badge badge-primary" style="font-size:9px;margin-right:4px;" title="From auto-queue">DB</span>';
+        }
+        if (c.method) {
+            nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;margin-right:4px;">${c.method}</span>`;
+        }
         if (c.is_speculation) {
             nlpBadges += '<span class="badge badge-info" style="font-size:9px;margin-right:4px;">Speculation</span>';
         }
@@ -313,8 +364,19 @@ window.selectTrainingItem = function(id) {
     keyInput.disabled = false;
     keyInput.value = ""; 
     
-    // Select the AI suggestion in the category dropdown (already populated)
+    // Populate and select the AI suggestion in the category dropdown
     const catSelect = document.getElementById('selectTrainCategory');
+    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+    
+    // Add all categories from taxonomy
+    const categories = Object.keys(CATEGORY_TAXONOMY).sort();
+    categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+    });
+    
     catSelect.disabled = false;
     
     // Set the value to AI suggestion if it exists in the options
@@ -378,24 +440,48 @@ async function saveTrainingResult() {
     }
 
     try {
-        const res = await apiClient.post("/api/nlp/keywords", {
-            term: term,
-            category: category,
-            subcategory: subcategory,
-            language: 'all',
-            confidence: 1.0 
-        });
+        let autoResolved = 0;
+        
+        // If item is from database queue, use the resolve endpoint
+        if (currentTrainingItem.source === 'database') {
+            const res = await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/resolve`, {
+                keyword: term,
+                category: category,
+                subcategory: subcategory
+            });
+            
+            if (!res?.success) throw new Error(res?.error || "Failed to resolve");
+            autoResolved = res.autoResolved || 0;
+            console.log("[TRAIN] Resolved database queue item:", currentTrainingItem.id, autoResolved > 0 ? `(+${autoResolved} auto-resolved)` : '');
+        } else {
+            // Legacy behavior: direct keyword add for memory items
+            const res = await apiClient.post("/api/nlp/keywords", {
+                term: term,
+                category: category,
+                subcategory: subcategory,
+                language: 'all',
+                confidence: 1.0 
+            });
 
-        if (!res?.success) throw new Error(res?.error || "Failed to save");
+            if (!res?.success) throw new Error(res?.error || "Failed to save");
+        }
 
         trainedComplaintIds.add(currentTrainingItem.id);
         saveTrainedIds();
 
-        // Update List
-        pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
+        // If auto-resolved others, also add their IDs and remove from list
+        if (autoResolved > 0) {
+            // Reload the list to reflect auto-resolved items
+            await loadLowConfidenceItems();
+            showMessage("success", `Trained "${term}" → ${category}. Also auto-resolved ${autoResolved} similar complaints!`);
+        } else {
+            // Update List
+            pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
+            showMessage("success", "Training saved successfully!");
+        }
         
         // Stats
-        addTrainingHistory("Trained keyword", `"${term}" → ${category}`);
+        addTrainingHistory("Trained keyword", `"${term}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto)` : ''}`);
         updateHITLStats();
         renderTrainingHistory();
         
@@ -418,8 +504,19 @@ async function saveTrainingResult() {
     }
 }
 
-function skipCurrentItem() {
+async function skipCurrentItem() {
     if (!currentTrainingItem) return;
+    
+    // If item is from database queue, use dismiss endpoint
+    if (currentTrainingItem.source === 'database') {
+        try {
+            await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/dismiss`);
+            console.log("[TRAIN] Dismissed database queue item:", currentTrainingItem.id);
+        } catch (err) {
+            console.warn("[TRAIN] Failed to dismiss from database:", err.message);
+        }
+    }
+    
     trainedComplaintIds.add(currentTrainingItem.id);
     saveTrainedIds();
     
@@ -449,7 +546,8 @@ function resetForm() {
     
     const catSelect = document.getElementById('selectTrainCategory');
     if(catSelect) {
-        catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+        // Keep categories populated but reset selection and disable
+        catSelect.value = "";
         catSelect.disabled = true;
     }
 

@@ -51,7 +51,17 @@ class InputSanitizer {
       // Don't sanitize key using values logic (avoids triggering email validation on the key 'email' itself)
       const sanitizedKey = safeKey;
       const fieldPath = context ? `${context}.${safeKey}` : safeKey;
-      sanitized[sanitizedKey] = InputSanitizer.sanitizeValue(value, fieldPath);
+      
+      // Handle arrays and objects recursively, only sanitize primitives
+      if (Array.isArray(value)) {
+        sanitized[sanitizedKey] = value.map((item, index) =>
+          InputSanitizer.sanitizeObject(item, `${fieldPath}[${index}]`)
+        );
+      } else if (typeof value === "object" && value !== null) {
+        sanitized[sanitizedKey] = InputSanitizer.sanitizeObject(value, fieldPath);
+      } else {
+        sanitized[sanitizedKey] = InputSanitizer.sanitizeValue(value, fieldPath);
+      }
     }
     return sanitized;
   }
@@ -76,7 +86,18 @@ class InputSanitizer {
     if (value === null || value === void 0) {
       return value;
     }
-    // Convert to string for processing
+    
+    // Handle arrays and objects - they should be processed by sanitizeObject, not here
+    if (Array.isArray(value)) {
+      return value.map((item, index) =>
+        InputSanitizer.sanitizeObject(item, `${fieldName}[${index}]`)
+      );
+    }
+    if (typeof value === "object") {
+      return InputSanitizer.sanitizeObject(value, fieldName);
+    }
+    
+    // Convert to string for processing (only for primitives)
     const stringValue = String(value);
     // Check for potential security threats first
     if (InputSanitizer.detectThreats(stringValue, fieldName)) {

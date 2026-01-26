@@ -1336,6 +1336,111 @@ async function fetchComplaints() {
   return arr;
 }
 
+/**
+ * HITL Auto-Queue: Scans processed complaints for low-confidence items
+ * and queues them for human review in the database.
+ * Called after processComplaint() runs on all complaints.
+ * Filter criteria aligned with train-system.js for consistency.
+ */
+async function queueLowConfidenceForReview(complaints) {
+  console.log(`[HITL] Starting scan of ${complaints.length} complaints...`);
+  
+  const CONFIDENCE_THRESHOLD = 0.6; // Aligned with train-system.js
+  const lowConfidenceItems = complaints.filter(c => {
+    if (!c?.id) return false;
+    
+    const intel = c.intelligence || {};
+    const conf = intel.confidence || c.nlp?.confidence || 0.5;
+    const triage = Number(c.triage_score ?? c.triage?.score ?? 0);
+    const isOthers = c.category === 'Others' || c.subcategory === 'Others';
+    const keywords = Array.isArray(c.keywords) ? c.keywords : Array.isArray(c.nlp?.keywords) ? c.nlp.keywords : [];
+    const hasKeywords = (intel.nlp_keywords?.length > 0) || (keywords.length > 0);
+    const noKeywords = !hasKeywords;
+    
+    // Intelligence flags
+    const lowConfidence = conf < CONFIDENCE_THRESHOLD;
+    const hasMismatch = Boolean(c.category_mismatch?.has_mismatch) || Boolean(intel.category_mismatch);
+    const isSpeculative = Boolean(intel.is_speculation) || Boolean(c.flags?.speculation);
+    const isMetaphorical = Boolean(intel.metaphor_score && intel.metaphor_score > 0.5) || Boolean(c.flags?.metaphor);
+    const wasReclassified = Boolean(intel.ai_reclassified) || Boolean(intel.ai_downgraded);
+    
+    // Training candidates: Low confidence, Others category, No keywords, Speculative, or Metaphorical
+    // Exclude items that were already reclassified by AI
+    const needsTraining = (
+      lowConfidence || 
+      isOthers || 
+      noKeywords || 
+      (isSpeculative && triage < 50) ||
+      (isMetaphorical && triage < 50)
+    ) && !wasReclassified;
+    
+    // Debug first few
+    if (complaints.indexOf(c) < 3) {
+      console.log(`[HITL] Sample ${c.id?.substring(0,8)}: conf=${conf.toFixed(2)}, cat=${c.category}, others=${isOthers}, hasKw=${hasKeywords}, spec=${isSpeculative}, meta=${isMetaphorical}, queue=${needsTraining}`);
+    }
+    
+    return needsTraining;
+  });
+
+  console.log(`[HITL] Filter result: ${lowConfidenceItems.length} low-confidence out of ${complaints.length} total`);
+
+  if (lowConfidenceItems.length === 0) {
+    console.log('[HITL] No low-confidence items to queue');
+    return { queued: 0 };
+  }
+
+  console.log(`[HITL] Found ${lowConfidenceItems.length} items for potential review`);
+  
+  // Log what we're sending - include all intelligence fields
+  const payload = lowConfidenceItems.slice(0, 100).map(c => {
+    const intel = c.intelligence || {};
+    return {
+      complaint_id: c.id,
+      text: c.description || c.original_text,
+      detected_category: c.category,
+      detected_subcategory: c.subcategory,
+      confidence: intel.confidence || c.nlp?.confidence || 0.5,
+      method: intel.override_type || (intel.nlp_keywords?.length ? 'RULE_BASED' : 'FALLBACK'),
+      matched_term: intel.nlp_keywords?.[0] || null
+    };
+  });
+  
+  console.log(`[HITL] Payload sample:`, payload[0]);
+  console.log(`[HITL] Payload is array:`, Array.isArray(payload));
+  console.log(`[HITL] Payload length:`, payload.length);
+  
+  // Create the body explicitly - ensure clean serialization
+  const bodyData = { items: payload };
+  const jsonBody = JSON.stringify(bodyData);
+  console.log(`[HITL] JSON body type:`, typeof jsonBody);
+  console.log(`[HITL] JSON body first 200 chars:`, jsonBody.substring(0, 200));
+
+  // Use the API to queue items (handles deduplication server-side)
+  try {
+    const response = await fetch('/api/nlp/pending-reviews/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: jsonBody
+    });
+
+    console.log(`[HITL] Response status: ${response.status}`);
+    const result = await response.json();
+    console.log(`[HITL] Full response:`, result);
+    
+    if (response.ok) {
+      console.log(`[HITL] ✅ Queued ${result.queued || 0} items for review (${result.skipped || 0} duplicates skipped)`);
+      return result;
+    } else {
+      console.warn('[HITL] Batch queue failed:', response.status, result);
+      return { queued: 0, error: response.status };
+    }
+  } catch (err) {
+    console.warn('[HITL] Could not queue items:', err.message);
+    return { queued: 0, error: err.message };
+  }
+}
+
 function initStream() {
   if (typeof EventSource === "undefined") return;
   try {
@@ -1406,6 +1511,11 @@ async function init() {
     rawComplaints = await fetchComplaints();
     processedComplaints = rawComplaints.map(processComplaint);
     filteredComplaints = [...processedComplaints];
+    
+    // HITL: Queue low-confidence items for human review
+    setLoading(true, "Scanning for training opportunities...", "Detecting low-confidence classifications...");
+    await queueLowConfidenceForReview(processedComplaints);
+    
     const stats = calcStats(processedComplaints);
     setupListeners();
     renderAll(stats);

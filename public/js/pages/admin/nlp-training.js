@@ -50,10 +50,181 @@ async function loadStats() {
             // Accuracy is mocked in backend for now, but we can display it if returned
             // Or leave it as static if not in response
         }
+        
+        // Load auto-queue count
+        await loadAutoQueueCount();
     } catch (err) {
         console.error("Failed to load stats:", err);
     }
 }
+
+// --- AUTO-QUEUE (HITL) ---
+async function loadAutoQueueCount() {
+    try {
+        const res = await apiClient.get("/api/nlp/pending-reviews/count");
+        if (res.success) {
+            const countEl = document.getElementById("count-auto-queue");
+            if (countEl) countEl.textContent = res.count || 0;
+        }
+    } catch (err) {
+        console.error("Failed to load auto-queue count:", err);
+        const countEl = document.getElementById("count-auto-queue");
+        if (countEl) countEl.textContent = "0";
+    }
+}
+
+window.showAutoQueueSection = async function() {
+    const section = document.getElementById("auto-queue-section");
+    if (section) {
+        section.classList.remove("hidden");
+        await loadAutoQueueItems();
+    }
+};
+
+window.hideAutoQueueSection = function() {
+    const section = document.getElementById("auto-queue-section");
+    if (section) section.classList.add("hidden");
+};
+
+async function loadAutoQueueItems() {
+    const list = document.getElementById("auto-queue-list");
+    if (!list) return;
+    
+    list.innerHTML = '<div class="text-center py-8 text-gray-400">Loading...</div>';
+    
+    try {
+        const res = await apiClient.get("/api/nlp/pending-reviews");
+        if (!res.success) throw new Error(res.error);
+        
+        const items = res.data || [];
+        
+        if (items.length === 0) {
+            list.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-gray-500 font-medium">All caught up!</p>
+                    <p class="text-gray-400 text-sm">No low-confidence classifications need training.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        list.innerHTML = '';
+        items.forEach(item => renderAutoQueueItem(item, list));
+        
+    } catch (err) {
+        list.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${err.message}</div>`;
+    }
+}
+
+function renderAutoQueueItem(item, container) {
+    const card = document.createElement("div");
+    card.className = "card-premium p-4 flex flex-col md:flex-row gap-4 items-start";
+    card.id = `aq-item-${item.id}`;
+    
+    const confidenceColor = item.confidence < 0.3 ? 'red' : item.confidence < 0.6 ? 'yellow' : 'orange';
+    const confidencePct = ((item.confidence || 0) * 100).toFixed(0);
+    
+    card.innerHTML = `
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="bg-${confidenceColor}-100 text-${confidenceColor}-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                    ${confidencePct}% confidence
+                </span>
+                <span class="text-gray-400 text-xs">${item.method}</span>
+                ${item.matched_term ? `<span class="text-gray-500 text-xs">• matched: "${item.matched_term}"</span>` : ''}
+            </div>
+            <p class="text-gray-800 dark:text-gray-200 font-medium mb-2">"${item.text}"</p>
+            <div class="text-sm text-gray-500">
+                <span>Detected: <span class="font-medium text-gray-700 dark:text-gray-300">${item.detected_category || 'Unknown'}</span></span>
+                ${item.detected_subcategory ? ` → ${item.detected_subcategory}` : ''}
+            </div>
+        </div>
+        <div class="flex flex-col gap-2 min-w-[200px]">
+            <div class="flex gap-2">
+                <input type="text" placeholder="Keyword to train" 
+                    class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 dark:bg-gray-700 dark:text-white"
+                    id="aq-keyword-${item.id}" value="${extractKeyword(item.text)}">
+            </div>
+            <div class="flex gap-2">
+                <select id="aq-category-${item.id}" 
+                    class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 dark:bg-gray-700 dark:text-white">
+                    <option value="">Category...</option>
+                    ${allCategories.map(c => `<option value="${c.category}" ${c.category === item.detected_category ? 'selected' : ''}>${c.category}</option>`).join('')}
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="resolveAutoQueueItem('${item.id}')" 
+                    class="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3 rounded-lg transition-colors">
+                    Train
+                </button>
+                <button onclick="dismissAutoQueueItem('${item.id}')" 
+                    class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 text-sm py-2 px-3 rounded-lg transition-colors">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+function extractKeyword(text) {
+    // Simple extraction: get first 2-3 significant words
+    const words = text.toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !['ang', 'yung', 'the', 'dito', 'may', 'ito', 'pero'].includes(w));
+    return words.slice(0, 3).join(' ');
+}
+
+window.resolveAutoQueueItem = async function(id) {
+    const keyword = document.getElementById(`aq-keyword-${id}`)?.value?.trim();
+    const category = document.getElementById(`aq-category-${id}`)?.value;
+    
+    if (!keyword || !category) {
+        showMessage("error", "Please enter a keyword and select a category");
+        return;
+    }
+    
+    try {
+        const res = await apiClient.post(`/api/nlp/pending-reviews/${id}/resolve`, {
+            keyword,
+            category
+        });
+        
+        if (res.success) {
+            showMessage("success", `Trained: "${keyword}" → ${category}`);
+            document.getElementById(`aq-item-${id}`)?.remove();
+            await loadAutoQueueCount();
+            await loadStats();
+        } else {
+            showMessage("error", res.error || "Failed to train");
+        }
+    } catch (err) {
+        showMessage("error", err.message);
+    }
+};
+
+window.dismissAutoQueueItem = async function(id) {
+    try {
+        const res = await apiClient.post(`/api/nlp/pending-reviews/${id}/dismiss`);
+        
+        if (res.success) {
+            showMessage("success", "Dismissed");
+            document.getElementById(`aq-item-${id}`)?.remove();
+            await loadAutoQueueCount();
+        } else {
+            showMessage("error", res.error || "Failed to dismiss");
+        }
+    } catch (err) {
+        showMessage("error", err.message);
+    }
+};
 
 // --- FORM HANDLING ---
 async function initForm() {
