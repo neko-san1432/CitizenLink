@@ -1,294 +1,180 @@
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/toast.css" />
-    <link rel="stylesheet" href="/css/components/sidebar.css" />
-    <link rel="stylesheet" href="/css/app.css" />
-    <link rel="stylesheet" href="/css/components/clock.css" />
-    <link rel="stylesheet" href="/css/header-redesign.css" />
-    <link rel="stylesheet" href="/css/pages/dashboard-common.css?v=1.2" />
-    <link rel="stylesheet" href="/css/viewport-fix.css" />
-  </head>
-  <body>
-    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
-    <div class="app-container">
-      <div class="header-container"></div>
-      <div id="sidebar" class="collapsible"></div>
-      <div id="app" class="collapsible lgu-admin-dashboard">
-        <!-- Welcome Section -->
-        <div class="dashboard-header-section">
-          <h1 class="text-2xl font-bold text-gray-800">Department Overview</h1>
-          <p class="text-gray-600">
-            Real-time insights and operational status.
-          </p>
-        </div>
 
-        <!-- Main Content Grid -->
-        <div class="dashboard-content gap-6 p-6">
-          <!-- Stats Row -->
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-          >
-            <!-- Total Active -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/components/clock.css" />
+  <link rel="stylesheet" href="/css/header-redesign.css" />
+  <link rel="stylesheet" href="/css/pages/dashboard-common.css?v=1.2" />
+  <link rel="stylesheet" href="/css/viewport-fix.css" />
+</head>
+
+<body>
+  <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+    <div id="app" class="collapsible lgu-admin-dashboard">
+      <!-- Welcome Section -->
+      <div class="dashboard-header-section">
+        <h1 class="text-2xl font-bold text-gray-800">Department Overview</h1>
+        <p class="text-gray-600">
+          Real-time insights and operational status.
+        </p>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="dashboard-content p-6">
+        <div id="brain-analytics-section" class="animate-fade-in-up">
+          <!-- Header Row -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-100 flex items-center gap-3">
+                <span
+                  class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg shadow-indigo-500/20">
+                  <i class="fas fa-brain text-white"></i>
+                </span>
+                Intelligence Command Center
+              </h2>
+              <p class="text-gray-400 mt-1 ml-1">Real-time NLP analysis & predictive triage of citizen reports.</p>
+            </div>
+            <div id="brain-system-status"></div>
+          </div>
+
+          <!-- Top Row: Metric Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Critical -->
             <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Total Active</p>
-                <h3
-                  class="text-2xl font-bold text-gray-800"
-                  id="stat-total-active"
-                >
-                  -
-                </h3>
+              class="bg-[#1e293b] p-5 rounded-xl border border-gray-700/50 shadow-sm relative overflow-hidden group hover:border-red-500/30 transition-colors">
+              <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-exclamation-triangle text-6xl text-red-500"></i>
               </div>
-              <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
+              <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Critical Cases</p>
+              <h3 class="text-3xl font-bold text-white mb-2" id="brain-emergencies">-</h3>
+              <div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-red-500 w-3/4 animate-pulse"></div>
               </div>
             </div>
 
-            <!-- Unassigned -->
+            <!-- Keywords -->
             <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Unassigned</p>
-                <h3
-                  class="text-2xl font-bold text-red-600"
-                  id="stat-unassigned"
-                >
-                  -
-                </h3>
+              class="bg-[#1e293b] p-5 rounded-xl border border-gray-700/50 shadow-sm relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+              <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-tags text-6xl text-blue-500"></i>
               </div>
-              <div class="p-3 bg-red-50 text-red-600 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+              <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Keywords Detected</p>
+              <h3 class="text-3xl font-bold text-white mb-2" id="brain-keywords">-</h3>
+              <div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 w-1/2"></div>
               </div>
             </div>
 
-            <!-- Urgent Priority -->
+            <!-- Confidence -->
             <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Urgent Priority</p>
-                <h3 class="text-2xl font-bold text-orange-600" id="stat-urgent">
-                  -
-                </h3>
+              class="bg-[#1e293b] p-5 rounded-xl border border-gray-700/50 shadow-sm relative overflow-hidden group hover:border-purple-500/30 transition-colors">
+              <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-microchip text-6xl text-purple-500"></i>
               </div>
-              <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+              <p class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1">AI Confidence</p>
+              <h3 class="text-3xl font-bold text-white mb-2" id="brain-confidence">-</h3>
+              <div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-purple-500 w-[92%]"></div>
               </div>
             </div>
 
-            <!-- High Priority -->
+            <!-- Unique Topics -->
             <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-sm text-gray-500 font-medium">High Priority</p>
-                <h3 class="text-2xl font-bold text-yellow-600" id="stat-high">
-                  -
-                </h3>
+              class="bg-[#1e293b] p-5 rounded-xl border border-gray-700/50 shadow-sm relative overflow-hidden group hover:border-teal-500/30 transition-colors">
+              <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-fingerprint text-6xl text-teal-500"></i>
               </div>
-              <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+              <p class="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1">Unique Topics</p>
+              <h3 class="text-3xl font-bold text-white mb-2" id="brain-unique">-</h3>
+              <div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-teal-500 w-2/3"></div>
               </div>
             </div>
           </div>
 
-          <!-- Charts Row -->
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
-          >
-            <!-- Trend Chart -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1 md:col-span-2 lg:col-span-3"
-            >
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                Complaint Submission Trend (7 Days)
-              </h3>
-              <div style="height: 300px; position: relative">
-                <canvas id="trendChart"></canvas>
-              </div>
-            </div>
-
-            <!-- Distribution Chart -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-1"
-            >
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                Priority Distribution
-              </h3>
-              <div style="height: 300px; position: relative">
-                <canvas id="distributionChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Lists Row -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Recent Unassigned -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            >
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">
-                  Recent Unassigned Data
+          <!-- Main Grid: Charts & Feeds -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Charts -->
+            <div class="lg:col-span-2 space-y-6">
+              <!-- Category Distribution -->
+              <div class="bg-[#1e293b] p-6 rounded-xl border border-gray-700/50 shadow-sm">
+                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <i class="fas fa-chart-pie text-gray-500"></i>
+                  Predictive Category Distribution
                 </h3>
-                <a
-                  href="/lgu-admin/assignments"
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >View All</a
-                >
-              </div>
-              <div id="recent-unassigned-list" class="space-y-3">
-                <!-- Loading State -->
-                <div class="animate-pulse space-y-3">
-                  <div class="h-16 bg-gray-100 rounded-lg"></div>
-                  <div class="h-16 bg-gray-100 rounded-lg"></div>
-                  <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-[250px] relative">
+                  <canvas id="brain-category-chart"></canvas>
                 </div>
               </div>
             </div>
 
-            <!-- Quick Actions Place holder -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            >
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                Quick Actions
-              </h3>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  id="btn-quick-assignments"
-                  class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
-                >
-                  <div
-                    class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
+            <!-- Right Column: Live Feed -->
+            <div class="lg:col-span-1">
+              <div class="bg-[#1e293b] p-0 rounded-xl border border-gray-700/50 shadow-sm h-full flex flex-col">
+                <div
+                  class="p-5 border-b border-gray-700/50 bg-[#1e293b] rounded-t-xl flex justify-between items-center">
+                  <h3 class="font-bold text-gray-100 flex items-center gap-2">
+                    <span
+                      class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+                    Live Critical Ticker
+                  </h3>
+                </div>
+                <div class="p-4 overflow-y-auto max-h-[500px] min-h-[300px] custom-scrollbar bg-[#0f172a]/50"
+                  id="brain-alerts-list">
+                  <!-- Loading State -->
+                  <div class="flex flex-col items-center justify-center h-full text-gray-600 animate-pulse">
+                    <i class="fas fa-satellite-dish text-3xl mb-2 opacity-50"></i>
+                    <p class="text-xs uppercase tracking-widest">Scanning incoming reports...</p>
                   </div>
-                  <h4 class="font-medium text-gray-900">Manage Assignments</h4>
-                  <p class="text-sm text-gray-500 mt-1">
-                    Assign or reassign complaints
-                  </p>
-                </button>
-
-                <button
-                  id="btn-quick-heatmap"
-                  class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
-                >
-                  <div
-                    class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                      />
-                    </svg>
-                  </div>
-                  <h4 class="font-medium text-gray-900">View Heatmap</h4>
-                  <p class="text-sm text-gray-500 mt-1">Geospatial analysis</p>
-                </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div id="toast-container" class="toast-container"></div>
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="/js/lib/supabase-boot.js"></script>
-    <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/components/header.js"></script>
-    <script type="module" src="../../js/components/sidebar.js"></script>
-    <script type="module" src="../../js/auth/authChecker.js"></script>
-    <script type="module" src="../../js/auth/roleToggle.js"></script>
-    <script type="module" src="../../js/components/clock.js"></script>
-    <script type="module" src="../../js/pages/lgu-admin/dashboard.js"></script>
-  </body>
+  </div>
+  <div id="toast-container" class="toast-container"></div>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="/js/lib/supabase-boot.js"></script>
+  <script type="module" src="../../js/components/toast.js"></script>
+  <script type="module" src="../../js/components/header.js"></script>
+  <script type="module" src="../../js/components/sidebar.js"></script>
+  <script type="module" src="../../js/auth/authChecker.js"></script>
+  <script type="module" src="../../js/auth/roleToggle.js"></script>
+  <script type="module" src="../../js/components/clock.js"></script>
+  <script type="module" src="../../js/pages/lgu-admin/dashboard.js"></script>
+  <!-- Brain Analytics Core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="/brain-dashboard/shared/taxonomy.js"></script>
+  <script src="/brain-dashboard/nlp-processor.js"></script>
+  <script src="/brain-dashboard/simulation-engine.js"></script>
+
+  <!-- Page Scripts -->
+  <script type="module">
+    import { initBrainAnalytics } from '/js/pages/lgu-admin/dashboard-brain.js';
+
+    // Init Brain Analytics after main load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        initBrainAnalytics();
+      }, 500); // Slight delay to prioritize main dashboard
+    });
+  </script>
+</body>
+
 </html>

@@ -51,6 +51,27 @@ router.post(
 );
 
 /**
+ * @route   GET /api/auth/login
+ * @desc    Trap for invalid GET requests to login (debugging)
+ * @access  Public
+ */
+router.get("/login", (req, res) => {
+  console.warn("[DEBUG] ⚠️ Caught GET /api/auth/login request. This should be POST.");
+  console.warn("[DEBUG] Headers:", JSON.stringify(req.headers, null, 2));
+  console.warn("[DEBUG] Query:", req.query);
+
+  // Check if this might be a redirect loop or cached 301
+  const isBrowser = req.accepts('html');
+
+  res.status(405).json({
+    success: false,
+    error: "Method Not Allowed. Login requires POST request.",
+    detail: "Your browser sent a GET request. This may be due to a cached redirect or incorrect form submission.",
+    help: "Clear browser cache or try a private/incognito window."
+  });
+});
+
+/**
  * @route   GET /api/auth/verify-email
  * @desc    Verify user email
  * @access  Public

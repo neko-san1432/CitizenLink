@@ -75,6 +75,18 @@ const setupMiddleware = (app) => {
       )
     );
   });
+  // Fix for root request 404
+  app.get("/brgy_boundaries_location.json", (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "public",
+        "assets",
+        "json",
+        "brgy_boundaries_location.json"
+      )
+    );
+  });
 
   // Serve static files with proper paths
   // Root public directory (for files like favicon, robots.txt, etc.)
