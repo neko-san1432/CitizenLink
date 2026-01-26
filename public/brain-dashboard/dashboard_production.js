@@ -1539,6 +1539,25 @@ function determineSeverity(count, category) {
 // Track critical points globally for panel interactions
 let currentCriticalPoints = [];
 let criticalMarkersLayer = null;
+let criticalMarkersVisible = true;
+
+window.setCriticalMarkersVisible = function (show) {
+    criticalMarkersVisible = Boolean(show);
+    if (!window.map || !criticalMarkersLayer) return;
+    if (criticalMarkersVisible) {
+        if (!window.map.hasLayer(criticalMarkersLayer)) {
+            criticalMarkersLayer.addTo(window.map);
+        }
+    } else {
+        if (window.map.hasLayer(criticalMarkersLayer)) {
+            window.map.removeLayer(criticalMarkersLayer);
+        }
+    }
+};
+
+window.getCriticalMarkersVisible = function () {
+    return criticalMarkersVisible;
+};
 
 /**
  * Render the Emergency Panel with critical dispatch tickets.
@@ -1803,8 +1822,12 @@ function renderCriticalMarkers(criticalPoints) {
         criticalMarkersLayer.addLayer(marker);
     });
 
-    criticalMarkersLayer.addTo(map);
-    console.log(`[TRIAGE] Rendered ${criticalPoints.length} pulsing markers on map`);
+    if (criticalMarkersVisible) {
+        criticalMarkersLayer.addTo(map);
+        console.log(`[TRIAGE] Rendered ${criticalPoints.length} pulsing markers on map`);
+    } else {
+        console.log(`[TRIAGE] Built ${criticalPoints.length} pulsing markers (hidden by toggle)`);
+    }
 }
 
 /**
@@ -3567,8 +3590,19 @@ function toggleEmergencyPanel() {
         return;
     }
 
-    // Toggle 'hidden' class to match CSS (default is often hidden)
-    panel.classList.toggle('hidden');
+    const show = arguments.length > 0 ? arguments[0] : undefined;
+    if (typeof show === 'boolean') {
+        if (show) panel.classList.remove('hidden');
+        else panel.classList.add('hidden');
+    } else {
+        panel.classList.toggle('hidden');
+    }
+
+    if (!panel.classList.contains('hidden') && currentCriticalPoints && currentCriticalPoints.length > 0) {
+        panel.classList.add('active');
+    } else {
+        panel.classList.remove('active');
+    }
 
     // Send message to parent/consumer if needed
     if (panel.classList.contains('hidden')) {
@@ -5666,28 +5700,6 @@ function visualizeNoisePoints(noisePoints) {
 
 // ==================== MAIN LOAD FUNCTION ====================
 
-// ==================== FILTERING API ====================
-
-/**
- * Apply global filters from UI instructions.
- * Triggers reload of simulation.
- * @param {Object} filters - { category, subcategory, office, start_date, end_date }
- */
-window.applyGlobalFilters = function (filters) {
-    console.log('[FILTER] Applying new filters:', filters);
-
-    if (filters.category !== undefined) currentFilterCategory = filters.category;
-    if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
-    if (filters.office !== undefined) currentFilterOffice = filters.office;
-    if (filters.start_date !== undefined) currentFilterStartDate = filters.start_date;
-    if (filters.end_date !== undefined) currentFilterEndDate = filters.end_date;
-
-    // Trigger reload if engine is ready
-    if (typeof simulationEngine !== 'undefined' && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
-        loadFullSimulation();
-    }
-};
-
 async function loadFullSimulation() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -5777,8 +5789,14 @@ async function loadFullSimulation() {
             console.log('Inputs:', { Start: currentFilterStartDate, End: currentFilterEndDate });
 
             filteredData = filteredData.filter(p => {
-                // Robust date parsing: Handle camelCase and snake_case
-                const rawDate = p.timestamp || p.submittedAt || p.submitted_at;
+                const rawDate =
+                    p.timestamp ||
+                    p.submittedAt ||
+                    p.submitted_at ||
+                    p.created_at ||
+                    p.createdAt ||
+                    p.updated_at ||
+                    p.updatedAt;
                 if (!rawDate) {
                     console.warn('[FILTER-WARN] Record missing date:', p.id);
                     return false;
@@ -6352,8 +6370,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEmergencyPanel();
     console.log('[TRIAGE] Emergency panel initialized');
 
-    // Load City Data button
-    document.getElementById('loadCityData').addEventListener('click', loadFullSimulation);
+    const loadCityDataBtn = document.getElementById('loadCityData');
+    if (loadCityDataBtn) {
+        loadCityDataBtn.addEventListener('click', loadFullSimulation);
+    }
 
     // ==================== v4.1: MAP LAYERS DROPDOWN ====================
     initMapLayersDropdown();
@@ -6363,16 +6383,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ================================================================
     // Causal analysis is handled via dropdown click in initMapLayersDropdown()
 
-    // Category Filter dropdown
-    document.getElementById('categoryFilter').addEventListener('change', (e) => {
-        currentFilterCategory = e.target.value;
-        console.log('[FILTER] Category:', currentFilterCategory);
+    const categoryFilterEl = document.getElementById('categoryFilter');
+    if (categoryFilterEl) {
+        categoryFilterEl.addEventListener('change', (e) => {
+            currentFilterCategory = e.target.value;
+            console.log('[FILTER] Category:', currentFilterCategory);
 
-        // Re-run analysis with new filter if data is loaded
-        if (simulationEngine && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
-            loadFullSimulation();
-        }
-    });
+            if (simulationEngine && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
+                loadFullSimulation();
+            }
+        });
+    }
 
     // Refresh Insights button with debounce
     let refreshTimeout = null;
@@ -6425,6 +6446,10 @@ window.applyGlobalFilters = function (filters) {
         cat: currentFilterCategory,
         sub: currentFilterSubcategory
     });
+
+    if (typeof simulationEngine !== 'undefined' && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
+        loadFullSimulation();
+    }
 };
 
 // Sidebars handled by heatmap.html inline script or other page-specific scripts to avoid conflicts.

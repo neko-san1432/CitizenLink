@@ -36,6 +36,8 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
+            padding-top: 70px;
+            box-sizing: border-box;
         }
 
         #app.collapsible {
@@ -48,6 +50,11 @@
             max-width: 100% !important;
             overflow: hidden;
             min-width: 0;
+            height: calc(100vh - 70px);
+        }
+
+        #sidebar.collapsible {
+            height: calc(100vh - 70px);
         }
 
         /* ========== MAP AREA (Left side - fills remaining space) ========== */
@@ -82,13 +89,14 @@
             min-width: 340px;
             max-width: 340px;
             height: 100%;
-            background: rgba(15, 23, 42, 0.98);
+            background: radial-gradient(1200px 700px at 20% 0%, rgba(59, 130, 246, 0.10), rgba(15, 23, 42, 0.98) 55%), rgba(15, 23, 42, 0.98);
             border-left: 1px solid rgba(51, 65, 85, 0.5);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             z-index: 100;
             flex-shrink: 0;
+            box-shadow: -12px 0 32px rgba(0, 0, 0, 0.35);
         }
 
         .command-header {
@@ -112,21 +120,71 @@
         }
 
         .command-header .refresh-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
             width: 32px;
             height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
+            padding: 0;
         }
 
         .command-header .refresh-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .command-center .btn.btn-secondary {
+            background: rgba(51, 65, 85, 0.75);
+            border-color: rgba(148, 163, 184, 0.25);
+            color: #f1f5f9;
+            box-shadow: none;
+        }
+
+        .command-center .btn.btn-secondary:hover:not(:disabled) {
+            background: rgba(71, 85, 105, 0.8);
+            border-color: rgba(148, 163, 184, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .command-center .btn.btn-secondary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .command-center .btn.btn-primary {
+            box-shadow: none;
+        }
+
+        .command-center .cc-label {
+            display: block;
+            margin-bottom: var(--space-2);
+            font-weight: var(--font-weight-600, 600);
+            font-size: 10px;
+            color: rgba(203, 213, 225, 0.9);
+            letter-spacing: 0.02em;
+        }
+
+        .command-center .cc-control.form-control {
+            padding: 8px 10px;
+            font-size: 12px;
+            line-height: 1.2;
+            border-radius: var(--radius-md);
+            box-shadow: none;
+            transform: none;
+            background-color: rgba(15, 23, 42, 0.8);
+            border-color: rgba(148, 163, 184, 0.35);
+            color: #e2e8f0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .command-center .cc-control.form-control:hover:not(:disabled) {
+            background-color: rgba(15, 23, 42, 0.9);
+            border-color: rgba(148, 163, 184, 0.55);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .command-center .cc-control.form-control:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.9);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            transform: none;
         }
 
         .command-body {
@@ -138,6 +196,43 @@
             gap: 12px;
         }
 
+        .command-body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .command-body::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.2);
+        }
+
+        .command-body::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 999px;
+            border: 2px solid rgba(15, 23, 42, 0.35);
+        }
+
+        .command-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.38);
+        }
+
+        .command-center .cc-accordion-item {
+            border: 1px solid rgba(51, 65, 85, 0.35);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(30, 41, 59, 0.22);
+        }
+
+        .command-center .cc-accordion-header {
+            background: rgba(30, 41, 59, 0.45);
+        }
+
+        .command-center .cc-accordion-item.open .cc-accordion-header {
+            background: rgba(59, 130, 246, 0.12);
+        }
+
+        .command-center .cc-accordion-content {
+            background: rgba(15, 23, 42, 0.22);
+        }
+
         /* Stats Grid */
         .stats-grid {
             display: grid;
@@ -146,13 +241,14 @@
         }
 
         .stat-card {
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(30, 41, 59, 0.5);
             border-radius: 10px;
             padding: 12px;
             display: flex;
             align-items: center;
             gap: 10px;
             border: 1px solid rgba(51, 65, 85, 0.3);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
         }
 
         .stat-icon {
@@ -257,7 +353,7 @@
         /* ========== FLOATING CONTROLS ========== */
         .floating-controls {
             position: absolute;
-            top: 80px;
+            top: 16px;
             right: 16px;
             z-index: 1000;
             display: flex;
@@ -521,47 +617,54 @@
         }
 
         /* ========== CUSTOM MULTI-SELECT ========== */
-        .custom-multiselect {
+        .command-center .custom-multiselect {
             position: relative;
             width: 100%;
         }
 
-        .multiselect-trigger {
+        .command-center .multiselect-trigger {
             width: 100%;
             background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(51, 65, 85, 0.5);
-            border-radius: 6px;
-            padding: 6px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: var(--radius-md);
+            padding: 8px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             color: #e2e8f0;
             transition: all 0.2s;
-            min-height: 28px;
+            min-height: 34px;
         }
 
-        .multiselect-trigger:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(30, 41, 59, 0.8);
+        .command-center .multiselect-trigger:hover:not(.disabled) {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: rgba(148, 163, 184, 0.55);
         }
 
-        .trigger-text {
+        .command-center .multiselect-trigger:focus,
+        .command-center .multiselect-trigger:focus-visible {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.9);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .command-center .trigger-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 90%;
         }
 
-        .multiselect-dropdown {
+        .command-center .multiselect-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
             background: #1e293b;
             border: 1px solid rgba(51, 65, 85, 0.8);
-            border-radius: 6px;
+            border-radius: var(--radius-md);
             margin-top: 4px;
             max-height: 200px;
             overflow-y: auto;
@@ -570,12 +673,12 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .multiselect-dropdown.open {
+        .command-center .multiselect-dropdown.open {
             display: block;
             animation: fadeIn 0.15s ease-out;
         }
 
-        .multiselect-option {
+        .command-center .multiselect-option {
             padding: 6px 10px;
             display: flex;
             align-items: center;
@@ -585,22 +688,22 @@
             transition: background 0.15s;
         }
 
-        .multiselect-option:last-child {
+        .command-center .multiselect-option:last-child {
             border-bottom: none;
         }
 
-        .multiselect-option:hover {
+        .command-center .multiselect-option:hover {
             background: rgba(59, 130, 246, 0.2);
         }
 
-        .multiselect-option.selected {
+        .command-center .multiselect-option.selected {
             background: rgba(59, 130, 246, 0.15);
         }
 
-        .option-checkbox {
+        .command-center .option-checkbox {
             width: 14px;
             height: 14px;
-            border-radius: 3px;
+            border-radius: var(--radius-sm);
             border: 1px solid #64748b;
             display: flex;
             align-items: center;
@@ -608,12 +711,12 @@
             transition: all 0.2s;
         }
 
-        .multiselect-option.selected .option-checkbox {
+        .command-center .multiselect-option.selected .option-checkbox {
             background: #3b82f6;
             border-color: #3b82f6;
         }
 
-        .option-checkbox::after {
+        .command-center .option-checkbox::after {
             content: '\f00c';
             font-family: 'Font Awesome 5 Free';
             font-weight: 900;
@@ -622,17 +725,17 @@
             display: none;
         }
 
-        .multiselect-option.selected .option-checkbox::after {
+        .command-center .multiselect-option.selected .option-checkbox::after {
             display: block;
         }
 
-        .option-label {
-            font-size: 11px;
+        .command-center .option-label {
+            font-size: 12px;
             color: #cbd5e1;
             flex: 1;
         }
 
-        .multiselect-trigger.disabled {
+        .command-center .multiselect-trigger.disabled {
             opacity: 0.6;
             cursor: not-allowed;
             background: rgba(15, 23, 42, 0.5);
@@ -653,7 +756,7 @@
 
                 <!-- Floating Controls -->
                 <div class="floating-controls">
-                    <button class="floating-btn primary" id="loadCityDataFloat"
+                    <button class="floating-btn primary" id="loadCityData"
                         title="Load complaint data from database">
                         <i class="fas fa-database"></i>
                         <span>Load Data</span>
@@ -702,7 +805,7 @@
                         <i class="fas fa-broadcast-tower"></i>
                         COMMAND CENTER
                     </h2>
-                    <button class="refresh-btn" id="refreshInsights" title="Refresh Intelligence">
+                    <button class="refresh-btn btn btn-secondary btn-sm" id="refreshInsights" title="Refresh Intelligence">
                         <i class="fas fa-sync"></i>
                     </button>
                 </div>
@@ -718,20 +821,18 @@
                                 <!-- Date Range -->
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block mb-1">Start Date</label>
-                                        <input type="date" id="filter-start-date"
-                                            class="w-full bg-[rgba(15,23,42,0.8)] border border-slate-600 rounded-md px-2 py-1.5 text-xs text-slate-200">
+                                        <label class="cc-label" for="filter-start-date">Start Date</label>
+                                        <input type="date" id="filter-start-date" class="form-control cc-control">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block mb-1">End Date</label>
-                                        <input type="date" id="filter-end-date"
-                                            class="w-full bg-[rgba(15,23,42,0.8)] border border-slate-600 rounded-md px-2 py-1.5 text-xs text-slate-200">
+                                        <label class="cc-label" for="filter-end-date">End Date</label>
+                                        <input type="date" id="filter-end-date" class="form-control cc-control">
                                     </div>
                                 </div>
 
                                 <!-- Office -->
                                 <div>
-                                    <label class="text-[10px] text-slate-400 block mb-1">Assigned Office</label>
+                                    <label class="cc-label">Assigned Office</label>
                                     <select id="filter-office" multiple class="hidden">
                                         <option value="all" selected>All Offices</option>
                                         <option value="City Engineering Office">City Engineering Office</option>
@@ -748,7 +849,7 @@
 
                                 <!-- Category -->
                                 <div>
-                                    <label class="text-[10px] text-slate-400 block mb-1">Category</label>
+                                    <label class="cc-label">Category</label>
                                     <select id="filter-category" multiple class="hidden">
                                         <option value="all" selected>All Categories</option>
                                     </select>
@@ -757,18 +858,21 @@
 
                                 <!-- Subcategory -->
                                 <div>
-                                    <label class="text-[10px] text-slate-400 block mb-1">Subcategory</label>
+                                    <label class="cc-label">Subcategory</label>
                                     <select id="filter-subcategory" multiple class="hidden" disabled>
                                         <option value="all" selected>All Subcategories</option>
                                     </select>
                                     <div id="ui-filter-subcategory" class="custom-multiselect"></div>
                                 </div>
 
-                                <!-- Reset Button -->
-                                <button id="reset-filters-btn"
-                                    class="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 rounded flex items-center justify-center gap-2 transition-colors">
-                                    <i class="fas fa-undo"></i> RESET FILTERS
-                                </button>
+                                <div style="display:flex; gap:10px;">
+                                    <button id="apply-filters-btn" class="btn btn-primary btn-sm btn-block" disabled>
+                                        <i class="fas fa-filter"></i> Apply
+                                    </button>
+                                    <button id="reset-filters-btn" class="btn btn-secondary btn-sm btn-block">
+                                        <i class="fas fa-undo"></i> Reset
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -815,6 +919,15 @@
                                         <i class="fas fa-triangle-exclamation text-amber-500"></i> Emergency Panel
                                     </span>
                                     <input type="checkbox" id="emergencyToggle" class="toggle-switch">
+                                </label>
+
+                                <!-- Emergency Markers Toggle -->
+                                <label
+                                    class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-slate-700/50 transition-colors">
+                                    <span class="flex items-center gap-2 text-xs text-slate-300">
+                                        <i class="fas fa-location-dot text-red-400"></i> Emergency Markers
+                                    </span>
+                                    <input type="checkbox" id="emergencyMarkersToggle" class="toggle-switch" checked>
                                 </label>
 
                                 <!-- Divider -->
@@ -978,6 +1091,7 @@
                 office: document.getElementById('filter-office'),
                 category: document.getElementById('filter-category'),
                 subcategory: document.getElementById('filter-subcategory'),
+                apply: document.getElementById('apply-filters-btn'),
                 reset: document.getElementById('reset-filters-btn')
             };
 
@@ -987,7 +1101,7 @@
             // Load Taxonomy
             let taxonomy = null;
             try {
-                taxonomy = await CitizenLinkTaxonomy.loadTaxonomy();
+                taxonomy = await CitizenLinkTaxonomy.loadTaxonomy({ skipConfig: true });
                 const categories = CitizenLinkTaxonomy.getCategories(taxonomy);
 
                 // Populate Category
@@ -1146,7 +1260,13 @@
                 return Array.from(select.selectedOptions).map(opt => opt.value);
             };
 
-            // Enhanced Apply Filters
+            let dirty = false;
+            const markDirty = () => {
+                dirty = true;
+                if (els.apply) els.apply.disabled = false;
+            };
+
+            // Apply Filters
             const apply = () => {
                 // UI Sync is handled by custom component events -> select change -> this apply
                 let catValues = getValues(els.category);
@@ -1158,12 +1278,22 @@
                 if (subValues.length === 0) subValues = ['all'];
                 if (officeValues.length === 0) officeValues = ['all'];
 
+                let startDate = els.start.value || '';
+                let endDate = els.end.value || '';
+                if (startDate && endDate && startDate > endDate) {
+                    const tmp = startDate;
+                    startDate = endDate;
+                    endDate = tmp;
+                    els.start.value = startDate;
+                    els.end.value = endDate;
+                }
+
                 const filters = {
                     category: catValues,
                     subcategory: subValues,
                     office: officeValues,
-                    start_date: els.start.value || undefined,
-                    end_date: els.end.value || undefined
+                    start_date: startDate,
+                    end_date: endDate
                 };
 
                 // Sync floating control (approximate single val)
@@ -1172,6 +1302,8 @@
                 }
 
                 window.applyGlobalFilters(filters);
+                dirty = false;
+                if (els.apply) els.apply.disabled = true;
             };
 
             // Event: Category Change -> Update Subcategory
@@ -1215,14 +1347,21 @@
                     });
                 }
 
-                apply();
+                markDirty();
             });
 
             // Event: Other Inputs Change
-            els.start.addEventListener('change', apply);
-            els.end.addEventListener('change', apply);
-            els.office.addEventListener('change', apply);
-            els.subcategory.addEventListener('change', apply);
+            els.start.addEventListener('change', markDirty);
+            els.end.addEventListener('change', markDirty);
+            els.office.addEventListener('change', markDirty);
+            els.subcategory.addEventListener('change', markDirty);
+
+            if (els.apply) {
+                els.apply.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    apply();
+                });
+            }
 
             // Event: Reset
             els.reset.addEventListener('click', () => {
@@ -1283,6 +1422,7 @@
             const clSwitch = document.getElementById('clustersSwitch');
             const mkToggle = document.getElementById('markersToggle');
             const emToggle = document.getElementById('emergencyToggle');
+            const emMarkersToggle = document.getElementById('emergencyMarkersToggle');
             const emergencyCollapse = document.getElementById('emergencyCollapse');
             const emergencyPanel = document.getElementById('emergencyPanel');
 
@@ -1330,13 +1470,25 @@
             if (emToggle) {
                 emToggle.addEventListener('change', () => {
                     if (typeof toggleEmergencyPanel === 'function') {
-                        toggleEmergencyPanel();
+                        toggleEmergencyPanel(Boolean(emToggle.checked));
                     } else {
                         // Fallback manual toggle
                         const emPanel = document.getElementById('emergencyPanel');
                         if (emPanel) {
-                            emPanel.classList.toggle('hidden');
+                            if (emToggle.checked) emPanel.classList.remove('hidden');
+                            else emPanel.classList.add('hidden');
                         }
+                    }
+                });
+            }
+
+            if (emMarkersToggle) {
+                emMarkersToggle.addEventListener('change', () => {
+                    if (typeof window.setCriticalMarkersVisible === 'function') {
+                        window.setCriticalMarkersVisible(Boolean(emMarkersToggle.checked));
+                    } else if (window.map && window.criticalMarkersLayer) {
+                        if (emMarkersToggle.checked) window.criticalMarkersLayer.addTo(window.map);
+                        else window.map.removeLayer(window.criticalMarkersLayer);
                     }
                 });
             }
@@ -1347,6 +1499,10 @@
                     const emPanel = document.getElementById('emergencyPanel');
                     if (emPanel && emToggle) {
                         emToggle.checked = !emPanel.classList.contains('hidden');
+                    }
+
+                    if (emMarkersToggle && typeof window.getCriticalMarkersVisible === 'function') {
+                        emMarkersToggle.checked = Boolean(window.getCriticalMarkersVisible());
                     }
 
                     // Sync Cluster/Marker checkboxes with global variables if they exist
