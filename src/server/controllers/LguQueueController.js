@@ -59,7 +59,7 @@ class LguQueueController {
             let query = supabase
                 .from("complaints")
                 .select(`
-          id, title, descriptive_su, submitted_at, submitted_by, 
+          id, descriptive_su, submitted_at, submitted_by, 
           workflow_status, priority, location_text,
           preferred_departments, department_r,
           last_activity_at, updated_at
@@ -358,7 +358,7 @@ class LguQueueController {
             let query = supabase
                 .from("complaints")
                 .select(
-                    "id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority, category, subcategory",
+                    "id, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority, category, subcategory",
                     { count: "exact" }
                 )
                 .contains("department_r", [departmentCode]);

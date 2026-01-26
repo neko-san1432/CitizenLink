@@ -34,7 +34,7 @@ class LguOfficerService {
     const complaintIds = assignments.map(a => a.complaint_id);
     const complaints = await this.complaintRepo.findByIds(
       complaintIds,
-      "id, title, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, latitude, longitude, last_activity_at"
+      "id, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, latitude, longitude, last_activity_at"
     );
 
     // Deduplicate assignments by complaint_id (keep the most recent one)
@@ -104,7 +104,7 @@ class LguOfficerService {
     const complaintIds = assignments.map(a => a.complaint_id);
     const complaints = await this.complaintRepo.findByIds(
       complaintIds,
-      "id, title, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at"
+      "id, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at"
     );
 
     // Deduplicate assignments

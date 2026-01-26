@@ -1330,8 +1330,7 @@ class LguAdminController {
         userId,
         NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
         "Assignment Completed",
-        `You successfully assigned "${
-          complaint?.descriptive_su?.slice(0, 100) || "a complaint"
+        `You successfully assigned "${complaint?.descriptive_su?.slice(0, 100) || "a complaint"
         }" to an officer.`,
         {
           priority: NOTIFICATION_PRIORITY.INFO,
@@ -1448,7 +1447,7 @@ class LguAdminController {
         // Check if overdue (7+ days)
         const daysSinceAssignment = Math.floor(
           (Date.now() - new Date(assignment.created_at).getTime()) /
-            (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
         );
         if (daysSinceAssignment > 7) {
           officerGroups[officerId].overdue_count++;

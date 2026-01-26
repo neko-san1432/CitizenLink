@@ -194,7 +194,7 @@ class ComplaintRepository {
       client
         .from("complaints")
         .select(
-          "id, title, workflow_status, submitted_at, is_duplicate, cancelled_at"
+          "id, descriptive_su, workflow_status, submitted_at, is_duplicate, cancelled_at"
         )
         .eq("submitted_by", userId)
         .order("submitted_at", { ascending: false })
@@ -244,7 +244,7 @@ class ComplaintRepository {
     }
     if (search) {
       query = query.or(
-        `title.ilike.%${search}%,descriptive_su.ilike.%${search}%,location_text.ilike.%${search}%`
+        `descriptive_su.ilike.%${search}%,location_text.ilike.%${search}%`
       );
     }
     const { data, error, count } = await query.range(

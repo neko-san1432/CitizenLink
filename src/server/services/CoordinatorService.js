@@ -294,7 +294,7 @@ class CoordinatorService {
         await this.notificationService.notifyComplaintAssignedToOfficer(
           updated.submitted_by,
           complaintId,
-          updated.title,
+          updated.descriptive_su || "Complaint",
           { departments }
         );
       }
@@ -459,7 +459,7 @@ class CoordinatorService {
           data.submitted_by,
           "complaint_rejected",
           "Complaint Rejected",
-          `Your complaint "${data.title}" has been rejected. Reason: ${reason}`,
+          `Your complaint "${data.descriptive_su || "Complaint"}" has been rejected. Reason: ${reason}`,
           {
             priority: "warning",
             link: `/citizen/complaints/${complaintId}`,
@@ -531,7 +531,7 @@ class CoordinatorService {
                 await this.notificationService.notifyTaskAssigned(
                   options.assigned_to,
                   complaintId,
-                  assigned.title || "New Complaint",
+                  assigned.descriptive_su || "New Complaint",
                   options.priority || assigned.priority || "medium",
                   options.deadline || assigned.response_deadline || null
                 );
@@ -541,7 +541,7 @@ class CoordinatorService {
               await this.notificationService.notifyDepartmentAdminsByCode(
                 departmentName,
                 complaintId,
-                assigned.title || "New Complaint"
+                assigned.descriptive_su || "New Complaint"
               );
 
             } catch (e) {
@@ -624,7 +624,7 @@ class CoordinatorService {
               deadline: options.deadline || null
             }
           );
-          await this.notifyDepartmentAdmins(code, complaintId, updated.title || "New Complaint");
+          await this.notifyDepartmentAdmins(code, complaintId, updated.descriptive_su || "New Complaint");
         } catch (e) {
           console.warn("[COORDINATOR_SERVICE] Per-dept assignment failed:", code, e.message);
         }
@@ -706,7 +706,7 @@ class CoordinatorService {
           }
           // Notify department admins using the working method
           console.log("[COORDINATOR_SERVICE] assignToDepartment calling notifyDepartmentAdmins. notificationService:", this.notificationService);
-          await this.notifyDepartmentAdmins(departmentName, assigned[0]?.id, assigned[0]?.title || "New Complaints");
+          await this.notifyDepartmentAdmins(departmentName, assigned[0]?.id, assigned[0]?.descriptive_su || "New Complaints");
         }
       } catch (e) {
         console.warn("[COORDINATOR_SERVICE] Bulk assignment/notification post-step failed:", e.message);

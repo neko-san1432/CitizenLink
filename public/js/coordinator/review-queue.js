@@ -1,816 +1,293 @@
-// Coordinator Review Queue JavaScript
 import showToast from "../components/toast.js";
-// import BarangayPrioritization from "../components/barangay-prioritization.js";
+import DepartmentSelectionModal from "./department-selection-modal.js";
 
-class ReviewQueue {
+class ReviewQueueController {
   constructor() {
+    // UI Elements
+    this.container = document.getElementById("complaint-list");
+    this.loading = document.getElementById("loading");
+    this.emptyState = document.getElementById("empty-state");
+    this.searchInput = document.getElementById("search-input");
+    this.priorityFilter = document.getElementById("filter-priority");
+    this.typeFilter = document.getElementById("filter-type");
+    this.similarFilter = document.getElementById("filter-similar");
+    this.sortFilter = document.getElementById("filter-prioritization");
+
+    // Badges
+    this.countBadge = document.getElementById("queue-count-badge");
+    this.urgentBadge = document.getElementById("queue-urgent-badge");
+
+    // Pagination Elements
+    this.paginationContainer = document.getElementById("pagination-container");
+    this.prevBtn = document.getElementById("prev-page");
+    this.nextBtn = document.getElementById("next-page");
+    this.pageInfo = document.getElementById("page-info");
+    this.itemsInfo = document.getElementById("items-info");
+
+    // State
     this.complaints = [];
+    this.filteredComplaints = [];
     this.currentPage = 1;
-    this.itemsPerPage = 10;
-    this.filters = {
-      priority: "",
-      category: "",
-      duplicates: "",
-      search: "",
-      prioritization: "",
-    };
-    this.barangayPrioritization = null;
-    this.barangayPrioritizationComponent = null;
+    this.itemsPerPage = 9;
+
+    console.log("[REVIEW_QUEUE] Initializing v3 (Feature Restoration)");
     this.init();
   }
+
   async init() {
-    this.setupEventListeners();
-    this.setupRejectedSection();
-    // await this.initBarangayPrioritization();
+    if (!this.container) {
+      console.error("[REVIEW_QUEUE] Fatal: Container not found");
+      return;
+    }
+
+    // Initialize modal
+    this.deptModal = new DepartmentSelectionModal();
+
+    // Bind events
+    this.attachEventListeners();
+
+    // Load data
     await this.loadComplaints();
   }
 
-  /*
-  async initBarangayPrioritization() {
-    try {
-      this.barangayPrioritizationComponent = new BarangayPrioritization("barangay-prioritization-container");
-      await this.barangayPrioritizationComponent.loadInsights();
-      // Update prioritization map for filtering
-      if (this.barangayPrioritizationComponent.insightsData) {
-        this.barangayPrioritization = this.buildBarangayMap(this.barangayPrioritizationComponent.insightsData.barangays);
-        console.log("[REVIEW_QUEUE] Barangay prioritization loaded:", this.barangayPrioritization.size, "barangays");
-        // Enhance complaints if they're already loaded
-        if (this.complaints.length > 0) {
-          this.enhanceComplaintsWithPrioritization();
-          this.renderComplaints();
-        }
-      }
-    } catch (error) {
-      console.error("[REVIEW_QUEUE] Error initializing prioritization:", error);
-    }
-  }
-  */
-
-  setupRejectedSection() {
-    const toggleBtn = document.getElementById("toggle-rejected-btn");
-    const rejectedContainer = document.getElementById("rejected-container");
-    let isExpanded = false;
-    let rejectedComplaints = [];
-
-    if (toggleBtn && rejectedContainer) {
-      toggleBtn.addEventListener("click", async () => {
-        if (!isExpanded) {
-          // Load rejected complaints
-          const loading = document.getElementById("rejected-loading");
-          const rejectedList = document.getElementById("rejected-list");
-
-          if (loading) loading.style.display = "block";
-          if (rejectedList) rejectedList.innerHTML = "";
-
-          try {
-            const response = await fetch("/api/coordinator/rejected", {
-              method: "GET",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-            });
-
-            if (!response.ok)
-              throw new Error(`HTTP error! status: ${response.status}`);
-
-            const data = await response.json();
-            rejectedComplaints = data.data || [];
-
-            if (rejectedList) {
-              if (rejectedComplaints.length === 0) {
-                rejectedList.innerHTML =
-                  '<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-100"><p>No rejected complaints found.</p></div>';
-              } else {
-                rejectedList.innerHTML = rejectedComplaints
-                  .map((complaint) => this.createComplaintCard(complaint, true))
-                  .join("");
-                this.attachRejectedEventListeners();
-              }
-            }
-
-            toggleBtn.textContent = "Hide Rejected";
-            rejectedContainer.style.display = "block";
-            isExpanded = true;
-          } catch (error) {
-            console.error("Error loading rejected complaints:", error);
-            showToast("Failed to load rejected complaints", "error");
-            if (rejectedList) {
-              rejectedList.innerHTML =
-                '<div class="text-center py-8 text-red-500 bg-red-50 rounded-lg border border-red-100"><p>Error loading rejected complaints</p></div>';
-            }
-          } finally {
-            if (loading) loading.style.display = "none";
-          }
-        } else {
-          toggleBtn.textContent = "Show Rejected";
-          rejectedContainer.style.display = "none";
-          isExpanded = false;
-        }
+  attachEventListeners() {
+    // Filters
+    [this.searchInput, this.priorityFilter, this.typeFilter, this.similarFilter, this.sortFilter]
+      .forEach(el => {
+        if (el) el.addEventListener("input", () => this.applyFilters());
       });
-    }
-  }
 
-  attachRejectedEventListeners() {
-    document.querySelectorAll("#rejected-list .view-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const complaintId = e.target.getAttribute("data-complaint-id");
-        this.viewComplaint(complaintId);
-      });
-    });
-  }
-  setupEventListeners() {
-    // Filter controls
-    const priorityFilter = document.getElementById("filter-priority");
-    const categoryFilter = document.getElementById("filter-type");
-    const duplicateFilter = document.getElementById("filter-similar");
-    const searchInput = document.getElementById("search-input");
-    if (priorityFilter) {
-      priorityFilter.addEventListener("change", (e) => {
-        this.filters.priority = e.target.value;
-        this.applyFilters();
-      });
-    }
-    if (categoryFilter) {
-      categoryFilter.addEventListener("change", (e) => {
-        this.filters.category = e.target.value;
-        this.applyFilters();
-      });
-    }
-    if (duplicateFilter) {
-      duplicateFilter.addEventListener("change", (e) => {
-        this.filters.duplicates = e.target.value;
-        this.applyFilters();
-      });
-    }
-
-    const prioritizationFilter = document.getElementById(
-      "filter-prioritization"
-    );
-    if (prioritizationFilter) {
-      prioritizationFilter.addEventListener("change", (e) => {
-        this.filters.prioritization = e.target.value;
-        this.applyFilters();
-      });
-    }
-    if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
-        this.filters.search = e.target.value;
-        this.debounce(() => this.applyFilters(), 300)();
-      });
-    }
     // Pagination
-    const prevBtn = document.getElementById("prev-page");
-    const nextBtn = document.getElementById("next-page");
-    if (prevBtn) {
-      prevBtn.addEventListener("click", () => this.previousPage());
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener("click", () => this.nextPage());
-    }
+    if (this.prevBtn) this.prevBtn.addEventListener("click", () => this.changePage(-1));
+    if (this.nextBtn) this.nextBtn.addEventListener("click", () => this.changePage(1));
   }
-  applyFilters() {
-    this.currentPage = 1; // Reset to first page when filtering
-    this.renderComplaints();
-  }
+
   async loadComplaints() {
     try {
-      this.showLoading();
+      if (this.loading) this.loading.style.display = "block";
 
-      const complaintsResponse = await fetch("/api/coordinator/review-queue", {
+      const response = await fetch("/api/coordinator/review-queue", {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" }
       });
 
-      if (!complaintsResponse.ok) {
-        throw new Error(`HTTP error! status: ${complaintsResponse.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      const complaintsData = await complaintsResponse.json();
-      this.complaints = complaintsData.data || complaintsData.complaints || [];
+      const json = await response.json();
+      this.complaints = json.data || json.complaints || [];
 
-      console.log(`[REVIEW_QUEUE] Loaded ${this.complaints.length} complaints`);
-      if (this.complaints.length > 0) {
-        const sample = this.complaints[0];
-        console.log("[REVIEW_QUEUE] Sample complaint:", {
-          id: sample.id,
-          barangay: sample.barangay,
-          hasBarangay: Boolean(sample.barangay),
-          latitude: sample.latitude,
-          longitude: sample.longitude,
-        });
-      }
+      console.log(`[REVIEW_QUEUE] Loaded ${this.complaints.length} items`);
+      this.updateStats();
+      this.applyFilters(); // This triggers render
 
-      // Enhance complaints with prioritization if available
-      if (this.barangayPrioritization) {
-        this.enhanceComplaintsWithPrioritization();
-      } else if (
-        this.barangayPrioritizationComponent &&
-        this.barangayPrioritizationComponent.insightsData
-      ) {
-        // Build map if not already built
-        this.barangayPrioritization = this.buildBarangayMap(
-          this.barangayPrioritizationComponent.insightsData.barangays
-        );
-        this.enhanceComplaintsWithPrioritization();
-      } else {
-        console.warn(
-          "[REVIEW_QUEUE] Prioritization not available yet, complaints will be enhanced when prioritization loads"
-        );
-      }
-
-      this.renderComplaints();
     } catch (error) {
-      console.error("Error loading complaints:", error);
-      this.showError("Failed to load complaints. Please try again.");
+      console.error("[REVIEW_QUEUE] Error:", error);
+      showToast("Failed to load complaints: " + error.message, "error");
+      if (this.loading) this.loading.style.display = "none";
     }
   }
 
-  buildBarangayMap(barangays) {
-    const map = new Map();
-    barangays.forEach((barangay) => {
-      map.set(barangay.barangay, barangay.prioritizationScore);
+  updateStats() {
+    if (this.countBadge) this.countBadge.textContent = this.complaints.length;
+
+    const urgentCount = this.complaints.filter(c =>
+      (c.priority || "").toLowerCase() === "urgent" ||
+      (c.priority || "").toLowerCase() === "critical"
+    ).length;
+
+    if (this.urgentBadge) {
+      this.urgentBadge.textContent = `${urgentCount} Urgent`;
+      this.urgentBadge.classList.toggle("hidden", urgentCount === 0);
+    }
+  }
+
+  applyFilters() {
+    const query = (this.searchInput?.value || "").toLowerCase();
+    const priority = this.priorityFilter?.value || "";
+    const category = this.typeFilter?.value || "";
+    const sort = this.sortFilter?.value || "";
+
+    this.filteredComplaints = this.complaints.filter(c => {
+      const matchesQuery = !query ||
+        (JSON.stringify(c).toLowerCase().includes(query));
+
+      const matchesPriority = !priority || (c.priority || "").toLowerCase() === priority;
+      const matchesCategory = !category || (c.category || "").includes(category);
+
+      return matchesQuery && matchesPriority && matchesCategory;
     });
-    return map;
-  }
 
-  enhanceComplaintsWithPrioritization() {
-    if (!this.barangayPrioritization) {
-      console.warn(
-        "[REVIEW_QUEUE] Cannot enhance complaints: prioritization map not available"
-      );
-      return;
-    }
-
-    let enhancedCount = 0;
-    // Enhance each complaint with its barangay prioritization score
-    this.complaints.forEach((complaint) => {
-      if (
-        complaint.barangay &&
-        this.barangayPrioritization.has(complaint.barangay)
-      ) {
-        complaint.prioritizationScore = this.barangayPrioritization.get(
-          complaint.barangay
-        );
-        complaint.priorityLevel = this.getPriorityLevelFromScore(
-          complaint.prioritizationScore
-        );
-        enhancedCount++;
-      } else {
-        complaint.prioritizationScore = 0;
-        complaint.priorityLevel = "low";
-        if (complaint.barangay) {
-          console.warn(
-            `[REVIEW_QUEUE] Barangay "${complaint.barangay}" not found in prioritization map`
-          );
-        }
-      }
-    });
-    console.log(
-      `[REVIEW_QUEUE] Enhanced ${enhancedCount} out of ${this.complaints.length} complaints with prioritization scores`
-    );
-  }
-
-  getPriorityLevelFromScore(score) {
-    if (score >= 50) return "critical";
-    if (score >= 30) return "high";
-    if (score >= 15) return "medium";
-    return "low";
-  }
-  renderComplaints() {
-    const complaintList = document.getElementById("complaint-list");
-    const loading = document.getElementById("loading");
-    const emptyState = document.getElementById("empty-state");
-    if (!complaintList) {
-      console.error("complaint-list element not found");
-      return;
-    }
-    console.log("Rendering complaints, total count:", this.complaints.length);
-    const filteredComplaints = this.getFilteredComplaints();
-    console.log("Filtered complaints:", filteredComplaints.length);
-    const paginatedComplaints = this.getPaginatedComplaints(filteredComplaints);
-    console.log("Paginated complaints:", paginatedComplaints.length);
-    // Hide loading state
-    if (loading) loading.style.display = "none";
-    if (paginatedComplaints.length === 0) {
-      complaintList.style.display = "none";
-      if (emptyState) {
-        emptyState.style.display = "block";
-        emptyState.innerHTML = `
-                    <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
-                        <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900">No complaints found</h3>
-                    <p class="mt-2 text-gray-500">No complaints match your current filters.</p>
-                `;
-      }
-      return;
-    }
-    // Show complaint list and hide empty state
-    complaintList.style.display = "block";
-    if (emptyState) emptyState.style.display = "none";
-    // Reset debug flag for this render
-    this._lastLoggedCardId = null;
-    complaintList.innerHTML = paginatedComplaints
-      .map((complaint) => this.createComplaintCard(complaint))
-      .join("");
-    this.updatePagination(filteredComplaints.length);
-    this.attachEventListeners();
-  }
-  attachEventListeners() {
-    // View buttons
-    document.querySelectorAll(".view-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const complaintId = e.target.getAttribute("data-complaint-id");
-        this.viewComplaint(complaintId);
-      });
-    });
-    // Reject buttons
-    document.querySelectorAll(".reject-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const complaintId = e.target.getAttribute("data-complaint-id");
-        this.rejectComplaint(complaintId);
-      });
-    });
-  }
-  createComplaintCard(complaint, isRejected = false) {
-    const priorityBadge = this.getPriorityBadgeClass(complaint.priority);
-    const algorithmFlags = complaint.algorithm_flags || {};
-    const prioritizationScore = complaint.prioritizationScore || 0;
-    const priorityLevel = complaint.priorityLevel || "low";
-    const barangay = complaint.barangay || null;
-
-    const priority = complaint.priority?.toLowerCase() || "medium";
-
-    // Debug: Log first complaint being rendered
-    const isFirstCard = !this._lastLoggedCardId;
-    if (isFirstCard) {
-      this._lastLoggedCardId = complaint.id;
-      console.log("[REVIEW_QUEUE] Creating card for complaint:", {
-        id: complaint.id.substring(0, 8),
-        barangay,
-        prioritizationScore,
-        priorityLevel,
-        hasBarangay: Boolean(barangay),
-      });
-    }
-
-    let flagHTML = "";
-    if (algorithmFlags.high_confidence_duplicate) {
-      flagHTML = `
-                <div class="rounded-xl p-4 flex gap-4 items-start mt-4 bg-red-50 border border-red-200 text-red-800">
-                    <span class="text-xl">⚠️</span>
-                    <div class="flex flex-col">
-                        <strong class="font-bold">HIGH CONFIDENCE DUPLICATE DETECTED</strong>
-                        <span class="text-sm opacity-90">Similarity score ≥85% - Review required</span>
-                    </div>
-                </div>
-            `;
-    } else if (algorithmFlags.has_duplicates) {
-      flagHTML = `
-                <div class="rounded-xl p-4 flex gap-4 items-start mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800">
-                    <span class="text-xl">🔍</span>
-                    <span class="font-medium">
-                        ${algorithmFlags.similarity_count} potential duplicate(s) found
-                    </span>
-                </div>
-            `;
-    }
-
-    // Add prioritization suggestion badge
-    let prioritizationSuggestionHTML = "";
-
-    // Show suggestion for any complaint with a barangay
-    if (barangay) {
-      const suggestionClass = `prioritization-suggestion ${priorityLevel}`;
-      let suggestionText = "";
-
-      // Determine suggestion text based on priority level
-      if (priorityLevel === "critical") {
-        suggestionText = "🚨 Critical Priority Barangay - Assign First!";
-      } else if (priorityLevel === "high") {
-        suggestionText = "⚡ High Priority Barangay - Recommended";
-      } else if (priorityLevel === "medium") {
-        suggestionText = "📊 Medium Priority Barangay";
-      } else {
-        // Show for all barangays, even low priority
-        suggestionText = "📍 Barangay Prioritization";
-      }
-
-      // Always show suggestion if barangay exists
-      prioritizationSuggestionHTML = `
-                <div class="${suggestionClass}">
-                    ${suggestionText}
-                    <span class="barangay-name">${this.escapeHtml(
-        barangay
-      )}</span>
-                    ${prioritizationScore > 0
-          ? `<span class="priority-score">Score: ${prioritizationScore}</span>`
-          : ""
-        }
-                </div>
-            `;
-
-      // Debug: Log when suggestion is added (for first card only)
-      if (isFirstCard) {
-        console.log("[REVIEW_QUEUE] ✓ Added suggestion badge:", {
-          barangay,
-          priorityLevel,
-          score: prioritizationScore,
-          htmlLength: prioritizationSuggestionHTML.length,
-          htmlPreview: prioritizationSuggestionHTML.substring(0, 100),
-        });
-      }
+    // Sorting
+    if (sort === "desc") {
+      // Priority desc (High to Low)
+      const pMap = { urgent: 4, critical: 4, high: 3, medium: 2, low: 1 };
+      this.filteredComplaints.sort((a, b) => (pMap[b.priority?.toLowerCase()] || 0) - (pMap[a.priority?.toLowerCase()] || 0));
+    } else if (sort === "asc") {
+      const pMap = { urgent: 4, critical: 4, high: 3, medium: 2, low: 1 };
+      this.filteredComplaints.sort((a, b) => (pMap[a.priority?.toLowerCase()] || 0) - (pMap[b.priority?.toLowerCase()] || 0));
     } else {
-      // Debug: Log when no suggestion (for first card only)
-      if (isFirstCard) {
-        console.log("[REVIEW_QUEUE] ✗ No suggestion - no barangay:", {
-          id: complaint.id.substring(0, 8),
-          hasBarangay: Boolean(complaint.barangay),
-        });
-      }
+      // Default: Date desc
+      this.filteredComplaints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
+
+    this.currentPage = 1;
+    this.render();
+  }
+
+  changePage(delta) {
+    const totalPages = Math.ceil(this.filteredComplaints.length / this.itemsPerPage);
+    const newPage = this.currentPage + delta;
+
+    if (newPage >= 1 && newPage <= totalPages) {
+      this.currentPage = newPage;
+      this.render();
+    }
+  }
+
+  render() {
+    // Hide loading
+    if (this.loading) this.loading.style.display = "none";
+
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    const pageItems = this.filteredComplaints.slice(start, end);
+
+    // Update pagination UI
+    if (this.paginationContainer) {
+      this.paginationContainer.classList.remove("hidden");
+      this.paginationContainer.style.display = this.filteredComplaints.length > 0 ? "flex" : "none";
+    }
+
+    if (this.pageInfo) {
+      const totalPages = Math.ceil(this.filteredComplaints.length / this.itemsPerPage) || 1;
+      this.pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+    }
+
+    if (this.itemsInfo) {
+      this.itemsInfo.textContent = `Showing ${pageItems.length} of ${this.filteredComplaints.length} complaints`;
+    }
+
+    if (this.prevBtn) this.prevBtn.disabled = this.currentPage === 1;
+    if (this.nextBtn) this.nextBtn.disabled = this.currentPage >= Math.ceil(this.filteredComplaints.length / this.itemsPerPage);
+
+    // Handle Empty State
+    if (pageItems.length === 0) {
+      this.container.style.display = "none"; // Hide grid
+      if (this.emptyState) {
+        this.emptyState.classList.remove("hidden");
+        this.emptyState.style.display = "block";
+      }
+      return;
+    }
+
+    // Render Table
+    if (this.emptyState) {
+      this.emptyState.classList.add("hidden");
+      this.emptyState.style.display = "none";
+    }
+
+    this.container.classList.remove("hidden");
+    // this.container.style.display = "grid"; // Removed grid style
+
+    this.container.innerHTML = pageItems.map(c => this.createRow(c)).join("");
+
+    // Re-attach card events
+    this.container.querySelectorAll(".btn-verify").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = e.currentTarget.getAttribute("data-id");
+        this.deptModal.open(id);
+      });
+    });
+  }
+
+  createRow(c) {
+    // No Title Usage
+    const desc = c.description || c.descriptive_su || "No Description";
+    const brgy = c.barangay || "Unknown Area";
+    const category = c.category || "Uncategorized";
+    const date = this.timeAgo(new Date(c.submitted_at || c.created_at));
+    const priority = (c.priority || "low").toLowerCase();
+
+    const badgeClass = {
+      urgent: "bg-red-100 text-red-800",
+      critical: "bg-red-100 text-red-800",
+      high: "bg-orange-100 text-orange-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      low: "bg-blue-100 text-blue-800"
+    }[priority] || "bg-gray-100 text-gray-800";
+
+    // Determine if AI suggestion exists
+    const hasAi = c.ai_analysis && c.ai_analysis.suggested_department;
+    const aiBadge = hasAi ?
+      `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+          AI
+       </span>` : "";
 
     return `
-            <div class="complaint-card bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-blue-300 ${complaint.priority?.toLowerCase() || "medium"
-      } ${priorityLevel === "critical" || priorityLevel === "high"
-        ? "ring-2 ring-red-100"
-        : ""
-      }" data-complaint-id="${complaint.id
-      }" data-priority-score="${prioritizationScore}">
-                ${prioritizationSuggestionHTML}
-                
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <div class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-mono rounded mb-2">#${complaint.id}</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-1 leading-tight">${complaint.title || "Untitled Complaint"
-      }</h3>
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass} uppercase">
+                        ${priority}
+                    </span>
+                    ${aiBadge}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${this.escape(category)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${this.escape(brgy)}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900 line-clamp-2 max-w-md" title="${this.escape(desc)}">
+                        ${this.escape(desc)}
                     </div>
-                    <div class="px-3 py-1 rounded-full text-sm font-semibold capitalize status-${complaint.workflow_status?.toLowerCase() ||
-      complaint.status?.toLowerCase() ||
-      "pending"
-      } ${
-      // Dynamic status colors
-      (complaint.workflow_status || complaint.status) === 'resolved' ? 'bg-green-100 text-green-800' :
-        (complaint.workflow_status || complaint.status) === 'rejected' ? 'bg-red-100 text-red-800' :
-          'bg-yellow-100 text-yellow-800'
-      }">
-                        ${complaint.workflow_status ||
-      complaint.status ||
-      "Pending"
-      }
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${date}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="flex justify-end gap-2">
+                         <a href="/coordinator/review/${c.id}" class="text-gray-400 hover:text-blue-600 transition-colors" title="View Details">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </a>
+                        <button class="text-blue-600 hover:text-blue-900 btn-verify flex items-center gap-1" data-id="${c.id}" title="Assign">
+                            Assign
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </button>
                     </div>
-                </div>
-
-                <div class="complaint-content">
-                    <p class="text-gray-600 mb-4 leading-relaxed">${complaint.descriptive_su ||
-      complaint.description ||
-      "No description provided"
-      }</p>
-                    
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${priority === 'urgent' ? 'bg-red-100 text-red-800 border border-red-200' :
-        priority === 'high' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
-          priority === 'medium' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-            'bg-green-100 text-green-800 border border-green-200'
-      }">${complaint.priority || "Medium"}</span>
-                        
-                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-gray-100 text-gray-700 border border-gray-200">
-                          ${complaint.category || "General"}
-                        </span>
-                        
-                        ${barangay
-        ? `<span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-100">📍 ${barangay}</span>`
-        : ""
-      }
-                        
-                         <span class="text-sm text-gray-500 flex items-center ml-auto">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            ${this.formatTimeAgo(complaint.submitted_at || complaint.created_at)}
-                         </span>
-                    </div>
-
-                    ${flagHTML}
-                </div>
-
-                <div class="flex gap-4 mt-6 pt-6 border-t border-gray-100">
-                    <button class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-sm hover:shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 view-btn" data-complaint-id="${complaint.id
-      }">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                        View Details
-                    </button>
-                    ${!isRejected
-        ? `<button class="px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 hover:border-red-300 transition-all flex items-center gap-2 reject-btn" data-complaint-id="${complaint.id}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        Reject
-                    </button>`
-        : `<span class="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium self-center">Rejected</span>`
-      }
-                    
-                </div>
-                ${isRejected && complaint.coordinator_notes
-        ? `<div class="mt-4 p-3 bg-orange-50 text-orange-800 rounded-lg text-sm border border-orange-100">
-                    <strong>Rejection Reason:</strong> ${complaint.coordinator_notes}
-                </div>`
-        : ""
-      }
-            </div>
+                </td>
+            </tr>
         `;
   }
-  getFilteredComplaints() {
-    let filtered = this.complaints.filter((complaint) => {
-      // Priority filter
-      const matchesPriority =
-        !this.filters.priority ||
-        this.filters.priority === "" ||
-        complaint.priority?.toLowerCase() ===
-        this.filters.priority.toLowerCase();
-      // Category filter
-      const matchesCategory =
-        !this.filters.category ||
-        this.filters.category === "" ||
-        complaint.category?.toLowerCase() ===
-        this.filters.category.toLowerCase();
-      // Duplicate filter
-      const matchesDuplicates =
-        !this.filters.duplicates ||
-        this.filters.duplicates === "" ||
-        (this.filters.duplicates === "yes" &&
-          complaint.algorithm_flags?.has_duplicates) ||
-        (this.filters.duplicates === "no" &&
-          !complaint.algorithm_flags?.has_duplicates);
-      // Search filter
-      const matchesSearch =
-        !this.filters.search ||
-        this.filters.search === "" ||
-        complaint.title
-          ?.toLowerCase()
-          .includes(this.filters.search.toLowerCase()) ||
-        (complaint.descriptive_su || complaint.description)
-          ?.toLowerCase()
-          .includes(this.filters.search.toLowerCase());
-      return (
-        matchesPriority && matchesCategory && matchesDuplicates && matchesSearch
-      );
-    });
 
-    // Sort by prioritization if filter is set, otherwise default to highest priority first
-    if (this.barangayPrioritization) {
-      filtered = filtered.sort((a, b) => {
-        const scoreA =
-          a.prioritizationScore ||
-          this.barangayPrioritization.get(a.barangay || "") ||
-          0;
-        const scoreB =
-          b.prioritizationScore ||
-          this.barangayPrioritization.get(b.barangay || "") ||
-          0;
-
-        if (this.filters.prioritization) {
-          // Use filter setting
-          return this.filters.prioritization === "desc"
-            ? scoreB - scoreA
-            : scoreA - scoreB;
-        }
-        // Default: highest priority first
-        return scoreB - scoreA;
-      });
-    }
-
-    return filtered;
-  }
-  getPaginatedComplaints(complaints) {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return complaints.slice(startIndex, endIndex);
-  }
-  updatePagination(totalItems) {
-    const totalPages = Math.ceil(totalItems / this.itemsPerPage);
-    const paginationContainer = document.getElementById("pagination-container");
-    const pageInfo = document.getElementById("page-info");
-    const itemsInfo = document.getElementById("items-info");
-    const prevBtn = document.getElementById("prev-page");
-    const nextBtn = document.getElementById("next-page");
-    const pageNumbers = document.getElementById("page-numbers");
-
-    // Show/hide pagination container
-    if (totalPages > 1) {
-      if (paginationContainer) paginationContainer.style.display = "flex";
-    } else {
-      if (paginationContainer) paginationContainer.style.display = "none";
-      return;
-    }
-
-    // Update page info
-    if (pageInfo) {
-      pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
-    }
-
-    // Update items info
-    if (itemsInfo) {
-      const startItem =
-        totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
-      const endItem = Math.min(
-        this.currentPage * this.itemsPerPage,
-        totalItems
-      );
-      itemsInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} complaints`;
-    }
-
-    // Update prev/next buttons
-    if (prevBtn) {
-      prevBtn.disabled = this.currentPage === 1;
-    }
-    if (nextBtn) {
-      nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
-    }
-
-    // Generate page numbers
-    if (pageNumbers) {
-      pageNumbers.innerHTML = "";
-      const maxVisiblePages = 7;
-      let startPage = Math.max(
-        1,
-        this.currentPage - Math.floor(maxVisiblePages / 2)
-      );
-      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-      // Adjust start page if we're near the end
-      if (endPage - startPage < maxVisiblePages - 1) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-
-      // First page
-      if (startPage > 1) {
-        const firstBtn = document.createElement("button");
-        firstBtn.className = "px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50";
-        firstBtn.textContent = "1";
-        firstBtn.addEventListener("click", () => this.goToPage(1));
-        pageNumbers.appendChild(firstBtn);
-
-        if (startPage > 2) {
-          const ellipsis = document.createElement("span");
-          ellipsis.className = "px-2 py-1 text-gray-400";
-          ellipsis.textContent = "...";
-          pageNumbers.appendChild(ellipsis);
-        }
-      }
-
-      // Page numbers
-      for (let i = startPage; i <= endPage; i++) {
-        const pageBtn = document.createElement("button");
-        // Base classes
-        let classes = "px-3 py-1 border rounded-md text-sm font-medium transition-colors ";
-        if (i === this.currentPage) {
-          classes += "bg-blue-600 text-white border-blue-600";
-        } else {
-          classes += "bg-white text-gray-700 border-gray-300 hover:bg-gray-50";
-        }
-        pageBtn.className = classes;
-
-        pageBtn.textContent = i.toString();
-        pageBtn.addEventListener("click", () => this.goToPage(i));
-        pageNumbers.appendChild(pageBtn);
-      }
-
-      // Last page
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          const ellipsis = document.createElement("span");
-          ellipsis.className = "px-2 py-1 text-gray-400";
-          ellipsis.textContent = "...";
-          pageNumbers.appendChild(ellipsis);
-        }
-
-        const lastBtn = document.createElement("button");
-        lastBtn.className = "px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50";
-        lastBtn.textContent = totalPages.toString();
-        lastBtn.addEventListener("click", () => this.goToPage(totalPages));
-        pageNumbers.appendChild(lastBtn);
-      }
-    }
+  escape(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  goToPage(page) {
-    const totalPages = Math.ceil(
-      this.getFilteredComplaints().length / this.itemsPerPage
-    );
-    if (page >= 1 && page <= totalPages) {
-      this.currentPage = page;
-      this.renderComplaints();
-      // Scroll to top of complaint list
-      const complaintList = document.getElementById("complaint-list");
-      if (complaintList) {
-        complaintList.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  }
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.goToPage(this.currentPage - 1);
-    }
-  }
-  nextPage() {
-    const totalPages = Math.ceil(
-      this.getFilteredComplaints().length / this.itemsPerPage
-    );
-    if (this.currentPage < totalPages) {
-      this.goToPage(this.currentPage + 1);
-    }
-  }
-  async viewComplaint(complaintId) {
-    try {
-      // Redirect to the dedicated complaint review page
-      window.location.href = `/coordinator/review/${complaintId}`;
-    } catch (error) {
-      console.error("Error redirecting to complaint details:", error);
-      this.showError("Failed to navigate to complaint details.");
-    }
-  }
-  async rejectComplaint(complaintId) {
-    const reason = prompt("Please provide a reason for rejection:");
-    if (!reason) return;
-    try {
-      const response = await fetch(
-        `/api/coordinator/review-queue/${complaintId}/decide`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            decision: "reject",
-            data: { reason },
-          }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      showToast("Complaint rejected successfully", "success");
-      this.loadComplaints();
-    } catch (error) {
-      console.error("Error rejecting complaint:", error);
-      this.showError("Failed to reject complaint.");
-    }
-  }
-  showLoading() {
-    const loading = document.getElementById("loading");
-    const complaintList = document.getElementById("complaint-list");
-    const emptyState = document.getElementById("empty-state");
-    if (loading) loading.style.display = "block";
-    if (complaintList) complaintList.style.display = "none";
-    if (emptyState) emptyState.style.display = "none";
-  }
-  showError(message) {
-    showToast(message, "error");
-  }
-  getPriorityBadgeClass(priority) {
-    const map = {
-      urgent: "badge-urgent",
-      high: "badge-high",
-      medium: "badge-medium",
-      low: "badge-low",
-    };
-    return map[priority] || "badge-medium";
-  }
-  formatTimeAgo(dateString) {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    if (seconds < 60) return "Just now";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  }
-  formatDate(dateString) {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-  }
-  debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-  escapeHtml(text) {
-    if (!text) return "";
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+  timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + "y ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return Math.floor(seconds) + "s ago";
   }
 }
-// Initialize when DOM is loaded
+
+// Auto-start
 document.addEventListener("DOMContentLoaded", () => {
-  window.reviewQueue = new ReviewQueue();
+  window.reviewQueue = new ReviewQueueController();
 });

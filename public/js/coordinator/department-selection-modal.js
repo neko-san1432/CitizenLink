@@ -171,7 +171,7 @@ class DepartmentSelectionModal {
       }
     } catch (error) {
       console.error("Error approving complaint:", error);
-      alert(`Failed to approve complaint: ${  error.message}`);
+      alert(`Failed to approve complaint: ${error.message}`);
       // Re-enable button
       const confirmBtn = this.modal.querySelector("#confirm-approval");
       confirmBtn.disabled = false;
@@ -188,3 +188,4 @@ class DepartmentSelectionModal {
 }
 // Export for use in other files
 window.DepartmentSelectionModal = DepartmentSelectionModal;
+export default DepartmentSelectionModal;
