@@ -307,6 +307,22 @@ router.get(
   }
 );
 router.get(
+  "/dictionary-manager",
+  authenticateUser,
+  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "views",
+        "pages",
+        "lgu-admin",
+        "dictionary-manager.html"
+      )
+    );
+  }
+);
+router.get(
   "/publish",
   authenticateUser,
   requireRole(["lgu-admin"]),

@@ -39,6 +39,7 @@ body{
   color:var(--gray-800);
 }
 
+/* Legacy header styles - kept for backwards compatibility */
 .header{
   position:fixed;
   top:0;left:0;right:0;
@@ -57,6 +58,95 @@ body{
 .version{font-size:12px;opacity:.85;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:999px}
 .header-right{display:flex;gap:10px;align-items:center}
 
+/* CitizenLink integrated styles */
+.dashboard-header-section{
+  padding:20px 24px;
+  border-bottom:1px solid var(--gray-200);
+  background:#fff;
+}
+.dashboard-header-section .header-content{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.dashboard-header-section h1{
+  margin:0;
+  font-size:24px;
+  font-weight:700;
+  color:var(--gray-800);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.dashboard-header-section h1 i{
+  color:var(--primary);
+}
+.dashboard-header-section p{
+  margin:4px 0 0;
+  color:var(--gray-600);
+}
+.dashboard-header-section .header-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.dashboard-header-section .btn{
+  padding:8px 14px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  font-weight:500;
+  transition:all 0.2s ease;
+}
+.dashboard-header-section .btn-secondary{
+  background:white;
+  border:1px solid var(--gray-300);
+  color:var(--gray-700);
+}
+.dashboard-header-section .btn-secondary:hover{
+  background:var(--gray-100);
+}
+.dashboard-header-section .btn-primary{
+  background:var(--primary);
+  border:none;
+  color:white;
+}
+.dashboard-header-section .btn-primary:hover{
+  background:var(--primary-dark);
+}
+.analytics-tabs{
+  display:flex;
+  gap:4px;
+  padding:12px 24px;
+  background:var(--gray-100);
+  border-bottom:1px solid var(--gray-200);
+  flex-wrap:wrap;
+}
+.analytics-tabs .nav-tab{
+  position:static;
+  padding:10px 16px;
+  border:none;
+  background:transparent;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  color:var(--gray-600);
+  transition:all 0.2s ease;
+}
+.analytics-tabs .nav-tab:hover{
+  background:var(--gray-200);
+}
+.analytics-tabs .nav-tab.active{
+  background:#fff;
+  color:var(--primary);
+  font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,0.1);
+}
+
 .btn{
   appearance:none;
   border:none;
@@ -74,18 +164,14 @@ body{
 .btn-secondary{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.25)}
 .btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)}
 
+/* Legacy nav-tabs - for standalone mode */
 .nav-tabs{
-  position:fixed;
-  top:var(--header-height);
-  left:0;right:0;
-  height:var(--nav-height);
   display:flex;
   align-items:center;
   gap:8px;
-  padding:0 14px;
+  padding:12px 14px;
   background:#fff;
   border-bottom:1px solid var(--gray-300);
-  z-index:9;
 }
 .nav-tab{
   border:none;
@@ -104,7 +190,6 @@ body{
 
 .main-content{
   padding:18px;
-  padding-top:calc(var(--header-height) + var(--nav-height) + 18px);
 }
 .tab-content{display:none}
 .tab-content.active{display:block}

@@ -514,6 +514,66 @@
     ];
 
     /**
+     * v4.2: PHRASE-BASED NEGATION PATTERNS
+     * @thesis-feature Enhanced negation detection from CitizenLink_Simulated_System
+     * 
+     * These patterns detect complete negated phrases that should NOT trigger
+     * false positive classifications. Each pattern maps to the category it negates.
+     * 
+     * Example: "walang sunog" = "no fire" → should NOT classify as Fire
+     */
+    const NEGATION_PHRASE_PATTERNS = [
+        // Fire-related negations
+        { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(sunog|fire|apoy|kayo|nasusunog)\b/gi, negatedCategory: "Fire" },
+        { pattern: /\b(fire|sunog)\s*(drill|exercise|training)\b/gi, negatedCategory: "Fire" },
+        { pattern: /\b(false|fake)\s*(fire|alarm|sunog)\b/gi, negatedCategory: "Fire" },
+        
+        // Flood-related negations
+        { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(baha|flood|lunop|tubig)\b/gi, negatedCategory: "Flood" },
+        { pattern: /\b(baha|flood)\s*(warning|drill|exercise)\b/gi, negatedCategory: "Flood" },
+        
+        // Crime-related negations
+        { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(krimen|crime|nakaw|holdap|robbery|theft)\b/gi, negatedCategory: "Crime" },
+        { pattern: /\b(false|fake)\s*(report|alarm)\b/gi, negatedCategory: "Crime" },
+        
+        // Accident-related negations
+        { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(aksidente|accident|bangga|crash)\b/gi, negatedCategory: "Accident" },
+        
+        // Utilities negations
+        { pattern: /\b(may|meron|there\s*is)\s*(tubig|water|kuryente|electricity|power)\b/gi, negatedCategory: "No Water" },
+        { pattern: /\b(may|meron|there\s*is)\s*(kuryente|electricity|power|ilaw)\b/gi, negatedCategory: "Blackout" },
+        
+        // General false reports
+        { pattern: /\b(false|fake|hoax|prank)\s*(report|complaint|claim)\b/gi, negatedCategory: "_ALL_" }
+    ];
+
+    /**
+     * Check if text contains a negation phrase pattern
+     * Returns the negated category if found, null otherwise
+     * @param {string} text - The full text to check
+     * @returns {Object|null} { found: boolean, negatedCategory: string, pattern: string }
+     */
+    function checkNegationPhrasePatterns(text) {
+        if (!text || typeof text !== 'string') return null;
+        
+        const lowerText = text.toLowerCase();
+        
+        for (const { pattern, negatedCategory } of NEGATION_PHRASE_PATTERNS) {
+            const match = lowerText.match(pattern);
+            if (match) {
+                return {
+                    found: true,
+                    negatedCategory,
+                    matchedPhrase: match[0],
+                    pattern: pattern.toString()
+                };
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Clause separators for clause-based context analysis
      */
     const CLAUSE_SEPARATORS = /[.!?;]|\bpero\b|\bbut\b|\bkaso\b|\bhowever\b|\bkaya\b|\bso\b|\bthen\b|\bpagkatapos\b|\bundangan\b/gi;
@@ -1241,6 +1301,15 @@
             return result;
         }
 
+        // v4.2: PHRASE-BASED NEGATION PRE-CHECK
+        // Check for explicit negation phrases BEFORE tokenization
+        // This prevents false positives like "walang sunog" being classified as Fire
+        const phraseNegation = checkNegationPhrasePatterns(rawInput);
+        if (phraseNegation && phraseNegation.found) {
+            result.processingLog.push(`⚠️ PHRASE NEGATION detected: "${phraseNegation.matchedPhrase}" → negates ${phraseNegation.negatedCategory}`);
+            result.phraseNegation = phraseNegation;
+        }
+
         // Step 1: Tokenize with clause segmentation
         const { clauses, allTokens } = tokenizeWithClauses(rawInput);
         result.tokenCount = allTokens.length;
@@ -1362,6 +1431,24 @@
 
         processedMatches.forEach(match => {
             const cat = match.category;
+            
+            // v4.2: PHRASE NEGATION FILTER
+            // If phrase negation detected for this category, skip it entirely
+            if (result.phraseNegation && result.phraseNegation.found) {
+                const negatedCat = result.phraseNegation.negatedCategory;
+                if (negatedCat === "_ALL_") {
+                    result.processingLog.push(`⛔ Category "${cat}" blocked by global phrase negation`);
+                    return; // Skip all categories for global negation (false report)
+                }
+                // Check if this match's category matches the negated category
+                const matchCategories = [cat, match.specificCategory, match.keyword].map(c => (c || '').toLowerCase());
+                const negatedLower = negatedCat.toLowerCase();
+                if (matchCategories.some(mc => mc.includes(negatedLower) || negatedLower.includes(mc))) {
+                    result.processingLog.push(`⛔ Category "${cat}" blocked by phrase negation: "${result.phraseNegation.matchedPhrase}"`);
+                    return; // Skip this match
+                }
+            }
+            
             if (!categoryScores[cat] || match.finalUrgency > categoryScores[cat].urgency) {
                 categoryScores[cat] = {
                     category: cat,

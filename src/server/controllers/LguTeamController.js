@@ -177,7 +177,11 @@ class LguTeamController {
 
                 officerGroups[officerId].complaints.push({
                     id: assignment.complaints.id,
+<<<<<<< HEAD
                     title: assignment.complaints.descriptive_su || "Complaint",
+=======
+                    title: assignment.complaints.descriptive_su?.slice(0, 100) || 'No description',
+>>>>>>> 912f5b440e12e8a4109f8b57db78b49717ddf4ac
                     priority: assignment.complaints.priority,
                     assigned_days_ago: daysSinceAssignment,
                     is_overdue: daysSinceAssignment > 7,

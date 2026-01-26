@@ -675,25 +675,33 @@ function initDictionaryManager() {
   $("refreshDictionaryBtn")?.addEventListener("click", loadDictionary);
   $("exportDictionaryBtn")?.addEventListener("click", exportDictionary);
 
-  document.querySelector('[data-tab="dictionary-manager"]')?.addEventListener("click", () => {
-    if (!dictionaryData) loadDictionary();
-  });
-
-  // Handle direct navigation via hash
-  if (window.location.hash === "#dictionary-manager") {
-    // Small delay to ensure tabs are initialized before loading data
-    setTimeout(() => {
+  // Check if we're on the standalone dictionary-manager page
+  const isStandalonePage = window.location.pathname === "/dictionary-manager" || 
+                           window.location.pathname.includes("dictionary-manager");
+  
+  if (isStandalonePage) {
+    // Auto-load dictionary on standalone page
+    loadDictionary();
+  } else {
+    // On brain-analytics page, load when tab is clicked
+    document.querySelector('[data-tab="dictionary-manager"]')?.addEventListener("click", () => {
       if (!dictionaryData) loadDictionary();
-    }, 100);
-  }
+    });
 
-  // Handle in-page navigation (Sidebar clicks while already on page)
-  window.addEventListener("hashchange", () => {
+    // Handle direct navigation via hash
     if (window.location.hash === "#dictionary-manager") {
-      // Ensure tab is visually active (handled by analytics.js usually, but we ensure data load)
-      if (!dictionaryData) loadDictionary();
+      setTimeout(() => {
+        if (!dictionaryData) loadDictionary();
+      }, 100);
     }
-  });
+
+    // Handle in-page navigation (Sidebar clicks while already on page)
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash === "#dictionary-manager") {
+        if (!dictionaryData) loadDictionary();
+      }
+    });
+  }
 }
 
 async function init() {

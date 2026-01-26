@@ -4,12 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CitizenLink: City Analytics Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
     <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
+    <style>
+        /* Override app container for full-width heatmap */
+        #app.collapsible {
+            padding: 0;
+            max-width: 100%;
+        }
+        .heatmap-wrapper {
+            height: calc(100vh - 60px);
+            width: 100%;
+            position: relative;
+        }
+        /* Hide the control panel header */
+        .control-panel {
+            display: none !important;
+        }
+        /* Floating action buttons */
+        .floating-controls {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .floating-btn {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+        .floating-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        .floating-btn.primary {
+            background: var(--primary, #4472C4);
+            color: white;
+            border: none;
+        }
+        .floating-btn.primary:hover {
+            background: var(--primary-dark, #2E5A9C);
+        }
+        .floating-btn i {
+            font-size: 14px;
+        }
+        /* Transparent Command Center */
+        .insights-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        .insights-header {
+            background: rgba(68, 114, 196, 0.9) !important;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(8px);
+        }
+        .category-distribution {
+            background: rgba(255, 255, 255, 0.6) !important;
+        }
+        /* Emergency panel transparency */
+        .emergency-panel {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+        }
+        .emergency-header {
+            background: rgba(220, 53, 69, 0.9) !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <div class="heatmap-wrapper">
+                <!-- Floating Controls -->
+                <div class="floating-controls">
+                    <button class="floating-btn primary" id="loadCityDataFloat" title="Load complaint data from database">
+                        <i class="fas fa-database"></i>
+                        <span>Load Data</span>
+                    </button>
+                    <button class="floating-btn" id="toggleHeatmapFloat" title="Toggle heatmap layer">
+                        <i class="fas fa-fire" style="color: #ef4444;"></i>
+                        <span>Heatmap</span>
+                    </button>
+                    <button class="floating-btn" id="toggleClustersFloat" title="Toggle cluster markers">
+                        <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
+                        <span>Clusters</span>
+                    </button>
+                    <div style="height: 1px; background: rgba(0,0,0,0.1); margin: 4px 0;"></div>
+                    <select id="categoryFilterFloat" class="floating-btn" style="padding-right: 30px; appearance: auto;">
+                        <option value="all">All Categories</option>
+                        <option value="Infrastructure">Infrastructure</option>
+                        <option value="Sanitation">Sanitation</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Environment">Environment</option>
+                        <option value="Traffic">Traffic</option>
+                        <option value="Public Safety">Public Safety</option>
+                        <option value="Others">Others</option>
+                    </select>
+                    <button class="floating-btn" id="exportExcelFloat" title="Export to Excel" disabled>
+                        <i class="fas fa-file-excel" style="color: #217346;"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+                <div class="container">
         <header class="control-panel">
             <div class="control-panel-brand">
                 <div class="logo-mini">
@@ -73,8 +200,8 @@
                         </div>
                     </div>
                 </div>
-                <a href="/brain-analytics-page#dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
-                    <i class="fas fa-chart-line"></i>
+                <a href="/dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
+                    <i class="fas fa-book"></i>
                     <span>Dictionary</span>
                 </a>
                 <div class="search-container">
@@ -241,7 +368,20 @@
                 </div>
             </aside>
         </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- Core Scripts -->
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    
+    <!-- Heatmap Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
@@ -253,5 +393,64 @@
     <script src="/brain-dashboard/dashboard_production.js"></script>
     <script src="/brain-dashboard/statistical-analysis.js"></script>
     <script src="/brain-dashboard/statistical-excel-export.js"></script>
+    
+    <!-- Floating Controls Bridge -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Bridge floating buttons to original controls
+            const loadFloat = document.getElementById('loadCityDataFloat');
+            const loadOrig = document.getElementById('loadCityData');
+            if (loadFloat && loadOrig) {
+                loadFloat.addEventListener('click', () => loadOrig.click());
+            }
+            
+            // Heatmap toggle
+            const heatmapFloat = document.getElementById('toggleHeatmapFloat');
+            const heatmapSwitch = document.getElementById('heatmapSwitch');
+            if (heatmapFloat && heatmapSwitch) {
+                heatmapFloat.addEventListener('click', () => {
+                    heatmapSwitch.checked = !heatmapSwitch.checked;
+                    heatmapSwitch.dispatchEvent(new Event('change'));
+                    heatmapFloat.style.background = heatmapSwitch.checked ? 'rgba(239, 68, 68, 0.15)' : '';
+                });
+            }
+            
+            // Clusters toggle
+            const clustersFloat = document.getElementById('toggleClustersFloat');
+            const clustersSwitch = document.getElementById('clustersSwitch');
+            if (clustersFloat && clustersSwitch) {
+                // Set initial state
+                clustersFloat.style.background = clustersSwitch.checked ? 'rgba(59, 130, 246, 0.15)' : '';
+                clustersFloat.addEventListener('click', () => {
+                    clustersSwitch.checked = !clustersSwitch.checked;
+                    clustersSwitch.dispatchEvent(new Event('change'));
+                    clustersFloat.style.background = clustersSwitch.checked ? 'rgba(59, 130, 246, 0.15)' : '';
+                });
+            }
+            
+            // Category filter
+            const catFloat = document.getElementById('categoryFilterFloat');
+            const catOrig = document.getElementById('categoryFilter');
+            if (catFloat && catOrig) {
+                catFloat.addEventListener('change', (e) => {
+                    catOrig.value = e.target.value;
+                    catOrig.dispatchEvent(new Event('change'));
+                });
+            }
+            
+            // Export button
+            const exportFloat = document.getElementById('exportExcelFloat');
+            const exportOrig = document.getElementById('exportExcelBtn');
+            if (exportFloat && exportOrig) {
+                exportFloat.addEventListener('click', () => exportOrig.click());
+                // Mirror disabled state
+                const observer = new MutationObserver(() => {
+                    exportFloat.disabled = exportOrig.disabled;
+                    exportFloat.style.opacity = exportOrig.disabled ? '0.5' : '1';
+                });
+                observer.observe(exportOrig, { attributes: true, attributeFilter: ['disabled'] });
+            }
+        });
+    </script>
 </body>
 </html>

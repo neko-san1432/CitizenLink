@@ -226,6 +226,7 @@ function getMenuItemsForRole(role) {
       { url: "/super-admin/user-manager", icon: "role-changer", label: "User Manager" },
       { url: "/super-admin/link-generator", icon: "link-generator", label: "Link Generator" },
       { url: "/super-admin/server-logs", icon: "server-logs", label: "Server logs" },
+      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
       { url: "/departments", icon: "departments", label: "Departments" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ],
@@ -239,6 +240,7 @@ function getMenuItemsForRole(role) {
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
+      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ],
     "lgu-admin": [
@@ -247,6 +249,7 @@ function getMenuItemsForRole(role) {
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
       { url: "/publish", icon: "publish", label: "Publish" },
+      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ]
   };
