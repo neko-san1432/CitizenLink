@@ -1811,6 +1811,7 @@ function initEmergencyPanel() {
     const panel = document.getElementById('emergencyPanel');
     const header = document.querySelector('.emergency-header');
     const minimizeBtn = document.getElementById('emergencyMinimize');
+    const collapseBtn = document.getElementById('emergencyCollapse');
     const toggleBtn = document.getElementById('toggleEmergencyPanel');
 
     if (!panel) return;
@@ -1818,7 +1819,25 @@ function initEmergencyPanel() {
     // Track panel visibility state
     let isPanelVisible = true;
 
-    // Minimize button
+    // Collapse button - collapses content while keeping header visible
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();  // Don't trigger drag
+            panel.classList.toggle('collapsed');
+            
+            // Rotate the icon to indicate state
+            const icon = collapseBtn.querySelector('i');
+            if (icon) {
+                if (panel.classList.contains('collapsed')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+    }
+
+    // Minimize button - hides the entire panel
     if (minimizeBtn) {
         minimizeBtn.addEventListener('click', (e) => {
             e.stopPropagation();  // Don't trigger drag
@@ -2306,7 +2325,8 @@ async function runCausalAnalysis() {
     }
     if (statusIndicator) {
         statusIndicator.classList.add('processing');
-        statusIndicator.querySelector('span').textContent = 'Causal Re-clustering...';
+        const statusSpan = statusIndicator.querySelector('span');
+        if (statusSpan) statusSpan.textContent = 'Causal Re-clustering...';
     }
 
     console.log('╔════════════════════════════════════════════════════════════╗');
@@ -2523,7 +2543,8 @@ async function runCausalAnalysis() {
         }
         if (statusIndicator) {
             statusIndicator.classList.remove('processing');
-            statusIndicator.querySelector('span').textContent = 'Causal Analysis Done';
+            const statusSpan = statusIndicator.querySelector('span');
+            if (statusSpan) statusSpan.textContent = 'Causal Analysis Done';
         }
     }
 }
@@ -5675,10 +5696,13 @@ async function loadFullSimulation() {
 
     try {
         // Show loading state
-        loadingOverlay.classList.add('active');
-        statusIndicator.classList.add('processing');
-        statusIndicator.querySelector('span').textContent = 'Processing...';
-        loadButton.disabled = true;
+        if (loadingOverlay) loadingOverlay.classList.add('active');
+        if (statusIndicator) {
+            statusIndicator.classList.add('processing');
+            const statusSpan = statusIndicator.querySelector('span');
+            if (statusSpan) statusSpan.textContent = 'Processing...';
+        }
+        if (loadButton) loadButton.disabled = true;
 
         console.log('[PRODUCTION] Starting full city analysis...');
 
@@ -5699,8 +5723,10 @@ async function loadFullSimulation() {
         simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory);
 
         // Update progress
-        document.getElementById('loadingProgress').textContent =
-            `Analyzing ${filteredData.length} complaints...`;
+        const loadingProgressEl = document.getElementById('loadingProgress');
+        if (loadingProgressEl) {
+            loadingProgressEl.textContent = `Analyzing ${filteredData.length} complaints...`;
+        }
 
         // ================================================================
         // CRITICAL TRIAGE SYSTEM: Extract emergencies BEFORE clustering
@@ -5759,9 +5785,12 @@ async function loadFullSimulation() {
         createHeatmap(filteredData);
 
         // Success state
-        statusIndicator.classList.remove('processing');
-        statusIndicator.classList.remove('error');
-        statusIndicator.querySelector('span').textContent = 'Analysis Complete';
+        if (statusIndicator) {
+            statusIndicator.classList.remove('processing');
+            statusIndicator.classList.remove('error');
+            const statusSpan = statusIndicator.querySelector('span');
+            if (statusSpan) statusSpan.textContent = 'Analysis Complete';
+        }
 
         // ================================================================
         // PHASE 2: Enable Causal Analysis button now that clustering is done
@@ -5797,12 +5826,15 @@ async function loadFullSimulation() {
 
     } catch (error) {
         console.error('[ERROR]', error);
-        statusIndicator.classList.add('error');
-        statusIndicator.querySelector('span').textContent = 'Error';
+        if (statusIndicator) {
+            statusIndicator.classList.add('error');
+            const statusSpan = statusIndicator.querySelector('span');
+            if (statusSpan) statusSpan.textContent = 'Error';
+        }
         alert('Failed to load city data: ' + error.message);
     } finally {
-        loadingOverlay.classList.remove('active');
-        loadButton.disabled = false;
+        if (loadingOverlay) loadingOverlay.classList.remove('active');
+        if (loadButton) loadButton.disabled = false;
     }
 }
 

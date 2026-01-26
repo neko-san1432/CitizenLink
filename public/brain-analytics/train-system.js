@@ -43,8 +43,37 @@ async function init() {
 
   // Setup Event Listeners
   setupEventListeners();
+  
+  // Pre-populate category dropdown so it's ready even without items
+  populateCategoryDropdown();
 
   updateHITLStats();
+}
+
+// Pre-populate category dropdown on page load
+function populateCategoryDropdown() {
+    const catSelect = $("selectTrainCategory");
+    if (!catSelect) {
+        console.warn("[TRAIN] Category select element not found for pre-population");
+        return;
+    }
+    
+    // Clear and add default option
+    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+    
+    // Add all categories from taxonomy
+    const categories = Object.keys(CATEGORY_TAXONOMY).sort();
+    console.log("[TRAIN] Pre-populating categories:", categories);
+    
+    categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+    });
+    
+    // Enable the dropdown (but keep it at default selection)
+    catSelect.disabled = false;
 }
 
 function setupEventListeners() {
@@ -52,7 +81,15 @@ function setupEventListeners() {
     $("fetchLowConfidenceBtn")?.addEventListener("click", loadLowConfidenceItems);
     $("btnSaveTrain")?.addEventListener("click", saveTrainingResult);
     $("btnSkipTrain")?.addEventListener("click", skipCurrentItem);
-    $("selectTrainCategory")?.addEventListener("change", updateSubcategories);
+    
+    // Category selection event - add robust handling
+    const catSelect = $("selectTrainCategory");
+    if (catSelect) {
+        catSelect.addEventListener("change", updateSubcategories);
+        console.log("[TRAIN] Category select event listener attached");
+    } else {
+        console.warn("[TRAIN] selectTrainCategory element not found");
+    }
 }
 
 // =============================================================================
@@ -60,12 +97,16 @@ function setupEventListeners() {
 // =============================================================================
 
 async function ensureHITLTaxonomyLoaded() {
-  if (HITL_CATEGORIES.length > 0) return;
+  if (HITL_CATEGORIES.length > 0) {
+    console.log("[TRAIN] Taxonomy already loaded:", HITL_CATEGORIES.length, "categories");
+    return;
+  }
   
   let taxonomy = null;
   if (typeof CitizenLinkTaxonomy !== "undefined") {
     try {
       taxonomy = await CitizenLinkTaxonomy.loadTaxonomy();
+      console.log("[TRAIN] Taxonomy loaded via CitizenLinkTaxonomy library");
     } catch (e) {
       console.error("[TRAIN] Failed to load taxonomy via library:", e);
       taxonomy = null;
@@ -78,6 +119,7 @@ async function ensureHITLTaxonomyLoaded() {
       const res = await fetch('/categories_subcategories.json');
       if (res.ok) {
         taxonomy = await res.json();
+        console.log("[TRAIN] Taxonomy loaded via fallback fetch");
       }
     } catch (e) {
       console.error("[TRAIN] Fallback taxonomy fetch failed:", e);
@@ -85,6 +127,7 @@ async function ensureHITLTaxonomyLoaded() {
   }
 
   if (!taxonomy?.categories) {
+    console.warn("[TRAIN] No taxonomy available, using default");
     CATEGORY_TAXONOMY = { Others: { subcategories: [] } };
     HITL_CATEGORIES = ["Others"];
     SUBCATEGORY_TO_PARENT = {};
@@ -98,6 +141,7 @@ async function ensureHITLTaxonomyLoaded() {
     ])
   );
   HITL_CATEGORIES = Object.keys(CATEGORY_TAXONOMY);
+  console.log("[TRAIN] Taxonomy loaded successfully:", HITL_CATEGORIES.length, "categories:", HITL_CATEGORIES);
 
   SUBCATEGORY_TO_PARENT = {};
   for (const [parent, data] of Object.entries(CATEGORY_TAXONOMY)) {
@@ -269,18 +313,16 @@ window.selectTrainingItem = function(id) {
     keyInput.disabled = false;
     keyInput.value = ""; 
     
+    // Select the AI suggestion in the category dropdown (already populated)
     const catSelect = document.getElementById('selectTrainCategory');
     catSelect.disabled = false;
-    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
     
-    // Populate Categories
-    Object.keys(CATEGORY_TAXONOMY).sort().forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        if (cat === item.ai_suggestion) opt.selected = true;
-        catSelect.appendChild(opt);
-    });
+    // Set the value to AI suggestion if it exists in the options
+    if (item.ai_suggestion && CATEGORY_TAXONOMY[item.ai_suggestion]) {
+        catSelect.value = item.ai_suggestion;
+    } else {
+        catSelect.value = ""; // Reset to default
+    }
 
     updateSubcategories(); 
     
@@ -290,15 +332,24 @@ window.selectTrainingItem = function(id) {
 };
 
 function updateSubcategories() {
+    console.log("[TRAIN] updateSubcategories called");
     const catSelect = document.getElementById('selectTrainCategory');
     const subSelect = document.getElementById('selectTrainSubcategory');
+    
+    if (!catSelect || !subSelect) {
+        console.warn("[TRAIN] Select elements not found");
+        return;
+    }
+    
     const selectedCat = catSelect.value;
+    console.log("[TRAIN] Selected category:", selectedCat, "| Available:", Object.keys(CATEGORY_TAXONOMY));
     
     subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
     subSelect.disabled = true;
 
     if (selectedCat && CATEGORY_TAXONOMY[selectedCat]) {
         const subs = CATEGORY_TAXONOMY[selectedCat].subcategories || [];
+        console.log("[TRAIN] Subcategories for", selectedCat, ":", subs);
         if (subs.length > 0) {
             subSelect.disabled = false;
             subs.forEach(sub => {

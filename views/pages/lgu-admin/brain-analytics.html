@@ -104,7 +104,7 @@
             </div>
 
             <div class="command-center-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div class="command-widget" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--danger);">
+                <div class="command-widget" style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--danger);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <i class="fas fa-bell" style="color: var(--danger); font-size: 1.2em;"></i>
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Recent High-Priority Alerts</h4>
@@ -116,7 +116,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="command-widget" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--primary);">
+                <div class="command-widget" style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--primary);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <i class="fas fa-chart-pie" style="color: var(--primary); font-size: 1.2em;"></i>
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Category Breakdown</h4>
@@ -128,7 +128,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="command-widget" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--success);">
+                <div class="command-widget" style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--success);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <i class="fas fa-heartbeat" style="color: var(--success); font-size: 1.2em;"></i>
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">System Health</h4>
@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="command-widget" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--warning);">
+                <div class="command-widget" style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--warning);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <i class="fas fa-map-marked-alt" style="color: var(--warning); font-size: 1.2em;"></i>
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Top 5 Active Barangays</h4>
@@ -163,7 +163,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="command-widget" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--info);">
+                <div class="command-widget" style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--info);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <i class="fas fa-stopwatch" style="color: var(--info); font-size: 1.2em;"></i>
                         <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Response Metrics</h4>
@@ -351,7 +351,7 @@
             </div>
             
             <div class="edge-case-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #f3e5f5 100%); border-left: 4px solid #7B1FA2;">
+                <div class="edge-case-card" style="background: var(--card-bg, #fff); border-left: 4px solid #7B1FA2;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-theater-masks" style="color: #7B1FA2;"></i> Figurative Language</h3>
                         <span class="badge" style="background: #E1BEE7; color: #7B1FA2; font-size: 16px; padding: 4px 12px;" id="metaphorCount">0</span>
@@ -359,7 +359,7 @@
                     <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Metaphors, similes, and figurative expressions detected</p>
                     <div class="edge-case-list" id="metaphorList" style="max-height: 280px; overflow-y: auto;"></div>
                 </div>
-                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #fff3e0 100%); border-left: 4px solid #E65100;">
+                <div class="edge-case-card" style="background: var(--card-bg, #fff); border-left: 4px solid #E65100;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-question-circle" style="color: #E65100;"></i> Conditional Reports</h3>
                         <span class="badge" style="background: #FFE0B2; color: #E65100; font-size: 16px; padding: 4px 12px;" id="speculationCount">0</span>
@@ -367,7 +367,7 @@
                     <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Speculative or future-tense statements requiring verification</p>
                     <div class="edge-case-list" id="speculationList" style="max-height: 280px; overflow-y: auto;"></div>
                 </div>
-                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #ffebee 100%); border-left: 4px solid #C62828;">
+                <div class="edge-case-card" style="background: var(--card-bg, #fff); border-left: 4px solid #C62828;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-not-equal" style="color: #C62828;"></i> Category Mismatches</h3>
                         <span class="badge" style="background: #FFCDD2; color: #C62828; font-size: 16px; padding: 4px 12px;" id="mismatchCount">0</span>
@@ -375,7 +375,7 @@
                     <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">AI detected different category than user selected</p>
                     <div class="edge-case-list" id="mismatchList" style="max-height: 280px; overflow-y: auto;"></div>
                 </div>
-                <div class="edge-case-card" style="background: linear-gradient(135deg, #fff 0%, #ffebee 100%); border-left: 4px solid var(--danger);">
+                <div class="edge-case-card" style="background: var(--card-bg, #fff); border-left: 4px solid var(--danger);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Critical Alerts</h3>
                         <span class="badge" style="background: var(--danger-light); color: var(--danger); font-size: 16px; padding: 4px 12px;" id="alertCount">0</span>

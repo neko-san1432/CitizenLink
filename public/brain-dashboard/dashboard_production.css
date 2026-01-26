@@ -770,16 +770,23 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
 }
 
 .map-container {
     flex: 1;
     position: relative;
+    min-width: 0; /* Prevent flex item from overflowing */
 }
 
 #map {
     width: 100%;
     height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 /* ==================== LOADING OVERLAY ==================== */
@@ -881,15 +888,20 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ==================== INSIGHTS PANEL ==================== */
+/* ==================== INSIGHTS PANEL (COMMAND CENTER) ==================== */
 
 .insights-panel {
-    width: 420px;
+    width: 380px;
+    min-width: 380px;
+    max-width: 420px;
     background: linear-gradient(180deg, #0a1628 0%, var(--panel-bg) 100%);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 .insights-header {
@@ -2072,8 +2084,8 @@ body {
     top: 90px;
     left: 50%;
     transform: translateX(-50%);
-    width: 500px;
-    min-width: 350px;
+    width: 480px;
+    min-width: 320px;
     max-width: 90vw;
     background: linear-gradient(135deg, #1a0a0a 0%, #2d0a0a 100%);
     border: 2px solid #ef4444;
@@ -2085,7 +2097,7 @@ body {
     max-height: 70vh;
     overflow: hidden;
     resize: both;
-    transition: opacity var(--transition-normal), transform var(--transition-normal);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(8px);
 }
 
@@ -2104,6 +2116,23 @@ body {
     user-select: none;
 }
 
+/* Collapsible Emergency Panel - Smooth Animation */
+.emergency-panel .emergency-content {
+    max-height: 500px;
+    overflow-y: auto;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+}
+
+.emergency-panel.collapsed .emergency-content {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
 .emergency-panel.minimized .emergency-content {
     display: none;
 }
@@ -2113,6 +2142,36 @@ body {
     min-width: 200px;
     max-width: 300px;
     resize: none;
+}
+
+.emergency-panel.collapsed {
+    max-height: 60px;
+    resize: none;
+}
+
+/* Collapse toggle button styling */
+.emergency-collapse-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+}
+
+.emergency-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.emergency-panel.collapsed .emergency-collapse-btn i,
+.emergency-panel.collapsed .emergency-minimize i {
+    transform: rotate(180deg);
 }
 
 @keyframes emergency-glow {
@@ -4974,6 +5033,366 @@ body {
     0% { filter: drop-shadow(0 0 0px #ef4444); }
     50% { filter: drop-shadow(0 0 10px #ef4444); transform: scale(1.2); }
     100% { filter: drop-shadow(0 0 0px #ef4444); }
+}
+
+/* ==================== LIGHT MODE SUPPORT ==================== */
+/* Light mode is the default when html.dark is NOT present */
+
+:root {
+    /* Light mode variables (default) */
+    --light-bg-primary: #f8fafc;
+    --light-bg-secondary: #ffffff;
+    --light-bg-tertiary: #f1f5f9;
+    --light-border: #e2e8f0;
+    --light-text-primary: #1e293b;
+    --light-text-secondary: #64748b;
+    --light-accent-blue: #3b82f6;
+    --light-accent-green: #10b981;
+    --light-accent-red: #ef4444;
+    --light-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* When NOT in dark mode (light mode) */
+html:not(.dark) body {
+    background: var(--light-bg-primary);
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .container {
+    background: var(--light-bg-primary);
+}
+
+/* Control Panel - Light Mode */
+html:not(.dark) .control-panel {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-bottom-color: var(--light-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .brand-text h1 {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html:not(.dark) .brand-text p {
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .control-btn.secondary {
+    background: #ffffff;
+    border-color: var(--light-border);
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .control-btn.secondary:hover {
+    background: #f1f5f9;
+    border-color: var(--light-accent-blue);
+}
+
+html:not(.dark) .control-btn.secondary.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--light-accent-blue);
+    color: var(--light-accent-blue);
+}
+
+/* Category Filter - Light Mode */
+html:not(.dark) .category-select {
+    background: #ffffff;
+    border-color: var(--light-border);
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .category-select:hover,
+html:not(.dark) .category-select:focus {
+    border-color: var(--light-accent-blue);
+}
+
+/* Search Input - Light Mode */
+html:not(.dark) .complaint-search-input {
+    background: #ffffff;
+    border-color: var(--light-border);
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .complaint-search-input::placeholder {
+    color: #94a3b8;
+}
+
+html:not(.dark) .complaint-search-input:focus {
+    background: #ffffff;
+    border-color: var(--light-accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+html:not(.dark) .search-results-dropdown {
+    background: #ffffff;
+    border-color: var(--light-border);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+html:not(.dark) .search-result-item {
+    border-bottom-color: var(--light-border);
+}
+
+html:not(.dark) .search-result-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+html:not(.dark) .search-result-desc {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .search-result-meta {
+    color: var(--light-text-secondary);
+}
+
+/* Status Indicator - Light Mode */
+html:not(.dark) .status-indicator {
+    background: #ffffff;
+    border-color: var(--light-border);
+    color: var(--light-text-secondary);
+}
+
+/* Map Layers Dropdown - Light Mode */
+html:not(.dark) .layers-dropdown-menu {
+    background: #ffffff;
+    border-color: var(--light-border);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+html:not(.dark) .layers-dropdown-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom-color: var(--light-border);
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .layer-toggle-item {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .layer-toggle-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+html:not(.dark) .layers-dropdown-divider {
+    background: var(--light-border);
+}
+
+/* Insights Panel (Command Center) - Light Mode */
+html:not(.dark) .insights-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-left-color: var(--light-border);
+}
+
+html:not(.dark) .insights-header {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+    border-bottom-color: var(--light-border);
+}
+
+html:not(.dark) .insights-header h2 {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .stats-grid {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+html:not(.dark) .stat-card {
+    background: #ffffff;
+    border-color: var(--light-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+html:not(.dark) .stat-value {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .stat-label {
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .stat-icon.blue {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+html:not(.dark) .stat-icon.green {
+    background: rgba(16, 185, 129, 0.12);
+}
+
+html:not(.dark) .stat-icon.red {
+    background: rgba(239, 68, 68, 0.12);
+}
+
+html:not(.dark) .stat-icon.purple {
+    background: rgba(139, 92, 246, 0.12);
+}
+
+html:not(.dark) .refresh-insights {
+    background: #ffffff;
+    border-color: var(--light-border);
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .refresh-insights:hover {
+    background: var(--light-accent-blue);
+    color: #ffffff;
+}
+
+/* Insights Content - Light Mode */
+html:not(.dark) .insights-content {
+    background: transparent;
+}
+
+html:not(.dark) .insight-card {
+    background: #ffffff;
+    border-color: var(--light-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .insight-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+html:not(.dark) .insight-placeholder {
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .insight-placeholder i {
+    color: #cbd5e1;
+}
+
+/* Category Distribution - Light Mode */
+html:not(.dark) .category-distribution {
+    background: transparent;
+    border-top-color: var(--light-border);
+}
+
+html:not(.dark) .category-distribution h3 {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .category-bar-bg {
+    background: #e2e8f0;
+}
+
+html:not(.dark) .category-label {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .category-value {
+    color: var(--light-text-secondary);
+}
+
+/* Emergency Panel - Light Mode */
+html:not(.dark) .emergency-panel {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-color: #ef4444;
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.25);
+}
+
+html:not(.dark) .emergency-header {
+    background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+}
+
+html:not(.dark) .emergency-content {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+html:not(.dark) .emergency-card {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+html:not(.dark) .emergency-card-header {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+html:not(.dark) .emergency-placeholder {
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .emergency-placeholder i {
+    color: #fca5a5;
+}
+
+/* Loading Overlay - Light Mode */
+html:not(.dark) .loading-overlay {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+html:not(.dark) .loading-text {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .loading-subtext {
+    color: var(--light-text-secondary);
+}
+
+/* Popup Styles - Light Mode */
+html:not(.dark) .complaint-popup-v2 {
+    background: #ffffff;
+}
+
+html:not(.dark) .popup-grid {
+    background: #ffffff;
+}
+
+html:not(.dark) .popup-column {
+    background: #ffffff;
+}
+
+html:not(.dark) .popup-column-left {
+    background: #f8fafc;
+    border-right-color: var(--light-border);
+}
+
+html:not(.dark) .popup-column-right {
+    background: #ffffff;
+}
+
+html:not(.dark) .popup-section-title {
+    color: var(--light-text-primary);
+    border-bottom-color: var(--light-border);
+}
+
+html:not(.dark) .popup-info-row,
+html:not(.dark) .popup-info-item {
+    color: var(--light-text-primary);
+}
+
+html:not(.dark) .popup-info-label {
+    color: var(--light-text-secondary);
+}
+
+html:not(.dark) .popup-description {
+    color: var(--light-text-primary);
+    background: #f8fafc;
+    border-color: var(--light-border);
+}
+
+/* Scrollbar - Light Mode */
+html:not(.dark) .insights-panel::-webkit-scrollbar-thumb,
+html:not(.dark) .emergency-content::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+html:not(.dark) .insights-panel::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .emergency-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+html:not(.dark) .insights-panel::-webkit-scrollbar-track,
+html:not(.dark) .emergency-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* ==================== END LIGHT MODE SUPPORT ====================
 }
 
 .spotlight-marker.anomaly .spotlight-marker-inner {

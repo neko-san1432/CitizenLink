@@ -18,84 +18,476 @@
     <link rel="stylesheet" href="/css/viewport-fix.css" />
     <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
     <style>
-        /* Override app container for full-width heatmap */
-        #app.collapsible {
+        /* ========== RESET & BASE ========== */
+        html, body {
+            margin: 0;
             padding: 0;
-            max-width: 100%;
+            overflow: hidden;
+            height: 100%;
         }
-        .heatmap-wrapper {
-            height: calc(100vh - 60px);
-            width: 100%;
+        
+        /* ========== MAIN LAYOUT ========== */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #app.collapsible {
+            flex: 1;
+            display: flex;
+            flex-direction: row; /* KEY: Horizontal layout - map + command center side by side */
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden;
+            min-width: 0;
+        }
+        
+        /* ========== MAP AREA (Left side - fills remaining space) ========== */
+        .map-area {
+            flex: 1;
             position: relative;
+            min-width: 0;
+            height: 100%;
+            background: #1a1a2e;
         }
-        /* Hide the control panel header */
-        .control-panel {
+        
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+        }
+        
+        /* Hide legacy container/main-content structure */
+        .container, .main-content, .map-container, .control-panel {
             display: none !important;
         }
-        /* Floating action buttons */
+        
+        /* ========== COMMAND CENTER (Right side - fixed width) ========== */
+        .command-center {
+            width: 340px;
+            min-width: 340px;
+            max-width: 340px;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            border-left: 1px solid rgba(51, 65, 85, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        
+        .command-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            padding: 14px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .command-header h2 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .command-header .refresh-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .command-header .refresh-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .command-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(51, 65, 85, 0.3);
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .stat-icon.red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .stat-icon.purple { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        
+        .stat-data {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Insights Section */
+        .insights-section {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            flex: 1;
+            min-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .insights-section h3 {
+            margin: 0 0 10px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .insight-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+        
+        .insight-placeholder i {
+            font-size: 28px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        
+        /* Category Breakdown */
+        .category-section {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        
+        .category-section h3 {
+            margin: 0 0 10px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* ========== FLOATING CONTROLS ========== */
         .floating-controls {
-            position: fixed;
+            position: absolute;
             top: 80px;
-            right: 24px;
+            right: 16px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
         }
+        
         .floating-btn {
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: 600;
-            font-size: 13px;
-            color: #333;
+            font-size: 12px;
+            color: #e2e8f0;
             transition: all 0.2s ease;
         }
+        
         .floating-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            background: rgba(51, 65, 85, 0.95);
+            transform: translateY(-1px);
         }
+        
         .floating-btn.primary {
             background: var(--primary, #4472C4);
             color: white;
             border: none;
         }
+        
         .floating-btn.primary:hover {
             background: var(--primary-dark, #2E5A9C);
         }
+        
+        .floating-btn.active {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
         .floating-btn i {
+            font-size: 13px;
+        }
+        
+        #categoryFilterFloat {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e2e8f0' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+            min-width: 130px;
+        }
+        
+        /* ========== EMERGENCY PANEL (Floating on map) ========== */
+        .emergency-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 16px;
+            width: 300px;
+            background: rgba(30, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            z-index: 2000;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .emergency-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+        
+        .emergency-header {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            padding: 12px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .emergency-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .emergency-title h2 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .emergency-count {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
             font-size: 14px;
         }
-        /* Transparent Command Center */
-        .insights-panel {
-            background: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(12px);
-            border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+        
+        .emergency-collapse-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-        .insights-header {
-            background: rgba(68, 114, 196, 0.9) !important;
+        
+        .emergency-collapse-btn:hover {
+            background: rgba(255,255,255,0.2);
         }
-        .stat-card {
-            background: rgba(255, 255, 255, 0.7) !important;
-            backdrop-filter: blur(8px);
+        
+        .emergency-content {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 8px;
         }
-        .category-distribution {
-            background: rgba(255, 255, 255, 0.6) !important;
+        
+        .emergency-panel.collapsed .emergency-content {
+            display: none;
         }
-        /* Emergency panel transparency */
-        .emergency-panel {
-            background: rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(10px);
+        
+        .emergency-panel.collapsed .emergency-collapse-btn i {
+            transform: rotate(180deg);
         }
-        .emergency-header {
-            background: rgba(220, 53, 69, 0.9) !important;
+        
+        .emergency-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+        }
+        
+        .emergency-placeholder i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        
+        /* Pulse animation */
+        .pulse-icon {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* ========== LOADING OVERLAY ========== */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-spinner i {
+            font-size: 48px;
+            color: var(--primary, #4472C4);
+        }
+        
+        .loading-text {
+            margin-top: 16px;
+            color: #e2e8f0;
+            font-size: 16px;
+        }
+        
+        .loading-subtext {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        
+        /* ========== LIGHT MODE ========== */
+        html:not(.dark) .command-center {
+            background: rgba(255, 255, 255, 0.98);
+            border-left-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        html:not(.dark) .command-header {
+            background: linear-gradient(135deg, var(--primary, #4472C4), var(--primary-dark, #2E5A9C));
+        }
+        
+        html:not(.dark) .stat-card {
+            background: rgba(248, 250, 252, 0.8);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        
+        html:not(.dark) .stat-value {
+            color: #1e293b;
+        }
+        
+        html:not(.dark) .stat-label {
+            color: #64748b;
+        }
+        
+        html:not(.dark) .insights-section,
+        html:not(.dark) .category-section {
+            background: rgba(248, 250, 252, 0.6);
+        }
+        
+        html:not(.dark) .insights-section h3,
+        html:not(.dark) .category-section h3 {
+            color: #475569;
+        }
+        
+        html:not(.dark) .floating-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #334155;
+        }
+        
+        html:not(.dark) .floating-btn:hover {
+            background: rgba(248, 250, 252, 0.95);
+        }
+        
+        html:not(.dark) #categoryFilterFloat {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+        }
+        
+        html:not(.dark) .emergency-panel {
+            background: rgba(255, 250, 250, 0.95);
+            border-color: rgba(220, 53, 69, 0.2);
+        }
+        
+        html:not(.dark) .emergency-header {
+            background: linear-gradient(135deg, #dc3545, #c82333);
         }
     </style>
 </head>
@@ -105,7 +497,11 @@
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
-            <div class="heatmap-wrapper">
+            
+            <!-- MAP AREA (fills remaining space) -->
+            <div class="map-area">
+                <div id="map"></div>
+                
                 <!-- Floating Controls -->
                 <div class="floating-controls">
                     <button class="floating-btn primary" id="loadCityDataFloat" title="Load complaint data from database">
@@ -120,8 +516,12 @@
                         <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
                         <span>Clusters</span>
                     </button>
-                    <div style="height: 1px; background: rgba(0,0,0,0.1); margin: 4px 0;"></div>
-                    <select id="categoryFilterFloat" class="floating-btn" style="padding-right: 30px; appearance: auto;">
+                    <button class="floating-btn" id="toggleEmergencyFloat" title="Toggle emergency panel">
+                        <i class="fas fa-triangle-exclamation" style="color: #f59e0b;"></i>
+                        <span>Emergency</span>
+                    </button>
+                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0;"></div>
+                    <select id="categoryFilterFloat" class="floating-btn">
                         <option value="all">All Categories</option>
                         <option value="Infrastructure">Infrastructure</option>
                         <option value="Sanitation">Sanitation</option>
@@ -136,118 +536,31 @@
                         <span>Export</span>
                     </button>
                 </div>
-                <div class="container">
-        <header class="control-panel">
-            <div class="control-panel-brand">
-                <div class="logo-mini">
-                    <i class="fas fa-city"></i>
-                </div>
-                <div class="brand-text">
-                    <h1>CitizenLink</h1>
-                    <p>City Analytics Dashboard</p>
-                </div>
-            </div>
-            <div class="control-panel-actions">
-                <button class="control-btn primary" id="loadCityData">
-                    <i class="fas fa-database"></i>
-                    <span>Load City Data</span>
-                </button>
-                <div class="map-layers-dropdown" id="mapLayersDropdown">
-                    <button class="control-btn layers-btn" id="mapLayersToggle">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Map Layers</span>
-                        <i class="fas fa-chevron-down dropdown-arrow"></i>
-                    </button>
-                    <div class="layers-dropdown-menu" id="layersDropdownMenu">
-                        <div class="layers-dropdown-header">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Visualization Options</span>
+                
+                <!-- Emergency Panel (Floating on map) -->
+                <aside class="emergency-panel hidden" id="emergencyPanel">
+                    <div class="emergency-header">
+                        <div class="emergency-title">
+                            <i class="fas fa-exclamation-triangle pulse-icon"></i>
+                            <h2>ACTIVE EMERGENCIES</h2>
                         </div>
-                        <div class="layer-toggle-item" id="toggleHeatmapItem">
-                            <div class="layer-toggle-left">
-                                <i class="fas fa-fire" style="color: #ef4444;"></i>
-                                <span>Heatmap Layer</span>
-                            </div>
-                            <div class="layer-toggle-switch">
-                                <input type="checkbox" id="heatmapSwitch" class="layer-switch">
-                                <label for="heatmapSwitch" class="layer-switch-label"></label>
-                            </div>
+                        <div class="emergency-count">
+                            <span id="emergencyCount">0</span>
                         </div>
-                        <div class="layer-toggle-item" id="toggleClustersItem">
-                            <div class="layer-toggle-left">
-                                <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
-                                <span>Glass Box Clusters</span>
-                            </div>
-                            <div class="layer-toggle-switch">
-                                <input type="checkbox" id="clustersSwitch" class="layer-switch" checked>
-                                <label for="clustersSwitch" class="layer-switch-label"></label>
-                            </div>
-                        </div>
-                        <div class="layers-dropdown-divider"></div>
-                        <div class="layer-toggle-item action-item" id="causalAnalysisItem">
-                            <div class="layer-toggle-left">
-                                <i class="fas fa-link" style="color: #a855f7;"></i>
-                                <span>Causal Analysis</span>
-                            </div>
-                            <span class="layer-action-badge">Phase 2</span>
-                        </div>
-                        <div class="layer-toggle-item action-item" id="emergencyPanelItem">
-                            <div class="layer-toggle-left">
-                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
-                                <span>Emergency Panel</span>
-                            </div>
-                            <span class="emergency-count-badge" id="emergencyCountDropdown">0</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
-                    <i class="fas fa-book"></i>
-                    <span>Dictionary</span>
-                </a>
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="complaintSearch" class="complaint-search-input" placeholder="Search by Complaint ID..." autocomplete="off">
-                        <button class="search-clear-btn" id="searchClearBtn" title="Clear search">
-                            <i class="fas fa-times"></i>
+                        <button class="emergency-collapse-btn" id="emergencyCollapse" title="Collapse/Expand">
+                            <i class="fas fa-chevron-up"></i>
                         </button>
                     </div>
-                    <button class="control-btn search-btn" id="searchBtn">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>Locate</span>
-                    </button>
-                    <div class="search-results-dropdown" id="searchResultsDropdown"></div>
-                </div>
-                <div class="control-dropdown">
-                    <label for="categoryFilter">
-                        <i class="fas fa-filter"></i> Filter:
-                    </label>
-                    <select id="categoryFilter" class="category-select">
-                        <option value="all">All Categories</option>
-                        <option value="Infrastructure">Infrastructure</option>
-                        <option value="Sanitation">Sanitation</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Environment">Environment</option>
-                        <option value="Traffic">Traffic</option>
-                        <option value="Public Safety">Public Safety</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-                <div class="status-indicator" id="statusIndicator">
-                    <div class="status-dot"></div>
-                    <span>Ready</span>
-                </div>
-            </div>
-        </header>
-        <div class="main-content">
-            <main class="map-container">
-                <div id="map"></div>
-                <div class="export-button-container">
-                    <button class="export-excel-btn" id="exportExcelBtn" title="Export Analysis to Excel" disabled>
-                        <i class="fas fa-file-excel"></i>
-                        <span>Export to Excel</span>
-                    </button>
-                </div>
+                    <div class="emergency-content" id="emergencyContent">
+                        <div class="emergency-placeholder">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>No active emergencies</p>
+                            <span>Critical reports will appear here</span>
+                        </div>
+                    </div>
+                </aside>
+                
+                <!-- Loading Overlay -->
                 <div class="loading-overlay" id="loadingOverlay">
                     <div class="loading-spinner">
                         <i class="fas fa-circle-notch fa-spin"></i>
@@ -255,121 +568,117 @@
                     <p class="loading-text">Processing city data...</p>
                     <p class="loading-subtext" id="loadingProgress">0 / 0 records analyzed</p>
                 </div>
-            </main>
-            <aside class="emergency-panel" id="emergencyPanel">
-                <div class="emergency-header">
-                    <div class="emergency-title">
-                        <i class="fas fa-exclamation-triangle pulse-icon"></i>
-                        <h2>ACTIVE EMERGENCIES</h2>
-                    </div>
-                    <div class="emergency-count">
-                        <span id="emergencyCount">0</span>
-                    </div>
-                    <button class="emergency-minimize" id="emergencyMinimize" title="Minimize Panel">
-                        <i class="fas fa-chevron-up"></i>
-                    </button>
-                </div>
-                <div class="emergency-content" id="emergencyContent">
-                    <div class="emergency-placeholder">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>No active emergencies</p>
-                        <span>Critical reports will appear here</span>
-                    </div>
-                </div>
-            </aside>
-            <aside class="insights-panel">
-                <div class="insights-header">
+            </div>
+            
+            <!-- COMMAND CENTER (Fixed right panel - outside map) -->
+            <aside class="command-center">
+                <div class="command-header">
                     <h2>
                         <i class="fas fa-broadcast-tower"></i>
                         COMMAND CENTER
                     </h2>
-                    <button class="refresh-insights" id="refreshInsights" title="Refresh Intelligence">
+                    <button class="refresh-btn" id="refreshInsights" title="Refresh Intelligence">
                         <i class="fas fa-sync"></i>
                     </button>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card" title="Total raw signals received from the public">
-                        <div class="stat-icon blue">
-                            <i class="fas fa-users"></i>
+                <div class="command-body">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card" title="Total citizen inputs">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="totalComplaints">--</span>
+                                <span class="stat-label">CITIZEN INPUTS</span>
+                            </div>
                         </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="totalComplaints">--</span>
-                            <span class="stat-label">CITIZEN INPUTS</span>
+                        <div class="stat-card" title="Verified incidents">
+                            <div class="stat-icon green">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="totalClusters">--</span>
+                                <span class="stat-label">VERIFIED</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" title="Priority zones">
+                            <div class="stat-icon red">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="criticalHotspots">--</span>
+                                <span class="stat-label">PRIORITY</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" title="Noise reduction">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-filter"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="efficiencyScore">--</span>
+                                <span class="stat-label">EFFICIENCY</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" title="Active incidents">
+                            <div class="stat-icon red">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="activeIncidentsCount">--</span>
+                                <span class="stat-label">ACTIVE</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" title="History logs">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="historyLogsCount">--</span>
+                                <span class="stat-label">HISTORY</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" title="Advisories">
+                            <div class="stat-icon green">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="advisoriesCount">--</span>
+                                <span class="stat-label">ADVISORIES</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card" title="Clusters confirmed as valid issues requiring action">
-                        <div class="stat-icon green">
-                            <i class="fas fa-clipboard-check"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="totalClusters">--</span>
-                            <span class="stat-label">VERIFIED INCIDENTS</span>
-                        </div>
-                    </div>
-                    <div class="stat-card" title="High-density clusters requiring immediate attention">
-                        <div class="stat-icon red">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="criticalHotspots">--</span>
-                            <span class="stat-label">PRIORITY ZONES</span>
+                    
+                    <!-- Insights Section -->
+                    <div class="insights-section" id="insightsContent">
+                        <h3><i class="fas fa-lightbulb"></i> Intelligence Feed</h3>
+                        <div class="insight-placeholder">
+                            <i class="fas fa-satellite-dish"></i>
+                            <p>Awaiting field intelligence...</p>
+                            <span>Load data to generate insights</span>
                         </div>
                     </div>
-                    <div class="stat-card" title="Percentage of duplicate reports compressed - saves city resources">
-                        <div class="stat-icon purple">
-                            <i class="fas fa-filter"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="efficiencyScore">--</span>
-                            <span class="stat-label">NOISE REDUCTION</span>
-                        </div>
+                    
+                    <!-- Category Breakdown -->
+                    <div class="category-section">
+                        <h3><i class="fas fa-chart-bar"></i> Incident Breakdown</h3>
+                        <div class="category-bars" id="categoryBars"></div>
                     </div>
-                    <div class="stat-card" title="Items tagged as currently active via temporal_present">
-                        <div class="stat-icon red">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="activeIncidentsCount">--</span>
-                            <span class="stat-label">ACTIVE INCIDENTS</span>
-                        </div>
-                    </div>
-                    <div class="stat-card" title="Items tagged as past/resolved via temporal_past">
-                        <div class="stat-icon blue">
-                            <i class="fas fa-clock-rotate-left"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="historyLogsCount">--</span>
-                            <span class="stat-label">HISTORY / LOGS</span>
-                        </div>
-                    </div>
-                    <div class="stat-card" title="Items tagged as future advisory via temporal_future">
-                        <div class="stat-icon green">
-                            <i class="fas fa-triangle-exclamation"></i>
-                        </div>
-                        <div class="stat-data">
-                            <span class="stat-value" id="advisoriesCount">--</span>
-                            <span class="stat-label">ADVISORIES</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="insights-content" id="insightsContent">
-                    <div class="insight-placeholder">
-                        <i class="fas fa-satellite-dish"></i>
-                        <p>Awaiting field intelligence...</p>
-                        <span class="placeholder-hint">Run analysis to generate dispatch orders</span>
-                    </div>
-                </div>
-                <div class="category-distribution">
-                    <h3>
-                        <i class="fas fa-chart-bar"></i>
-                        INCIDENT BREAKDOWN
-                    </h3>
-                    <div class="category-bars" id="categoryBars"></div>
                 </div>
             </aside>
-        </div>
-            </div>
-        </div>
+            
+        </div><!-- end #app -->
+    </div><!-- end .app-container -->
+    
+    <!-- Hidden legacy elements for JS compatibility -->
+    <div style="display:none;">
+        <button id="loadCityData"></button>
+        <input type="checkbox" id="heatmapSwitch">
+        <input type="checkbox" id="clustersSwitch" checked>
+        <select id="categoryFilter">
+            <option value="all">All Categories</option>
+        </select>
+        <button id="exportExcelBtn" disabled></button>
     </div>
     
     <!-- Core Scripts -->
@@ -397,7 +706,7 @@
     <!-- Floating Controls Bridge -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Bridge floating buttons to original controls
+            // Bridge floating buttons to hidden legacy controls
             const loadFloat = document.getElementById('loadCityDataFloat');
             const loadOrig = document.getElementById('loadCityData');
             if (loadFloat && loadOrig) {
@@ -411,7 +720,7 @@
                 heatmapFloat.addEventListener('click', () => {
                     heatmapSwitch.checked = !heatmapSwitch.checked;
                     heatmapSwitch.dispatchEvent(new Event('change'));
-                    heatmapFloat.style.background = heatmapSwitch.checked ? 'rgba(239, 68, 68, 0.15)' : '';
+                    heatmapFloat.classList.toggle('active', heatmapSwitch.checked);
                 });
             }
             
@@ -419,12 +728,11 @@
             const clustersFloat = document.getElementById('toggleClustersFloat');
             const clustersSwitch = document.getElementById('clustersSwitch');
             if (clustersFloat && clustersSwitch) {
-                // Set initial state
-                clustersFloat.style.background = clustersSwitch.checked ? 'rgba(59, 130, 246, 0.15)' : '';
+                clustersFloat.classList.toggle('active', clustersSwitch.checked);
                 clustersFloat.addEventListener('click', () => {
                     clustersSwitch.checked = !clustersSwitch.checked;
                     clustersSwitch.dispatchEvent(new Event('change'));
-                    clustersFloat.style.background = clustersSwitch.checked ? 'rgba(59, 130, 246, 0.15)' : '';
+                    clustersFloat.classList.toggle('active', clustersSwitch.checked);
                 });
             }
             
@@ -443,12 +751,29 @@
             const exportOrig = document.getElementById('exportExcelBtn');
             if (exportFloat && exportOrig) {
                 exportFloat.addEventListener('click', () => exportOrig.click());
-                // Mirror disabled state
                 const observer = new MutationObserver(() => {
                     exportFloat.disabled = exportOrig.disabled;
                     exportFloat.style.opacity = exportOrig.disabled ? '0.5' : '1';
                 });
                 observer.observe(exportOrig, { attributes: true, attributeFilter: ['disabled'] });
+            }
+            
+            // Emergency panel toggle
+            const emergencyFloat = document.getElementById('toggleEmergencyFloat');
+            const emergencyPanel = document.getElementById('emergencyPanel');
+            const emergencyCollapse = document.getElementById('emergencyCollapse');
+            
+            if (emergencyFloat && emergencyPanel) {
+                emergencyFloat.addEventListener('click', () => {
+                    emergencyPanel.classList.toggle('hidden');
+                    emergencyFloat.classList.toggle('active', !emergencyPanel.classList.contains('hidden'));
+                });
+            }
+            
+            if (emergencyCollapse && emergencyPanel) {
+                emergencyCollapse.addEventListener('click', () => {
+                    emergencyPanel.classList.toggle('collapsed');
+                });
             }
         });
     </script>

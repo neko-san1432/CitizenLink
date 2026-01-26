@@ -22,6 +22,10 @@
   --gray-700:#495057;
   --gray-800:#343A40;
   --gray-900:#212529;
+  --card-bg:#FFFFFF;
+  --body-bg:#F8F9FA;
+  --text-primary:#212529;
+  --text-secondary:#6C757D;
   --shadow:0 2px 8px rgba(0,0,0,.1);
   --shadow-lg:0 4px 16px rgba(0,0,0,.15);
   --border-radius:8px;
@@ -231,7 +235,7 @@ body{
   margin-bottom:12px;
 }
 .chart-container{
-  background:#fff;
+  background: var(--card-bg, #fff);
   border-radius:12px;
   box-shadow:var(--shadow);
   padding:14px;
@@ -245,7 +249,7 @@ body{
   gap:12px;
 }
 .edge-case-card{
-  background:#fff;
+  background: var(--card-bg, #fff);
   border-radius:12px;
   box-shadow:var(--shadow);
   padding:14px;
@@ -530,4 +534,403 @@ body{
   background: var(--success);
   width: 0%;
   transition: width 0.5s ease;
+}
+
+/* ==================== DARK MODE SUPPORT ==================== */
+html.dark {
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #cbd5e1;
+  --gray-700: #e2e8f0;
+  --gray-800: #f1f5f9;
+  --gray-900: #f8fafc;
+  --card-bg: #1e293b;
+  --body-bg: #0f172a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --shadow: 0 2px 8px rgba(0,0,0,.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.4);
+}
+
+html.dark body {
+  background: var(--body-bg);
+  color: var(--text-primary);
+}
+
+/* Dashboard header section */
+html.dark .dashboard-header-section {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-200);
+}
+
+html.dark .dashboard-header-section h1 {
+  color: var(--gray-800);
+}
+
+html.dark .dashboard-header-section p {
+  color: var(--gray-600);
+}
+
+/* Buttons */
+html.dark .btn {
+  border-color: var(--gray-300);
+}
+
+html.dark .btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border-color: var(--gray-300);
+}
+
+html.dark .btn-secondary:hover {
+  background: var(--gray-200);
+}
+
+/* Analytics Tabs */
+html.dark .analytics-tabs {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-200);
+}
+
+html.dark .analytics-tab {
+  color: var(--gray-600);
+}
+
+html.dark .analytics-tab:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+html.dark .analytics-tab.active {
+  color: var(--primary-light);
+  border-bottom-color: var(--primary-light);
+  background: rgba(68, 114, 196, 0.1);
+}
+
+/* Tab Panels / Content */
+html.dark .tab-panel {
+  background: var(--gray-50);
+}
+
+html.dark .dashboard-content {
+  background: var(--gray-50);
+}
+
+/* Command Widget Cards (Overview Dashboard) */
+html.dark .command-widget {
+  background: var(--card-bg) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+html.dark .command-widget h4 {
+  color: var(--text-primary);
+}
+
+html.dark .command-widget .status-badge {
+  background: var(--success);
+}
+
+/* System Health Status Items */
+html.dark .command-widget [style*="background: var(--gray-100)"] {
+  background: var(--gray-200) !important;
+}
+
+/* Chart Containers */
+html.dark .chart-container {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+html.dark .chart-container h3 {
+  color: var(--text-primary);
+}
+
+html.dark .chart-row {
+  background: transparent;
+}
+
+html.dark .edge-case-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+
+html.dark .edge-case-card h3 {
+  color: var(--text-primary);
+}
+
+html.dark .edge-case-item {
+  border-color: var(--gray-300);
+  background: rgba(30, 41, 59, 0.35);
+  color: var(--text-primary);
+}
+
+html.dark .edge-case-item:hover {
+  background: rgba(30, 41, 59, 0.55);
+}
+
+/* Metric Cards */
+html.dark .metric-cards {
+  background: var(--gray-50);
+}
+
+html.dark .metric-card {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .metric-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(68, 114, 196, 0.2);
+}
+
+html.dark .metric-card h3 {
+  color: var(--gray-600);
+}
+
+html.dark .metric-card .metric-value {
+  color: var(--gray-800);
+}
+
+/* Train System Layout */
+html.dark .train-system-layout {
+  background: var(--gray-50);
+}
+
+html.dark .train-card {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .train-card-header {
+  background: linear-gradient(135deg, var(--gray-200), var(--gray-100));
+  border-bottom-color: var(--gray-200);
+  color: var(--gray-800);
+}
+
+html.dark .train-card-header h3 {
+  color: var(--gray-800);
+}
+
+/* Form Elements */
+html.dark .form-group label {
+  color: var(--gray-700);
+}
+
+html.dark .form-group input,
+html.dark .form-group select,
+html.dark .form-group textarea {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+}
+
+html.dark .form-group input:focus,
+html.dark .form-group select:focus,
+html.dark .form-group textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(68, 114, 196, 0.2);
+}
+
+html.dark .form-group input::placeholder,
+html.dark .form-group textarea::placeholder {
+  color: var(--gray-500);
+}
+
+/* AI Prediction Box */
+html.dark .ai-prediction-box {
+  background: linear-gradient(135deg, var(--gray-200), var(--gray-100));
+  border-color: var(--gray-400);
+}
+
+html.dark .prediction-row {
+  color: var(--gray-700);
+}
+
+html.dark .confidence-bar-bg {
+  background: var(--gray-300);
+}
+
+/* Complaints Lists */
+html.dark .complaint-item,
+html.dark .pending-item {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .complaint-item:hover,
+html.dark .pending-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(68, 114, 196, 0.2);
+}
+
+html.dark .complaint-text,
+html.dark .pending-text {
+  color: var(--gray-800);
+}
+
+html.dark .complaint-meta,
+html.dark .pending-meta {
+  color: var(--gray-500);
+}
+
+/* Dictionary Manager Specific */
+html.dark .dictionary-panel {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .dictionary-header {
+  background: linear-gradient(135deg, var(--gray-200), var(--gray-100));
+  border-bottom-color: var(--gray-200);
+}
+
+html.dark .category-tree {
+  background: var(--gray-50);
+}
+
+html.dark .category-item {
+  color: var(--gray-700);
+}
+
+html.dark .category-item:hover {
+  background: var(--gray-200);
+}
+
+html.dark .category-item.active {
+  background: rgba(68, 114, 196, 0.15);
+  color: var(--primary-light);
+}
+
+html.dark .keyword-chip {
+  background: var(--gray-200);
+  color: var(--gray-700);
+  border-color: var(--gray-300);
+}
+
+html.dark .keyword-chip:hover {
+  background: var(--gray-300);
+}
+
+/* Tables */
+html.dark table {
+  background: var(--gray-100);
+}
+
+html.dark th {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  border-color: var(--gray-300);
+}
+
+html.dark td {
+  border-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+html.dark tr:hover td {
+  background: var(--gray-200);
+}
+
+/* Scrollbars */
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 4px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Legacy Header for standalone use */
+html.dark .header {
+  background: linear-gradient(135deg, var(--gray-200), var(--gray-100));
+}
+
+/* Dropdowns and Popovers */
+html.dark .dropdown-menu {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+  box-shadow: var(--shadow-lg);
+}
+
+html.dark .dropdown-item {
+  color: var(--gray-700);
+}
+
+html.dark .dropdown-item:hover {
+  background: var(--gray-200);
+}
+
+/* Badges and Tags */
+html.dark .badge {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+html.dark .badge-primary {
+  background: rgba(68, 114, 196, 0.2);
+  color: var(--primary-light);
+}
+
+html.dark .badge-success {
+  background: rgba(112, 173, 71, 0.2);
+  color: var(--success-light);
+}
+
+html.dark .badge-warning {
+  background: rgba(255, 192, 0, 0.2);
+  color: var(--warning);
+}
+
+html.dark .badge-danger {
+  background: rgba(192, 0, 0, 0.2);
+  color: var(--danger-light);
+}
+
+/* Empty States and Placeholders */
+html.dark .empty-state {
+  color: var(--gray-500);
+}
+
+html.dark .empty-state i {
+  color: var(--gray-400);
+}
+
+/* Modal/Dialog Overlays */
+html.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+html.dark .modal-content {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .modal-header {
+  background: var(--gray-200);
+  border-bottom-color: var(--gray-300);
+}
+
+html.dark .modal-header h3 {
+  color: var(--gray-800);
+}
+
+/* Toast Notifications - inherit from parent styles */
+html.dark .toast {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+  color: var(--gray-700);
 }

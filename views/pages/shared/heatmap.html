@@ -129,27 +129,7 @@
                     <p class="loading-subtext" id="loadingProgress">0 / 0 records analyzed</p>
                 </div>
             </main>
-            <aside class="emergency-panel" id="emergencyPanel">
-                <div class="emergency-header">
-                    <div class="emergency-title">
-                        <i class="fas fa-exclamation-triangle pulse-icon"></i>
-                        <h2>ACTIVE EMERGENCIES</h2>
-                    </div>
-                    <div class="emergency-count">
-                        <span id="emergencyCount">0</span>
-                    </div>
-                    <button class="emergency-minimize" id="emergencyMinimize" title="Minimize Panel">
-                        <i class="fas fa-chevron-up"></i>
-                    </button>
-                </div>
-                <div class="emergency-content" id="emergencyContent">
-                    <div class="emergency-placeholder">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>No active emergencies</p>
-                        <span>Critical reports will appear here</span>
-                    </div>
-                </div>
-            </aside>
+            <!-- Command Center Panel - Fixed sidebar on the right -->
             <aside class="insights-panel">
                 <div class="insights-header">
                     <h2>
@@ -241,6 +221,31 @@
                 </div>
             </aside>
         </div>
+        <!-- Emergency Panel - Floating collapsible panel (outside main flow) -->
+        <aside class="emergency-panel" id="emergencyPanel">
+            <div class="emergency-header">
+                <div class="emergency-title">
+                    <i class="fas fa-exclamation-triangle pulse-icon"></i>
+                    <h2>ACTIVE EMERGENCIES</h2>
+                </div>
+                <div class="emergency-count">
+                    <span id="emergencyCount">0</span>
+                </div>
+                <button class="emergency-collapse-btn" id="emergencyCollapse" title="Collapse/Expand Panel">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+                <button class="emergency-minimize" id="emergencyMinimize" title="Minimize Panel">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+            <div class="emergency-content" id="emergencyContent">
+                <div class="emergency-placeholder">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>No active emergencies</p>
+                    <span>Critical reports will appear here</span>
+                </div>
+            </div>
+        </aside>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
