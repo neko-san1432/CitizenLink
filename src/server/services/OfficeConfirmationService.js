@@ -35,7 +35,7 @@ class OfficeConfirmationService {
         // Query task_forces joined with complaints
         .select(`
           *,
-          complaint:complaints(id, title, description, status, location_text)
+          complaint:complaints(id, descriptive_su, status, location_text)
         `)
         .eq("status", "pending_confirmation") // Assuming a status column
         // .eq('assigned_to', officerId) // If assigned to specific person

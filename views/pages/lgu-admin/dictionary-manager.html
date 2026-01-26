@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary Manager - CitizenLink</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
+    <link rel="stylesheet" href="/brain-analytics/analytics.css">
+    <style>
+        .dictionary-page-content {
+            padding: 24px;
+            max-width: 1400px;
+        }
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            color: var(--gray-500);
+        }
+        .loading-spinner i {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <!-- Page Header -->
+            <div class="dashboard-header-section">
+                <div class="header-content">
+                    <div>
+                        <h1><i class="fas fa-book"></i> Dictionary Manager</h1>
+                        <p>View, search, add, and remove keywords from the NLP dictionary used for complaint classification.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="refreshDictionaryBtn" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button id="exportDictionaryBtn" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Export JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dictionary-page-content">
+
+                <div class="metric-cards" style="margin-bottom: 20px;">
+                    <div class="metric-card info">
+                        <div class="metric-icon"><i class="fas fa-database"></i></div>
+                        <div class="metric-value" id="dictTotalKeywords">-</div>
+                        <div class="metric-label">Total Keywords</div>
+                    </div>
+                    <div class="metric-card success">
+                        <div class="metric-icon"><i class="fas fa-globe"></i></div>
+                        <div class="metric-value" id="dictLanguages">-</div>
+                        <div class="metric-label">Languages</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-icon"><i class="fas fa-folder"></i></div>
+                        <div class="metric-value" id="dictCategories">-</div>
+                        <div class="metric-label">Categories</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="metric-value" id="dictLastUpdated">-</div>
+                        <div class="metric-label">Last Updated</div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="dict-search" placeholder="Search keywords...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Category:</label>
+                        <select id="dict-category-filter">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="dictionary-container" style="margin-top: 20px;">
+                    <div class="loading-spinner">
+                        <div style="text-align: center;">
+                            <i class="fas fa-spinner fa-spin" style="display: block; margin-bottom: 12px;"></i>
+                            Loading dictionary...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    
+    <!-- Taxonomy and Dictionary Manager -->
+    <script src="/brain-dashboard/shared/taxonomy.js"></script>
+    <script type="module" src="/brain-analytics/dictionary-manager.js"></script>
+</body>
+</html>

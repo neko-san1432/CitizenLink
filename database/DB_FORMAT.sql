@@ -161,7 +161,6 @@ CREATE TABLE public.complaints (
   category text,
   subcategory text,
   department_r ARRAY DEFAULT '{}'::text[],
-  preferred_departments jsonb DEFAULT '[]'::jsonb,
   workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text])),
   priority text DEFAULT 'low'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   assigned_coordinator_id uuid,
@@ -171,7 +170,6 @@ CREATE TABLE public.complaints (
   resolved_at timestamp with time zone,
   confirmed_by_citizen boolean DEFAULT false,
   citizen_confirmation_date timestamp with time zone,
-  is_duplicate boolean DEFAULT false,
   master_complaint_id uuid,
   task_force_id uuid,
   coordinator_notes text,
@@ -189,7 +187,6 @@ CREATE TABLE public.complaints (
   urgency_level text DEFAULT 'medium'::text CHECK (urgency_level = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   upvote_count integer DEFAULT 0,
   citizen_satisfaction_rating integer,
-  title text DEFAULT 'Untitled Complaint'::text,
   submitted_by_snapshot jsonb,
   account_preservation_data jsonb,
   original_submitter_id uuid,
@@ -199,17 +196,6 @@ CREATE TABLE public.complaints (
   CONSTRAINT complaints_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES auth.users(id),
   CONSTRAINT complaints_cancelled_by_fkey FOREIGN KEY (cancelled_by) REFERENCES auth.users(id),
   CONSTRAINT complaints_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id)
-);
-CREATE TABLE public.department_subcategory_mapping (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  department_id bigint NOT NULL,
-  subcategory_id uuid NOT NULL,
-  is_primary boolean DEFAULT false,
-  response_priority integer DEFAULT 1,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT department_subcategory_mapping_pkey PRIMARY KEY (id),
-  CONSTRAINT department_subcategory_mapping_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id),
-  CONSTRAINT department_subcategory_mapping_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
 );
 CREATE TABLE public.department_transfers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -309,17 +295,7 @@ CREATE TABLE public.nlp_anchors (
   category text,
   anchor_text text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT nlp_anchors_pkey PRIMARY KEY (id),
-  CONSTRAINT nlp_anchors_category_fkey FOREIGN KEY (category) REFERENCES public.nlp_category_config(category)
-);
-CREATE TABLE public.nlp_category_config (
-  category text NOT NULL,
-  parent_category text,
-  urgency_rating integer DEFAULT 30 CHECK (urgency_rating >= 0 AND urgency_rating <= 100),
-  description text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT nlp_category_config_pkey PRIMARY KEY (category)
+  CONSTRAINT nlp_anchors_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.nlp_dictionary_rules (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

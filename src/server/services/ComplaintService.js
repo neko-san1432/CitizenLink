@@ -195,7 +195,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintSubmitted(
           userId,
           createdComplaint.id,
-          createdComplaint.title
+          createdComplaint.descriptive_su?.slice(0, 100) || 'Your complaint'
         );
       } catch (notifError) {
         console.warn(
@@ -209,7 +209,7 @@ class ComplaintService {
         const coordResult =
           await this.notificationService.notifyAllCoordinators(
             createdComplaint.id,
-            createdComplaint.title
+            createdComplaint.descriptive_su?.slice(0, 100) || 'New complaint'
           );
         if (!coordResult.success) {
           console.warn(
@@ -983,7 +983,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintStatusChanged(
           complaint.submitted_by,
           id,
-          complaint.title,
+          complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
           workflowStatus,
           complaint.workflow_status
         );
@@ -1175,7 +1175,7 @@ class ComplaintService {
       let query = supabase
         .from("complaints")
         .select(
-          "id, title, descriptive_su, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory",
+          "id, descriptive_su, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory",
           { count: "exact" }
         )
         .not("latitude", "is", null)
@@ -1450,7 +1450,7 @@ class ComplaintService {
               if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
               return {
                 id: complaint.id,
-                title: complaint.title,
+                title: complaint.descriptive_su?.slice(0, 100) || 'Complaint',
                 status: complaint.workflow_status,
                 priority: complaint.priority || "medium",
                 lat,
@@ -1517,7 +1517,7 @@ class ComplaintService {
 
           return {
             id: complaint.id,
-            title: complaint.title,
+            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint',
             status: complaint.workflow_status,
             priority: complaint.priority || "medium",
             lat,
@@ -1626,7 +1626,7 @@ class ComplaintService {
             complaint.assigned_coordinator_id,
             "complaint_cancelled",
             "Complaint Cancelled",
-            `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+            `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Cancelled complaint'}" has been cancelled by the citizen.`,
             {
               priority: "info",
               link: `/coordinator/review-queue`,
@@ -1656,7 +1656,7 @@ class ComplaintService {
                     assignment.assigned_by,
                     "complaint_cancelled",
                     "Complaint Cancelled",
-                    `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+                    `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Cancelled complaint'}" has been cancelled by the citizen.`,
                     {
                       priority: "info",
                       link: `/lgu-admin/department-queue`,
@@ -1762,7 +1762,7 @@ class ComplaintService {
               assignment.assigned_to,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || 'Your assigned complaint'}"`,
               {
                 priority: "warning",
                 link: `/lgu-officer/tasks/${complaintId}`,
@@ -1776,7 +1776,7 @@ class ComplaintService {
               assignment.assigned_by,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}"`,
               {
                 priority: "warning",
                 link: `/lgu-admin/department-queue`,

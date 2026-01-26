@@ -26,56 +26,102 @@ class AdvancedDecisionEngine {
         try {
             console.log('[NLP] 🔄 Initializing Advanced Decision Engine...');
 
-            // 1. Load Keywords
-            const { data: keywords, error: kwError } = await this.supabase
-                .from('nlp_keywords')
-                .select('*');
-            if (kwError) throw kwError;
-            this.keywords = keywords;
+            // 1. Load Keywords (graceful fallback if table doesn't exist)
+            try {
+                const { data: keywords, error: kwError } = await this.supabase
+                    .from('nlp_keywords')
+                    .select('*');
+                if (kwError) {
+                    console.warn('[NLP] ⚠️ nlp_keywords table not found or error, using empty list:', kwError.message);
+                    this.keywords = [];
+                } else {
+                    this.keywords = keywords || [];
+                }
+            } catch (e) {
+                console.warn('[NLP] ⚠️ Failed to load keywords:', e.message);
+                this.keywords = [];
+            }
 
-            // 2. Load Metaphors
-            const { data: metaphors, error: mtError } = await this.supabase
-                .from('nlp_metaphors')
-                .select('*');
-            if (mtError) throw mtError;
-            this.metaphors = metaphors;
+            // 2. Load Metaphors (graceful fallback if table doesn't exist)
+            try {
+                const { data: metaphors, error: mtError } = await this.supabase
+                    .from('nlp_metaphors')
+                    .select('*');
+                if (mtError) {
+                    console.warn('[NLP] ⚠️ nlp_metaphors table not found or error, using empty list:', mtError.message);
+                    this.metaphors = [];
+                } else {
+                    this.metaphors = metaphors || [];
+                }
+            } catch (e) {
+                console.warn('[NLP] ⚠️ Failed to load metaphors:', e.message);
+                this.metaphors = [];
+            }
 
-            // 3. Load Category Config
-            const { data: configs, error: cfError } = await this.supabase
-                .from('nlp_category_config')
-                .select('*');
-            if (cfError) throw cfError;
+            // 3. Load Category Config (graceful fallback if table doesn't exist)
+            try {
+                const { data: configs, error: cfError } = await this.supabase
+                    .from('nlp_category_config')
+                    .select('*');
+                if (cfError) {
+                    console.warn('[NLP] ⚠️ nlp_category_config table not found or error, using defaults:', cfError.message);
+                    // Use default urgency ratings
+                    this.categoryConfig = {
+                        'Infrastructure': { category: 'Infrastructure', urgency_rating: 60 },
+                        'Sanitation': { category: 'Sanitation', urgency_rating: 50 },
+                        'Utilities': { category: 'Utilities', urgency_rating: 55 },
+                        'Public Safety': { category: 'Public Safety', urgency_rating: 80 },
+                        'Environment': { category: 'Environment', urgency_rating: 45 },
+                        'Traffic': { category: 'Traffic', urgency_rating: 50 },
+                        'Others': { category: 'Others', urgency_rating: 30 }
+                    };
+                } else {
+                    this.categoryConfig = {};
+                    (configs || []).forEach(c => {
+                        this.categoryConfig[c.category] = c;
+                    });
+                }
+            } catch (e) {
+                console.warn('[NLP] ⚠️ Failed to load category config:', e.message);
+                this.categoryConfig = {};
+            }
 
-            this.categoryConfig = {};
-            configs.forEach(c => {
-                this.categoryConfig[c.category] = c;
-            });
+            // 4. Load Anchors (graceful fallback if table doesn't exist)
+            try {
+                const { data: anchors, error: anError } = await this.supabase
+                    .from('nlp_anchors')
+                    .select('*');
+                if (anError) {
+                    console.warn('[NLP] ⚠️ nlp_anchors table not found or error, using empty list:', anError.message);
+                    this.anchors = {};
+                } else {
+                    // Group anchors by category
+                    const groupedAnchors = {};
+                    (anchors || []).forEach(a => {
+                        if (!groupedAnchors[a.category]) groupedAnchors[a.category] = [];
+                        groupedAnchors[a.category].push(a.anchor_text);
+                    });
+                    this.anchors = groupedAnchors;
+                }
+            } catch (e) {
+                console.warn('[NLP] ⚠️ Failed to load anchors:', e.message);
+                this.anchors = {};
+            }
 
-            // 4. Load Anchors & Init AI
-            const { data: anchors, error: anError } = await this.supabase
-                .from('nlp_anchors')
-                .select('*');
-            if (anError) throw anError;
-
-            // Group anchors by category
-            const groupedAnchors = {};
-            anchors.forEach(a => {
-                if (!groupedAnchors[a.category]) groupedAnchors[a.category] = [];
-                groupedAnchors[a.category].push(a.anchor_text);
-            });
-            this.anchors = groupedAnchors;
-
-            // Initialize AI Service (background)
-            TensorFlowService.initialize().then(() => {
-                TensorFlowService.precomputeAnchors(this.anchors);
-            });
+            // Initialize AI Service (background) - only if we have anchors
+            if (Object.keys(this.anchors).length > 0) {
+                TensorFlowService.initialize().then(() => {
+                    TensorFlowService.precomputeAnchors(this.anchors);
+                });
+            }
 
             this.initialized = true;
-            console.log(`[NLP] ✅ Loaded ${keywords.length} keywords, ${metaphors.length} metaphors, ${anchors.length} anchors.`);
+            console.log(`[NLP] ✅ Initialized with ${this.keywords.length} keywords, ${this.metaphors.length} metaphors, ${Object.keys(this.anchors).length} anchor categories.`);
 
         } catch (error) {
             console.error('[NLP] ❌ Initialization failed:', error.message);
-            // Don't throw, allow app to start with empty rules
+            // Mark as initialized anyway to prevent infinite retries
+            this.initialized = true;
         }
     }
 

@@ -278,7 +278,7 @@ function getMenuItemsForRole(role) {
         label: "Server logs",
       },
       {
-        url: "/brain-analytics-page#dictionary-manager",
+        url: "/dictionary-manager",
         icon: "analytics",
         label: "Dictionary Manager",
       },
@@ -304,7 +304,7 @@ function getMenuItemsForRole(role) {
         label: "Brain Analytics",
       },
       {
-        url: "/brain-analytics-page#dictionary-manager",
+        url: "/dictionary-manager",
         icon: "analytics",
         label: "Dictionary Manager",
       },
@@ -321,7 +321,7 @@ function getMenuItemsForRole(role) {
       },
       { url: "/publish", icon: "publish", label: "Publish" },
       {
-        url: "/brain-analytics-page#dictionary-manager",
+        url: "/dictionary-manager",
         icon: "analytics",
         label: "Dictionary Manager",
       },

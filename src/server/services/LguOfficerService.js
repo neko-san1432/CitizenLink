@@ -64,7 +64,7 @@ class LguOfficerService {
         completed_at: assignment.completed_at,
         complaint: complaint ? {
           id: complaint.id,
-          title: complaint.title,
+          title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
           description: complaint.descriptive_su,
           category: complaint.category,
           subcategory: complaint.subcategory,
@@ -148,7 +148,7 @@ class LguOfficerService {
           completed_at: assignment.completed_at,
           complaint: complaint ? {
             id: complaint.id,
-            title: complaint.title,
+            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
             description: complaint.descriptive_su,
             category: complaint.category,
             subcategory: complaint.subcategory,
@@ -303,7 +303,7 @@ class LguOfficerService {
         updatedComplaint.submitted_by,
         "complaint_resolved",
         "Complaint Resolved",
-        `Your complaint "${updatedComplaint.title}" has been resolved. Please confirm if you're satisfied with the resolution.`,
+        `Your complaint "${updatedComplaint.descriptive_su?.slice(0, 100) || 'your complaint'}" has been resolved. Please confirm if you're satisfied with the resolution.`,
         {
           priority: "success",
           link: `/citizen/complaints/${complaintId}`,
@@ -414,7 +414,7 @@ class LguOfficerService {
   }
 
   _getActivityDescription(activity, complaint = null) {
-    const complaintTitle = complaint?.title || `Complaint #${activity.complaint_id?.substring(0, 8)}`;
+    const complaintTitle = complaint?.descriptive_su?.slice(0, 100) || `Complaint #${activity.complaint_id?.substring(0, 8)}`;
     const complaintCategory = complaint?.category || "General";
     switch (this._getActivityType(activity)) {
       case "task_completed":

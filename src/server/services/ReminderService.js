@@ -235,22 +235,22 @@ class ReminderService {
     const reminderMessages = {
       first: {
         title: "Complaint Reminder",
-        message: `Complaint "${complaint.title}" has been pending for 24+ hours and needs attention.`,
+        message: `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}" has been pending for 24+ hours and needs attention.`,
         priority: "warning"
       },
       second: {
         title: "Urgent Complaint Reminder",
-        message: `Complaint "${complaint.title}" has been pending for 3+ days and requires immediate attention.`,
+        message: `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}" has been pending for 3+ days and requires immediate attention.`,
         priority: "urgent"
       },
       third: {
         title: "Critical Complaint Reminder",
-        message: `Complaint "${complaint.title}" has been pending for 1+ week and needs urgent resolution.`,
+        message: `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}" has been pending for 1+ week and needs urgent resolution.`,
         priority: "urgent"
       },
       final: {
         title: "Final Complaint Reminder",
-        message: `Complaint "${complaint.title}" has been pending for 2+ weeks. This is the final reminder.`,
+        message: `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}" has been pending for 2+ weeks. This is the final reminder.`,
         priority: "urgent"
       }
     };

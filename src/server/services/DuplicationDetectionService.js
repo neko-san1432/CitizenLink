@@ -70,27 +70,28 @@ class DuplicationDetectionService {
     }
     return candidates
       .map((candidate) => {
-        const titleScore = this.calculateTextSimilarity(
-          (complaint.title || "").toLowerCase(),
-          (candidate.title || "").toLowerCase()
+        // Use descriptive_su as the primary text field for comparison
+        const textScore1 = this.calculateTextSimilarity(
+          (complaint.descriptive_su || "").toLowerCase(),
+          (candidate.descriptive_su || "").toLowerCase()
         );
-        const descScore = this.calculateTextSimilarity(
+        const textScore2 = this.calculateTextSimilarity(
           (complaint.descriptive_su || "").toLowerCase(),
           (candidate.descriptive_su || "").toLowerCase()
         );
         const keywordScore = this.calculateKeywordOverlap(
-          `${complaint.title || ""} ${complaint.descriptive_su || ""}`,
-          `${candidate.title || ""} ${candidate.descriptive_su || ""}`
+          `${complaint.descriptive_su || ""}`,
+          `${candidate.descriptive_su || ""}`
         );
         const textScore =
-          titleScore * 0.4 + descScore * 0.4 + keywordScore * 0.2;
+          textScore1 * 0.4 + textScore2 * 0.4 + keywordScore * 0.2;
 
         return {
           complaint_id: candidate.id,
           score: textScore,
           factors: {
-            titleSimilarity: titleScore,
-            descriptionSimilarity: descScore,
+            textSimilarity1: textScore1,
+            textSimilarity2: textScore2,
             keywordOverlap: keywordScore,
           },
           method: "text",

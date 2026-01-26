@@ -122,7 +122,7 @@ class LguAdminController {
       // 2. Recent Unassigned (Limit 5)
       const { data: recentUnassigned } = await supabase
         .from("complaints")
-        .select("id, title, submitted_at, location_text, priority")
+        .select("id, descriptive_su, submitted_at, location_text, priority")
         .contains("department_r", [departmentCode])
         .in("workflow_status", [
           "new",
@@ -245,7 +245,7 @@ class LguAdminController {
         .from("complaints")
         .select(
           `
-          id, title, descriptive_su, submitted_at, submitted_by, 
+          id, descriptive_su, submitted_at, submitted_by, 
           workflow_status, priority, location_text,
           preferred_departments, department_r,
           last_activity_at, updated_at
@@ -572,7 +572,7 @@ class LguAdminController {
             .notifyTaskAssigned(
               assignment.assigned_to,
               complaintId,
-              updatedComplaint.title,
+              updatedComplaint.descriptive_su?.slice(0, 100) || 'Complaint',
               priority === "urgent" ? "urgent" : "info",
               deadline
             )
@@ -591,7 +591,7 @@ class LguAdminController {
             .notifyComplaintAssignedToOfficer(
               complaint.submitted_by,
               complaintId,
-              complaint.title,
+              complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
               {
                 officer_count: createdAssignments.length,
                 department: departmentCode,
@@ -612,7 +612,7 @@ class LguAdminController {
             userId,
             NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
             "Assignment Completed",
-            `You successfully assigned "${updatedComplaint.title}" to ${createdAssignments.length} officer(s).`,
+            `You successfully assigned "${updatedComplaint.descriptive_su?.slice(0, 100) || 'a complaint'}" to ${createdAssignments.length} officer(s).`,
             {
               priority: NOTIFICATION_PRIORITY.INFO,
               link: `/lgu-admin/assignments`,
@@ -722,7 +722,7 @@ class LguAdminController {
       let baseQuery = supabase
         .from("complaints")
         .select(
-          "id, title, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority, category, subcategory",
+          "id, descriptive_su, location_text, submitted_at, submitted_by, department_r, workflow_status, priority, category, subcategory",
           { count: "exact" } // Request exact count for pagination
         )
         .contains("department_r", [departmentCode]);
@@ -911,7 +911,7 @@ class LguAdminController {
           // Use sliced UUID as Display ID since no readable ID exists
           display_id: complaint.id.slice(0, 8),
 
-          title: complaint.title,
+          title: complaint.descriptive_su?.slice(0, 100) || 'No description',
           description: complaint.descriptive_su, // Mapped from descriptive_su
           location_text: complaint.location_text,
           citizen_name: userProfile
@@ -1291,7 +1291,7 @@ class LguAdminController {
       // Get complaint details
       const { data: complaint } = await supabase
         .from("complaints")
-        .select("title, descriptive_su, id")
+        .select("descriptive_su, id, submitted_by")
         .eq("id", complaintId)
         .single();
       // Send notification to the officer
@@ -1305,7 +1305,7 @@ class LguAdminController {
       await notificationService.notifyTaskAssigned(
         officerId,
         complaintId,
-        complaint?.title || "a complaint",
+        complaint?.descriptive_su?.slice(0, 100) || "a complaint",
         notificationPriority,
         deadline
       );
@@ -1315,7 +1315,7 @@ class LguAdminController {
           .notifyComplaintAssignedToOfficer(
             complaint.submitted_by,
             complaintId,
-            complaint.title,
+            complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
             { officer_count: 1, department: departmentCode }
           )
           .catch((notifError) => {
@@ -1331,7 +1331,7 @@ class LguAdminController {
         NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
         "Assignment Completed",
         `You successfully assigned "${
-          complaint?.title || "a complaint"
+          complaint?.descriptive_su?.slice(0, 100) || "a complaint"
         }" to an officer.`,
         {
           priority: NOTIFICATION_PRIORITY.INFO,
@@ -1423,7 +1423,7 @@ class LguAdminController {
         .select(
           `
           *,
-          complaints!inner(id, title, workflow_status, submitted_at, priority),
+          complaints!inner(id, descriptive_su, workflow_status, submitted_at, priority),
           departments(id, code, name)
         `
         )
@@ -1455,7 +1455,7 @@ class LguAdminController {
         }
         officerGroups[officerId].complaints.push({
           id: assignment.complaints.id,
-          title: assignment.complaints.title,
+          title: assignment.complaints.descriptive_su?.slice(0, 100) || 'No description',
           priority: assignment.complaints.priority,
           assigned_days_ago: daysSinceAssignment,
           is_overdue: daysSinceAssignment > 7,

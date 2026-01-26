@@ -326,7 +326,7 @@ class CoordinatorService {
         await this.notificationService.notifyComplaintDuplicate(
           complaint.submitted_by,
           complaintId,
-          complaint.title,
+          complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
           masterComplaintId
         );
       } catch (notifError) {
@@ -883,7 +883,7 @@ class CoordinatorService {
       await this.notificationService.notifyPendingTaskReminder(
         officerId,
         complaintId,
-        complaint.title,
+        complaint.descriptive_su?.slice(0, 100) || 'Pending complaint',
         `${reminderMessage} (from LGU Admin)`
       );
       // Notify admin that reminder was sent
@@ -891,7 +891,7 @@ class CoordinatorService {
         adminId,
         "officer_reminder_sent",
         "Reminder Sent",
-        `Reminder sent to ${officerName} for complaint: "${complaint.title}"`,
+        `Reminder sent to ${officerName} for complaint: "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}"`,
         {
           priority: "info",
           link: `/lgu-admin/assignments`,
@@ -931,7 +931,7 @@ class CoordinatorService {
         .from("complaint_assignments")
         .select(`
           *,
-          complaints!inner(id, title, workflow_status, submitted_at, priority),
+          complaints!inner(id, descriptive_su, workflow_status, submitted_at, priority),
           departments(id, code, name)
         `)
         .eq("status", "pending")
@@ -963,14 +963,14 @@ class CoordinatorService {
           overdueItems.push({
             assignment_id: assignment.id,
             complaint_id: complaint.id,
-            complaint_title: complaint.title,
+            complaint_title: complaint.descriptive_su?.slice(0, 100) || 'Overdue complaint',
             officer_id: officerId,
             days_overdue: daysSinceAssignment
           });
         }
         officerSummary[officerId].recent_complaints.push({
           id: complaint.id,
-          title: complaint.title,
+          title: complaint.descriptive_su?.slice(0, 100) || 'Complaint',
           priority: complaint.priority,
           assigned_days_ago: daysSinceAssignment
         });

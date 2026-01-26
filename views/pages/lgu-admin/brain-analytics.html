@@ -5,66 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CitizenLink - Complaint Analytics | Digos City</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/viewport-fix.css" />
     <link rel="stylesheet" href="/brain-analytics/analytics.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <h1><i class="fas fa-chart-line"></i> Complaint Analytics</h1>
-            <span class="version">CitizenLink Dashboard v1.0</span>
-        </div>
-        <div class="header-right">
-            <button id="exportPDF" class="btn btn-secondary" title="Export to PDF">
-                <i class="fas fa-file-pdf"></i> Export PDF
-            </button>
-            <button id="exportCSV" class="btn btn-secondary" title="Export to CSV">
-                <i class="fas fa-file-csv"></i> Export Excel
-            </button>
-            <button id="presentBtn" class="btn btn-primary" title="Presentation Mode">
-                <i class="fas fa-tv"></i> Present
-            </button>
-            <a href="/heatmap" class="btn btn-outline" id="backLink" title="Back">
-                <i class="fas fa-arrow-left"></i> Back to Map
-            </a>
-        </div>
-    </header>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="app" class="collapsible">
+            <!-- Tab Navigation -->
+            <nav class="analytics-tabs">
+                <button class="nav-tab active" data-tab="overview">
+                    <i class="fas fa-tachometer-alt"></i> <span>Overview</span>
+                </button>
+                <button class="nav-tab" data-tab="temporal">
+                    <i class="fas fa-clock"></i> <span>Time Trends</span>
+                </button>
+                <button class="nav-tab" data-tab="categories">
+                    <i class="fas fa-tags"></i> <span>Categories</span>
+                </button>
+                <button class="nav-tab" data-tab="edge-cases">
+                    <i class="fas fa-exclamation-triangle"></i> <span>Smart Detection</span>
+                </button>
+                <button class="nav-tab" data-tab="data-table">
+                    <i class="fas fa-table"></i> <span>All Complaints</span>
+                </button>
+                <button class="nav-tab" data-tab="system-training">
+                    <i class="fas fa-brain"></i> <span>Train System</span>
+                </button>
+            </nav>
 
-    <nav class="nav-tabs">
-        <button class="nav-tab active" data-tab="overview">
-            <i class="fas fa-tachometer-alt"></i> <span>Overview</span>
-        </button>
-        <button class="nav-tab" data-tab="temporal">
-            <i class="fas fa-clock"></i> <span>Time Trends</span>
-        </button>
-        <button class="nav-tab" data-tab="categories">
-            <i class="fas fa-tags"></i> <span>Categories</span>
-        </button>
-        <button class="nav-tab" data-tab="edge-cases">
-            <i class="fas fa-exclamation-triangle"></i> <span>Smart Detection</span>
-        </button>
-        <button class="nav-tab" data-tab="data-table">
-            <i class="fas fa-table"></i> <span>All Complaints</span>
-        </button>
-        <button class="nav-tab" data-tab="system-training">
-            <i class="fas fa-brain"></i> <span>Train System</span>
-        </button>
-        <button class="nav-tab" data-tab="dictionary-manager">
-            <i class="fas fa-book"></i> <span>Dictionary</span>
-        </button>
-    </nav>
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>Loading Complaints...</p>
+                    <p class="loading-detail">Processing data, please wait...</p>
+                </div>
+            </div>
 
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Loading Complaints...</p>
-            <p class="loading-detail">Processing data, please wait...</p>
-        </div>
-    </div>
-
-    <main class="main-content">
+            <main class="main-content">
         <section id="overview" class="tab-content active">
             <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
             <p class="section-description">Summary of all citizen complaints processed by the CitizenLink system.</p>
@@ -395,8 +387,15 @@
         </section>
 
         <section id="data-table" class="tab-content">
-            <h2 class="section-title"><i class="fas fa-table"></i> Complete Dataset</h2>
-            <p class="section-description">Search, filter, and examine all complaints in the system.</p>
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;"><i class="fas fa-table"></i> Complete Dataset</h2>
+                    <p class="section-description" style="margin: 0;">Search, filter, and examine all complaints in the system.</p>
+                </div>
+                <button id="exportCSV" class="btn btn-primary" title="Export to Excel" style="padding: 10px 16px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+            </div>
             <div class="table-controls">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -446,60 +445,6 @@
                     <option value="50">50</option>
                     <option value="100">100</option>
                 </select>
-            </div>
-        </section>
-
-        <section id="dictionary-manager" class="tab-content">
-            <h2 class="section-title"><i class="fas fa-book"></i> Dictionary Manager</h2>
-            <p class="section-description">View, search, add, and remove keywords from the NLP dictionary used for complaint classification.</p>
-
-            <div class="metric-cards" style="margin-bottom: 20px;">
-                <div class="metric-card info">
-                    <div class="metric-icon"><i class="fas fa-database"></i></div>
-                    <div class="metric-value" id="dictTotalKeywords">-</div>
-                    <div class="metric-label">Total Keywords</div>
-                </div>
-                <div class="metric-card success">
-                    <div class="metric-icon"><i class="fas fa-globe"></i></div>
-                    <div class="metric-value" id="dictLanguages">-</div>
-                    <div class="metric-label">Languages</div>
-                </div>
-                <div class="metric-card warning">
-                    <div class="metric-icon"><i class="fas fa-folder"></i></div>
-                    <div class="metric-value" id="dictCategories">-</div>
-                    <div class="metric-label">Categories</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-icon"><i class="fas fa-calendar-check"></i></div>
-                    <div class="metric-value" id="dictLastUpdated">-</div>
-                    <div class="metric-label">Last Updated</div>
-                </div>
-            </div>
-
-            <div class="filter-bar">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="dict-search" placeholder="Search keywords...">
-                </div>
-                <div class="filter-group">
-                    <label>Category:</label>
-                    <select id="dict-category-filter">
-                        <option value="all">All Categories</option>
-                    </select>
-                </div>
-                <button id="refreshDictionaryBtn" class="btn btn-secondary">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-                <button id="exportDictionaryBtn" class="btn btn-primary">
-                    <i class="fas fa-download"></i> Export JSON
-                </button>
-            </div>
-
-            <div id="dictionary-container" style="margin-top: 20px;">
-                <p style="color: var(--gray-500); padding: 40px; text-align: center;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
-                    Loading dictionary...
-                </p>
             </div>
         </section>
 
@@ -605,39 +550,45 @@
                 </div>
             </div>
         </section>
-    </main>
+            </main>
 
-    <div id="complaintModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-clipboard-list"></i> Complaint Details</h3>
-                <button class="modal-close">&times;</button>
+            <div id="complaintModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Complaint Details</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body" id="modalBody"></div>
+                </div>
             </div>
-            <div class="modal-body" id="modalBody"></div>
-        </div>
-    </div>
 
-    <div id="presentationOverlay" class="presentation-overlay">
-        <div class="presentation-controls">
-            <button id="prevSlide"><i class="fas fa-chevron-left"></i> Previous</button>
-            <span id="slideIndicator">1 / 7</span>
-            <button id="nextSlide">Next <i class="fas fa-chevron-right"></i></button>
-            <button id="exitPresentation"><i class="fas fa-times"></i> Exit</button>
-        </div>
-        <div class="presentation-content" id="presentationContent"></div>
-    </div>
+            <div id="presentationOverlay" class="presentation-overlay">
+                <div class="presentation-controls">
+                    <button id="prevSlide"><i class="fas fa-chevron-left"></i> Previous</button>
+                    <span id="slideIndicator">1 / 7</span>
+                    <button id="nextSlide">Next <i class="fas fa-chevron-right"></i></button>
+                    <button id="exitPresentation"><i class="fas fa-times"></i> Exit</button>
+                </div>
+                <div class="presentation-content" id="presentationContent"></div>
+            </div>
+        </div><!-- end #app -->
+    </div><!-- end .app-container -->
 
-    <footer class="footer">
-        <p><strong>CitizenLink Analytics</strong> - Digos City LGU</p>
-        <p class="footer-meta">Powered by CitizenLink Complaint Management System</p>
-    </footer>
-
+    <!-- Core Scripts -->
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    
+    <!-- Brain Analytics Scripts -->
     <script src="/brain-dashboard/shared/taxonomy.js"></script>
     <script src="/brain-dashboard/nlp-processor.js"></script>
     <script src="/brain-dashboard/causality-manager.js"></script>
     <script src="/brain-dashboard/simulation-engine.js"></script>
     <script src="/brain-analytics/analytics.js"></script>
     <script type="module" src="/brain-analytics/train-system.js"></script>
-    <script type="module" src="/brain-analytics/dictionary-manager.js"></script>
 </body>
 </html>

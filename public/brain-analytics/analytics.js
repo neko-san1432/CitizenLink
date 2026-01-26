@@ -1058,12 +1058,14 @@ function renderTable() {
         c.flags?.metaphor ? "Metaphor" : null,
         c.flags?.speculation ? "Conditional" : null,
       ].filter(Boolean);
+      const desc = safeText(c.description || c.original_text || c.descriptive_su || c.location_text);
+      const descDisplay = desc ? desc.slice(0, 120) : '<span style="color:var(--gray-400);font-style:italic;">No description</span>';
       return `<tr data-id="${safeText(c.id)}">
         <td>${safeText(c.id).slice(0, 8)}</td>
         <td>${safeText(c.subcategory || c.category)}</td>
         <td>${safeText(c.barangay)}</td>
         <td><strong>${Math.round(c.triage_score || 0)}</strong></td>
-        <td>${safeText(c.description).slice(0, 120)}</td>
+        <td class="description-cell">${descDisplay}</td>
         <td style="color:var(--gray-600);">${flags.join(", ")}</td>
       </tr>`;
     })
