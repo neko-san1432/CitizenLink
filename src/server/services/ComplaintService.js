@@ -83,14 +83,9 @@ class ComplaintService {
       // Map 'description' from client to 'descriptive_su' expected by server model
       descriptive_su: complaintData.description || complaintData.descriptive_su,
       // Handle Title (Map 'complaintTitle' or Auto-Generate)
-      title:
-        complaintData.title ||
-        complaintData.complaintTitle ||
-        (complaintData.description
-          ? complaintData.description.length > 50
-            ? complaintData.description.substring(0, 47) + "..."
-            : complaintData.description
-          : "Untitled Complaint"),
+      descriptive_su: complaintData.description || complaintData.descriptive_su,
+      // Handle fallback for descriptive_su if generic description is provided
+      // No 'title' field in DB anymore
       // Store user's preferred departments
       preferred_departments: preferredDepartments,
       // Map location (client sends 'location', server expects 'location_text')
@@ -195,7 +190,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintSubmitted(
           userId,
           createdComplaint.id,
-          createdComplaint.title
+          createdComplaint.descriptive_su || "Complaint"
         );
       } catch (notifError) {
         console.warn(
@@ -209,7 +204,7 @@ class ComplaintService {
         const coordResult =
           await this.notificationService.notifyAllCoordinators(
             createdComplaint.id,
-            createdComplaint.title
+            createdComplaint.descriptive_su || "New Complaint"
           );
         if (!coordResult.success) {
           console.warn(
@@ -318,7 +313,7 @@ class ComplaintService {
       let query = client
         .from("complaints")
         .select(
-          "id, title, description:descriptive_su, latitude, longitude, submitted_at, workflow_status, category, subcategory, upvote_count"
+          "id, descriptive_su, latitude, longitude, submitted_at, workflow_status, category, subcategory, upvote_count"
         )
         .gte("submitted_at", lookbackDate.toISOString())
         .neq("workflow_status", "closed")
@@ -521,7 +516,7 @@ class ComplaintService {
       const { data: target, error } = await this.complaintRepo.supabase
         .from("complaints")
         .select(
-          "id, latitude, longitude, category, subcategory, submitted_at, title"
+          "id, latitude, longitude, category, subcategory, submitted_at, descriptive_su"
         )
         .eq("id", complaintId)
         .single();
@@ -1517,7 +1512,7 @@ class ComplaintService {
 
           return {
             id: complaint.id,
-            title: complaint.title,
+            title: complaint.descriptive_su || "Complaint",
             status: complaint.workflow_status,
             priority: complaint.priority || "medium",
             lat,
@@ -1626,7 +1621,7 @@ class ComplaintService {
             complaint.assigned_coordinator_id,
             "complaint_cancelled",
             "Complaint Cancelled",
-            `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+            `Complaint "${complaint.descriptive_su || "Complaint"}" has been cancelled by the citizen.`,
             {
               priority: "info",
               link: `/coordinator/review-queue`,
@@ -1656,7 +1651,7 @@ class ComplaintService {
                     assignment.assigned_by,
                     "complaint_cancelled",
                     "Complaint Cancelled",
-                    `Complaint "${complaint.title}" has been cancelled by the citizen.`,
+                    `Complaint "${complaint.descriptive_su || "Complaint"}" has been cancelled by the citizen.`,
                     {
                       priority: "info",
                       link: `/lgu-admin/department-queue`,
@@ -1762,7 +1757,7 @@ class ComplaintService {
               assignment.assigned_to,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su || "Complaint"}"`,
               {
                 priority: "warning",
                 link: `/lgu-officer/tasks/${complaintId}`,
@@ -1776,7 +1771,7 @@ class ComplaintService {
               assignment.assigned_by,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.title}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su || "Complaint"}"`,
               {
                 priority: "warning",
                 link: `/lgu-admin/department-queue`,

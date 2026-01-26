@@ -146,7 +146,7 @@ class LguTeamController {
         try {
             const { data: assignments, error } = await supabase
                 .from("complaint_assignments")
-                .select(`*, complaints!inner(id, title, workflow_status, submitted_at, priority), departments(id, code, name)`)
+                .select(`*, complaints!inner(id, descriptive_su, workflow_status, submitted_at, priority), departments(id, code, name)`)
                 .eq("status", "pending")
                 .order("created_at", { ascending: false });
 
@@ -177,7 +177,7 @@ class LguTeamController {
 
                 officerGroups[officerId].complaints.push({
                     id: assignment.complaints.id,
-                    title: assignment.complaints.title,
+                    title: assignment.complaints.descriptive_su || "Complaint",
                     priority: assignment.complaints.priority,
                     assigned_days_ago: daysSinceAssignment,
                     is_overdue: daysSinceAssignment > 7,

@@ -715,9 +715,7 @@ function renderCategoriesTable(categories, container) {
             </td>
             <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate dark:text-gray-400">${cat.description || '-'}</td>
             <td class="px-4 py-3 text-right">
-                <button onclick="deleteCategory('${cat.category}')" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                    Delete
-                </button>
+                <!-- Delete Removed for Safety -->
             </td>
         `;
         tbody.appendChild(row);

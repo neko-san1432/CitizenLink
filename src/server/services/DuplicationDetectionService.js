@@ -71,16 +71,16 @@ class DuplicationDetectionService {
     return candidates
       .map((candidate) => {
         const titleScore = this.calculateTextSimilarity(
-          (complaint.title || "").toLowerCase(),
-          (candidate.title || "").toLowerCase()
+          (complaint.descriptive_su || "").toLowerCase().substring(0, 50),
+          (candidate.descriptive_su || "").toLowerCase().substring(0, 50)
         );
         const descScore = this.calculateTextSimilarity(
           (complaint.descriptive_su || "").toLowerCase(),
           (candidate.descriptive_su || "").toLowerCase()
         );
         const keywordScore = this.calculateKeywordOverlap(
-          `${complaint.title || ""} ${complaint.descriptive_su || ""}`,
-          `${candidate.title || ""} ${candidate.descriptive_su || ""}`
+          `${complaint.descriptive_su || ""}`,
+          `${candidate.descriptive_su || ""}`
         );
         const textScore =
           titleScore * 0.4 + descScore * 0.4 + keywordScore * 0.2;

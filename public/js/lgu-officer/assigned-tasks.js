@@ -240,19 +240,16 @@ class AssignedTasks {
         (task) => `
             <div class="task-card">
                 <div class="task-header">
-                    <h3 class="task-title">${
-                      task.complaint?.title || "Untitled Complaint"
-                    }</h3>
+                    <h3 class="task-title">${task.complaint?.descriptive_su || "Complaint"
+          }</h3>
                     <div class="task-meta">
-                        <span class="task-tag status-${
-                          task.status?.toLowerCase().replace(" ", "_") ||
-                          "assigned"
-                        }">
+                        <span class="task-tag status-${task.status?.toLowerCase().replace(" ", "_") ||
+          "assigned"
+          }">
                             ${task.status || "Assigned"}
                         </span>
-                        <span class="task-tag priority-${
-                          task.priority?.toLowerCase() || "medium"
-                        }">
+                        <span class="task-tag priority-${task.priority?.toLowerCase() || "medium"
+          }">
                             ${task.priority || "Medium"}
                         </span>
                         <span class="task-id">#${task.complaint_id}</span>
@@ -260,9 +257,8 @@ class AssignedTasks {
                 </div>
                 
                 <div class="task-content">
-                    <p>${
-                      task.complaint?.description || "No description provided"
-                    }</p>
+                    <p>${task.complaint?.description || "No description provided"
+          }</p>
                     
                     <div class="task-details-grid">
                         <div class="task-detail">
@@ -271,26 +267,23 @@ class AssignedTasks {
                         </div>
                         <div class="task-detail">
                             <span>📍</span>
-                            <span>${
-                              task.complaint?.location_text || "No location"
-                            }</span>
+                            <span>${task.complaint?.location_text || "No location"
+          }</span>
                         </div>
                         <div class="task-detail">
                             <span>🏷️</span>
-                            <span>${
-                              task.complaint?.category || "General"
-                            }</span>
+                            <span>${task.complaint?.category || "General"
+          }</span>
                         </div>
-                        ${
-                          task.deadline
-                            ? `
+                        ${task.deadline
+            ? `
                             <div class="task-detail">
                                 <span>⏰</span>
                                 <span>${this.formatDate(task.deadline)}</span>
                             </div>
                         `
-                            : ""
-                        }
+            : ""
+          }
                     </div>
                 </div>
 
@@ -350,8 +343,8 @@ class AssignedTasks {
       return `
                 <div class="deadline-warning overdue">
                     ⚠️ This task is overdue! Deadline was ${this.formatDate(
-                      task.deadline
-                    )}
+        task.deadline
+      )}
                 </div>
             `;
     } else if (hoursUntilDeadline < 24) {
@@ -527,7 +520,7 @@ class AssignedTasks {
       const searchTerm = this.filters.search.toLowerCase();
       filtered = filtered.filter(
         (task) =>
-          task.complaint?.title?.toLowerCase().includes(searchTerm) ||
+          task.complaint?.descriptive_su?.toLowerCase().includes(searchTerm) ||
           task.complaint?.description?.toLowerCase().includes(searchTerm) ||
           task.complaint_id?.toString().includes(searchTerm)
       );

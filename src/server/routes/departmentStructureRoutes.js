@@ -8,26 +8,83 @@ const DepartmentService = require("../services/DepartmentService");
 // Get all categories with their subcategories and departments
 router.get("/categories", async (req, res) => {
   try {
-    const { data: categories, error: categoriesError } = await Database.getClient()
+    const supabase = Database.getClient();
+
+    // 1. Fetch Categories
+    const { data: categories, error: catError } = await supabase
       .from("categories")
-      .select(`
-        *,
-        subcategories (
-          *,
-          departments (
-            *,
-            department_subcategory_mapping (
-              response_priority
-            )
-          )
-        )
-      `)
+      .select("*")
       .eq("is_active", true)
       .order("sort_order");
-    if (categoriesError) throw categoriesError;
+
+    if (catError) throw catError;
+
+    // 2. Fetch Subcategories
+    const { data: subcategories, error: subError } = await supabase
+      .from("subcategories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order");
+
+    if (subError) throw subError;
+
+    // 3. Fetch Departments
+    const { data: departments, error: deptError } = await supabase
+      .from("departments")
+      .select("*")
+      .eq("is_active", true);
+
+    if (deptError) throw deptError;
+
+    // 4. Fetch Mappings (Subcategory <-> Department)
+    const { data: mappings, error: mapError } = await supabase
+      .from("department_subcategory_mapping")
+      .select("subcategory_id, department_id, response_priority");
+
+    if (mapError) {
+      console.warn("Error fetching mappings:", mapError.message);
+      // Continue, just won't have departments mapped
+    }
+
+    // 5. Assemble Hierarchy
+    const deptMap = new Map((departments || []).map(d => [d.id, d]));
+
+    // Group departments by subcategory
+    const subcategoryDepts = {};
+    (mappings || []).forEach(m => {
+      if (!subcategoryDepts[m.subcategory_id]) {
+        subcategoryDepts[m.subcategory_id] = [];
+      }
+      const dept = deptMap.get(m.department_id);
+      if (dept) {
+        subcategoryDepts[m.subcategory_id].push({
+          ...dept,
+          department_subcategory_mapping: {
+            response_priority: m.response_priority
+          }
+        });
+      }
+    });
+
+    // Attach departments to subcategories
+    const subsWithDepts = (subcategories || []).map(sub => ({
+      ...sub,
+      departments: (subcategoryDepts[sub.id] || []).sort((a, b) => {
+        // Sort by response priority derived from mapping
+        return (a.department_subcategory_mapping?.response_priority || 999) -
+          (b.department_subcategory_mapping?.response_priority || 999);
+      })
+    }));
+
+    // Attach subcategories to categories
+    const result = (categories || []).map(cat => ({
+      ...cat,
+      subcategories: subsWithDepts.filter(s => s.category_id === cat.id)
+    }));
+
     res.json({
       success: true,
-      data: categories
+      data: result
     });
   } catch (error) {
     console.error("Error fetching categories:", error);

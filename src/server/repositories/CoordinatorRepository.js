@@ -45,8 +45,16 @@ class CoordinatorRepository {
       if (error) throw error;
       // Fetch user information separately for each complaint
       const complaints = data || [];
+
       // Get unique user IDs
       const userIds = [...new Set(complaints.map(c => c.submitted_by).filter(Boolean))];
+
+      // Get potential Category UUIDs
+      const categoryIds = [...new Set(complaints
+        .map(c => c.category)
+        .filter(c => c && c.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))
+      )];
+
       // Fetch user details from auth.users
       const usersMap = {};
       if (userIds.length > 0) {
@@ -70,11 +78,38 @@ class CoordinatorRepository {
           // Continue without user profiles - complaints will have null submitted_by_profile
         }
       }
-      // Attach user info to complaints
-      return complaints.map(complaint => ({
-        ...complaint,
-        submitted_by_profile: usersMap[complaint.submitted_by] || null
-      }));
+
+      // Fetch Category Names if needed
+      const categoryMap = {};
+      if (categoryIds.length > 0) {
+        try {
+          const { data: categories, error: catError } = await this.supabase
+            .from('categories')
+            .select('id, name')
+            .in('id', categoryIds);
+
+          if (!catError && categories) {
+            categories.forEach(c => categoryMap[c.id] = c.name);
+          }
+        } catch (e) {
+          console.warn('[COORDINATOR_REPO] Failed to fetch category names:', e);
+        }
+      }
+
+      // Attach user info and map category names
+      return complaints.map(complaint => {
+        // Resolve Category Name if it's a UUID
+        let resolvedCategory = complaint.category;
+        if (categoryMap[complaint.category]) {
+          resolvedCategory = categoryMap[complaint.category];
+        }
+
+        return {
+          ...complaint,
+          category: resolvedCategory,
+          submitted_by_profile: usersMap[complaint.submitted_by] || null
+        };
+      });
     } catch (error) {
       console.error("[COORDINATOR_REPO] Get review queue error:", error);
       throw error;

@@ -102,7 +102,7 @@ class LguDashboardController {
             // 2. Recent Unassigned (Limit 5)
             const { data: recentUnassigned } = await supabase
                 .from("complaints")
-                .select("id, title, submitted_at, location_text, priority")
+                .select("id, descriptive_su, submitted_at, location_text, priority")
                 .contains("department_r", [departmentCode])
                 .in("workflow_status", [
                     "new", "pending", "unassigned",

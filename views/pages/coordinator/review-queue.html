@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/css/components/sidebar.css" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/header-redesign.css" />
-  <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css" />
+  <link rel="stylesheet" href="/css/pages/coordinator-review-queue.css?v=3" />
   <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
 </head>
 
@@ -35,10 +35,10 @@
 
       <!-- Main Content -->
       <div class="dashboard-content p-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          <!-- LEFT COLUMN: Filters & Queue (Span 2) -->
-          <div class="lg:col-span-2 space-y-6">
+          <!-- LEFT COLUMN: Filters & Queue (Span 9) -->
+          <div class="lg:col-span-9 space-y-6">
 
             <!-- Filters Card -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -113,6 +113,20 @@
               </div>
             </div>
 
+            <!-- Queue Status Bar (From v3 simplify) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+              <div class="flex items-center gap-4">
+                <span class="text-lg font-bold text-gray-700">Queue Status</span>
+                <span
+                  class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
+                  id="queue-count-badge">Loading...</span>
+                <!-- Urgent Badge from original -->
+                <span
+                  class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-red-200 dark:text-red-800 hidden"
+                  id="queue-urgent-badge">0 Urgent</span>
+              </div>
+            </div>
+
             <!-- Loading State -->
             <div id="loading" class="text-center py-12">
               <div class="spinner mx-auto mb-3"></div>
@@ -132,9 +146,36 @@
               <p class="mt-2 text-gray-500">There are no complaints pending review at the moment.</p>
             </div>
 
-            <!-- Complaint List -->
-            <div id="complaint-list" class="space-y-4 hidden">
-              <!-- Complaints will be injected here -->
+            <!-- Complaint List - TABLE VIEW -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority
+                      </th>
+                      <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category
+                      </th>
+                      <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location
+                      </th>
+                      <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                        Description</th>
+                      <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th scope="col"
+                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="complaint-list" class="bg-white divide-y divide-gray-200">
+                    <!-- Rows injected here -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- Pagination -->
@@ -179,8 +220,8 @@
 
           </div>
 
-          <!-- RIGHT COLUMN: Barangay Prioritization (Span 1) -->
-          <div class="lg:col-span-1">
+          <!-- RIGHT COLUMN: Barangay Prioritization (Span 3) -->
+          <div class="lg:col-span-3">
             <div class="sticky top-24">
               <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Barangay
@@ -205,17 +246,12 @@
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/services/toastNotificationService.js"></script>
-    <script type="module" src="../../js/coordinator/department-selection-modal.js"></script>
-    <script type="module" src="../../js/coordinator/review-queue.js"></script>
+    <!-- CACHE BUSTER v3 -->
+    <script type="module" src="../../js/coordinator/review-queue.js?v=3"></script>
 
     <script type="module">
-      // Initialize toast notification service
       import toastNotificationService from "../../js/services/toastNotificationService.js";
-
-      // Start listening for real-time notifications
       toastNotificationService.startListening();
-
-      // Clean up on page unload
       window.addEventListener("beforeunload", () => {
         toastNotificationService.stopListening();
       });
