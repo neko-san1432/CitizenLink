@@ -187,10 +187,10 @@ class SuperAdminController {
       const status = error.message.includes("Only Super Admin")
         ? 403
         : error.message.includes("Can only assign")
-        ? 400
-        : error.message.includes("Invalid department role")
-        ? 400
-        : 500;
+          ? 400
+          : error.message.includes("Invalid department role")
+            ? 400
+            : 500;
       res.status(status).json({
         success: false,
         error: error.message || "Failed to assign citizen to department",

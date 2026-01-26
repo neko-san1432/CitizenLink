@@ -88,7 +88,7 @@ class ComplaintService {
         complaintData.complaintTitle ||
         (complaintData.description
           ? complaintData.description.length > 50
-            ? complaintData.description.substring(0, 47) + "..."
+            ? `${complaintData.description.substring(0, 47)  }...`
             : complaintData.description
           : "Untitled Complaint"),
       // Store user's preferred departments
@@ -379,7 +379,7 @@ class ComplaintService {
           is_duplicate: true,
           master_complaint_id: masterComplaintId,
           workflow_status: "closed", // Auto-close duplicates? Or 'resolved'? Let's say 'closed'
-          coordinator_notes: "Marked as duplicate of " + masterComplaintId,
+          coordinator_notes: `Marked as duplicate of ${  masterComplaintId}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", complaintId);
@@ -601,7 +601,7 @@ class ComplaintService {
       try {
         // Store in evidence subfolder for initial evidence
         const fileName = `${complaintId}/evidence/${Date.now()}-${file.originalname
-          }`;
+        }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -675,7 +675,7 @@ class ComplaintService {
       try {
         // Store in completion subfolder
         const fileName = `${complaintId}/completion/${Date.now()}-${file.originalname
-          }`;
+        }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -772,7 +772,7 @@ class ComplaintService {
               name:
                 combined.name ||
                 `${combined.first_name || ""} ${combined.last_name || ""
-                  }`.trim() ||
+                }`.trim() ||
                 user.email,
               firstName: combined.first_name,
               lastName: combined.last_name,
@@ -936,8 +936,8 @@ class ComplaintService {
       subcategory,
       notes,
     } = typeof updateData === "string"
-        ? { status: updateData, notes: userId } // Handle legacy signature if needed
-        : updateData;
+      ? { status: updateData, notes: userId } // Handle legacy signature if needed
+      : updateData;
 
     const dataToUpdate = { updated_at: new Date().toISOString() };
 
