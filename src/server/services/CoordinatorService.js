@@ -326,11 +326,7 @@ class CoordinatorService {
         await this.notificationService.notifyComplaintDuplicate(
           complaint.submitted_by,
           complaintId,
-<<<<<<< HEAD
-          complaint.descriptive_su || "Complaint",
-=======
           complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
->>>>>>> 912f5b440e12e8a4109f8b57db78b49717ddf4ac
           masterComplaintId
         );
       } catch (notifError) {

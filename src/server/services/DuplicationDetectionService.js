@@ -70,16 +70,10 @@ class DuplicationDetectionService {
     }
     return candidates
       .map((candidate) => {
-<<<<<<< HEAD
-        const titleScore = this.calculateTextSimilarity(
-          (complaint.descriptive_su || "").toLowerCase().substring(0, 50),
-          (candidate.descriptive_su || "").toLowerCase().substring(0, 50)
-=======
         // Use descriptive_su as the primary text field for comparison
         const textScore1 = this.calculateTextSimilarity(
           (complaint.descriptive_su || "").toLowerCase(),
           (candidate.descriptive_su || "").toLowerCase()
->>>>>>> 912f5b440e12e8a4109f8b57db78b49717ddf4ac
         );
         const textScore2 = this.calculateTextSimilarity(
           (complaint.descriptive_su || "").toLowerCase(),
