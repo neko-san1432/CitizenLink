@@ -9,6 +9,7 @@ class CoordinatorDashboard {
     this.activityInterval = null;
     this.trendChart = null;
     this.distributionChart = null;
+    this.lastDashboardData = null;
     this.init();
   }
 
@@ -52,6 +53,7 @@ class CoordinatorDashboard {
       const result = await response.json();
       if (result.success) {
         const { data } = result;
+        this.lastDashboardData = data;
 
         // Map API data to new HTML IDs
         // Incoming Reports -> Pending Reviews
@@ -174,11 +176,11 @@ class CoordinatorDashboard {
       this.distributionChart = new Chart(distCtx, {
         type: "doughnut",
         data: {
-          labels: ["Infrastructure", "Health", "Environment", "Other"],
+          labels: [],
           datasets: [
             {
-              data: [40, 30, 20, 10], // Mock data
-              backgroundColor: ["#3b82f6", "#ef4444", "#10b981", "#f59e0b"],
+              data: [],
+              backgroundColor: [],
             },
           ],
         },
@@ -189,10 +191,50 @@ class CoordinatorDashboard {
         },
       });
     }
+
+    if (this.lastDashboardData) {
+      this.updateCharts(this.lastDashboardData);
+    }
   }
 
   updateCharts(data) {
-    // Implement chart data update when API endpoint supports it
+    if (!data) return;
+
+    const dist = Array.isArray(data.category_distribution) ? data.category_distribution : [];
+    if (this.distributionChart) {
+      const entries = dist
+        .map((x) => ({ category: x?.category, count: Number(x?.count || 0) }))
+        .filter((x) => x.category && Number.isFinite(x.count) && x.count > 0);
+
+      const top = entries.slice(0, 8);
+      const rest = entries.slice(8);
+      const otherCount = rest.reduce((sum, x) => sum + x.count, 0);
+
+      const labels = top.map((x) => x.category);
+      const counts = top.map((x) => x.count);
+      if (otherCount > 0) {
+        labels.push("Others");
+        counts.push(otherCount);
+      }
+
+      const palette = [
+        "#2563eb",
+        "#dc2626",
+        "#059669",
+        "#d97706",
+        "#7c3aed",
+        "#0891b2",
+        "#4b5563",
+        "#db2777",
+        "#16a34a",
+      ];
+      const colors = labels.map((_, idx) => palette[idx % palette.length]);
+
+      this.distributionChart.data.labels = labels;
+      this.distributionChart.data.datasets[0].data = counts;
+      this.distributionChart.data.datasets[0].backgroundColor = colors;
+      this.distributionChart.update();
+    }
   }
 
   setupEventListeners() {

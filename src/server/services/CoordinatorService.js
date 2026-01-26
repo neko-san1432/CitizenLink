@@ -751,8 +751,33 @@ class CoordinatorService {
       );
       // console.log removed for security
       const recentQueue = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 10 });
+      const distributionSample = await this.coordinatorRepo.getReviewQueue(coordinatorId, { limit: 250 });
       // console.log removed for security
       const clusters = await this.coordinatorRepo.getActiveClusters({ limit: 5 });
+
+      const { data: categoriesData, error: categoriesError } = await this.coordinatorRepo.supabase
+        .from("categories")
+        .select("name")
+        .order("name");
+      if (categoriesError) throw categoriesError;
+
+      const countsByCategory = new Map();
+      for (const row of categoriesData || []) {
+        const name = row?.name;
+        if (name) countsByCategory.set(name, 0);
+      }
+
+      for (const complaint of distributionSample || []) {
+        const cat = complaint?.category;
+        if (!cat) continue;
+        if (!countsByCategory.has(cat)) countsByCategory.set(cat, 0);
+        countsByCategory.set(cat, (countsByCategory.get(cat) || 0) + 1);
+      }
+
+      const categoryDistribution = [...countsByCategory.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([category, count]) => ({ category, count }));
+
       // console.log removed for security
       const result = {
         pending_reviews: pendingCount,
@@ -761,6 +786,7 @@ class CoordinatorService {
           period: "last_7_days"
         },
         recent_queue: recentQueue,
+        category_distribution: categoryDistribution,
         active_clusters: clusters
       };
       // console.log removed for security

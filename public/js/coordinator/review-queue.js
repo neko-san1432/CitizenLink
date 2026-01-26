@@ -28,7 +28,8 @@ class ReviewQueueController {
     this.complaints = [];
     this.filteredComplaints = [];
     this.currentPage = 1;
-    this.itemsPerPage = 9;
+    this.itemsPerPage = 10;
+    this.fetchLimit = 250;
 
     console.log("[REVIEW_QUEUE] Initializing v3 (Feature Restoration)");
     this.init();
@@ -66,7 +67,7 @@ class ReviewQueueController {
     try {
       if (this.loading) this.loading.style.display = "block";
 
-      const response = await fetch("/api/coordinator/review-queue", {
+      const response = await fetch(`/api/coordinator/review-queue?limit=${encodeURIComponent(this.fetchLimit)}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
       });
@@ -210,56 +211,36 @@ class ReviewQueueController {
     const priority = (c.priority || "low").toLowerCase();
 
     const badgeClass = {
-      urgent: "bg-red-100 text-red-800",
-      critical: "bg-red-100 text-red-800",
-      high: "bg-orange-100 text-orange-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      low: "bg-blue-100 text-blue-800"
-    }[priority] || "bg-gray-100 text-gray-800";
+      urgent: "rq-badge rq-badge-urgent",
+      critical: "rq-badge rq-badge-urgent",
+      high: "rq-badge rq-badge-high",
+      medium: "rq-badge rq-badge-medium",
+      low: "rq-badge rq-badge-low"
+    }[priority] || "rq-badge rq-badge-low";
 
     // Determine if AI suggestion exists
     const hasAi = c.ai_analysis && c.ai_analysis.suggested_department;
     const aiBadge = hasAi ?
-      `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-          AI
-       </span>` : "";
+      `<span class="rq-badge rq-badge-ai">AI</span>` : "";
 
     return `
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass} uppercase">
-                        ${priority}
-                    </span>
-                    ${aiBadge}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${this.escape(category)}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${this.escape(brgy)}
-                </td>
-                <td class="px-6 py-4">
-                    <div class="text-sm text-gray-900 line-clamp-2 max-w-md" title="${this.escape(desc)}">
-                        ${this.escape(desc)}
+            <tr class="rq-row">
+                <td>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span class="${badgeClass}">${priority}</span>
+                        ${aiBadge}
                     </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${date}
+                <td>${this.escape(category)}</td>
+                <td>${this.escape(brgy)}</td>
+                <td>
+                    <div class="rq-desc" title="${this.escape(desc)}">${this.escape(desc)}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex justify-end gap-2">
-                         <a href="/coordinator/review/${c.id}" class="text-gray-400 hover:text-blue-600 transition-colors" title="View Details">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </a>
-                        <button class="text-blue-600 hover:text-blue-900 btn-verify flex items-center gap-1" data-id="${c.id}" title="Assign">
-                            Assign
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                        </button>
+                <td>${date}</td>
+                <td>
+                    <div class="rq-actions">
+                        <a href="/coordinator/review/${c.id}" class="btn btn-secondary btn-sm" title="View Details">View</a>
+                        <button class="btn btn-primary btn-sm btn-verify" data-id="${c.id}" title="Assign">Assign</button>
                     </div>
                 </td>
             </tr>

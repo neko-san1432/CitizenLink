@@ -168,6 +168,7 @@ class CoordinatorController {
             period: "last_7_days"
           },
           recent_queue: [],
+          category_distribution: [],
           active_clusters: []
         }
       });

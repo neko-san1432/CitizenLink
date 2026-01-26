@@ -1,0 +1,197 @@
+.rq-panel.panel {
+  border-radius: var(--radius-xl);
+}
+
+.rq-search.form-control {
+  padding-left: 2.5rem;
+}
+
+.rq-table.table th.rq-th {
+  padding: var(--space-4);
+}
+
+.rq-table.table th.rq-th-actions {
+  text-align: right;
+}
+
+.rq-table.table td {
+  vertical-align: top;
+}
+
+.rq-row {
+  white-space: nowrap;
+}
+
+.rq-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  max-width: 46rem;
+}
+
+.rq-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.rq-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  line-height: 1.2;
+}
+
+.rq-badge-urgent {
+  background: rgba(239, 68, 68, 0.12);
+  color: rgb(185, 28, 28);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.rq-badge-high {
+  background: rgba(217, 119, 6, 0.12);
+  color: rgb(154, 52, 18);
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
+.rq-badge-medium {
+  background: rgba(59, 130, 246, 0.12);
+  color: rgb(29, 78, 216);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.rq-badge-low {
+  background: rgba(16, 185, 129, 0.12);
+  color: rgb(4, 120, 87);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.rq-badge-ai {
+  background: rgba(124, 58, 237, 0.12);
+  color: rgb(91, 33, 182);
+  border-color: rgba(124, 58, 237, 0.2);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 2px 8px;
+}
+
+.rq-pagination.panel {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+html.dark .rq-panel.panel {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+html.dark .rq-panel.panel .text-gray-800,
+html.dark .rq-panel.panel .text-gray-900 {
+  color: var(--gray-900);
+}
+
+html.dark .rq-panel.panel .text-gray-700,
+html.dark .rq-panel.panel .text-gray-600,
+html.dark .rq-panel.panel .text-gray-500 {
+  color: var(--gray-700);
+}
+
+html.dark .rq-panel.panel label {
+  color: var(--gray-700);
+}
+
+html.dark .rq-panel.panel .form-control {
+  background-color: var(--gray-50);
+  border-color: var(--gray-200);
+  color: var(--gray-900);
+  box-shadow: none;
+}
+
+html.dark .rq-panel.panel .form-control:hover:not(:disabled) {
+  border-color: var(--gray-300);
+}
+
+html.dark .rq-panel.panel .form-control:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+html.dark .rq-table.table {
+  background-color: var(--gray-100);
+}
+
+html.dark .rq-table.table thead {
+  border-bottom-color: var(--gray-200);
+}
+
+html.dark .rq-table.table th {
+  color: var(--gray-900);
+}
+
+html.dark .rq-table.table td {
+  border-bottom-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+html.dark .rq-table.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+html.dark .rq-panel.panel .btn-secondary {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  color: var(--gray-900);
+}
+
+html.dark .rq-panel.panel .btn-secondary:hover:not(:disabled) {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+  color: var(--gray-900);
+}
+
+html.dark .rq-badge-urgent {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--error-600);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+html.dark .rq-badge-high {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--warning-600);
+  border-color: rgba(251, 191, 36, 0.22);
+}
+
+html.dark .rq-badge-medium {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--info-600);
+  border-color: rgba(96, 165, 250, 0.22);
+}
+
+html.dark .rq-badge-low {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--success-600);
+  border-color: rgba(52, 211, 153, 0.22);
+}
+
+html.dark .rq-badge-ai {
+  background: rgba(167, 139, 250, 0.12);
+  color: rgba(221, 214, 254, 1);
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+@media (max-width: 1024px) {
+  .rq-desc {
+    max-width: 32rem;
+  }
+}
