@@ -30,6 +30,10 @@ let heatmapLayer = null;
 let currentClusters = [];
 let currentNoisePoints = [];
 let currentFilterCategory = 'all';
+let currentFilterSubcategory = 'all';
+let currentFilterOffice = 'all';
+let currentFilterStartDate = null;
+let currentFilterEndDate = null;
 let clustersVisible = true; // Track cluster visibility state
 let causalAnalysisEnabled = false; // Phase 2: Only show causal chains after user triggers analysis
 
@@ -186,17 +190,18 @@ async function fetchServerComplaints(apiEndpoint, options = {}) {
         const result = await response.json();
 
         if (result.success && result.complaints.length > 0) {
+            console.log(`[DEBUG-FETCH] Received ${result.complaints.length} complaints from server`);
             const newComplaints = result.complaints.filter(serverComplaint => {
                 return !simulationEngine.complaints.some(c => c.id === serverComplaint.id);
             });
 
             if (newComplaints.length > 0) {
-                console.log(`[SERVER] Found ${newComplaints.length} new complaints`);
+                console.log(`[SERVER] Found ${newComplaints.length} new unique complaints`);
                 if (options.silent) {
                     newComplaints.forEach(c => ingestServerComplaint(c, { showUI: false }));
                     if (autoReloadTimer) clearTimeout(autoReloadTimer);
                     autoReloadTimer = setTimeout(() => {
-                        loadFullSimulation().catch(() => {});
+                        loadFullSimulation().catch(() => { });
                     }, AUTO_RELOAD_DELAY);
                 } else {
                     newComplaints.forEach(c => handleNewServerComplaint(c));
@@ -223,7 +228,7 @@ function ingestServerComplaint(complaint, options = {}) {
         try {
             const intelligence = window.analyzeComplaintIntelligence(complaint);
             complaint.nlp_result = intelligence;
-        } catch {}
+        } catch { }
     }
 
     if (!simulationEngine || !simulationEngine.complaints) return false;
@@ -271,7 +276,7 @@ function handleNewServerComplaint(complaint) {
         console.log('[AUTO-RELOAD] 🔄 Triggering automatic data processing...');
         loadFullSimulation().then(() => {
             console.log('[AUTO-RELOAD] ✅ City data automatically reloaded!');
-        }).catch(() => {});
+        }).catch(() => { });
     }, AUTO_RELOAD_DELAY);
 }
 
@@ -1381,28 +1386,26 @@ function initMap() {
         markerZoomAnimation: true
     }).setView([6.7490, 125.3572], 13);
 
-    // Dark tile layer with performance settings
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 22,
-        maxNativeZoom: 19,
-        subdomains: 'abcd',
-        updateWhenIdle: true,
-        updateWhenZooming: false,
-        keepBuffer: 2
-    }).addTo(map);
 
-    // Custom attribution
-    L.control.attribution({
-        position: 'bottomright',
-        prefix: '<a href="https://leafletjs.com">Leaflet</a> | CitizenLink Production v3.4.1'
-    }).addTo(map);
 
-    // Scale control
-    L.control.scale({
-        position: 'bottomleft',
-        metric: true,
-        imperial: false
-    }).addTo(map);
+    // v4.5: Add Tile Layer Toggle (User Request)
+    const baseLayers = {
+        "Dark Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 22, maxNativeZoom: 19, subdomains: 'abcd'
+        }),
+        "Light Mode": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 22, maxNativeZoom: 19, subdomains: 'abcd'
+        }),
+        "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 22, maxNativeZoom: 19, attribution: 'Esri'
+        })
+    };
+
+    // Add default layer
+    baseLayers["Dark Mode"].addTo(map);
+
+    // Add control
+    L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
 }
 
 // ==================== SMART INSIGHTS GENERATION ====================
@@ -1824,7 +1827,7 @@ function initEmergencyPanel() {
         collapseBtn.addEventListener('click', (e) => {
             e.stopPropagation();  // Don't trigger drag
             panel.classList.toggle('collapsed');
-            
+
             // Rotate the icon to indicate state
             const icon = collapseBtn.querySelector('i');
             if (icon) {
@@ -3510,15 +3513,13 @@ function toggleHeatmapFromDropdown(show) {
 function toggleClustersFromDropdown(show) {
     if (!simulationEngine) {
         console.warn('[CLUSTERS] Simulation engine not initialized');
-        const clustersSwitch = document.getElementById('clustersSwitch');
-        if (clustersSwitch) clustersSwitch.checked = true; // Reset to default
         return;
     }
 
     clustersVisible = show;
 
     if (clustersVisible) {
-        // Show clusters - hide background markers, show spotlight markers
+        // Show clusters
         simulationEngine.spotlightMarkers.forEach(marker => {
             if (marker && map) marker.addTo(map);
         });
@@ -3527,16 +3528,16 @@ function toggleClustersFromDropdown(show) {
             if (line && map) line.addTo(map);
         });
 
-        // Hide background markers
-        if (simulationEngine.backgroundMarkers) {
-            simulationEngine.backgroundMarkers.forEach(marker => {
-                if (marker && map.hasLayer(marker)) map.removeLayer(marker);
+        // Show convex hulls if any
+        if (simulationEngine.convexHullLayers) {
+            simulationEngine.convexHullLayers.forEach(hull => {
+                if (hull && map) hull.addTo(map);
             });
         }
 
-        console.log('[CLUSTERS] Shown via dropdown');
+        console.log('[CLUSTERS] Shown via independent toggle');
     } else {
-        // Hide clusters - show background markers
+        // Hide clusters
         simulationEngine.spotlightMarkers.forEach(marker => {
             if (marker && map.hasLayer(marker)) map.removeLayer(marker);
         });
@@ -3545,26 +3546,14 @@ function toggleClustersFromDropdown(show) {
             if (line && map.hasLayer(line)) map.removeLayer(line);
         });
 
-        // Show background markers
-        if (simulationEngine.backgroundMarkers) {
-            simulationEngine.backgroundMarkers.forEach((marker, id) => {
-                if (marker) {
-                    marker.addTo(map);
-
-                    // Bind popup if needed
-                    const complaint = simulationEngine.complaints.find(c => c.id === id);
-                    if (complaint && !marker.getPopup()) {
-                        const popupContent = createSimpleComplaintPopup(complaint);
-                        marker.bindPopup(popupContent, {
-                            maxWidth: 300,
-                            className: 'background-marker-popup-container'
-                        });
-                    }
-                }
+        // Hide convex hulls
+        if (simulationEngine.convexHullLayers) {
+            simulationEngine.convexHullLayers.forEach(hull => {
+                if (hull && map.hasLayer(hull)) map.removeLayer(hull);
             });
         }
 
-        console.log('[CLUSTERS] Hidden via dropdown - Background markers shown');
+        console.log('[CLUSTERS] Hidden via independent toggle');
     }
 }
 
@@ -3578,13 +3567,13 @@ function toggleEmergencyPanel() {
         return;
     }
 
-    const isVisible = panel.classList.contains('visible');
+    // Toggle 'hidden' class to match CSS (default is often hidden)
+    panel.classList.toggle('hidden');
 
-    if (isVisible) {
-        panel.classList.remove('visible');
+    // Send message to parent/consumer if needed
+    if (panel.classList.contains('hidden')) {
         console.log('[EMERGENCY] Panel hidden');
     } else {
-        panel.classList.add('visible');
         console.log('[EMERGENCY] Panel shown');
     }
 }
@@ -3882,203 +3871,203 @@ function findCausalPairs(categories) {
     const knownCausalLinks = (window.CitizenLinkBrainConfig && window.CitizenLinkBrainConfig.correlations && window.CitizenLinkBrainConfig.correlations.knownCausalLinks)
         ? window.CitizenLinkBrainConfig.correlations.knownCausalLinks
         : [
-        // ================================================================
-        // WATER & FLOODING CHAIN
-        // ================================================================
-        { cause: 'Pipe Leak', effect: 'Flooding', correlation: 0.92 },
-        { cause: 'Pipe Leak', effect: 'Flood', correlation: 0.92 },
-        { cause: 'Pipe Leak', effect: 'No Water', correlation: 0.85 },
-        { cause: 'Pipe Leak', effect: 'Low Pressure', correlation: 0.80 },
-        { cause: 'Pipe Leak', effect: 'Road Damage', correlation: 0.55 },
-        { cause: 'Flooding', effect: 'Traffic', correlation: 0.85 },
-        { cause: 'Flood', effect: 'Traffic', correlation: 0.85 },
-        { cause: 'Flooding', effect: 'Traffic Congestion', correlation: 0.88 },
-        { cause: 'Flood', effect: 'Traffic Congestion', correlation: 0.88 },
-        { cause: 'Flooding', effect: 'Road Obstruction', correlation: 0.90 },
-        { cause: 'Flood', effect: 'Road Obstruction', correlation: 0.90 },
-        { cause: 'Flooding', effect: 'Traffic Light Issue', correlation: 0.60 },
-        { cause: 'Flood', effect: 'Traffic Light Issue', correlation: 0.60 },
-        { cause: 'Flooding', effect: 'Road Damage', correlation: 0.65 },
-        { cause: 'Flood', effect: 'Road Damage', correlation: 0.65 },
-        { cause: 'Flooding', effect: 'Accident', correlation: 0.60 },
-        { cause: 'Flood', effect: 'Accident', correlation: 0.60 },
-        { cause: 'Flooding', effect: 'Stranded', correlation: 0.75 },
-        { cause: 'Flood', effect: 'Stranded', correlation: 0.75 },
-        { cause: 'Flooding', effect: 'Evacuation', correlation: 0.70 },
-        { cause: 'Flood', effect: 'Evacuation', correlation: 0.70 },
-        { cause: 'Heavy Rain', effect: 'Flooding', correlation: 0.90 },
-        { cause: 'Heavy Rain', effect: 'Flood', correlation: 0.90 },
-        { cause: 'Heavy Rain', effect: 'Traffic', correlation: 0.75 },
-        { cause: 'Heavy Rain', effect: 'Accident', correlation: 0.70 },
-        { cause: 'Clogged Drainage', effect: 'Flooding', correlation: 0.88 },
-        { cause: 'Clogged Drainage', effect: 'Flood', correlation: 0.88 },
-        { cause: 'Clogged Canal', effect: 'Flooding', correlation: 0.85 },
-        { cause: 'Clogged Canal', effect: 'Flood', correlation: 0.85 },
+            // ================================================================
+            // WATER & FLOODING CHAIN
+            // ================================================================
+            { cause: 'Pipe Leak', effect: 'Flooding', correlation: 0.92 },
+            { cause: 'Pipe Leak', effect: 'Flood', correlation: 0.92 },
+            { cause: 'Pipe Leak', effect: 'No Water', correlation: 0.85 },
+            { cause: 'Pipe Leak', effect: 'Low Pressure', correlation: 0.80 },
+            { cause: 'Pipe Leak', effect: 'Road Damage', correlation: 0.55 },
+            { cause: 'Flooding', effect: 'Traffic', correlation: 0.85 },
+            { cause: 'Flood', effect: 'Traffic', correlation: 0.85 },
+            { cause: 'Flooding', effect: 'Traffic Congestion', correlation: 0.88 },
+            { cause: 'Flood', effect: 'Traffic Congestion', correlation: 0.88 },
+            { cause: 'Flooding', effect: 'Road Obstruction', correlation: 0.90 },
+            { cause: 'Flood', effect: 'Road Obstruction', correlation: 0.90 },
+            { cause: 'Flooding', effect: 'Traffic Light Issue', correlation: 0.60 },
+            { cause: 'Flood', effect: 'Traffic Light Issue', correlation: 0.60 },
+            { cause: 'Flooding', effect: 'Road Damage', correlation: 0.65 },
+            { cause: 'Flood', effect: 'Road Damage', correlation: 0.65 },
+            { cause: 'Flooding', effect: 'Accident', correlation: 0.60 },
+            { cause: 'Flood', effect: 'Accident', correlation: 0.60 },
+            { cause: 'Flooding', effect: 'Stranded', correlation: 0.75 },
+            { cause: 'Flood', effect: 'Stranded', correlation: 0.75 },
+            { cause: 'Flooding', effect: 'Evacuation', correlation: 0.70 },
+            { cause: 'Flood', effect: 'Evacuation', correlation: 0.70 },
+            { cause: 'Heavy Rain', effect: 'Flooding', correlation: 0.90 },
+            { cause: 'Heavy Rain', effect: 'Flood', correlation: 0.90 },
+            { cause: 'Heavy Rain', effect: 'Traffic', correlation: 0.75 },
+            { cause: 'Heavy Rain', effect: 'Accident', correlation: 0.70 },
+            { cause: 'Clogged Drainage', effect: 'Flooding', correlation: 0.88 },
+            { cause: 'Clogged Drainage', effect: 'Flood', correlation: 0.88 },
+            { cause: 'Clogged Canal', effect: 'Flooding', correlation: 0.85 },
+            { cause: 'Clogged Canal', effect: 'Flood', correlation: 0.85 },
 
-        // ================================================================
-        // INFRASTRUCTURE & ROAD CHAIN
-        // ================================================================
-        { cause: 'Pothole', effect: 'Road Damage', correlation: 0.75 },
-        { cause: 'Pothole', effect: 'Accident', correlation: 0.65 },
-        { cause: 'Pothole', effect: 'Traffic', correlation: 0.55 },
-        { cause: 'Road Damage', effect: 'Traffic', correlation: 0.70 },
-        { cause: 'Road Damage', effect: 'Accident', correlation: 0.65 },
-        { cause: 'Road Obstruction', effect: 'Traffic', correlation: 0.85 },
-        { cause: 'Road Obstruction', effect: 'Traffic Congestion', correlation: 0.90 },
-        { cause: 'Road Obstruction', effect: 'Accident', correlation: 0.60 },
-        { cause: 'Fallen Tree', effect: 'Road Obstruction', correlation: 0.90 },
-        { cause: 'Fallen Tree', effect: 'Traffic', correlation: 0.80 },
-        { cause: 'Fallen Tree', effect: 'Blackout', correlation: 0.70 },
-        { cause: 'Landslide', effect: 'Road Obstruction', correlation: 0.95 },
-        { cause: 'Landslide', effect: 'Traffic', correlation: 0.85 },
-        { cause: 'Landslide', effect: 'Evacuation', correlation: 0.80 },
-        { cause: 'Bridge Collapse', effect: 'Traffic', correlation: 0.95 },
-        { cause: 'Bridge Collapse', effect: 'Stranded', correlation: 0.85 },
-        { cause: 'Construction', effect: 'Traffic', correlation: 0.75 },
-        { cause: 'Construction', effect: 'Noise', correlation: 0.80 },
-        { cause: 'Construction', effect: 'Road Obstruction', correlation: 0.70 },
+            // ================================================================
+            // INFRASTRUCTURE & ROAD CHAIN
+            // ================================================================
+            { cause: 'Pothole', effect: 'Road Damage', correlation: 0.75 },
+            { cause: 'Pothole', effect: 'Accident', correlation: 0.65 },
+            { cause: 'Pothole', effect: 'Traffic', correlation: 0.55 },
+            { cause: 'Road Damage', effect: 'Traffic', correlation: 0.70 },
+            { cause: 'Road Damage', effect: 'Accident', correlation: 0.65 },
+            { cause: 'Road Obstruction', effect: 'Traffic', correlation: 0.85 },
+            { cause: 'Road Obstruction', effect: 'Traffic Congestion', correlation: 0.90 },
+            { cause: 'Road Obstruction', effect: 'Accident', correlation: 0.60 },
+            { cause: 'Fallen Tree', effect: 'Road Obstruction', correlation: 0.90 },
+            { cause: 'Fallen Tree', effect: 'Traffic', correlation: 0.80 },
+            { cause: 'Fallen Tree', effect: 'Blackout', correlation: 0.70 },
+            { cause: 'Landslide', effect: 'Road Obstruction', correlation: 0.95 },
+            { cause: 'Landslide', effect: 'Traffic', correlation: 0.85 },
+            { cause: 'Landslide', effect: 'Evacuation', correlation: 0.80 },
+            { cause: 'Bridge Collapse', effect: 'Traffic', correlation: 0.95 },
+            { cause: 'Bridge Collapse', effect: 'Stranded', correlation: 0.85 },
+            { cause: 'Construction', effect: 'Traffic', correlation: 0.75 },
+            { cause: 'Construction', effect: 'Noise', correlation: 0.80 },
+            { cause: 'Construction', effect: 'Road Obstruction', correlation: 0.70 },
 
-        // ================================================================
-        // SANITATION & WASTE CHAIN
-        // ================================================================
-        { cause: 'Trash', effect: 'Bad Odor', correlation: 0.80 },
-        { cause: 'Overflowing Trash', effect: 'Bad Odor', correlation: 0.85 },
-        { cause: 'Garbage', effect: 'Bad Odor', correlation: 0.78 },
-        { cause: 'Illegal Dumping', effect: 'Bad Odor', correlation: 0.75 },
-        { cause: 'Illegal Dumping', effect: 'Overflowing Trash', correlation: 0.70 },
-        { cause: 'Illegal Dumping', effect: 'Clogged Drainage', correlation: 0.65 },
-        { cause: 'Trash', effect: 'Stray Dog', correlation: 0.65 },
-        { cause: 'Overflowing Trash', effect: 'Stray Dog', correlation: 0.60 },
-        { cause: 'Garbage', effect: 'Stray Dog', correlation: 0.60 },
-        { cause: 'Trash', effect: 'Pest Infestation', correlation: 0.75 },
-        { cause: 'Garbage', effect: 'Pest Infestation', correlation: 0.75 },
-        { cause: 'Trash', effect: 'Clogged Drainage', correlation: 0.60 },
-        { cause: 'Dead Animal', effect: 'Bad Odor', correlation: 0.90 },
-        { cause: 'Dead Animal', effect: 'Health Hazard', correlation: 0.85 },
-        { cause: 'Sewage Leak', effect: 'Bad Odor', correlation: 0.92 },
-        { cause: 'Sewage Leak', effect: 'Health Hazard', correlation: 0.85 },
-        { cause: 'Sewage Leak', effect: 'Flooding', correlation: 0.60 },
+            // ================================================================
+            // SANITATION & WASTE CHAIN
+            // ================================================================
+            { cause: 'Trash', effect: 'Bad Odor', correlation: 0.80 },
+            { cause: 'Overflowing Trash', effect: 'Bad Odor', correlation: 0.85 },
+            { cause: 'Garbage', effect: 'Bad Odor', correlation: 0.78 },
+            { cause: 'Illegal Dumping', effect: 'Bad Odor', correlation: 0.75 },
+            { cause: 'Illegal Dumping', effect: 'Overflowing Trash', correlation: 0.70 },
+            { cause: 'Illegal Dumping', effect: 'Clogged Drainage', correlation: 0.65 },
+            { cause: 'Trash', effect: 'Stray Dog', correlation: 0.65 },
+            { cause: 'Overflowing Trash', effect: 'Stray Dog', correlation: 0.60 },
+            { cause: 'Garbage', effect: 'Stray Dog', correlation: 0.60 },
+            { cause: 'Trash', effect: 'Pest Infestation', correlation: 0.75 },
+            { cause: 'Garbage', effect: 'Pest Infestation', correlation: 0.75 },
+            { cause: 'Trash', effect: 'Clogged Drainage', correlation: 0.60 },
+            { cause: 'Dead Animal', effect: 'Bad Odor', correlation: 0.90 },
+            { cause: 'Dead Animal', effect: 'Health Hazard', correlation: 0.85 },
+            { cause: 'Sewage Leak', effect: 'Bad Odor', correlation: 0.92 },
+            { cause: 'Sewage Leak', effect: 'Health Hazard', correlation: 0.85 },
+            { cause: 'Sewage Leak', effect: 'Flooding', correlation: 0.60 },
 
-        // ================================================================
-        // FIRE & EMERGENCY CHAIN
-        // ================================================================
-        { cause: 'Fire', effect: 'Traffic', correlation: 0.80 },
-        { cause: 'Fire', effect: 'Smoke', correlation: 0.95 },
-        { cause: 'Fire', effect: 'Evacuation', correlation: 0.90 },
-        { cause: 'Fire', effect: 'Road Obstruction', correlation: 0.70 },
-        { cause: 'Fire', effect: 'Blackout', correlation: 0.55 },
-        { cause: 'Fire', effect: 'Public Safety', correlation: 0.85 },
-        { cause: 'Smoke', effect: 'Health Hazard', correlation: 0.80 },
-        { cause: 'Smoke', effect: 'Traffic', correlation: 0.60 },
-        { cause: 'Explosion', effect: 'Fire', correlation: 0.85 },
-        { cause: 'Explosion', effect: 'Evacuation', correlation: 0.90 },
-        { cause: 'Explosion', effect: 'Public Safety', correlation: 0.95 },
-        { cause: 'Gas Leak', effect: 'Fire', correlation: 0.75 },
-        { cause: 'Gas Leak', effect: 'Explosion', correlation: 0.70 },
-        { cause: 'Gas Leak', effect: 'Evacuation', correlation: 0.80 },
+            // ================================================================
+            // FIRE & EMERGENCY CHAIN
+            // ================================================================
+            { cause: 'Fire', effect: 'Traffic', correlation: 0.80 },
+            { cause: 'Fire', effect: 'Smoke', correlation: 0.95 },
+            { cause: 'Fire', effect: 'Evacuation', correlation: 0.90 },
+            { cause: 'Fire', effect: 'Road Obstruction', correlation: 0.70 },
+            { cause: 'Fire', effect: 'Blackout', correlation: 0.55 },
+            { cause: 'Fire', effect: 'Public Safety', correlation: 0.85 },
+            { cause: 'Smoke', effect: 'Health Hazard', correlation: 0.80 },
+            { cause: 'Smoke', effect: 'Traffic', correlation: 0.60 },
+            { cause: 'Explosion', effect: 'Fire', correlation: 0.85 },
+            { cause: 'Explosion', effect: 'Evacuation', correlation: 0.90 },
+            { cause: 'Explosion', effect: 'Public Safety', correlation: 0.95 },
+            { cause: 'Gas Leak', effect: 'Fire', correlation: 0.75 },
+            { cause: 'Gas Leak', effect: 'Explosion', correlation: 0.70 },
+            { cause: 'Gas Leak', effect: 'Evacuation', correlation: 0.80 },
 
-        // ================================================================
-        // ACCIDENT & TRAFFIC CHAIN
-        // ================================================================
-        { cause: 'Accident', effect: 'Traffic', correlation: 0.90 },
-        { cause: 'Accident', effect: 'Road Obstruction', correlation: 0.75 },
-        { cause: 'Accident', effect: 'Medical', correlation: 0.70 },
-        { cause: 'Accident', effect: 'Public Safety', correlation: 0.65 },
-        { cause: 'Vehicle Breakdown', effect: 'Traffic', correlation: 0.70 },
-        { cause: 'Vehicle Breakdown', effect: 'Road Obstruction', correlation: 0.65 },
-        { cause: 'Reckless Driving', effect: 'Accident', correlation: 0.80 },
-        { cause: 'Reckless Driving', effect: 'Public Safety', correlation: 0.70 },
-        { cause: 'Drunk Driving', effect: 'Accident', correlation: 0.85 },
-        { cause: 'Traffic', effect: 'Air Pollution', correlation: 0.65 },
-        { cause: 'Traffic', effect: 'Noise', correlation: 0.60 },
+            // ================================================================
+            // ACCIDENT & TRAFFIC CHAIN
+            // ================================================================
+            { cause: 'Accident', effect: 'Traffic', correlation: 0.90 },
+            { cause: 'Accident', effect: 'Road Obstruction', correlation: 0.75 },
+            { cause: 'Accident', effect: 'Medical', correlation: 0.70 },
+            { cause: 'Accident', effect: 'Public Safety', correlation: 0.65 },
+            { cause: 'Vehicle Breakdown', effect: 'Traffic', correlation: 0.70 },
+            { cause: 'Vehicle Breakdown', effect: 'Road Obstruction', correlation: 0.65 },
+            { cause: 'Reckless Driving', effect: 'Accident', correlation: 0.80 },
+            { cause: 'Reckless Driving', effect: 'Public Safety', correlation: 0.70 },
+            { cause: 'Drunk Driving', effect: 'Accident', correlation: 0.85 },
+            { cause: 'Traffic', effect: 'Air Pollution', correlation: 0.65 },
+            { cause: 'Traffic', effect: 'Noise', correlation: 0.60 },
 
-        // ================================================================
-        // UTILITIES & POWER CHAIN
-        // ================================================================
-        { cause: 'Blackout', effect: 'Crime', correlation: 0.65 },
-        { cause: 'Blackout', effect: 'Accident', correlation: 0.55 },
-        { cause: 'Blackout', effect: 'Traffic', correlation: 0.60 },
-        { cause: 'Blackout', effect: 'Public Safety', correlation: 0.70 },
-        { cause: 'Broken Streetlight', effect: 'Crime', correlation: 0.60 },
-        { cause: 'Broken Streetlight', effect: 'Accident', correlation: 0.55 },
-        { cause: 'Broken Streetlight', effect: 'Public Safety', correlation: 0.65 },
-        { cause: 'Streetlight', effect: 'Crime', correlation: 0.55 },
-        { cause: 'Streetlight', effect: 'Accident', correlation: 0.50 },
-        { cause: 'Power Line Down', effect: 'Blackout', correlation: 0.90 },
-        { cause: 'Power Line Down', effect: 'Fire', correlation: 0.60 },
-        { cause: 'Power Line Down', effect: 'Public Safety', correlation: 0.85 },
-        { cause: 'Transformer Explosion', effect: 'Blackout', correlation: 0.95 },
-        { cause: 'Transformer Explosion', effect: 'Fire', correlation: 0.70 },
-        { cause: 'No Water', effect: 'Fire', correlation: 0.40 },
-        { cause: 'No Water', effect: 'Health Hazard', correlation: 0.55 },
+            // ================================================================
+            // UTILITIES & POWER CHAIN
+            // ================================================================
+            { cause: 'Blackout', effect: 'Crime', correlation: 0.65 },
+            { cause: 'Blackout', effect: 'Accident', correlation: 0.55 },
+            { cause: 'Blackout', effect: 'Traffic', correlation: 0.60 },
+            { cause: 'Blackout', effect: 'Public Safety', correlation: 0.70 },
+            { cause: 'Broken Streetlight', effect: 'Crime', correlation: 0.60 },
+            { cause: 'Broken Streetlight', effect: 'Accident', correlation: 0.55 },
+            { cause: 'Broken Streetlight', effect: 'Public Safety', correlation: 0.65 },
+            { cause: 'Streetlight', effect: 'Crime', correlation: 0.55 },
+            { cause: 'Streetlight', effect: 'Accident', correlation: 0.50 },
+            { cause: 'Power Line Down', effect: 'Blackout', correlation: 0.90 },
+            { cause: 'Power Line Down', effect: 'Fire', correlation: 0.60 },
+            { cause: 'Power Line Down', effect: 'Public Safety', correlation: 0.85 },
+            { cause: 'Transformer Explosion', effect: 'Blackout', correlation: 0.95 },
+            { cause: 'Transformer Explosion', effect: 'Fire', correlation: 0.70 },
+            { cause: 'No Water', effect: 'Fire', correlation: 0.40 },
+            { cause: 'No Water', effect: 'Health Hazard', correlation: 0.55 },
 
-        // ================================================================
-        // CRIME & SAFETY CHAIN
-        // ================================================================
-        { cause: 'Crime', effect: 'Public Safety', correlation: 0.85 },
-        { cause: 'Robbery', effect: 'Crime', correlation: 0.95 },
-        { cause: 'Robbery', effect: 'Public Safety', correlation: 0.80 },
-        { cause: 'Theft', effect: 'Crime', correlation: 0.90 },
-        { cause: 'Vandalism', effect: 'Crime', correlation: 0.75 },
-        { cause: 'Vandalism', effect: 'Broken Streetlight', correlation: 0.60 },
-        { cause: 'Drug Activity', effect: 'Crime', correlation: 0.85 },
-        { cause: 'Drug Activity', effect: 'Public Safety', correlation: 0.80 },
-        { cause: 'Gunshot', effect: 'Crime', correlation: 0.90 },
-        { cause: 'Gunshot', effect: 'Public Safety', correlation: 0.95 },
-        { cause: 'Assault', effect: 'Crime', correlation: 0.90 },
-        { cause: 'Assault', effect: 'Medical', correlation: 0.70 },
-        { cause: 'Trespassing', effect: 'Crime', correlation: 0.70 },
-        { cause: 'Loitering', effect: 'Public Safety', correlation: 0.50 },
-        { cause: 'Gang Activity', effect: 'Crime', correlation: 0.90 },
-        { cause: 'Gang Activity', effect: 'Public Safety', correlation: 0.85 },
+            // ================================================================
+            // CRIME & SAFETY CHAIN
+            // ================================================================
+            { cause: 'Crime', effect: 'Public Safety', correlation: 0.85 },
+            { cause: 'Robbery', effect: 'Crime', correlation: 0.95 },
+            { cause: 'Robbery', effect: 'Public Safety', correlation: 0.80 },
+            { cause: 'Theft', effect: 'Crime', correlation: 0.90 },
+            { cause: 'Vandalism', effect: 'Crime', correlation: 0.75 },
+            { cause: 'Vandalism', effect: 'Broken Streetlight', correlation: 0.60 },
+            { cause: 'Drug Activity', effect: 'Crime', correlation: 0.85 },
+            { cause: 'Drug Activity', effect: 'Public Safety', correlation: 0.80 },
+            { cause: 'Gunshot', effect: 'Crime', correlation: 0.90 },
+            { cause: 'Gunshot', effect: 'Public Safety', correlation: 0.95 },
+            { cause: 'Assault', effect: 'Crime', correlation: 0.90 },
+            { cause: 'Assault', effect: 'Medical', correlation: 0.70 },
+            { cause: 'Trespassing', effect: 'Crime', correlation: 0.70 },
+            { cause: 'Loitering', effect: 'Public Safety', correlation: 0.50 },
+            { cause: 'Gang Activity', effect: 'Crime', correlation: 0.90 },
+            { cause: 'Gang Activity', effect: 'Public Safety', correlation: 0.85 },
 
-        // ================================================================
-        // NOISE & DISTURBANCE CHAIN
-        // ================================================================
-        { cause: 'Noise', effect: 'Public Safety', correlation: 0.45 },
-        { cause: 'Noise Complaint', effect: 'Public Safety', correlation: 0.45 },
-        { cause: 'Loud Music', effect: 'Noise', correlation: 0.90 },
-        { cause: 'Loud Party', effect: 'Noise', correlation: 0.90 },
-        { cause: 'Karaoke', effect: 'Noise', correlation: 0.85 },
-        { cause: 'Barking Dog', effect: 'Noise', correlation: 0.75 },
-        { cause: 'Construction', effect: 'Noise', correlation: 0.80 },
+            // ================================================================
+            // NOISE & DISTURBANCE CHAIN
+            // ================================================================
+            { cause: 'Noise', effect: 'Public Safety', correlation: 0.45 },
+            { cause: 'Noise Complaint', effect: 'Public Safety', correlation: 0.45 },
+            { cause: 'Loud Music', effect: 'Noise', correlation: 0.90 },
+            { cause: 'Loud Party', effect: 'Noise', correlation: 0.90 },
+            { cause: 'Karaoke', effect: 'Noise', correlation: 0.85 },
+            { cause: 'Barking Dog', effect: 'Noise', correlation: 0.75 },
+            { cause: 'Construction', effect: 'Noise', correlation: 0.80 },
 
-        // ================================================================
-        // ANIMAL & HEALTH CHAIN
-        // ================================================================
-        { cause: 'Stray Dog', effect: 'Public Safety', correlation: 0.60 },
-        { cause: 'Stray Dog', effect: 'Noise', correlation: 0.55 },
-        { cause: 'Stray Animal', effect: 'Public Safety', correlation: 0.55 },
-        { cause: 'Snake Sighting', effect: 'Public Safety', correlation: 0.75 },
-        { cause: 'Pest Infestation', effect: 'Health Hazard', correlation: 0.80 },
-        { cause: 'Mosquito Breeding', effect: 'Health Hazard', correlation: 0.85 },
-        { cause: 'Dengue', effect: 'Health Hazard', correlation: 0.95 },
-        { cause: 'Stagnant Water', effect: 'Mosquito Breeding', correlation: 0.85 },
-        { cause: 'Stagnant Water', effect: 'Bad Odor', correlation: 0.65 },
+            // ================================================================
+            // ANIMAL & HEALTH CHAIN
+            // ================================================================
+            { cause: 'Stray Dog', effect: 'Public Safety', correlation: 0.60 },
+            { cause: 'Stray Dog', effect: 'Noise', correlation: 0.55 },
+            { cause: 'Stray Animal', effect: 'Public Safety', correlation: 0.55 },
+            { cause: 'Snake Sighting', effect: 'Public Safety', correlation: 0.75 },
+            { cause: 'Pest Infestation', effect: 'Health Hazard', correlation: 0.80 },
+            { cause: 'Mosquito Breeding', effect: 'Health Hazard', correlation: 0.85 },
+            { cause: 'Dengue', effect: 'Health Hazard', correlation: 0.95 },
+            { cause: 'Stagnant Water', effect: 'Mosquito Breeding', correlation: 0.85 },
+            { cause: 'Stagnant Water', effect: 'Bad Odor', correlation: 0.65 },
 
-        // ================================================================
-        // STRUCTURAL & BUILDING CHAIN
-        // ================================================================
-        { cause: 'Building Collapse', effect: 'Evacuation', correlation: 0.95 },
-        { cause: 'Building Collapse', effect: 'Road Obstruction', correlation: 0.80 },
-        { cause: 'Building Collapse', effect: 'Rescue', correlation: 0.90 },
-        { cause: 'Earthquake', effect: 'Building Collapse', correlation: 0.75 },
-        { cause: 'Earthquake', effect: 'Evacuation', correlation: 0.85 },
-        { cause: 'Earthquake', effect: 'Fire', correlation: 0.55 },
-        { cause: 'Illegal Construction', effect: 'Building Collapse', correlation: 0.60 },
-        { cause: 'Illegal Construction', effect: 'Public Safety', correlation: 0.65 },
+            // ================================================================
+            // STRUCTURAL & BUILDING CHAIN
+            // ================================================================
+            { cause: 'Building Collapse', effect: 'Evacuation', correlation: 0.95 },
+            { cause: 'Building Collapse', effect: 'Road Obstruction', correlation: 0.80 },
+            { cause: 'Building Collapse', effect: 'Rescue', correlation: 0.90 },
+            { cause: 'Earthquake', effect: 'Building Collapse', correlation: 0.75 },
+            { cause: 'Earthquake', effect: 'Evacuation', correlation: 0.85 },
+            { cause: 'Earthquake', effect: 'Fire', correlation: 0.55 },
+            { cause: 'Illegal Construction', effect: 'Building Collapse', correlation: 0.60 },
+            { cause: 'Illegal Construction', effect: 'Public Safety', correlation: 0.65 },
 
-        // ================================================================
-        // ENVIRONMENTAL CHAIN
-        // ================================================================
-        { cause: 'Air Pollution', effect: 'Health Hazard', correlation: 0.75 },
-        { cause: 'Water Pollution', effect: 'Health Hazard', correlation: 0.80 },
-        { cause: 'Burning Trash', effect: 'Smoke', correlation: 0.90 },
-        { cause: 'Burning Trash', effect: 'Air Pollution', correlation: 0.85 },
-        { cause: 'Burning Trash', effect: 'Fire', correlation: 0.55 },
-        { cause: 'Open Burning', effect: 'Smoke', correlation: 0.90 },
-        { cause: 'Open Burning', effect: 'Air Pollution', correlation: 0.85 }
-    ];
+            // ================================================================
+            // ENVIRONMENTAL CHAIN
+            // ================================================================
+            { cause: 'Air Pollution', effect: 'Health Hazard', correlation: 0.75 },
+            { cause: 'Water Pollution', effect: 'Health Hazard', correlation: 0.80 },
+            { cause: 'Burning Trash', effect: 'Smoke', correlation: 0.90 },
+            { cause: 'Burning Trash', effect: 'Air Pollution', correlation: 0.85 },
+            { cause: 'Burning Trash', effect: 'Fire', correlation: 0.55 },
+            { cause: 'Open Burning', effect: 'Smoke', correlation: 0.90 },
+            { cause: 'Open Burning', effect: 'Air Pollution', correlation: 0.85 }
+        ];
 
     const foundPairs = [];
 
@@ -5677,6 +5666,28 @@ function visualizeNoisePoints(noisePoints) {
 
 // ==================== MAIN LOAD FUNCTION ====================
 
+// ==================== FILTERING API ====================
+
+/**
+ * Apply global filters from UI instructions.
+ * Triggers reload of simulation.
+ * @param {Object} filters - { category, subcategory, office, start_date, end_date }
+ */
+window.applyGlobalFilters = function (filters) {
+    console.log('[FILTER] Applying new filters:', filters);
+
+    if (filters.category !== undefined) currentFilterCategory = filters.category;
+    if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
+    if (filters.office !== undefined) currentFilterOffice = filters.office;
+    if (filters.start_date !== undefined) currentFilterStartDate = filters.start_date;
+    if (filters.end_date !== undefined) currentFilterEndDate = filters.end_date;
+
+    // Trigger reload if engine is ready
+    if (typeof simulationEngine !== 'undefined' && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
+        loadFullSimulation();
+    }
+};
+
 async function loadFullSimulation() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -5715,11 +5726,86 @@ async function loadFullSimulation() {
 
         // Apply category filter
         let filteredData = allData;
-        if (currentFilterCategory !== 'all') {
-            filteredData = allData.filter(p => p.category === currentFilterCategory);
+
+        // 1. Category Filter
+        if (Array.isArray(currentFilterCategory)) {
+            if (!currentFilterCategory.includes('all')) {
+                filteredData = filteredData.filter(p => currentFilterCategory.includes(p.category));
+            }
+        } else if (currentFilterCategory !== 'all') {
+            filteredData = filteredData.filter(p => p.category === currentFilterCategory);
+        }
+
+        // 2. Subcategory Filter
+        if (Array.isArray(currentFilterSubcategory)) {
+            if (!currentFilterSubcategory.includes('all')) {
+                filteredData = filteredData.filter(p => currentFilterSubcategory.includes(p.subcategory || p.category));
+            }
+        } else if (currentFilterSubcategory && currentFilterSubcategory !== 'all') {
+            filteredData = filteredData.filter(p => (p.subcategory || p.category) === currentFilterSubcategory);
+        }
+
+        // 3. Office/Department Filter
+        if (Array.isArray(currentFilterOffice)) {
+            if (!currentFilterOffice.includes('all')) {
+                filteredData = filteredData.filter(p => {
+                    const dept = p.department || "";
+                    const depts = p.departments || [];
+                    // Check if any of the selected offices match
+                    return currentFilterOffice.includes(dept) ||
+                        (Array.isArray(depts) && depts.some(d => currentFilterOffice.includes(d)));
+                });
+            }
+        } else if (currentFilterOffice && currentFilterOffice !== 'all') {
+            filteredData = filteredData.filter(p => {
+                // Check primary department assignment
+                const dept = p.department || "";
+                if (dept === currentFilterOffice) return true;
+
+                // Check multi-department array
+                if (p.departments && Array.isArray(p.departments) && p.departments.includes(currentFilterOffice)) return true;
+
+                return false;
+            });
+        }
+
+        // 4. Date Range Filter
+        // 4. Date Range Filter
+        // 4. Date Range Filter
+        if (currentFilterStartDate || currentFilterEndDate) {
+            console.log('--- DATE FILTER ACTIVE ---');
+            console.log('Inputs:', { Start: currentFilterStartDate, End: currentFilterEndDate });
+
+            filteredData = filteredData.filter(p => {
+                // Robust date parsing: Handle camelCase and snake_case
+                const rawDate = p.timestamp || p.submittedAt || p.submitted_at;
+                if (!rawDate) {
+                    console.warn('[FILTER-WARN] Record missing date:', p.id);
+                    return false;
+                }
+
+                const recordDate = new Date(rawDate);
+                // Use UTC Date string (YYYY-MM-DD) to match the raw database value
+                // This prevents "Day Shift" where late UTC records become the next day in Local Time
+                // and thus disappear from the expected filter range.
+                const recordDateStr = recordDate.toISOString().split('T')[0];
+
+                let valid = true;
+
+                if (currentFilterStartDate && recordDateStr < currentFilterStartDate) return false;
+
+                if (currentFilterEndDate && recordDateStr > currentFilterEndDate) return false;
+
+
+
+                return valid;
+            });
+            console.log(`[FILTER] Date range applied. Remaining records: ${filteredData.length}`);
         }
 
         // Filter background markers to show only selected category
+        // Note: simulationEngine.filterBackgroundMarkersByCategory only handles main category
+        // We might need to enhance it later, but for now this is consistent
         simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory);
 
         // Update progress
@@ -6223,6 +6309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize map
     initMap();
+    window.map = map; // Expose globally for heatmap.html
     console.log('[MAP] Initialized');
 
     // Load barangay boundaries for offline zone detection (Turf.js)
@@ -6234,6 +6321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize simulation engine
     simulationEngine = new SimulationEngine(map, () => { }, () => { }, () => { });
+    window.simulationEngine = simulationEngine; // Expose globally for heatmap.html
     console.log('[ENGINE] Created');
 
     // Load mock data
@@ -6314,3 +6402,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('[PRODUCTION] Dashboard v3.4.1 ready! (UI Optimized)');
 });
+
+// ==================== GLOBAL FILTER BRIDGE ====================
+// Bridge function to allow external modules (like heatmap.html) to trigger filters
+window.applyGlobalFilters = function (filters) {
+    console.log('[FILTER] Applying global filters:', filters);
+
+    // Update global state
+    // Use 'undefined' check to allow clearing filters with '' or null
+    if (filters.start_date !== undefined) currentFilterStartDate = filters.start_date;
+    if (filters.end_date !== undefined) currentFilterEndDate = filters.end_date;
+
+    if (filters.office !== undefined) currentFilterOffice = filters.office;
+    if (filters.category !== undefined) currentFilterCategory = filters.category;
+    if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
+
+    // Log the new state
+    console.log('[FILTER] valid state:', {
+        start: currentFilterStartDate,
+        end: currentFilterEndDate,
+        office: currentFilterOffice,
+        cat: currentFilterCategory,
+        sub: currentFilterSubcategory
+    });
+};
+
+// Sidebars handled by heatmap.html inline script or other page-specific scripts to avoid conflicts.

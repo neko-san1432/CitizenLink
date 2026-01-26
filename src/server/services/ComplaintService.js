@@ -1314,11 +1314,12 @@ class ComplaintService {
         // Continue anyway - pagination will handle it
       }
 
-      // console.log(
-      //   `[COMPLAINT-SERVICE] Total complaints matching filters: ${
-      //     totalCount || "unknown"
-      //   }`
-      // );
+      console.log(
+        `[COMPLAINT-SERVICE] Total complaints matching filters: ${totalCount || "unknown"
+        }`
+      );
+
+      // Use pagination to fetch all records in batches
 
       // Use pagination to fetch all records in batches
       const batchSize = 1000; // Fetch in batches of 1000
@@ -1345,9 +1346,9 @@ class ComplaintService {
 
         if (batchData && batchData.length > 0) {
           allData = allData.concat(batchData);
-          // console.log(
-          //   `[COMPLAINT-SERVICE] Fetched batch: ${batchData.length} complaints (total so far: ${allData.length})`
-          // );
+          console.log(
+            `[COMPLAINT-SERVICE] Fetched batch: ${batchData.length} complaints (total so far: ${allData.length})`
+          );
           offset += batchSize;
           // If we got fewer results than batchSize, we've reached the end
           hasMore = batchData.length === batchSize;

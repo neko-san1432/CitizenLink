@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CitizenLink: City Analytics Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/css/style.css" />
@@ -17,15 +19,17 @@
     <link rel="stylesheet" href="/css/header-redesign.css" />
     <link rel="stylesheet" href="/css/viewport-fix.css" />
     <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
+    <link rel="stylesheet" href="/css/components/filter-sidebar.css">
     <style>
         /* ========== RESET & BASE ========== */
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             height: 100%;
         }
-        
+
         /* ========== MAIN LAYOUT ========== */
         .app-container {
             display: flex;
@@ -33,18 +37,19 @@
             height: 100vh;
             overflow: hidden;
         }
-        
+
         #app.collapsible {
             flex: 1;
             display: flex;
-            flex-direction: row; /* KEY: Horizontal layout - map + command center side by side */
+            flex-direction: row;
+            /* KEY: Horizontal layout - map + command center side by side */
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
             overflow: hidden;
             min-width: 0;
         }
-        
+
         /* ========== MAP AREA (Left side - fills remaining space) ========== */
         .map-area {
             flex: 1;
@@ -53,7 +58,7 @@
             height: 100%;
             background: #1a1a2e;
         }
-        
+
         #map {
             position: absolute;
             top: 0;
@@ -62,12 +67,15 @@
             bottom: 0;
             z-index: 1;
         }
-        
+
         /* Hide legacy container/main-content structure */
-        .container, .main-content, .map-container, .control-panel {
+        .container,
+        .main-content,
+        .map-container,
+        .control-panel {
             display: none !important;
         }
-        
+
         /* ========== COMMAND CENTER (Right side - fixed width) ========== */
         .command-center {
             width: 340px;
@@ -82,7 +90,7 @@
             z-index: 100;
             flex-shrink: 0;
         }
-        
+
         .command-header {
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
             padding: 14px 16px;
@@ -92,7 +100,7 @@
             justify-content: space-between;
             flex-shrink: 0;
         }
-        
+
         .command-header h2 {
             margin: 0;
             font-size: 14px;
@@ -102,9 +110,9 @@
             gap: 8px;
             letter-spacing: 0.5px;
         }
-        
+
         .command-header .refresh-btn {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border: none;
             color: white;
             width: 32px;
@@ -116,11 +124,11 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        
+
         .command-header .refresh-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .command-body {
             flex: 1;
             overflow-y: auto;
@@ -129,14 +137,14 @@
             flex-direction: column;
             gap: 12px;
         }
-        
+
         /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
-        
+
         .stat-card {
             background: rgba(30, 41, 59, 0.6);
             border-radius: 10px;
@@ -146,7 +154,7 @@
             gap: 10px;
             border: 1px solid rgba(51, 65, 85, 0.3);
         }
-        
+
         .stat-icon {
             width: 36px;
             height: 36px;
@@ -156,30 +164,45 @@
             justify-content: center;
             font-size: 14px;
         }
-        
-        .stat-icon.blue { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-        .stat-icon.green { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-        .stat-icon.red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-        .stat-icon.purple { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
-        
+
+        .stat-icon.blue {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .stat-icon.green {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .stat-icon.red {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .stat-icon.purple {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
         .stat-data {
             display: flex;
             flex-direction: column;
         }
-        
+
         .stat-value {
             font-size: 18px;
             font-weight: 700;
             color: #f1f5f9;
         }
-        
+
         .stat-label {
             font-size: 9px;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         /* Insights Section */
         .insights-section {
             background: rgba(30, 41, 59, 0.4);
@@ -189,7 +212,7 @@
             min-height: 120px;
             overflow-y: auto;
         }
-        
+
         .insights-section h3 {
             margin: 0 0 10px;
             font-size: 12px;
@@ -200,26 +223,26 @@
             align-items: center;
             gap: 6px;
         }
-        
+
         .insight-placeholder {
             text-align: center;
             padding: 20px;
             color: #64748b;
         }
-        
+
         .insight-placeholder i {
             font-size: 28px;
             margin-bottom: 8px;
             opacity: 0.5;
         }
-        
+
         /* Category Breakdown */
         .category-section {
             background: rgba(30, 41, 59, 0.4);
             border-radius: 10px;
             padding: 12px;
         }
-        
+
         .category-section h3 {
             margin: 0 0 10px;
             font-size: 12px;
@@ -230,7 +253,7 @@
             align-items: center;
             gap: 6px;
         }
-        
+
         /* ========== FLOATING CONTROLS ========== */
         .floating-controls {
             position: absolute;
@@ -241,14 +264,14 @@
             flex-direction: column;
             gap: 6px;
         }
-        
+
         .floating-btn {
             padding: 10px 14px;
             border-radius: 10px;
             background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(51, 65, 85, 0.5);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -258,31 +281,31 @@
             color: #e2e8f0;
             transition: all 0.2s ease;
         }
-        
+
         .floating-btn:hover {
             background: rgba(51, 65, 85, 0.95);
             transform: translateY(-1px);
         }
-        
+
         .floating-btn.primary {
             background: var(--primary, #4472C4);
             color: white;
             border: none;
         }
-        
+
         .floating-btn.primary:hover {
             background: var(--primary-dark, #2E5A9C);
         }
-        
+
         .floating-btn.active {
             background: rgba(59, 130, 246, 0.25);
             border-color: rgba(59, 130, 246, 0.5);
         }
-        
+
         .floating-btn i {
             font-size: 13px;
         }
-        
+
         #categoryFilterFloat {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e2e8f0' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
@@ -291,7 +314,7 @@
             padding-right: 28px;
             min-width: 130px;
         }
-        
+
         /* ========== EMERGENCY PANEL (Floating on map) ========== */
         .emergency-panel {
             position: absolute;
@@ -301,19 +324,19 @@
             background: rgba(30, 20, 20, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             z-index: 2000;
             overflow: hidden;
             transition: all 0.3s ease;
             border: 1px solid rgba(220, 53, 69, 0.3);
         }
-        
+
         .emergency-panel.hidden {
             opacity: 0;
             pointer-events: none;
             transform: translateY(20px);
         }
-        
+
         .emergency-header {
             background: linear-gradient(135deg, #991b1b, #7f1d1d);
             padding: 12px 16px;
@@ -322,31 +345,31 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         .emergency-title {
             display: flex;
             align-items: center;
             gap: 8px;
             flex: 1;
         }
-        
+
         .emergency-title h2 {
             margin: 0;
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-        
+
         .emergency-count {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             padding: 4px 10px;
             border-radius: 12px;
             font-weight: 700;
             font-size: 14px;
         }
-        
+
         .emergency-collapse-btn {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border: none;
             color: white;
             width: 28px;
@@ -358,47 +381,54 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        
+
         .emergency-collapse-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .emergency-content {
             max-height: 280px;
             overflow-y: auto;
             padding: 8px;
         }
-        
+
         .emergency-panel.collapsed .emergency-content {
             display: none;
         }
-        
+
         .emergency-panel.collapsed .emergency-collapse-btn i {
             transform: rotate(180deg);
         }
-        
+
         .emergency-placeholder {
             text-align: center;
             padding: 20px;
             color: #94a3b8;
         }
-        
+
         .emergency-placeholder i {
             font-size: 24px;
             margin-bottom: 8px;
             opacity: 0.5;
         }
-        
+
         /* Pulse animation */
         .pulse-icon {
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
-        
+
         /* ========== LOADING OVERLAY ========== */
         .loading-overlay {
             position: absolute;
@@ -413,130 +443,225 @@
             justify-content: center;
             z-index: 3000;
         }
-        
+
         .loading-overlay.active {
             display: flex;
         }
-        
+
         .loading-spinner i {
             font-size: 48px;
             color: var(--primary, #4472C4);
         }
-        
+
         .loading-text {
             margin-top: 16px;
             color: #e2e8f0;
             font-size: 16px;
         }
-        
+
         .loading-subtext {
             color: #94a3b8;
             font-size: 13px;
         }
-        
+
         /* ========== LIGHT MODE ========== */
         html:not(.dark) .command-center {
             background: rgba(255, 255, 255, 0.98);
             border-left-color: rgba(0, 0, 0, 0.1);
         }
-        
+
         html:not(.dark) .command-header {
             background: linear-gradient(135deg, var(--primary, #4472C4), var(--primary-dark, #2E5A9C));
         }
-        
+
         html:not(.dark) .stat-card {
             background: rgba(248, 250, 252, 0.8);
             border-color: rgba(0, 0, 0, 0.08);
         }
-        
+
         html:not(.dark) .stat-value {
             color: #1e293b;
         }
-        
+
         html:not(.dark) .stat-label {
             color: #64748b;
         }
-        
+
         html:not(.dark) .insights-section,
         html:not(.dark) .category-section {
             background: rgba(248, 250, 252, 0.6);
         }
-        
+
         html:not(.dark) .insights-section h3,
         html:not(.dark) .category-section h3 {
             color: #475569;
         }
-        
+
         html:not(.dark) .floating-btn {
             background: rgba(255, 255, 255, 0.95);
             border-color: rgba(0, 0, 0, 0.1);
             color: #334155;
         }
-        
+
         html:not(.dark) .floating-btn:hover {
             background: rgba(248, 250, 252, 0.95);
         }
-        
+
         html:not(.dark) #categoryFilterFloat {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
         }
-        
+
         html:not(.dark) .emergency-panel {
             background: rgba(255, 250, 250, 0.95);
             border-color: rgba(220, 53, 69, 0.2);
         }
-        
+
         html:not(.dark) .emergency-header {
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
+
+        /* ========== CUSTOM MULTI-SELECT ========== */
+        .custom-multiselect {
+            position: relative;
+            width: 100%;
+        }
+
+        .multiselect-trigger {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 11px;
+            color: #e2e8f0;
+            transition: all 0.2s;
+            min-height: 28px;
+        }
+
+        .multiselect-trigger:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .trigger-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            border-radius: 6px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .multiselect-dropdown.open {
+            display: block;
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        .multiselect-option {
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.15s;
+        }
+
+        .multiselect-option:last-child {
+            border-bottom: none;
+        }
+
+        .multiselect-option:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .multiselect-option.selected {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .option-checkbox {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .multiselect-option.selected .option-checkbox {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .option-checkbox::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 9px;
+            display: none;
+        }
+
+        .multiselect-option.selected .option-checkbox::after {
+            display: block;
+        }
+
+        .option-label {
+            font-size: 11px;
+            color: #cbd5e1;
+            flex: 1;
+        }
+
+        .multiselect-trigger.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: rgba(15, 23, 42, 0.5);
+        }
     </style>
 </head>
+
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
-            
+
             <!-- MAP AREA (fills remaining space) -->
             <div class="map-area">
                 <div id="map"></div>
-                
+
                 <!-- Floating Controls -->
                 <div class="floating-controls">
-                    <button class="floating-btn primary" id="loadCityDataFloat" title="Load complaint data from database">
+                    <button class="floating-btn primary" id="loadCityDataFloat"
+                        title="Load complaint data from database">
                         <i class="fas fa-database"></i>
                         <span>Load Data</span>
                     </button>
-                    <button class="floating-btn" id="toggleHeatmapFloat" title="Toggle heatmap layer">
-                        <i class="fas fa-fire" style="color: #ef4444;"></i>
-                        <span>Heatmap</span>
-                    </button>
-                    <button class="floating-btn" id="toggleClustersFloat" title="Toggle cluster markers">
-                        <i class="fas fa-project-diagram" style="color: #3b82f6;"></i>
-                        <span>Clusters</span>
-                    </button>
-                    <button class="floating-btn" id="toggleEmergencyFloat" title="Toggle emergency panel">
-                        <i class="fas fa-triangle-exclamation" style="color: #f59e0b;"></i>
-                        <span>Emergency</span>
-                    </button>
-                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0;"></div>
-                    <select id="categoryFilterFloat" class="floating-btn">
-                        <option value="all">All Categories</option>
-                        <option value="Infrastructure">Infrastructure</option>
-                        <option value="Sanitation">Sanitation</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Environment">Environment</option>
-                        <option value="Traffic">Traffic</option>
-                        <option value="Public Safety">Public Safety</option>
-                        <option value="Others">Others</option>
-                    </select>
-                    <button class="floating-btn" id="exportExcelFloat" title="Export to Excel" disabled>
-                        <i class="fas fa-file-excel" style="color: #217346;"></i>
-                        <span>Export</span>
-                    </button>
                 </div>
-                
+
+
+
                 <!-- Emergency Panel (Floating on map) -->
                 <aside class="emergency-panel hidden" id="emergencyPanel">
                     <div class="emergency-header">
@@ -559,7 +684,7 @@
                         </div>
                     </div>
                 </aside>
-                
+
                 <!-- Loading Overlay -->
                 <div class="loading-overlay" id="loadingOverlay">
                     <div class="loading-spinner">
@@ -569,7 +694,7 @@
                     <p class="loading-subtext" id="loadingProgress">0 / 0 records analyzed</p>
                 </div>
             </div>
-            
+
             <!-- COMMAND CENTER (Fixed right panel - outside map) -->
             <aside class="command-center">
                 <div class="command-header">
@@ -582,105 +707,241 @@
                     </button>
                 </div>
                 <div class="command-body">
-                    <!-- Stats Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-card" title="Total citizen inputs">
-                            <div class="stat-icon blue">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="totalComplaints">--</span>
-                                <span class="stat-label">CITIZEN INPUTS</span>
+                    <!-- Section 0: FILTERS (Collapsible) -->
+                    <div class="cc-accordion-item open" data-section="filters">
+                        <button class="cc-accordion-header">
+                            <span><i class="fas fa-filter"></i> Filters</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cc-accordion-content">
+                            <div class="grid grid-cols-1 gap-3">
+                                <!-- Date Range -->
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block mb-1">Start Date</label>
+                                        <input type="date" id="filter-start-date"
+                                            class="w-full bg-[rgba(15,23,42,0.8)] border border-slate-600 rounded-md px-2 py-1.5 text-xs text-slate-200">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block mb-1">End Date</label>
+                                        <input type="date" id="filter-end-date"
+                                            class="w-full bg-[rgba(15,23,42,0.8)] border border-slate-600 rounded-md px-2 py-1.5 text-xs text-slate-200">
+                                    </div>
+                                </div>
+
+                                <!-- Office -->
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-1">Assigned Office</label>
+                                    <select id="filter-office" multiple class="hidden">
+                                        <option value="all" selected>All Offices</option>
+                                        <option value="City Engineering Office">City Engineering Office</option>
+                                        <option value="City Health Office">City Health Office</option>
+                                        <option value="Traffic Management">Traffic Management (TMO)</option>
+                                        <option value="Bureau of Fire Protection">Bureau of Fire Protection</option>
+                                        <option value="PNP">PNP (Police)</option>
+                                        <option value="DRRMO">DRRMO (Disaster)</option>
+                                        <option value="DSWD">DSWD (Social Welfare)</option>
+                                        <option value="CENRO">CENRO (Environment)</option>
+                                    </select>
+                                    <div id="ui-filter-office" class="custom-multiselect"></div>
+                                </div>
+
+                                <!-- Category -->
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-1">Category</label>
+                                    <select id="filter-category" multiple class="hidden">
+                                        <option value="all" selected>All Categories</option>
+                                    </select>
+                                    <div id="ui-filter-category" class="custom-multiselect"></div>
+                                </div>
+
+                                <!-- Subcategory -->
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-1">Subcategory</label>
+                                    <select id="filter-subcategory" multiple class="hidden" disabled>
+                                        <option value="all" selected>All Subcategories</option>
+                                    </select>
+                                    <div id="ui-filter-subcategory" class="custom-multiselect"></div>
+                                </div>
+
+                                <!-- Reset Button -->
+                                <button id="reset-filters-btn"
+                                    class="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 rounded flex items-center justify-center gap-2 transition-colors">
+                                    <i class="fas fa-undo"></i> RESET FILTERS
+                                </button>
                             </div>
                         </div>
-                        <div class="stat-card" title="Verified incidents">
-                            <div class="stat-icon green">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="totalClusters">--</span>
-                                <span class="stat-label">VERIFIED</span>
-                            </div>
-                        </div>
-                        <div class="stat-card" title="Priority zones">
-                            <div class="stat-icon red">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="criticalHotspots">--</span>
-                                <span class="stat-label">PRIORITY</span>
-                            </div>
-                        </div>
-                        <div class="stat-card" title="Noise reduction">
-                            <div class="stat-icon purple">
-                                <i class="fas fa-filter"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="efficiencyScore">--</span>
-                                <span class="stat-label">EFFICIENCY</span>
-                            </div>
-                        </div>
-                        <div class="stat-card" title="Active incidents">
-                            <div class="stat-icon red">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="activeIncidentsCount">--</span>
-                                <span class="stat-label">ACTIVE</span>
-                            </div>
-                        </div>
-                        <div class="stat-card" title="History logs">
-                            <div class="stat-icon blue">
-                                <i class="fas fa-clock-rotate-left"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="historyLogsCount">--</span>
-                                <span class="stat-label">HISTORY</span>
-                            </div>
-                        </div>
-                        <div class="stat-card" title="Advisories">
-                            <div class="stat-icon green">
-                                <i class="fas fa-triangle-exclamation"></i>
-                            </div>
-                            <div class="stat-data">
-                                <span class="stat-value" id="advisoriesCount">--</span>
-                                <span class="stat-label">ADVISORIES</span>
+                    </div>
+
+                    <!-- Section 0.5: LAYER CONTROLS (Collapsible) -->
+                    <div class="cc-accordion-item open" data-section="layers">
+                        <button class="cc-accordion-header">
+                            <span><i class="fas fa-layer-group"></i> Layer Controls</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cc-accordion-content">
+                            <div class="flex flex-col gap-2">
+                                <!-- Heatmap Toggle -->
+                                <label
+                                    class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-slate-700/50 transition-colors">
+                                    <span class="flex items-center gap-2 text-xs text-slate-300">
+                                        <i class="fas fa-fire text-red-500"></i> Heatmap Layer
+                                    </span>
+                                    <input type="checkbox" id="heatmapSwitch" class="toggle-switch">
+                                </label>
+
+                                <!-- Clusters Toggle -->
+                                <label
+                                    class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-slate-700/50 transition-colors">
+                                    <span class="flex items-center gap-2 text-xs text-slate-300">
+                                        <i class="fas fa-project-diagram text-blue-500"></i> AI Clusters
+                                    </span>
+                                    <input type="checkbox" id="clustersSwitch" class="toggle-switch" checked>
+                                </label>
+
+                                <!-- Individual Markers Toggle -->
+                                <label
+                                    class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-slate-700/50 transition-colors">
+                                    <span class="flex items-center gap-2 text-xs text-slate-300">
+                                        <i class="fas fa-map-marker-alt text-green-500"></i> Individual Markers
+                                    </span>
+                                    <input type="checkbox" id="markersToggle" class="toggle-switch" checked>
+                                </label>
+
+                                <!-- Emergency Panel Toggle -->
+                                <label
+                                    class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-slate-700/50 transition-colors">
+                                    <span class="flex items-center gap-2 text-xs text-slate-300">
+                                        <i class="fas fa-triangle-exclamation text-amber-500"></i> Emergency Panel
+                                    </span>
+                                    <input type="checkbox" id="emergencyToggle" class="toggle-switch">
+                                </label>
+
+                                <!-- Divider -->
+                                <div class="border-t border-slate-700/50 my-1"></div>
+
+                                <!-- Export Button -->
+                                <button id="exportExcelBtn"
+                                    class="w-full bg-green-700/80 hover:bg-green-600 text-white text-xs font-bold py-2 rounded flex items-center justify-center gap-2 transition-colors"
+                                    disabled>
+                                    <i class="fas fa-file-excel"></i> EXPORT TO EXCEL
+                                </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Insights Section -->
-                    <div class="insights-section" id="insightsContent">
-                        <h3><i class="fas fa-lightbulb"></i> Intelligence Feed</h3>
-                        <div class="insight-placeholder">
-                            <i class="fas fa-satellite-dish"></i>
-                            <p>Awaiting field intelligence...</p>
-                            <span>Load data to generate insights</span>
+
+                    <!-- Section 1: Stats Overview (Collapsible) -->
+                    <div class="cc-accordion-item open" data-section="stats">
+                        <button class="cc-accordion-header">
+                            <span><i class="fas fa-chart-pie"></i> Overview</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cc-accordion-content">
+                            <div class="stats-grid">
+                                <div class="stat-card" title="Total citizen inputs">
+                                    <div class="stat-icon blue">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="totalComplaints">--</span>
+                                        <span class="stat-label">CITIZEN INPUTS</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="Verified incidents">
+                                    <div class="stat-icon green">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="totalClusters">--</span>
+                                        <span class="stat-label">VERIFIED</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="Priority zones">
+                                    <div class="stat-icon red">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="criticalHotspots">--</span>
+                                        <span class="stat-label">PRIORITY</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="Noise reduction">
+                                    <div class="stat-icon purple">
+                                        <i class="fas fa-filter"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="efficiencyScore">--</span>
+                                        <span class="stat-label">EFFICIENCY</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="Active incidents">
+                                    <div class="stat-icon red">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="activeIncidentsCount">--</span>
+                                        <span class="stat-label">ACTIVE</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="History logs">
+                                    <div class="stat-icon blue">
+                                        <i class="fas fa-clock-rotate-left"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="historyLogsCount">--</span>
+                                        <span class="stat-label">HISTORY</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card" title="Advisories">
+                                    <div class="stat-icon green">
+                                        <i class="fas fa-triangle-exclamation"></i>
+                                    </div>
+                                    <div class="stat-data">
+                                        <span class="stat-value" id="advisoriesCount">--</span>
+                                        <span class="stat-label">ADVISORIES</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Category Breakdown -->
-                    <div class="category-section">
-                        <h3><i class="fas fa-chart-bar"></i> Incident Breakdown</h3>
-                        <div class="category-bars" id="categoryBars"></div>
+
+                    <!-- Section 2: Intelligence Feed (Collapsible) -->
+                    <div class="cc-accordion-item open" data-section="insights">
+                        <button class="cc-accordion-header">
+                            <span><i class="fas fa-lightbulb"></i> Intelligence Feed</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cc-accordion-content">
+                            <div class="insights-section" id="insightsContent">
+                                <div class="insight-placeholder">
+                                    <i class="fas fa-satellite-dish"></i>
+                                    <p>Awaiting field intelligence...</p>
+                                    <span>Load data to generate insights</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Incident Breakdown (Collapsible) -->
+                    <div class="cc-accordion-item open" data-section="breakdown">
+                        <button class="cc-accordion-header">
+                            <span><i class="fas fa-chart-bar"></i> Incident Breakdown</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cc-accordion-content">
+                            <div class="category-section">
+                                <div class="category-bars" id="categoryBars"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
-            
+
         </div><!-- end #app -->
     </div><!-- end .app-container -->
-    
-    <!-- Hidden legacy elements for JS compatibility -->
-    <div style="display:none;">
-        <button id="loadCityData"></button>
-        <input type="checkbox" id="heatmapSwitch">
-        <input type="checkbox" id="clustersSwitch" checked>
-        <select id="categoryFilter">
-            <option value="all">All Categories</option>
-        </select>
-        <button id="exportExcelBtn" disabled></button>
-    </div>
-    
+
+
+
     <!-- Core Scripts -->
     <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script type="module" src="/js/auth/authChecker.js"></script>
@@ -689,7 +950,7 @@
     <script type="module" src="/js/components/header.js"></script>
     <script type="module" src="/js/components/sidebar.js"></script>
     <script type="module" src="/js/components/clock.js"></script>
-    
+
     <!-- Heatmap Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
@@ -702,80 +963,413 @@
     <script src="/brain-dashboard/dashboard_production.js"></script>
     <script src="/brain-dashboard/statistical-analysis.js"></script>
     <script src="/brain-dashboard/statistical-excel-export.js"></script>
-    
+
+    <!-- Filter Logic Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check dependencies
+            if (typeof CitizenLinkTaxonomy === 'undefined' || typeof window.applyGlobalFilters === 'undefined') {
+                console.warn('[FILTERS] Dependencies missing (Taxonomy or Dashboard script)');
+            }
+
+            const els = {
+                start: document.getElementById('filter-start-date'),
+                end: document.getElementById('filter-end-date'),
+                office: document.getElementById('filter-office'),
+                category: document.getElementById('filter-category'),
+                subcategory: document.getElementById('filter-subcategory'),
+                reset: document.getElementById('reset-filters-btn')
+            };
+
+            // Sync with existing floating category filter if present
+            const floatingCat = document.getElementById('categoryFilter');
+
+            // Load Taxonomy
+            let taxonomy = null;
+            try {
+                taxonomy = await CitizenLinkTaxonomy.loadTaxonomy();
+                const categories = CitizenLinkTaxonomy.getCategories(taxonomy);
+
+                // Populate Category
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    els.category.appendChild(opt);
+                });
+
+            } catch (e) {
+                console.error('[FILTERS] Failed to load taxonomy:', e);
+            }
+
+            // Custom Multi-Select UI Initializer
+            const setupCustomMultiSelect = (selectId, uiId, placeholder, isSubcat = false) => {
+                const select = document.getElementById(selectId);
+                const container = document.getElementById(uiId);
+
+                if (!select || !container) return;
+
+                // Build UI
+                container.innerHTML = `
+                    <div class="multiselect-trigger ${select.disabled ? 'disabled' : ''}" tabindex="0">
+                        <span class="trigger-text">${placeholder}</span>
+                        <i class="fas fa-chevron-down text-[10px] text-slate-400"></i>
+                    </div>
+                    <div class="multiselect-dropdown custom-scroll">
+                        <!-- Options injected here -->
+                    </div>
+                `;
+
+                const trigger = container.querySelector('.multiselect-trigger');
+                const triggerText = container.querySelector('.trigger-text');
+                const dropdown = container.querySelector('.multiselect-dropdown');
+
+                // Toggle Dropdown
+                trigger.addEventListener('click', (e) => {
+                    if (select.disabled) return;
+                    e.stopPropagation();
+
+                    // Close others
+                    document.querySelectorAll('.multiselect-dropdown.open').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('open');
+                    });
+
+                    dropdown.classList.toggle('open');
+                    renderOptions(); // Refresh state on open
+                });
+
+                // Render Options Function
+                const renderOptions = () => {
+                    dropdown.innerHTML = '';
+                    const opts = Array.from(select.options);
+
+                    opts.forEach(opt => {
+                        const row = document.createElement('div');
+                        row.className = `multiselect-option ${opt.selected ? 'selected' : ''}`;
+                        row.innerHTML = `
+                           <div class="option-checkbox"></div>
+                           <span class="option-label">${opt.text}</span>
+                       `;
+
+                        row.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Keep open
+
+                            // Logic: Handle "All" vs Others
+                            if (opt.value === 'all') {
+                                // If clicking "All", clear others
+                                opts.forEach(o => o.selected = false);
+                                opt.selected = true;
+                            } else {
+                                // Toggle current
+                                opt.selected = !opt.selected;
+
+                                // If selecting specific, uncheck "All"
+                                if (opt.selected) {
+                                    const allOpt = opts.find(o => o.value === 'all');
+                                    if (allOpt) allOpt.selected = false;
+                                }
+
+                                // If nothing selected, re-select "All"
+                                const anySelected = opts.some(o => o.selected);
+                                if (!anySelected) {
+                                    const allOpt = opts.find(o => o.value === 'all');
+                                    if (allOpt) allOpt.selected = true;
+                                }
+                            }
+
+                            // Update UI immediately for feedback
+                            renderOptions();
+                            updateTriggerText();
+
+                            // Fire change event on native select
+                            select.dispatchEvent(new Event('change'));
+                        });
+
+                        dropdown.appendChild(row);
+                    });
+                };
+
+                // Update Trigger Text
+                const updateTriggerText = () => {
+                    const selected = Array.from(select.selectedOptions);
+                    if (selected.length === 0 || (selected.length === 1 && selected[0].value === 'all')) {
+                        triggerText.textContent = placeholder;
+                        triggerText.classList.remove('text-blue-400');
+                    } else {
+                        if (selected.length === 1) {
+                            triggerText.textContent = selected[0].text;
+                        } else {
+                            triggerText.textContent = `${selected.length} items selected`;
+                        }
+                        triggerText.classList.add('text-blue-400');
+                    }
+
+                    // Update disabled state style
+                    if (select.disabled) {
+                        trigger.classList.add('disabled');
+                    } else {
+                        trigger.classList.remove('disabled');
+                    }
+                };
+
+                // Initial Render
+                renderOptions();
+                updateTriggerText();
+
+                // Listen for external changes (e.g. from Reset button or dynamic population)
+                const observer = new MutationObserver(() => {
+                    renderOptions();
+                    updateTriggerText();
+                });
+                observer.observe(select, { childList: true, attributes: true, subtree: true });
+
+                // Also listen to change event (if triggered manually)
+                select.addEventListener('change', updateTriggerText);
+
+                return { render: renderOptions, update: updateTriggerText };
+            };
+
+            // Initialize Custom UI
+            const officeUI = setupCustomMultiSelect('filter-office', 'ui-filter-office', 'All Offices');
+            const catUI = setupCustomMultiSelect('filter-category', 'ui-filter-category', 'All Categories');
+            const subUI = setupCustomMultiSelect('filter-subcategory', 'ui-filter-subcategory', 'All Subcategories', true);
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.custom-multiselect')) {
+                    document.querySelectorAll('.multiselect-dropdown.open').forEach(d => d.classList.remove('open'));
+                }
+            });
+
+            // Handler: Get Multi-Select Values
+            const getValues = (select) => {
+                return Array.from(select.selectedOptions).map(opt => opt.value);
+            };
+
+            // Enhanced Apply Filters
+            const apply = () => {
+                // UI Sync is handled by custom component events -> select change -> this apply
+                let catValues = getValues(els.category);
+                let subValues = getValues(els.subcategory);
+                let officeValues = getValues(els.office);
+
+                // UX Logic: If they selected nothing (should be handled by component but double check)
+                if (catValues.length === 0) catValues = ['all'];
+                if (subValues.length === 0) subValues = ['all'];
+                if (officeValues.length === 0) officeValues = ['all'];
+
+                const filters = {
+                    category: catValues,
+                    subcategory: subValues,
+                    office: officeValues,
+                    start_date: els.start.value || undefined,
+                    end_date: els.end.value || undefined
+                };
+
+                // Sync floating control (approximate single val)
+                if (floatingCat && catValues.length === 1 && floatingCat.value !== catValues[0]) {
+                    floatingCat.value = catValues[0];
+                }
+
+                window.applyGlobalFilters(filters);
+            };
+
+            // Event: Category Change -> Update Subcategory
+            els.category.addEventListener('change', (e) => {
+                // Handle "All" exclusivity UI update (Optional but good UX)
+                const opts = Array.from(els.category.options);
+                const allOpt = opts.find(o => o.value === 'all');
+
+                // If 'all' is selected and other things are too, decide logic.
+                // We'll leave UI flexible, logic handled in apply().
+
+                const cats = getValues(els.category);
+
+                // Clear subcategories
+                els.subcategory.innerHTML = '<option value="all" selected>All Subcategories</option>';
+
+                // Determine active categories (ignore 'all')
+                const activeCats = cats.filter(c => c !== 'all');
+
+                if (activeCats.length === 0) {
+                    // Only 'all' or nothing selected
+                    els.subcategory.disabled = true;
+                    els.subcategory.classList.add('opacity-50', 'cursor-not-allowed');
+                } else if (taxonomy) {
+                    els.subcategory.disabled = false;
+                    els.subcategory.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                    // Aggregate subcategories
+                    const allSubcats = new Set();
+                    activeCats.forEach(cat => {
+                        const subcats = CitizenLinkTaxonomy.getSubcategories(cat, taxonomy);
+                        subcats.forEach(s => allSubcats.add(s));
+                    });
+
+                    // Sort and append
+                    Array.from(allSubcats).sort().forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        opt.textContent = sub;
+                        els.subcategory.appendChild(opt);
+                    });
+                }
+
+                apply();
+            });
+
+            // Event: Other Inputs Change
+            els.start.addEventListener('change', apply);
+            els.end.addEventListener('change', apply);
+            els.office.addEventListener('change', apply);
+            els.subcategory.addEventListener('change', apply);
+
+            // Event: Reset
+            els.reset.addEventListener('click', () => {
+                els.start.value = '';
+                els.end.value = '';
+
+                // Reset Multi-selects
+                Array.from(els.office.options).forEach(o => o.selected = (o.value === 'all'));
+                Array.from(els.category.options).forEach(o => o.selected = (o.value === 'all'));
+
+                els.subcategory.innerHTML = '<option value="all" selected>All Subcategories</option>';
+                els.subcategory.disabled = true;
+                els.subcategory.classList.add('opacity-50', 'cursor-not-allowed');
+
+                // Also reset the floating filter if it exists
+                if (floatingCat) {
+                    floatingCat.value = 'all';
+                }
+
+                // Reset Custom UIs
+                setTimeout(() => {
+                    officeUI.update();
+                    catUI.update();
+                    subUI.update();
+                }, 50);
+
+                apply();
+            });
+
+            // Sync: Listen to floating control changes (dashboard_production.js handles the event listener on it, 
+            // but we want to update OUR dropdown if it changes)
+            if (floatingCat) {
+                floatingCat.addEventListener('change', (e) => {
+                    if (els.category.value !== e.target.value) {
+                        els.category.value = e.target.value;
+                        // Trigger change to update subcategories
+                        els.category.dispatchEvent(new Event('change'));
+                    }
+                });
+            }
+        });
+    </script>
+
     <!-- Floating Controls Bridge -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Bridge floating buttons to hidden legacy controls
-            const loadFloat = document.getElementById('loadCityDataFloat');
-            const loadOrig = document.getElementById('loadCityData');
-            if (loadFloat && loadOrig) {
-                loadFloat.addEventListener('click', () => loadOrig.click());
-            }
-            
-            // Heatmap toggle
-            const heatmapFloat = document.getElementById('toggleHeatmapFloat');
-            const heatmapSwitch = document.getElementById('heatmapSwitch');
-            if (heatmapFloat && heatmapSwitch) {
-                heatmapFloat.addEventListener('click', () => {
-                    heatmapSwitch.checked = !heatmapSwitch.checked;
-                    heatmapSwitch.dispatchEvent(new Event('change'));
-                    heatmapFloat.classList.toggle('active', heatmapSwitch.checked);
+        document.addEventListener('DOMContentLoaded', function () {
+            // Command Center Accordion Toggle
+            const ccAccordionHeaders = document.querySelectorAll('.cc-accordion-header');
+            ccAccordionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const item = this.parentElement;
+                    item.classList.toggle('open');
                 });
-            }
-            
-            // Clusters toggle
-            const clustersFloat = document.getElementById('toggleClustersFloat');
-            const clustersSwitch = document.getElementById('clustersSwitch');
-            if (clustersFloat && clustersSwitch) {
-                clustersFloat.classList.toggle('active', clustersSwitch.checked);
-                clustersFloat.addEventListener('click', () => {
-                    clustersSwitch.checked = !clustersSwitch.checked;
-                    clustersSwitch.dispatchEvent(new Event('change'));
-                    clustersFloat.classList.toggle('active', clustersSwitch.checked);
-                });
-            }
-            
-            // Category filter
-            const catFloat = document.getElementById('categoryFilterFloat');
-            const catOrig = document.getElementById('categoryFilter');
-            if (catFloat && catOrig) {
-                catFloat.addEventListener('change', (e) => {
-                    catOrig.value = e.target.value;
-                    catOrig.dispatchEvent(new Event('change'));
-                });
-            }
-            
-            // Export button
-            const exportFloat = document.getElementById('exportExcelFloat');
-            const exportOrig = document.getElementById('exportExcelBtn');
-            if (exportFloat && exportOrig) {
-                exportFloat.addEventListener('click', () => exportOrig.click());
-                const observer = new MutationObserver(() => {
-                    exportFloat.disabled = exportOrig.disabled;
-                    exportFloat.style.opacity = exportOrig.disabled ? '0.5' : '1';
-                });
-                observer.observe(exportOrig, { attributes: true, attributeFilter: ['disabled'] });
-            }
-            
-            // Emergency panel toggle
-            const emergencyFloat = document.getElementById('toggleEmergencyFloat');
-            const emergencyPanel = document.getElementById('emergencyPanel');
+            });
+
+            // Map Layer Toggles
+            const hmSwitch = document.getElementById('heatmapSwitch');
+            const clSwitch = document.getElementById('clustersSwitch');
+            const mkToggle = document.getElementById('markersToggle');
+            const emToggle = document.getElementById('emergencyToggle');
             const emergencyCollapse = document.getElementById('emergencyCollapse');
-            
-            if (emergencyFloat && emergencyPanel) {
-                emergencyFloat.addEventListener('click', () => {
-                    emergencyPanel.classList.toggle('hidden');
-                    emergencyFloat.classList.toggle('active', !emergencyPanel.classList.contains('hidden'));
-                });
-            }
-            
+            const emergencyPanel = document.getElementById('emergencyPanel');
+
             if (emergencyCollapse && emergencyPanel) {
                 emergencyCollapse.addEventListener('click', () => {
                     emergencyPanel.classList.toggle('collapsed');
                 });
             }
+
+            if (hmSwitch) {
+                hmSwitch.addEventListener('change', () => {
+                    if (typeof toggleHeatmapFromDropdown === 'function') {
+                        toggleHeatmapFromDropdown(hmSwitch.checked);
+                    }
+                });
+            }
+
+            if (clSwitch) {
+                clSwitch.addEventListener('change', () => {
+                    if (typeof toggleClustersFromDropdown === 'function') {
+                        toggleClustersFromDropdown(clSwitch.checked);
+                    }
+                });
+            }
+
+            if (mkToggle) {
+                mkToggle.addEventListener('change', () => {
+                    // Independent logic for individual markers
+                    const engine = window.simulationEngine;
+                    if (engine && engine.backgroundMarkers) {
+                        engine.backgroundMarkers.forEach((marker) => {
+                            if (mkToggle.checked) {
+                                if (window.map && !window.map.hasLayer(marker)) marker.addTo(window.map);
+                            } else {
+                                if (window.map && window.map.hasLayer(marker)) window.map.removeLayer(marker);
+                            }
+                        });
+                        console.log('[MARKERS] Individual markers toggled:', mkToggle.checked);
+                    } else {
+                        console.warn('[MARKERS] Simulation engine or background markers not found');
+                    }
+                });
+            }
+
+            if (emToggle) {
+                emToggle.addEventListener('change', () => {
+                    if (typeof toggleEmergencyPanel === 'function') {
+                        toggleEmergencyPanel();
+                    } else {
+                        // Fallback manual toggle
+                        const emPanel = document.getElementById('emergencyPanel');
+                        if (emPanel) {
+                            emPanel.classList.toggle('hidden');
+                        }
+                    }
+                });
+            }
+
+            // Sync initial states (Wait a bit for dashboard to load data)
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const emPanel = document.getElementById('emergencyPanel');
+                    if (emPanel && emToggle) {
+                        emToggle.checked = !emPanel.classList.contains('hidden');
+                    }
+
+                    // Sync Cluster/Marker checkboxes with global variables if they exist
+                    if (typeof clustersVisible !== 'undefined' && clSwitch) {
+                        clSwitch.checked = clustersVisible;
+                    }
+                    if (window.map && typeof heatmapLayer !== 'undefined' && hmSwitch) {
+                        hmSwitch.checked = heatmapLayer && window.map.hasLayer(heatmapLayer);
+                    }
+
+                    // Sync individual markers toggle
+                    if (window.simulationEngine && mkToggle) {
+                        const markers = window.simulationEngine.backgroundMarkers;
+                        if (markers && markers.size > 0) {
+                            // Check if first marker is on map
+                            const firstMarker = Array.from(markers.values())[0];
+                            mkToggle.checked = window.map && window.map.hasLayer(firstMarker);
+                        }
+                    }
+                }, 1000);
+            });
         });
     </script>
 </body>
+
 </html>
