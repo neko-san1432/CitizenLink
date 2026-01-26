@@ -132,6 +132,7 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
 
     // Check if limit exceeded
     if (rateLimitData.requests.length >= effectiveMaxRequests) {
+      console.warn(`[RATE LIMIT] Blocked request from IP: ${key}. Limit: ${effectiveMaxRequests}, Current: ${rateLimitData.requests.length}`);
       return res.status(429).json({
         success: false,
         error: "Too many requests from this IP, please try again later."
@@ -179,8 +180,8 @@ const noOpLimiter = (req, res, next) => {
 const apiLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(1000, 15 * 60 * 1000); // 1000 requests per 15 minutes (5000 in dev)
 // Stricter rate limiting for authentication endpoints - 5x limits in development (500 vs 100)
 const authLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes (500 in dev)
-// Very strict rate limiting for login attempts - 5x limits in development (100 vs 20)
-const loginLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(20, 15 * 60 * 1000); // 20 requests per 15 minutes (100 in dev)
+// Very strict rate limiting for login attempts - 5x limits in development (250 vs 50)
+const loginLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(50, 15 * 60 * 1000); // 50 requests per 15 minutes (250 in dev)
 // Rate limiting for password reset requests - 5x limits in development (25 vs 5)
 const passwordResetLimiter = DISABLE_RATE_LIMITING ? noOpLimiter : createRateLimiter(5, 60 * 60 * 1000); // 5 requests per hour (25 in dev)
 // Rate limiting for file uploads - 5x limits in development (100 vs 20)

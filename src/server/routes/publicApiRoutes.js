@@ -36,7 +36,7 @@ function getGeocodeCacheKey(lat, lng) {
  */
 function evictOldestCacheEntries() {
   if (geocodeCache.size <= GEOCODE_CACHE_MAX_SIZE) return;
-  
+
   const entriesToDelete = geocodeCache.size - GEOCODE_CACHE_MAX_SIZE;
   const iterator = geocodeCache.keys();
   for (let i = 0; i < entriesToDelete; i++) {
@@ -49,7 +49,7 @@ function evictOldestCacheEntries() {
 
 router.get("/boundaries", apiLimiter, async (req, res) => {
   try {
-    const filePath = path.join(config.rootDir, "src", "client", "assets", "brgy_boundaries_location.json");
+    const filePath = path.join(config.rootDir, "public", "assets", "json", "brgy_boundaries_location.json");
     const fs = require("fs").promises;
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path
@@ -84,7 +84,7 @@ router.get("/reverse-geocode", apiLimiter, async (req, res) => {
     // ==================== CACHE CHECK ====================
     const cacheKey = getGeocodeCacheKey(lat, lng);
     const cachedEntry = geocodeCache.get(cacheKey);
-    
+
     if (cachedEntry) {
       // Check TTL
       if (Date.now() - cachedEntry.timestamp < GEOCODE_CACHE_TTL_MS) {
