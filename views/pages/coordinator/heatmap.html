@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CitizenLink: City Analytics Dashboard</title>
+    <title>DRIMS: City Analytics Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/brain-dashboard/dashboard_production.css">
 </head>
+
 <body>
     <div class="container">
         <header class="control-panel">
@@ -16,7 +18,7 @@
                     <i class="fas fa-city"></i>
                 </div>
                 <div class="brand-text">
-                    <h1>CitizenLink</h1>
+                    <h1>DRIMS</h1>
                     <p>City Analytics Dashboard</p>
                 </div>
             </div>
@@ -73,14 +75,16 @@
                         </div>
                     </div>
                 </div>
-                <a href="/dictionary-manager" class="control-btn analytics-btn" id="openAnalytics" title="Open Dictionary Manager">
+                <a href="/dictionary-manager" class="control-btn analytics-btn" id="openAnalytics"
+                    title="Open Dictionary Manager">
                     <i class="fas fa-book"></i>
                     <span>Dictionary</span>
                 </a>
                 <div class="search-container">
                     <div class="search-input-wrapper">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="complaintSearch" class="complaint-search-input" placeholder="Search by Complaint ID..." autocomplete="off">
+                        <input type="text" id="complaintSearch" class="complaint-search-input"
+                            placeholder="Search by Complaint ID..." autocomplete="off">
                         <button class="search-clear-btn" id="searchClearBtn" title="Clear search">
                             <i class="fas fa-times"></i>
                         </button>
@@ -259,4 +263,5 @@
     <script src="/brain-dashboard/statistical-analysis.js"></script>
     <script src="/brain-dashboard/statistical-excel-export.js"></script>
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 /**
- * CitizenLink Simulation Engine v3.9
+ * DRIMS Simulation Engine v3.9
  * ====================================
  * STRICT Implementation: Background vs. Spotlight Layering System
  * 
@@ -45,7 +45,7 @@
  * │  - Dimmed to 0.15 opacity during spotlight mode         │
  * └─────────────────────────────────────────────────────────┘
  * 
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * @version 3.8.0 - Enhanced Bisaya habitual verb detection
  */
 
@@ -256,16 +256,16 @@ const FALLBACK_SUBCATEGORY_MAP = {
 let taxonomyCache = null;
 
 function normalizeTaxonomyLabel(label) {
-    if (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache) {
-        return CitizenLinkTaxonomy.normalizeLabel(label, taxonomyCache);
+    if (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache) {
+        return DRIMSTaxonomy.normalizeLabel(label, taxonomyCache);
     }
     return label || 'Others';
 }
 
 function getCanonicalParent(label) {
     const normalized = normalizeTaxonomyLabel(label);
-    if (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache) {
-        return CitizenLinkTaxonomy.getParentForLabel(normalized, taxonomyCache);
+    if (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache) {
+        return DRIMSTaxonomy.getParentForLabel(normalized, taxonomyCache);
     }
     return FALLBACK_SUBCATEGORY_MAP[normalized] || normalized || 'Others';
 }
@@ -1432,7 +1432,7 @@ function validateCategoryMismatch(complaint) {
 // Extracts emergency reports BEFORE clustering to prevent them being merged
 // with non-critical complaints. Enables dedicated "ACTIVE EMERGENCIES" panel.
 //
-// @author CitizenLink v3.0 Team
+// @author DRIMS v3.0 Team
 // @date January 2026
 
 /**
@@ -1997,7 +1997,7 @@ const NON_EMERGENCY_PHRASES = [
 // 3. Check for idiomatic expressions
 // 4. Return true if metaphorical, false if literal emergency
 //
-// @author CitizenLink v3.5 Team
+// @author DRIMS v3.5 Team
 // @date January 15, 2026
 // @thesis Figurative Language Detection for Emergency Alert Systems
 // ============================================================================
@@ -5092,7 +5092,7 @@ const RoadValidator = {
                 const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
                 const response = await fetch(url, {
-                    headers: { 'User-Agent': 'CitizenLink-City-Dashboard/1.0' },
+                    headers: { 'User-Agent': 'DRIMS-City-Dashboard/1.0' },
                     signal: controller.signal
                 });
 
@@ -5161,7 +5161,7 @@ window.RoadValidator = RoadValidator;
  * - Cluster #6: Illegal Dumping (8 reports, 47m)
  * All in Zone III, R. Magsaysay Street → Should be merged as single incident
  * 
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * @version 1.0.0 - Initial implementation
  * ============================================================================
  */
@@ -6290,7 +6290,7 @@ function generateClusterConnections(clusteringResult) {
 
 // ==================== CLUSTER STITCHING WITH TEMPORAL AWARENESS ====================
 // Prevents historical data (e.g., last year) from merging with active data (today)
-// Added: January 2026 - CitizenLink v3.0
+// Added: January 2026 - DRIMS v3.0
 
 /**
  * TEMPORAL STITCHING CONFIGURATION
@@ -6677,9 +6677,9 @@ class SimulationEngine {
         try {
             this.addLog('[SYSTEM] Loading mock_complaints.json...', 'system');
 
-            if (!taxonomyCache && typeof CitizenLinkTaxonomy !== 'undefined') {
+            if (!taxonomyCache && typeof DRIMSTaxonomy !== 'undefined') {
                 try {
-                    taxonomyCache = await CitizenLinkTaxonomy.loadTaxonomy();
+                    taxonomyCache = await DRIMSTaxonomy.loadTaxonomy();
                 } catch (e) {
                     taxonomyCache = null;
                 }
@@ -8495,16 +8495,16 @@ async function loadNLPDictionaries(forceReload = false) {
     }
 
     try {
-        if (!taxonomyCache && typeof CitizenLinkTaxonomy !== 'undefined') {
+        if (!taxonomyCache && typeof DRIMSTaxonomy !== 'undefined') {
             try {
-                taxonomyCache = await CitizenLinkTaxonomy.loadTaxonomy();
+                taxonomyCache = await DRIMSTaxonomy.loadTaxonomy();
             } catch (e) {
                 taxonomyCache = null;
             }
         }
 
-        if (taxonomyCache && window.CitizenLinkBrainConfig && window.CitizenLinkBrainConfig.dictionaries) {
-            NLP_DICTIONARIES = window.CitizenLinkBrainConfig.dictionaries;
+        if (taxonomyCache && window.DRIMSBrainConfig && window.DRIMSBrainConfig.dictionaries) {
+            NLP_DICTIONARIES = window.DRIMSBrainConfig.dictionaries;
             NLP_DICTIONARY_LOADED = true;
             buildDictionaryIndices();
             return NLP_DICTIONARIES;
@@ -9061,7 +9061,7 @@ function analyzeComplaintText(text) {
  * but the system will still function if external code doesn't call
  * those specific functions.
  * 
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * @version 1.0.0 - Modular Architecture
  */
 

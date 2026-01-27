@@ -107,7 +107,7 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background-image: url("/assets/images/CitizenLink-logo-no-text.png");
+  background-image: url("/assets/images/DRIMS-icon.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -121,6 +121,17 @@
   font-size: 1.25rem;
   font-weight: 800;
   color: rgb(28, 76, 153);
+  transition: color 0.2s ease;
+}
+
+.dark .brand-text {
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-text {
+    color: #ffffff;
+  }
 }
 
 .header-right {

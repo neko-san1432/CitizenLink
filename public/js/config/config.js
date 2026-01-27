@@ -62,7 +62,7 @@ const supabaseProxy = new Proxy(
         return supabase[prop];
       }
       // Kick off initialization (single flight)
-      initializeSupabase().catch(() => {});
+      initializeSupabase().catch(() => { });
       // Return a promise-based method for async operations
       if (prop === "auth") {
         return new Proxy(
@@ -137,6 +137,6 @@ class SecureDatabaseClient {
 export const db = new SecureDatabaseClient();
 
 export const brandConfig = {
-  name: "CitizenLink",
+  name: "DRIMS",
   dashboardUrl: "/dashboard",
 };

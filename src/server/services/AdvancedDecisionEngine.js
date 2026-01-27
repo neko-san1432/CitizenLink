@@ -3,7 +3,7 @@ const TensorFlowService = require('./TensorFlowService');
 
 /**
  * AdvancedDecisionEngine
- * Core intelligence service for CitizenLink.
+ * Core intelligence service for DRIMS.
  * Implements the hybrid classification logic: Rule-Based (Fast) -> AI Fallback (Slow).
  * 
  * HITL Feature: Automatically queues low-confidence results for human review.
@@ -16,7 +16,7 @@ class AdvancedDecisionEngine {
         this.anchors = {};
         this.categoryConfig = {};
         this.initialized = false;
-        
+
         // HITL Configuration
         this.CONFIDENCE_THRESHOLD = 0.7;  // Below this, add to pending reviews
         this.enableAutoQueue = true;      // Set false to disable HITL queueing
@@ -184,12 +184,12 @@ class AdvancedDecisionEngine {
                 confidence: bestMatch.confidence,
                 matched_term: bestMatch.term
             };
-            
+
             // HITL: Queue if below threshold (even rule-based can have low confidence)
             if (result.confidence < this.CONFIDENCE_THRESHOLD) {
                 this.addToPendingReviews(text, result, complaintId);
             }
-            
+
             return result;
         }
 
@@ -205,12 +205,12 @@ class AdvancedDecisionEngine {
                     method: 'AI_TENSORFLOW',
                     confidence: aiResult.confidence
                 };
-                
+
                 // HITL: Queue AI results below threshold for human verification
                 if (result.confidence < this.CONFIDENCE_THRESHOLD) {
                     this.addToPendingReviews(text, result, complaintId);
                 }
-                
+
                 return result;
             }
         } catch (err) {
@@ -225,10 +225,10 @@ class AdvancedDecisionEngine {
             method: 'FALLBACK',
             confidence: 0.0
         };
-        
+
         // HITL: Always queue fallback results - these need human training
         this.addToPendingReviews(text, fallbackResult, complaintId);
-        
+
         return fallbackResult;
     }
 
@@ -244,7 +244,7 @@ class AdvancedDecisionEngine {
      */
     async addToPendingReviews(text, result, complaintId = null) {
         if (!this.enableAutoQueue) return;
-        
+
         try {
             // Check for duplicate (same text already pending)
             const { data: existing } = await this.supabase
@@ -253,7 +253,7 @@ class AdvancedDecisionEngine {
                 .eq('text', text)
                 .eq('status', 'pending')
                 .limit(1);
-            
+
             if (existing && existing.length > 0) {
                 console.log('[NLP-HITL] Duplicate pending review, skipping');
                 return;
@@ -303,7 +303,7 @@ class AdvancedDecisionEngine {
         }
 
         console.log(`[NLP-HITL] Batch queue received ${items.length} items`);
-        
+
         // Log first item for debugging
         if (items[0]) {
             console.log('[NLP-HITL] First item sample:', JSON.stringify(items[0], null, 2));
@@ -312,24 +312,24 @@ class AdvancedDecisionEngine {
         try {
             // Get existing pending complaint IDs to avoid duplicates
             const complaintIds = items.map(i => i.complaint_id).filter(Boolean);
-            
+
             if (complaintIds.length === 0) {
                 console.log('[NLP-HITL] No valid complaint IDs found in items');
                 console.log('[NLP-HITL] Item IDs received:', items.map(i => i.complaint_id));
                 return { queued: 0, skipped: items.length, errors: ['No valid complaint IDs'] };
             }
-            
+
             console.log(`[NLP-HITL] Valid complaint IDs: ${complaintIds.length}`);
-            
+
             const { data: existing, error: selectError } = await this.supabase
                 .from('nlp_pending_reviews')
                 .select('complaint_id')
                 .in('complaint_id', complaintIds);  // Check all statuses, not just pending
-            
+
             if (selectError) {
                 console.warn('[NLP-HITL] Error checking existing:', selectError.message);
             }
-            
+
             const existingIds = new Set((existing || []).map(e => e.complaint_id));
             console.log(`[NLP-HITL] Already in database (any status): ${existingIds.size}`);
 
@@ -341,9 +341,9 @@ class AdvancedDecisionEngine {
             const toInsert = items.filter(item => {
                 if (!item.complaint_id || !item.text) {
                     invalid++;
-                    console.log(`[NLP-HITL] Invalid item - missing complaint_id or text:`, { 
-                        complaint_id: item.complaint_id, 
-                        hasText: !!item.text 
+                    console.log(`[NLP-HITL] Invalid item - missing complaint_id or text:`, {
+                        complaint_id: item.complaint_id,
+                        hasText: !!item.text
                     });
                     return false;
                 }
@@ -351,17 +351,17 @@ class AdvancedDecisionEngine {
                     skipped++;
                     return false;
                 }
-                
+
                 // Check if text contains any known keyword - but still queue if it's Others category
                 // (Others items need training even if they have keywords that map elsewhere)
                 const textLower = item.text.toLowerCase();
                 const hasKnownKeyword = allKeywordTerms.some(kw => textLower.includes(kw));
                 if (hasKnownKeyword && item.detected_category !== 'Others') {
                     skipped++;
-                    console.log(`[NLP-HITL] Skipped (has known keyword, not Others): ${item.complaint_id?.substring(0,8)}`);
+                    console.log(`[NLP-HITL] Skipped (has known keyword, not Others): ${item.complaint_id?.substring(0, 8)}`);
                     return false;
                 }
-                
+
                 return true;
             }).map(item => ({
                 complaint_id: item.complaint_id,
@@ -378,7 +378,7 @@ class AdvancedDecisionEngine {
 
             if (toInsert.length > 0) {
                 console.log('[NLP-HITL] Inserting first item sample:', JSON.stringify(toInsert[0], null, 2));
-                
+
                 const { error } = await this.supabase
                     .from('nlp_pending_reviews')
                     .insert(toInsert);
@@ -412,7 +412,7 @@ class AdvancedDecisionEngine {
                 .from('nlp_pending_reviews')
                 .select('id, text, detected_category')
                 .eq('status', 'pending');
-            
+
             if (fetchError || !pending?.length) {
                 return { cleaned: 0, remaining: 0 };
             }
@@ -431,7 +431,7 @@ class AdvancedDecisionEngine {
             for (const item of pending) {
                 if (!item.text) continue;
                 const textLower = item.text.toLowerCase();
-                
+
                 // Check if any keyword exists in the text
                 for (const kwTerm of allKeywordTerms) {
                     if (textLower.includes(kwTerm)) {
@@ -485,7 +485,7 @@ class AdvancedDecisionEngine {
                 .from('nlp_pending_reviews')
                 .select('*', { count: 'exact', head: true })
                 .eq('status', 'pending');
-            
+
             return error ? 0 : count;
         } catch {
             return 0;
@@ -499,14 +499,14 @@ class AdvancedDecisionEngine {
         try {
             // Run cleanup before fetching
             await this.cleanupPendingReviews();
-            
+
             const { data, error } = await this.supabase
                 .from('nlp_pending_reviews')
                 .select('*')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false })
                 .limit(limit);
-            
+
             return error ? [] : data;
         } catch {
             return [];
@@ -528,7 +528,7 @@ class AdvancedDecisionEngine {
                     confidence: 0.85,
                     language: 'all'
                 });
-            
+
             if (kwError && kwError.code !== '23505') {  // Ignore duplicate key error
                 throw new Error(`Failed to add keyword: ${kwError.message}`);
             }
@@ -557,13 +557,13 @@ class AdvancedDecisionEngine {
                 .select('id, text')
                 .eq('status', 'pending')
                 .neq('id', reviewId);
-            
+
             let autoResolved = 0;
             if (!searchError && similarPending?.length > 0) {
-                const toAutoResolve = similarPending.filter(item => 
+                const toAutoResolve = similarPending.filter(item =>
                     item.text && item.text.toLowerCase().includes(keywordLower)
                 );
-                
+
                 if (toAutoResolve.length > 0) {
                     const ids = toAutoResolve.map(item => item.id);
                     const { error: batchError } = await this.supabase
@@ -577,7 +577,7 @@ class AdvancedDecisionEngine {
                             resolved_by: userId
                         })
                         .in('id', ids);
-                    
+
                     if (!batchError) {
                         autoResolved = ids.length;
                         console.log(`[NLP-HITL] 🔄 Auto-resolved ${autoResolved} similar pending reviews containing "${keyword}"`);

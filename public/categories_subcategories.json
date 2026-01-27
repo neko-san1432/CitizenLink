@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "4.0.0",
-    "system": "CitizenLink Simulation Engine",
+    "system": "DRIMS Simulation Engine",
     "description": "Refined taxonomy for complaint classification (categories, subcategories, aliases, clustering)",
     "language_support": [
       "English",

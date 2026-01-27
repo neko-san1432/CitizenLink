@@ -10,10 +10,10 @@ let trainedToday = 0;
 let trainingHistory = [];
 let currentTrainingItem = null;
 
-let trainedComplaintIds = new Set(JSON.parse(localStorage.getItem("citizenlink_trained_ids") || "[]"));
+let trainedComplaintIds = new Set(JSON.parse(localStorage.getItem("DRIMS_trained_ids") || "[]"));
 
 function saveTrainedIds() {
-  localStorage.setItem("citizenlink_trained_ids", JSON.stringify([...trainedComplaintIds]));
+  localStorage.setItem("DRIMS_trained_ids", JSON.stringify([...trainedComplaintIds]));
 }
 
 function $(id) {
@@ -42,7 +42,7 @@ async function init() {
 
   // Setup Event Listeners
   setupEventListeners();
-  
+
   // Pre-populate category dropdown so it's ready even without items
   populateCategoryDropdown();
 
@@ -51,44 +51,44 @@ async function init() {
 
 // Pre-populate category dropdown on page load
 function populateCategoryDropdown() {
-    const catSelect = $("selectTrainCategory");
-    if (!catSelect) {
-        console.warn("[TRAIN] Category select element not found for pre-population");
-        return;
-    }
-    
-    // Clear and add default option
-    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
-    
-    // Add all categories from taxonomy
-    const categories = Object.keys(CATEGORY_TAXONOMY).sort();
-    console.log("[TRAIN] Pre-populating categories:", categories);
-    
-    categories.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        catSelect.appendChild(opt);
-    });
-    
-    // Enable the dropdown (but keep it at default selection)
-    catSelect.disabled = false;
+  const catSelect = $("selectTrainCategory");
+  if (!catSelect) {
+    console.warn("[TRAIN] Category select element not found for pre-population");
+    return;
+  }
+
+  // Clear and add default option
+  catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+
+  // Add all categories from taxonomy
+  const categories = Object.keys(CATEGORY_TAXONOMY).sort();
+  console.log("[TRAIN] Pre-populating categories:", categories);
+
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+
+  // Enable the dropdown (but keep it at default selection)
+  catSelect.disabled = false;
 }
 
 function setupEventListeners() {
-    $("refreshPendingBtn")?.addEventListener("click", loadLowConfidenceItems);
-    $("fetchLowConfidenceBtn")?.addEventListener("click", loadLowConfidenceItems);
-    $("btnSaveTrain")?.addEventListener("click", saveTrainingResult);
-    $("btnSkipTrain")?.addEventListener("click", skipCurrentItem);
-    
-    // Category selection event - add robust handling
-    const catSelect = $("selectTrainCategory");
-    if (catSelect) {
-        catSelect.addEventListener("change", updateSubcategories);
-        console.log("[TRAIN] Category select event listener attached");
-    } else {
-        console.warn("[TRAIN] selectTrainCategory element not found");
-    }
+  $("refreshPendingBtn")?.addEventListener("click", loadLowConfidenceItems);
+  $("fetchLowConfidenceBtn")?.addEventListener("click", loadLowConfidenceItems);
+  $("btnSaveTrain")?.addEventListener("click", saveTrainingResult);
+  $("btnSkipTrain")?.addEventListener("click", skipCurrentItem);
+
+  // Category selection event - add robust handling
+  const catSelect = $("selectTrainCategory");
+  if (catSelect) {
+    catSelect.addEventListener("change", updateSubcategories);
+    console.log("[TRAIN] Category select event listener attached");
+  } else {
+    console.warn("[TRAIN] selectTrainCategory element not found");
+  }
 }
 
 // =============================================================================
@@ -100,12 +100,12 @@ async function ensureHITLTaxonomyLoaded() {
     console.log("[TRAIN] Taxonomy already loaded:", HITL_CATEGORIES.length, "categories");
     return;
   }
-  
+
   let taxonomy = null;
-  if (typeof CitizenLinkTaxonomy !== "undefined") {
+  if (typeof DRIMSTaxonomy !== "undefined") {
     try {
-      taxonomy = await CitizenLinkTaxonomy.loadTaxonomy();
-      console.log("[TRAIN] Taxonomy loaded via CitizenLinkTaxonomy library");
+      taxonomy = await DRIMSTaxonomy.loadTaxonomy();
+      console.log("[TRAIN] Taxonomy loaded via DRIMSTaxonomy library");
     } catch (e) {
       console.error("[TRAIN] Failed to load taxonomy via library:", e);
       taxonomy = null;
@@ -155,7 +155,7 @@ async function ensureHITLTaxonomyLoaded() {
 // =============================================================================
 
 function getProcessedComplaints() {
-  const api = window.CitizenLinkBrainAnalytics;
+  const api = window.DRIMSBrainAnalytics;
   const items = api?.getProcessedComplaints ? api.getProcessedComplaints() : null;
   return Array.isArray(items) ? items : [];
 }
@@ -173,13 +173,13 @@ async function loadLowConfidenceItems() {
 
   // HYBRID APPROACH: Fetch from both database queue AND in-memory processed complaints
   pendingReviews = [];
-  
+
   // 1. First, try to fetch from database (HITL Auto-Queue)
   try {
     console.log("[TRAIN] Fetching from /api/nlp/pending-reviews...");
     const dbRes = await apiClient.get("/api/nlp/pending-reviews");
     console.log("[TRAIN] API Response:", dbRes);
-    
+
     if (dbRes?.success && Array.isArray(dbRes.data)) {
       const dbItems = dbRes.data.map(item => ({
         id: item.id,
@@ -194,7 +194,7 @@ async function loadLowConfidenceItems() {
         matched_term: item.matched_term,
         source: 'database' // Track source for UI differentiation
       })).filter(item => !trainedComplaintIds.has(item.id));
-      
+
       pendingReviews.push(...dbItems);
       console.log(`[TRAIN] ✅ Fetched ${dbItems.length} items from database queue`);
     } else {
@@ -207,18 +207,18 @@ async function loadLowConfidenceItems() {
   // 2. Also scan in-memory processed complaints (legacy behavior)
   const processed = getProcessedComplaints();
   console.log(`[TRAIN] In-memory processed complaints available: ${processed.length}`);
-  
+
   const memoryItems = processed.filter((item) => {
     if (!item?.id) return false;
     if (trainedComplaintIds.has(item.id)) return false;
     // Don't duplicate items already in database queue
     if (pendingReviews.some(p => p.complaint_id === item.id)) return false;
-    
+
     const triage = Number(item?.triage_score ?? item?.triage?.score ?? 0);
     const isOthers = safeText(item?.category) === "Others" || safeText(item?.subcategory) === "Others";
     const keywords = Array.isArray(item?.keywords) ? item.keywords : Array.isArray(item?.nlp?.keywords) ? item.nlp.keywords : [];
     const noKeywords = keywords.length === 0;
-    
+
     // Use NLP intelligence for better detection
     const intel = item.intelligence || {};
     const lowConfidence = intel.confidence && intel.confidence < 0.6;
@@ -226,16 +226,16 @@ async function loadLowConfidenceItems() {
     const isSpeculative = Boolean(intel.is_speculation) || Boolean(item?.flags?.speculation);
     const isMetaphorical = Boolean(intel.metaphor_score && intel.metaphor_score > 0.5) || Boolean(item?.flags?.metaphor);
     const wasReclassified = Boolean(intel.ai_reclassified) || Boolean(intel.ai_downgraded);
-    
+
     // Training candidates: Low confidence, Others category, No keywords, Speculative, or Reclassified
     const needsTraining = (
-      lowConfidence || 
-      isOthers || 
-      noKeywords || 
+      lowConfidence ||
+      isOthers ||
+      noKeywords ||
       (isSpeculative && triage < 50) ||
       (isMetaphorical && triage < 50)
     ) && !wasReclassified;
-    
+
     return needsTraining;
   }).slice(0, 30).map(item => {
     const intel = item.intelligence || {};
@@ -253,7 +253,7 @@ async function loadLowConfidenceItems() {
       source: 'memory' // Track source
     };
   });
-  
+
   pendingReviews.push(...memoryItems);
   console.log(`[TRAIN] Total pending reviews: ${pendingReviews.length} (${pendingReviews.filter(p => p.source === 'database').length} from DB, ${pendingReviews.filter(p => p.source === 'memory').length} from memory)`);
 
@@ -262,11 +262,11 @@ async function loadLowConfidenceItems() {
 }
 
 function renderTrainingList() {
-    const listContainer = document.getElementById("trainingList");
-    if (!listContainer) return;
+  const listContainer = document.getElementById("trainingList");
+  if (!listContainer) return;
 
-    if (pendingReviews.length === 0) {
-        listContainer.innerHTML = `
+  if (pendingReviews.length === 0) {
+    listContainer.innerHTML = `
             <div style="padding: 40px; text-align: center; color: var(--gray-600);">
                 <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
                 <p style="font-weight: 600;">No items in the training queue</p>
@@ -280,35 +280,35 @@ function renderTrainingList() {
                 </p>
             </div>
         `;
-        resetForm();
-        return;
+    resetForm();
+    return;
+  }
+
+  listContainer.innerHTML = pendingReviews.map(c => {
+    // Build NLP context badges
+    let nlpBadges = '';
+
+    // Source badge (database vs memory)
+    if (c.source === 'database') {
+      nlpBadges += '<span class="badge badge-primary" style="font-size:9px;margin-right:4px;" title="From auto-queue">DB</span>';
+    }
+    if (c.method) {
+      nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;margin-right:4px;">${c.method}</span>`;
+    }
+    if (c.is_speculation) {
+      nlpBadges += '<span class="badge badge-info" style="font-size:9px;margin-right:4px;">Speculation</span>';
+    }
+    if (c.is_metaphor) {
+      nlpBadges += '<span class="badge badge-warning" style="font-size:9px;margin-right:4px;">Metaphor</span>';
+    }
+    if (c.temporal_tag) {
+      nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;">${c.temporal_tag}</span>`;
     }
 
-    listContainer.innerHTML = pendingReviews.map(c => {
-        // Build NLP context badges
-        let nlpBadges = '';
-        
-        // Source badge (database vs memory)
-        if (c.source === 'database') {
-            nlpBadges += '<span class="badge badge-primary" style="font-size:9px;margin-right:4px;" title="From auto-queue">DB</span>';
-        }
-        if (c.method) {
-            nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;margin-right:4px;">${c.method}</span>`;
-        }
-        if (c.is_speculation) {
-            nlpBadges += '<span class="badge badge-info" style="font-size:9px;margin-right:4px;">Speculation</span>';
-        }
-        if (c.is_metaphor) {
-            nlpBadges += '<span class="badge badge-warning" style="font-size:9px;margin-right:4px;">Metaphor</span>';
-        }
-        if (c.temporal_tag) {
-            nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;">${c.temporal_tag}</span>`;
-        }
-        
-        return `
+    return `
         <div class="train-item" onclick="window.selectTrainingItem('${c.id}')" id="train-item-${c.id}">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-weight:600; font-size:13px;">${c.id.substring(0,8)}...</span>
+                <span style="font-weight:600; font-size:13px;">${c.id.substring(0, 8)}...</span>
                 <span class="badge ${getConfidenceBadge(c.confidence)}">${Math.round(c.confidence * 100)}%</span>
             </div>
             ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ''}
@@ -320,248 +320,248 @@ function renderTrainingList() {
             </div>
         </div>
     `}).join('');
-    
-    // Auto-select first
-    if (pendingReviews.length > 0 && !currentTrainingItem) {
-        selectTrainingItem(pendingReviews[0].id);
-    }
+
+  // Auto-select first
+  if (pendingReviews.length > 0 && !currentTrainingItem) {
+    selectTrainingItem(pendingReviews[0].id);
+  }
 }
 
 function getConfidenceBadge(score) {
-    if (score >= 0.8) return 'badge-success'; 
-    if (score >= 0.5) return 'badge-warning';
-    return 'badge-danger';
+  if (score >= 0.8) return 'badge-success';
+  if (score >= 0.5) return 'badge-warning';
+  return 'badge-danger';
 }
 
 // Exposed to global scope for onclick
-window.selectTrainingItem = function(id) {
-    const item = pendingReviews.find(c => c.id === id);
-    if (!item) return;
+window.selectTrainingItem = function (id) {
+  const item = pendingReviews.find(c => c.id === id);
+  if (!item) return;
 
-    currentTrainingItem = item;
-    
-    // UI Updates
-    document.querySelectorAll('.train-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(`train-item-${id}`)?.classList.add('active');
+  currentTrainingItem = item;
 
-    // Populate Form
-    const badge = document.getElementById('trainingStatusBadge');
-    if (badge) {
-        badge.textContent = "Reviewing";
-        badge.className = "badge badge-primary";
-    }
-    
-    document.getElementById('lblOriginalText').textContent = item.text;
-    document.getElementById('lblSystemGuess').textContent = item.ai_suggestion;
-    
-    const conf = item.confidence || 0;
-    document.getElementById('lblConfidence').textContent = `${(conf * 100).toFixed(1)}%`;
-    document.getElementById('barConfidence').style.width = `${conf * 100}%`;
-    document.getElementById('barConfidence').style.background = conf > 0.7 ? 'var(--success)' : (conf > 0.4 ? 'var(--warning)' : 'var(--danger)');
+  // UI Updates
+  document.querySelectorAll('.train-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`train-item-${id}`)?.classList.add('active');
 
-    // Enable Form
-    const keyInput = document.getElementById('inputTrainKeyword');
-    keyInput.disabled = false;
-    keyInput.value = ""; 
-    
-    // Populate and select the AI suggestion in the category dropdown
-    const catSelect = document.getElementById('selectTrainCategory');
-    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
-    
-    // Add all categories from taxonomy
-    const categories = Object.keys(CATEGORY_TAXONOMY).sort();
-    categories.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        catSelect.appendChild(opt);
-    });
-    
-    catSelect.disabled = false;
-    
-    // Set the value to AI suggestion if it exists in the options
-    if (item.ai_suggestion && CATEGORY_TAXONOMY[item.ai_suggestion]) {
-        catSelect.value = item.ai_suggestion;
-    } else {
-        catSelect.value = ""; // Reset to default
-    }
+  // Populate Form
+  const badge = document.getElementById('trainingStatusBadge');
+  if (badge) {
+    badge.textContent = "Reviewing";
+    badge.className = "badge badge-primary";
+  }
 
-    updateSubcategories(); 
-    
-    // Enable Buttons
-    document.getElementById('btnSaveTrain').disabled = false;
-    document.getElementById('btnSkipTrain').disabled = false;
+  document.getElementById('lblOriginalText').textContent = item.text;
+  document.getElementById('lblSystemGuess').textContent = item.ai_suggestion;
+
+  const conf = item.confidence || 0;
+  document.getElementById('lblConfidence').textContent = `${(conf * 100).toFixed(1)}%`;
+  document.getElementById('barConfidence').style.width = `${conf * 100}%`;
+  document.getElementById('barConfidence').style.background = conf > 0.7 ? 'var(--success)' : (conf > 0.4 ? 'var(--warning)' : 'var(--danger)');
+
+  // Enable Form
+  const keyInput = document.getElementById('inputTrainKeyword');
+  keyInput.disabled = false;
+  keyInput.value = "";
+
+  // Populate and select the AI suggestion in the category dropdown
+  const catSelect = document.getElementById('selectTrainCategory');
+  catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+
+  // Add all categories from taxonomy
+  const categories = Object.keys(CATEGORY_TAXONOMY).sort();
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+
+  catSelect.disabled = false;
+
+  // Set the value to AI suggestion if it exists in the options
+  if (item.ai_suggestion && CATEGORY_TAXONOMY[item.ai_suggestion]) {
+    catSelect.value = item.ai_suggestion;
+  } else {
+    catSelect.value = ""; // Reset to default
+  }
+
+  updateSubcategories();
+
+  // Enable Buttons
+  document.getElementById('btnSaveTrain').disabled = false;
+  document.getElementById('btnSkipTrain').disabled = false;
 };
 
 function updateSubcategories() {
-    console.log("[TRAIN] updateSubcategories called");
-    const catSelect = document.getElementById('selectTrainCategory');
-    const subSelect = document.getElementById('selectTrainSubcategory');
-    
-    if (!catSelect || !subSelect) {
-        console.warn("[TRAIN] Select elements not found");
-        return;
-    }
-    
-    const selectedCat = catSelect.value;
-    console.log("[TRAIN] Selected category:", selectedCat, "| Available:", Object.keys(CATEGORY_TAXONOMY));
-    
-    subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-    subSelect.disabled = true;
+  console.log("[TRAIN] updateSubcategories called");
+  const catSelect = document.getElementById('selectTrainCategory');
+  const subSelect = document.getElementById('selectTrainSubcategory');
 
-    if (selectedCat && CATEGORY_TAXONOMY[selectedCat]) {
-        const subs = CATEGORY_TAXONOMY[selectedCat].subcategories || [];
-        console.log("[TRAIN] Subcategories for", selectedCat, ":", subs);
-        if (subs.length > 0) {
-            subSelect.disabled = false;
-            subs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                if (currentTrainingItem && sub === currentTrainingItem.subcategory) {
-                    opt.selected = true;
-                }
-                subSelect.appendChild(opt);
-            });
+  if (!catSelect || !subSelect) {
+    console.warn("[TRAIN] Select elements not found");
+    return;
+  }
+
+  const selectedCat = catSelect.value;
+  console.log("[TRAIN] Selected category:", selectedCat, "| Available:", Object.keys(CATEGORY_TAXONOMY));
+
+  subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+  subSelect.disabled = true;
+
+  if (selectedCat && CATEGORY_TAXONOMY[selectedCat]) {
+    const subs = CATEGORY_TAXONOMY[selectedCat].subcategories || [];
+    console.log("[TRAIN] Subcategories for", selectedCat, ":", subs);
+    if (subs.length > 0) {
+      subSelect.disabled = false;
+      subs.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.textContent = sub;
+        if (currentTrainingItem && sub === currentTrainingItem.subcategory) {
+          opt.selected = true;
         }
+        subSelect.appendChild(opt);
+      });
     }
+  }
 }
 
 async function saveTrainingResult() {
-    if (!currentTrainingItem) return;
+  if (!currentTrainingItem) return;
 
-    const term = document.getElementById('inputTrainKeyword').value.trim();
-    const category = document.getElementById('selectTrainCategory').value;
-    const subcategory = document.getElementById('selectTrainSubcategory').value;
+  const term = document.getElementById('inputTrainKeyword').value.trim();
+  const category = document.getElementById('selectTrainCategory').value;
+  const subcategory = document.getElementById('selectTrainSubcategory').value;
 
-    if (!term || !category) {
-        showMessage("error", "Please enter a keyword and select a category.");
-        return;
+  if (!term || !category) {
+    showMessage("error", "Please enter a keyword and select a category.");
+    return;
+  }
+
+  try {
+    let autoResolved = 0;
+
+    // If item is from database queue, use the resolve endpoint
+    if (currentTrainingItem.source === 'database') {
+      const res = await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/resolve`, {
+        keyword: term,
+        category: category,
+        subcategory: subcategory
+      });
+
+      if (!res?.success) throw new Error(res?.error || "Failed to resolve");
+      autoResolved = res.autoResolved || 0;
+      console.log("[TRAIN] Resolved database queue item:", currentTrainingItem.id, autoResolved > 0 ? `(+${autoResolved} auto-resolved)` : '');
+    } else {
+      // Legacy behavior: direct keyword add for memory items
+      const res = await apiClient.post("/api/nlp/keywords", {
+        term: term,
+        category: category,
+        subcategory: subcategory,
+        language: 'all',
+        confidence: 1.0
+      });
+
+      if (!res?.success) throw new Error(res?.error || "Failed to save");
     }
 
-    try {
-        let autoResolved = 0;
-        
-        // If item is from database queue, use the resolve endpoint
-        if (currentTrainingItem.source === 'database') {
-            const res = await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/resolve`, {
-                keyword: term,
-                category: category,
-                subcategory: subcategory
-            });
-            
-            if (!res?.success) throw new Error(res?.error || "Failed to resolve");
-            autoResolved = res.autoResolved || 0;
-            console.log("[TRAIN] Resolved database queue item:", currentTrainingItem.id, autoResolved > 0 ? `(+${autoResolved} auto-resolved)` : '');
-        } else {
-            // Legacy behavior: direct keyword add for memory items
-            const res = await apiClient.post("/api/nlp/keywords", {
-                term: term,
-                category: category,
-                subcategory: subcategory,
-                language: 'all',
-                confidence: 1.0 
-            });
+    trainedComplaintIds.add(currentTrainingItem.id);
+    saveTrainedIds();
 
-            if (!res?.success) throw new Error(res?.error || "Failed to save");
-        }
-
-        trainedComplaintIds.add(currentTrainingItem.id);
-        saveTrainedIds();
-
-        // If auto-resolved others, also add their IDs and remove from list
-        if (autoResolved > 0) {
-            // Reload the list to reflect auto-resolved items
-            await loadLowConfidenceItems();
-            showMessage("success", `Trained "${term}" → ${category}. Also auto-resolved ${autoResolved} similar complaints!`);
-        } else {
-            // Update List
-            pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
-            showMessage("success", "Training saved successfully!");
-        }
-        
-        // Stats
-        addTrainingHistory("Trained keyword", `"${term}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto)` : ''}`);
-        updateHITLStats();
-        renderTrainingHistory();
-        
-        // Refresh
-        resetForm();
-        renderTrainingList();
-        
-        // Trigger Engine Update
-        if (typeof window.loadNLPDictionaries === 'function') {
-            await window.loadNLPDictionaries(true);
-            if (window.CitizenLinkBrainAnalytics?.reprocessAll) {
-                window.CitizenLinkBrainAnalytics.reprocessAll();
-            }
-        }
-
-        showMessage("success", "Training saved successfully!");
-
-    } catch (err) {
-        showMessage("error", "Error saving: " + err.message);
+    // If auto-resolved others, also add their IDs and remove from list
+    if (autoResolved > 0) {
+      // Reload the list to reflect auto-resolved items
+      await loadLowConfidenceItems();
+      showMessage("success", `Trained "${term}" → ${category}. Also auto-resolved ${autoResolved} similar complaints!`);
+    } else {
+      // Update List
+      pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
+      showMessage("success", "Training saved successfully!");
     }
+
+    // Stats
+    addTrainingHistory("Trained keyword", `"${term}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto)` : ''}`);
+    updateHITLStats();
+    renderTrainingHistory();
+
+    // Refresh
+    resetForm();
+    renderTrainingList();
+
+    // Trigger Engine Update
+    if (typeof window.loadNLPDictionaries === 'function') {
+      await window.loadNLPDictionaries(true);
+      if (window.DRIMSBrainAnalytics?.reprocessAll) {
+        window.DRIMSBrainAnalytics.reprocessAll();
+      }
+    }
+
+    showMessage("success", "Training saved successfully!");
+
+  } catch (err) {
+    showMessage("error", "Error saving: " + err.message);
+  }
 }
 
 async function skipCurrentItem() {
-    if (!currentTrainingItem) return;
-    
-    // If item is from database queue, use dismiss endpoint
-    if (currentTrainingItem.source === 'database') {
-        try {
-            await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/dismiss`);
-            console.log("[TRAIN] Dismissed database queue item:", currentTrainingItem.id);
-        } catch (err) {
-            console.warn("[TRAIN] Failed to dismiss from database:", err.message);
-        }
+  if (!currentTrainingItem) return;
+
+  // If item is from database queue, use dismiss endpoint
+  if (currentTrainingItem.source === 'database') {
+    try {
+      await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/dismiss`);
+      console.log("[TRAIN] Dismissed database queue item:", currentTrainingItem.id);
+    } catch (err) {
+      console.warn("[TRAIN] Failed to dismiss from database:", err.message);
     }
-    
-    trainedComplaintIds.add(currentTrainingItem.id);
-    saveTrainedIds();
-    
-    pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
-    resetForm();
-    renderTrainingList();
+  }
+
+  trainedComplaintIds.add(currentTrainingItem.id);
+  saveTrainedIds();
+
+  pendingReviews = pendingReviews.filter(c => c.id !== currentTrainingItem.id);
+  resetForm();
+  renderTrainingList();
 }
 
 function resetForm() {
-    currentTrainingItem = null;
-    const badge = document.getElementById('trainingStatusBadge');
-    if (badge) {
-        badge.textContent = "No Item Selected";
-        badge.className = "badge badge-noise";
-    }
+  currentTrainingItem = null;
+  const badge = document.getElementById('trainingStatusBadge');
+  if (badge) {
+    badge.textContent = "No Item Selected";
+    badge.className = "badge badge-noise";
+  }
 
-    document.getElementById('lblOriginalText').textContent = "Select an item from the left to view details.";
-    document.getElementById('lblSystemGuess').textContent = "-";
-    document.getElementById('lblConfidence').textContent = "-";
-    document.getElementById('barConfidence').style.width = "0%";
-    
-    const keyInput = document.getElementById('inputTrainKeyword');
-    if(keyInput) {
-        keyInput.value = "";
-        keyInput.disabled = true;
-    }
-    
-    const catSelect = document.getElementById('selectTrainCategory');
-    if(catSelect) {
-        // Keep categories populated but reset selection and disable
-        catSelect.value = "";
-        catSelect.disabled = true;
-    }
+  document.getElementById('lblOriginalText').textContent = "Select an item from the left to view details.";
+  document.getElementById('lblSystemGuess').textContent = "-";
+  document.getElementById('lblConfidence').textContent = "-";
+  document.getElementById('barConfidence').style.width = "0%";
 
-    const subSelect = document.getElementById('selectTrainSubcategory');
-    if(subSelect) {
-        subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-        subSelect.disabled = true;
-    }
+  const keyInput = document.getElementById('inputTrainKeyword');
+  if (keyInput) {
+    keyInput.value = "";
+    keyInput.disabled = true;
+  }
 
-    const saveBtn = document.getElementById('btnSaveTrain');
-    if(saveBtn) saveBtn.disabled = true;
+  const catSelect = document.getElementById('selectTrainCategory');
+  if (catSelect) {
+    // Keep categories populated but reset selection and disable
+    catSelect.value = "";
+    catSelect.disabled = true;
+  }
 
-    const skipBtn = document.getElementById('btnSkipTrain');
-    if(skipBtn) skipBtn.disabled = true;
+  const subSelect = document.getElementById('selectTrainSubcategory');
+  if (subSelect) {
+    subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+    subSelect.disabled = true;
+  }
+
+  const saveBtn = document.getElementById('btnSaveTrain');
+  if (saveBtn) saveBtn.disabled = true;
+
+  const skipBtn = document.getElementById('btnSkipTrain');
+  if (skipBtn) skipBtn.disabled = true;
 }
 
 // Stats & History Helpers
@@ -570,15 +570,15 @@ function updateHITLStats() {
     const el = $(id);
     if (el) el.textContent = val;
   };
-  
+
   // Update pending review counts (both legacy and new element IDs)
   set("pendingReviewCount", String(pendingReviews.length));
   set("pendingTrainCount", String(pendingReviews.length));
-  
+
   // Update trained today counts
   set("trainedCount", String(trainedToday));
   set("trainedTodayCount", String(trainedToday));
-  
+
   // Calculate average confidence from pending items
   let totalConf = 0;
   let confCount = 0;
@@ -591,7 +591,7 @@ function updateHITLStats() {
   }
   const avgConf = confCount > 0 ? Math.round((totalConf / confCount) * 100) : 0;
   set("avgConfidenceScore", avgConf > 0 ? avgConf + "%" : "-");
-  
+
   // Model accuracy estimation (based on training history vs total processed)
   const totalTrained = trainingHistory.length;
   const accuracy = totalTrained > 10 ? Math.min(95, 70 + Math.round(totalTrained / 5)) : "-";
@@ -602,13 +602,13 @@ function addTrainingHistory(title, detail) {
   const date = new Date().toLocaleDateString();
   trainingHistory.unshift({ title, detail, date });
   trainingHistory = trainingHistory.slice(0, 50);
-  localStorage.setItem("citizenlink_training_history", JSON.stringify(trainingHistory));
+  localStorage.setItem("DRIMS_training_history", JSON.stringify(trainingHistory));
   trainedToday += 1;
-  localStorage.setItem("citizenlink_trained_today", String(trainedToday));
+  localStorage.setItem("DRIMS_trained_today", String(trainedToday));
 }
 
 function loadTrainingHistory() {
-  const stored = JSON.parse(localStorage.getItem("citizenlink_training_history") || "[]");
+  const stored = JSON.parse(localStorage.getItem("DRIMS_training_history") || "[]");
   trainingHistory = Array.isArray(stored) ? stored : [];
   const today = new Date().toLocaleDateString();
   // Simple check for today's count
@@ -638,7 +638,7 @@ async function loadDictionaryStats() {
       const sizeEl = $("dictionarySize");
       if (sizeEl) sizeEl.textContent = Number(response.data?.keywords ?? 0).toLocaleString();
     }
-  } catch {}
+  } catch { }
 }
 
 document.addEventListener("DOMContentLoaded", init);

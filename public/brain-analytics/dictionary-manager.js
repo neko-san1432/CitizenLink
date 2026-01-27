@@ -52,9 +52,9 @@ async function fetchAllRules() {
 }
 
 async function loadTaxonomy() {
-  if (typeof CitizenLinkTaxonomy === "undefined") return null;
+  if (typeof DRIMSTaxonomy === "undefined") return null;
   try {
-    return await CitizenLinkTaxonomy.loadTaxonomy();
+    return await DRIMSTaxonomy.loadTaxonomy();
   } catch {
     return null;
   }
@@ -653,7 +653,7 @@ function exportDictionary() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `citizenlink_dictionary_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `DRIMS_dictionary_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -676,9 +676,9 @@ function initDictionaryManager() {
   $("exportDictionaryBtn")?.addEventListener("click", exportDictionary);
 
   // Check if we're on the standalone dictionary-manager page
-  const isStandalonePage = window.location.pathname === "/dictionary-manager" || 
-                           window.location.pathname.includes("dictionary-manager");
-  
+  const isStandalonePage = window.location.pathname === "/dictionary-manager" ||
+    window.location.pathname.includes("dictionary-manager");
+
   if (isStandalonePage) {
     // Auto-load dictionary on standalone page
     loadDictionary();

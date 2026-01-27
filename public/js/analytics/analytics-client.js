@@ -1,5 +1,5 @@
 /**
- * CitizenLink Analytics Client v2.0
+ * DRIMS Analytics Client v2.0
  * Connects to Node.js Backend API
  */
 

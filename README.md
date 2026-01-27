@@ -1,4 +1,4 @@
-# CitizenLink 2.0
+# DRIMS 2.0
 
 **Citizen Complaint Management System with DBSCAN-Based Geospatial Heatmap Analytics**
 
@@ -6,9 +6,9 @@
 
 ### Introduction
 
-CitizenLink 2.0 is a web-based complaint management system designed for Local Government Units (LGUs) to efficiently handle and analyze citizen complaints. The system's primary innovation is its **advanced geospatial analytics using DBSCAN clustering** for complaint hotspot detection, enabling data-driven decision-making for resource allocation and policy development.
+DRIMS 2.0 is a web-based complaint management system designed for Local Government Units (LGUs) to efficiently handle and analyze citizen complaints. The system's primary innovation is its **advanced geospatial analytics using DBSCAN clustering** for complaint hotspot detection, enabling data-driven decision-making for resource allocation and policy development.
 
-Built with modern web technologies, CitizenLink provides a scalable platform for managing citizen feedback with intelligent spatial analysis capabilities.
+Built with modern web technologies, DRIMS provides a scalable platform for managing citizen feedback with intelligent spatial analysis capabilities.
 
 ### Core Capabilities
 
@@ -32,7 +32,7 @@ Built with modern web technologies, CitizenLink provides a scalable platform for
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd CitizenLink
+cd DRIMS
 
 # Install dependencies
 npm install
@@ -69,7 +69,7 @@ npm run dev
 ### Directory Structure
 
 ```
-CitizenLink/
+DRIMS/
 ├── 📁 config/                 # Configuration management
 ├── 📁 src/
 │   ├── 📁 server/             # Backend (Node.js/Express)
@@ -97,7 +97,7 @@ CitizenLink/
 
 ### Architectural Pattern
 
-CitizenLink follows a **layered MVC + Service architecture** with clear separation of concerns:
+DRIMS follows a **layered MVC + Service architecture** with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -137,7 +137,7 @@ CitizenLink follows a **layered MVC + Service architecture** with clear separati
 
 ### Overview
 
-The primary innovation of CitizenLink is its implementation of **Density-Based Spatial Clustering of Applications with Noise (DBSCAN)** algorithm for advanced geospatial analysis of citizen complaints.
+The primary innovation of DRIMS is its implementation of **Density-Based Spatial Clustering of Applications with Noise (DBSCAN)** algorithm for advanced geospatial analysis of citizen complaints.
 
 ### What is DBSCAN?
 
@@ -607,7 +607,7 @@ LGU administrators use insights to:
 
 ## 👨‍💻 Development Team
 
-CitizenLink 2.0 was developed by:
+DRIMS 2.0 was developed by:
 
 **Pyrrhus Go** - _Backend Developer_
 
@@ -667,4 +667,4 @@ MIT License - see LICENSE file for details
 
 ---
 
-**CitizenLink 2.0** - Data-Driven Complaint Management with Geospatial Intelligence 🗺️
+**DRIMS 2.0** - Data-Driven Complaint Management with Geospatial Intelligence 🗺️

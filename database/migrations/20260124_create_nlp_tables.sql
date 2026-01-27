@@ -1,6 +1,6 @@
 -- Migration: Create NLP Tables
 -- Description: Stores dynamic keywords, metaphors, and category configs for the Advanced Decision Engine
--- Author: CitizenLink AI
+-- Author: DRIMS AI
 -- Date: 2026-01-24
 
 -- 1. NLP Category Configuration (Urgency & Hierarchy)

@@ -1699,29 +1699,32 @@ body {
 
 .auth-card {
   width: 100%;
-  background: white;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 1rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--gray-200);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
   overflow: hidden;
 }
 
 .auth-header {
   padding: 1.5rem 1.5rem 1rem;
   text-align: center;
-  background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+  background: transparent;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .auth-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-light);
   margin: 0 0 0.5rem 0;
 }
 
 .auth-subtitle {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-dim);
   margin: 0;
 }
 
@@ -2383,10 +2386,12 @@ body {
   width: 100%;
   height: auto;
   /* avoid clipping content */
-  background: white;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-2xl);
-  border: 1px solid var(--gray-200);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
   display: grid;
   grid-template-rows: auto 1fr auto;
   overflow: hidden;
@@ -2416,20 +2421,21 @@ body {
 .auth-header {
   padding: clamp(12px, 1.5vw, 20px) clamp(12px, 1.5vw, 20px) clamp(8px, 1vw, 16px);
   text-align: center;
-  background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+  background: transparent;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .auth-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-light);
   margin: 0;
   letter-spacing: -0.025em;
 }
 
 .auth-subtitle {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--text-dim);
   line-height: 1.5;
 }
 
@@ -2713,9 +2719,9 @@ body {
 /* Footer tighter */
 .auth-footer {
   padding: clamp(8px, 1vw, 12px);
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--glass-border);
   text-align: center;
-  background: var(--gray-50);
+  background: transparent;
 }
 
 /* Reduce extra vertical margins */
@@ -2909,7 +2915,8 @@ body {
   display: block;
   text-align: center;
   padding: clamp(6px, 1vw, 12px) clamp(10px, 1.25vw, 16px) clamp(6px, 0.8vw, 10px);
-  background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+  background: transparent;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 /* Final compact override to force small header when multiple blocks exist */
@@ -2929,7 +2936,7 @@ body {
 .auth-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-light);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -2937,7 +2944,7 @@ body {
 
 .auth-subtitle {
   font-size: 0.9rem;
-  color: var(--gray-600);
+  color: var(--text-dim);
   line-height: 1.35;
   margin-top: 2px;
 }

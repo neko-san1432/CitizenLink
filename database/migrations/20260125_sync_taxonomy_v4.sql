@@ -1,4 +1,4 @@
--- Sync taxonomy v4.0.0 into database tables used by CitizenLink NLP management.
+-- Sync taxonomy v4.0.0 into database tables used by DRIMS NLP management.
 -- This migration is idempotent and safe to run multiple times.
 -- Targets:
 -- - public.nlp_category_config (top-level categories)

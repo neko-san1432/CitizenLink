@@ -1,10 +1,10 @@
 /**
- * CitizenLink Production Dashboard Controller
+ * DRIMS Production Dashboard Controller
  * ============================================
  * Production-grade city analytics system with dynamic insights generation.
  * 
  * @version 3.9.0 (Production - Security Hardened)
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * 
  * v3.9.0 Changes (AUDIT FIXES):
  * - Added XSS sanitization for all user inputs
@@ -1222,7 +1222,7 @@ async function reverseGeocode(lat, lng) {
 
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'CitizenLink-Dashboard/3.7 (thesis project; contact: citizenlink@example.com)',
+                'User-Agent': 'DRIMS-Dashboard/3.7 (thesis project; contact: DRIMS@example.com)',
                 'Accept-Language': 'en'
             }
         });
@@ -3902,8 +3902,8 @@ window.CATEGORY_CONTEXT_NOUNS = CATEGORY_CONTEXT_NOUNS;
  * v3.7.3: Comprehensive causal link database covering all category relationships
  */
 function findCausalPairs(categories) {
-    const knownCausalLinks = (window.CitizenLinkBrainConfig && window.CitizenLinkBrainConfig.correlations && window.CitizenLinkBrainConfig.correlations.knownCausalLinks)
-        ? window.CitizenLinkBrainConfig.correlations.knownCausalLinks
+    const knownCausalLinks = (window.DRIMSBrainConfig && window.DRIMSBrainConfig.correlations && window.DRIMSBrainConfig.correlations.knownCausalLinks)
+        ? window.DRIMSBrainConfig.correlations.knownCausalLinks
         : [
             // ================================================================
             // WATER & FLOODING CHAIN
@@ -5920,7 +5920,7 @@ async function loadFullSimulation() {
             };
 
             // Use localStorage for cross-tab communication
-            localStorage.setItem('citizenlink_analytics_handover', JSON.stringify(transferPackage));
+            localStorage.setItem('DRIMS_analytics_handover', JSON.stringify(transferPackage));
             console.log(`[HANDOVER] 📤 Data exported for Analytics inheritance (${simulationEngine.complaints.length} records)`);
         } catch (storageError) {
             console.warn('[HANDOVER] Failed to export data to Analytics (likely QuotaExceeded):', storageError);

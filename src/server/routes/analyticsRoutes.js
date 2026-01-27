@@ -88,7 +88,7 @@ router.get('/export/pdf', async (req, res) => {
 
         res.set({
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="CitizenLink_${type}_Report_${to}.pdf"`,
+            'Content-Disposition': `attachment; filename="DRIMS_${type}_Report_${to}.pdf"`,
             'Content-Length': pdfBuffer.length
         });
 

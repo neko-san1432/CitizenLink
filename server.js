@@ -1,7 +1,7 @@
 require("dotenv").config();
 // Initialize console logger early to capture all logs
 require("./src/server/utils/consoleLogger");
-console.log("🚀 Starting CitizenLink Server...");
+console.log("🚀 Starting DRIMS Server...");
 // Set development mode if not already set
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "development";
@@ -30,10 +30,10 @@ try {
   ]);
   process.exit(1);
 }
-console.log("🏗️  Initializing CitizenLink application...");
-const CitizenLinkApp = require("./src/server/app");
+console.log("🏗️  Initializing DRIMS application...");
+const DRIMSApp = require("./src/server/app");
 
-const app = new CitizenLinkApp();
+const app = new DRIMSApp();
 console.log("🔄 Starting server on port", config.port);
 app.start(config.port).then(() => {
   // Start the automated reporting scheduler

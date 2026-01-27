@@ -43,7 +43,7 @@ class EmailService {
 
         try {
             const info = await this.transporter.sendMail({
-                from: `"CitizenLink Analytics" <${process.env.EMAIL_USER}>`,
+                from: `"DRIMS Analytics" <${process.env.EMAIL_USER}>`,
                 to,
                 subject,
                 html,

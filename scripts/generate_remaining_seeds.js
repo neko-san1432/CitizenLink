@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load mock complaints
-const dataPath = path.join(__dirname, '../../CitizenLink_Simulated_System/data/complaints/mock_complaints.json');
+const dataPath = path.join(__dirname, '../../DRIMS_Simulated_System/data/complaints/mock_complaints.json');
 const data = require(dataPath);
 
 // IDs already uploaded to database
@@ -44,7 +44,7 @@ const batchSize = 50;
 for (let i = 0; i < remaining.length; i += batchSize) {
     const batch = remaining.slice(i, Math.min(i + batchSize, remaining.length));
     const batchNum = Math.floor(i / batchSize) + 1;
-    
+
     sql += `-- Batch ${batchNum} (records ${i + 1} to ${i + batch.length})\n`;
     sql += `INSERT INTO public.complaints (
     id, submitted_by, descriptive_su, location_text, latitude, longitude,
@@ -52,13 +52,13 @@ for (let i = 0; i < remaining.length; i += batchSize) {
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES\n`;
-    
+
     batch.forEach((c, idx) => {
         // Generic location - no zone labels for blind testing
         const location = 'Digos City, Davao del Sur';
         const desc = (c.description || '').replace(/'/g, "''");
         const subcat = (c.subcategory || '').replace(/'/g, "''");
-        
+
         sql += `(
     '${c.id}',
     (SELECT id FROM auth.users LIMIT 1),

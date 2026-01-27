@@ -1,9 +1,9 @@
 /**
- * CitizenLink Brain Analytics - Dashboard Integration
+ * DRIMS Brain Analytics - Dashboard Integration
  * Bridges the NLP prediction engine with the LGU Admin Dashboard
  */
 
-import { showToast } from "../../components/toast.js";
+
 
 // Global state for brain analytics
 const BrainState = {
@@ -27,8 +27,8 @@ export async function initBrainAnalytics() {
 
     try {
         // 1. Load Taxonomy (needed for category normalization)
-        if (typeof CitizenLinkTaxonomy !== "undefined") {
-            BrainState.taxonomy = await CitizenLinkTaxonomy.loadTaxonomy();
+        if (typeof DRIMSTaxonomy !== "undefined") {
+            BrainState.taxonomy = await DRIMSTaxonomy.loadTaxonomy();
         }
 
         // 2. Fetch Data
@@ -72,8 +72,8 @@ function processData() {
         let subcategory = c.subcategory || null;
 
         // Use Taxonomy for normalization if available
-        if (taxonomy && typeof CitizenLinkTaxonomy !== "undefined") {
-            const norm = CitizenLinkTaxonomy.normalizeCategoryPair(category, subcategory, taxonomy);
+        if (taxonomy && typeof DRIMSTaxonomy !== "undefined") {
+            const norm = DRIMSTaxonomy.normalizeCategoryPair(category, subcategory, taxonomy);
             category = norm.category;
             subcategory = norm.subcategory;
         }

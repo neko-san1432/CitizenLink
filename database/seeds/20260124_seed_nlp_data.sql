@@ -1,7 +1,7 @@
 -- Seed Data: NLP System - COMPREHENSIVE EXTRACTION
 -- Sources: 
--- 1. brain_logic/CitizenLink_Simulated_System/data/nlp_dictionaries.json (Version 3.9.3)
--- 2. brain_logic/CitizenLink_Simulated_System/nlp-processor.js (Version 4.0.0)
+-- 1. brain_logic/DRIMS_Simulated_System/data/nlp_dictionaries.json (Version 3.9.3)
+-- 2. brain_logic/DRIMS_Simulated_System/nlp-processor.js (Version 4.0.0)
 
 -- =================================================================
 -- 1. NLP CATEGORY CONFIGURATION (Urgency & Hierarchy)

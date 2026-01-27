@@ -65,14 +65,16 @@ class LguAdminDashboard {
 
   renderStats(stats) {
     if (!stats) return;
-    document.getElementById("stat-total-active").textContent =
-      stats.total_active || 0;
-    document.getElementById("stat-unassigned").textContent =
-      stats.unassigned || 0;
-    document.getElementById("stat-urgent").textContent =
-      stats.priority?.urgent || 0;
-    document.getElementById("stat-high").textContent =
-      stats.priority?.high || 0;
+
+    const setContent = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    setContent("stat-total-active", stats.total_active || 0);
+    setContent("stat-unassigned", stats.unassigned || 0);
+    setContent("stat-urgent", stats.priority?.urgent || 0);
+    setContent("stat-high", stats.priority?.high || 0);
   }
 
   renderCharts(stats, chartsData) {

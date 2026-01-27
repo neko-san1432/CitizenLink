@@ -72,14 +72,14 @@ class SchedulerService {
 
             // 2. Send Email
             if (reportsToSend.length > 0) {
-                const subject = `CitizenLink Automated Reports - ${this._formatDate(today)}`;
+                const subject = `DRIMS Automated Reports - ${this._formatDate(today)}`;
                 const html = `
-                    <h3>CitizenLink Analytics Report</h3>
+                    <h3>DRIMS Analytics Report</h3>
                     <p>Attached are the automated reports for ${today.toDateString()}.</p>
                     <ul>
                         ${reportsToSend.map(r => `<li>${r.filename}</li>`).join('')}
                     </ul>
-                    <p><em>Generated automatically by CitizenLink Analytics Node.</em></p>
+                    <p><em>Generated automatically by DRIMS Analytics Node.</em></p>
                 `;
 
                 await EmailService.sendEmail(adminEmail, subject, html, reportsToSend);

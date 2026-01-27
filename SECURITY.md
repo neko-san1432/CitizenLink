@@ -2,7 +2,7 @@
 
 ## Reporting Security Issues
 
-If you discover a security vulnerability, please report it to security@citizenlink.local
+If you discover a security vulnerability, please report it to security@DRIMS.local
 
 ## Security Measures Implemented
 

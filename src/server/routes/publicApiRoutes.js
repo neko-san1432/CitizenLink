@@ -13,7 +13,7 @@ const router = express.Router();
  * Key: "lat,lng" with 5-decimal precision (~1.1m accuracy)
  * Value: { data, timestamp }
  * 
- * @thesis-feature Implements geocode caching from CitizenLink_Simulated_System
+ * @thesis-feature Implements geocode caching from DRIMS_Simulated_System
  */
 const geocodeCache = new Map();
 const GEOCODE_CACHE_MAX_SIZE = 1000; // LRU eviction threshold
@@ -113,7 +113,7 @@ router.get("/reverse-geocode", apiLimiter, async (req, res) => {
     const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
     const response = await fetch(nominatimUrl, {
       headers: {
-        "User-Agent": "CitizenLink/1.0 (https://citizenlink.local)"
+        "User-Agent": "DRIMS/1.0 (https://DRIMS.local)"
       }
     });
     if (!response.ok) {

@@ -91,7 +91,7 @@ class SettingService {
       {
         key: "terms_and_conditions",
         value: `<h2>Terms and Conditions</h2>
-        <p>By using CitizenLink, you agree to the following terms:</p>
+        <p>By using DRIMS, you agree to the following terms:</p>
         <ul>
           <li>Provide accurate information when filing complaints</li>
           <li>Use the platform responsibly and lawfully</li>

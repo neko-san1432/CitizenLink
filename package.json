@@ -1,5 +1,5 @@
 {
-  "name": "citizenlink",
+  "name": "DRIMS",
   "version": "2.0.0",
   "description": "Modern Citizen Complaint Management System with Clean Architecture Specifically for Digos City",
   "type": "commonjs",
@@ -62,6 +62,6 @@
     "express",
     "bootstrap"
   ],
-  "author": "CitizenLink Team",
+  "author": "DRIMS Team",
   "license": "MIT"
 }

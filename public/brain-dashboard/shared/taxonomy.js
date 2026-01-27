@@ -2,7 +2,7 @@
     if (typeof module === 'object' && module.exports) {
         module.exports = factory(require('fs'), require('path'));
     } else {
-        root.CitizenLinkTaxonomy = factory(null, null);
+        root.DRIMSTaxonomy = factory(null, null);
     }
 })(typeof self !== 'undefined' ? self : this, function (fs, path) {
     'use strict';
@@ -145,12 +145,12 @@
                     try {
                         const config = await fetchJsonWithTimeout(configUrl, configTimeoutMs);
                         if (config && typeof config === 'object') {
-                            root.CitizenLinkBrainConfig = config;
+                            root.DRIMSBrainConfig = config;
                             if (config.taxonomy && typeof config.taxonomy === 'object') {
                                 taxonomy = config.taxonomy;
                             }
                         }
-                    } catch (_e) {}
+                    } catch (_e) { }
                 }
 
                 if (!taxonomy) {

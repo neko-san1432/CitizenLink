@@ -409,7 +409,7 @@ async function reverseGeocode(lat, lng) {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
 
         const response = await fetch(url, {
-            headers: { 'User-Agent': 'CitizenLink-Dashboard/3.8 (Project)' }
+            headers: { 'User-Agent': 'DRIMS-Dashboard/3.8 (Project)' }
         });
 
         if (!response.ok) throw new Error('Geocode failed');

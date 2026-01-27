@@ -67,7 +67,7 @@
  * - AI fallback path: ~50-100ms (async, non-blocking)
  * - TF.js loads in background, doesn't block page load
  * 
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * @version 4.0.0 - Hybrid Edge-AI Architecture
  * @module NLPProcessor
  */
@@ -515,7 +515,7 @@
 
     /**
      * v4.2: PHRASE-BASED NEGATION PATTERNS
-     * @thesis-feature Enhanced negation detection from CitizenLink_Simulated_System
+     * @thesis-feature Enhanced negation detection from DRIMS_Simulated_System
      * 
      * These patterns detect complete negated phrases that should NOT trigger
      * false positive classifications. Each pattern maps to the category it negates.
@@ -527,22 +527,22 @@
         { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(sunog|fire|apoy|kayo|nasusunog)\b/gi, negatedCategory: "Fire" },
         { pattern: /\b(fire|sunog)\s*(drill|exercise|training)\b/gi, negatedCategory: "Fire" },
         { pattern: /\b(false|fake)\s*(fire|alarm|sunog)\b/gi, negatedCategory: "Fire" },
-        
+
         // Flood-related negations
         { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(baha|flood|lunop|tubig)\b/gi, negatedCategory: "Flood" },
         { pattern: /\b(baha|flood)\s*(warning|drill|exercise)\b/gi, negatedCategory: "Flood" },
-        
+
         // Crime-related negations
         { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(krimen|crime|nakaw|holdap|robbery|theft)\b/gi, negatedCategory: "Crime" },
         { pattern: /\b(false|fake)\s*(report|alarm)\b/gi, negatedCategory: "Crime" },
-        
+
         // Accident-related negations
         { pattern: /\b(walang?|walay|way|dili|hindi|no|not?)\s*(aksidente|accident|bangga|crash)\b/gi, negatedCategory: "Accident" },
-        
+
         // Utilities negations
         { pattern: /\b(may|meron|there\s*is)\s*(tubig|water|kuryente|electricity|power)\b/gi, negatedCategory: "No Water" },
         { pattern: /\b(may|meron|there\s*is)\s*(kuryente|electricity|power|ilaw)\b/gi, negatedCategory: "Blackout" },
-        
+
         // General false reports
         { pattern: /\b(false|fake|hoax|prank)\s*(report|complaint|claim)\b/gi, negatedCategory: "_ALL_" }
     ];
@@ -555,9 +555,9 @@
      */
     function checkNegationPhrasePatterns(text) {
         if (!text || typeof text !== 'string') return null;
-        
+
         const lowerText = text.toLowerCase();
-        
+
         for (const { pattern, negatedCategory } of NEGATION_PHRASE_PATTERNS) {
             const match = lowerText.match(pattern);
             if (match) {
@@ -569,7 +569,7 @@
                 };
             }
         }
-        
+
         return null;
     }
 
@@ -647,7 +647,7 @@
 
     // ==================== INDEXEDDB CACHING FOR USE MODEL ====================
 
-    const IDB_NAME = 'CitizenLinkNLP';
+    const IDB_NAME = 'DRIMSNLP';
     const IDB_STORE = 'modelCache';
     const IDB_VERSION = 1;
     const ANCHOR_CACHE_KEY = 'use_anchor_embeddings_v1';
@@ -945,8 +945,8 @@
     let _hardcodedKeywordsIndex = null;
     let taxonomyCache = null;
 
-    if (typeof CitizenLinkTaxonomy !== 'undefined') {
-        CitizenLinkTaxonomy.loadTaxonomy().then(t => {
+    if (typeof DRIMSTaxonomy !== 'undefined') {
+        DRIMSTaxonomy.loadTaxonomy().then(t => {
             taxonomyCache = t;
         }).catch(() => {
             taxonomyCache = null;
@@ -1026,11 +1026,11 @@
         for (const [category, data] of Object.entries(NLP_KEYWORDS)) {
             for (const keyword of data.keywords) {
                 const normalizedKeyword = keyword.toLowerCase();
-                const canonicalLabel = (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache)
-                    ? CitizenLinkTaxonomy.normalizeLabel(category, taxonomyCache)
+                const canonicalLabel = (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache)
+                    ? DRIMSTaxonomy.normalizeLabel(category, taxonomyCache)
                     : category;
                 const parentCategory = getParentCategory(canonicalLabel);
-                const specificCategory = (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache && CitizenLinkTaxonomy.isValidSubcategory(canonicalLabel, taxonomyCache))
+                const specificCategory = (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache && DRIMSTaxonomy.isValidSubcategory(canonicalLabel, taxonomyCache))
                     ? canonicalLabel
                     : null;
 
@@ -1157,8 +1157,8 @@
     function getParentCategory(specificCategory) {
         if (!specificCategory) return 'Others';
         const normalized = String(specificCategory).trim();
-        if (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache) {
-            return CitizenLinkTaxonomy.getParentForLabel(normalized, taxonomyCache);
+        if (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache) {
+            return DRIMSTaxonomy.getParentForLabel(normalized, taxonomyCache);
         }
         return CATEGORY_HIERARCHY[normalized] || normalized;
     }
@@ -1431,7 +1431,7 @@
 
         processedMatches.forEach(match => {
             const cat = match.category;
-            
+
             // v4.2: PHRASE NEGATION FILTER
             // If phrase negation detected for this category, skip it entirely
             if (result.phraseNegation && result.phraseNegation.found) {
@@ -1448,7 +1448,7 @@
                     return; // Skip this match
                 }
             }
-            
+
             if (!categoryScores[cat] || match.finalUrgency > categoryScores[cat].urgency) {
                 categoryScores[cat] = {
                     category: cat,
@@ -1492,9 +1492,9 @@
             result.intensifierWord = winner.intensifierWord;
         }
 
-        if (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache) {
+        if (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache) {
             result.detectedCategories = result.detectedCategories.map(dc => {
-                const pair = CitizenLinkTaxonomy.normalizeCategoryPair(dc.category, dc.specificCategory, taxonomyCache);
+                const pair = DRIMSTaxonomy.normalizeCategoryPair(dc.category, dc.specificCategory, taxonomyCache);
                 return {
                     ...dc,
                     category: pair.category,
@@ -1502,7 +1502,7 @@
                 };
             });
 
-            const pair = CitizenLinkTaxonomy.normalizeCategoryPair(result.category, result.specificCategory, taxonomyCache);
+            const pair = DRIMSTaxonomy.normalizeCategoryPair(result.category, result.specificCategory, taxonomyCache);
             result.category = pair.category;
             result.subcategory = pair.subcategory;
             result.specificCategory = pair.subcategory;
@@ -1646,8 +1646,8 @@
                 if (aiResult && aiResult.similarity >= AI_SIMILARITY_THRESHOLD) {
                     // AI override
                     const previousCategory = result.category;
-                    const pair = (typeof CitizenLinkTaxonomy !== 'undefined' && taxonomyCache)
-                        ? CitizenLinkTaxonomy.normalizeCategoryPair(aiResult.category, null, taxonomyCache)
+                    const pair = (typeof DRIMSTaxonomy !== 'undefined' && taxonomyCache)
+                        ? DRIMSTaxonomy.normalizeCategoryPair(aiResult.category, null, taxonomyCache)
                         : { category: aiResult.category, subcategory: null };
                     const urgencyKey = pair.subcategory || pair.category;
                     result.category = pair.category;

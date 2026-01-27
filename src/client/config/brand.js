@@ -1,12 +1,12 @@
 // Brand configuration for easy modification
 
 export const brandConfig = {
-  name: "CitizenLink",
+  name: "DRIMS",
   dashboardUrl: "/dashboard",
   logo: {
     // You can add logo image URL here if needed
     // imageUrl: '/assets/logo.png',
-    text: "CitizenLink"
+    text: "DRIMS"
   },
   colors: {
     primary: "#333",

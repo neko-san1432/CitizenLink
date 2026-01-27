@@ -1,5 +1,5 @@
 /**
- * CitizenLink Complaint Intelligence v3.6
+ * DRIMS Complaint Intelligence v3.6
  * ========================================
  * Ported from Simulation Engine for Production Use
  * 

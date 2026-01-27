@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const filePath =
-  "c:\\Users\\User\\Documents\\Projects\\acads\\CitizenLink\\public\\css\\pages\\index.css";
+  "c:\\Users\\User\\Documents\\Projects\\acads\\DRIMS\\public\\css\\pages\\index.css";
 
 try {
   let content;

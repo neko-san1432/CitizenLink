@@ -2,7 +2,7 @@ const PRIVACY_SECTIONS = [
   {
     title: "What This Notice Covers",
     body: [
-      "How CitizenLink collects, uses, shares, and protects your personal data when you use our services.",
+      "How DRIMS collects, uses, shares, and protects your personal data when you use our services.",
       "The choices available to you regarding the use of your information.",
       "How you can exercise your rights under Philippine data protection laws."
     ]
@@ -14,7 +14,7 @@ const PRIVACY_SECTIONS = [
       "Account credentials and metadata required to manage your profile.",
       "Complaint submissions including descriptions, media uploads, location details, and supporting evidence.",
       "Usage analytics (device, browser, timestamps) captured to secure the platform and improve performance.",
-      "Communications you send to the LGU or support teams through CitizenLink."
+      "Communications you send to the LGU or support teams through DRIMS."
     ]
   },
   {
@@ -78,7 +78,7 @@ const PRIVACY_SECTIONS = [
   {
     title: "Cookies and Analytics",
     body: [
-      "CitizenLink uses session cookies to keep you signed in securely.",
+      "DRIMS uses session cookies to keep you signed in securely.",
       "Essential analytics are collected to monitor service availability and detect outages.",
       "We do not use third-party advertising trackers."
     ]
@@ -86,7 +86,7 @@ const PRIVACY_SECTIONS = [
   {
     title: "Children's Privacy",
     body: [
-      "CitizenLink is intended for use by adults and duly authorized representatives.",
+      "DRIMS is intended for use by adults and duly authorized representatives.",
       "If we learn that data from a minor was collected without guardian consent, we will take steps to delete it promptly."
     ]
   },
@@ -105,7 +105,7 @@ const PRIVACY_SECTIONS = [
       "Phone: (082) 555-1234",
       "Address: Digos City Hall, Rizal Avenue, Digos City, Davao del Sur"
     ],
-    note: "For urgent concerns, you may also reach out through the CitizenLink support desk within the platform."
+    note: "For urgent concerns, you may also reach out through the DRIMS support desk within the platform."
   }
 ];
 
@@ -128,7 +128,7 @@ export function getPrivacyNoticeHtml(options = {}) {
 
   if (includeIntro) {
     parts.push(
-      "<p>CitizenLink is operated by the Digos City Local Government Unit (LGU). " +
+      "<p>DRIMS is operated by the Digos City Local Government Unit (LGU). " +
       "We respect your privacy and process personal data in accordance with the Data Privacy Act of 2012 and its implementing rules.</p>"
     );
     parts.push(
@@ -150,7 +150,7 @@ export function getPrivacyNoticeHtml(options = {}) {
     }
   });
 
-  parts.push(`<p class="privacy-updated">Last updated: ${  new Date().toISOString().split("T")[0]  }</p>`);
+  parts.push(`<p class="privacy-updated">Last updated: ${new Date().toISOString().split("T")[0]}</p>`);
 
   return parts.join("");
 }

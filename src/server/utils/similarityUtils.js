@@ -3,7 +3,7 @@
  * Implements the 3-Layer Filter Architecture
  * 
  * v4.2: ADAPTIVE DBSCAN PARAMETERS
- * @thesis-feature Ported from CitizenLink_Simulated_System
+ * @thesis-feature Ported from DRIMS_Simulated_System
  * 
  * Key Enhancements:
  * - Category-specific epsilon (clustering radius)
@@ -42,7 +42,7 @@ const ADAPTIVE_EPSILON = {
   "Robbery": 30,
   "Assault": 30,
   "Public Safety": 30,
-  
+
   // TIER 2: Infrastructure (ε = 30-40m)
   "Pothole": 30,
   "Road Damage": 35,
@@ -53,7 +53,7 @@ const ADAPTIVE_EPSILON = {
   "Clogged Drainage": 40,
   "Clogged Canal": 40,
   "Infrastructure": 40,
-  
+
   // TIER 3: Sanitation (ε = 40m)
   "Trash": 40,
   "Overflowing Trash": 40,
@@ -62,7 +62,7 @@ const ADAPTIVE_EPSILON = {
   "Bad Odor": 45,
   "Sewage Leak": 40,
   "Sanitation": 40,
-  
+
   // TIER 4: Area-Wide Events (ε = 50-60m)
   "Flooding": 60,
   "Flood": 60,
@@ -74,7 +74,7 @@ const ADAPTIVE_EPSILON = {
   "Evacuation": 60,
   "Environment": 55,
   "Utilities": 50,
-  
+
   // TIER 5: Quality of Life (ε = 40-50m)
   "Noise Complaint": 40,
   "Stray Dog": 45,
@@ -82,7 +82,7 @@ const ADAPTIVE_EPSILON = {
   "Traffic": 50,
   "Traffic Congestion": 50,
   "Vehicle Breakdown": 45,
-  
+
   // Default fallback
   "Others": 50,
   "default": 50
@@ -116,7 +116,7 @@ const ADAPTIVE_MINPTS = {
   "Assault": 1,
   "Landslide": 1,
   "Flash Flood": 1,
-  
+
   // HIGH PRIORITY: Low threshold (minPts = 2)
   "Flooding": 2,
   "Flood": 2,
@@ -127,7 +127,7 @@ const ADAPTIVE_MINPTS = {
   "Pipe Leak": 2,
   "Public Safety": 2,
   "Evacuation": 1,
-  
+
   // INFRASTRUCTURE: Moderate threshold (minPts = 2-3)
   "Pothole": 2,
   "Road Damage": 2,
@@ -138,7 +138,7 @@ const ADAPTIVE_MINPTS = {
   "Clogged Drainage": 3,
   "Clogged Canal": 3,
   "Infrastructure": 2,
-  
+
   // ROUTINE: Higher threshold (minPts = 4-5)
   "Trash": 4,
   "Overflowing Trash": 3,
@@ -148,12 +148,12 @@ const ADAPTIVE_MINPTS = {
   "Stray Dog": 4,
   "Stray Animal": 4,
   "Sanitation": 3,
-  
+
   // QUALITY OF LIFE (minPts = 3-4)
   "Traffic": 3,
   "Traffic Congestion": 3,
   "Vehicle Breakdown": 3,
-  
+
   // Default fallback
   "Others": 3,
   "default": 3
@@ -177,17 +177,17 @@ function getDynamicEpsilon(categoryId, categoryName = "", subcategoryName = "") 
   // v4.2: Try subcategory first (most specific), then category, then fallback
   const subLower = (subcategoryName || "").trim();
   const catLower = (categoryName || "").trim();
-  
+
   // Exact subcategory match
   if (subLower && ADAPTIVE_EPSILON[subLower] !== undefined) {
     return ADAPTIVE_EPSILON[subLower];
   }
-  
+
   // Exact category match
   if (catLower && ADAPTIVE_EPSILON[catLower] !== undefined) {
     return ADAPTIVE_EPSILON[catLower];
   }
-  
+
   // Legacy heuristic fallback (for backward compatibility)
   const lowerName = catLower.toLowerCase();
   if (
@@ -227,17 +227,17 @@ function getDynamicMinPts(categoryName = "", subcategoryName = "") {
   // Try subcategory first (most specific), then category
   const subLower = (subcategoryName || "").trim();
   const catLower = (categoryName || "").trim();
-  
+
   // Exact subcategory match
   if (subLower && ADAPTIVE_MINPTS[subLower] !== undefined) {
     return ADAPTIVE_MINPTS[subLower];
   }
-  
+
   // Exact category match
   if (catLower && ADAPTIVE_MINPTS[catLower] !== undefined) {
     return ADAPTIVE_MINPTS[catLower];
   }
-  
+
   // Heuristic fallback for critical keywords
   const lowerName = (catLower + " " + subLower).toLowerCase();
   if (
@@ -256,7 +256,7 @@ function getDynamicMinPts(categoryName = "", subcategoryName = "") {
   ) {
     return 2; // High priority
   }
-  
+
   return ADAPTIVE_MINPTS["default"] || 3;
 }
 

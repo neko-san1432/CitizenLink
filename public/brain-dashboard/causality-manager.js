@@ -47,12 +47,12 @@
  * - Find all links in N clusters: O(N²)
  * - Graph building uses adjacency list: O(N + E)
  * 
- * @author CitizenLink Development Team
+ * @author DRIMS Development Team
  * @version 1.0.0 - Thesis Defense Implementation
  * @module CausalityManager
  */
 
-(function(global) {
+(function (global) {
     'use strict';
 
     // ==================== CONFIGURATION ====================
@@ -75,24 +75,24 @@
         "Pipe Leak": ["Flooding", "Flood", "No Water", "Road Damage"],
         "Clogged Drainage": ["Flooding", "Flood"],
         "Clogged Canal": ["Flooding", "Flood"],
-        
+
         // FIRE CHAIN: Heat/smoke-based cascading effects
         "Fire": ["Traffic", "Smoke", "Evacuation", "Blackout", "Road Obstruction", "Medical", "Panic"],
         "Explosion": ["Fire", "Traffic", "Evacuation", "Medical", "Building Collapse", "Blackout"],
         "Gas Leak": ["Fire", "Explosion", "Evacuation"],
         "Transformer Explosion": ["Fire", "Blackout"],
         "Power Line Down": ["Fire", "Blackout"],
-        
+
         // ACCIDENT CHAIN: Human behavior cascading effects
         "Accident": ["Traffic", "Road Obstruction", "Medical"],
         "Vehicle Breakdown": ["Traffic", "Road Obstruction"],
         "Reckless Driving": ["Accident"],
         "Drunk Driving": ["Accident"],
-        
+
         // TRAFFIC CHAIN: Limited downstream effects (CANNOT cause floods/fires)
         "Traffic": ["Noise", "Air Pollution"],
         "Road Obstruction": ["Traffic"],
-        
+
         // INFRASTRUCTURE CHAIN
         "Landslide": ["Road Obstruction", "Traffic", "Stranded", "Evacuation"],
         "Bridge Collapse": ["Traffic", "Stranded"],
@@ -100,24 +100,24 @@
         "Building Collapse": ["Traffic", "Evacuation", "Medical"],
         "Pothole": ["Accident"],
         "Road Damage": ["Accident", "Traffic"],
-        
+
         // UTILITIES CHAIN
         "Blackout": ["Traffic", "Accident", "Crime"],
         "No Water": ["Health Hazard"],
-        
+
         // CRIME CHAIN
         "Crime": ["Traffic", "Panic"],
         "Robbery": ["Traffic", "Panic"],
         "Gang Activity": ["Panic"],
         "Gunshot": ["Panic"],
-        
+
         // HEALTH CHAIN
         "Sewage Leak": ["Health Hazard", "Bad Odor"],
         "Mosquito Breeding": ["Health Hazard"],
         "Pest Infestation": ["Health Hazard"],
         "Trash": ["Pest Infestation", "Bad Odor", "Clogged Drainage"],
         "Overflowing Trash": ["Pest Infestation", "Bad Odor", "Clogged Drainage"],
-        
+
         // ENVIRONMENT CHAIN
         "Earthquake": ["Building Collapse", "Fire", "Landslide", "Panic"]
     };
@@ -193,7 +193,7 @@
         if (typeof global.haversineDistance === 'function') {
             return global.haversineDistance(lat1, lon1, lat2, lon2);
         }
-        
+
         // Fallback implementation
         const R = 6371000; // Earth radius in meters
         const φ1 = lat1 * Math.PI / 180;
@@ -202,9 +202,9 @@
         const Δλ = (lon2 - lon1) * Math.PI / 180;
 
         const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }
@@ -218,22 +218,22 @@
      */
     function getClusterTimestamp(cluster) {
         if (!cluster) return null;
-        
+
         // Try common timestamp fields
-        const timestamp = cluster.timestamp || 
-                         cluster.created_at || 
-                         cluster.date || 
-                         cluster.reported_at ||
-                         cluster.averageTime ||
-                         cluster.time;
-        
+        const timestamp = cluster.timestamp ||
+            cluster.created_at ||
+            cluster.date ||
+            cluster.reported_at ||
+            cluster.averageTime ||
+            cluster.time;
+
         if (!timestamp) return null;
-        
+
         // Handle numeric timestamps (milliseconds)
         if (typeof timestamp === 'number') {
             return new Date(timestamp);
         }
-        
+
         const date = new Date(timestamp);
         return isNaN(date.getTime()) ? null : date;
     }
@@ -246,17 +246,17 @@
      */
     function getClusterCenter(cluster) {
         if (!cluster) return null;
-        
+
         // Try direct coordinates
         if (typeof cluster.latitude === 'number' && typeof cluster.longitude === 'number') {
             return { lat: cluster.latitude, lng: cluster.longitude };
         }
-        
+
         // Try lat/lng shorthand
         if (typeof cluster.lat === 'number' && typeof cluster.lng === 'number') {
             return { lat: cluster.lat, lng: cluster.lng };
         }
-        
+
         // Try center object
         if (cluster.center) {
             if (typeof cluster.center.lat === 'number') {
@@ -266,20 +266,20 @@
                 return { lat: cluster.center.latitude, lng: cluster.center.longitude };
             }
         }
-        
+
         // Try centroid
         if (cluster.centroid) {
             if (typeof cluster.centroid.lat === 'number') {
                 return { lat: cluster.centroid.lat, lng: cluster.centroid.lng || cluster.centroid.lon };
             }
         }
-        
+
         // Try averaging points if available
         if (cluster.points && Array.isArray(cluster.points) && cluster.points.length > 0) {
-            const validPoints = cluster.points.filter(p => 
+            const validPoints = cluster.points.filter(p =>
                 typeof p.latitude === 'number' && typeof p.longitude === 'number'
             );
-            
+
             if (validPoints.length > 0) {
                 const sumLat = validPoints.reduce((sum, p) => sum + p.latitude, 0);
                 const sumLng = validPoints.reduce((sum, p) => sum + p.longitude, 0);
@@ -289,7 +289,7 @@
                 };
             }
         }
-        
+
         return null;
     }
 
@@ -301,12 +301,12 @@
      */
     function getClusterCategory(cluster) {
         if (!cluster) return "Others";
-        
-        return cluster.category || 
-               cluster.dominantCategory || 
-               cluster.type || 
-               cluster.subcategory ||
-               "Others";
+
+        return cluster.category ||
+            cluster.dominantCategory ||
+            cluster.type ||
+            cluster.subcategory ||
+            "Others";
     }
 
     /**
@@ -395,7 +395,7 @@
      */
     function verifyCausality(clusterA, clusterB) {
         const startTime = performance.now();
-        
+
         const result = {
             isLinked: false,
             reason: null,
@@ -414,21 +414,21 @@
             },
             processingTimeMs: 0
         };
-        
+
         // Validate inputs
         if (!clusterA || !clusterB) {
             result.reason = "Invalid cluster input (null)";
             result.processingTimeMs = performance.now() - startTime;
             return result;
         }
-        
+
         // Extract categories
         const categoryA = getClusterCategory(clusterA);
         const categoryB = getClusterCategory(clusterB);
-        
+
         result.details.categoryA = categoryA;
         result.details.categoryB = categoryB;
-        
+
         // ================================================================
         // CHECK 1: DIRECTION (Causal Matrix Lookup)
         // Does the physics of disaster allow A to cause B?
@@ -436,23 +436,23 @@
         const possibleEffects = CAUSAL_MATRIX[categoryA] || [];
         const directionValid = possibleEffects.includes(categoryB);
         result.checks.direction = directionValid;
-        
+
         if (!directionValid) {
             result.reason = `Causal matrix rejects: "${categoryA}" cannot cause "${categoryB}"`;
             console.log(`[CAUSALITY] ❌ Direction FAIL: ${categoryA} ⛔→ ${categoryB}`);
             result.processingTimeMs = performance.now() - startTime;
             return result;
         }
-        
+
         console.log(`[CAUSALITY] ✅ Direction PASS: ${categoryA} → ${categoryB}`);
-        
+
         // ================================================================
         // CHECK 2: TEMPORAL (Cause Precedes Effect)
         // Cluster A's timestamp must be BEFORE Cluster B's timestamp
         // ================================================================
         const timestampA = getClusterTimestamp(clusterA);
         const timestampB = getClusterTimestamp(clusterB);
-        
+
         if (!timestampA || !timestampB) {
             // If timestamps unavailable, allow causality check to pass
             // (assume temporal order is valid if we can't verify)
@@ -462,12 +462,12 @@
             const timeDiffMs = timestampB.getTime() - timestampA.getTime();
             const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
             result.details.timeDiffHours = Math.round(timeDiffHours * 100) / 100;
-            
+
             // Cause must precede effect (positive time diff)
             // And effect must occur within the causal window
             const temporalValid = timeDiffHours > 0 && timeDiffHours <= CAUSAL_MAX_TIME_HOURS;
             result.checks.temporal = temporalValid;
-            
+
             if (!temporalValid) {
                 if (timeDiffHours <= 0) {
                     result.reason = `Temporal violation: Effect (${categoryB}) precedes Cause (${categoryA})`;
@@ -478,17 +478,17 @@
                 result.processingTimeMs = performance.now() - startTime;
                 return result;
             }
-            
+
             console.log(`[CAUSALITY] ✅ Temporal PASS: +${timeDiffHours.toFixed(1)}h`);
         }
-        
+
         // ================================================================
         // CHECK 3: SPATIAL (Within Propagation Distance)
         // Use Haversine distance to verify proximity
         // ================================================================
         const centerA = getClusterCenter(clusterA);
         const centerB = getClusterCenter(clusterB);
-        
+
         if (!centerA || !centerB) {
             // If coordinates unavailable, skip spatial check
             result.checks.spatial = true;
@@ -500,35 +500,35 @@
                 centerB.lat, centerB.lng
             );
             result.details.distanceMeters = Math.round(distance);
-            
+
             // Get appropriate distance threshold
             const threshold = CAUSAL_DISTANCE_OVERRIDE[categoryA] || DEFAULT_CAUSAL_PROXIMITY;
             result.details.distanceThreshold = threshold;
-            
+
             const spatialValid = distance <= threshold;
             result.checks.spatial = spatialValid;
-            
+
             if (!spatialValid) {
                 result.reason = `Spatial violation: ${Math.round(distance)}m exceeds ${threshold}m threshold`;
                 console.log(`[CAUSALITY] ❌ Spatial FAIL: ${Math.round(distance)}m > ${threshold}m`);
                 result.processingTimeMs = performance.now() - startTime;
                 return result;
             }
-            
+
             console.log(`[CAUSALITY] ✅ Spatial PASS: ${Math.round(distance)}m ≤ ${threshold}m`);
         }
-        
+
         // ================================================================
         // ALL CHECKS PASSED: Causal Link Verified
         // ================================================================
         result.isLinked = true;
         result.reason = `Causal link verified: ${categoryA} → ${categoryB}`;
         result.strength = getCausalStrength(categoryA, categoryB);
-        
+
         console.log(`[CAUSALITY] 🔗 LINK CONFIRMED: ${categoryA} → ${categoryB} (strength: ${result.strength})`);
-        
+
         result.processingTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
-        
+
         return result;
     }
 
@@ -542,16 +542,16 @@
     function findAllCausalLinks(clusters) {
         const startTime = performance.now();
         const links = [];
-        
+
         if (!clusters || clusters.length < 2) return links;
-        
+
         // Compare all pairs (O(n²) but necessary for completeness)
         for (let i = 0; i < clusters.length; i++) {
             for (let j = 0; j < clusters.length; j++) {
                 if (i === j) continue;
-                
+
                 const result = verifyCausality(clusters[i], clusters[j]);
-                
+
                 if (result.isLinked) {
                     links.push({
                         causeIndex: i,
@@ -563,10 +563,10 @@
                 }
             }
         }
-        
+
         const processingTime = Math.round(performance.now() - startTime);
         console.log(`[CAUSALITY] Found ${links.length} causal links among ${clusters.length} clusters in ${processingTime}ms`);
-        
+
         return links;
     }
 
@@ -587,11 +587,11 @@
                 processingTimeMs: 0
             }
         };
-        
+
         if (!clusters || clusters.length === 0) return graph;
-        
+
         const startTime = performance.now();
-        
+
         // Initialize nodes
         clusters.forEach((cluster, idx) => {
             graph.nodes.push({
@@ -601,12 +601,12 @@
             });
             graph.edges.set(idx, []);
         });
-        
+
         graph.metadata.totalNodes = clusters.length;
-        
+
         // Find all links and add edges
         const links = findAllCausalLinks(clusters);
-        
+
         links.forEach(link => {
             graph.edges.get(link.causeIndex).push({
                 target: link.effectIndex,
@@ -614,10 +614,10 @@
                 details: link.verification.details
             });
         });
-        
+
         graph.metadata.totalEdges = links.length;
         graph.metadata.processingTimeMs = Math.round(performance.now() - startTime);
-        
+
         return graph;
     }
 
@@ -629,11 +629,11 @@
      */
     function findRootCauses(graph) {
         const hasIncoming = new Set();
-        
+
         for (const [_, edges] of graph.edges) {
             edges.forEach(edge => hasIncoming.add(edge.target));
         }
-        
+
         return graph.nodes
             .filter(node => !hasIncoming.has(node.index))
             .map(node => node.index);
@@ -663,13 +663,13 @@
         const chain = [];
         const visited = new Set();
         const queue = [{ index: rootIndex, depth: 0, path: [rootIndex] }];
-        
+
         while (queue.length > 0) {
             const { index, depth, path } = queue.shift();
-            
+
             if (visited.has(index)) continue;
             visited.add(index);
-            
+
             const node = graph.nodes[index];
             chain.push({
                 index,
@@ -677,7 +677,7 @@
                 depth,
                 path: [...path]
             });
-            
+
             const edges = graph.edges.get(index) || [];
             edges.forEach(edge => {
                 if (!visited.has(edge.target)) {
@@ -689,7 +689,7 @@
                 }
             });
         }
-        
+
         return chain;
     }
 
@@ -702,7 +702,7 @@
     function describeCausalChain(clusters) {
         if (!clusters || clusters.length === 0) return "No causal chain";
         if (clusters.length === 1) return getClusterCategory(clusters[0]);
-        
+
         return clusters
             .map(c => getClusterCategory(c))
             .join(' → ');
@@ -717,39 +717,39 @@
     const CausalityManager = {
         // Main verification function
         verifyCausality,
-        
+
         // Batch operations
         findAllCausalLinks,
         buildCausalGraph,
-        
+
         // Graph analysis
         findRootCauses,
         findTerminalEffects,
         traceCausalChain,
         describeCausalChain,
-        
+
         // Utility functions
         canCause,
         getPossibleEffects,
         getPossibleCauses,
         getCausalStrength,
         getCausalDistanceThreshold,
-        
+
         // Cluster helpers
         getClusterTimestamp,
         getClusterCenter,
         getClusterCategory,
-        
+
         // Configuration (read-only exposure)
         config: Object.freeze({
-            CAUSAL_MATRIX: Object.freeze({...CAUSAL_MATRIX}),
-            CAUSAL_DISTANCE_OVERRIDE: Object.freeze({...CAUSAL_DISTANCE_OVERRIDE}),
-            CAUSAL_STRENGTH: Object.freeze({...CAUSAL_STRENGTH}),
+            CAUSAL_MATRIX: Object.freeze({ ...CAUSAL_MATRIX }),
+            CAUSAL_DISTANCE_OVERRIDE: Object.freeze({ ...CAUSAL_DISTANCE_OVERRIDE }),
+            CAUSAL_STRENGTH: Object.freeze({ ...CAUSAL_STRENGTH }),
             CAUSAL_MAX_TIME_HOURS,
             CAUSAL_MAX_DISTANCE_METERS,
             DEFAULT_CAUSAL_PROXIMITY
         }),
-        
+
         // Version info
         version: '1.0.0',
         name: 'CausalityManager'
@@ -760,15 +760,15 @@
         // Node.js / CommonJS
         module.exports = CausalityManager;
     }
-    
+
     if (typeof define === 'function' && define.amd) {
         // AMD / RequireJS
-        define([], function() { return CausalityManager; });
+        define([], function () { return CausalityManager; });
     }
-    
+
     // Browser global
     global.CausalityManager = CausalityManager;
-    
+
     // Also expose individual functions for backward compatibility
     global.verifyCausality = verifyCausality;
     global.findAllCausalLinks = findAllCausalLinks;

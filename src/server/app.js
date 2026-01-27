@@ -4,7 +4,7 @@ const sessionRoutes = require("./routes/sessionRoutes");
 const pageRoutes = require("./routes/pages");
 const { setupMiddleware, setupErrorHandling } = require("./config/middleware");
 
-class CitizenLinkApp {
+class DRIMSApp {
   constructor() {
     this.app = express();
     this.initializeMiddleware();
@@ -52,4 +52,4 @@ class CitizenLinkApp {
   }
 }
 
-module.exports = CitizenLinkApp;
+module.exports = DRIMSApp;

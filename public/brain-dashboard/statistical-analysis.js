@@ -1,5 +1,5 @@
 /**
- * CitizenLink Statistical Analysis Integration
+ * DRIMS Statistical Analysis Integration
  * =============================================
  * Replaces Excel Export with Python-powered Statistical Analysis
  * 
@@ -704,7 +704,7 @@ function downloadFullReport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `CitizenLink_Statistical_Report_${new Date().toISOString().slice(0, 10)}.txt`;
+        a.download = `DRIMS_Statistical_Report_${new Date().toISOString().slice(0, 10)}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

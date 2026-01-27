@@ -1,133 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Complete Position Signup</title>
-    <link rel="stylesheet" href="/css/auth.css" />
-    <link rel="stylesheet" href="/css/components/toast.css" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  </head>
-  <body>
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <div class="auth-logo-placeholder">CL</div>
-          <h1>Complete Position Signup</h1>
-          <p>
-            Please provide your mobile number to complete your position
-            registration
-          </p>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complete Position Signup</title>
+  <link rel="stylesheet" href="/css/auth.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="icon" href="/favicon.ico" />
+</head>
+
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo-placeholder">CL</div>
+        <h1>Complete Position Signup</h1>
+        <p>
+          Please provide your mobile number to complete your position
+          registration
+        </p>
+      </div>
+
+      <form id="hrOauthCompleteForm">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="Full Name" readonly class="readonly" />
         </div>
 
-        <form id="hrOauthCompleteForm">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Full Name"
-              readonly
-              class="readonly"
-            />
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Email" readonly class="readonly" />
+        </div>
+
+        <div class="form-group">
+          <label for="mobile">Mobile Number</label>
+          <div class="phone-input">
+            <span class="phone-prefix">+63</span>
+            <input type="tel" id="mobile" name="mobile" placeholder="9123456789" maxlength="10" pattern="[0-9]{10}"
+              required class="phone-number" />
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email"
-              readonly
-              class="readonly"
-            />
-          </div>
+        <div class="form-group">
+          <label for="signupCode">Signup Code</label>
+          <input type="text" id="signupCode" name="signupCode" readonly class="readonly" />
+        </div>
 
-          <div class="form-group">
-            <label for="mobile">Mobile Number</label>
-            <div class="phone-input">
-              <span class="phone-prefix">+63</span>
-              <input
-                type="tel"
-                id="mobile"
-                name="mobile"
-                placeholder="9123456789"
-                maxlength="10"
-                pattern="[0-9]{10}"
-                required
-                class="phone-number"
-              />
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <input type="text" id="role" name="role" readonly class="readonly" />
+        </div>
 
-          <div class="form-group">
-            <label for="signupCode">Signup Code</label>
-            <input
-              type="text"
-              id="signupCode"
-              name="signupCode"
-              readonly
-              class="readonly"
-            />
-          </div>
+        <div class="form-group">
+          <label for="department">Department</label>
+          <input type="text" id="department" name="department" readonly class="readonly" />
+        </div>
 
-          <div class="form-group">
-            <label for="role">Role</label>
-            <input
-              type="text"
-              id="role"
-              name="role"
-              readonly
-              class="readonly"
-            />
-          </div>
+        <div id="position-signup-captcha"></div>
 
-          <div class="form-group">
-            <label for="department">Department</label>
-            <input
-              type="text"
-              id="department"
-              name="department"
-              readonly
-              class="readonly"
-            />
-          </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="button-text">Complete Registration</span>
+          <span class="button-loading hidden">
+            <div class="spinner"></div>
+            Processing...
+          </span>
+        </button>
 
-          <div id="position-signup-captcha"></div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" required />
+            I agree to the <a href="#" id="toc">Terms and Conditions</a> and
+            <a href="/privacy-notice" id="pc" target="_blank">Privacy Notice</a>
+          </label>
+        </div>
+      </form>
 
-          <button type="submit" class="btn btn-primary">
-            <span class="button-text">Complete Registration</span>
-            <span class="button-loading hidden">
-              <div class="spinner"></div>
-              Processing...
-            </span>
-          </button>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" required />
-              I agree to the <a href="#" id="toc">Terms and Conditions</a> and
-              <a href="/privacy-notice" id="pc" target="_blank"
-                >Privacy Notice</a
-              >
-            </label>
-          </div>
-        </form>
-
-        <div id="terms"></div>
-        <div id="privacy"></div>
-        <div id="toast-container" class="toast-container"></div>
-        <script type="module" src="/js/components/toast.js"></script>
-      </div>
+      <div id="terms"></div>
+      <div id="privacy"></div>
+      <div id="toast-container" class="toast-container"></div>
+      <script type="module" src="/js/components/toast.js"></script>
     </div>
+  </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <script type="module" src="/js/auth/complete-position-signup.js"></script>
-    <script
-      type="module"
-      src="/js/auth/complete-position-signup-page.js"
-    ></script>
-  </body>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script type="module" src="/js/auth/complete-position-signup.js"></script>
+  <script type="module" src="/js/auth/complete-position-signup-page.js"></script>
+</body>
+
 </html>

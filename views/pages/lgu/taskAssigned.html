@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <title>My Assigned Tasks - CitizenLink</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet">
+    <title>My Assigned Tasks - DRIMS</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/toast.css">
     <link rel="stylesheet" href="/css/components/sidebar.css">
@@ -14,11 +16,12 @@
     <link rel="stylesheet" href="/css/header-redesign.css">
     <link rel="stylesheet" href="/css/pages/lgu-task-assigned.css">
 </head>
+
 <body>
     <div class="app-container">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
-        
+
         <div id="app" class="collapsible">
             <div class="tasks-page">
                 <!-- Page Header -->
@@ -137,7 +140,8 @@
                 </label>
                 <div class="form-actions">
                     <button id="submit-update" class="btn-primary">Submit Update</button>
-                    <button onclick="document.getElementById('update-form').style.display='none'" class="btn-secondary">Cancel</button>
+                    <button onclick="document.getElementById('update-form').style.display='none'"
+                        class="btn-secondary">Cancel</button>
                 </div>
             </div>
         </div>
@@ -145,11 +149,12 @@
 
     <div id="toast-container" class="toast-container"></div>
     <script type="module" src="../../js/components/toast.js"></script>
-    
+
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/pages/lgu/taskAssigned.js"></script>
 </body>
+
 </html>

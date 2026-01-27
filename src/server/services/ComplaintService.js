@@ -112,7 +112,7 @@ class ComplaintService {
         console.log(`[COMPLAINT] Location text missing, attempting reverse geocode for ${mappedData.latitude}, ${mappedData.longitude}`);
         const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${mappedData.latitude}&lon=${mappedData.longitude}&zoom=18&addressdetails=1`;
         const response = await fetch(nominatimUrl, {
-          headers: { "User-Agent": "CitizenLink/1.0 (https://citizenlink.local)" }
+          headers: { "User-Agent": "DRIMS/1.0 (https://DRIMS.local)" }
         });
         if (response.ok) {
           const data = await response.json();

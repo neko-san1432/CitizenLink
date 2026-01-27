@@ -1,6 +1,6 @@
 -- ============================================================================
 -- MOCK COMPLAINTS SEED DATA
--- Generated from CitizenLink_Simulated_System/data/complaints/mock_complaints.json
+-- Generated from DRIMS_Simulated_System/data/complaints/mock_complaints.json
 -- 
 -- IMPORTANT: Replace 'PLACEHOLDER_USER_ID' with a real user UUID from auth.users
 -- before running this script. You can find user IDs with:
