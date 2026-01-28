@@ -260,13 +260,14 @@ class ComplaintDetails {
     }
     // Populate basic complaint info
     const titleEl = document.getElementById("complaint-title");
-    if (titleEl)
+    if (titleEl) {
       // Use title if available and not generic, otherwise derive from description
       let displayTitle = this.complaint.title;
-    if (!displayTitle || displayTitle === "Complaint" || displayTitle === "Assignment") {
-      displayTitle = (this.complaint.descriptive_su || this.complaint.description || "Complaint").substring(0, 50) + (this.complaint.descriptive_su && this.complaint.descriptive_su.length > 50 ? "..." : "");
+      if (!displayTitle || displayTitle === "Complaint" || displayTitle === "Assignment") {
+        displayTitle = (this.complaint.descriptive_su || this.complaint.description || "Complaint").substring(0, 50) + (this.complaint.descriptive_su && this.complaint.descriptive_su.length > 50 ? "..." : "");
+      }
+      titleEl.textContent = displayTitle;
     }
-    titleEl.textContent = displayTitle;
 
     document.getElementById(
       "complaint-id"
