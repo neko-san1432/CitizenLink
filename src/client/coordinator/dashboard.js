@@ -190,20 +190,20 @@ function createClusterCard(cluster) {
 /**
  * View complaint detail
  */
-window.viewComplaintDetail = async function(complaintId) {
+window.viewComplaintDetail = async function (complaintId) {
   window.location.href = `/coordinator/review/${complaintId}`;
 };
 /**
  * View cluster detail
  */
-window.viewClusterDetail = async function(_clusterId) {
+window.viewClusterDetail = async function (_clusterId) {
   showMessage("info", "Cluster detail view coming soon");
   // TODO: Implement cluster detail view
 };
 /**
  * Detect new clusters
  */
-window.detectNewClusters = async function() {
+window.detectNewClusters = async function () {
   try {
     showMessage("info", "Detecting clusters...");
     const response = await fetch("/api/coordinator/detect-clusters", {
@@ -394,7 +394,7 @@ function renderActivity(data) {
     }
     return;
   }
-  const {activities} = data;
+  const { activities } = data;
   const activityList = container.querySelector(".activity-list");
   if (activityList) {
     activityList.innerHTML = activities.map(activity => `
@@ -438,14 +438,14 @@ async function _refreshActivity() {
 /**
  * Bulk assign complaints
  */
-window.bulkAssignComplaints = async function() {
+window.bulkAssignComplaints = async function () {
   showMessage("info", "Bulk assignment feature coming soon");
   // TODO: Implement bulk assignment modal
 };
 /**
  * Generate report
  */
-window.generateReport = async function() {
+window.generateReport = async function () {
   try {
     showMessage("info", "Generating report...");
     // Implement report generation
@@ -458,15 +458,15 @@ window.generateReport = async function() {
 /**
  * View analytics
  */
-window.viewAnalytics = function() {
+window.viewAnalytics = function () {
   showMessage("info", "Advanced analytics view coming soon");
   // TODO: Implement full analytics page
 };
 /**
  * Manage departments
  */
-window.manageDepartments = function() {
-  window.location.href = "/admin/departments";
+window.manageDepartments = function () {
+  window.location.href = "/departments";
 };
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", initializeDashboard);

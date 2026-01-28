@@ -451,14 +451,25 @@ router.get(
 );
 
 // Coordinator complaint review page (individual)
+// Coordinator review link (simplified URL)
 router.get(
-  "/coordinator/review/:id",
+  "/review/:id",
   authenticateUser,
   requireRole(["complaint-coordinator"]),
   (req, res) => {
     res.sendFile(
       path.join(config.rootDir, "views", "pages", "coordinator", "review.html")
     );
+  }
+);
+
+// Legacy coordinator review page -> redirect
+router.get(
+  "/coordinator/review/:id",
+  authenticateUser,
+  requireRole(["complaint-coordinator"]),
+  (req, res) => {
+    res.redirect(`/review/${req.params.id}`);
   }
 );
 

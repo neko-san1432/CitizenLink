@@ -239,7 +239,7 @@ class ReviewQueueController {
                 <td>${date}</td>
                 <td>
                     <div class="rq-actions">
-                        <a href="/coordinator/review/${c.id}" class="btn btn-secondary btn-sm" title="View Details">View</a>
+                        <a href="/review/${c.id}" class="btn btn-secondary btn-sm" title="View Details">View</a>
                         <button class="btn btn-primary btn-sm btn-verify" data-id="${c.id}" title="Assign">Assign</button>
                     </div>
                 </td>

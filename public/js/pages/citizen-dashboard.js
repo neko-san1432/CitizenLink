@@ -94,7 +94,7 @@ function updateActivity(complaints) {
            </svg>
          </div>
          <div class="flex-1 min-w-0">
-           <p class="text-sm font-semibold text-gray-900 truncate">${c.title || "Untitled Complaint"}</p>
+           <p class="text-sm font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || "Untitled Complaint"}</p>
            <p class="text-xs text-gray-500 mt-0.5">${new Date(c.submitted_at || c.created_at).toLocaleDateString()}</p>
          </div>
          <div>

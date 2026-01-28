@@ -24,14 +24,14 @@ class LguAdminDashboard {
     const btnAssignments = document.getElementById("btn-quick-assignments");
     if (btnAssignments) {
       btnAssignments.addEventListener("click", () => {
-        window.location.href = "/lgu-admin/assignments";
+        window.location.href = "/assignments";
       });
     }
 
     const btnHeatmap = document.getElementById("btn-quick-heatmap");
     if (btnHeatmap) {
       btnHeatmap.addEventListener("click", () => {
-        window.location.href = "/lgu-admin/heatmap";
+        window.location.href = "/heatmap";
       });
     }
 

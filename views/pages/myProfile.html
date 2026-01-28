@@ -1,339 +1,223 @@
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-    <title id="profile">Profile</title>
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/toast.css" />
-    <link rel="stylesheet" href="../css/components/sidebar.css" />
-    <link rel="stylesheet" href="../css/app.css" />
-    <link rel="stylesheet" href="../css/components/clock.css" />
-    <link rel="stylesheet" href="../css/header-redesign.css" />
-    <link rel="stylesheet" href="../css/viewport-fix.css" />
-    <link rel="stylesheet" href="../css/pages/profile-revamp.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <div class="header-container"></div>
-      <div id="sidebar" class="collapsible"></div>
-      <div
-        id="dashboard-clock"
-        class="dashboard-clock"
-        aria-live="polite"
-      ></div>
-      <div id="app" class="collapsible">
-        <div class="profile-page">
-          <!-- Hero Section -->
-          <div class="profile-header-section glass-panel">
-            <div class="profile-cover-image"></div>
-            <div class="profile-header-content">
-              <div class="profile-identity-group">
-                <div class="profile-avatar-large">
-                  <div id="profile-initial">User</div>
-                  <div class="profile-status-pill">Online</div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title id="profile">Profile</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/toast.css" />
+  <link rel="stylesheet" href="../css/components/sidebar.css" />
+  <link rel="stylesheet" href="../css/app.css" />
+  <link rel="stylesheet" href="../css/components/clock.css" />
+  <link rel="stylesheet" href="../css/header-redesign.css" />
+  <link rel="stylesheet" href="../css/viewport-fix.css" />
+  <link rel="stylesheet" href="../css/pages/profile-revamp.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+    <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+    <div id="app" class="collapsible">
+      <div class="profile-page">
+        <!-- Hero Section -->
+        <div class="profile-header-section glass-panel">
+          <div class="profile-cover-image"></div>
+          <div class="profile-header-content">
+            <div class="profile-identity-group">
+              <div class="profile-avatar-large">
+                <div id="profile-initial">User</div>
+                <div class="profile-status-pill">Online</div>
+              </div>
+              <div class="profile-main-info">
+                <div class="profile-name-row">
+                  <h1 class="profile-real-name" id="profile-name-display">
+                    Loading...
+                  </h1>
+                  <span class="edit-icon-lg" id="edit-name-icon" title="Edit name">✏️</span>
                 </div>
-                <div class="profile-main-info">
-                  <div class="profile-name-row">
-                    <h1 class="profile-real-name" id="profile-name-display">
-                      Loading...
-                    </h1>
-                    <span
-                      class="edit-icon-lg"
-                      id="edit-name-icon"
-                      title="Edit name"
-                      >✏️</span
-                    >
-                  </div>
 
-                  <!-- Name Edit Form -->
-                  <div
-                    id="profile-name-edit"
-                    class="inline-edit-form"
-                    style="display: none"
-                  >
-                    <div class="input-group-row">
-                      <input
-                        id="edit-first-name-input"
-                        class="input"
-                        type="text"
-                        placeholder="First Name"
-                      />
-                      <input
-                        id="edit-middle-name-input"
-                        class="input"
-                        type="text"
-                        placeholder="Middle Name"
-                      />
-                      <input
-                        id="edit-last-name-input"
-                        class="input"
-                        type="text"
-                        placeholder="Last Name"
-                      />
-                    </div>
-                    <div class="action-buttons-row">
-                      <button class="btn-primary btn-sm" id="save-name-btn">
-                        Save
-                      </button>
-                      <button class="btn-secondary btn-sm" id="cancel-name-btn">
-                        Cancel
-                      </button>
-                    </div>
+                <!-- Name Edit Form -->
+                <div id="profile-name-edit" class="inline-edit-form" style="display: none">
+                  <div class="input-group-row">
+                    <input id="edit-first-name-input" class="input" type="text" placeholder="First Name" />
+                    <input id="edit-middle-name-input" class="input" type="text" placeholder="Middle Name" />
+                    <input id="edit-last-name-input" class="input" type="text" placeholder="Last Name" />
                   </div>
+                  <div class="action-buttons-row">
+                    <button class="btn-primary btn-sm" id="save-name-btn">
+                      Save
+                    </button>
+                    <button class="btn-secondary btn-sm" id="cancel-name-btn">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
 
-                  <div class="profile-role-row">
-                    <span class="role-badge" id="profile-role">—</span>
-                    <span class="email-text" id="profile-email-display">—</span>
-                    <span
-                      class="edit-icon-sm"
-                      id="edit-email-icon"
-                      title="Edit email"
-                      >✏️</span
-                    >
+                <div class="profile-role-row">
+                  <span class="role-badge" id="profile-role">—</span>
+                  <span class="email-text" id="profile-email-display">—</span>
+                  <span class="edit-icon-sm" id="edit-email-icon" title="Edit email">✏️</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-header-actions">
+              <a href="/fileComplaint" class="btn-primary" id="action-button" style="display: none">
+                + New Complaint
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="profile-grid-layout">
+          <!-- Left Column: Details & Settings -->
+          <div class="profile-left-col">
+            <!-- Personal Info Card -->
+            <div class="glass-panel info-card">
+              <div class="card-header">
+                <h3>Personal Details</h3>
+              </div>
+              <div class="info-list">
+                <!-- Member Since -->
+                <div class="info-row">
+                  <span class="info-label">Member Since</span>
+                  <span class="info-val" id="member-since">—</span>
+                </div>
+
+                <!-- Mobile -->
+                <div class="info-row">
+                  <span class="info-label">Mobile</span>
+                  <span class="info-val">
+                    <span id="profile-mobile-display">—</span>
+                    <span class="edit-icon-sm" id="edit-mobile-icon">✏️</span>
+                  </span>
+                </div>
+                <!-- Mobile Edit Form -->
+                <div id="profile-mobile-edit" class="inline-edit-form" style="display: none">
+                  <input id="edit-mobile-input" class="input" type="tel" />
+                  <div class="action-buttons-row">
+                    <button class="btn-primary btn-sm" id="save-mobile-btn">
+                      Save
+                    </button>
+                    <button class="btn-secondary btn-sm" id="cancel-mobile-btn">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Role/Office Specifics -->
+                <div class="info-row" id="profile-office-item" style="display: none">
+                  <span class="info-label">Office</span>
+                  <span class="info-val" id="profile-office">—</span>
+                </div>
+                <div class="info-row" id="profile-position-id-item" style="display: none">
+                  <span class="info-label">Position ID</span>
+                  <span class="info-val" id="profile-position-id">—</span>
+                </div>
+
+                <!-- Address Section -->
+                <div class="info-divider"></div>
+                <div class="info-header-row">
+                  <span class="info-label">Address</span>
+                  <button id="edit-address-btn" class="btn-text">Edit</button>
+                </div>
+                <div id="address-display" class="address-box">
+                  <span id="address-line-1-display" class="addr-line">—</span>
+                  <span id="address-line-2-display" class="addr-line" style="display: none">—</span>
+                  <span class="addr-line">Digos City, Davao del Sur
+                    <span id="address-postal-display"></span></span>
+                  <span id="address-barangay-display" class="addr-line badge-barangay">—</span>
+                </div>
+
+                <!-- Address Edit Form -->
+                <div id="address-edit" class="inline-edit-form" style="display: none">
+                  <input id="edit-address-line-1" class="input" type="text" placeholder="Line 1" />
+                  <input id="edit-address-line-2" class="input" type="text" placeholder="Line 2" />
+                  <input id="edit-address-postal" class="input" type="text" placeholder="Postal Code" />
+                  <input id="edit-address-barangay" class="input" type="text" placeholder="Barangay" />
+                  <div class="action-buttons-row">
+                    <button class="btn-primary btn-sm" id="save-address-btn">
+                      Save
+                    </button>
+                    <button class="btn-secondary btn-sm" id="cancel-address-btn">
+                      Cancel
+                    </button>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="profile-header-actions">
-                <a
-                  href="/citizen/fileComplaint"
-                  class="btn-primary"
-                  id="action-button"
-                  style="display: none"
-                >
-                  + New Complaint
-                </a>
+            <!-- Security Card -->
+            <div class="glass-panel security-card">
+              <div class="card-header">
+                <h3>Security</h3>
+                <span class="card-subtitle">Manage your password</span>
               </div>
+              <form id="change-password-form">
+                <div class="form-group">
+                  <input id="current-password" class="input" type="password" placeholder="Current Password"
+                    autocomplete="current-password" />
+                </div>
+                <div class="form-group">
+                  <input id="new-password" class="input" type="password" placeholder="New Password"
+                    autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                  <input id="confirm-new-password" class="input" type="password" placeholder="Confirm Password"
+                    autocomplete="new-password" />
+                </div>
+                <button class="btn-primary w-full" type="submit">
+                  Update Password
+                </button>
+                <div id="email-confirmation-message" class="email-confirmation-message hidden"></div>
+              </form>
             </div>
           </div>
 
-          <!-- Main Grid -->
-          <div class="profile-grid-layout">
-            <!-- Left Column: Details & Settings -->
-            <div class="profile-left-col">
-              <!-- Personal Info Card -->
-              <div class="glass-panel info-card">
-                <div class="card-header">
-                  <h3>Personal Details</h3>
-                </div>
-                <div class="info-list">
-                  <!-- Member Since -->
-                  <div class="info-row">
-                    <span class="info-label">Member Since</span>
-                    <span class="info-val" id="member-since">—</span>
-                  </div>
-
-                  <!-- Mobile -->
-                  <div class="info-row">
-                    <span class="info-label">Mobile</span>
-                    <span class="info-val">
-                      <span id="profile-mobile-display">—</span>
-                      <span class="edit-icon-sm" id="edit-mobile-icon">✏️</span>
-                    </span>
-                  </div>
-                  <!-- Mobile Edit Form -->
-                  <div
-                    id="profile-mobile-edit"
-                    class="inline-edit-form"
-                    style="display: none"
-                  >
-                    <input id="edit-mobile-input" class="input" type="tel" />
-                    <div class="action-buttons-row">
-                      <button class="btn-primary btn-sm" id="save-mobile-btn">
-                        Save
-                      </button>
-                      <button
-                        class="btn-secondary btn-sm"
-                        id="cancel-mobile-btn"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Role/Office Specifics -->
-                  <div
-                    class="info-row"
-                    id="profile-office-item"
-                    style="display: none"
-                  >
-                    <span class="info-label">Office</span>
-                    <span class="info-val" id="profile-office">—</span>
-                  </div>
-                  <div
-                    class="info-row"
-                    id="profile-position-id-item"
-                    style="display: none"
-                  >
-                    <span class="info-label">Position ID</span>
-                    <span class="info-val" id="profile-position-id">—</span>
-                  </div>
-
-                  <!-- Address Section -->
-                  <div class="info-divider"></div>
-                  <div class="info-header-row">
-                    <span class="info-label">Address</span>
-                    <button id="edit-address-btn" class="btn-text">Edit</button>
-                  </div>
-                  <div id="address-display" class="address-box">
-                    <span id="address-line-1-display" class="addr-line">—</span>
-                    <span
-                      id="address-line-2-display"
-                      class="addr-line"
-                      style="display: none"
-                      >—</span
-                    >
-                    <span class="addr-line"
-                      >Digos City, Davao del Sur
-                      <span id="address-postal-display"></span
-                    ></span>
-                    <span
-                      id="address-barangay-display"
-                      class="addr-line badge-barangay"
-                      >—</span
-                    >
-                  </div>
-
-                  <!-- Address Edit Form -->
-                  <div
-                    id="address-edit"
-                    class="inline-edit-form"
-                    style="display: none"
-                  >
-                    <input
-                      id="edit-address-line-1"
-                      class="input"
-                      type="text"
-                      placeholder="Line 1"
-                    />
-                    <input
-                      id="edit-address-line-2"
-                      class="input"
-                      type="text"
-                      placeholder="Line 2"
-                    />
-                    <input
-                      id="edit-address-postal"
-                      class="input"
-                      type="text"
-                      placeholder="Postal Code"
-                    />
-                    <input
-                      id="edit-address-barangay"
-                      class="input"
-                      type="text"
-                      placeholder="Barangay"
-                    />
-                    <div class="action-buttons-row">
-                      <button class="btn-primary btn-sm" id="save-address-btn">
-                        Save
-                      </button>
-                      <button
-                        class="btn-secondary btn-sm"
-                        id="cancel-address-btn"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
+          <!-- Right Column: Complaints/History -->
+          <div class="profile-right-col">
+            <div class="glass-panel history-panel">
+              <div class="panel-header">
+                <h2 id="content-title">Records & Activity</h2>
+                <div class="tab-filters">
+                  <span class="tab active">Complaints</span>
                 </div>
               </div>
 
-              <!-- Security Card -->
-              <div class="glass-panel security-card">
-                <div class="card-header">
-                  <h3>Security</h3>
-                  <span class="card-subtitle">Manage your password</span>
-                </div>
-                <form id="change-password-form">
-                  <div class="form-group">
-                    <input
-                      id="current-password"
-                      class="input"
-                      type="password"
-                      placeholder="Current Password"
-                      autocomplete="current-password"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <input
-                      id="new-password"
-                      class="input"
-                      type="password"
-                      placeholder="New Password"
-                      autocomplete="new-password"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <input
-                      id="confirm-new-password"
-                      class="input"
-                      type="password"
-                      placeholder="Confirm Password"
-                      autocomplete="new-password"
-                    />
-                  </div>
-                  <button class="btn-primary w-full" type="submit">
-                    Update Password
-                  </button>
-                  <div
-                    id="email-confirmation-message"
-                    class="email-confirmation-message hidden"
-                  ></div>
-                </form>
-              </div>
-            </div>
-
-            <!-- Right Column: Complaints/History -->
-            <div class="profile-right-col">
-              <div class="glass-panel history-panel">
-                <div class="panel-header">
-                  <h2 id="content-title">Records & Activity</h2>
-                  <div class="tab-filters">
-                    <span class="tab active">Complaints</span>
-                  </div>
-                </div>
-
-                <div class="complaints-scroll" id="complaints-scroll">
-                  <!-- Complaint Status Chart -->
-                  <div
-                    class="chart-section"
-                    style="
+              <div class="complaints-scroll" id="complaints-scroll">
+                <!-- Complaint Status Chart -->
+                <div class="chart-section" style="
                       padding: 1rem 2rem;
                       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
                       display: none;
-                    "
-                    id="complaint-stats-container"
-                  >
-                    <div
-                      style="
+                    " id="complaint-stats-container">
+                  <div style="
                         height: 200px;
                         position: relative;
                         width: 100%;
                         display: flex;
                         justify-content: center;
-                      "
-                    >
-                      <canvas id="complaintStatsChart"></canvas>
-                    </div>
+                      ">
+                    <canvas id="complaintStatsChart"></canvas>
                   </div>
+                </div>
 
-                  <div id="my-complaints"></div>
+                <div id="my-complaints"></div>
 
-                  <!-- Empty State -->
-                  <div id="complaints-empty" class="complaints-empty hidden">
-                    <div class="empty-icon">📂</div>
-                    <h3 id="empty-title">No Records Found</h3>
-                    <p id="empty-message">
-                      You haven't filed any complaints yet.
-                    </p>
-                  </div>
+                <!-- Empty State -->
+                <div id="complaints-empty" class="complaints-empty hidden">
+                  <div class="empty-icon">📂</div>
+                  <h3 id="empty-title">No Records Found</h3>
+                  <p id="empty-message">
+                    You haven't filed any complaints yet.
+                  </p>
                 </div>
               </div>
             </div>
@@ -341,155 +225,110 @@
         </div>
       </div>
     </div>
-    <div id="toast-container" class="toast-container"></div>
+  </div>
+  <div id="toast-container" class="toast-container"></div>
 
-    <!-- Email Change Modal -->
-    <div
-      id="email-change-modal"
-      class="modal-overlay"
-      style="display: none; visibility: hidden"
-    >
-      <div class="modal-content" style="max-width: 500px">
-        <div
-          style="
+  <!-- Email Change Modal -->
+  <div id="email-change-modal" class="modal-overlay" style="display: none; visibility: hidden">
+    <div class="modal-content" style="max-width: 500px">
+      <div style="
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-          "
-        >
-          <h2
-            style="
+          ">
+        <h2 style="
               margin: 0;
               font-size: 1.25rem;
               font-weight: 600;
               color: #1f2937;
-            "
-          >
-            Change Email Address
-          </h2>
-          <button
-            id="close-email-modal"
-            style="
+            ">
+          Change Email Address
+        </h2>
+        <button id="close-email-modal" style="
               background: none;
               border: none;
               font-size: 1.5rem;
               cursor: pointer;
               color: #6b7280;
-            "
-          >
-            &times;
-          </button>
-        </div>
-        <div style="margin-bottom: 1rem">
-          <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #6b7280">
-            Current email:
-          </p>
-          <p
-            style="
+            ">
+          &times;
+        </button>
+      </div>
+      <div style="margin-bottom: 1rem">
+        <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #6b7280">
+          Current email:
+        </p>
+        <p style="
               margin: 0;
               font-size: 0.9375rem;
               color: #1f2937;
               font-weight: 500;
-            "
-            id="current-email-display"
-          >
-            —
-          </p>
+            " id="current-email-display">
+          —
+        </p>
+      </div>
+      <form id="email-change-form">
+        <div style="margin-bottom: 1rem">
+          <label for="new-email-input" style="
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                color: #374151;
+                font-weight: 500;
+              ">New email address:</label>
+          <input id="new-email-input" class="input" type="email" placeholder="Enter new email" required
+            style="width: 100%; padding: 0.5rem; font-size: 0.875rem" />
         </div>
-        <form id="email-change-form">
-          <div style="margin-bottom: 1rem">
-            <label
-              for="new-email-input"
-              style="
+        <div style="margin-bottom: 1rem">
+          <label for="current-password-email" style="
                 display: block;
                 margin-bottom: 0.5rem;
                 font-size: 0.875rem;
                 color: #374151;
                 font-weight: 500;
-              "
-              >New email address:</label
-            >
-            <input
-              id="new-email-input"
-              class="input"
-              type="email"
-              placeholder="Enter new email"
-              required
-              style="width: 100%; padding: 0.5rem; font-size: 0.875rem"
-            />
-          </div>
-          <div style="margin-bottom: 1rem">
-            <label
-              for="current-password-email"
-              style="
-                display: block;
-                margin-bottom: 0.5rem;
-                font-size: 0.875rem;
-                color: #374151;
-                font-weight: 500;
-              "
-              >Current password:</label
-            >
-            <input
-              id="current-password-email"
-              class="input"
-              type="password"
-              placeholder="Enter your current password"
-              required
-              autocomplete="current-password"
-              style="width: 100%; padding: 0.5rem; font-size: 0.875rem"
-            />
-          </div>
-          <div
-            style="
+              ">Current password:</label>
+          <input id="current-password-email" class="input" type="password" placeholder="Enter your current password"
+            required autocomplete="current-password" style="width: 100%; padding: 0.5rem; font-size: 0.875rem" />
+        </div>
+        <div style="
               padding: 0.75rem;
               background-color: #fffbeb;
               border-left: 4px solid #f59e0b;
               border-radius: 4px;
               margin-bottom: 1rem;
-            "
-          >
-            <p
-              style="
+            ">
+          <p style="
                 margin: 0;
                 font-size: 0.8125rem;
                 color: #92400e;
                 line-height: 1.5;
-              "
-            >
-              <strong>Note:</strong> A verification email will be sent to your
-              new email address to confirm this change. You must click the
-              confirmation link in that email to complete the email change.
-            </p>
-          </div>
-          <div style="display: flex; gap: 0.5rem">
-            <button
-              type="submit"
-              class="btn-primary"
-              style="flex: 1; padding: 0.5rem; font-size: 0.875rem"
-            >
-              Request Email Change
-            </button>
-            <button
-              type="button"
-              id="cancel-email-modal"
-              class="btn-secondary"
-              style="flex: 1; padding: 0.5rem; font-size: 0.875rem"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+              ">
+            <strong>Note:</strong> A verification email will be sent to your
+            new email address to confirm this change. You must click the
+            confirmation link in that email to complete the email change.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem">
+          <button type="submit" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem">
+            Request Email Change
+          </button>
+          <button type="button" id="cancel-email-modal" class="btn-secondary"
+            style="flex: 1; padding: 0.5rem; font-size: 0.875rem">
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="/js/lib/supabase-boot.js"></script>
-    <script type="module" src="../js/components/header.js"></script>
-    <script type="module" src="../js/components/sidebar.js"></script>
-    <script type="module" src="../js/auth/authChecker.js"></script>
-    <script type="module" src="../js/components/clock.js"></script>
-    <script type="module" src="../js/pages/myProfile.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="/js/lib/supabase-boot.js"></script>
+  <script type="module" src="../js/components/header.js"></script>
+  <script type="module" src="../js/components/sidebar.js"></script>
+  <script type="module" src="../js/auth/authChecker.js"></script>
+  <script type="module" src="../js/components/clock.js"></script>
+  <script type="module" src="../js/pages/myProfile.js"></script>
+</body>
+
 </html>

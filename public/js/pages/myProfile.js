@@ -206,9 +206,8 @@ function renderProfile(profile) {
         "Nov",
         "Dec",
       ];
-      memberSinceEl.textContent = `${
-        monthNames[date.getMonth()]
-      } ${date.getFullYear()}`;
+      memberSinceEl.textContent = `${monthNames[date.getMonth()]
+        } ${date.getFullYear()}`;
     } else {
       memberSinceEl.textContent = "—";
     }
@@ -408,7 +407,7 @@ function renderPage(page, role) {
   const thead = document.createElement("thead");
   thead.innerHTML = `
     <tr>
-      <th>Title</th>
+      <th>Complaint</th>
       <th>Status</th>
       <th>Date</th>
       <th>Action</th>
@@ -436,24 +435,24 @@ function renderPage(page, role) {
 
     const dateStr = date
       ? new Date(date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
       : "";
 
     tr.innerHTML = `
       <td>
-        <div style="font-weight: 500; color: #1f2937;" class="complaint-title-text">${title}</div>
-        <div style="font-size: 0.75rem; color: #6b7280;">ID: ${complaintId.substring(
-          0,
-          8
-        )}...</div>
+        <div class="complaint-title-text font-medium text-gray-900 dark:text-gray-100">${title}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">ID: ${complaintId.substring(
+      0,
+      8
+    )}...</div>
       </td>
       <td>
         <span class="status-badge status-${status}">${statusLabel}</span>
       </td>
-      <td style="color: #6b7280;">${dateStr}</td>
+      <td class="text-gray-500 dark:text-gray-400">${dateStr}</td>
       <td>
         <a class="btn-secondary" href="/complaint-details/${complaintId}?from=profile" style="text-decoration: none; font-size: 0.75rem; padding: 0.25rem 0.5rem;">View</a>
       </td>
@@ -469,12 +468,10 @@ function renderPage(page, role) {
       Showing ${startIndex + 1} to ${endIndex} of ${totalItems} results
     </div>
     <div class="pagination-buttons">
-      <button class="page-btn" ${
-        currentPage === 1 ? "disabled" : ""
-      } id="prev-btn">Previous</button>
-      <button class="page-btn" ${
-        currentPage === totalPages ? "disabled" : ""
-      } id="next-btn">Next</button>
+      <button class="page-btn" ${currentPage === 1 ? "disabled" : ""
+    } id="prev-btn">Previous</button>
+      <button class="page-btn" ${currentPage === totalPages ? "disabled" : ""
+    } id="next-btn">Next</button>
     </div>
   `;
 

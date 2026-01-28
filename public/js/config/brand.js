@@ -5,7 +5,7 @@ export const brandConfig = {
   dashboardUrl: "/dashboard",
   logo: {
     // You can add logo image URL here if needed
-    imageUrl: "/assets/images/DRIMS-icon.png",
+    imageUrl: "/assets/images/DRIMS-icon-removebg-preview.png",
     text: "DRIMS",
   },
   colors: {

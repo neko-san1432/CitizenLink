@@ -130,8 +130,7 @@ import { supabase } from "../config/config.js";
     if (now < cameraCooldownUntil) {
       const secondsLeft = Math.ceil((cameraCooldownUntil - now) / 1000);
       status(
-        `Please wait ${secondsLeft} second${
-          secondsLeft > 1 ? "s" : ""
+        `Please wait ${secondsLeft} second${secondsLeft > 1 ? "s" : ""
         } before trying again.`,
         "info"
       );
@@ -1452,7 +1451,7 @@ import { supabase } from "../config/config.js";
         formData.append("file", file);
         formData.append("lastName", lastName);
 
-        const res = await fetch("/api/ocr/verify-residency", {
+        const res = await fetch("/api/identity/ocr/verify-residency", {
           method: "POST",
           body: formData,
         });

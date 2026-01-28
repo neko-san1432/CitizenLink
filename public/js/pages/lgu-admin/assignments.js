@@ -370,7 +370,7 @@ class LguAdminAssignments {
 
     // Get data directly (already paginated by server)
     const paginatedData = this.assignments;
-    const {totalItems} = this;
+    const { totalItems } = this;
 
     if (totalItems === 0 && paginatedData.length === 0) {
       tableBody.innerHTML = `
@@ -462,8 +462,8 @@ class LguAdminAssignments {
     container.classList.remove("hidden");
     container.style.display = "flex";
 
-    const {totalItems} = this;
-    const {currentPage} = this;
+    const { totalItems } = this;
+    const { currentPage } = this;
     const limit = this.itemsPerPage;
     const totalPages = Math.ceil(totalItems / limit);
 
@@ -481,9 +481,8 @@ class LguAdminAssignments {
     if (pageEndEl) pageEndEl.textContent = end;
     if (totalItemsEl) totalItemsEl.textContent = totalItems;
     if (currentPageDisplay)
-      currentPageDisplay.textContent = `Page ${currentPage} of ${
-        totalPages || 1
-      }`;
+      currentPageDisplay.textContent = `Page ${currentPage} of ${totalPages || 1
+        }`;
 
     // Update buttons
     const prevBtn = document.getElementById("prev-btn");
@@ -520,7 +519,7 @@ class LguAdminAssignments {
   }
 
   // Legacy Loop/Load More - Removed
-  updateLoadMoreControls() {}
+  updateLoadMoreControls() { }
 
   async changePage(newPage) {
     if (newPage < 1) return;
@@ -566,74 +565,69 @@ class LguAdminAssignments {
     return `
       <tr class="border-b border-gray-100 dark:border-gray-700 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
         <td class="p-4 text-sm text-gray-500 dark:text-gray-400">
-          #${
-  assignment.display_id ||
-            (assignment.complaint_id
-              ? assignment.complaint_id.slice(-8)
-              : "N/A")
-}
+          #${assignment.display_id ||
+      (assignment.complaint_id
+        ? assignment.complaint_id.slice(-8)
+        : "N/A")
+      }
         </td>
         <td class="p-4">
           <div class="font-semibold text-gray-800 dark:text-gray-200 mb-1">${escapeHtml(
-    assignment.title || "Untitled"
-  )}</div>
+        assignment.descriptive_su ? (assignment.descriptive_su.substring(0, 50) + (assignment.descriptive_su.length > 50 ? "..." : "")) : (assignment.title || "Untitled")
+      )}</div>
           <div class="text-gray-500 dark:text-gray-400 text-xs max-w-[250px] truncate">
-            ${escapeHtml(assignment.description || "No description")}
+            ${escapeHtml(assignment.descriptive_su || assignment.description || "No details")}
           </div>
         </td>
         <td class="p-4">
            <div class="text-gray-700 dark:text-gray-300 text-sm">${escapeHtml(
-    assignment.citizen_name || "Unknown"
-  )}</div>
+        assignment.citizen_name || "Unknown"
+      )}</div>
            <div class="text-gray-400 dark:text-gray-500 text-xs">${escapeHtml(
-    assignment.location_text || "No location"
-  )}</div>
+        assignment.location_text || "No location"
+      )}</div>
         </td>
         <td class="p-4">
-           ${
-  assignment.officer_name
-    ? `<div class="flex items-center gap-2">
+           ${assignment.officer_name
+        ? `<div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-gray-700">
                         ${assignment.officer_name.charAt(0)}
                     </div>
                     <div class="text-sm text-gray-700 dark:text-gray-300">${escapeHtml(
-    assignment.officer_name
-  )}</div>
+          assignment.officer_name
+        )}</div>
                   </div>`
-    : '<span class="text-gray-400 dark:text-gray-500 italic text-sm">Unassigned</span>'
-}
+        : '<span class="text-gray-400 dark:text-gray-500 italic text-sm">Unassigned</span>'
+      }
         </td>
         <td class="p-4">
-          <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase ${priorityClass}">${
-  assignment.priority
-}</span>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase ${priorityClass}">${assignment.priority
+      }</span>
         </td>
         <td class="p-4">
           <div class="flex flex-col items-start gap-1">
             <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${getStatusText(
-  assignment.status
-)}</span>
-            ${
-  assignment.has_other_assignments && !assignment.assigned_to
-    ? `<span class="text-[10px] text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded border border-orange-100 dark:border-orange-800 whitespace-nowrap">
+        assignment.status
+      )}</span>
+            ${assignment.has_other_assignments && !assignment.assigned_to
+        ? `<span class="text-[10px] text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded border border-orange-100 dark:border-orange-800 whitespace-nowrap">
                      Assigned by others
                    </span>`
-    : ""
-}
+        : ""
+      }
           </div>
         </td>
         <td class="p-4 text-center">
-          ${
-  assignment.status === "unassigned" || !assignment.assigned_to
-    ? `<button class="btn btn-primary btn-sm assign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
+          ${assignment.status === "unassigned" || !assignment.assigned_to
+        ? `<button class="btn btn-primary btn-sm assign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                    Assign
                  </button>`
-    : `<button class="btn btn-secondary btn-sm reassign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
+        : `<button class="btn btn-secondary btn-sm reassign-btn ${disabledClass}" data-complaint-id="${assignment.complaint_id}" ${disabledAttr}>
                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                    Manage
                  </button>`
-}
+      }
         </td>
       </tr>
     `;
@@ -696,20 +690,20 @@ class LguAdminAssignments {
       complaintSummary.dataset.complaintId = complaintId;
       complaintSummary.innerHTML = `
         <div class="complaint-summary-title font-semibold text-gray-900 dark:text-white mb-2">${escapeHtml(
-    complaint.title || "Untitled Complaint"
-  )}</div>
+        complaint.title || "Untitled Complaint"
+      )}</div>
         <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>ID:</strong> #${complaint.complaint_id.slice(
-    -8
-  )}</div>
+        -8
+      )}</div>
         <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Description:</strong> ${escapeHtml(
-    complaint.description || "No description"
-  )}</div>
+        complaint.description || "No description"
+      )}</div>
         <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Location:</strong> ${escapeHtml(
-    complaint.location_text || "Not specified"
-  )}</div>
+        complaint.location_text || "Not specified"
+      )}</div>
         <div class="complaint-summary-detail text-sm text-gray-600 dark:text-gray-300 mb-1"><strong>Citizen:</strong> ${escapeHtml(
-    complaint.citizen_name || "Unknown"
-  )}</div>
+        complaint.citizen_name || "Unknown"
+      )}</div>
       `;
     }
     // Populate officer checkboxes
@@ -725,19 +719,17 @@ class LguAdminAssignments {
           checkboxItem.className =
             "officer-checkbox-item flex items-center p-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer";
           checkboxItem.innerHTML = `
-            <input type="checkbox" id="officer-${officer.id}" value="${
-  officer.id
-}" name="officers" class="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-            <label for="officer-${
-  officer.id
-}" class="flex-1 cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-300">
+            <input type="checkbox" id="officer-${officer.id}" value="${officer.id
+            }" name="officers" class="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            <label for="officer-${officer.id
+            }" class="flex-1 cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-300">
               <div class="officer-info flex flex-col gap-1">
                 <div class="officer-name font-medium text-gray-800 dark:text-gray-200">${escapeHtml(
-    officer.name
-  )}</div>
+              officer.name
+            )}</div>
                 <div class="officer-details text-xs text-gray-500 dark:text-gray-400">${escapeHtml(
-    officer.email
-  )} • ${officer.employee_id || "No ID"}</div>
+              officer.email
+            )} • ${officer.employee_id || "No ID"}</div>
               </div>
             </label>
           `;
@@ -844,18 +836,17 @@ class LguAdminAssignments {
             <h4>${escapeHtml(complaint.title || "Untitled Complaint")}</h4>
             <div class="complaint-meta">
               <span class="complaint-id">ID: #${complaint.complaint_id.slice(
-    -8
-  )}</span>
+      -8
+    )}</span>
               <span class="submission-date">Submitted: ${submittedDate}</span>
             </div>
           </div>
           <div class="complaint-status">
             <span class="status-badge ${getStatusClass(
-    complaint.status
-  )}">${getStatusText(complaint.status)}</span>
-            <span class="priority-badge ${priorityClass}">${
-  complaint.priority
-}</span>
+      complaint.status
+    )}">${getStatusText(complaint.status)}</span>
+            <span class="priority-badge ${priorityClass}">${complaint.priority
+      }</span>
           </div>
         </div>
 
@@ -868,8 +859,8 @@ class LguAdminAssignments {
             </div>
             <div class="section-content">
               <p>${escapeHtml(
-    complaint.description || "No description provided"
-  )}</p>
+        complaint.description || "No description provided"
+      )}</p>
             </div>
           </div>
 
@@ -880,17 +871,16 @@ class LguAdminAssignments {
             </div>
             <div class="section-content">
               <p>${escapeHtml(
-    complaint.location_text || "Location not specified"
-  )}</p>
-              ${
-  complaint.latitude && complaint.longitude
-    ? `
+        complaint.location_text || "Location not specified"
+      )}</p>
+              ${complaint.latitude && complaint.longitude
+        ? `
                 <div class="map-container">
                   <div id="complaint-map-${complaint.complaint_id}" class="complaint-map"></div>
                 </div>
               `
-    : ""
-}
+        : ""
+      }
             </div>
           </div>
 
@@ -902,22 +892,20 @@ class LguAdminAssignments {
             <div class="section-content">
               <div class="complainant-info">
                 <p><strong>Name:</strong> ${escapeHtml(
-    complaint.citizen_name || "Unknown"
-  )}</p>
-                ${
-  complaint.citizen_email
-    ? `<p><strong>Email:</strong> ${escapeHtml(
-      complaint.citizen_email
-    )}</p>`
-    : ""
-}
-                ${
-  complaint.citizen_mobile
-    ? `<p><strong>Mobile:</strong> ${escapeHtml(
-      complaint.citizen_mobile
-    )}</p>`
-    : ""
-}
+        complaint.citizen_name || "Unknown"
+      )}</p>
+                ${complaint.citizen_email
+        ? `<p><strong>Email:</strong> ${escapeHtml(
+          complaint.citizen_email
+        )}</p>`
+        : ""
+      }
+                ${complaint.citizen_mobile
+        ? `<p><strong>Mobile:</strong> ${escapeHtml(
+          complaint.citizen_mobile
+        )}</p>`
+        : ""
+      }
               </div>
             </div>
           </div>
@@ -927,9 +915,8 @@ class LguAdminAssignments {
               <h5>📎 Evidence</h5>
             </div>
             <div class="section-content">
-              <div class="evidence-container" id="evidence-container-${
-  complaint.complaint_id
-}">
+              <div class="evidence-container" id="evidence-container-${complaint.complaint_id
+      }">
                 <div class="evidence-loading">Loading evidence...</div>
               </div>
             </div>
@@ -943,60 +930,54 @@ class LguAdminAssignments {
               <div class="status-info">
                 <div class="status-item">
                   <span class="status-label">Status:</span>
-                  <span class="status-value ${
-  complaint.status === "unassigned"
-    ? "unassigned"
-    : "assigned"
-}">
-                    ${
-  complaint.status === "unassigned"
-    ? "⏳ Unassigned"
-    : "✅ Assigned"
-}
+                  <span class="status-value ${complaint.status === "unassigned"
+        ? "unassigned"
+        : "assigned"
+      }">
+                    ${complaint.status === "unassigned"
+        ? "⏳ Unassigned"
+        : "✅ Assigned"
+      }
                   </span>
                 </div>
-                ${
-  complaint.officer_name
-    ? `
+                ${complaint.officer_name
+        ? `
                   <div class="status-item">
                     <span class="status-label">Assigned to:</span>
                     <span class="status-value">${escapeHtml(
-    complaint.officer_name
-  )}</span>
+          complaint.officer_name
+        )}</span>
                   </div>
                 `
-    : ""
-}
-                ${
-  complaint.assigned_at
-    ? `
+        : ""
+      }
+                ${complaint.assigned_at
+        ? `
                   <div class="status-item">
                     <span class="status-label">Assigned:</span>
                     <span class="status-value">${new Date(
-    complaint.assigned_at
-  ).toLocaleString()}</span>
+          complaint.assigned_at
+        ).toLocaleString()}</span>
                   </div>
                 `
-    : ""
-}
-                ${
-  complaint.deadline
-    ? `
+        : ""
+      }
+                ${complaint.deadline
+        ? `
                   <div class="status-item">
                     <span class="status-label">Deadline:</span>
                     <span class="status-value deadline">${new Date(
-    complaint.deadline
-  ).toLocaleString()}</span>
+          complaint.deadline
+        ).toLocaleString()}</span>
                   </div>
                 `
-    : ""
-}
+        : ""
+      }
               </div>
             </div>
           </div>
-          ${
-  complaint.notes
-    ? `
+          ${complaint.notes
+        ? `
             <!-- Notes Section -->
             <div class="details-section">
               <div class="section-header">
@@ -1007,8 +988,8 @@ class LguAdminAssignments {
               </div>
             </div>
           `
-    : ""
-}
+        : ""
+      }
         </div>
       </div>
     `;
@@ -1018,14 +999,13 @@ class LguAdminAssignments {
     return `
       <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 justify-end">
         <button type="button" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm" id="close-details-panel">Close</button>
-        ${
-  complaint.status === "unassigned"
-    ? `
+        ${complaint.status === "unassigned"
+        ? `
           <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors font-medium text-sm shadow-sm" id="assign-from-details">
             Assign to Officer
           </button>
         `
-    : `
+        : `
           <button type="button" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm" id="view-assignment">
             View Assignment
           </button>
@@ -1033,7 +1013,7 @@ class LguAdminAssignments {
             Reassign
           </button>
         `
-}
+      }
       </div>
     `;
   }
@@ -1103,18 +1083,16 @@ class LguAdminAssignments {
               <div class="evidence-size">${fileSize}</div>
             </div>
             <div class="evidence-actions">
-              ${
-  isImage
-    ? `
+              ${isImage
+              ? `
                 <button class="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" onclick="this.previewEvidence('${file.name}', '${file.url}')">
                   Preview
                 </button>
               `
-    : ""
-}
-              <button class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors ml-1" onclick="this.downloadEvidence('${
-  file.name
-}', '${file.url}')">
+              : ""
+            }
+              <button class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors ml-1" onclick="this.downloadEvidence('${file.name
+            }', '${file.url}')">
                 Download
               </button>
             </div>
@@ -1142,10 +1120,9 @@ class LguAdminAssignments {
           const reasons = details.rejectedOfficers
             .map(
               (o) =>
-                `${o.email || o.id}: ${o.reason}${
-                  o.officerDept
-                    ? ` (has: ${o.officerDept}, needs: ${o.requiredDept})`
-                    : ""
+                `${o.email || o.id}: ${o.reason}${o.officerDept
+                  ? ` (has: ${o.officerDept}, needs: ${o.requiredDept})`
+                  : ""
                 }`
             )
             .join("; ");

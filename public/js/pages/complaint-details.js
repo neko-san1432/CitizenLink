@@ -261,7 +261,12 @@ class ComplaintDetails {
     // Populate basic complaint info
     const titleEl = document.getElementById("complaint-title");
     if (titleEl)
-      titleEl.textContent = this.complaint.title || "Untitled Complaint";
+      // Use title if available and not generic, otherwise derive from description
+      let displayTitle = this.complaint.title;
+    if (!displayTitle || displayTitle === "Complaint" || displayTitle === "Assignment") {
+      displayTitle = (this.complaint.descriptive_su || this.complaint.description || "Complaint").substring(0, 50) + (this.complaint.descriptive_su && this.complaint.descriptive_su.length > 50 ? "..." : "");
+    }
+    titleEl.textContent = displayTitle;
 
     document.getElementById(
       "complaint-id"
@@ -1843,8 +1848,8 @@ class ComplaintDetails {
     const isFromProfile =
       fromParam === "profile" || referrer.includes("/myProfile");
     const isFromReviewQueue =
-      referrer.includes("/coordinator/review-queue") ||
-      referrer.includes("/review-queue");
+      referrer.includes("/review-queue") ||
+      referrer.includes("/review");
     const isFromAssignments = referrer.includes("/assignments");
 
     // For citizens coming from dashboard or profile previews, always go to profile
@@ -1866,7 +1871,7 @@ class ComplaintDetails {
     switch (this.userRole) {
       case "complaint-coordinator":
         returnLink.href = isFromReviewQueue
-          ? "/coordinator/review-queue"
+          ? "/review-queue"
           : "/dashboard";
         returnText.textContent = isFromReviewQueue
           ? "Return to Review Queue"
@@ -1874,7 +1879,7 @@ class ComplaintDetails {
         break;
       case "lgu-admin":
         returnLink.href = isFromAssignments
-          ? "/lgu-admin/assignments"
+          ? "/assignments"
           : "/dashboard";
         returnText.textContent = isFromAssignments
           ? "Return to Assigned Complaints"
@@ -1882,7 +1887,7 @@ class ComplaintDetails {
         break;
       case "lgu":
       case "lgu-officer":
-        returnLink.href = "/lgu-officer/assigned-tasks";
+        returnLink.href = "/task-assigned";
         returnText.textContent = "Return to Assigned Tasks";
         break;
       case "citizen":
