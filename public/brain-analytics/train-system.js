@@ -309,14 +309,13 @@ function renderTrainingList() {
         <div class="train-item" onclick="window.selectTrainingItem('${c.id}')" id="train-item-${c.id}">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <span style="font-weight:600; font-size:13px;">${c.id.substring(0, 8)}...</span>
-                <span class="badge ${getConfidenceBadge(c.confidence)}">${Math.round(c.confidence * 100)}%</span>
             </div>
             ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ''}
             <div style="font-size:12px; color:var(--gray-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 ${c.text}
             </div>
             <div style="font-size:11px; color:var(--gray-400); margin-top:3px;">
-                Suggested: <strong>${c.ai_suggestion}</strong>${c.subcategory ? ` › ${c.subcategory}` : ''}
+                Predicted: <strong style="color:var(--primary);">${c.ai_suggestion}</strong>${c.subcategory ? ` › ${c.subcategory}` : ''}
             </div>
         </div>
     `}).join('');
@@ -353,11 +352,6 @@ window.selectTrainingItem = function (id) {
 
   document.getElementById('lblOriginalText').textContent = item.text;
   document.getElementById('lblSystemGuess').textContent = item.ai_suggestion;
-
-  const conf = item.confidence || 0;
-  document.getElementById('lblConfidence').textContent = `${(conf * 100).toFixed(1)}%`;
-  document.getElementById('barConfidence').style.width = `${conf * 100}%`;
-  document.getElementById('barConfidence').style.background = conf > 0.7 ? 'var(--success)' : (conf > 0.4 ? 'var(--warning)' : 'var(--danger)');
 
   // Enable Form
   const keyInput = document.getElementById('inputTrainKeyword');
@@ -535,8 +529,6 @@ function resetForm() {
 
   document.getElementById('lblOriginalText').textContent = "Select an item from the left to view details.";
   document.getElementById('lblSystemGuess').textContent = "-";
-  document.getElementById('lblConfidence').textContent = "-";
-  document.getElementById('barConfidence').style.width = "0%";
 
   const keyInput = document.getElementById('inputTrainKeyword');
   if (keyInput) {

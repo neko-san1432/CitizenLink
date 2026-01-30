@@ -1,13 +1,94 @@
 /**
  * DBSCAN (Density-Based Spatial Clustering of Applications with Noise) Algorithm
  * Implementation for complaint location clustering
+ * 
+ * OPTIMIZED: Now uses Grid-Based Spatial Indexing for O(n) neighbor lookup
+ * instead of O(n²) brute force approach.
  */
+
+/**
+ * SpatialGrid - Grid-based spatial index for efficient neighbor queries
+ * Reduces neighbor search from O(n) to O(k) where k = points in adjacent cells
+ */
+class SpatialGrid {
+  /**
+   * @param {number} cellSize - Size of each grid cell (in same units as coordinates)
+   */
+  constructor(cellSize) {
+    this.cellSize = cellSize;
+    this.grid = new Map();
+    this.points = null;
+  }
+
+  /**
+   * Generate a cell key for a given point
+   * @param {Object} point - {lat, lng}
+   * @returns {string} Cell key in format "x_y"
+   */
+  getCellKey(point) {
+    const cellX = Math.floor(point.lat / this.cellSize);
+    const cellY = Math.floor(point.lng / this.cellSize);
+    return `${cellX}_${cellY}`;
+  }
+
+  /**
+   * Build the spatial grid from an array of points - O(n)
+   * @param {Array} points - Array of points with lat, lng properties
+   */
+  build(points) {
+    this.grid.clear();
+    this.points = points;
+
+    for (let i = 0; i < points.length; i++) {
+      const key = this.getCellKey(points[i]);
+      if (!this.grid.has(key)) {
+        this.grid.set(key, []);
+      }
+      this.grid.get(key).push(i);
+    }
+  }
+
+  /**
+   * Get all point indices in a cell and its 8 neighbors
+   * @param {Object} point - {lat, lng}
+   * @returns {Array} Array of point indices in adjacent cells
+   */
+  getNearbyCandidates(point) {
+    const cellX = Math.floor(point.lat / this.cellSize);
+    const cellY = Math.floor(point.lng / this.cellSize);
+    const candidates = [];
+
+    // Check the cell and all 8 adjacent cells
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const key = `${cellX + dx}_${cellY + dy}`;
+        const cellPoints = this.grid.get(key);
+        if (cellPoints) {
+          candidates.push(...cellPoints);
+        }
+      }
+    }
+
+    return candidates;
+  }
+
+  /**
+   * Clear the grid
+   */
+  clear() {
+    this.grid.clear();
+    this.points = null;
+  }
+}
+
 class DBSCAN {
 
   constructor(eps = 0.01, minPts = 3) {
-    this.eps = eps; // Maximum distance between two samples for one to be considered in the neighborhood of the other
-    this.minPts = minPts; // Minimum number of samples in a neighborhood for a point to be considered a core point
+    this.eps = eps; // Maximum distance between two samples (in km)
+    this.minPts = minPts; // Minimum samples for core point
+    this.spatialGrid = null; // Lazy-initialized spatial index
   }
+
   /**
    * Calculate distance between two points using Haversine formula
    * @param {Object} point1 - {lat, lng}
@@ -32,7 +113,21 @@ class DBSCAN {
   }
 
   /**
+   * Build spatial grid for efficient neighbor lookups
+   * Cell size is set to eps converted to approximate degrees
+   * @param {Array} points - Array of points with lat, lng properties
+   */
+  buildSpatialIndex(points) {
+    // Convert eps (km) to approximate degrees for grid cell size
+    // 1 degree ≈ 111 km at equator, using slightly larger cells to ensure coverage
+    const cellSizeDegrees = (this.eps / 111) * 1.1; // 10% buffer for safety
+    this.spatialGrid = new SpatialGrid(cellSizeDegrees);
+    this.spatialGrid.build(points);
+  }
+
+  /**
    * Find all points within eps distance of a given point
+   * OPTIMIZED: Uses spatial grid to check only nearby cells - O(k) instead of O(n)
    * @param {Array} points - Array of points
    * @param {number} pointIndex - Index of the point to find neighbors for
    * @returns {Array} Array of neighbor indices
@@ -41,11 +136,26 @@ class DBSCAN {
     const neighbors = [];
     const point = points[pointIndex];
 
-    for (let i = 0; i < points.length; i++) {
-      if (i !== pointIndex) {
-        const distance = this.calculateDistance(point, points[i]);
-        if (distance <= this.eps) {
-          neighbors.push(i);
+    // Use spatial grid if available (optimized path)
+    if (this.spatialGrid) {
+      const candidates = this.spatialGrid.getNearbyCandidates(point);
+      
+      for (const i of candidates) {
+        if (i !== pointIndex) {
+          const distance = this.calculateDistance(point, points[i]);
+          if (distance <= this.eps) {
+            neighbors.push(i);
+          }
+        }
+      }
+    } else {
+      // Fallback to brute force if grid not built
+      for (let i = 0; i < points.length; i++) {
+        if (i !== pointIndex) {
+          const distance = this.calculateDistance(point, points[i]);
+          if (distance <= this.eps) {
+            neighbors.push(i);
+          }
         }
       }
     }
@@ -55,10 +165,15 @@ class DBSCAN {
 
   /**
    * Perform DBSCAN clustering
+   * OPTIMIZED: Builds spatial index before clustering for O(n) neighbor lookups
    * @param {Array} points - Array of points with lat, lng properties
    * @returns {Object} Clustering result with clusters and noise points
    */
   cluster(points) {
+    // Build spatial index for O(n) neighbor lookups
+    if (points && points.length > 0) {
+      this.buildSpatialIndex(points);
+    }
     if (!points || points.length === 0) {
       return { clusters: [], noise: [] };
     }
