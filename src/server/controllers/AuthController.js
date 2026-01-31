@@ -164,9 +164,8 @@ class AuthController {
       if (!requiredFields.isValid) {
         return res.status(400).json({
           success: false,
-          error: `${requiredFields.missingFields.join(", ")} ${
-            requiredFields.missingFields.length === 1 ? "is" : "are"
-          } required`,
+          error: `${requiredFields.missingFields.join(", ")} ${requiredFields.missingFields.length === 1 ? "is" : "are"
+            } required`,
         });
       }
 
@@ -204,6 +203,32 @@ class AuthController {
       // Extract and combine user metadata
       const combinedMetadata = extractUserMetadata(authData.user);
 
+
+      console.log(`[LOGIN_DEBUG] User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
+
+      // RESTRICT ROLES based on Workflow Mode
+      let allowedRoles = ["citizen", "super-admin", "lgu", "complaint-coordinator", "lgu-officer", "lgu-admin", "lgu-hr"];
+
+      if (process.env.SIMPLE_WORKFLOW_MODE === "true") {
+        allowedRoles = ["citizen", "super-admin", "lgu"];
+      } else if (process.env.ENABLE_LEGACY_ROLES === "true") {
+        // Ensure legacy roles are definitely included if explicit flag is on (though they are in default above)
+        // This block is kept for backward compatibility if ENABLE_LEGACY_ROLES was used previously
+      }
+
+      const userRole = combinedMetadata.role || "citizen";
+      console.log(`[LOGIN_DEBUG] Checking role '${userRole}' against allowed:`, allowedRoles);
+
+      if (!allowedRoles.includes(userRole)) {
+        console.warn(`[LOGIN] Blocked login attempt for restricted role: ${userRole} (${email})`);
+
+        // Return generic error to prevent role enumeration, same as invalid password
+        return res.status(401).json({
+          success: false,
+          error: "Invalid email or password",
+        });
+      }
+
       // Check ban status
       // Check ban status
       const isBanned =
@@ -236,9 +261,8 @@ class AuthController {
       // Build user object from metadata
       const userName =
         combinedMetadata.name ||
-        `${combinedMetadata.first_name || ""} ${
-          combinedMetadata.last_name || ""
-        }`.trim() ||
+        `${combinedMetadata.first_name || ""} ${combinedMetadata.last_name || ""
+          }`.trim() ||
         authData.user.email?.split("@")[0] ||
         "Unknown User";
 

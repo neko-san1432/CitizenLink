@@ -13,8 +13,9 @@ class LguOfficerController {
     try {
       const userId = req.user.id;
       const { status, priority, limit } = req.query;
+      const department = req.user.department;
 
-      const tasks = await this.officerService.getAssignedTasks(userId, { status, priority, limit });
+      const tasks = await this.officerService.getAssignedTasks(userId, { status, priority, limit, department });
 
       return res.json({
         success: true,

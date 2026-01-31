@@ -46,9 +46,20 @@ const departmentColors = {
 };
 
 let allDepartments = []; // Store for filtering
+let systemConfig = { legacyRolesEnabled: false };
 
 async function loadDepartments() {
   try {
+    // Load config first
+    try {
+      const configResp = await fetch("/api/config");
+      if (configResp.ok) {
+        systemConfig = await configResp.json();
+      }
+    } catch (e) {
+      console.warn("Failed to load config", e);
+    }
+
     const response = await fetch("/api/departments/active");
     const result = await response.json();
 
@@ -143,6 +154,11 @@ function createDepartmentCard(department) {
   const level = escapeHtml(department.level || "N/A");
   const responseTime = department.response_time_hours || "N/A";
 
+  const keyRoles = ["LGU Officer"];
+  if (systemConfig.legacyRolesEnabled) {
+    keyRoles.push("Complaint Coordinator");
+  }
+
   return `
     <div class="department-card-premium">
         ${level !== 'N/A' ? `<div class="dept-badge">${level}</div>` : ''}
@@ -166,6 +182,10 @@ function createDepartmentCard(department) {
              <div class="dept-meta-item">
                 <span class="dept-meta-label">Status</span>
                 <span class="dept-meta-value" style="color: #059669;">● Active</span>
+            </div>
+             <div class="dept-meta-item">
+                <span class="dept-meta-label">Key Roles</span>
+                <span class="dept-meta-value">${keyRoles.join(", ")}</span>
             </div>
         </div>
     </div>

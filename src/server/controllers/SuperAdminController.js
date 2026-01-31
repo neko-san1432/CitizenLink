@@ -75,7 +75,7 @@ class SuperAdminController {
       console.error("[SUPERADMIN_CONTROLLER] Role swap error:", error);
       const status =
         error.message.includes("Only Super Admin") ||
-        error.message.includes("Cannot change")
+          error.message.includes("Cannot change")
           ? 403
           : 500;
       res.status(status).json({
@@ -160,12 +160,27 @@ class SuperAdminController {
           error: "Department ID is required",
         });
       }
+      // Get current role
+      const currentRole = await this.superAdminService.roleService.getUserRole(user_id);
+
+      // If user is NOT a citizen, check if legacy/flexible management is enabled
+      if (currentRole !== "citizen") {
+        const legacyManagementEnabled = process.env.ENABLE_LEGACY_ROLE_MANAGEMENT === "true";
+        if (!legacyManagementEnabled) {
+          return res.status(403).json({
+            success: false,
+            error: "Can only assign citizens to departments. Please demote the user first.",
+          });
+        }
+      }
+
       console.log("[SUPERADMIN_CONTROLLER] Assign citizen request:", {
         userId: user_id,
         role,
         departmentId: department_id,
         performedBy: user.id,
         reason,
+        currentRole
       });
 
       const result = await this.superAdminService.assignCitizenToDepartment(
@@ -187,10 +202,10 @@ class SuperAdminController {
       const status = error.message.includes("Only Super Admin")
         ? 403
         : error.message.includes("Can only assign")
-        ? 400
-        : error.message.includes("Invalid department role")
-        ? 400
-        : 500;
+          ? 400
+          : error.message.includes("Invalid department role")
+            ? 400
+            : 500;
       res.status(status).json({
         success: false,
         error: error.message || "Failed to assign citizen to department",

@@ -276,10 +276,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .password-toggle:hover {
   color: var(--text-light);
+}
+
+.password-toggle .eye-icon {
+  width: 20px;
+  height: 20px;
 }
 
 /* Options */

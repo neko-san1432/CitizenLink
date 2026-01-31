@@ -21,9 +21,54 @@ class LguOfficerService {
    * Get assigned tasks for an officer
    */
   async getAssignedTasks(officerId, filters = {}) {
-    const { status, priority, limit } = filters;
+    const { status, priority, limit, department } = filters;
 
-    // Get assignments
+    // DIRECT VISIBILITY MODE: If department is provided, fetch all complaints for the department
+    if (department) {
+      // Use findAll from repo which supports department filtering
+      // Note: findAll returns { complaints, total, ... }
+      const result = await this.complaintRepo.findAll({
+        department,
+        status,
+        limit: limit || 50, // Default limit if not specified
+        page: 1
+      });
+
+      const complaints = result.complaints || [];
+
+      // Map complaints to "Task" structure for frontend compatibility
+      return complaints.map(complaint => {
+        return {
+          id: `direct-${complaint.id}`, // specific ID for direct tasks
+          complaint_id: complaint.id,
+          assigned_by: null, // System / Direct
+          status: complaint.workflow_status === 'new' ? 'assigned' : (complaint.workflow_status || 'assigned'), // Map 'new' to 'assigned' for officer view
+          notes: null,
+          priority: complaint.priority,
+          deadline: null,
+          assigned_at: complaint.submitted_at, // Use submission time as assignment time
+          created_at: complaint.submitted_at,
+          updated_at: complaint.updated_at,
+          completed_at: complaint.resolved_at,
+          complaint: {
+            id: complaint.id,
+            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
+            description: complaint.descriptive_su,
+            category: complaint.category,
+            subcategory: complaint.subcategory,
+            status: complaint.workflow_status, // Use accurate workflow status
+            priority: complaint.priority,
+            submitted_at: complaint.submitted_at,
+            location_text: complaint.location_text,
+            latitude: complaint.latitude,
+            longitude: complaint.longitude,
+            last_activity_at: complaint.last_activity_at
+          }
+        };
+      });
+    }
+
+    // LEGACY / ASSIGNMENT MODE: Get specific assignments
     const assignments = await this.assignmentRepo.findByOfficer(officerId, { status, priority, limit });
 
     if (!assignments || assignments.length === 0) {

@@ -13,6 +13,7 @@ class ComplaintDetails {
     this.boundaryLayer = null;
     this.boundaryVisible = false;
     this.boundaryToggleButton = null;
+    this.systemConfig = { legacyRolesEnabled: false }; // Default config
     this.init();
     // Cleanup map when page is unloaded
     window.addEventListener("beforeunload", () => {
@@ -28,6 +29,16 @@ class ComplaintDetails {
 
       // Show loading spinner immediately
       this.showLoading();
+
+      // Load system config
+      try {
+        const configResp = await fetch("/api/config");
+        if (configResp.ok) {
+          this.systemConfig = await configResp.json();
+        }
+      } catch (e) {
+        console.warn("Failed to load config", e);
+      }
 
       // Hide complaint details container initially to prevent showing dummy content
       const detailsContainer = document.getElementById("complaint-details");
@@ -98,6 +109,161 @@ class ComplaintDetails {
     } catch (error) {
       console.error("Error initializing complaint details:", error);
       this.showError(`Failed to load complaint details: ${error.message}`);
+    }
+  }
+  // ... (lines 103-1900 skipped) ...
+  setupRoleSpecificActions() {
+    const actionsContainer = document.getElementById("complaint-actions");
+    if (!actionsContainer) return;
+    // Return early if complaint is not loaded
+    if (!this.complaint) return;
+    const actions = [];
+
+    // Universal Print Button for all roles
+    actions.push({
+      text: "Print / Export",
+      class: "btn btn-secondary",
+      action: "print-complaint"
+    });
+
+    switch (this.userRole) {
+      case "complaint-coordinator":
+        if (this.complaint.status === "pending review") {
+          actions.push(
+            { text: "Approve", class: "btn btn-success", action: "approve" },
+            { text: "Reject", class: "btn btn-danger", action: "reject" }
+          );
+        }
+        break;
+      case "lgu-admin":
+        // Only show Assign if legacy roles/dispatching is enabled
+        if (this.systemConfig.legacyRolesEnabled && (
+          this.complaint.status === "approved" ||
+          this.complaint.status === "assigned"
+        )) {
+          actions.push({
+            text: "Assign to Officer",
+            class: "btn btn-primary",
+            action: "assign-officer",
+          });
+        }
+        // If legacy roles disabled, lgu-admin should also be able to resolve direct complaints?
+        // Assuming lgu-admin acts like lgu-officer in simplified mode
+        if (!this.systemConfig.legacyRolesEnabled && (
+          this.complaint.status === "assigned" ||
+          this.complaint.status === "in progress" ||
+          this.complaint.status === "approved" // Allow resolving approved complaints directly
+        )) {
+          actions.push({
+            text: "Mark as Resolved",
+            class: "btn btn-success",
+            action: "mark-resolved",
+          });
+        }
+        break;
+      case "lgu":
+      case "lgu-officer":
+        if (
+          this.complaint.status === "assigned" ||
+          this.complaint.status === "in progress" ||
+          (!this.systemConfig.legacyRolesEnabled && this.complaint.status === "approved") // Allow picking up approved items directly
+        ) {
+          actions.push({
+            text: "Mark as Resolved",
+            class: "btn btn-success",
+            action: "mark-resolved",
+          });
+        }
+        break;
+      case "citizen":
+        if (
+          this.complaint.status === "pending review" ||
+          this.complaint.status === "approved"
+        ) {
+          actions.push({
+            text: "Cancel Complaint",
+            class: "btn btn-warning",
+            action: "cancel",
+          });
+        }
+        // Show confirmation button when all assignments are complete and citizen hasn't confirmed
+        if (this.shouldShowConfirmationButton()) {
+          actions.push({
+            text: "Confirm Resolution",
+            class: "btn btn-success",
+            action: "confirm-resolution",
+          });
+        }
+        if (
+          this.complaint.status !== "cancelled" &&
+          this.complaint.status !== "closed"
+        ) {
+          actions.push({
+            text: "Set Reminder",
+            class: "btn btn-info",
+            action: "remind",
+          });
+        }
+        break;
+    }
+    // Hide Confirm Resolution if already resolved/completed
+    const wf = (this.complaint.workflow_status || "").toLowerCase();
+    const confirmedByCitizen = Boolean(this.complaint.confirmed_by_citizen);
+    const filteredActions = actions.filter((a) => {
+      if (a.action === "confirm-resolution") {
+        if (wf === "completed" || confirmedByCitizen) return false;
+      }
+      if (a.action === "remind") {
+        // Hide reminder when already resolved/completed or cancelled
+        if (wf === "completed" || wf === "cancelled") return false;
+      }
+      return true;
+    });
+    actionsContainer.innerHTML = filteredActions
+      .map(
+        (action) => `
+            <button type="button" class="${action.class}" data-action="${action.action}">
+                ${action.text}
+            </button>
+        `
+      )
+      .join("");
+    // Attach event listeners
+    actionsContainer
+      .querySelectorAll("button[data-action]")
+      .forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const action = e.target.getAttribute("data-action");
+          this.handleAction(action);
+        });
+      });
+  }
+  async handleAction(action) {
+    switch (action) {
+      case "approve":
+        await this.approveComplaint();
+        break;
+      case "reject":
+        await this.rejectComplaint();
+        break;
+      case "assign-officer":
+        await this.assignToOfficer();
+        break;
+      case "mark-resolved":
+        await this.markAsResolved();
+        break;
+      case "cancel":
+        await this.cancelComplaint();
+        break;
+      case "confirm-resolution":
+        await this.confirmResolution();
+        break;
+      case "remind":
+        await this.sendReminder();
+        break;
+      case "print-complaint":
+        window.print();
+        break;
     }
   }
   async getUserRole() {
@@ -1904,6 +2070,14 @@ class ComplaintDetails {
     // Return early if complaint is not loaded
     if (!this.complaint) return;
     const actions = [];
+
+    // Universal Print Button for all roles
+    actions.push({
+      text: "Print / Export",
+      class: "btn btn-secondary",
+      action: "print-complaint"
+    });
+
     switch (this.userRole) {
       case "complaint-coordinator":
         if (this.complaint.status === "pending review") {
@@ -1914,14 +2088,28 @@ class ComplaintDetails {
         }
         break;
       case "lgu-admin":
-        if (
+        // Only show Assign if legacy roles/dispatching is enabled
+        if (this.systemConfig.legacyRolesEnabled && (
           this.complaint.status === "approved" ||
           this.complaint.status === "assigned"
-        ) {
+        )) {
           actions.push({
             text: "Assign to Officer",
             class: "btn btn-primary",
             action: "assign-officer",
+          });
+        }
+        // If legacy roles disabled, lgu-admin should also be able to resolve direct complaints?
+        // Assuming lgu-admin acts like lgu-officer in simplified mode
+        if (!this.systemConfig.legacyRolesEnabled && (
+          this.complaint.status === "assigned" ||
+          this.complaint.status === "in progress" ||
+          this.complaint.status === "approved" // Allow resolving approved complaints directly
+        )) {
+          actions.push({
+            text: "Mark as Resolved",
+            class: "btn btn-success",
+            action: "mark-resolved",
           });
         }
         break;
@@ -1929,7 +2117,8 @@ class ComplaintDetails {
       case "lgu-officer":
         if (
           this.complaint.status === "assigned" ||
-          this.complaint.status === "in progress"
+          this.complaint.status === "in progress" ||
+          (!this.systemConfig.legacyRolesEnabled && this.complaint.status === "approved") // Allow picking up approved items directly
         ) {
           actions.push({
             text: "Mark as Resolved",
@@ -2023,6 +2212,9 @@ class ComplaintDetails {
         break;
       case "remind":
         await this.sendReminder();
+        break;
+      case "print-complaint":
+        window.print();
         break;
     }
   }

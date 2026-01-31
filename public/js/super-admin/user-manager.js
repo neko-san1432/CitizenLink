@@ -334,7 +334,7 @@ function normalizeRoleDisplay(role, department = null) {
   } else if (roleLower === "super-admin") {
     displayRole = "Super Admin";
   } else if (roleLower === "complaint-coordinator") {
-    displayRole = "Complaint Coordinator";
+    displayRole = "LGU Officer";
   } else if (roleLower === "citizen") {
     displayRole = "Citizen";
   } else {
@@ -379,11 +379,10 @@ function renderUserRow(u) {
   // We add 'user-row-id-${u.id}' to easily toggle active state
 
   return `
-    <div class="um-user-item user-item" id="user-row-${u.id}" data-user-id="${
-    u.id
-  }" data-user-email="${escapeHtml(
-    u.email || ""
-  )}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
+    <div class="um-user-item user-item" id="user-row-${u.id}" data-user-id="${u.id
+    }" data-user-email="${escapeHtml(
+      u.email || ""
+    )}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
       <div class="user-item-avatar">
         ${initials}
       </div>
@@ -490,12 +489,20 @@ async function loadUserDetails(userId) {
         u.id !== currentUserId &&
         !isTargetSuperAdmin;
 
+      // Check for legacy role management cap
+      let legacyRoleManagement = false;
+      try {
+        const confRes = await fetch("/api/config");
+        const conf = await confRes.json();
+        legacyRoleManagement = conf.legacyRoleManagementEnabled === true;
+      } catch (e) { console.warn("Failed to fetch config", e); }
+
       container.innerHTML = `
         <div class="profile-card">
             <div class="profile-avatar">${initials}</div>
             <h2 class="profile-name">${escapeHtml(
-              u.fullName || u.name || "Unknown"
-            )}</h2>
+        u.fullName || u.name || "Unknown"
+      )}</h2>
             <p class="profile-email">${escapeHtml(u.email || "")}</p>
         </div>
 
@@ -512,9 +519,8 @@ async function loadUserDetails(userId) {
             </div>
             <div class="info-item">
                 <span class="info-label">Status</span>
-                <div class="info-value" style="color:${
-                  isBanned ? "#ef4444" : "#10b981"
-                }">
+                <div class="info-value" style="color:${isBanned ? "#ef4444" : "#10b981"
+        }">
                     ${isBanned ? "Banned" : "Active"}
                 </div>
             </div>
@@ -525,45 +531,40 @@ async function loadUserDetails(userId) {
         </div>
 
         <div class="actions-container">
-            ${
-              isCitizen
-                ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
-                    u.email || ""
-                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
-                    u.id
-                  }')">Promote User</button>`
-                : `<button class="btn btn-secondary" onclick="demoteToCitizen('${u.id}')">Demote to Citizen</button>`
-            }
+            ${isCitizen
+          ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
+            u.email || ""
+          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
+          }')">Promote User</button>`
+          : legacyRoleManagement
+            ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(u.email || "")}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id}', '${u.role}', '${u.department}')">Change Role</button>`
+            : `<button class="btn btn-secondary" onclick="demoteToCitizen('${u.id}')">Demote to Citizen</button>`
+        }
             
-            ${
-              !isCitizen && !isTargetSuperAdmin
-                ? `<button class="btn btn-warning" onclick="openTransferModal('${escapeHtml(
-                    u.email || ""
-                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
-                    u.id
-                  }', '${escapeHtml(
-                    u.department || ""
-                  )}')">Transfer Dept</button>`
-                : ""
-            }
+            ${!isCitizen && !isTargetSuperAdmin
+          ? `<button class="btn btn-warning" onclick="openTransferModal('${escapeHtml(
+            u.email || ""
+          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
+          }', '${escapeHtml(
+            u.department || ""
+          )}')">Transfer Dept</button>`
+          : ""
+        }
             
-            ${
-              !isBanned
-                ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(
-                    u.email || ""
-                  )}', '${escapeHtml(u.fullName || u.name || "")}', '${
-                    u.id
-                  }')">Ban User</button>`
-                : currentUserRole === "super-admin"
-                ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban User</button>`
-                : ""
-            }
+            ${!isBanned
+          ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(
+            u.email || ""
+          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
+          }')">Ban User</button>`
+          : currentUserRole === "super-admin"
+            ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban User</button>`
+            : ""
+        }
             
-            ${
-              canDeleteUser
-                ? `<button class="btn btn-secondary" style="border-color:#fee2e2; color:#991b1b; background:#fff;" id="delete-user-btn">Delete Account</button>`
-                : ""
-            }
+            ${canDeleteUser
+          ? `<button class="btn btn-secondary" style="border-color:#fee2e2; color:#991b1b; background:#fff;" id="delete-user-btn">Delete Account</button>`
+          : ""
+        }
         </div>
       `;
 
@@ -594,30 +595,55 @@ window.unbanUser = unbanUser;
 window.openTransferModal = openTransferModal;
 window.openDeleteModal = openDeleteModal;
 
-function openPromotionModal(email, name, userId) {
+function openPromotionModal(email, name, userId, currentRole = null, currentDept = null) {
   const modal = document.getElementById("promotion-modal");
   if (!modal) {
     showMessage("error", "Promotion modal not found");
     return;
   }
 
-  selectedUser = { id: userId, email, name };
+  selectedUser = { id: userId, email, name, role: currentRole, department: currentDept };
 
   const userLabel = document.getElementById("promotion-user-label");
   const roleSelect = document.getElementById("promotion-role");
   const deptSelect = document.getElementById("promotion-dept");
   const reasonTextarea = document.getElementById("promotion-reason");
+  const modalTitle = modal.querySelector("h3");
+
+  if (modalTitle) {
+    modalTitle.textContent = currentRole ? "Change User Role" : "Promote Citizen";
+  }
 
   if (userLabel) userLabel.value = `${name || email}`;
   if (roleSelect) {
-    roleSelect.value = "";
+    // Attempt to match current role if exists
+    // Note: currentRole might be normalized or raw, usually raw here from selectedUser
+    roleSelect.value = currentRole || "";
+
     roleSelect.removeEventListener("change", updateDepartmentRequirement);
     roleSelect.addEventListener("change", updateDepartmentRequirement);
   }
-  if (deptSelect) deptSelect.value = "";
+  if (deptSelect && currentDept) {
+    deptSelect.value = currentDept; // Attempt to set value
+  } else if (deptSelect) {
+    deptSelect.value = "";
+  }
+
   if (reasonTextarea) reasonTextarea.value = "";
 
   updateDepartmentRequirement();
+
+  // If we have a current dept, updateRequirement logic might have cleared it or disabled it incorrectly if role not yet set
+  // Re-apply if role is set and valid
+  if (currentRole && currentDept && deptSelect) {
+    const needsDepartment =
+      ["lgu-officer", "lgu-admin", "lgu-hr"].includes(currentRole) ||
+      currentRole.startsWith("lgu-");
+    if (needsDepartment) {
+      deptSelect.value = currentDept;
+    }
+  }
+
   modal.style.display = "flex";
   modal.style.visibility = "visible";
   modal.style.opacity = "1";

@@ -40,7 +40,7 @@ const PRIVACY_SECTIONS = [
     title: "Sharing and Disclosure",
     body: [
       "Relevant LGU departments and officers who are assigned to investigate or resolve your complaint.",
-      "Authorized complaint coordinators and administrators supporting case management.",
+      "Authorized LGU officers and administrators supporting case management.",
       "Service providers that supply secure infrastructure, cloud storage, mapping, notifications, and security tooling.",
       "Regulators or courts when disclosure is legally required."
     ],

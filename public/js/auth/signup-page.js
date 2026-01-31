@@ -29,7 +29,7 @@ const checkAuthentication = async () => {
       if (oauthCleanupFlag) {
         sessionStorage.removeItem("cl_oauth_cleanup");
       }
-    } catch {}
+    } catch { }
 
     // If we just cleaned up, don't redirect - let user proceed with signup
     if (oauthCleanupFlag) {
@@ -57,7 +57,7 @@ const checkAuthentication = async () => {
     if (session && !error) {
       // console.log removed for security
       // Get user metadata
-      const {user} = session;
+      const { user } = session;
       const role = user?.user_metadata?.role || "";
       const name = user?.user_metadata?.name || "";
       // Check if user has completed registration
@@ -107,6 +107,9 @@ const initializeSignupPage = async () => {
 
   // Wire password strength meter
   attachPasswordStrengthMeter();
+  
+  // Wire password toggles
+  setupPasswordToggles();
 
   // Listen for auth state changes to update UI dynamically
   supabase.auth.onAuthStateChange((event, session) => {
@@ -171,8 +174,8 @@ function attachPasswordStrengthMeter() {
       const pwd = passwordInput.value || "";
       // Do not evaluate if empty or less than 8 chars
       if (pwd.length < 8) {
-        strengthFill.classList.remove("weak","fair","good","strong");
-        strengthText.classList.remove("weak","fair","good","strong");
+        strengthFill.classList.remove("weak", "fair", "good", "strong");
+        strengthText.classList.remove("weak", "fair", "good", "strong");
         strengthFill.style.width = "0%";
         strengthText.textContent = "Password strength";
         return;
@@ -180,8 +183,8 @@ function attachPasswordStrengthMeter() {
       const score = calcScore(pwd);
       const cls = classFor(score);
       // reset
-      strengthFill.classList.remove("weak","fair","good","strong");
-      strengthText.classList.remove("weak","fair","good","strong");
+      strengthFill.classList.remove("weak", "fair", "good", "strong");
+      strengthText.classList.remove("weak", "fair", "good", "strong");
       // Apply base width 0 first
       strengthFill.style.width = "0%";
       // apply classes
@@ -194,7 +197,34 @@ function attachPasswordStrengthMeter() {
     };
     passwordInput.addEventListener("input", update);
     update();
-  } catch (_) {}
+  } catch (_) { }
+}
+
+function setupPasswordToggles() {
+  const toggleButtons = document.querySelectorAll(".password-toggle");
+
+  toggleButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = button.parentElement.querySelector("input");
+      const icon = button.querySelector("svg");
+
+      if (input.type === "password") {
+        input.type = "text";
+        // Switch to eye-off icon
+        icon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+      } else {
+        input.type = "password";
+        // Switch back to eye icon
+        icon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+      }
+    });
+  });
 }
 // Initialize when DOM is ready
 if (document.readyState === "loading") {
@@ -243,7 +273,7 @@ function setupSignupMethodSelector() {
         } else {
           localStorage.removeItem(METHOD_STORAGE_KEY);
         }
-      } catch {}
+      } catch { }
     }
   };
 
@@ -254,7 +284,7 @@ function setupSignupMethodSelector() {
     }
     selectMethod("none", { persist });
     clearOAuthContext();
-    try { localStorage.removeItem("cl_signup_step_index"); } catch {} // Reset step index storage
+    try { localStorage.removeItem("cl_signup_step_index"); } catch { } // Reset step index storage
     document.dispatchEvent(new Event("signup-reset")); // Reset UI step to 0
   };
   resetSignupStateHandler = resetSignupState;
@@ -270,7 +300,7 @@ function setupSignupMethodSelector() {
   let cachedMethod = null;
   try {
     cachedMethod = localStorage.getItem(METHOD_STORAGE_KEY);
-  } catch {}
+  } catch { }
   if (cachedMethod === "email") {
     selectMethod("email");
   } else {
@@ -464,7 +494,7 @@ async function cleanupPendingOAuth(message = "OAuth signup was cancelled. Please
         // Only log if it's not a 401/403 (expected for invalid sessions)
         if (!deleteResponse.ok) {
           const errorData = await deleteResponse.json().catch(() => ({}));
-          const {status} = deleteResponse;
+          const { status } = deleteResponse;
           // Don't log auth errors - they're expected for incomplete signups
           if (status !== 401 && status !== 403) {
             console.warn("[SIGNUP] Failed to delete incomplete OAuth user:", errorData.error || "Unknown error");
@@ -478,9 +508,9 @@ async function cleanupPendingOAuth(message = "OAuth signup was cancelled. Please
 
     // Sign out after deletion attempt
     await supabase.auth.signOut();
-  } catch {}
+  } catch { }
 
-  try { await fetch("/auth/session", { method: "DELETE" }); } catch {}
+  try { await fetch("/auth/session", { method: "DELETE" }); } catch { }
   clearOAuthContext();
   resetSignupStateHandler?.({ persist: true });
   if (message) {

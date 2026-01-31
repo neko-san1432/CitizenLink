@@ -36,6 +36,14 @@ class SuperAdminService {
         throw new Error(`Invalid role: ${newRole}`);
       }
 
+      // Simple Workflow Mode Check
+      if (process.env.SIMPLE_WORKFLOW_MODE === "true") {
+        const allowedSwaps = ["citizen", "lgu", "super-admin"];
+        if (!allowedSwaps.includes(newRole)) {
+          throw new Error(`Role '${newRole}' is not allowed in Simple Workflow Mode.`);
+        }
+      }
+
       // Prepare metadata - clear department if demoting to citizen
       const metadata = {
         reason: reason || "Role swap by Super Admin",
@@ -161,20 +169,31 @@ class SuperAdminService {
       if (adminRole !== "super-admin") {
         throw new Error("Only Super Admin can assign citizens to departments");
       }
-      // Get current role - must be citizen
+      // Get current role - strict check removed to support flexible role management
       const currentRole = await this.roleService.getUserRole(userId);
+      // Logic for strict/flexible mode is handled in the controller
+      /* 
       if (currentRole !== "citizen") {
         throw new Error("Can only assign citizens to departments");
       }
+      */
       // Validate target role - must be LGU officer, admin, HR, coordinator, or super-admin
       // Note: Roles should NOT include department suffix (e.g., use 'lgu-officer' not 'lgu-ceeo')
-      const isLguOfficer = role === "lgu-officer" || role === "lgu";
-      const isLguAdmin = role === "lgu-admin";
       const isLguHR = role === "lgu-hr";
       const isCoordinator = role === "complaint-coordinator";
       const isSuperAdmin = role === "super-admin";
-      const isValidRole =
+
+      let isValidRole =
         isLguOfficer || isLguAdmin || isLguHR || isCoordinator || isSuperAdmin;
+
+      // Simple Workflow Mode Limitation
+      if (process.env.SIMPLE_WORKFLOW_MODE === "true") {
+        // Only allow LGU (officer) or Super Admin.
+        // Block Admin, HR, Coordinator
+        if (isLguAdmin || isLguHR || isCoordinator) {
+          isValidRole = false;
+        }
+      }
 
       console.log("[SUPER_ADMIN] Role validation:", {
         role,
@@ -464,7 +483,7 @@ class SuperAdminService {
                 email_confirmed_at: authUser.email_confirmed_at,
                 is_oauth: Boolean(
                   authUser.app_metadata?.provider &&
-                    authUser.app_metadata.provider !== "email"
+                  authUser.app_metadata.provider !== "email"
                 ),
               };
             })

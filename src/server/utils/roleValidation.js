@@ -74,6 +74,43 @@ async function validateUserRole(role) {
   // Check for valid role patterns
   let roleType = null;
   let departmentCode = null;
+
+  // Simple Workflow Mode Check
+  const isSimpleMode = process.env.SIMPLE_WORKFLOW_MODE === "true";
+
+  if (isSimpleMode) {
+    // In simple mode, only citizen, lgu (as lgu-officer), and super-admin are allowed
+    const allowedRoles = ["citizen", "lgu", "lgu-officer", "super-admin"];
+    if (!allowedRoles.includes(roleLower)) {
+      return {
+        isValid: false,
+        roleType: null,
+        departmentCode: null,
+        error: "Role not allowed in Simple Workflow mode (Citizen, LGU, Super Admin only)"
+      };
+    }
+
+
+    // Map 'lgu' to 'lgu' (user requested plain "lgu")
+    // We accept lgu-officer as input but normalize to lgu for consistency in this mode if desired,
+    // or just allow both but preferring lgu.
+    if (roleLower === "lgu" || roleLower === "lgu-officer") {
+      roleType = "lgu";
+      departmentCode = null;
+    } else {
+      roleType = roleLower;
+      departmentCode = null;
+    }
+
+    return {
+      isValid: true,
+      roleType,
+      departmentCode,
+      error: null
+    };
+  }
+
+  // Legacy/Complex Workflow Logic
   // Simplified LGU roles
   if (roleLower === "lgu-admin") {
     roleType = "lgu-admin";

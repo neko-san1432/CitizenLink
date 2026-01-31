@@ -49,6 +49,40 @@ class ComplaintController {
   }
 
   /**
+   * Get coordinator stats
+   */
+  async getCoordinatorStats(req, res) {
+    try {
+      const stats = await this.complaintService.getComplaintStats(req.user);
+      res.json({ success: true, data: stats });
+    } catch (error) {
+      console.error("[ComplaintController] getCoordinatorStats error:", error.message);
+      res.status(500).json({ success: false, error: "Failed to fetch coordinator stats" });
+    }
+  }
+
+  /**
+   * Get review queue
+   */
+  async getReviewQueue(req, res) {
+    try {
+      // Re-use getComplaints logic but ensure we filter for relevant status
+      // Use req.query directly as getComplaints handles pagination/filtering
+      const { user } = req;
+      // Force status filter if not provided, or ensure it's within coordinator scope
+      if (!req.query.status) {
+        req.query.status = "pending review";
+      }
+
+      const result = await this.complaintService.getComplaints(req.query, user);
+      res.json(result);
+    } catch (error) {
+      console.error("[ComplaintController] getReviewQueue error:", error.message);
+      res.status(500).json({ success: false, error: "Failed to fetch review queue" });
+    }
+  }
+
+  /**
    * Cancel complaint
    */
   async cancelComplaint(req, res) {
@@ -388,34 +422,34 @@ class ComplaintController {
         const complaints = Array.isArray(parsed) ? parsed : parsed?.complaints;
         const fallback = Array.isArray(complaints)
           ? complaints
-              .map((c) => {
-                const lat = Number.parseFloat(c.latitude);
-                const lng = Number.parseFloat(c.longitude);
-                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-                const departments = Array.isArray(c.department_r)
-                  ? c.department_r
-                  : c.department_r
-                    ? [c.department_r]
-                    : [];
-                return {
-                  id: c.id,
-                  title: c.title || null,
-                  status: c.workflow_status || "new",
-                  priority: c.priority || "medium",
-                  lat,
-                  lng,
-                  location: c.location_text || "",
-                  submittedAt: c.submitted_at || null,
-                  department: departments.length > 0 ? departments[0] : "Unknown",
-                  departments,
-                  secondaryDepartments: departments.length > 1 ? departments.slice(1) : [],
-                  type: c.category || "General",
-                  category: c.category || null,
-                  subcategory: c.subcategory || null,
-                  department_r: departments,
-                };
-              })
-              .filter(Boolean)
+            .map((c) => {
+              const lat = Number.parseFloat(c.latitude);
+              const lng = Number.parseFloat(c.longitude);
+              if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+              const departments = Array.isArray(c.department_r)
+                ? c.department_r
+                : c.department_r
+                  ? [c.department_r]
+                  : [];
+              return {
+                id: c.id,
+                title: c.title || null,
+                status: c.workflow_status || "new",
+                priority: c.priority || "medium",
+                lat,
+                lng,
+                location: c.location_text || "",
+                submittedAt: c.submitted_at || null,
+                department: departments.length > 0 ? departments[0] : "Unknown",
+                departments,
+                secondaryDepartments: departments.length > 1 ? departments.slice(1) : [],
+                type: c.category || "General",
+                category: c.category || null,
+                subcategory: c.subcategory || null,
+                department_r: departments,
+              };
+            })
+            .filter(Boolean)
           : [];
 
         res.json({

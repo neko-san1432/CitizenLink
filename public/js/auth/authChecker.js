@@ -8,7 +8,7 @@ const SUPPRESS_DURATION_MS = 8000;
 export const saveUserMeta = (meta) => {
   try {
     localStorage.setItem(storageKey, JSON.stringify(meta));
-  } catch {}
+  } catch { }
 };
 
 export const getUserMeta = () => {
@@ -54,7 +54,7 @@ export const refreshMetaFromSession = async () => {
 export const setOAuthContext = (ctx) => {
   try {
     localStorage.setItem(oauthKey, JSON.stringify(ctx || {}));
-  } catch {}
+  } catch { }
 };
 
 export const getOAuthContext = () => {
@@ -69,7 +69,7 @@ export const getOAuthContext = () => {
 export const clearOAuthContext = () => {
   try {
     localStorage.removeItem(oauthKey);
-  } catch {}
+  } catch { }
 };
 
 export const suppressAuthErrorNotifications = (
@@ -78,7 +78,7 @@ export const suppressAuthErrorNotifications = (
   try {
     const expiresAt = Date.now() + duration;
     sessionStorage.setItem(authErrorSuppressKey, String(expiresAt));
-  } catch {}
+  } catch { }
 };
 
 const isAuthErrorSuppressed = () => {
@@ -103,7 +103,7 @@ const isAuthErrorSuppressed = () => {
 const clearAuthErrorSuppression = () => {
   try {
     sessionStorage.removeItem(authErrorSuppressKey);
-  } catch {}
+  } catch { }
 };
 
 const hasPendingOAuthSignup = () => {
@@ -169,7 +169,7 @@ export const getUserRole = async (options = {}) => {
     } else if (response.status === 401) {
       try {
         localStorage.removeItem("cl_user_meta");
-      } catch {}
+      } catch { }
       throw new Error("Unauthorized");
     }
   } catch (error) {
@@ -281,7 +281,7 @@ export function initializeAuthListener() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ access_token: session.access_token }),
         });
-      } catch {}
+      } catch { }
       // Restart monitoring on fresh session
       stopTokenExpiryMonitoring();
       startTokenExpiryMonitoring();
@@ -656,7 +656,7 @@ function formatRoleNameForDisplay(role) {
     citizen: "Citizen",
     lgu: "LGU Officer",
     "lgu-admin": "LGU Admin",
-    "complaint-coordinator": "Complaint Coordinator",
+    "complaint-coordinator": "LGU Officer",
     "super-admin": "Super Admin",
     hr: "HR",
     "lgu-hr": "LGU HR",
@@ -744,7 +744,7 @@ try {
               // Unified dashboard route for all roles
               const href = "/dashboard";
               if (dashboardBtn) dashboardBtn.setAttribute("href", href);
-            } catch {}
+            } catch { }
           } else {
             // Not authenticated, show unauthenticated buttons
             if (unauthEl) unauthEl.classList.remove("hidden");
@@ -772,14 +772,14 @@ try {
               },
               { once: true }
             );
-          } catch {}
+          } catch { }
         }
       })();
-    } catch {}
+    } catch { }
   };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initializeHeaderAuthUI);
   } else {
     initializeHeaderAuthUI();
   }
-} catch {}
+} catch { }

@@ -47,6 +47,14 @@ function evictOldestCacheEntries() {
 
 // Public API endpoints
 
+// Public configuration endpoint
+router.get("/config", apiLimiter, (req, res) => {
+  res.json({
+    legacyRolesEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
+    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLE_MANAGEMENT === "true"
+  });
+});
+
 router.get("/boundaries", apiLimiter, async (req, res) => {
   try {
     const filePath = path.join(config.rootDir, "public", "assets", "json", "brgy_boundaries_location.json");
