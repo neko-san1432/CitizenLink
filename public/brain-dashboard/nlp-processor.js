@@ -75,6 +75,209 @@
 (function (global) {
     'use strict';
 
+    // ==================== PHASE 2: BISLISH TYPO TOLERANCE ====================
+
+    /**
+     * v4.3: BISLISH TYPO MAP
+     * Pre-processor for common Digos City Bisaya-English misspellings.
+     * Maps incorrect spellings → correct dictionary terms.
+     * @thesis-feature Dialect-aware NLP for improved recall
+     */
+    const BISLISH_TYPO_MAP = {
+        // Water/Drainage
+        "tubog": "tubig",
+        "tupig": "tubig",
+        "baha-baha": "baha",
+        "lunup": "lunop",
+        "bahag": "baha",
+        "apaw-apaw": "apaw",
+
+        // Fire
+        "sunug": "sunog",
+        "apuy": "apoy",
+        "kalayo": "apoy",
+        "kayo": "apoy",
+        "nasusunog": "sunog",
+
+        // Infrastructure
+        "lubac": "lubak",
+        "lubaq": "lubak",
+        "kalsadah": "kalsada",
+        "siminto": "semento",
+        "simento": "semento",
+        "danan": "daan",
+        "dalanan": "daan",
+
+        // Utilities
+        "kuryenti": "kuryente",
+        "way kuryente": "brownout",
+        "walay kuryente": "brownout",
+        "ngitngit": "brownout",
+        "brownaut": "brownout",
+
+        // Sanitation
+        "basora": "basura",
+        "kalat-kalat": "kalat",
+        "mabao": "mabaho"
+    };
+
+    /**
+     * v4.3: SAFETY MULTIPLIERS (Ontology-Based Weighting)
+     * Ensures safety hazards mathematically outrank aesthetic issues.
+     * Applied to final urgency score calculation.
+     * @thesis-feature Priority escalation for life-safety categories
+     */
+    const SAFETY_MULTIPLIERS = {
+        // Critical Priority (Life-threatening)
+        "Public Safety": 1.3,
+        "Emergency": 1.3,
+        "Fire": 1.3,
+
+        // High Priority (Environmental hazards)
+        "Environment": 1.2,
+        "Flood": 1.2,
+        "Flooding": 1.2,
+        "Landslide": 1.2,
+
+        // Standard Priority (Infrastructure/Utilities)
+        "Utilities": 1.1,
+        "Infrastructure": 1.05,
+
+        // Baseline
+        "Sanitation": 1.0,
+        "Health Hazard": 1.0,
+        "Pest Infestation": 1.0,
+
+        // De-prioritized (Quality of Life issues)
+        "Noise Complaint": 0.8,
+        "Noise": 0.8,
+        "Stray Animals": 0.85,
+        "Traffic Congestion": 0.9,
+        "Traffic": 0.9,
+        "Others": 0.7
+    };
+
+    /**
+     * v4.3: Optimized Levenshtein Distance Algorithm
+     * Uses Wagner-Fischer dynamic programming with early termination.
+     * @param {string} a - First string
+     * @param {string} b - Second string
+     * @returns {number} Edit distance between strings
+     */
+    function getLevenshteinDistance(a, b) {
+        if (!a || !b) return Math.max((a || '').length, (b || '').length);
+        if (a === b) return 0;
+
+        // Early termination: if length difference > threshold, skip
+        if (Math.abs(a.length - b.length) > 3) return 999;
+
+        const aLen = a.length;
+        const bLen = b.length;
+
+        // Use single-row optimization for memory efficiency
+        let prevRow = new Array(bLen + 1);
+        let currRow = new Array(bLen + 1);
+
+        // Initialize first row
+        for (let j = 0; j <= bLen; j++) {
+            prevRow[j] = j;
+        }
+
+        for (let i = 1; i <= aLen; i++) {
+            currRow[0] = i;
+
+            for (let j = 1; j <= bLen; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                currRow[j] = Math.min(
+                    prevRow[j] + 1,      // deletion
+                    currRow[j - 1] + 1,  // insertion
+                    prevRow[j - 1] + cost // substitution
+                );
+            }
+
+            // Swap rows
+            [prevRow, currRow] = [currRow, prevRow];
+        }
+
+        return prevRow[bLen];
+    }
+
+    /**
+     * v4.3: Correct Bislish typos using the dialect map
+     * @param {string} token - Input token
+     * @returns {Object} { corrected: string, wasCorrected: boolean, original: string }
+     */
+    function correctBislishTypo(token) {
+        if (!token) return { corrected: token, wasCorrected: false, original: token };
+
+        const lowerToken = token.toLowerCase();
+
+        if (BISLISH_TYPO_MAP[lowerToken]) {
+            return {
+                corrected: BISLISH_TYPO_MAP[lowerToken],
+                wasCorrected: true,
+                original: token
+            };
+        }
+
+        return { corrected: lowerToken, wasCorrected: false, original: token };
+    }
+
+    /**
+     * v4.3: Fuzzy match token against keyword index
+     * Uses Levenshtein distance with confidence penalty
+     * @param {string} token - Token to match
+     * @param {Map} keywordIndex - Keyword index map
+     * @param {number} maxDistance - Maximum edit distance (default: 2)
+     * @returns {Object|null} Match result with fuzzy confidence
+     */
+    function fuzzyMatchToken(token, keywordIndex, maxDistance = 2) {
+        // Skip fuzzy matching for short tokens (too many false positives)
+        if (!token || token.length <= 4) return null;
+
+        let bestMatch = null;
+        let bestDistance = Infinity;
+        let bestKeyword = null;
+
+        for (const [keyword, entry] of keywordIndex) {
+            // Skip if length difference too large
+            if (Math.abs(keyword.length - token.length) > maxDistance) continue;
+
+            const distance = getLevenshteinDistance(token, keyword);
+
+            if (distance <= maxDistance && distance < bestDistance) {
+                bestDistance = distance;
+                bestKeyword = keyword;
+                bestMatch = { ...entry };
+            }
+        }
+
+        if (bestMatch) {
+            // Apply confidence penalty based on edit distance
+            // Distance 1 = 0.85 confidence, Distance 2 = 0.7 confidence
+            const fuzzyPenalty = 1 - (bestDistance * 0.15);
+            bestMatch.confidence = (bestMatch.confidence || 0.8) * fuzzyPenalty;
+            bestMatch.fuzzyMatched = true;
+            bestMatch.fuzzyDistance = bestDistance;
+            bestMatch.originalToken = token;
+            bestMatch.matchedKeyword = bestKeyword;
+
+            return bestMatch;
+        }
+
+        return null;
+    }
+
+    /**
+     * v4.3: Get safety multiplier for a category
+     * @param {string} category - Category name
+     * @returns {number} Multiplier (0.7 - 1.3)
+     */
+    function getSafetyMultiplier(category) {
+        if (!category) return 1.0;
+        return SAFETY_MULTIPLIERS[category] || 1.0;
+    }
+
     // ==================== VERSION 4.0 CONFIGURATION ====================
 
     /**
@@ -1332,45 +1535,104 @@
         clauses.forEach((clause, clauseIdx) => {
             const tokens = clause.tokens;
 
-            // Single token matching
+            // v4.3: WATERFALL TOKEN MATCHING
+            // Step A: Bislish typo correction
+            // Step B: Exact dictionary match
+            // Step C: Fuzzy fallback (Levenshtein ≤ 2)
+
             tokens.forEach((token, localIdx) => {
-                if (keywordIndex.has(token)) {
-                    const entry = keywordIndex.get(token);
+                let matchFound = false;
+                let effectiveToken = token;
+                let correctionInfo = null;
+
+                // === STEP A: Bislish Typo Correction ===
+                const correction = correctBislishTypo(token);
+                if (correction.wasCorrected) {
+                    effectiveToken = correction.corrected;
+                    correctionInfo = correction;
+                    result.processingLog.push(`🔤 Bislish correction: "${token}" → "${effectiveToken}"`);
+                }
+
+                // === STEP B: Exact Dictionary Match ===
+                if (keywordIndex.has(effectiveToken)) {
+                    const entry = keywordIndex.get(effectiveToken);
                     matches.push({
-                        keyword: token,
+                        keyword: effectiveToken,
+                        originalToken: token,
                         localIndex: localIdx,
                         clauseIndex: clauseIdx,
                         clause: clause,
+                        bislishCorrected: correction.wasCorrected,
+                        fuzzyMatched: false,
                         ...entry
                     });
+                    matchFound = true;
+                }
+
+                // === STEP C: Fuzzy Fallback (only if no exact match AND token length > 4) ===
+                if (!matchFound && effectiveToken.length > 4) {
+                    const fuzzyResult = fuzzyMatchToken(effectiveToken, keywordIndex, 2);
+                    if (fuzzyResult) {
+                        matches.push({
+                            keyword: fuzzyResult.matchedKeyword,
+                            originalToken: token,
+                            localIndex: localIdx,
+                            clauseIndex: clauseIdx,
+                            clause: clause,
+                            bislishCorrected: correction.wasCorrected,
+                            fuzzyMatched: true,
+                            fuzzyDistance: fuzzyResult.fuzzyDistance,
+                            ...fuzzyResult
+                        });
+                        result.processingLog.push(`🔍 Fuzzy match: "${token}" → "${fuzzyResult.matchedKeyword}" (distance: ${fuzzyResult.fuzzyDistance}, confidence: ${(fuzzyResult.confidence * 100).toFixed(0)}%)`);
+                    }
                 }
             });
 
-            // Multi-word matching (2-gram and 3-gram)
+            // Multi-word matching (2-gram and 3-gram) with Bislish correction
             for (let i = 0; i < tokens.length - 1; i++) {
-                const bigram = `${tokens[i]} ${tokens[i + 1]}`;
+                // Apply Bislish correction to n-grams
+                const correctedTokens = tokens.map(t => correctBislishTypo(t).corrected);
+
+                const bigram = `${correctedTokens[i]} ${correctedTokens[i + 1]}`;
+                const originalBigram = `${tokens[i]} ${tokens[i + 1]}`;
+
                 if (keywordIndex.has(bigram)) {
                     const entry = keywordIndex.get(bigram);
                     matches.push({
                         keyword: bigram,
+                        originalToken: originalBigram,
                         localIndex: i,
                         clauseIndex: clauseIdx,
                         clause: clause,
+                        bislishCorrected: bigram !== originalBigram,
+                        fuzzyMatched: false,
                         ...entry
                     });
+                    if (bigram !== originalBigram) {
+                        result.processingLog.push(`🔤 Bislish n-gram correction: "${originalBigram}" → "${bigram}"`);
+                    }
                 }
 
                 if (i < tokens.length - 2) {
-                    const trigram = `${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`;
+                    const trigram = `${correctedTokens[i]} ${correctedTokens[i + 1]} ${correctedTokens[i + 2]}`;
+                    const originalTrigram = `${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`;
+
                     if (keywordIndex.has(trigram)) {
                         const entry = keywordIndex.get(trigram);
                         matches.push({
                             keyword: trigram,
+                            originalToken: originalTrigram,
                             localIndex: i,
                             clauseIndex: clauseIdx,
                             clause: clause,
+                            bislishCorrected: trigram !== originalTrigram,
+                            fuzzyMatched: false,
                             ...entry
                         });
+                        if (trigram !== originalTrigram) {
+                            result.processingLog.push(`🔤 Bislish n-gram correction: "${originalTrigram}" → "${trigram}"`);
+                        }
                     }
                 }
             }
@@ -1450,15 +1712,28 @@
             }
 
             if (!categoryScores[cat] || match.finalUrgency > categoryScores[cat].urgency) {
+                // v4.3: Apply SAFETY MULTIPLIERS (Ontology-Based Weighting)
+                // Life-safety categories get priority boost, quality-of-life gets de-prioritized
+                const safetyMultiplier = getSafetyMultiplier(cat);
+                const weightedUrgency = Math.min(match.finalUrgency * safetyMultiplier, 100);
+
                 categoryScores[cat] = {
                     category: cat,
                     specificCategory: match.specificCategory || cat,
-                    urgency: match.finalUrgency,
+                    urgency: weightedUrgency,
+                    baseUrgency: match.finalUrgency,  // Original score before multiplier
+                    safetyMultiplier: safetyMultiplier,
                     confidence: match.confidence,
                     keyword: match.keyword,
                     negated: match.negated,
-                    intensified: match.intensified
+                    intensified: match.intensified,
+                    bislishCorrected: match.bislishCorrected || false,
+                    fuzzyMatched: match.fuzzyMatched || false
                 };
+
+                if (safetyMultiplier !== 1.0) {
+                    result.processingLog.push(`⚖️ Safety multiplier applied: "${cat}" × ${safetyMultiplier} → urgency ${match.finalUrgency.toFixed(0)} → ${weightedUrgency.toFixed(0)}`);
+                }
             }
         });
 

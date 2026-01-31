@@ -81,11 +81,17 @@ body {
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Override brand-text for auth pages - higher specificity to override header-redesign.css */
+.auth-page .navbar .brand-text,
+.auth-page .brand-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .logo {

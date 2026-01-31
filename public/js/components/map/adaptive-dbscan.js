@@ -227,6 +227,47 @@ const KEYWORD_DICTIONARY = {
 
 // ==================== HELPER FUNCTIONS ====================
 
+// ==================== SEMANTIC RELATION CACHE ====================
+/**
+ * Memoization cache for checkSemanticRelation results
+ * Key format: "categoryA|categoryB" (alphabetically sorted for order-independence)
+ * This prevents redundant computation when the same category pairs are checked repeatedly
+ */
+const semanticCache = new Map();
+
+/**
+ * Generate an order-independent cache key for a category pair
+ * @param {string} categoryA - First category
+ * @param {string} categoryB - Second category
+ * @returns {string} Normalized cache key
+ */
+function getSemanticCacheKey(categoryA, categoryB) {
+    // Sort alphabetically to ensure order-independence
+    // "Pothole|Road" and "Road|Pothole" both become "Pothole|Road"
+    return categoryA < categoryB
+        ? `${categoryA}|${categoryB}`
+        : `${categoryB}|${categoryA}`;
+}
+
+/**
+ * Clear the semantic cache (call when category relationships are updated)
+ */
+function clearSemanticCache() {
+    semanticCache.clear();
+    console.log('[AdaptiveDBSCAN] Semantic cache cleared');
+}
+
+/**
+ * Get semantic cache statistics for debugging
+ * @returns {Object} Cache statistics
+ */
+function getSemanticCacheStats() {
+    return {
+        size: semanticCache.size,
+        entries: Array.from(semanticCache.keys()).slice(0, 10) // First 10 for preview
+    };
+}
+
 function normalizeTimestamp(timestamp) {
     if (!timestamp) {
         return new Date().toISOString();
@@ -355,9 +396,20 @@ function getAdaptiveMinPts(categoryOrPoint) {
 }
 
 function checkSemanticRelation(categoryA, categoryB) {
+    // Fast path: handle null/undefined inputs
     if (!categoryA || !categoryB) return { isRelated: false, score: 0.0, relationship: "NONE" };
+
+    // Fast path: identical categories (no cache needed)
     if (categoryA === categoryB) return { isRelated: true, score: 1.0, relationship: "IDENTICAL" };
 
+    // ==================== CACHE LOOKUP ====================
+    // Check cache first to avoid redundant computation
+    const cacheKey = getSemanticCacheKey(categoryA, categoryB);
+    if (semanticCache.has(cacheKey)) {
+        return semanticCache.get(cacheKey);
+    }
+
+    // ==================== COMPUTE RELATION ====================
     const relatedFromA = RELATIONSHIP_MATRIX[categoryA] || [];
     const isRelatedAtoB = relatedFromA.includes(categoryB);
 
@@ -387,11 +439,17 @@ function checkSemanticRelation(categoryA, categoryB) {
         relationship = "WEAK";
     }
 
-    return {
+    const result = {
         isRelated: isRelated && score >= CORRELATION_THRESHOLD,
         score,
         relationship
     };
+
+    // ==================== CACHE STORAGE ====================
+    // Store result for future lookups
+    semanticCache.set(cacheKey, result);
+
+    return result;
 }
 
 function checkLogic(pointA, pointB) {

@@ -1244,6 +1244,74 @@ body {
   transition: width 0.5s ease;
 }
 
+/* ==================== TRAIN SYSTEM BUTTONS ==================== */
+/* Skip Button - Enhanced visibility in both light and dark mode */
+#btnSkipTrain {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 2px solid var(--gray-400);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#btnSkipTrain:hover:not(:disabled) {
+  background: var(--gray-200);
+  border-color: var(--gray-500);
+  color: var(--gray-800);
+}
+
+#btnSkipTrain:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Save & Update Button - Clear primary styling with visible outline */
+#btnSaveTrain {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark, #2E5A9C));
+  color: #ffffff;
+  border: 2px solid var(--primary-dark, #2E5A9C);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(68, 114, 196, 0.3);
+}
+
+#btnSaveTrain:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-dark, #2E5A9C), var(--primary));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(68, 114, 196, 0.4);
+}
+
+#btnSaveTrain:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Dark mode button overrides */
+html.dark #btnSkipTrain {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  border-color: var(--gray-400);
+}
+
+html.dark #btnSkipTrain:hover:not(:disabled) {
+  background: var(--gray-300);
+  border-color: var(--gray-500);
+}
+
+html.dark #btnSaveTrain {
+  box-shadow: 0 2px 8px rgba(68, 114, 196, 0.5);
+}
+
 /* ==================== DARK MODE SUPPORT ==================== */
 html.dark {
   --gray-50: #0f172a;
