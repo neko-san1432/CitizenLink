@@ -1,36 +1,26 @@
 // Application-wide constants
-// User Roles
-// Note: LGU roles can have department suffixes
-// - LGU Officers: 'lgu-{dept}', 'lgu-{dept}', 'lgu-{dept}', etc. (department code only)
-// - LGU Admins: 'lgu-admin-{dept}', 'lgu-admin-{dept}', etc. (admin prefix + department)
-// - LGU HR: 'lgu-hr-{dept}', 'lgu-hr-{dept}', etc. (hr prefix + department)
+// User Roles - Simple Workflow Mode (3 roles only)
+// Legacy roles (lgu-admin, lgu-hr, complaint-coordinator) are normalized to 'lgu'
 const USER_ROLES = {
   CITIZEN: "citizen",
-  COMPLAINT_COORDINATOR: "complaint-coordinator",
-  LGU_OFFICER: "lgu", // Base pattern - actual roles: 'lgu-{dept}', 'lgu-{dept}', etc.
-  LGU_ADMIN: "lgu-admin", // Can be 'lgu-admin-{dept}', 'lgu-admin-{dept}', etc.
-  LGU_HR: "lgu-hr", // Can be 'lgu-hr-{dept}', 'lgu-hr-{dept}', etc.
+  LGU: "lgu", // All LGU staff - includes legacy lgu-admin, lgu-hr, complaint-coordinator
   SUPER_ADMIN: "super-admin"
 };
+
 // Role Hierarchy (for permission checks)
-// Note: LGU officer roles start with 'lgu-' (e.g., 'lgu-{dept}'), check with startsWith()
+// Simple Workflow Mode: Only 3 levels
 const ROLE_HIERARCHY = {
   "citizen": 0,
-  "lgu": 1, // LGU Officers: lgu-{dept}, lgu-{dept}, etc.
-  "complaint-coordinator": 2,
-  "lgu-admin": 3,
-  "lgu-hr": 4,
-  "super-admin": 5
+  "lgu": 1,
+  "super-admin": 2
 };
+
 // Roles that can file complaints (or switch to citizen mode)
 const COMPLAINT_ROLES = ["citizen"];
+
 // Roles that can switch to citizen mode
-// Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
 const SWITCHABLE_ROLES = [
-  "complaint-coordinator",
-  "lgu", // LGU Officers: lgu-{dept}, lgu-{dept}, etc.
-  "lgu-admin",
-  "lgu-hr",
+  "lgu",
   "super-admin"
 ];
 // Complaint Statuses

@@ -176,6 +176,43 @@ function initializeProfileButton() {
     }
   });
 }
+
+// Initialize logout button
+function initializeLogoutButton() {
+  const logoutBtn = document.getElementById("logout-btn");
+  if (!logoutBtn) {
+    console.warn("[HEADER] Logout button not found");
+    return;
+  }
+
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      // Clear server session
+      await fetch("/auth/session", { method: "DELETE" });
+
+      // Clear Supabase session
+      const { supabase } = await import("../config/config.js");
+      await supabase.auth.signOut();
+
+      // Clear local storage
+      localStorage.clear();
+
+      // Clear cookies
+      document.cookie = "sb_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "app_mode=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+      // Redirect to login
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("[HEADER] Logout error:", error);
+      // Force redirect even if logout fails
+      window.location.href = "/login";
+    }
+  });
+}
 // Initialize menu toggle
 function initializeMenuToggle() {
   // console.log removed for security
@@ -387,6 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       initializeNotificationButton();
       initializeProfileButton();
+      initializeLogoutButton();
       initializeMenuToggle(); // Initialize menu toggle after header HTML is created
       initializeThemeToggle();
       initializeHeaderScroll();

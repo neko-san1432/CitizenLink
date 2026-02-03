@@ -1140,15 +1140,31 @@ async function getUserDepartment() {
 
 // Load departments
 async function loadDepartments() {
+  // Simple Workflow Mode: Skip loading departments - not using office assignments
+  const group = document.getElementById("department-filter-group");
+  if (group) {
+    group.style.display = "none"; // Hide the entire department filter group
+  }
+  // Also hide the toolbar-office-btn if it exists
+  const officeBtn = document.getElementById("toolbar-office-btn");
+  if (officeBtn) {
+    officeBtn.style.display = "none";
+  }
+  const officeDropdown = document.getElementById("toolbar-office-dropdown");
+  if (officeDropdown) {
+    officeDropdown.style.display = "none";
+  }
+  return; // Exit early - no department filtering in Simple Workflow Mode
+
+  /* Original department loading code (disabled for Simple Workflow Mode)
   try {
-    const group = document.getElementById("department-filter-group");
     const loading = document.getElementById("department-loading");
     if (loading) loading.remove();
-
+  
     const isLguAdmin = heatmapViz?.userRole === "lgu-admin";
     const userDepartmentCode =
       heatmapViz?.userDepartment || (await getUserDepartment());
-
+  
     if (isLguAdmin && userDepartmentCode) {
       const notice = document.createElement("div");
       notice.style.cssText =
@@ -1164,7 +1180,7 @@ async function loadDepartments() {
       currentFilters.department = userDepartmentCode;
       return;
     }
-
+  
     // Try using getActiveDepartments first (simpler endpoint)
     let departments = [];
     try {
@@ -1183,7 +1199,7 @@ async function loadDepartments() {
       );
       departments = await getDepartments();
     }
-
+  
     // If still empty, try direct API call
     if (!departments || departments.length === 0) {
       try {
@@ -1196,7 +1212,7 @@ async function loadDepartments() {
         console.error("[HEATMAP] Direct API call failed:", e);
       }
     }
-
+  
     // Get user's department and sort departments to put user's office first
     const resolvedUserDepartmentCode = userDepartmentCode;
     if (resolvedUserDepartmentCode && departments && departments.length > 0) {
@@ -1206,32 +1222,32 @@ async function loadDepartments() {
         const bCode = (b.code || "").toUpperCase();
         const aIsUserDept = aCode === resolvedUserDepartmentCode;
         const bIsUserDept = bCode === resolvedUserDepartmentCode;
-
+  
         if (aIsUserDept && !bIsUserDept) return -1;
         if (!aIsUserDept && bIsUserDept) return 1;
         return 0; // Keep original order for non-matching items
       });
     }
-
+  
     if (departments && departments.length > 0) {
       departments.forEach((dept) => {
         const label = document.createElement("label");
         // Use Tailwind classes
         label.className =
           "flex items-center gap-1.5 font-normal py-0.5 text-gray-700 dark:text-gray-300";
-
+  
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.className = "department-checkbox";
         checkbox.value = dept.code || dept.id;
-
+  
         // Add change listener for auto-filtering
         checkbox.addEventListener("change", () => {
           if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
             window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
           }
         });
-
+  
         const deptName = dept.name || `Department ${dept.code || dept.id}`;
         const deptCode = dept.code ? `(${dept.code})` : "";
         // Highlight user's department with bold text
@@ -1274,6 +1290,7 @@ async function loadDepartments() {
   } finally {
     // Reposition gear button after departments load (panel height might change)
   }
+  End of original department loading code (disabled for Simple Workflow Mode) */
 }
 
 // Update statistics display

@@ -68,26 +68,9 @@ if (document.readyState === "loading") {
 }
 
 async function loadDepartments() {
-  try {
-    const headers = await getAuthHeaders();
-    const res = await fetch("/api/department-structure/departments", {
-      headers,
-      credentials: "include",
-    });
-    const { data } = await res.json();
-    departmentsCache = Array.isArray(data) ? data : [];
-    const deptSelect = document.getElementById("promotion-dept");
-    if (deptSelect) {
-      departmentsCache.forEach((d) => {
-        const opt = document.createElement("option");
-        opt.value = d.code?.toUpperCase() || "";
-        opt.textContent = `${d.name} (${d.code})`;
-        deptSelect.appendChild(opt);
-      });
-    }
-  } catch (e) {
-    // ignore
-  }
+  // Departments are not used in Simple Workflow Mode
+  // This function is kept for compatibility but does nothing
+  return;
 }
 
 function setupHandlers() {
@@ -319,41 +302,25 @@ async function refreshUserList() {
   }
 }
 
-// Normalize role for display
+// Normalize role for display (Simple Workflow Mode: citizen, lgu, super-admin)
 function normalizeRoleDisplay(role, department = null) {
   if (!role) return "Citizen";
   const roleLower = role.toLowerCase();
 
-  let displayRole = "";
-  if (roleLower === "lgu" || roleLower === "lgu-officer") {
-    displayRole = "LGU Officer";
-  } else if (roleLower === "lgu-admin") {
-    displayRole = "LGU Admin";
-  } else if (roleLower === "lgu-hr") {
-    displayRole = "LGU HR";
+  // Simple Workflow Mode: only 3 roles
+  if (roleLower === "citizen") {
+    return "Citizen";
+  } else if (roleLower === "lgu" || roleLower.startsWith("lgu-")) {
+    return "LGU Officer";
   } else if (roleLower === "super-admin") {
-    displayRole = "Super Admin";
-  } else if (roleLower === "complaint-coordinator") {
-    displayRole = "LGU Officer";
-  } else if (roleLower === "citizen") {
-    displayRole = "Citizen";
+    return "Super Admin";
   } else {
-    displayRole = role
+    // Fallback for any unexpected roles
+    return role
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   }
-
-  const isLguRole =
-    roleLower === "lgu" ||
-    roleLower === "lgu-officer" ||
-    roleLower === "lgu-admin" ||
-    roleLower === "lgu-hr";
-  if (isLguRole && department) {
-    displayRole += ` - ${department}`;
-  }
-
-  return displayRole;
 }
 
 function renderUserRow(u) {
@@ -489,14 +456,6 @@ async function loadUserDetails(userId) {
         u.id !== currentUserId &&
         !isTargetSuperAdmin;
 
-      // Check for legacy role management cap
-      let legacyRoleManagement = false;
-      try {
-        const confRes = await fetch("/api/config");
-        const conf = await confRes.json();
-        legacyRoleManagement = conf.legacyRoleManagementEnabled === true;
-      } catch (e) { console.warn("Failed to fetch config", e); }
-
       container.innerHTML = `
         <div class="profile-card">
             <div class="profile-avatar">${initials}</div>
@@ -531,23 +490,11 @@ async function loadUserDetails(userId) {
         </div>
 
         <div class="actions-container">
-            ${isCitizen
+            ${!isTargetSuperAdmin
           ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
             u.email || ""
           )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
-          }')">Promote User</button>`
-          : legacyRoleManagement
-            ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(u.email || "")}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id}', '${u.role}', '${u.department}')">Change Role</button>`
-            : `<button class="btn btn-secondary" onclick="demoteToCitizen('${u.id}')">Demote to Citizen</button>`
-        }
-            
-            ${!isCitizen && !isTargetSuperAdmin
-          ? `<button class="btn btn-warning" onclick="openTransferModal('${escapeHtml(
-            u.email || ""
-          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
-          }', '${escapeHtml(
-            u.department || ""
-          )}')">Transfer Dept</button>`
+          }', '${u.role}')">Change Role</button>`
           : ""
         }
             
@@ -595,54 +542,38 @@ window.unbanUser = unbanUser;
 window.openTransferModal = openTransferModal;
 window.openDeleteModal = openDeleteModal;
 
-function openPromotionModal(email, name, userId, currentRole = null, currentDept = null) {
+function openPromotionModal(email, name, userId, currentRole = null) {
   const modal = document.getElementById("promotion-modal");
   if (!modal) {
-    showMessage("error", "Promotion modal not found");
+    showMessage("error", "Role change modal not found");
     return;
   }
 
-  selectedUser = { id: userId, email, name, role: currentRole, department: currentDept };
+  selectedUser = { id: userId, email, name, role: currentRole };
 
   const userLabel = document.getElementById("promotion-user-label");
   const roleSelect = document.getElementById("promotion-role");
-  const deptSelect = document.getElementById("promotion-dept");
   const reasonTextarea = document.getElementById("promotion-reason");
-  const modalTitle = modal.querySelector("h3");
-
-  if (modalTitle) {
-    modalTitle.textContent = currentRole ? "Change User Role" : "Promote Citizen";
-  }
 
   if (userLabel) userLabel.value = `${name || email}`;
-  if (roleSelect) {
-    // Attempt to match current role if exists
-    // Note: currentRole might be normalized or raw, usually raw here from selectedUser
-    roleSelect.value = currentRole || "";
 
-    roleSelect.removeEventListener("change", updateDepartmentRequirement);
-    roleSelect.addEventListener("change", updateDepartmentRequirement);
-  }
-  if (deptSelect && currentDept) {
-    deptSelect.value = currentDept; // Attempt to set value
-  } else if (deptSelect) {
-    deptSelect.value = "";
+  if (roleSelect) {
+    // Map current role to simplified role values
+    let mappedRole = "";
+    if (currentRole) {
+      const roleLower = currentRole.toLowerCase();
+      if (roleLower === "citizen") {
+        mappedRole = "citizen";
+      } else if (roleLower === "lgu" || roleLower.startsWith("lgu-")) {
+        mappedRole = "lgu";
+      } else if (roleLower === "super-admin") {
+        mappedRole = "super-admin";
+      }
+    }
+    roleSelect.value = mappedRole;
   }
 
   if (reasonTextarea) reasonTextarea.value = "";
-
-  updateDepartmentRequirement();
-
-  // If we have a current dept, updateRequirement logic might have cleared it or disabled it incorrectly if role not yet set
-  // Re-apply if role is set and valid
-  if (currentRole && currentDept && deptSelect) {
-    const needsDepartment =
-      ["lgu-officer", "lgu-admin", "lgu-hr"].includes(currentRole) ||
-      currentRole.startsWith("lgu-");
-    if (needsDepartment) {
-      deptSelect.value = currentDept;
-    }
-  }
 
   modal.style.display = "flex";
   modal.style.visibility = "visible";
@@ -650,38 +581,10 @@ function openPromotionModal(email, name, userId, currentRole = null, currentDept
   modal.style.zIndex = "10000";
 }
 
+// Department requirement is no longer needed in Simple Workflow Mode
 function updateDepartmentRequirement() {
-  const roleSelect = document.getElementById("promotion-role");
-  const deptSelect = document.getElementById("promotion-dept");
-  const requiredIndicator = document.getElementById("dept-required-indicator");
-  const helpText = document.getElementById("dept-help-text");
-
-  if (!roleSelect || !deptSelect) return;
-
-  const role = roleSelect.value;
-  // Roles that require department: lgu-officer, lgu-admin, lgu-hr
-  // Roles that DO NOT: super-admin, complaint-coordinator (usually global)
-  // Actually coordinator depends on business logic, but typically they are global or per-type, not per-department
-  const needsDepartment =
-    ["lgu-officer", "lgu-admin", "lgu-hr"].includes(role) ||
-    role.startsWith("lgu-"); // Catch all lgu roles
-
-  if (needsDepartment) {
-    deptSelect.required = true;
-    deptSelect.disabled = false;
-    if (requiredIndicator) requiredIndicator.style.display = "inline";
-    if (helpText) helpText.textContent = "Required for this role";
-  } else {
-    deptSelect.required = false;
-    deptSelect.disabled = true;
-    deptSelect.value = "";
-    if (requiredIndicator) requiredIndicator.style.display = "none";
-    if (helpText)
-      helpText.textContent =
-        "Required for all roles except Super Admin and Complaint Coordinator";
-    deptSelect.style.backgroundColor = "";
-    deptSelect.style.cursor = "";
-  }
+  // No-op in Simple Workflow Mode
+  return;
 }
 
 function hidePromotionModal() {
@@ -703,16 +606,14 @@ async function onPromoteSubmit(e) {
   }
 
   const roleSelect = document.getElementById("promotion-role");
-  const deptSelect = document.getElementById("promotion-dept");
   const reasonTextarea = document.getElementById("promotion-reason");
 
-  if (!roleSelect || !deptSelect) {
+  if (!roleSelect) {
     showMessage("error", "Form elements not found");
     return;
   }
 
   const role = roleSelect.value;
-  const dept = deptSelect.value;
   const reason = reasonTextarea?.value || "";
 
   if (!role) {
@@ -720,25 +621,31 @@ async function onPromoteSubmit(e) {
     return;
   }
 
-  const rolesWithoutDept = ["super-admin", "complaint-coordinator"];
-  if (!rolesWithoutDept.includes(role) && !dept) {
-    showMessage(
-      "error",
-      "Please select an office (not required for Super Admin and Complaint Coordinator)"
-    );
+  // Check if role is the same as current
+  const currentRoleLower = (selectedUser.role || "").toLowerCase();
+  let currentMappedRole = "citizen";
+  if (currentRoleLower === "lgu" || currentRoleLower.startsWith("lgu-")) {
+    currentMappedRole = "lgu";
+  } else if (currentRoleLower === "super-admin") {
+    currentMappedRole = "super-admin";
+  }
+
+  if (role === currentMappedRole) {
+    showMessage("info", "User already has this role");
+    hidePromotionModal();
     return;
   }
 
+  // Use role-swap endpoint for all role changes in Simple Workflow Mode
   const requestBody = {
     user_id: selectedUser.id,
-    role,
-    department_id: dept,
-    reason: reason || undefined,
+    new_role: role,
+    reason: reason || "Role changed by Super Admin",
   };
 
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch("/api/superadmin/assign-citizen", {
+    const res = await fetch("/api/superadmin/role-swap", {
       method: "POST",
       headers,
       credentials: "include",
@@ -748,7 +655,8 @@ async function onPromoteSubmit(e) {
     const result = await res.json();
 
     if (result.success) {
-      showMessage("success", `Citizen promoted successfully to ${role}`);
+      const roleDisplay = normalizeRoleDisplay(role);
+      showMessage("success", `Role changed to ${roleDisplay}`);
       hidePromotionModal();
       await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserList();
@@ -756,11 +664,11 @@ async function onPromoteSubmit(e) {
         await loadUserDetails(selectedUser.id);
       }
     } else {
-      showMessage("error", result.error || "Failed to promote");
+      showMessage("error", result.error || "Failed to change role");
     }
   } catch (e) {
-    console.error("[USER_MANAGER] Promotion exception:", e);
-    showMessage("error", e.message || "Failed to promote");
+    console.error("[USER_MANAGER] Role change exception:", e);
+    showMessage("error", e.message || "Failed to change role");
   }
 }
 
