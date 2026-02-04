@@ -22,26 +22,12 @@ const getDashboardPath = (userRole) => {
       "citizen",
       "dashboard.html"
     ),
-    lgu: path.join(config.rootDir, "views", "pages", "lgu", "dashboard.html"),
-    "complaint-coordinator": path.join(
+    // LGU Role now uses the Coordinator Dashboard (as per user request)
+    lgu: path.join(
       config.rootDir,
       "views",
       "pages",
       "coordinator",
-      "dashboard.html"
-    ),
-    "lgu-admin": path.join(
-      config.rootDir,
-      "views",
-      "pages",
-      "lgu-admin",
-      "dashboard.html"
-    ),
-    "lgu-hr": path.join(
-      config.rootDir,
-      "views",
-      "pages",
-      "hr",
       "dashboard.html"
     ),
     "super-admin": path.join(
@@ -52,19 +38,7 @@ const getDashboardPath = (userRole) => {
       "dashboard.html"
     ),
   };
-  // Check for simplified LGU roles
-  if (normalizedRole === "lgu-hr") {
-    return path.join(config.rootDir, "views", "pages", "hr", "dashboard.html");
-  }
-  if (normalizedRole === "lgu-admin") {
-    return path.join(
-      config.rootDir,
-      "views",
-      "pages",
-      "lgu-admin",
-      "dashboard.html"
-    );
-  }
+
   return roleDashboards[normalizedRole] || roleDashboards.citizen;
 };
 
@@ -73,54 +47,136 @@ const getDashboardPath = (userRole) => {
 // ============================================================================
 
 // Redirects from role-prefixed URLs to simplified URLs (backward compatibility)
-router.get("/citizen/fileComplaint", authenticateUser, (req, res) => {
-  res.redirect("/fileComplaint");
-});
-router.get("/citizen/departments", authenticateUser, (req, res) => {
-  res.redirect("/departments");
-});
-router.get("/admin/appoint-admins", authenticateUser, (req, res) => {
-  res.redirect("/appoint-admins");
-});
-router.get("/admin/departments", authenticateUser, (req, res) => {
-  res.redirect("/departments");
-});
-router.get("/admin/role-changer", authenticateUser, (req, res) => {
-  res.redirect("/role-changer");
-});
-router.get("/admin/settings", authenticateUser, (req, res) => {
-  res.redirect("/settings");
-});
-router.get("/hr/link-generator", authenticateUser, (req, res) => {
-  res.redirect("/link-generator");
-});
-router.get("/hr/role-changer", authenticateUser, (req, res) => {
-  res.redirect("/role-changer");
-});
-router.get("/coordinator/review-queue", authenticateUser, (req, res) => {
-  res.redirect("/review-queue");
-});
-router.get("/coordinator/assignments", authenticateUser, (req, res) => {
-  res.redirect("/assignments");
-});
-router.get("/coordinator/heatmap", authenticateUser, (req, res) => {
-  res.redirect("/heatmap");
-});
-router.get("/lgu-admin/dashboard", authenticateUser, (req, res) => {
-  res.redirect("/dashboard");
-});
-router.get("/lgu-admin/assignments", authenticateUser, (req, res) => {
-  res.redirect("/assignments");
-});
-router.get("/lgu-admin/heatmap", authenticateUser, (req, res) => {
-  res.redirect("/heatmap");
-});
-router.get("/lgu-admin/publish", authenticateUser, (req, res) => {
-  res.redirect("/publish");
-});
-router.get("/lgu-officer/task-assigned", authenticateUser, (req, res) => {
-  res.redirect("/task-assigned");
-});
+router.get(
+  "/citizen/fileComplaint",
+  authenticateUser,
+  requireRole(["citizen"]),
+  (req, res) => {
+    res.redirect("/fileComplaint");
+  }
+);
+router.get(
+  "/citizen/departments",
+  authenticateUser,
+  requireRole(["citizen"]),
+  (req, res) => {
+    res.redirect("/departments");
+  }
+);
+router.get(
+  "/admin/appoint-admins",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  (req, res) => {
+    res.redirect("/appoint-admins");
+  }
+);
+router.get(
+  "/admin/departments",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  (req, res) => {
+    res.redirect("/departments");
+  }
+);
+router.get(
+  "/admin/role-changer",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  (req, res) => {
+    res.redirect("/role-changer");
+  }
+);
+router.get(
+  "/admin/settings",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  (req, res) => {
+    res.redirect("/settings");
+  }
+);
+router.get(
+  "/hr/link-generator",
+  authenticateUser,
+  requireRole(["lgu-hr"]),
+  (req, res) => {
+    res.redirect("/link-generator");
+  }
+);
+router.get(
+  "/hr/role-changer",
+  authenticateUser,
+  requireRole(["lgu-hr"]),
+  (req, res) => {
+    res.redirect("/role-changer");
+  }
+);
+// Coordinator redirects -> Accessible by 'lgu'
+router.get(
+  "/coordinator/review-queue",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/review-queue");
+  }
+);
+router.get(
+  "/coordinator/assignments",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/assignments");
+  }
+);
+router.get(
+  "/coordinator/heatmap",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/heatmap");
+  }
+);
+// LGU Admin redirects -> Accessible by 'lgu'
+router.get(
+  "/lgu-admin/dashboard",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/dashboard");
+  }
+);
+router.get(
+  "/lgu-admin/assignments",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/assignments");
+  }
+);
+router.get(
+  "/lgu-admin/heatmap",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/heatmap");
+  }
+);
+router.get(
+  "/lgu-admin/publish",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/publish");
+  }
+);
+router.get(
+  "/lgu-officer/task-assigned",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/task-assigned");
+  }
+);
 
 // Dashboard route - protected and routed by role
 router.get("/dashboard", authenticateUser, (req, res) => {
@@ -204,7 +260,7 @@ router.get(
 router.get(
   "/settings",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => {
     res.redirect("/dashboard");
   }
@@ -213,7 +269,7 @@ router.get(
 router.get(
   "/admin/nlp-training",
   authenticateUser,
-  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => {
     res.sendFile(
       path.join(
@@ -267,7 +323,7 @@ router.get(
 router.get(
   "/assignments",
   authenticateUser,
-  requireRole(["lgu-admin", "complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
       path.join(
@@ -283,7 +339,7 @@ router.get(
 router.get(
   "/heatmap",
   authenticateUser,
-  requireRole(["lgu-admin", "complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
       path.join(config.rootDir, "views", "pages", "lgu-admin", "heatmap.html")
@@ -293,7 +349,7 @@ router.get(
 router.get(
   "/brain-analytics-page",
   authenticateUser,
-  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => {
     res.sendFile(
       path.join(
@@ -309,7 +365,7 @@ router.get(
 router.get(
   "/dictionary-manager",
   authenticateUser,
-  requireRole(["lgu-admin", "complaint-coordinator", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => {
     res.sendFile(
       path.join(
@@ -325,7 +381,7 @@ router.get(
 router.get(
   "/publish",
   authenticateUser,
-  requireRole(["lgu-admin"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
       path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html")
@@ -358,7 +414,7 @@ router.get("/lgu", authenticateUser, requireRole(["lgu"]), (req, res) => {
 router.get(
   "/coordinator",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.redirect("/dashboard");
   }
@@ -366,7 +422,7 @@ router.get(
 router.get(
   "/lgu-admin",
   authenticateUser,
-  requireRole(["lgu-admin"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.redirect("/dashboard");
   }
@@ -436,7 +492,7 @@ router.get(
 router.get(
   "/review-queue",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
       path.join(
@@ -455,7 +511,7 @@ router.get(
 router.get(
   "/review/:id",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
       path.join(config.rootDir, "views", "pages", "coordinator", "review.html")
@@ -467,7 +523,7 @@ router.get(
 router.get(
   "/coordinator/review/:id",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu"]),
   (req, res) => {
     res.redirect(`/review/${req.params.id}`);
   }

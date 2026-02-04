@@ -46,6 +46,7 @@ router.get(
     "lgu-pnp",
     "lgu-bfp",
     "lgu-mayor",
+    "lgu",
   ]),
   async (req, res) => {
     try {
@@ -105,6 +106,7 @@ router.get(
     "lgu-pnp",
     "lgu-bfp",
     "lgu-mayor",
+    "lgu",
   ]),
   async (req, res) => {
     res.writeHead(200, {

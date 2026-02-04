@@ -7,6 +7,9 @@ const USER_ROLES = {
   SUPER_ADMIN: "super-admin"
 };
 
+// Strict Mode: Allowed Roles
+// Only these roles are permitted when ENABLE_LEGACY_ROLES=false
+const ALLOWED_ROLES = ["citizen", "lgu", "super-admin"];
 // Role Hierarchy (for permission checks)
 // Simple Workflow Mode: Only 3 levels
 const ROLE_HIERARCHY = {
@@ -19,8 +22,11 @@ const ROLE_HIERARCHY = {
 const COMPLAINT_ROLES = ["citizen"];
 
 // Roles that can switch to citizen mode
+// Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
+// Roles that can switch to citizen mode
+// Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
 const SWITCHABLE_ROLES = [
-  "lgu",
+  "lgu", // Unified LGU role
   "super-admin"
 ];
 // Complaint Statuses
@@ -197,5 +203,6 @@ module.exports = {
   VALIDATION,
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITY,
-  NOTIFICATION_ICONS
+  NOTIFICATION_ICONS,
+  ALLOWED_ROLES
 };
