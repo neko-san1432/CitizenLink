@@ -2,179 +2,213 @@
  * Similarity Utilities for Duplicate Detection
  * Implements the 3-Layer Filter Architecture
  * 
- * v4.2: ADAPTIVE DBSCAN PARAMETERS
- * @thesis-feature Ported from DRIMS_Simulated_System
+ * v5.0: THESIS-VALIDATED ADAPTIVE DBSCAN PARAMETERS
+ * @thesis-feature Synchronized with CitizenLink_Simulated_System
  * 
- * Key Enhancements:
- * - Category-specific epsilon (clustering radius)
- * - Category-specific minPts (minimum points for cluster)
- * - Critical events (Fire, Crime) use minPts=1 for immediate visibility
+ * CRITICAL: Parameters derived from Thesis K-Distance Graphs
+ * 
+ * Key Values:
+ * - Infrastructure (Roads, Pipelines): 0.001125 ≈ 125 meters
+ * - Public Safety (Events): 0.00045 ≈ 50 meters
+ * - Sanitation (Specific Piles): 0.000144 ≈ 16 meters
+ * 
+ * Unit Conversion: 1 degree ≈ 111km, so 0.001 degrees ≈ 111 meters
  */
 
 const { calculateDistance } = require("./locationUtils");
 
 // ==================== ADAPTIVE EPSILON CONFIGURATION ====================
 /**
- * Category-specific clustering radius (in meters)
+ * [THESIS-VALIDATED] Adaptive Epsilon Parameters (Aligned with Simulation Engine)
  * 
- * TIER 1: Critical Events (ε = 25-30m)
- * - Fire, Accident, Crime: Need tight clustering to pinpoint exact location
- * - Medical emergencies need precise location for responders
+ * Unit: Degrees (approximately 1 degree = 111km)
+ * - 0.001125 ≈ 125 meters (Infrastructure)
+ * - 0.00045 ≈ 50 meters (Public Safety)
+ * - 0.000144 ≈ 16 meters (Sanitation/Specific)
  * 
- * TIER 2: Infrastructure Issues (ε = 30-40m)
- * - Pothole, Streetlight: Localized problems, moderate radius
- * - Trash, Illegal Dumping: Small area accumulation
- * 
- * TIER 3: Area-Wide Events (ε = 50-60m)
- * - Flooding, Blackout: Affects larger geographic areas
- * - No Water: Neighborhood-level issue
- * 
- * @thesis-parameter Justified in THESIS_PARAMETER_PLACEMENT_GUIDE.md
+ * @thesis-parameter Derived from K-Distance Elbow Method Analysis
  */
 const ADAPTIVE_EPSILON = {
-  // TIER 1: Critical/Emergency (ε = 25-30m)
-  "Fire": 25,
-  "Accident": 25,
-  "Crime": 25,
-  "Medical": 25,
-  "Explosion": 25,
-  "Gunshot": 25,
-  "Robbery": 30,
-  "Assault": 30,
-  "Public Safety": 30,
+  // =====================================================================
+  // TIER 1: MACRO INFRASTRUCTURE (Roads, Pipelines) - 125m Radius
+  // Rationale: Road issues like potholes and drainage problems span
+  // larger stretches of road and require wider clustering radius.
+  // =====================================================================
+  "Pothole": 0.001125,
+  "Road Damage": 0.001125,
+  "Street Light": 0.001125,
+  "Streetlight": 0.001125,
+  "Broken Streetlight": 0.001125,
+  "Drainage": 0.001125,
+  "Clogged Drainage": 0.001125,
+  "Clogged Canal": 0.001125,
+  "Infrastructure": 0.001125,
+  "Pipe Leak": 0.001125,
+  "Road Obstruction": 0.001125,
+  "Fallen Tree": 0.001125,
 
-  // TIER 2: Infrastructure (ε = 30-40m)
-  "Pothole": 30,
-  "Road Damage": 35,
-  "Broken Streetlight": 35,
-  "Streetlight": 35,
-  "Fallen Tree": 35,
-  "Road Obstruction": 35,
-  "Clogged Drainage": 40,
-  "Clogged Canal": 40,
-  "Infrastructure": 40,
+  // =====================================================================
+  // TIER 2: STANDARD PUBLIC SAFETY (Events) - 50m Radius
+  // Rationale: Emergency events need moderate radius for responder
+  // coordination while maintaining location precision.
+  // =====================================================================
+  "Fire": 0.00045,
+  "Accident": 0.00045,
+  "Crime": 0.00045,
+  "Flooding": 0.00045,
+  "Flood": 0.00045,
+  "Flash Flood": 0.00045,
+  "Blackout": 0.00045,
+  "No Water": 0.00045,
+  "Traffic": 0.00045,
+  "Traffic Congestion": 0.00045,
+  "Medical": 0.00045,
+  "Explosion": 0.00045,
+  "Gunshot": 0.00045,
+  "Robbery": 0.00045,
+  "Assault": 0.00045,
+  "Public Safety": 0.00045,
+  "Landslide": 0.00045,
+  "Evacuation": 0.00045,
+  "Environment": 0.00045,
+  "Utilities": 0.00045,
 
-  // TIER 3: Sanitation (ε = 40m)
-  "Trash": 40,
-  "Overflowing Trash": 40,
-  "Illegal Dumping": 40,
-  "Dead Animal": 35,
-  "Bad Odor": 45,
-  "Sewage Leak": 40,
-  "Sanitation": 40,
+  // =====================================================================
+  // TIER 3: MICRO SANITATION (Specific Piles) - 16m Radius
+  // Rationale: Garbage piles and sanitation issues are localized.
+  // Tight clustering prevents merging distinct dumping sites.
+  // =====================================================================
+  "Garbage": 0.000144,
+  "Trash": 0.000144,
+  "Overflowing Trash": 0.000144,
+  "Illegal Dumping": 0.000144,
+  "Sanitation": 0.000144,
+  "Bad Odor": 0.000144,
+  "Dead Animal": 0.000144,
+  "Sewage Leak": 0.000144,
+  "Obstruction": 0.000144,
+  "Stray Dog": 0.000144,
+  "Stray Animal": 0.000144,
+  "Noise Complaint": 0.000144,
 
-  // TIER 4: Area-Wide Events (ε = 50-60m)
-  "Flooding": 60,
-  "Flood": 60,
-  "Flash Flood": 60,
-  "Blackout": 60,
-  "No Water": 55,
-  "Pipe Leak": 50,
-  "Landslide": 50,
-  "Evacuation": 60,
-  "Environment": 55,
-  "Utilities": 50,
-
-  // TIER 5: Quality of Life (ε = 40-50m)
-  "Noise Complaint": 40,
-  "Stray Dog": 45,
-  "Stray Animal": 45,
-  "Traffic": 50,
-  "Traffic Congestion": 50,
-  "Vehicle Breakdown": 45,
-
-  // Default fallback
-  "Others": 50,
-  "default": 50
+  // =====================================================================
+  // DEFAULT FALLBACK - ~33 meters
+  // =====================================================================
+  "Others": 0.00030,
+  "default": 0.00030
 };
 
 // ==================== ADAPTIVE MINPTS CONFIGURATION ====================
 /**
- * Category-specific minimum points for cluster formation
+ * [THESIS-VALIDATED] Adaptive MinPts Parameters
  * 
- * CRITICAL EVENTS (minPts = 1):
- * - Fire, Crime, Medical: A SINGLE report should be visible
- * - These are life-threatening and cannot wait for corroboration
+ * Defines minimum reports required to form a cluster.
+ * Critical incidents need fewer reports to trigger immediate attention.
  * 
- * STANDARD ISSUES (minPts = 2-3):
- * - Infrastructure, Accidents: Need some corroboration but low threshold
- * 
- * ROUTINE COMPLAINTS (minPts = 4-5):
- * - Trash, Noise: Require multiple reports to filter noise
- * 
- * @thesis-parameter Justified in DEFENSE_PARAMETER_JUSTIFICATION.md
+ * @thesis-parameter Derived from operational response requirements
  */
 const ADAPTIVE_MINPTS = {
-  // CRITICAL: Single report visible (minPts = 1)
-  "Fire": 1,
-  "Crime": 1,
-  "Medical": 1,
-  "Explosion": 1,
-  "Gunshot": 1,
-  "Accident": 1,
-  "Robbery": 1,
-  "Assault": 1,
-  "Landslide": 1,
-  "Flash Flood": 1,
+  // CRITICAL: 2 reports trigger a cluster (immediate response needed)
+  "Fire": 2,
+  "Explosion": 2,
+  "Gunshot": 2,
+  "Medical": 2,
+  "Landslide": 2,
+  "Flash Flood": 2,
+  "Evacuation": 2,
 
-  // HIGH PRIORITY: Low threshold (minPts = 2)
-  "Flooding": 2,
-  "Flood": 2,
-  "Blackout": 2,
-  "No Water": 2,
-  "Power Line Down": 1,
-  "Transformer Explosion": 1,
-  "Pipe Leak": 2,
-  "Public Safety": 2,
-  "Evacuation": 1,
+  // HIGH PRIORITY: 3 reports for validation
+  "Crime": 3,
+  "Accident": 3,
+  "Robbery": 3,
+  "Assault": 3,
+  "Flooding": 3,
+  "Flood": 3,
+  "Blackout": 3,
+  "No Water": 3,
+  "Public Safety": 3,
 
-  // INFRASTRUCTURE: Moderate threshold (minPts = 2-3)
-  "Pothole": 2,
-  "Road Damage": 2,
-  "Broken Streetlight": 3,
-  "Streetlight": 3,
-  "Fallen Tree": 2,
-  "Road Obstruction": 2,
-  "Clogged Drainage": 3,
-  "Clogged Canal": 3,
-  "Infrastructure": 2,
+  // INFRASTRUCTURE: Needs more validation (5 reports)
+  "Pothole": 5,
+  "Road Damage": 5,
+  "Street Light": 5,
+  "Streetlight": 5,
+  "Broken Streetlight": 5,
+  "Drainage": 5,
+  "Clogged Drainage": 5,
+  "Clogged Canal": 5,
+  "Infrastructure": 5,
+  "Pipe Leak": 5,
+  "Road Obstruction": 5,
+  "Fallen Tree": 5,
 
-  // ROUTINE: Higher threshold (minPts = 4-5)
+  // SANITATION: 4 reports required
+  "Garbage": 4,
   "Trash": 4,
-  "Overflowing Trash": 3,
-  "Illegal Dumping": 3,
+  "Overflowing Trash": 4,
+  "Illegal Dumping": 4,
+  "Sanitation": 4,
   "Bad Odor": 4,
+  "Dead Animal": 4,
+  "Sewage Leak": 4,
+
+  // QUALITY OF LIFE: Standard threshold
+  "Traffic": 4,
+  "Traffic Congestion": 4,
   "Noise Complaint": 4,
   "Stray Dog": 4,
   "Stray Animal": 4,
-  "Sanitation": 3,
 
-  // QUALITY OF LIFE (minPts = 3-4)
-  "Traffic": 3,
-  "Traffic Congestion": 3,
-  "Vehicle Breakdown": 3,
-
-  // Default fallback
+  // DEFAULT FALLBACK
   "Others": 3,
   "default": 3
 };
 
-// Legacy constants for backward compatibility
-const DEFAULT_EPSILON = 50;
-const LARGE_EPSILON = 500;
-const SMALL_EPSILON = 20;
+// Legacy constants for backward compatibility (in meters)
+const DEFAULT_EPSILON = 0.00030; // ~33 meters
+const LARGE_EPSILON = 0.0045;   // ~500 meters
+const SMALL_EPSILON = 0.00018;  // ~20 meters
+
+/**
+ * Get epsilon for a specific category.
+ * Primary lookup function for DBSCAN clustering.
+ * 
+ * @param {string} category - Category name
+ * @returns {number} Epsilon value in degrees
+ */
+function getEpsilonForCategory(category) {
+  if (!category) return ADAPTIVE_EPSILON["default"];
+  const normalized = category.trim();
+  return ADAPTIVE_EPSILON[normalized] !== undefined 
+    ? ADAPTIVE_EPSILON[normalized] 
+    : ADAPTIVE_EPSILON["default"];
+}
+
+/**
+ * Get minPts for a specific category.
+ * 
+ * @param {string} category - Category name
+ * @returns {number} MinPts value
+ */
+function getMinPtsForCategory(category) {
+  if (!category) return ADAPTIVE_MINPTS["default"];
+  const normalized = category.trim();
+  return ADAPTIVE_MINPTS[normalized] !== undefined 
+    ? ADAPTIVE_MINPTS[normalized] 
+    : ADAPTIVE_MINPTS["default"];
+}
 
 /**
  * Get dynamic Epsilon (radius) based on category
- * v4.2: Uses ADAPTIVE_EPSILON lookup with fallback chain
+ * v5.0: Uses ADAPTIVE_EPSILON lookup with fallback chain
  * 
- * @param {string} categoryId - The category UUID (ignored in v4.2)
+ * @param {string} categoryId - The category UUID (ignored in v5.0)
  * @param {string} [categoryName] - Category name for adaptive lookup
  * @param {string} [subcategoryName] - Subcategory name for more specific lookup
- * @returns {number} Epsilon value in meters
+ * @returns {number} Epsilon value in degrees
  */
 function getDynamicEpsilon(categoryId, categoryName = "", subcategoryName = "") {
-  // v4.2: Try subcategory first (most specific), then category, then fallback
+  // v5.0: Try subcategory first (most specific), then category, then fallback
   const subLower = (subcategoryName || "").trim();
   const catLower = (categoryName || "").trim();
 
@@ -188,36 +222,37 @@ function getDynamicEpsilon(categoryId, categoryName = "", subcategoryName = "") 
     return ADAPTIVE_EPSILON[catLower];
   }
 
-  // Legacy heuristic fallback (for backward compatibility)
+  // Heuristic fallback for infrastructure keywords
   const lowerName = catLower.toLowerCase();
   if (
-    lowerName.includes("flood") ||
-    lowerName.includes("blackout") ||
-    lowerName.includes("outage")
-  ) {
-    return ADAPTIVE_EPSILON["Flooding"] || LARGE_EPSILON;
-  }
-  if (
     lowerName.includes("pothole") ||
-    lowerName.includes("parking") ||
-    lowerName.includes("trash")
+    lowerName.includes("road") ||
+    lowerName.includes("streetlight") ||
+    lowerName.includes("drainage")
   ) {
-    return ADAPTIVE_EPSILON["Pothole"] || SMALL_EPSILON;
+    return ADAPTIVE_EPSILON["Infrastructure"]; // 125m
   }
   if (
     lowerName.includes("fire") ||
     lowerName.includes("crime") ||
-    lowerName.includes("accident")
+    lowerName.includes("accident") ||
+    lowerName.includes("flood")
   ) {
-    return ADAPTIVE_EPSILON["Fire"] || 25;
+    return ADAPTIVE_EPSILON["Fire"]; // 50m
+  }
+  if (
+    lowerName.includes("garbage") ||
+    lowerName.includes("trash") ||
+    lowerName.includes("sanitation")
+  ) {
+    return ADAPTIVE_EPSILON["Sanitation"]; // 16m
   }
 
-  return ADAPTIVE_EPSILON["default"] || DEFAULT_EPSILON;
+  return ADAPTIVE_EPSILON["default"];
 }
 
 /**
- * v4.2: Get dynamic MinPts based on category
- * Critical events return minPts=1 so single reports are visible
+ * v5.0: Get dynamic MinPts based on category
  * 
  * @param {string} categoryName - Category name
  * @param {string} [subcategoryName] - Subcategory name for more specific lookup
@@ -242,31 +277,26 @@ function getDynamicMinPts(categoryName = "", subcategoryName = "") {
   const lowerName = (catLower + " " + subLower).toLowerCase();
   if (
     lowerName.includes("fire") ||
-    lowerName.includes("crime") ||
-    lowerName.includes("medical") ||
-    lowerName.includes("accident") ||
-    lowerName.includes("explosion")
+    lowerName.includes("explosion") ||
+    lowerName.includes("medical")
   ) {
-    return 1; // Critical: single report visible
+    return 2; // Critical: needs only 2 reports
   }
   if (
-    lowerName.includes("flood") ||
-    lowerName.includes("blackout") ||
-    lowerName.includes("water")
+    lowerName.includes("crime") ||
+    lowerName.includes("accident") ||
+    lowerName.includes("flood")
   ) {
-    return 2; // High priority
+    return 3; // High priority
   }
 
-  return ADAPTIVE_MINPTS["default"] || 3;
+  return ADAPTIVE_MINPTS["default"];
 }
 
 // LAYER 3: Semantic Filter (Incident Relationship Matrix)
-// Defining distinct sets of related categories.
-// Since we might only have UUIDs, this matrix would normally map UUID <-> UUID.
-// We will implement the Logic structure assuming we can check relationship.
 const INCIDENT_RELATIONSHIP_MATRIX = {
-  // Example structure:
-  // "uuid-1": ["uuid-2", "uuid-3"], // uuid-1 is related to 2 and 3
+  // Example structure for semantic clustering
+  // "Fire": ["Smoke", "Explosion"],
 };
 
 /**
@@ -312,23 +342,30 @@ function checkTemporalProximity(date1, date2) {
  * The Master Filter Function
  * Runs the 3-Layer Check
  * 
- * v4.2: Uses adaptive epsilon based on category/subcategory
+ * v5.0: Uses thesis-validated adaptive epsilon (in degrees)
  */
 function isPotentialDuplicate(newComplaint, existingComplaint) {
-  // Layer 1: Spatial (v4.2: Adaptive epsilon)
+  // Layer 1: Spatial (v5.0: Adaptive epsilon in degrees)
   const epsilon = getDynamicEpsilon(
     newComplaint.category,
     newComplaint.categoryName || newComplaint.category_name || "",
     newComplaint.subcategoryName || newComplaint.subcategory || ""
   );
-  const distance = calculateDistance(
+  
+  // Calculate distance using Haversine (returns meters)
+  const distanceMeters = calculateDistance(
     newComplaint.latitude,
     newComplaint.longitude,
     existingComplaint.latitude,
     existingComplaint.longitude
   );
+  
+  // Convert epsilon from degrees to meters for comparison (1 degree ≈ 111km)
+  const epsilonMeters = epsilon * 111000;
 
-  if (distance > epsilon) return { isMatch: false, reason: "spatial", distance, epsilon };
+  if (distanceMeters > epsilonMeters) {
+    return { isMatch: false, reason: "spatial", distance: distanceMeters, epsilon: epsilonMeters };
+  }
 
   // Layer 2: Temporal
   if (
@@ -347,19 +384,67 @@ function isPotentialDuplicate(newComplaint, existingComplaint) {
     return { isMatch: false, reason: "semantic" };
   }
 
-  return { isMatch: true, distance, score: 1.0 };
+  return { isMatch: true, distance: distanceMeters, score: 1.0 };
+}
+
+/**
+ * Convert epsilon (degrees) to meters for display/logging
+ * @param {number} epsilonDegrees - Epsilon in degrees
+ * @returns {number} Epsilon in meters
+ */
+function epsilonToMeters(epsilonDegrees) {
+  return Math.round(epsilonDegrees * 111000);
+}
+
+/**
+ * Verification function for thesis parameter validation
+ * Run this to confirm parameters match thesis claims
+ */
+function verifyThesisParameters() {
+  console.log("=== THESIS PARAMETER VERIFICATION ===");
+  console.log(`Testing Infrastructure Radius: ${ADAPTIVE_EPSILON["Infrastructure"]} (Should be 0.001125 ≈ 125m)`);
+  console.log(`  → In meters: ${epsilonToMeters(ADAPTIVE_EPSILON["Infrastructure"])}m`);
+  console.log(`Testing Sanitation Radius: ${ADAPTIVE_EPSILON["Sanitation"]} (Should be 0.000144 ≈ 16m)`);
+  console.log(`  → In meters: ${epsilonToMeters(ADAPTIVE_EPSILON["Sanitation"])}m`);
+  console.log(`Testing Fire Radius: ${ADAPTIVE_EPSILON["Fire"]} (Should be 0.00045 ≈ 50m)`);
+  console.log(`  → In meters: ${epsilonToMeters(ADAPTIVE_EPSILON["Fire"])}m`);
+  console.log(`Testing Default Radius: ${ADAPTIVE_EPSILON["default"]} (Should be 0.00030 ≈ 33m)`);
+  console.log(`  → In meters: ${epsilonToMeters(ADAPTIVE_EPSILON["default"])}m`);
+  console.log("=====================================");
+  
+  // Validation checks
+  const passed = 
+    ADAPTIVE_EPSILON["Infrastructure"] === 0.001125 &&
+    ADAPTIVE_EPSILON["Sanitation"] === 0.000144 &&
+    ADAPTIVE_EPSILON["Fire"] === 0.00045 &&
+    ADAPTIVE_EPSILON["default"] === 0.00030;
+  
+  console.log(`\n✅ VERIFICATION ${passed ? 'PASSED' : '❌ FAILED'}`);
+  return passed;
 }
 
 module.exports = {
-  // v4.2: Adaptive DBSCAN exports
+  // v5.0: Thesis-validated DBSCAN exports
   ADAPTIVE_EPSILON,
   ADAPTIVE_MINPTS,
+  
+  // Primary lookup functions
+  getEpsilonForCategory,
+  getMinPtsForCategory,
+  
+  // Legacy-compatible functions
   getDynamicEpsilon,
   getDynamicMinPts,
+  
+  // Utility functions
+  epsilonToMeters,
+  verifyThesisParameters,
+  
   // Legacy exports
   checkTemporalProximity,
   areCategoriesRelated,
   isPotentialDuplicate,
+  
   // Constants
   DEFAULT_EPSILON,
   LARGE_EPSILON,
