@@ -127,7 +127,7 @@ async function setSidebarRole() {
     }
     if (!role) {
       console.error("No role found, redirecting to login");
-      window.location.href = `/login?message=${  encodeURIComponent("Unable to determine user role. Please log in again.")  }&type=error`;
+      window.location.href = `/login?message=${encodeURIComponent("Unable to determine user role. Please log in again.")}&type=error`;
       return;
     }
     const roleLower = role.toLowerCase();
@@ -211,13 +211,22 @@ function getMenuItemsForRole(role) {
     console.log("[SIDEBAR] Normalizing role from", originalRole, "to", role, "for menu items");
   }
 
-  // console.log removed for security
+  // Simple Workflow Mode: Only 3 roles supported
   const menuItems = {
     "citizen": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
       { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
       { url: "/departments", icon: "departments", label: "Departments" },
+      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
+    ],
+    "lgu": [
+      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
+      { url: "/assignments", icon: "assignments", label: "Assignments" },
+      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
+      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ],
     "super-admin": [
@@ -229,46 +238,16 @@ function getMenuItemsForRole(role) {
       { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
       { url: "/departments", icon: "departments", label: "Departments" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
-    ],
-    "lgu-hr": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/link-generator", icon: "link-generator", label: "Link Generator" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
-    ],
-    "complaint-coordinator": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
-      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
-      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
-    ],
-    "lgu-admin": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/assignments", icon: "assignments", label: "Assignments" },
-      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
-      { url: "/publish", icon: "publish", label: "Publish" },
-      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ]
   };
-  // Handle simplified LGU roles
-  if (role === "lgu-hr") {
-    return menuItems["lgu-hr"] || [];
+
+  // Map any legacy LGU roles to the unified "lgu" role
+  if (role.startsWith("lgu-") || role === "complaint-coordinator") {
+    role = "lgu";
   }
-  if (role === "lgu-admin") {
-    return menuItems["lgu-admin"] || [];
-  }
-  if (role === "lgu") {
-    return [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/task-assigned", icon: "taskAssigned", label: "Task Assigned" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" }
-    ];
-  }
-  // Return menu items for exact role match
-  const items = menuItems[role] || [];
+
+  // Return menu items for the role
+  const items = menuItems[role] || menuItems["citizen"];
   console.log("[SIDEBAR] Menu items for role:", role, "found", items.length, "items");
   return items;
 }

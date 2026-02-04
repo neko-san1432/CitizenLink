@@ -284,7 +284,32 @@ const requireRole = (allowedRoles) => {
       ? String(baseRole).trim().toLowerCase()
       : null;
 
-    const hasPermission = allowedRoles.some((allowedRole) => {
+    // Simple Workflow Mode: Normalize user role to simplified 3-role system
+    // Map any lgu-* role or complaint-coordinator to 'lgu'
+    const simplifiedUserRole = (normalizedRole.startsWith("lgu-") || normalizedRole === "complaint-coordinator")
+      ? "lgu"
+      : normalizedRole;
+
+    const simplifiedBaseRole = normalizedBaseRole
+      ? ((normalizedBaseRole.startsWith("lgu-") || normalizedBaseRole === "complaint-coordinator")
+        ? "lgu"
+        : normalizedBaseRole)
+      : null;
+
+    // Also normalize the allowed roles for matching
+    const normalizedAllowedRoles = allowedRoles.map(role => {
+      if (typeof role === "string") {
+        const roleLower = role.toLowerCase();
+        // Map legacy LGU roles to 'lgu' in the allowed list
+        if (roleLower.startsWith("lgu-") || roleLower === "complaint-coordinator") {
+          return "lgu";
+        }
+        return roleLower;
+      }
+      return role;
+    });
+
+    const hasPermission = normalizedAllowedRoles.some((allowedRole) => {
       if (typeof allowedRole === "string") {
         // Support wildcard matching (e.g., "lgu-admin*" matches "lgu-admin-{dept}")
         if (allowedRole.includes("*")) {
@@ -293,19 +318,18 @@ const requireRole = (allowedRoles) => {
           // eslint-disable-next-line security/detect-non-literal-regexp
           const regex = new RegExp(`^${pattern}$`);
           return (
-            regex.test(normalizedRole) ||
-            (normalizedBaseRole && regex.test(normalizedBaseRole))
+            regex.test(simplifiedUserRole) ||
+            (simplifiedBaseRole && regex.test(simplifiedBaseRole))
           );
         }
         return (
-          normalizedRole === allowedRole.toLowerCase() ||
-          (normalizedBaseRole &&
-            normalizedBaseRole === allowedRole.toLowerCase())
+          simplifiedUserRole === allowedRole ||
+          (simplifiedBaseRole && simplifiedBaseRole === allowedRole)
         );
       } else if (allowedRole instanceof RegExp) {
         return (
-          allowedRole.test(normalizedRole) ||
-          (normalizedBaseRole && allowedRole.test(normalizedBaseRole))
+          allowedRole.test(simplifiedUserRole) ||
+          (simplifiedBaseRole && allowedRole.test(simplifiedBaseRole))
         );
       } else if (typeof allowedRole === "object" && allowedRole !== null) {
         // Handle case where regex might be converted to object
@@ -333,7 +357,9 @@ const requireRole = (allowedRoles) => {
             process.env.NODE_ENV === "development"
               ? {
                 userRole,
+                simplifiedUserRole,
                 allowedRoles,
+                normalizedAllowedRoles,
                 path: req.path,
               }
               : null,

@@ -9,7 +9,7 @@ class HeatmapControls {
       status: "",
       category: "",
       subcategory: "",
-      department: "",
+      // department: "", // Simple Workflow Mode: Not using department filter
       timeRange: "",
       startDate: "",
       endDate: "",
@@ -46,7 +46,8 @@ class HeatmapControls {
     }
     this.setupEventListeners();
     this.loadCategoriesPromise = this.loadCategories();
-    this.loadDepartmentsPromise = this.loadDepartments();
+    // Simple Workflow Mode: Skip loading departments - not using office assignments
+    // this.loadDepartmentsPromise = this.loadDepartments();
   }
   /**
    * Get HTML for controls
@@ -102,13 +103,13 @@ class HeatmapControls {
           </select>
         </div>
 
-        <div class="control-group" id="department-filter-control">
+        <!-- Simple Workflow Mode: Department filter hidden - not using office assignments -->
+        <!-- <div class="control-group" id="department-filter-control">
           <label>Department Filter:</label>
           <select id="department-filter">
             <option value="">All Departments</option>
-            <div id="department-options-loading">Loading departments...</div>
           </select>
-        </div>
+        </div> -->
 
         <div class="control-group">
           <label>Time Range:</label>
@@ -475,16 +476,12 @@ class HeatmapControls {
    * @returns {Object} Current filters
    */
   getCurrentFilters() {
-    const selectedDepartment =
-      document.getElementById("department-filter")?.value || "";
-    const enforcedDepartment = this.isDepartmentLocked
-      ? this.userDepartmentCode || ""
-      : selectedDepartment;
+    // Simple Workflow Mode: Department filter removed - not using office assignments
     return {
       status: document.getElementById("status-filter")?.value || "",
       category: this.currentFilters.category || "",
       subcategory: this.currentFilters.subcategory || "",
-      department: enforcedDepartment,
+      // department removed for Simple Workflow Mode
       timeRange: this.currentFilters.timeRange || "",
       startDate: document.getElementById("start-date")?.value || "",
       endDate: document.getElementById("end-date")?.value || "",
@@ -808,9 +805,8 @@ class HeatmapControls {
           const isUserDept =
             userDepartmentCode &&
             (dept.code || "").toUpperCase() === userDepartmentCode;
-          option.textContent = `${dept.name} (${dept.code})${
-            isUserDept ? " ★" : ""
-          }`;
+          option.textContent = `${dept.name} (${dept.code})${isUserDept ? " ★" : ""
+            }`;
           if (isUserDept) {
             option.style.fontWeight = "bold";
           }

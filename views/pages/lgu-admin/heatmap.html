@@ -1009,7 +1009,8 @@
                                     </div>
                                 </div>
 
-                                <div>
+                                <!-- Simple Workflow Mode: Office filter hidden - not using office assignments -->
+                                <!-- <div>
                                     <label class="cc-label">Assigned Office</label>
                                     <select id="filter-office" multiple class="hidden">
                                         <option value="all" selected>All Offices</option>
@@ -1023,7 +1024,7 @@
                                         <option value="CENRO">CENRO (Environment)</option>
                                     </select>
                                     <div id="ui-filter-office" class="custom-multiselect"></div>
-                                </div>
+                                </div> -->
 
                                 <div>
                                     <label class="cc-label">Category</label>
@@ -1221,7 +1222,8 @@
             const els = {
                 start: document.getElementById('filter-start-date'),
                 end: document.getElementById('filter-end-date'),
-                office: document.getElementById('filter-office'),
+                // Simple Workflow Mode: office filter is hidden
+                // office: document.getElementById('filter-office'),
                 category: document.getElementById('filter-category'),
                 subcategory: document.getElementById('filter-subcategory'),
                 apply: document.getElementById('apply-filters-btn'),
@@ -1377,7 +1379,8 @@
             };
 
             // Initialize Custom UI
-            const officeUI = setupCustomMultiSelect('filter-office', 'ui-filter-office', 'All Offices');
+            // Simple Workflow Mode: Office filter hidden
+            // const officeUI = setupCustomMultiSelect('filter-office', 'ui-filter-office', 'All Offices');
             const catUI = setupCustomMultiSelect('filter-category', 'ui-filter-category', 'All Categories');
             const subUI = setupCustomMultiSelect('filter-subcategory', 'ui-filter-subcategory', 'All Subcategories', true);
 
@@ -1404,12 +1407,12 @@
                 // UI Sync is handled by custom component events -> select change -> this apply
                 let catValues = getValues(els.category);
                 let subValues = getValues(els.subcategory);
-                let officeValues = getValues(els.office);
+                // Simple Workflow Mode: Office filter hidden
+                let officeValues = ['all']; // Always "all" since filter is hidden
 
                 // UX Logic: If they selected nothing (should be handled by component but double check)
                 if (catValues.length === 0) catValues = ['all'];
                 if (subValues.length === 0) subValues = ['all'];
-                if (officeValues.length === 0) officeValues = ['all'];
 
                 let startDate = els.start.value || '';
                 let endDate = els.end.value || '';
@@ -1424,7 +1427,8 @@
                 const filters = {
                     category: catValues,
                     subcategory: subValues,
-                    office: officeValues,
+                    // Simple Workflow Mode: no office filtering
+                    // office: officeValues,
                     start_date: startDate,
                     end_date: endDate
                 };
@@ -1486,7 +1490,8 @@
             // Event: Other Inputs Change
             els.start.addEventListener('change', markDirty);
             els.end.addEventListener('change', markDirty);
-            els.office.addEventListener('change', markDirty);
+            // Simple Workflow Mode: office filter hidden
+            // els.office.addEventListener('change', markDirty);
             els.subcategory.addEventListener('change', markDirty);
 
             if (els.apply) {
@@ -1502,7 +1507,8 @@
                 els.end.value = '';
 
                 // Reset Multi-selects
-                Array.from(els.office.options).forEach(o => o.selected = (o.value === 'all'));
+                // Simple Workflow Mode: office filter hidden
+                // Array.from(els.office.options).forEach(o => o.selected = (o.value === 'all'));
                 Array.from(els.category.options).forEach(o => o.selected = (o.value === 'all'));
 
                 els.subcategory.innerHTML = '<option value="all" selected>All Subcategories</option>';
@@ -1516,7 +1522,8 @@
 
                 // Reset Custom UIs
                 setTimeout(() => {
-                    officeUI.update();
+                    // Simple Workflow Mode: officeUI is not initialized
+                    // officeUI.update();
                     catUI.update();
                     subUI.update();
                 }, 50);
