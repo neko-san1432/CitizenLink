@@ -338,7 +338,18 @@ function getMenuItemsForRole(role) {
   if (role === "lgu") {
     return [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/task-assigned", icon: "taskAssigned", label: "Task Assigned" },
+      { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
+      { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
+      {
+        url: "/brain-analytics-page",
+        icon: "analytics",
+        label: "Brain Analytics",
+      },
+      {
+        url: "/dictionary-manager",
+        icon: "analytics",
+        label: "Dictionary Manager",
+      },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" },
     ];
   }

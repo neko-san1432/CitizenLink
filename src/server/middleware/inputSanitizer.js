@@ -51,7 +51,7 @@ class InputSanitizer {
       // Don't sanitize key using values logic (avoids triggering email validation on the key 'email' itself)
       const sanitizedKey = safeKey;
       const fieldPath = context ? `${context}.${safeKey}` : safeKey;
-      
+
       // Handle arrays and objects recursively, only sanitize primitives
       if (Array.isArray(value)) {
         sanitized[sanitizedKey] = value.map((item, index) =>
@@ -86,7 +86,7 @@ class InputSanitizer {
     if (value === null || value === void 0) {
       return value;
     }
-    
+
     // Handle arrays and objects - they should be processed by sanitizeObject, not here
     if (Array.isArray(value)) {
       return value.map((item, index) =>
@@ -96,14 +96,7 @@ class InputSanitizer {
     if (typeof value === "object") {
       return InputSanitizer.sanitizeObject(value, fieldName);
     }
-    
-    // Convert to string for processing (only for primitives)
-    const stringValue = String(value);
-    // Check for potential security threats first
-    if (InputSanitizer.detectThreats(stringValue, fieldName)) {
-      // Silenced noisy sanitizer warnings per request; still sanitize by returning empty string
-      return "";
-    }
+
     // Skip sanitization for certain field types that shouldn't be modified
     const skipFields = [
       "password",
@@ -119,6 +112,14 @@ class InputSanitizer {
       )
     ) {
       return value; // Return original value for sensitive fields
+    }
+
+    // Convert to string for processing (only for primitives)
+    const stringValue = String(value);
+    // Check for potential security threats first
+    if (InputSanitizer.detectThreats(stringValue, fieldName)) {
+      // Silenced noisy sanitizer warnings per request; still sanitize by returning empty string
+      return "";
     }
     // Sanitize based on field name patterns
     if (fieldName.toLowerCase().includes("email")) {

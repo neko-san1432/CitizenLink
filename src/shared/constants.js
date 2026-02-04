@@ -12,6 +12,10 @@ const USER_ROLES = {
   LGU_HR: "lgu-hr", // Can be 'lgu-hr-{dept}', 'lgu-hr-{dept}', etc.
   SUPER_ADMIN: "super-admin"
 };
+
+// Strict Mode: Allowed Roles
+// Only these roles are permitted when ENABLE_LEGACY_ROLES=false
+const ALLOWED_ROLES = ["citizen", "lgu", "super-admin"];
 // Role Hierarchy (for permission checks)
 // Note: LGU officer roles start with 'lgu-' (e.g., 'lgu-{dept}'), check with startsWith()
 const ROLE_HIERARCHY = {
@@ -26,11 +30,10 @@ const ROLE_HIERARCHY = {
 const COMPLAINT_ROLES = ["citizen"];
 // Roles that can switch to citizen mode
 // Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
+// Roles that can switch to citizen mode
+// Note: Use pattern matching for LGU roles (e.g., role.startsWith('lgu-'))
 const SWITCHABLE_ROLES = [
-  "complaint-coordinator",
-  "lgu", // LGU Officers: lgu-{dept}, lgu-{dept}, etc.
-  "lgu-admin",
-  "lgu-hr",
+  "lgu", // Unified LGU role
   "super-admin"
 ];
 // Complaint Statuses
@@ -207,5 +210,6 @@ module.exports = {
   VALIDATION,
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITY,
-  NOTIFICATION_ICONS
+  NOTIFICATION_ICONS,
+  ALLOWED_ROLES
 };

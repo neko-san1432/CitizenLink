@@ -8,7 +8,7 @@ const {
   buildUserObject,
   handleAuthError,
 } = require("../utils/authUtils");
-const { SWITCHABLE_ROLES } = require("../../shared/constants");
+const { SWITCHABLE_ROLES, ALLOWED_ROLES } = require("../../shared/constants");
 
 const supabase = Database.getClient();
 
@@ -146,6 +146,52 @@ const authenticateUser = async (req, res, next) => {
           `Invalid role: ${roleValidation.error}`
         )}&type=error`
       );
+    }
+
+    // STRICT MODE CHECK: Enforce 3-role system if legacy roles are disabled
+    if (process.env.ENABLE_LEGACY_ROLES === "false") {
+      const normalizedRole = userRole.toLowerCase();
+
+      // Allow if role is explicitly in ALLOWED_ROLES
+      // OR if it's an LGU role (starts with 'lgu') but NOT one of the restricted legacy ones
+      // We need to be careful: 'lgu' is allowed. 'lgu-admin', 'lgu-hr' are NOT.
+      // But 'lgu-{dept}' (officer) might need handling.
+      // Based on plan: "lgu-officer is disabled". 
+      // So valid roles are exact matches: 'citizen', 'super-admin'.
+      // And 'lgu' (base role).
+      // What about 'lgu-{dept}'? The instruction says "lgu (formerly Coordinator/Admin)".
+      // The user said "the 'lgu' role will now become the complaint coordinator".
+      // Usually 'lgu' was the base officer. Now it's the "LGU" role.
+
+      // We will check against the ALLOWED_ROLES list from constants: ['citizen', 'lgu', 'super-admin']
+      // We must check if the userRole *starts with* allowed roles if we want to allow variations, 
+      // OR strict equality if we want to block 'lgu-admin'.
+
+      // 'lgu' is in allowed roles. 'lgu-admin' starts with 'lgu'. 
+      // If we strictly check includes, 'lgu-admin' is NOT in ['citizen', 'lgu', 'super-admin'].
+      // So simply checking ALLOWED_ROLES.includes(normalizedRole) should work for exact matches.
+      // However, we need to handle the case where 'lgu' might have data appended? 
+      // Current system uses 'lgu' as the role string in metadata usually, or 'lgu-{dept}'.
+      // If 'lgu-{dept}' is the officer, and we want to disable officer... 
+      // But usage of 'lgu' implies the NEW main LGU role.
+
+      // Let's assume strict exact match for now as safe default for 'citizen' and 'super-admin'.
+      // For 'lgu', we might need to handle 'lgu' vs 'lgu-admin'.
+      // If allowed is 'lgu', then 'lgu-admin' should FAIL.
+
+      const isAllowed = ALLOWED_ROLES.includes(normalizedRole);
+
+      if (!isAllowed) {
+        console.error(`[AUTH] ⛔ Role '${userRole}' is disabled in strict mode.`);
+        res.clearCookie("sb_access_token");
+
+        const errorMsg = "Your role is no longer active in the new system.";
+
+        if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
+          return res.status(403).json({ success: false, error: errorMsg });
+        }
+        return res.redirect(`/login?message=${encodeURIComponent(errorMsg)}&type=error`);
+      }
     }
 
     // Extract department code for LGU roles
