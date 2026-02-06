@@ -1,50 +1,65 @@
 const Database = require('../config/database');
 const Complaint = require('../models/Complaint');
+const {
+    ADAPTIVE_EPSILON,
+    ADAPTIVE_MINPTS,
+    getEpsilonForCategory,
+    getMinPtsForCategory,
+    epsilonToMeters
+} = require('../utils/similarityUtils');
 
 /**
- * ClusteringService
- * Implements Adaptive DBSCAN clustering for complaint analytics.
- * Ported from Simulation Engine v3.9
+ * ClusteringService v5.0
+ * Implements Thesis-Validated Adaptive DBSCAN clustering for complaint analytics.
+ * 
+ * SYNCHRONIZED with CitizenLink_Simulated_System
+ * 
+ * Key Changes in v5.0:
+ * - Imports ADAPTIVE_EPSILON/ADAPTIVE_MINPTS from similarityUtils.js
+ * - Uses degrees-based epsilon (0.001125 ≈ 125m for Infrastructure)
+ * - Removed hardcoded CLUSTERING_TIERS in favor of centralized lookup
  */
 class ClusteringService {
     constructor() {
         this.db = Database.getInstance();
         this.supabase = this.db.getClient();
 
-        // Configuration from Simulation Engine (Aligned to 5-Tier Schema)
-        this.CLUSTERING_TIERS = {
-            TIER_1_CRITICAL: { epsilon: 20.0, minPts: 1 }, // Life-Threatening (Fire, Crime) - "Lone Wolf" valid
-            TIER_2_HIGH: { epsilon: 30.0, minPts: 2 },     // High Priority (Accident)
-            TIER_3_INFRA: { epsilon: 40.0, minPts: 3 },    // Infrastructure (Pothole, Broken Light)
-            TIER_4_QOL: { epsilon: 50.0, minPts: 4 },      // Quality of Life (Noise, Trash)
-            TIER_5_MINOR: { epsilon: 60.0, minPts: 5 }     // Minor Issues
-        };
-
-        // Categories mapping to Tiers (Default if urgency_score missing)
-        this.CATEGORY_CONFIG = {
-            'Fire': 'TIER_1_CRITICAL',
-            'Crime': 'TIER_1_CRITICAL',
-            'Accident': 'TIER_2_HIGH',
-            'Flood': 'TIER_2_HIGH',
-            'Flooding': 'TIER_2_HIGH',
-            'Blackout': 'TIER_3_INFRA',
-            'Pothole': 'TIER_3_INFRA',
-            'Road Damage': 'TIER_3_INFRA',
-            'Traffic': 'TIER_4_QOL',
-            'Trash': 'TIER_4_QOL',
-            'Noise': 'TIER_4_QOL',
-            'Others': 'TIER_5_MINOR'
-        };
-
         // Semantic Relationship Matrix (for semantic clustering)
         // Which categories can form a cluster together?
         this.RELATIONSHIP_MATRIX = {
             'Fire': ['Smoke', 'Explosion'],
             'Flood': ['Flooding', 'Traffic', 'Stranded'],
+            'Flooding': ['Flood', 'Traffic', 'Stranded', 'Clogged Drainage'],
             'Accident': ['Traffic', 'Medical'],
-            'Pothole': ['Road Damage'],
-            'Traffic': ['Road Obstruction', 'Accident']
+            'Pothole': ['Road Damage', 'Infrastructure'],
+            'Road Damage': ['Pothole', 'Infrastructure'],
+            'Traffic': ['Road Obstruction', 'Accident'],
+            'Trash': ['Garbage', 'Illegal Dumping', 'Sanitation'],
+            'Garbage': ['Trash', 'Illegal Dumping', 'Sanitation'],
+            'Infrastructure': ['Pothole', 'Road Damage', 'Streetlight', 'Drainage']
         };
+    }
+
+    /**
+     * Get epsilon for a category (thesis-validated lookup)
+     * Uses centralized ADAPTIVE_EPSILON from similarityUtils.js
+     * 
+     * @param {string} category - Category name
+     * @returns {number} Epsilon in degrees
+     */
+    _getEpsilonForCategory(category) {
+        return getEpsilonForCategory(category);
+    }
+
+    /**
+     * Get minPts for a category (thesis-validated lookup)
+     * Uses centralized ADAPTIVE_MINPTS from similarityUtils.js
+     * 
+     * @param {string} category - Category name
+     * @returns {number} MinPts value
+     */
+    _getMinPtsForCategory(category) {
+        return getMinPtsForCategory(category);
     }
 
     /**
@@ -53,10 +68,10 @@ class ClusteringService {
      */
     async generateClusters() {
         try {
-            console.log('[CLUSTERING] 🔄 Starting DBSCAN analysis...');
+            console.log('[CLUSTERING v5.0] 🔄 Starting Thesis-Validated DBSCAN analysis...');
+            console.log('[CLUSTERING v5.0] Using ADAPTIVE_EPSILON from similarityUtils.js');
 
             // 1. Fetch active complaints (last 7 days)
-            // We focus on active/recent issues for the dashboard
             const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
             const { data: complaints, error } = await this.supabase
@@ -69,7 +84,7 @@ class ClusteringService {
             if (error) throw error;
             if (!complaints || complaints.length === 0) return { clusters: [], noise: [] };
 
-            console.log(`[CLUSTERING] Processing ${complaints.length} datapoints...`);
+            console.log(`[CLUSTERING v5.0] Processing ${complaints.length} datapoints...`);
 
             // 2. Prepare points
             const points = complaints.map(c => ({
@@ -80,7 +95,7 @@ class ClusteringService {
                 lng: parseFloat(c.longitude)
             })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-            // 3. DBSCAN Algorithm
+            // 3. DBSCAN Algorithm with Thesis-Validated Parameters
             let clusterId = 0;
             const clusters = [];
 
@@ -91,10 +106,13 @@ class ClusteringService {
                 point.visited = true;
                 const neighbors = this._regionQuery(point, points);
 
-                // Check minPts (Adaptive)
-                const config = this._getConfig(point.category);
+                // Get adaptive minPts from centralized config
+                const minPts = this._getMinPtsForCategory(point.category || point.subcategory);
+                const epsilon = this._getEpsilonForCategory(point.category || point.subcategory);
 
-                if (neighbors.length < config.minPts) {
+                console.log(`[CLUSTERING v5.0] Point ${point.id} [${point.category}]: ε=${epsilon} (${epsilonToMeters(epsilon)}m), minPts=${minPts}`);
+
+                if (neighbors.length < minPts) {
                     point.type = 'NOISE';
                 } else {
                     clusterId++;
@@ -103,24 +121,23 @@ class ClusteringService {
                 }
             }
 
-            console.log(`[CLUSTERING] ✅ Generated ${clusters.length} clusters.`);
+            console.log(`[CLUSTERING v5.0] ✅ Generated ${clusters.length} clusters.`);
             return { clusters, noise: points.filter(p => p.type === 'NOISE') };
 
         } catch (error) {
-            console.error('[CLUSTERING] Error:', error.message);
+            console.error('[CLUSTERING v5.0] Error:', error.message);
             return { clusters: [], noise: [] };
         }
     }
 
     /**
-     * Expand the cluster recursively
+     * Expand the cluster recursively (BFS implementation)
      */
     _expandCluster(point, neighbors, allPoints, clusterId) {
         const clusterPoints = [point];
         point.clusterId = clusterId;
 
         // Queue for BFS
-        // Simulation engine uses DFS but BFS is safer for stack depth in Node
         let queue = [...neighbors];
 
         while (queue.length > 0) {
@@ -130,14 +147,8 @@ class ClusteringService {
                 neighbor.visited = true;
                 const newNeighbors = this._regionQuery(neighbor, allPoints);
 
-                const config = this._getConfig(neighbor.category);
-                if (newNeighbors.length >= config.minPts) {
-                    // Add new neighbors to queue if they are semantically related
-                    // Only expand if semantic link OK (e.g. dont merge Pothole into Fire cluster)
-                    // ... actually standard DBSCAN expands based on density, 
-                    // but we apply "Semantic Filtering" inside the region query or here?
-                    // Simulation engine applies it in `getSemanticallyRelatedNeighbors`.
-                    // Here we applied it in _regionQuery.
+                const minPts = this._getMinPtsForCategory(neighbor.category || neighbor.subcategory);
+                if (newNeighbors.length >= minPts) {
                     queue = [...queue, ...newNeighbors];
                 }
             }
@@ -154,22 +165,23 @@ class ClusteringService {
 
     /**
      * Find neighbors within Epsilon AND Semantic Match
+     * v5.0: Uses thesis-validated epsilon from ADAPTIVE_EPSILON
      */
     _regionQuery(point, allPoints) {
-        const config = this._getConfig(point.category);
-        const epsilon = config.epsilon;
+        // Get epsilon from centralized thesis-validated config
+        const epsilonDegrees = this._getEpsilonForCategory(point.category || point.subcategory);
+
+        // Convert to meters for haversine comparison
+        const epsilonMeters = epsilonToMeters(epsilonDegrees);
 
         return allPoints.filter(other => {
             if (point.id === other.id) return false;
 
-            // 1. Spatial Check
+            // 1. Spatial Check (Haversine returns meters)
             const dist = this._haversineDistance(point.lat, point.lng, other.lat, other.lng);
-            if (dist > epsilon) return false;
+            if (dist > epsilonMeters) return false;
 
             // 2. Semantic Check (Mixed Category Logic)
-            // If categories match exactly -> OK
-            // If related in matrix -> OK (e.g. Fire & Smoke)
-            // Otherwise -> Skip (Don't cluster "Pothole" with "Fire" even if 5 meters apart)
             return this._isSemanticallyRelated(point.category, other.category);
         });
     }
@@ -184,11 +196,6 @@ class ClusteringService {
         if (this.RELATIONSHIP_MATRIX[catB]?.includes(catA)) return true;
 
         return false;
-    }
-
-    _getConfig(category) {
-        const tierKey = this.CATEGORY_CONFIG[category] || 'TIER_3_INFRA';
-        return this.CLUSTERING_TIERS[tierKey];
     }
 
     _haversineDistance(lat1, lon1, lat2, lon2) {
@@ -226,6 +233,9 @@ class ClusteringService {
         // Urgency Sum
         const urgencyAvg = points.reduce((acc, p) => acc + (p.urgency_score || 0), 0) / points.length;
 
+        // Get thesis-validated radius
+        const radiusFromPoints = this._calculateRadius(points, { lat: latSum / points.length, lng: lngSum / points.length });
+
         return {
             id: `cluster_${id}`,
             center: { lat: latSum / points.length, lng: lngSum / points.length },
@@ -233,7 +243,8 @@ class ClusteringService {
             size: points.length,
             category: dominantCat,
             urgency_avg: Math.round(urgencyAvg),
-            radius: this._calculateRadius(points, { lat: latSum / points.length, lng: lngSum / points.length })
+            radius: radiusFromPoints,
+            epsilon_used: epsilonToMeters(this._getEpsilonForCategory(dominantCat)) // For debugging
         };
     }
 
