@@ -2,6 +2,13 @@
 
 export function getStatusText(status) {
   const statusTexts = {
+    // New Workflow Statuses
+    submitted: "Submitted",
+    verified: "Verified",
+    under_review: "Under Review",
+    action_taken: "Action Taken",
+    resolved: "Resolved",
+    // Legacy / Other
     unassigned: "Unassigned",
     assigned: "Assigned",
     active: "Active",
@@ -19,6 +26,18 @@ export function getStatusText(status) {
 
 export function getStatusClass(status) {
   const statusClasses = {
+    // New Workflow Statuses
+    submitted:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    verified:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    under_review:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+    action_taken:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    resolved:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    // Legacy / Other
     unassigned:
       "bg-gray-100 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300",
     assigned:

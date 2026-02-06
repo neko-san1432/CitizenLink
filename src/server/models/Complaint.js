@@ -11,7 +11,7 @@ class Complaint {
     this.preferred_departments = data.preferred_departments || [];
     this.category = data.category;
     this.subcategory = data.subcategory;
-    this.workflow_status = data.workflow_status || "new";
+    this.workflow_status = data.workflow_status || "submitted";
     this.priority = data.priority || "low";
     this.urgency_level = data.urgency_level || "low";
     // Evidence is now handled separately - not stored in complaints table
@@ -25,6 +25,7 @@ class Complaint {
     this.master_complaint_id = data.master_complaint_id;
     this.task_force_id = data.task_force_id;
     this.coordinator_notes = data.coordinator_notes;
+    this.comment = data.comment || {};
     this.estimated_resolution_date = data.estimated_resolution_date;
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
@@ -87,19 +88,16 @@ class Complaint {
       "pending review",
       "in progress",
       "resolved",
-      "closed",
-      "rejected",
     ];
     if (data.status && !validStatuses.includes(data.status)) {
       errors.push("Invalid status");
     }
     const validWorkflowStatuses = [
-      "new",
-      "assigned",
-      "in_progress",
-      "pending_approval",
-      "completed",
-      "cancelled",
+      "submitted",
+      "verified",
+      "under_review",
+      "action_taken",
+      "resolved",
     ];
     if (
       data.workflow_status &&
@@ -123,18 +121,18 @@ class Complaint {
   sanitizeForInsert() {
     return {
       submitted_by: this.submitted_by,
-      title: this.title?.trim(),
+      // title: this.title?.trim(), // Removed - Validation Only, not in DB
       descriptive_su: this.descriptive_su?.trim(),
       location_text: this.location_text?.trim(),
       latitude: this.latitude ? parseFloat(this.latitude) : null,
       longitude: this.longitude ? parseFloat(this.longitude) : null,
       department_r: Array.isArray(this.department_r) ? this.department_r : [],
-      preferred_departments: Array.isArray(this.preferred_departments)
-        ? this.preferred_departments
-        : [],
+      // preferred_departments: Array.isArray(this.preferred_departments)
+      //   ? this.preferred_departments
+      //   : [], // Removed - Used for logic but not stored in complaints table
       category: this.category,
       subcategory: this.subcategory,
-      workflow_status: this.workflow_status || "new",
+      workflow_status: this.workflow_status || "submitted",
       priority: this.priority || "low",
       urgency_level: this.urgency_level || "low",
       assigned_coordinator_id: this.assigned_coordinator_id || null,
@@ -170,6 +168,7 @@ class Complaint {
       master_complaint_id: this.master_complaint_id,
       task_force_id: this.task_force_id,
       coordinator_notes: this.coordinator_notes,
+      comment: this.comment,
       estimated_resolution_date: this.estimated_resolution_date,
       submitted_at: this.submitted_at,
       updated_at: this.updated_at,

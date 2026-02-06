@@ -169,8 +169,38 @@ async function setSidebarRole() {
         
 <div class="sidebar-menu">
           ${menuItems
-          .map(
-            (item) => `
+          .map((item) => {
+            if (item.children) {
+              return `
+              <div class="menu-group">
+                <div class="menu-header" onclick="this.parentElement.classList.toggle('expanded')">
+                  <div class="menu-header-content">
+                    <span class="menu-icon">${getMenuIcon(item.icon, {
+                size: 20,
+              })}</span>
+                    <span>${item.label}</span>
+                  </div>
+                  <i class="fas fa-chevron-down menu-chevron"></i>
+                </div>
+                <div class="menu-children">
+                  ${item.children
+                  .map(
+                    (child) => `
+                    <a href="${root}${child.url}" data-icon="${child.icon
+                      }" aria-label="${child.label}">
+                      <span class="menu-icon">${getMenuIcon(child.icon, {
+                        size: 18,
+                      })}</span>
+                      <span>${child.label}</span>
+                    </a>
+                  `
+                  )
+                  .join("")}
+                </div>
+              </div>
+            `;
+            }
+            return `
             <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label
               }">
               <span class="menu-icon">${getMenuIcon(item.icon, {
@@ -178,8 +208,8 @@ async function setSidebarRole() {
               })}</span>
               <span>${item.label}</span>
             </a>
-          `
-          )
+          `;
+          })
           .join("")}
 </div>
         
@@ -258,12 +288,38 @@ function getMenuItemsForRole(role) {
     lgu: [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
-      { url: "/assignments", icon: "assignments", label: "Assignments" },
+
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       {
-        url: "/brain-analytics-page",
+        label: "Analytics",
         icon: "analytics",
-        label: "Brain Analytics",
+        children: [
+          {
+            url: "/brain-analytics-page?tab=temporal",
+            label: "Time Trends",
+            icon: "clock",
+          },
+          {
+            url: "/brain-analytics-page?tab=categories",
+            label: "Categories",
+            icon: "tags",
+          },
+          {
+            url: "/brain-analytics-page?tab=edge-cases",
+            label: "Smart Detection",
+            icon: "alert",
+          },
+          {
+            url: "/brain-analytics-page?tab=data-table",
+            label: "All Complaints",
+            icon: "table",
+          },
+          {
+            url: "/brain-analytics-page?tab=system-training",
+            label: "Train System",
+            icon: "brain",
+          },
+        ],
       },
       {
         url: "/dictionary-manager",

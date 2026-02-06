@@ -57,7 +57,20 @@ const schemas = {
   // Status Update
   updateStatus: Joi.object({
     status: Joi.string()
-      .valid("new", "assigned", "in_progress", "completed", "cancelled")
+      .valid(
+        "new",
+        "submitted",
+        "verified",
+        "assigned",
+        "under_review",
+        "in_progress",
+        "action_taken",
+        "completed",
+        "resolved",
+        "closed",
+        "cancelled",
+        "rejected"
+      )
       .optional(),
     priority: Joi.string().valid("low", "medium", "high", "urgent").optional(),
     category: Joi.string().trim().optional(),
@@ -67,7 +80,8 @@ const schemas = {
 
   // Mark as False
   markAsFalse: Joi.object({
-    reason: reasonSchema,
+    reason: Joi.string().trim().min(2).max(500).required(),
+    notes: Joi.string().trim().allow("", null).optional(),
   }),
 
   // Mark as Duplicate

@@ -127,7 +127,15 @@ class ComplaintMap {
   setLocation(latitude, longitude, title = "Complaint Location", description = "") {
 
     if (!this.map) {
-      console.warn("[COMPLAINT_MAP] Map not initialized");
+      // If still initializing, wait a bit and retry once
+      console.warn("[COMPLAINT_MAP] Map not yet initialized, retrying...");
+      setTimeout(() => {
+        if (this.map) {
+          this.setLocation(latitude, longitude, title, description);
+        } else {
+          console.error("[COMPLAINT_MAP] Map failed to initialize after 1s");
+        }
+      }, 1000);
       return;
     }
     // Remove existing marker

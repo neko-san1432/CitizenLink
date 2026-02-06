@@ -128,45 +128,23 @@ class ComplaintDetails {
 
     switch (this.userRole) {
       case "complaint-coordinator":
-        if (this.complaint.status === "pending review") {
+        if (this.complaint.workflow_status === "submitted" || this.complaint.workflow_status === "new") {
           actions.push(
             { text: "Approve", class: "btn btn-success", action: "approve" },
             { text: "Reject", class: "btn btn-danger", action: "reject" }
           );
         }
         break;
-      case "lgu-admin":
-        // Only show Assign if legacy roles/dispatching is enabled
-        if (this.systemConfig.legacyRolesEnabled && (
-          this.complaint.status === "approved" ||
-          this.complaint.status === "assigned"
-        )) {
-          actions.push({
-            text: "Assign to Officer",
-            class: "btn btn-primary",
-            action: "assign-officer",
-          });
-        }
-        // If legacy roles disabled, lgu-admin should also be able to resolve direct complaints?
-        // Assuming lgu-admin acts like lgu-officer in simplified mode
-        if (!this.systemConfig.legacyRolesEnabled && (
-          this.complaint.status === "assigned" ||
-          this.complaint.status === "in progress" ||
-          this.complaint.status === "approved" // Allow resolving approved complaints directly
-        )) {
-          actions.push({
-            text: "Mark as Resolved",
-            class: "btn btn-success",
-            action: "mark-resolved",
-          });
-        }
-        break;
       case "lgu":
       case "lgu-officer":
+      case "lgu-admin":
+        // Unified LGU Actions
+        // 1. Mark as Resolved (if verified/active)
         if (
-          this.complaint.status === "assigned" ||
-          this.complaint.status === "in progress" ||
-          (!this.systemConfig.legacyRolesEnabled && this.complaint.status === "approved") // Allow picking up approved items directly
+          this.complaint.workflow_status === "verified" ||
+          this.complaint.workflow_status === "under_review" ||
+          this.complaint.workflow_status === "action_taken" ||
+          this.complaint.workflow_status === "assigned"
         ) {
           actions.push({
             text: "Mark as Resolved",
@@ -174,18 +152,32 @@ class ComplaintDetails {
             action: "mark-resolved",
           });
         }
-        break;
-      case "citizen":
+
+        // 2. Reject Complaint (if not already resolved/rejected)
         if (
-          this.complaint.status === "pending review" ||
-          this.complaint.status === "approved"
+          this.complaint.workflow_status !== "dresolved" &&
+          this.complaint.workflow_status !== "completed" &&
+          this.complaint.workflow_status !== "rejected"
         ) {
           actions.push({
-            text: "Cancel Complaint",
-            class: "btn btn-warning",
-            action: "cancel",
+            text: "Reject Complaint",
+            class: "btn btn-danger",
+            action: "reject"
           });
         }
+
+        // 3. Add Comment (Always available)
+        actions.push({
+          text: "Add Comment",
+          class: "btn btn-secondary",
+          action: "add-comment"
+        });
+        break;
+
+      case "citizen":
+        // Citizen Actions
+        // REMOVED: Cancel Complaint (Workflow simplification)
+
         // Show confirmation button when all assignments are complete and citizen hasn't confirmed
         if (this.shouldShowConfirmationButton()) {
           actions.push({
@@ -195,8 +187,10 @@ class ComplaintDetails {
           });
         }
         if (
-          this.complaint.status !== "cancelled" &&
-          this.complaint.status !== "closed"
+          this.complaint.workflow_status !== "cancelled" &&
+          this.complaint.workflow_status !== "resolved" &&
+          this.complaint.workflow_status !== "closed" &&
+          this.complaint.workflow_status !== "rejected"
         ) {
           actions.push({
             text: "Set Reminder",
@@ -469,20 +463,22 @@ class ComplaintDetails {
       this.complaint.confirmation_status !== "pending"
     ) {
       displayStatus = this.complaint.confirmation_status;
-    } else if (wf === "completed") {
+    } else if (wf === "resolved" || wf === "completed") {
       displayStatus = "resolved";
     } else if (
+      wf === "under_review" ||
       wf === "in_progress" ||
-      wf === "pending_approval" ||
-      wf === "assigned"
+      wf === "assigned" ||
+      wf === "verified" || // Mapping verified -> in progress/active bucket
+      wf === "action_taken"
     ) {
-      displayStatus = "in progress";
+      displayStatus = wf; // Pass through new statuses directly, class map will handle them
     } else if (wf === "cancelled") {
       displayStatus = "cancelled";
-    } else if (wf === "rejected_false") {
+    } else if (wf === "rejected") {
       displayStatus = "rejected";
-    } else if (wf === "new") {
-      displayStatus = "new";
+    } else if (wf === "submitted" || wf === "new") {
+      displayStatus = "submitted";
     } else {
       displayStatus = this.complaint.status || "Unknown";
     }
@@ -859,6 +855,7 @@ class ComplaintDetails {
   }
   getStatusClass(status) {
     const statusMap = {
+      // Legacy / Standard
       pending: "status-pending",
       waiting_for_responders: "status-warning",
       waiting_for_complainant: "status-info",
@@ -868,6 +865,16 @@ class ComplaintDetails {
       resolved: "status-success",
       cancelled: "status-secondary",
       rejected: "status-danger",
+      // New Workflow Statuses
+      submitted: "status-pending",
+      verified: "status-info",
+      under_review: "status-warning",
+      action_taken: "status-success", // Or info?
+      // Legacy mapping
+      new: "status-pending",
+      assigned: "status-info",
+      in_progress: "status-warning",
+      completed: "status-success"
     };
     return statusMap[status] || "status-pending";
   }
@@ -882,9 +889,16 @@ class ComplaintDetails {
       resolved: "Resolved",
       cancelled: "Cancelled",
       rejected: "Rejected",
+      // New Workflow Statuses
+      submitted: "Submitted",
+      verified: "Verified",
+      under_review: "Under Review",
+      action_taken: "Action Taken",
+      // Legacy
       new: "New Complaint",
       assigned: "Assigned to Coordinator",
       completed: "Completed - Awaiting Confirmation",
+      in_progress: "In Progress"
     };
     return displayMap[status] || status || "Unknown";
   }
@@ -1883,96 +1897,350 @@ class ComplaintDetails {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   }
-  renderTimeline() {
+  async renderTimeline() {
     const timelineContainer = document.getElementById("timeline-items");
     if (!timelineContainer) return;
-    // Map workflow status to step number (0-4, with 5 as cancelled)
-    const workflowStatus = (
-      this.complaint.workflow_status || "new"
-    ).toLowerCase();
-    const isCancelled = workflowStatus === "cancelled";
-    const statusStepMap = {
-      new: 0,
-      assigned: 1,
-      in_progress: 2,
-      pending_approval: 3,
-      completed: 4,
-    };
-    // For cancelled complaints, don't show any active steps - gray everything out
-    // Otherwise, show progress up to the current step
-    const currentStep = isCancelled
-      ? -1
-      : statusStepMap[workflowStatus] !== void 0
-        ? statusStepMap[workflowStatus]
-        : 0;
 
-    // Step labels
-    const stepLabels = [
-      "New",
-      "Assigned",
-      "In Progress",
-      "Pending Approval",
-      "Completed",
-      "Cancelled",
+    // Use the new 'comment' JSON attribute directly from the complaint object
+    // Structure: { "verified": { "date": "...", "comment": "..." }, ... }
+    const commentData = this.complaint.comment || {};
+
+    // Define the standard workflow steps in order
+    const steps = [
+      {
+        key: 'submitted',
+        label: 'Submitted',
+        icon: '📝',
+        statuses: ['new', 'submitted', 'pending']
+      },
+      {
+        key: 'verified',
+        label: 'Verified',
+        icon: '✅',
+        statuses: ['assigned', 'verified', 'under_review']
+      },
+      {
+        key: 'action_taken',
+        label: 'Action Taken',
+        icon: '🛠️',
+        statuses: ['pending_approval', 'action_taken', 'in_progress']
+      },
+      {
+        key: 'resolved',
+        label: 'Resolved',
+        icon: '🎉',
+        statuses: ['resolved', 'completed', 'closed']
+      }
     ];
-    // Node color (blue only for all active steps)
-    const nodeColors = ["#3b82f6", "#3b82f6", "#3b82f6", "#3b82f6", "#3b82f6"];
-    // Build the stepper HTML
-    let stepperHTML = '<div class="stepper-container">';
-    for (let i = 0; i < 5; i++) {
-      // If cancelled, all steps are inactive (grayed out)
-      // Otherwise, active steps are those up to currentStep (0-4)
-      // Step 5 is always inactive (grey) - represents unreached final state
-      const isActive = isCancelled ? false : i <= currentStep && i < 5;
-      // Get node color - if cancelled, everything is grey
-      const nodeColor = isCancelled
-        ? "#9ca3af"
-        : isActive
-          ? nodeColors[i]
-          : "#9ca3af";
-      // Determine connector line style
-      let connectorStyle = "";
-      if (i < 4) {
-        // If cancelled, all connectors are grey
-        // Otherwise, color connector through the current step as well (continuous bar effect)
-        const isConnectorActive = isCancelled ? false : i <= currentStep;
-        if (isConnectorActive) {
-          // Active connector solid blue
-          connectorStyle = "#3b82f6";
-        } else {
-          connectorStyle = "#e5e7eb"; // Inactive grey
+
+    const currentStatus = (this.complaint.workflow_status || 'new').toLowerCase();
+    const isCancelled = currentStatus === 'cancelled';
+    const isRejected = currentStatus === 'rejected';
+
+    // Find the current step index
+    // If cancelled/rejected, we might show a special state, but typically it stops at the last valid step
+    let currentStepIndex = steps.findIndex(s => s.statuses.includes(currentStatus));
+
+    // Special handling for rejected/cancelled
+    if (isRejected || isCancelled) {
+      // Find the last completed step or show at the beginning
+      // For UX, it's often better to show it at the current step if it was rejected there
+    }
+
+    // Fallback if status not found
+    if (currentStepIndex === -1) {
+      // If we are in terminal state, we might want to stay at the last known valid step
+      // But for simplicity, let's keep the current logic if it works
+      currentStepIndex = 0;
+    }
+
+    let html = '<div class="timeline-stepper">';
+
+    steps.forEach((step, index) => {
+      // Determine state: completed, current, or future
+      let state = 'future';
+      if (isCancelled && index === 0) {
+        state = 'completed'; // At least submitted
+      } else if (index < currentStepIndex) {
+        state = 'completed';
+      } else if (index === currentStepIndex) {
+        state = 'current';
+      }
+
+      // GET COMMENT FROM JSON ATTRIBUTE
+      // The key in the JSON matches the step key (e.g., 'verified')
+      const stepData = commentData[step.key];
+
+      let commentContent = '';
+      let logDateDisplay = '';
+
+      if (stepData && stepData.comment) {
+        // We have data for this phase
+        const dateStr = stepData.date ? new Date(stepData.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+        if (stepData.date) logDateDisplay = `<span class="latest-log-date">${new Date(stepData.date).toLocaleDateString()}</span>`;
+
+        commentContent = `
+            <div class="timeline-log-entry">
+                <div class="log-header">
+                    <span class="log-date">${dateStr}</span>
+                </div>
+                <div class="log-message">"${stepData.comment}"</div>
+            </div>
+          `;
+      } else {
+        // Fallback text
+        if (state === 'future' || state === 'current') {
+          commentContent = `<div class="no-comments">No comments yet</div>`;
+        } else { // completed/past
+          commentContent = `<div class="no-comments">No comments available</div>`;
         }
       }
-      // No glow/box-shadow for nodes
-      const boxShadow = "none";
-      stepperHTML += `
-                <div class="stepper-step ${isActive ? "active" : ""}">
-                    <div class="stepper-node" style="background-color: ${nodeColor}; box-shadow: ${boxShadow};"></div>
-                    ${i < 4
-          ? `
-                    <div class="stepper-connector" style="background: ${connectorStyle};"></div>
-                    `
-          : ""
-        }
+
+      // CSS classes
+      const isActive = state === 'current';
+      const isPast = state === 'completed';
+      const nodeColor = isPast || isActive ? '#10b981' : '#e5e7eb'; // Green for active/done
+      const lineColor = isPast ? '#10b981' : '#e5e7eb';
+      const isLast = index === steps.length - 1;
+
+      html += `
+        <div class="timeline-item ${state}" data-step="${index}">
+            <div class="timeline-left">
+                <div class="timeline-node" style="background-color: ${nodeColor}">
+                    ${isPast || isActive ? step.icon : ''}
                 </div>
-            `;
+                ${!isLast ? `<div class="timeline-line" style="background-color: ${lineColor}"></div>` : ''}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-header" onclick="this.parentElement.classList.toggle('expanded')">
+                    <div class="timeline-title">
+                        <span class="step-name">${step.label}</span>
+                        ${isActive ? '<span class="status-badge current">Current</span>' : ''}
+                        ${logDateDisplay}
+                    </div>
+                    <div class="timeline-toggle">▼</div>
+                </div>
+                <!-- Always expanded by default now, as requested -->
+                <div class="timeline-body expanded">
+                    ${commentContent}
+                </div>
+            </div>
+        </div>
+      `;
+    });
+
+    // ADD TERMINAL STATUS IF REJECTED OR CANCELLED
+    if (isRejected || isCancelled) {
+      const terminalKey = isRejected ? 'rejected' : 'cancelled';
+      const terminalStep = {
+        key: terminalKey,
+        label: isRejected ? 'Rejected' : 'Cancelled',
+        icon: isRejected ? '❌' : '🛑'
+      };
+
+      const terminalData = commentData[terminalKey];
+      const state = 'current'; // Terminal state is the current end point
+
+      let commentContent = '';
+      if (terminalData && terminalData.comment) {
+        const dateStr = terminalData.date ? new Date(terminalData.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        commentContent = `
+          <div class="timeline-log-entry terminal-entry">
+            <div class="log-header">
+              <span class="log-date">${dateStr}</span>
+            </div>
+            <div class="log-message">"${terminalData.comment}"</div>
+          </div>`;
+      }
+
+      html += `
+        <div class="stepper-step terminal status-${terminalKey}">
+          <div class="stepper-node status-${terminalKey}">
+            <span class="stepper-icon">${terminalStep.icon}</span>
+          </div>
+          <div class="stepper-content">
+            <div class="step-label">${terminalStep.label}</div>
+            ${commentContent}
+          </div>
+        </div>`;
     }
-    stepperHTML += "</div>";
-    // Labels row under the stepper, aligned with nodes
-    stepperHTML += '<div class="stepper-labels">';
-    for (let i = 0; i < 5; i++) {
-      const isActive = !isCancelled && i <= currentStep;
-      stepperHTML += `
-                <div class="stepper-label-item ${isActive ? "active" : ""}">${stepLabels[i]
-        }</div>
-            `;
+
+    html += '</div>';
+
+    // Add specific styles for this component dynamically if not present
+    if (!document.getElementById('timeline-styles')) {
+      const style = document.createElement('style');
+      style.id = 'timeline-styles';
+      style.textContent = `
+            .timeline-stepper {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
+            .timeline-item {
+                display: flex;
+                gap: 1rem;
+                position: relative;
+                padding-bottom: 2rem;
+            }
+            .timeline-item:last-child {
+                padding-bottom: 0;
+            }
+            .timeline-left {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-width: 40px;
+            }
+            .timeline-node {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2;
+                color: white;
+                font-size: 0.85rem;
+                transition: all 0.3s ease;
+            }
+            .timeline-line {
+                flex: 1;
+                width: 2px;
+                margin-top: 4px;
+                min-height: 20px;
+            }
+            .timeline-content {
+                flex: 1;
+                background: white;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .timeline-header {
+                padding: 1rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+                background: #f9fafb;
+                transition: background 0.2s;
+            }
+            .timeline-header:hover {
+                background: #f3f4f6;
+            }
+            .timeline-title {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                font-weight: 600;
+                color: #374151;
+            }
+            .status-badge.current {
+                display: inline-block;
+                color: #f59e0b;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .latest-log-date {
+                font-size: 0.75rem;
+                color: #6b7280;
+                font-weight: normal;
+            }
+            .timeline-body {
+                display: none;
+                padding: 1rem;
+                border-top: 1px solid #e5e7eb;
+                background: white;
+            }
+            .timeline-content .expanded .timeline-body {
+                display: block;
+            }
+            /* Default expanded only for current step, handled by class */
+            .timeline-body.expanded {
+                display: block;
+            }
+            .timeline-log-entry {
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #f3f4f6;
+            }
+            .timeline-log-entry:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+            .log-header {
+                display: flex;
+                justify-content: space-between;
+                font-size: 0.75rem;
+                color: #6b7280;
+                margin-bottom: 0.25rem;
+            }
+            .log-user {
+                font-weight: 500;
+            }
+            .log-message {
+                color: #1f2937;
+                font-size: 0.9rem;
+            }
+            .log-notes {
+                margin-top: 0.5rem;
+                padding: 0.5rem;
+                background: #fffbeb;
+                border-left: 2px solid #f59e0b;
+                font-size: 0.85rem;
+                color: #92400e;
+                font-style: italic;
+            }
+            .no-comments {
+                color: #9ca3af;
+                font-style: italic;
+                font-size: 0.9rem;
+                text-align: center;
+                padding: 0.5rem;
+            }
+            .timeline-toggle {
+                color: #9ca3af;
+                transform: rotate(0deg);
+                transition: transform 0.2s;
+            }
+            .expanded .timeline-toggle { // This selector might be tricky with click handler
+                // Actually header click toggles parent class
+            }
+            .timeline-content.expanded .timeline-toggle {
+                 transform: rotate(180deg);
+            }
+        `;
+      document.head.appendChild(style);
     }
-    stepperHTML += "</div>";
-    const displayLabel = isCancelled
-      ? "Cancelled"
-      : stepLabels[currentStep] || "Unknown";
-    stepperHTML += `<div class="stepper-current">Current Status: <strong>${displayLabel}</strong></div>`;
-    timelineContainer.innerHTML = stepperHTML;
+
+    // Inject logic to handle toggling separately
+    // The onclick in the HTML string manages DOM, but CSS needs correct selectors
+    // Let's refine the toggle behavior in the HTML directly or attach listeners
+
+    timelineContainer.innerHTML = html;
+
+    // Re-attach listeners for better control
+    timelineContainer.querySelectorAll('.timeline-header').forEach(header => {
+      header.onclick = (e) => {
+        const content = e.currentTarget.parentElement; // timeline-content
+        // Toggle body
+        const body = content.querySelector('.timeline-body');
+        const toggle = content.querySelector('.timeline-toggle');
+
+        if (body.style.display === 'block' || body.classList.contains('expanded')) {
+          body.style.display = 'none';
+          body.classList.remove('expanded');
+          toggle.style.transform = 'rotate(0deg)';
+        } else {
+          body.style.display = 'block';
+          body.classList.add('expanded');
+          toggle.style.transform = 'rotate(180deg)';
+        }
+      };
+    });
   }
   hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -2166,8 +2434,8 @@ class ComplaintDetails {
         if (wf === "completed" || confirmedByCitizen) return false;
       }
       if (a.action === "remind") {
-        // Hide reminder when already resolved/completed or cancelled
-        if (wf === "completed" || wf === "cancelled") return false;
+        // Hide reminder when already resolved/completed or cancelled/rejected
+        if (wf === "completed" || wf === "resolved" || wf === "cancelled" || wf === "rejected") return false;
       }
       return true;
     });
@@ -2204,9 +2472,6 @@ class ComplaintDetails {
       case "mark-resolved":
         await this.markAsResolved();
         break;
-      case "cancel":
-        await this.cancelComplaint();
-        break;
       case "confirm-resolution":
         await this.confirmResolution();
         break;
@@ -2216,44 +2481,99 @@ class ComplaintDetails {
       case "print-complaint":
         window.print();
         break;
+      case "add-comment":
+        await this.addComment();
+        break;
     }
   }
   async approveComplaint() {
     // Redirect to coordinator review queue with approval action
     window.location.href = `/coordinator/review-queue?action=approve&id=${this.complaintId}`;
   }
+
+  showReasonModal(title, placeholder, confirmLabel, onConfirm) {
+    const existing = document.getElementById('action-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'action-modal';
+    modal.className = 'modal active';
+    modal.style.cssText = "position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);";
+
+    modal.innerHTML = `
+      <div class="modal-content" style="width: 500px; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+        <h2 style="margin-top: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">${title}</h2>
+        <textarea id="modal-input" placeholder="${placeholder}" style="width: 100%; height: 100px; margin: 1rem 0; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+            <button id="modal-confirm" class="btn btn-primary">${confirmLabel}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector('#modal-input');
+    input.focus();
+
+    const close = () => modal.remove();
+
+    modal.querySelector('#modal-cancel').onclick = close;
+    modal.querySelector('#modal-confirm').onclick = async () => {
+      const value = input.value.trim();
+      if (!value) {
+        showToast('Please enter a value', 'warning');
+        return;
+      }
+      const btn = modal.querySelector('#modal-confirm');
+      const originalText = btn.textContent;
+      btn.textContent = 'Processing...';
+      btn.disabled = true;
+
+      try {
+        await onConfirm(value);
+        close();
+      } catch (e) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        console.error(e);
+        showToast(e.message, 'error');
+      }
+    };
+
+    // Close on click outside
+    modal.onclick = (e) => {
+      if (e.target === modal) close();
+    };
+  }
+
   async rejectComplaint() {
-    const reason = prompt("Please provide a reason for rejection:");
-    if (!reason) return;
-    try {
-      const response = await fetch(
-        `/api/coordinator/review-queue/${this.complaintId}/decide`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            decision: "reject",
-            data: { reason },
-          }),
+    this.showReasonModal(
+      'Reject Complaint',
+      'Please provide a reason for rejection...',
+      'Reject Complaint',
+      async (reason) => {
+        const response = await fetch(
+          `/api/coordinator/review-queue/${this.complaintId}/decide`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              decision: "reject",
+              data: { reason },
+            }),
+          }
+        );
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        if (result.success) {
+          showToast("Complaint rejected successfully", "success");
+          this.loadComplaintDetails();
+        } else {
+          throw new Error(result.error || "Failed to reject complaint");
         }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const result = await response.json();
-      if (result.success) {
-        showToast("Complaint rejected successfully", "success");
-        this.loadComplaintDetails(); // Refresh
-      } else {
-        throw new Error(result.error || "Failed to reject complaint");
-      }
-    } catch (error) {
-      console.error("Error rejecting complaint:", error);
-      showToast(`Failed to reject complaint: ${error.message}`, "error");
-    }
+    );
   }
   async assignToOfficer() {
     // This would open a modal or redirect to assignment page
@@ -2291,15 +2611,27 @@ class ComplaintDetails {
       showToast(`Failed to mark as resolved: ${error.message}`, "error");
     }
   }
-  async cancelComplaint() {
-    const reason = prompt("Please provide a reason for cancellation:");
-    if (!reason) return;
-    if (!confirm("Are you sure you want to cancel this complaint?")) {
+  async updateStatus() {
+    // Simple prompt for status - in a real app, use a modal with dropdown
+    // For now, prompt for status and comment
+    const validStatuses = ["verified", "under_review", "action_taken", "resolved", "rejected"];
+    let status = prompt(`Enter new status:\n(${validStatuses.join(", ")})`);
+
+    if (!status) return;
+    status = status.toLowerCase().trim();
+    status = status.replace(' ', '_'); // handle 'under review' -> 'under_review'
+
+    if (!validStatuses.includes(status)) {
+      alert("Invalid status. Please use one of the allowed statuses.");
       return;
     }
+
+    const comment = prompt("Enter a comment/note for this update:");
+    if (!comment) return;
+
     try {
       const response = await fetch(
-        `/api/complaints/${this.complaintId}/cancel`,
+        `/api/lgu/complaints/${this.complaintId}/update-status`,
         {
           method: "POST",
           headers: {
@@ -2307,7 +2639,8 @@ class ComplaintDetails {
           },
           credentials: "include",
           body: JSON.stringify({
-            reason,
+            status: status,
+            comment: comment
           }),
         }
       );
@@ -2316,15 +2649,44 @@ class ComplaintDetails {
       }
       const result = await response.json();
       if (result.success) {
-        showToast("Complaint cancelled successfully", "success");
+        showToast("Status updated successfully", "success");
         this.loadComplaintDetails(); // Refresh
       } else {
-        throw new Error(result.error || "Failed to cancel complaint");
+        throw new Error(result.error || "Failed to update status");
       }
     } catch (error) {
-      console.error("Error cancelling complaint:", error);
-      showToast(`Failed to cancel complaint: ${error.message}`, "error");
+      console.error("Error updating status:", error);
+      showToast(`Failed to update status: ${error.message}`, "error");
     }
+  }
+  async addComment() {
+    this.showReasonModal(
+      'Add Comment / Note',
+      'Enter your comment here...',
+      'Add Comment',
+      async (comment) => {
+        const response = await fetch(
+          `/api/lgu/complaints/${this.complaintId}/update-status`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              // Send current status to just add a note without changing status
+              status: this.complaint.workflow_status,
+              comment: comment
+            }),
+          }
+        );
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        if (result.success) {
+          showToast("Comment added successfully", "success");
+          this.loadComplaintDetails();
+        } else {
+          throw new Error(result.error || "Failed to add comment");
+        }
+      }
+    );
   }
   async confirmResolution() {
     if (!confirm("Are you satisfied with the resolution of this complaint?")) {

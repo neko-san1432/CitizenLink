@@ -197,6 +197,15 @@ CREATE TABLE public.complaints (
   CONSTRAINT complaints_cancelled_by_fkey FOREIGN KEY (cancelled_by) REFERENCES auth.users(id),
   CONSTRAINT complaints_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id)
 );
+CREATE TABLE public.department_subcategory_mapping (
+  department_id bigint NOT NULL,
+  subcategory_id uuid NOT NULL,
+  response_priority integer DEFAULT 1,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT department_subcategory_mapping_pkey PRIMARY KEY (department_id, subcategory_id),
+  CONSTRAINT mapping_department_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id),
+  CONSTRAINT mapping_subcategory_fkey FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id)
+);
 CREATE TABLE public.department_transfers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -297,6 +306,15 @@ CREATE TABLE public.nlp_anchors (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT nlp_anchors_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.nlp_category_config (
+  category text NOT NULL,
+  parent_category text,
+  urgency_rating integer DEFAULT 30 CHECK (urgency_rating >= 0 AND urgency_rating <= 100),
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT nlp_category_config_pkey PRIMARY KEY (category)
+);
 CREATE TABLE public.nlp_dictionary_rules (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   rule_type USER-DEFINED NOT NULL,
@@ -347,6 +365,26 @@ CREATE TABLE public.nlp_metaphors (
   is_emergency boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT nlp_metaphors_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.nlp_pending_reviews (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  complaint_id uuid,
+  text text NOT NULL,
+  detected_category text,
+  detected_subcategory text,
+  confidence numeric,
+  method text,
+  matched_term text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'resolved'::text, 'dismissed'::text])),
+  trained_keyword text,
+  trained_category text,
+  trained_subcategory text,
+  resolved_at timestamp with time zone,
+  resolved_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT nlp_pending_reviews_pkey PRIMARY KEY (id),
+  CONSTRAINT nlp_pending_reviews_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
+  CONSTRAINT nlp_pending_reviews_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.nlp_proposals (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

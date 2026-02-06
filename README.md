@@ -607,6 +607,8 @@ LGU administrators use insights to:
 
 ## 👨‍💻 Development Team
 
+> **Note**: For a chronological history of changes and implementations, see [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
+
 DRIMS 2.0 was developed by:
 
 **Pyrrhus Go** - _Backend Developer_

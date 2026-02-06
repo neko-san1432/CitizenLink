@@ -808,7 +808,9 @@
      */
     let tfReady = false;
     let useModel = null;
-    let anchorEmbeddings = null;
+    let anchorEmbeddings = null; // Legacy raw data (for debugging)
+    let anchorMatrix = null;     // Tensor [C, 512] for fast GPU inference
+    let anchorCategories = [];   // Array of strings mapping rows to categories
     let aiLoadingPromise = null;
     let aiLoadError = null;
 
@@ -933,6 +935,12 @@
                     console.log('[NLP-AI] ✅ TensorFlow.js loaded from CDN');
                 }
 
+                // Ensure TF backend is ready before proceeding
+                if (typeof tf !== 'undefined') {
+                    await tf.ready();
+                    console.log(`[NLP-AI] Backend ready: ${tf.getBackend()}`);
+                }
+
                 // Enable IndexedDB storage backend for TensorFlow.js model caching
                 if (tf && tf.io && tf.io.browserFiles) {
                     console.log('[NLP-AI] 📦 TensorFlow.js will use IndexedDB for model caching');
@@ -969,6 +977,48 @@
                     // Cache for future use
                     await saveToCache(ANCHOR_CACHE_KEY, anchorEmbeddings);
                     console.log('[NLP-AI] 💾 Anchor embeddings saved to IndexedDB for future sessions');
+                }
+
+                // v4.4: OPTIMIZATION - HYDRATE GPU TENSORS
+                // Convert raw arrays to a single 2D Tensor for vectorized GPU matrix math
+                if (anchorEmbeddings) {
+
+                    // Re-doing cleanly:
+                    const vectors = [];
+                    const categories = [];
+                    for (const [cat, data] of Object.entries(anchorEmbeddings)) {
+                        vectors.push(data.meanVector);
+                        categories.push(cat);
+                    }
+
+                    if (vectors.length > 0) {
+                        try {
+                            if (anchorMatrix) anchorMatrix.dispose();
+                            anchorMatrix = tf.tensor2d(vectors); // [C, 512]
+                            anchorCategories = categories;
+                            console.log(`[NLP-AI] ⚡ GPU Tensor Hydrated: [${vectors.length}, 512]`);
+                        } catch (e) {
+                            console.error('[NLP-AI] Failed to create GPU tensor:', e);
+                        }
+                    }
+                }
+
+                // v4.4: OPTIMIZATION - SHADER WARMUP
+                // Run a dummy inference to force shader compilation now, not on first click
+                try {
+                    const warmupStart = performance.now();
+                    // useModel.embed is async, tidy won't catch the promise result
+                    // but we do it properly below with await.
+
+                    // Real async warmup
+                    const dummyTensor = await useModel.embed(['warmup_shader_compilation']);
+                    if (dummyTensor && typeof dummyTensor.dispose === 'function') {
+                        dummyTensor.dispose();
+                    }
+
+                    console.log(`[NLP-AI] 🔥 Shader Warmup complete in ${(performance.now() - warmupStart).toFixed(0)}ms`);
+                } catch (e) {
+                    console.warn('[NLP-AI] Warmup failed (non-fatal):', e);
                 }
 
                 tfReady = true;
@@ -1084,59 +1134,68 @@
      * @returns {Object|null} { category, confidence, similarity } or null if AI unavailable
      */
     async function classifyWithAI(text) {
-        if (!tfReady || !useModel || !anchorEmbeddings) {
-            console.log('[NLP-AI] ⚠️ AI not ready, skipping fallback');
+        if (!tfReady || !useModel || !anchorMatrix) {
+            console.log('[NLP-AI] ⚠️ AI not ready (or anchors not computed), skipping fallback');
             return null;
         }
 
         try {
             const startTime = performance.now();
 
-            // Encode the input text
+            // 1. Get Input Embedding [1, 512]
             const inputEmbedding = await useModel.embed([text]);
-            const inputVector = (await inputEmbedding.array())[0];
+
+            // 2. Perform Matrix Multiplication
+            // Scores = Anchors [C, 512] x Input^T [512, 1] -> [C, 1]
+            const { bestIdx, bestScore, allScores } = tf.tidy(() => {
+                const input = inputEmbedding.reshape([512]);
+                const normalizedInput = input.div(input.norm()); // Normalize input
+
+                // Dot product (Cosine Similarity since both are normalized)
+                // anchorMatrix is [C, 512]
+                // expandDims(1) makes input [512, 1]
+                // Result is [C, 1]
+                const scoresTensor = anchorMatrix.matMul(normalizedInput.expandDims(1)).flatten(); // [C]
+
+                return {
+                    bestIdx: scoresTensor.argMax().arraySync(), // Scalar (index)
+                    bestScore: scoresTensor.max().arraySync(),  // Scalar (score)
+                    allScores: scoresTensor.arraySync()         // Array [C]
+                };
+            });
+
             inputEmbedding.dispose();
 
-            // Calculate similarity with each category
+            // 3. Map result back to category
+            const bestCategory = anchorCategories[bestIdx];
+
+            // Format scores object for logging/debugging
             const similarities = {};
-            let bestCategory = 'Others';
-            let bestSimilarity = 0;
-
-            for (const [category, data] of Object.entries(anchorEmbeddings)) {
-                // Compare against mean vector for speed
-                const similarity = cosineSimilarity(inputVector, data.meanVector);
-                similarities[category] = similarity;
-
-                if (similarity > bestSimilarity) {
-                    bestSimilarity = similarity;
-                    bestCategory = category;
-                }
-            }
+            anchorCategories.forEach((cat, idx) => {
+                similarities[cat] = allScores[idx];
+            });
 
             const processingTime = performance.now() - startTime;
 
-            console.log(`[NLP-AI] 🧠 AI classification in ${processingTime.toFixed(2)}ms:`, {
-                input: text.substring(0, 40) + '...',
-                bestCategory,
-                similarity: bestSimilarity.toFixed(3),
-                allSimilarities: Object.fromEntries(
-                    Object.entries(similarities)
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 3)
-                        .map(([k, v]) => [k, v.toFixed(3)])
-                )
-            });
+            if (debugModeEnabled) {
+                console.log(`[NLP-AI] ⚡ GPU classification in ${processingTime.toFixed(2)}ms:`, {
+                    input: text.substring(0, 40) + '...',
+                    bestCategory,
+                    similarity: bestScore.toFixed(3)
+                });
+            }
 
             return {
                 category: bestCategory,
-                similarity: bestSimilarity,
-                confidence: bestSimilarity,
+                similarity: bestScore,
+                confidence: bestScore,
                 allSimilarities: similarities,
                 processingTimeMs: processingTime
             };
 
         } catch (error) {
-            console.error('[NLP-AI] ❌ Classification error:', error);
+            console.error('[NLP-AI] ❌ GPU Classification error:', error);
+            // Fallback (rare) would go here if needed, but usually error means TF is broken
             return null;
         }
     }

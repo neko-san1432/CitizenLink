@@ -1,5 +1,6 @@
 const ComplaintRepository = require("../repositories/ComplaintRepository");
 const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignmentRepository");
+const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
 const DepartmentRepository = require("../repositories/DepartmentRepository");
 const Complaint = require("../models/Complaint");
 const NotificationService = require("./NotificationService");
@@ -8,6 +9,7 @@ const {
   prepareComplaintForInsert,
   validateComplaintConsistency,
   _getAssignmentProgress,
+  getTimelineStepKey,
 } = require("../utils/complaintUtils");
 const { isPotentialDuplicate } = require("../utils/similarityUtils");
 
@@ -20,12 +22,14 @@ class ComplaintService {
     complaintRepo,
     assignmentRepo,
     departmentRepo,
-    notificationService
+    notificationService,
+    historyRepo
   ) {
     this.complaintRepo = complaintRepo || new ComplaintRepository();
     this.assignmentRepo = assignmentRepo || new ComplaintAssignmentRepository();
     this.departmentRepo = departmentRepo || new DepartmentRepository();
     this.notificationService = notificationService || new NotificationService();
+    this.historyRepo = historyRepo || new ComplaintHistoryRepository();
   }
   async createComplaint(userId, complaintData, files = [], token = null) {
     // Debug: Log received complaint data
@@ -177,6 +181,7 @@ class ComplaintService {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const sanitizedData = complaint.sanitizeForInsert();
+    console.log("[DEBUG] Complaint Insert Payload Keys:", Object.keys(sanitizedData));
     const createdComplaint = await this.complaintRepo.create(
       sanitizedData,
       token
@@ -233,7 +238,7 @@ class ComplaintService {
     if (departmentArray.length > 0) {
       try {
         await this.complaintRepo.update(complaint.id, {
-          workflow_status: "new",
+          workflow_status: "submitted",
           updated_at: new Date().toISOString(),
         });
 
@@ -769,20 +774,16 @@ class ComplaintService {
                 `${combined.first_name || ""} ${combined.last_name || ""
                   }`.trim() ||
                 user.email,
-              firstName: combined.first_name,
-              lastName: combined.last_name,
-              mobileNumber:
+              first_name: combined.first_name,
+              last_name: combined.last_name,
+              mobile_number:
                 rawMeta.mobile_number ||
-                meta.mobile_number ||
                 combined.mobile_number ||
-                null,
-              mobile:
-                rawMeta.mobile_number ||
-                meta.mobile_number ||
-                combined.mobile_number ||
-                null,
-              raw_user_meta_data: rawMeta,
+                user.phone ||
+                "N/A",
             };
+            // Alias for frontend compatibility (Coordinator Review expects complaint.user)
+            complaint.user = complaint.submitted_by_profile;
           }
         } catch (error) {
           console.error(
@@ -939,10 +940,17 @@ class ComplaintService {
     if (workflowStatus) {
       const validStatuses = [
         "new",
+        "submitted",
+        "verified",
         "assigned",
+        "under_review",
         "in_progress",
+        "action_taken",
         "completed",
+        "resolved",
+        "closed",
         "cancelled",
+        "rejected"
       ];
       if (!validStatuses.includes(workflowStatus)) {
         throw new Error("Invalid workflow status");
@@ -954,6 +962,18 @@ class ComplaintService {
     if (category) dataToUpdate.category = category;
     if (subcategory) dataToUpdate.subcategory = subcategory;
     if (notes) dataToUpdate.coordinator_notes = notes;
+
+    // [TIMELINE] Update comment JSON field for frontend timeline display
+    const currentComment = complaint.comment || {};
+    const stepKey = getTimelineStepKey(workflowStatus || complaint.workflow_status);
+    if (stepKey && notes) {
+      currentComment[stepKey] = {
+        date: new Date().toISOString(),
+        comment: notes,
+        user_id: userId
+      };
+      dataToUpdate.comment = currentComment;
+    }
 
     const updatedComplaint = await this.complaintRepo.update(id, dataToUpdate);
 
@@ -972,6 +992,21 @@ class ComplaintService {
       console.warn("[AUDIT] Status update logging failed:", error.message);
     }
 
+    // [HISTORY] Persist comment/note if provided or status changed
+    if (notes || (workflowStatus && workflowStatus !== complaint.workflow_status)) {
+      try {
+        const action = workflowStatus ? `status_change_to_${workflowStatus}` : 'update_notes';
+        await this.historyRepo.addEntry(
+          id,
+          action,
+          userId,
+          notes || `Status changed from ${complaint.workflow_status} to ${workflowStatus}`
+        );
+      } catch (histError) {
+        console.warn("[HISTORY] Failed to add history entry:", histError.message);
+      }
+    }
+
     // Send notification to citizen if status changed
     if (workflowStatus && complaint.workflow_status !== workflowStatus) {
       try {
@@ -985,6 +1020,21 @@ class ComplaintService {
       } catch (notifError) {
         console.warn(
           "[COMPLAINT] Failed to send status change notification:",
+          notifError.message
+        );
+      }
+    } else if (notes) {
+      // If only notes were added but status didn't change, still notify
+      try {
+        await this.notificationService.notifyComplaintUpdate(
+          complaint.submitted_by,
+          id,
+          complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+          notes
+        );
+      } catch (notifError) {
+        console.warn(
+          "[COMPLAINT] Failed to send update notification:",
           notifError.message
         );
       }
@@ -1190,10 +1240,9 @@ class ComplaintService {
         }
       } else if (!includeResolved) {
         // No status filter - check if we should exclude resolved
-        // Exclude completed and cancelled complaints
+        // Exclude resolved complaints
         query = query
-          .neq("workflow_status", "completed")
-          .neq("workflow_status", "cancelled");
+          .neq("workflow_status", "resolved");
       }
 
       // Filter by confirmation_status (supports array for multiple values)
@@ -1263,8 +1312,7 @@ class ComplaintService {
         }
       } else if (!includeResolved) {
         countQuery = countQuery
-          .neq("workflow_status", "completed")
-          .neq("workflow_status", "cancelled");
+          .neq("workflow_status", "resolved");
       }
 
       if (confirmationStatus) {
@@ -1556,131 +1604,7 @@ class ComplaintService {
       throw error;
     }
   }
-  /**
-   * Cancel complaint
-   */
-  async cancelComplaint(complaintId, userId, reason) {
-    try {
-      // Get complaint and verify ownership
-      const complaint = await this.complaintRepo.findById(complaintId);
-      if (!complaint) {
-        throw new Error("Complaint not found");
-      }
-      if (complaint.submitted_by !== userId) {
-        throw new Error("Not authorized to cancel this complaint");
-      }
-      // Check if complaint can be cancelled
-      const cancellableStatuses = ["new", "assigned", "in_progress"];
-      if (!cancellableStatuses.includes(complaint.workflow_status)) {
-        throw new Error("Complaint cannot be cancelled in its current status");
-      }
-      // Use Service Role client to bypass RLS recursion during update
-      const { createClient } = require("@supabase/supabase-js");
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const adminClient = createClient(supabaseUrl, serviceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      });
-
-      // Update complaint status
-      const { data: updatedComplaint, error: updateError } =
-        await adminClient
-          .from("complaints")
-          .update({
-            workflow_status: "cancelled",
-            cancelled_at: new Date().toISOString(),
-            cancelled_by: userId,
-            cancellation_reason: reason,
-            last_activity_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", complaintId)
-          .select()
-          .single();
-      if (updateError) {
-        console.error(
-          "[COMPLAINT-SERVICE] Cancel complaint update error:",
-          updateError
-        );
-        throw new Error(
-          `Failed to cancel complaint: ${updateError.message || "Database error"
-          }`
-        );
-      }
-      if (!updatedComplaint) {
-        throw new Error("Complaint not found or could not be updated");
-      }
-      // Notify relevant parties
-      try {
-        // Notify coordinator if assigned
-        if (complaint.assigned_coordinator_id) {
-          await this.notificationService.createNotification(
-            complaint.assigned_coordinator_id,
-            "complaint_cancelled",
-            "Complaint Cancelled",
-            `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Cancelled complaint'}" has been cancelled by the citizen.`,
-            {
-              priority: "info",
-              link: `/coordinator/review-queue`,
-              metadata: { complaint_id: complaintId, reason },
-            }
-          );
-        }
-        // Notify assigned departments
-        const departments = complaint.department_r || [];
-        for (const deptCode of departments) {
-          try {
-            const { data: dept } = await this.complaintRepo.supabase
-              .from("departments")
-              .select("id")
-              .eq("code", deptCode)
-              .single();
-            if (dept) {
-              // Get department admins and notify them
-              const { data: assignments } = await this.complaintRepo.supabase
-                .from("complaint_assignments")
-                .select("assigned_by")
-                .eq("complaint_id", complaintId)
-                .eq("department_id", dept.id);
-              for (const assignment of assignments || []) {
-                if (assignment.assigned_by) {
-                  await this.notificationService.createNotification(
-                    assignment.assigned_by,
-                    "complaint_cancelled",
-                    "Complaint Cancelled",
-                    `Complaint "${complaint.descriptive_su?.slice(0, 100) || 'Cancelled complaint'}" has been cancelled by the citizen.`,
-                    {
-                      priority: "info",
-                      link: `/lgu-admin/department-queue`,
-                      metadata: { complaint_id: complaintId, reason },
-                    }
-                  );
-                }
-              }
-            }
-          } catch (deptError) {
-            console.warn(
-              "[COMPLAINT-SERVICE] Failed to notify department:",
-              deptError.message
-            );
-          }
-        }
-      } catch (notifError) {
-        console.warn(
-          "[COMPLAINT-SERVICE] Failed to send cancellation notifications:",
-          notifError.message
-        );
-      }
-      return updatedComplaint;
-    } catch (error) {
-      console.error("[COMPLAINT-SERVICE] Cancel complaint error:", error);
-      throw error;
-    }
-  }
   /**
    * Send reminder for complaint
    */
@@ -1694,12 +1618,30 @@ class ComplaintService {
       if (complaint.submitted_by !== userId) {
         throw new Error("Not authorized to send reminder for this complaint");
       }
-      // Check if reminder can be sent (not cancelled, closed, resolved, or pending)
-      const reminderBlockedStatuses = ["cancelled", "completed", "pending"];
+      // 0. Verify Status Availability
+      // Cannot send reminder if complaint is effectively closed or new execution phase waiting
+      // The 4 statuses: Submitted -> Verified -> Action Taken -> Resolved
+      // Reminders allowed in: Submitted, Verified, Action Taken (if stalled)
+      // Blocked in: Rejected, Completed/Resolved, Cancelled
+      const reminderBlockedStatuses = ["rejected", "resolved", "completed", "cancelled", "closed"];
       if (reminderBlockedStatuses.includes(complaint.workflow_status)) {
         throw new Error("Cannot send reminder for complaint in current status");
       }
-      // Check cooldown period (24 hours)
+
+      // 1. Check COMPLAINT INACTIVITY (Lack of Movement)
+      // Must have NO updates for 48 hours
+      const lastActivityTime = new Date(complaint.updated_at || complaint.submitted_at);
+      const now = new Date();
+      const hoursSinceLastActivity = (now - lastActivityTime) / (1000 * 60 * 60);
+
+      // Threshold: 48 Hours
+      if (hoursSinceLastActivity < 48) {
+        const remainingHoursActivity = Math.ceil(48 - hoursSinceLastActivity);
+        throw new Error(`System shows recent activity. Please wait ${remainingHoursActivity} hours before sending a reminder.`);
+      }
+
+      // 2. Check REMINDER COOLDOWN
+      // Must wait 48 hours between reminders
       const { data: lastReminderData, error: reminderQueryError } =
         await this.complaintRepo.supabase
           .from("complaint_reminders")
@@ -1719,12 +1661,11 @@ class ComplaintService {
           : null;
       if (lastReminder) {
         const lastReminderTime = new Date(lastReminder.reminded_at);
-        const now = new Date();
         const hoursSinceLastReminder =
           (now - lastReminderTime) / (1000 * 60 * 60);
 
-        if (hoursSinceLastReminder < 24) {
-          const remainingHours = Math.ceil(24 - hoursSinceLastReminder);
+        if (hoursSinceLastReminder < 48) {
+          const remainingHours = Math.ceil(48 - hoursSinceLastReminder);
           throw new Error(
             `Please wait ${remainingHours} more hours before sending another reminder`
           );
@@ -2119,12 +2060,21 @@ class ComplaintService {
    * @param {string} reason - Reason for marking as false
    * @returns {Promise<Object>} Result
    */
-  async markAsFalseComplaint(complaintId, userId, reason) {
+  async markAsFalseComplaint(complaintId, userId, reason, notes) {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
         throw new Error("Complaint not found");
       }
+
+      // [TIMELINE] Update comment JSON for rejection phase
+      const currentComment = complaint.comment || {};
+      currentComment["rejected"] = {
+        date: new Date().toISOString(),
+        comment: notes || reason,
+        user_id: userId,
+        is_false: true
+      };
 
       const { data: updatedComplaint, error: updateError } =
         await this.complaintRepo.supabase
@@ -2132,7 +2082,9 @@ class ComplaintService {
           .update({
             is_false_complaint: true,
             false_complaint_reason: reason,
+            false_complaint_notes: notes,
             workflow_status: "rejected",
+            comment: currentComment,
             marked_false_by: userId,
             false_complaint_marked_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -2227,6 +2179,9 @@ class ComplaintService {
         error: error.message,
       };
     }
+  }
+  async getComplaintHistory(complaintId) {
+    return this.historyRepo.list(complaintId);
   }
 }
 

@@ -3,6 +3,7 @@ const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignme
 const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
 const NotificationService = require("./NotificationService");
 const Database = require("../config/database");
+const { getTimelineStepKey } = require("../utils/complaintUtils");
 
 /**
  * LGU Officer Service
@@ -322,10 +323,20 @@ class LguOfficerService {
       throw new Error("Resolution notes are required");
     }
 
+    // [TIMELINE] Update comment JSON for resolution phase
+    const complaint = await this.complaintRepo.findById(complaintId);
+    const currentComment = complaint.comment || {};
+    currentComment["resolved"] = {
+      date: new Date().toISOString(),
+      comment: resolutionNotes,
+      user_id: officerId
+    };
+
     // Update complaint status
     const updatedComplaint = await this.complaintRepo.update(complaintId, {
       status: "resolved by officer",
-      workflow_status: "pending_approval",
+      workflow_status: "action_taken", // Matches steps: action_taken
+      comment: currentComment,
       resolution_notes: resolutionNotes,
       resolved_by: officerId,
       resolved_at: new Date().toISOString(),
@@ -447,6 +458,55 @@ class LguOfficerService {
   async getUpdates(officerId, _limit = 10) {
     // Placeholder - department updates will be implemented later
     return [];
+  }
+
+  /**
+   * Update complaint status and add comment
+   */
+  async updateComplaintStatus(complaintId, officerId, status, comment) {
+    // 1. Prepare data
+    const updateData = {
+      date: new Date().toISOString(),
+      comment: comment
+    };
+
+    // 2. [TIMELINE] Map status to timeline step key
+    const stepKey = getTimelineStepKey(status) || status;
+
+    // 3. Update via Repo
+    const updatedComplaint = await this.complaintRepo.updateStatusAndComment(
+      complaintId,
+      stepKey, // Use stepKey as the mapping key
+      updateData,
+      status // Pass raw status to update workflow_status
+    );
+
+    // 3. Create Notification
+    // Notify citizen if relevant
+    if (updatedComplaint.submitted_by) {
+      try {
+        if (comment) {
+          await this.notificationService.notifyComplaintUpdate(
+            updatedComplaint.submitted_by,
+            complaintId,
+            updatedComplaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+            comment
+          );
+        } else {
+          await this.notificationService.notifyComplaintStatusChanged(
+            updatedComplaint.submitted_by,
+            complaintId,
+            updatedComplaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+            status,
+            'previous' // Placeholder if old status not easily available here
+          );
+        }
+      } catch (err) {
+        console.warn("Failed to notify citizen:", err);
+      }
+    }
+
+    return updatedComplaint;
   }
 
   // Helper methods

@@ -75,12 +75,11 @@ function getSecondaryDepartments(departmentR) {
 function getStatusFromWorkflow(workflowStatus) {
   // Use Map to prevent object injection vulnerabilities
   const statusMap = new Map([
-    ["new", "pending review"],
-    ["assigned", "in progress"],
-    ["in_progress", "in progress"],
-    ["pending_approval", "in progress"],
-    ["completed", "resolved"],
-    ["cancelled", "rejected"]
+    ["submitted", "submitted"],
+    ["verified", "verified"],
+    ["under_review", "under review"],
+    ["action_taken", "action taken"],
+    ["resolved", "resolved"]
   ]);
   // Safe lookup with Map
   if (workflowStatus && typeof workflowStatus === "string") {
@@ -99,21 +98,18 @@ function getWorkflowFromStatus(status) {
   const statusLower = status.toLowerCase();
 
   // If it's already a workflow status, return it as-is
-  const validWorkflowStatuses = ["new", "assigned", "in_progress", "pending_approval", "completed", "cancelled"];
-  if (validWorkflowStatuses.includes(statusLower)) {
-    return statusLower;
-  }
-
-  // Map legacy status values to workflow_status
+  /* Create a case-insensitive map for robustness */
   const workflowMap = {
-    "pending review": "new",
-    "pending": "new",
-    "in progress": "in_progress",
-    "resolved": "completed",
-    "completed": "completed", // Also handle "completed" as a legacy status
-    "rejected": "cancelled",
-    "closed": "cancelled",
-    "cancelled": "cancelled"
+    "submitted": "submitted",
+    "pending": "submitted", // Legacy
+    "new": "submitted", // Legacy
+    "verified": "verified",
+    "under review": "under_review",
+    "under_review": "under_review",
+    "action taken": "action_taken",
+    "action_taken": "action_taken",
+    "resolved": "resolved",
+    "completed": "resolved" // Legacy
   };
 
   // Check if it's a confirmation status - these don't map to workflow_status directly
@@ -244,7 +240,7 @@ function getComplaintStatistics(complaints) {
   complaints.forEach(complaint => {
     const normalized = normalizeComplaintData(complaint);
     // Count by status - validate input to prevent injection
-    const {status} = normalized;
+    const { status } = normalized;
     if (status && typeof status === "string" && status.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
@@ -256,7 +252,7 @@ function getComplaintStatistics(complaints) {
       stats.byWorkflowStatus[workflowStatus] = (stats.byWorkflowStatus[workflowStatus] || 0) + 1;
     }
     // Count by priority
-    const {priority} = complaint;
+    const { priority } = complaint;
     if (priority && typeof priority === "string" && priority.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
       stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
@@ -338,6 +334,26 @@ function validateComplaintConsistency(complaint) {
   };
 }
 
+/**
+ * Get the timeline step key for a given workflow status
+ * @param {string} workflowStatus
+ * @returns {string|null}
+ */
+function getTimelineStepKey(workflowStatus) {
+  if (!workflowStatus) return null;
+  const ws = workflowStatus.toLowerCase();
+
+  if (["new", "submitted", "pending"].includes(ws)) return "submitted";
+  if (["assigned", "verified", "under_review"].includes(ws)) return "verified";
+  if (["pending_approval", "action_taken", "in_progress"].includes(ws))
+    return "action_taken";
+  if (["resolved", "completed", "closed"].includes(ws)) return "resolved";
+  if (ws === "rejected") return "rejected";
+  if (ws === "cancelled") return "cancelled";
+
+  return null;
+}
+
 module.exports = {
   getPrimaryDepartment,
   getSecondaryDepartments,
@@ -347,5 +363,6 @@ module.exports = {
   prepareComplaintForInsert,
   getComplaintStatistics,
   validateComplaintConsistency,
-  getAssignmentProgress
+  getAssignmentProgress,
+  getTimelineStepKey,
 };

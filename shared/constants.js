@@ -23,7 +23,8 @@ const NOTIFICATION_TYPES = {
   // Workflow notifications
   WORKFLOW_STEP_COMPLETED: "workflow_step_completed",
   LGU_WORK_COMPLETED: "lgu_work_completed",
-  RESOLUTION_REVIEW_NEEDED: "resolution_review_needed"
+  RESOLUTION_REVIEW_NEEDED: "resolution_review_needed",
+  COMPLAINT_UPDATE: "complaint_update"
 };
 const NOTIFICATION_PRIORITY = {
   INFO: "info",
@@ -48,7 +49,8 @@ const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.PENDING_TASK_REMINDER]: "⏳",
   [NOTIFICATION_TYPES.WORKFLOW_STEP_COMPLETED]: "➡️",
   [NOTIFICATION_TYPES.LGU_WORK_COMPLETED]: "🏗️",
-  [NOTIFICATION_TYPES.RESOLUTION_REVIEW_NEEDED]: "👁️"
+  [NOTIFICATION_TYPES.RESOLUTION_REVIEW_NEEDED]: "👁️",
+  [NOTIFICATION_TYPES.COMPLAINT_UPDATE]: "💬"
 };
 
 module.exports = {

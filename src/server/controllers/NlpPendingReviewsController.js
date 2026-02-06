@@ -26,10 +26,10 @@ class NlpPendingReviewsController {
         try {
             const limit = parseInt(req.query.limit) || 50;
             const reviews = await AdvancedDecisionEngine.getPendingReviews(limit);
-            res.json({ 
-                success: true, 
+            res.json({
+                success: true,
                 count: reviews.length,
-                data: reviews 
+                data: reviews
             });
         } catch (error) {
             console.error("[NLP-HITL] Error getting reviews:", error);
@@ -62,8 +62,8 @@ class NlpPendingReviewsController {
             );
 
             if (result.success) {
-                res.json({ 
-                    success: true, 
+                res.json({
+                    success: true,
                     message: `Trained "${keyword}" as ${category}${subcategory ? '/' + subcategory : ''}`,
                     autoResolved: result.autoResolved || 0
                 });
@@ -102,34 +102,33 @@ class NlpPendingReviewsController {
      */
     async batchQueue(req, res) {
         try {
-            console.log('[NLP-HITL] batchQueue endpoint called');
-            console.log('[NLP-HITL] Full req.body:', JSON.stringify(req.body).substring(0, 500));
-            
+            AdvancedDecisionEngine.logHITL('batchQueue endpoint called');
+
             let { items } = req.body;
 
-            console.log(`[NLP-HITL] items type: ${typeof items}, isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
-            
+            AdvancedDecisionEngine.logHITL(`items type: ${typeof items}, isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
+
             // Handle case where items is a string (double-stringified JSON)
             if (typeof items === 'string') {
                 try {
                     items = JSON.parse(items);
-                    console.log(`[NLP-HITL] Parsed string items, now isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
+                    AdvancedDecisionEngine.logHITL(`Parsed string items, now isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
                 } catch (parseErr) {
                     console.error('[NLP-HITL] Failed to parse items string:', parseErr.message);
                 }
             }
 
             if (!Array.isArray(items) || items.length === 0) {
-                console.log('[NLP-HITL] Empty or invalid items array');
+                AdvancedDecisionEngine.logHITL('Empty or invalid items array');
                 return res.json({ success: true, queued: 0, skipped: 0 });
             }
-            
-            console.log('[NLP-HITL] First item sample:', JSON.stringify(items[0], null, 2));
+
+            AdvancedDecisionEngine.logHITL('First item sample:', JSON.stringify(items[0], null, 2));
 
             const result = await AdvancedDecisionEngine.batchQueueForReview(items);
-            console.log(`[NLP-HITL] batchQueueForReview result:`, result);
-            res.json({ 
-                success: true, 
+            AdvancedDecisionEngine.logHITL(`batchQueueForReview result:`, result);
+            res.json({
+                success: true,
                 queued: result.queued,
                 skipped: result.skipped,
                 errors: result.errors

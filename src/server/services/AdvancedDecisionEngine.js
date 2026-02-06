@@ -1,5 +1,6 @@
 const Database = require('../config/database');
 const TensorFlowService = require('./TensorFlowService');
+const Logger = require('../utils/Logger');
 
 /**
  * AdvancedDecisionEngine
@@ -20,6 +21,13 @@ class AdvancedDecisionEngine {
         // HITL Configuration
         this.CONFIDENCE_THRESHOLD = 0.7;  // Below this, add to pending reviews
         this.enableAutoQueue = true;      // Set false to disable HITL queueing
+    }
+
+    /**
+     * Helper to log to file and optionally console
+     */
+    logHITL(message, data = null) {
+        Logger.log('NLP-HITL', message, data);
     }
 
     /**
@@ -146,7 +154,7 @@ class AdvancedDecisionEngine {
         for (const meta of this.metaphors) {
             const regex = new RegExp(meta.pattern, 'i');
             if (regex.test(normalizedText)) {
-                console.log(`[NLP] Metaphor detected: "${meta.pattern}" -> Ignoring figurative language`);
+                this.logHITL(`Metaphor detected: "${meta.pattern}" -> Ignoring figurative language`);
                 return {
                     category: 'Others',
                     subcategory: 'Metaphor Filtered',
@@ -255,7 +263,7 @@ class AdvancedDecisionEngine {
                 .limit(1);
 
             if (existing && existing.length > 0) {
-                console.log('[NLP-HITL] Duplicate pending review, skipping');
+                this.logHITL('Duplicate pending review, skipping');
                 return;
             }
 
@@ -280,7 +288,7 @@ class AdvancedDecisionEngine {
                     console.warn('[NLP-HITL] Failed to queue for review:', error.message);
                 }
             } else {
-                console.log(`[NLP-HITL] ✅ Queued for review: "${text.substring(0, 50)}..." (confidence: ${(result.confidence * 100).toFixed(0)}%)`);
+                this.logHITL(`✅ Queued for review: "${text.substring(0, 50)}..." (confidence: ${(result.confidence * 100).toFixed(0)}%)`);
             }
         } catch (err) {
             console.warn('[NLP-HITL] Error adding to queue:', err.message);
@@ -298,15 +306,15 @@ class AdvancedDecisionEngine {
         const errors = [];
 
         if (!Array.isArray(items) || items.length === 0) {
-            console.log('[NLP-HITL] Batch queue called with empty array');
+            this.logHITL('Batch queue called with empty array');
             return { queued: 0, skipped: 0, errors: [] };
         }
 
-        console.log(`[NLP-HITL] Batch queue received ${items.length} items`);
+        this.logHITL(`Batch queue received ${items.length} items`);
 
         // Log first item for debugging
         if (items[0]) {
-            console.log('[NLP-HITL] First item sample:', JSON.stringify(items[0], null, 2));
+            this.logHITL('First item sample:', JSON.stringify(items[0], null, 2));
         }
 
         try {
@@ -314,12 +322,12 @@ class AdvancedDecisionEngine {
             const complaintIds = items.map(i => i.complaint_id).filter(Boolean);
 
             if (complaintIds.length === 0) {
-                console.log('[NLP-HITL] No valid complaint IDs found in items');
-                console.log('[NLP-HITL] Item IDs received:', items.map(i => i.complaint_id));
+                this.logHITL('No valid complaint IDs found in items');
+                this.logHITL('Item IDs received:', items.map(i => i.complaint_id));
                 return { queued: 0, skipped: items.length, errors: ['No valid complaint IDs'] };
             }
 
-            console.log(`[NLP-HITL] Valid complaint IDs: ${complaintIds.length}`);
+            this.logHITL(`Valid complaint IDs: ${complaintIds.length}`);
 
             const { data: existing, error: selectError } = await this.supabase
                 .from('nlp_pending_reviews')
@@ -331,17 +339,17 @@ class AdvancedDecisionEngine {
             }
 
             const existingIds = new Set((existing || []).map(e => e.complaint_id));
-            console.log(`[NLP-HITL] Already in database (any status): ${existingIds.size}`);
+            this.logHITL(`Already in database (any status): ${existingIds.size}`);
 
             // Get all existing keyword terms to check if text already has a trained term
             const allKeywordTerms = this.keywords.map(kw => kw.term?.toLowerCase()).filter(Boolean);
-            console.log(`[NLP-HITL] Known keywords in cache: ${allKeywordTerms.length}`);
+            this.logHITL(`Known keywords in cache: ${allKeywordTerms.length}`);
 
             // Filter out duplicates and items with already-trained keywords
             const toInsert = items.filter(item => {
                 if (!item.complaint_id || !item.text) {
                     invalid++;
-                    console.log(`[NLP-HITL] Invalid item - missing complaint_id or text:`, {
+                    this.logHITL(`Invalid item - missing complaint_id or text:`, {
                         complaint_id: item.complaint_id,
                         hasText: !!item.text
                     });
@@ -358,7 +366,7 @@ class AdvancedDecisionEngine {
                 const hasKnownKeyword = allKeywordTerms.some(kw => textLower.includes(kw));
                 if (hasKnownKeyword && item.detected_category !== 'Others') {
                     skipped++;
-                    console.log(`[NLP-HITL] Skipped (has known keyword, not Others): ${item.complaint_id?.substring(0, 8)}`);
+                    this.logHITL(`Skipped (has known keyword, not Others): ${item.complaint_id?.substring(0, 8)}`);
                     return false;
                 }
 
@@ -374,10 +382,10 @@ class AdvancedDecisionEngine {
                 status: 'pending'
             }));
 
-            console.log(`[NLP-HITL] Filtered to ${toInsert.length} items to insert (${skipped} duplicates)`);
+            this.logHITL(`Filtered to ${toInsert.length} items to insert (${skipped} duplicates)`);
 
             if (toInsert.length > 0) {
-                console.log('[NLP-HITL] Inserting first item sample:', JSON.stringify(toInsert[0], null, 2));
+                this.logHITL('Inserting first item sample:', JSON.stringify(toInsert[0], null, 2));
 
                 const { error } = await this.supabase
                     .from('nlp_pending_reviews')
@@ -388,10 +396,10 @@ class AdvancedDecisionEngine {
                     console.error('[NLP-HITL] ❌ Batch insert error:', error.message, error.details, error.hint);
                 } else {
                     queued = toInsert.length;
-                    console.log(`[NLP-HITL] ✅ Batch queued ${queued} items for review`);
+                    this.logHITL(`✅ Batch queued ${queued} items for review`);
                 }
             } else {
-                console.log('[NLP-HITL] No items to insert after filtering');
+                this.logHITL('No items to insert after filtering');
             }
         } catch (err) {
             errors.push(err.message);
@@ -419,10 +427,10 @@ class AdvancedDecisionEngine {
 
             // Get all keyword terms from the keywords array
             const allKeywordTerms = this.keywords.map(kw => kw.term?.toLowerCase()).filter(Boolean);
-            console.log(`[NLP-HITL] Cleanup: Checking ${pending.length} pending items against ${allKeywordTerms.length} keywords`);
+            this.logHITL(`Cleanup: Checking ${pending.length} pending items against ${allKeywordTerms.length} keywords`);
 
             if (allKeywordTerms.length === 0) {
-                console.log('[NLP-HITL] Cleanup: No keywords loaded, skipping');
+                this.logHITL('Cleanup: No keywords loaded, skipping');
                 return { cleaned: 0, remaining: pending.length };
             }
 
@@ -448,7 +456,7 @@ class AdvancedDecisionEngine {
             }
 
             if (toClean.length === 0) {
-                console.log('[NLP-HITL] Cleanup: No items matched existing keywords');
+                this.logHITL('Cleanup: No items matched existing keywords');
                 return { cleaned: 0, remaining: pending.length };
             }
 
@@ -468,7 +476,7 @@ class AdvancedDecisionEngine {
                 return { cleaned: 0, remaining: pending.length, error: updateError.message };
             }
 
-            console.log(`[NLP-HITL] ✅ Cleanup: Auto-resolved ${toClean.length} items with existing keywords`);
+            this.logHITL(`✅ Cleanup: Auto-resolved ${toClean.length} items with existing keywords`);
             return { cleaned: toClean.length, remaining: pending.length - toClean.length };
         } catch (err) {
             console.error('[NLP-HITL] Cleanup exception:', err.message);
@@ -580,7 +588,7 @@ class AdvancedDecisionEngine {
 
                     if (!batchError) {
                         autoResolved = ids.length;
-                        console.log(`[NLP-HITL] 🔄 Auto-resolved ${autoResolved} similar pending reviews containing "${keyword}"`);
+                        this.logHITL(`🔄 Auto-resolved ${autoResolved} similar pending reviews containing "${keyword}"`);
                     }
                 }
             }
@@ -588,7 +596,7 @@ class AdvancedDecisionEngine {
             // 4. Reload keywords cache
             await this.reloadKeywords();
 
-            console.log(`[NLP-HITL] ✅ Resolved: "${keyword}" → ${category}/${subcategory || 'N/A'}${autoResolved > 0 ? ` (+${autoResolved} auto-resolved)` : ''}`);
+            this.logHITL(`✅ Resolved: "${keyword}" → ${category}/${subcategory || 'N/A'}${autoResolved > 0 ? ` (+${autoResolved} auto-resolved)` : ''}`);
             return { success: true, autoResolved };
         } catch (err) {
             console.error('[NLP-HITL] Resolution failed:', err.message);

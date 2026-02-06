@@ -15,6 +15,8 @@ class DRIMSApp {
   initializeMiddleware() {
     setupMiddleware(this.app);
 
+
+
     // Silently handle browser tool discovery requests to prevent log noise
     this.app.get(
       "/.well-known/appspecific/com.chrome.devtools.json",

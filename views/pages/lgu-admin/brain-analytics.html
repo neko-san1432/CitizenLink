@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DRIMS - Complaint Analytics | Digos City</title>
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
@@ -31,26 +30,6 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
             <!-- Tab Navigation -->
-            <nav class="analytics-tabs">
-                <button class="nav-tab active" data-tab="overview">
-                    <i class="fas fa-tachometer-alt"></i> <span>Overview</span>
-                </button>
-                <button class="nav-tab" data-tab="temporal">
-                    <i class="fas fa-clock"></i> <span>Time Trends</span>
-                </button>
-                <button class="nav-tab" data-tab="categories">
-                    <i class="fas fa-tags"></i> <span>Categories</span>
-                </button>
-                <button class="nav-tab" data-tab="edge-cases">
-                    <i class="fas fa-exclamation-triangle"></i> <span>Smart Detection</span>
-                </button>
-                <button class="nav-tab" data-tab="data-table">
-                    <i class="fas fa-table"></i> <span>All Complaints</span>
-                </button>
-                <button class="nav-tab" data-tab="system-training">
-                    <i class="fas fa-brain"></i> <span>Train System</span>
-                </button>
-            </nav>
 
             <div id="loadingOverlay" class="loading-overlay">
                 <div class="loading-content">
@@ -61,188 +40,7 @@
             </div>
 
             <main class="main-content">
-                <section id="overview" class="tab-content active">
-                    <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
-                    <p class="section-description">Summary of all citizen complaints processed by the DRIMS system.</p>
-                    <div class="metric-cards">
-                        <div class="metric-card">
-                            <div class="metric-icon"><i class="fas fa-clipboard-list"></i></div>
-                            <div class="metric-value" id="totalComplaints">-</div>
-                            <div class="metric-label">Total Complaints</div>
-                        </div>
-                        <div class="metric-card danger">
-                            <div class="metric-icon"><i class="fas fa-exclamation-circle"></i></div>
-                            <div class="metric-value" id="tier1Count">-</div>
-                            <div class="metric-label">High Priority</div>
-                        </div>
-                        <div class="metric-card warning">
-                            <div class="metric-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="metric-value" id="tier2Count">-</div>
-                            <div class="metric-label">Medium Priority</div>
-                        </div>
-                        <div class="metric-card success">
-                            <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
-                            <div class="metric-value" id="tier3Count">-</div>
-                            <div class="metric-label">Low Priority</div>
-                        </div>
-                        <div class="metric-card danger">
-                            <div class="metric-icon"><i class="fas fa-fire"></i></div>
-                            <div class="metric-value" id="criticalCount">-</div>
-                            <div class="metric-label">Emergency Cases</div>
-                        </div>
-                        <div class="metric-card info">
-                            <div class="metric-icon"><i class="fas fa-key"></i></div>
-                            <div class="metric-value" id="keywordsDetected">-</div>
-                            <div class="metric-label">Keywords Found</div>
-                        </div>
-                        <div class="metric-card accent">
-                            <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="metric-value" id="avgTriageScore">-</div>
-                            <div class="metric-label">Avg. Priority Score</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-icon"><i class="fas fa-hashtag"></i></div>
-                            <div class="metric-value" id="uniqueKeywords">-</div>
-                            <div class="metric-label">Unique Keywords</div>
-                        </div>
-                    </div>
 
-                    <div class="command-center-grid"
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                        <div class="command-widget"
-                            style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--danger);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                <i class="fas fa-bell" style="color: var(--danger); font-size: 1.2em;"></i>
-                                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Recent High-Priority
-                                    Alerts</h4>
-                                <span class="pulse-dot"
-                                    style="width: 8px; height: 8px; background: var(--danger); border-radius: 50%; animation: pulse 2s infinite;"></span>
-                            </div>
-                            <div id="recentAlertsTicker" style="max-height: 180px; overflow-y: auto;">
-                                <div style="padding: 10px; color: var(--gray-500); text-align: center;">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading alerts...
-                                </div>
-                            </div>
-                        </div>
-                        <div class="command-widget"
-                            style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--primary);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                <i class="fas fa-chart-pie" style="color: var(--primary); font-size: 1.2em;"></i>
-                                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Category Breakdown</h4>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 20px;">
-                                <canvas id="overviewCategoryPie" style="max-width: 120px; max-height: 120px;"></canvas>
-                                <div id="categoryLegend" style="flex: 1; font-size: 0.85em;">
-                                    <div style="padding: 10px; color: var(--gray-500); text-align: center;">Loading...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="command-widget"
-                            style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--success);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                <i class="fas fa-heartbeat" style="color: var(--success); font-size: 1.2em;"></i>
-                                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">System Health</h4>
-                            </div>
-                            <div id="systemHealthStatus" style="display: flex; flex-direction: column; gap: 10px;">
-                                <div
-                                    style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                                    <span><i class="fas fa-brain" style="margin-right: 8px; color: var(--primary);"></i>
-                                        NLP Engine</span>
-                                    <span class="status-badge"
-                                        style="background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em;">●
-                                        Online</span>
-                                </div>
-                                <div
-                                    style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                                    <span><i class="fas fa-hourglass-half"
-                                            style="margin-right: 8px; color: var(--warning);"></i> Pending
-                                        Reviews</span>
-                                    <span id="healthPendingCount"
-                                        style="font-weight: bold; color: var(--warning);">0</span>
-                                </div>
-                                <div
-                                    style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                                    <span><i class="fas fa-database" style="margin-right: 8px; color: var(--info);"></i>
-                                        Database</span>
-                                    <span class="status-badge"
-                                        style="background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em;">●
-                                        OK</span>
-                                </div>
-                                <div
-                                    style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                                    <span><i class="fas fa-book" style="margin-right: 8px; color: var(--accent);"></i>
-                                        Dictionary</span>
-                                    <span id="healthDictSize" style="font-weight: bold; color: var(--accent);">-
-                                        entries</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="command-widget"
-                            style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--warning);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                <i class="fas fa-map-marked-alt" style="color: var(--warning); font-size: 1.2em;"></i>
-                                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Top 5 Active Barangays
-                                </h4>
-                            </div>
-                            <div id="topBarangaysList" style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="padding: 10px; color: var(--gray-500); text-align: center;">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading...
-                                </div>
-                            </div>
-                        </div>
-                        <div class="command-widget"
-                            style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--info);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                <i class="fas fa-stopwatch" style="color: var(--info); font-size: 1.2em;"></i>
-                                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Response Metrics</h4>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div
-                                    style="text-align: center; padding: 15px; background: linear-gradient(135deg, var(--info-light), var(--info)); border-radius: 8px; color: white;">
-                                    <div style="font-size: 2em; font-weight: bold;" id="avgResponseTime">--</div>
-                                    <div style="font-size: 0.85em; opacity: 0.9;">Avg. Processing Time</div>
-                                </div>
-                                <div style="display: flex; gap: 10px;">
-                                    <div
-                                        style="flex: 1; text-align: center; padding: 10px; background: var(--gray-100); border-radius: 6px;">
-                                        <div style="font-size: 1.2em; font-weight: bold; color: var(--success);"
-                                            id="resolvedToday">0</div>
-                                        <div style="font-size: 0.75em; color: var(--gray-600);">Resolved Today</div>
-                                    </div>
-                                    <div
-                                        style="flex: 1; text-align: center; padding: 10px; background: var(--gray-100); border-radius: 6px;">
-                                        <div style="font-size: 1.2em; font-weight: bold; color: var(--primary);"
-                                            id="processedTotal">0</div>
-                                        <div style="font-size: 0.75em; color: var(--gray-600);">Total Processed</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-chart-pie"></i> Priority Distribution</h3>
-                            <canvas id="tierDistChart"></canvas>
-                        </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-chart-bar"></i> Complaints by Category</h3>
-                            <canvas id="categoryChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-map-marked-alt"></i> Complaints by Barangay</h3>
-                            <canvas id="barangayChart"></canvas>
-                        </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-brain"></i> NLP Intelligence Impact</h3>
-                            <canvas id="nlpImpactChart"></canvas>
-                        </div>
-                    </div>
-                </section>
 
                 <section id="temporal" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-clock"></i> Time Trend Analysis</h2>
@@ -585,7 +383,8 @@
                             <div class="train-form" id="trainingForm">
                                 <div class="ai-prediction-box">
                                     <div class="prediction-row">
-                                        <span><strong>Predicted Category:</strong> <span id="lblSystemGuess" style="color: var(--primary); font-weight: 600;">-</span></span>
+                                        <span><strong>Predicted Category:</strong> <span id="lblSystemGuess"
+                                                style="color: var(--primary); font-weight: 600;">-</span></span>
                                     </div>
                                 </div>
 

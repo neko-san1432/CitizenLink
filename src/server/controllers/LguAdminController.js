@@ -760,8 +760,8 @@ class LguAdminController {
 
       // 2. Status Filter (Specific status)
       if (status && status !== "all") {
-        if (status === "completed") {
-          baseQuery = baseQuery.eq("workflow_status", "completed");
+        if (status === "resolved") {
+          baseQuery = baseQuery.eq("workflow_status", "resolved");
         } else {
           baseQuery = baseQuery.eq("workflow_status", status);
         }
@@ -770,8 +770,7 @@ class LguAdminController {
         // UNLESS assignment_filter is set (since we handled it above)
         if (!assignment_filter || assignment_filter === "all") {
           baseQuery = baseQuery
-            .neq("workflow_status", "completed")
-            .neq("workflow_status", "cancelled");
+            .neq("workflow_status", "resolved");
         }
       }
 

@@ -159,6 +159,31 @@ class LguOfficerController {
       return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
     }
   }
+  /**
+   * Update complaint status with comment (Generic LGU Action)
+   */
+  async updateComplaintStatus(req, res) {
+    try {
+      const { complaintId } = req.params;
+      const { status, comment } = req.body;
+      const userId = req.user.id;
+
+      if (!status || !comment) {
+        return res.status(400).json({ success: false, error: "Status and comment are required" });
+      }
+
+      const complaint = await this.officerService.updateComplaintStatus(complaintId, userId, status, comment);
+
+      return res.json({
+        success: true,
+        message: "Status updated successfully",
+        data: complaint
+      });
+    } catch (error) {
+      console.error("[LGU_OFFICER] Update status error:", error);
+      return ErrorHandler.handleApiError(error, req, res, "LGU_OFFICER");
+    }
+  }
 }
 
 module.exports = LguOfficerController;

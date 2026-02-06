@@ -69,7 +69,7 @@ async function seed() {
         latitude: lat,
         longitude: lng,
         location_text: "Seed Location, Digos City",
-        workflow_status: "new",
+        workflow_status: "submitted",
         submitted_at: new Date(timestamp.getTime() - i * 60000).toISOString(), // 1 min apart
         upvote_count: 0,
       };

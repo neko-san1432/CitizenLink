@@ -108,6 +108,12 @@ router.get(
 );
 
 router.get(
+  "/:id/history",
+  authenticateUser,
+  wrap(complaintController.getComplaintHistory)
+);
+
+router.get(
   "/:id",
   authenticateUser,
   wrap(complaintController.getComplaintById)
@@ -116,10 +122,16 @@ router.get(
 router.patch(
   "/:id/status",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin"]),
-  requireRole([/^lgu-/, "super-admin"]),
+  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
   validate(schemas.updateStatus),
   wrap(complaintController.updateComplaintStatus)
+);
+
+router.get(
+  "/:id/status",
+  authenticateUser,
+  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  wrap(complaintController.getComplaintStatus)
 );
 
 // Human confirmation workflow transitions (officer -> admin -> citizen)
@@ -149,29 +161,7 @@ router.patch(
   wrap(complaintController.transferComplaint)
 );
 
-// Citizen-specific endpoints
-router.post(
-  "/:id/cancel",
-  authenticateUser,
-  requireRole(["citizen"]),
-  validate(schemas.cancelComplaint),
-  wrap(complaintController.cancelComplaint)
-);
 
-// [DEBUG] Handle GET requests to cancel endpoint with specific error
-router.get(
-  "/:id/cancel",
-  (req, res) => {
-    res.status(405).json({
-      success: false,
-      error: "Method Not Allowed. Use POST to cancel complaint.",
-      debug: {
-        method: req.method,
-        path: req.path
-      }
-    });
-  }
-);
 
 router.post(
   "/:id/remind",

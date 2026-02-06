@@ -1148,6 +1148,12 @@ function setupListeners() {
     btn.addEventListener("click", () => {
       const tabId = btn.getAttribute("data-tab");
       if (!tabId) return;
+
+      // Update URL
+      const url = new URL(window.location);
+      url.searchParams.set("tab", tabId);
+      window.history.pushState({}, "", url);
+
       document.querySelectorAll(".nav-tab[data-tab]").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       btn.classList.add("active");
@@ -1231,17 +1237,22 @@ function setupListeners() {
     });
   }
 
-  const initialHash = (window.location.hash || "").replace("#", "").trim();
-  if (initialHash) {
-    const initialBtn = document.querySelector(`.nav-tab[data-tab="${initialHash}"]`);
-    const initialSection = document.getElementById(initialHash);
-    if (initialBtn && initialSection) {
+  const params = new URLSearchParams(window.location.search);
+  const initialTab = params.get("tab") || "temporal"; // Default to temporal since overview is removed
+  if (initialTab) {
+    const initialBtn = document.querySelector(`.nav-tab[data-tab="${initialTab}"]`);
+    const initialSection = document.getElementById(initialTab);
+
+    // Switch if section exists (button is optional now)
+    if (initialSection) {
       document.querySelectorAll(".nav-tab[data-tab]").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-      initialBtn.classList.add("active");
+
+      if (initialBtn) initialBtn.classList.add("active");
       initialSection.classList.add("active");
+
       // Auto-render if initial load is edge cases/smart detection
-      if (initialHash === 'tab-smart-detection' || initialHash === 'edge-cases') {
+      if (initialTab === 'tab-smart-detection' || initialTab === 'edge-cases') {
         renderEdgeCases();
         renderEdgeCasesCards();
       }
@@ -1493,14 +1504,24 @@ function populateCategoryFilter() {
 
 async function init() {
   try {
-    setLoading(true, "Loading Complaints...", "Synchronizing datasets...");
+    const isBrainHot = sessionStorage.getItem('brain_initialized');
+
+    // Only show loading if not hot start
+    if (!isBrainHot) {
+      setLoading(true, "Loading Complaints...", "Synchronizing datasets...");
+    }
 
     // Load NLP Dictionaries first
     if (typeof window.loadNLPDictionaries === 'function') {
-      setLoading(true, "Initializing Brain...", "Loading NLP Dictionaries...");
+
+      if (!isBrainHot) {
+        setLoading(true, "Initializing Brain...", "Loading NLP Dictionaries...");
+      }
+
       try {
         await window.loadNLPDictionaries();
         console.log('[ANALYTICS] NLP Dictionaries loaded successfully');
+        sessionStorage.setItem('brain_initialized', 'true');
       } catch (err) {
         console.error('[ANALYTICS] Failed to load NLP Dictionaries:', err);
       }

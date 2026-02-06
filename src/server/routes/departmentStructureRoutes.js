@@ -103,20 +103,47 @@ router.get("/categories/:categoryId/subcategories", async (req, res) => {
       .from("subcategories")
       .select(`
         *,
-        departments (
-          *,
-          department_subcategory_mapping (
-            response_priority
-          )
+        department_subcategory_mapping (
+          response_priority,
+          departments (*)
         )
       `)
       .eq("category_id", categoryId)
       .eq("is_active", true)
       .order("sort_order");
+
     if (error) throw error;
+
+    // Transform data to match expected format
+    const transformed = (subcategories || []).map(sub => {
+      const departments = (sub.department_subcategory_mapping || [])
+        .map(mapping => {
+          if (!mapping.departments) return null;
+          return {
+            ...mapping.departments,
+            department_subcategory_mapping: {
+              response_priority: mapping.response_priority
+            }
+          };
+        })
+        .filter(d => d !== null)
+        .sort((a, b) => {
+          const pA = a.department_subcategory_mapping?.response_priority || 999;
+          const pB = b.department_subcategory_mapping?.response_priority || 999;
+          return pA - pB;
+        });
+
+      // Remove the raw mapping array and attach formatted departments
+      const { department_subcategory_mapping, ...rest } = sub;
+      return {
+        ...rest,
+        departments
+      };
+    });
+
     res.json({
       success: true,
-      data: subcategories
+      data: transformed
     });
   } catch (error) {
     console.error("Error fetching subcategories:", error);

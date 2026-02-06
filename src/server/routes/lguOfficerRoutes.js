@@ -17,6 +17,7 @@ router.use(requireRole(["lgu"])); // Simplified role requirement
 router.get("/assigned-tasks", lguOfficerController.getAssignedTasks.bind(lguOfficerController));
 // Mark complaint as resolved
 router.post("/complaints/:complaintId/resolve", lguOfficerController.markAsResolved.bind(lguOfficerController));
+router.post("/complaints/:complaintId/update-status", lguOfficerController.updateComplaintStatus.bind(lguOfficerController));
 // Get all tasks assigned to the officer
 router.get("/my-tasks", lguOfficerController.getMyTasks.bind(lguOfficerController));
 // Update task status

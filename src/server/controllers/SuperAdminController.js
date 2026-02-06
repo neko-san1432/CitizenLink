@@ -165,7 +165,7 @@ class SuperAdminController {
 
       // If user is NOT a citizen, check if legacy/flexible management is enabled
       if (currentRole !== "citizen") {
-        const legacyManagementEnabled = process.env.ENABLE_LEGACY_ROLE_MANAGEMENT === "true";
+        const legacyManagementEnabled = process.env.ENABLE_LEGACY_ROLES === "true";
         if (!legacyManagementEnabled) {
           return res.status(403).json({
             success: false,

@@ -1,7 +1,12 @@
 node_modules
+node_modules
 .env
 codeql-results
 eng.traineddata
 /implementation_plans
 emails
 separate_module
+
+# AI Cache
+storage/ai_cache/
+.brain_logic

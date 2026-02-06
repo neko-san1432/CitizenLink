@@ -763,6 +763,23 @@ class NotificationService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Notify citizen of a general update/comment on their complaint
+   */
+  async notifyComplaintUpdate(citizenId, complaintId, complaintTitle, message) {
+    return this.createNotification(
+      citizenId,
+      NOTIFICATION_TYPES.COMPLAINT_UPDATE,
+      "Update on Your Complaint",
+      `A new update was added to "${complaintTitle}": ${message.substring(0, 50)}${message.length > 50 ? "..." : ""}`,
+      {
+        priority: NOTIFICATION_PRIORITY.INFO,
+        link: `/citizen/complaints/${complaintId}`,
+        metadata: { complaint_id: complaintId }
+      }
+    );
+  }
 }
 
 module.exports = NotificationService;

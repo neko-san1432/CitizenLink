@@ -8492,9 +8492,30 @@ async function loadNLPDictionaries(forceReload = false) {
         NLP_DICTIONARY_LOADED = false;
         NLP_DICTIONARIES = null;
         NLP_KEYWORD_INDEX = new Map();
+        localStorage.removeItem('DRIMSNLP_DICTIONARIES');
     }
 
     try {
+        // 1. Try loading from LocalStorage first (Cache Layer)
+        if (!forceReload) {
+            try {
+                const cached = localStorage.getItem('DRIMSNLP_DICTIONARIES');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    // Simple version check (optional, can be expanded)
+                    if (parsed && parsed._metadata) {
+                        console.log('[NLP] Loaded dictionaries from LocalStorage cache');
+                        NLP_DICTIONARIES = parsed;
+                        NLP_DICTIONARY_LOADED = true;
+                        buildDictionaryIndices();
+                        return NLP_DICTIONARIES;
+                    }
+                }
+            } catch (storageErr) {
+                console.warn('[NLP] Failed to load from localStorage, falling back to network', storageErr);
+            }
+        }
+
         if (!taxonomyCache && typeof DRIMSTaxonomy !== 'undefined') {
             try {
                 taxonomyCache = await DRIMSTaxonomy.loadTaxonomy();
@@ -8545,6 +8566,14 @@ async function loadNLPDictionaries(forceReload = false) {
         console.log(`[NLP] Found dictionary at: ${successPath}`);
 
         NLP_DICTIONARIES = await response.json();
+
+        // Save to LocalStorage
+        try {
+            localStorage.setItem('DRIMSNLP_DICTIONARIES', JSON.stringify(NLP_DICTIONARIES));
+        } catch (e) {
+            console.warn('[NLP] Failed to cache dictionary to localStorage (quota exceeded?)');
+        }
+
         NLP_DICTIONARY_LOADED = true;
 
         // Log metadata

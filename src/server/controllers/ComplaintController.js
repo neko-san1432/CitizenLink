@@ -70,11 +70,18 @@ class ComplaintController {
       // Use req.query directly as getComplaints handles pagination/filtering
       const { user } = req;
       // Force status filter if not provided, or ensure it's within coordinator scope
-      if (!req.query.status) {
-        req.query.status = "pending review";
+      // [MODIFIED] User requested to show ALL complaints, so we remove the default "pending review" filter.
+      // [FIX] Force-clear status if it's "pending review" (which returns 0 results for LGU usually)
+      // or if it's "undefined"/"null" string from some clients.
+      if (req.query.status === "pending review" || req.query.status === "null" || req.query.status === "undefined") {
+        console.log("[DEBUG] ComplaintController: Clearing 'pending review' filter.");
+        delete req.query.status;
       }
 
-      const result = await this.complaintService.getComplaints(req.query, user);
+      console.log("[DEBUG] ComplaintController: getReviewQueue query:", req.query);
+
+      // Use getAllComplaints instead of non-existent getComplaints
+      const result = await this.complaintService.getAllComplaints(req.query);
       res.json(result);
     } catch (error) {
       console.error("[ComplaintController] getReviewQueue error:", error.message);
@@ -82,25 +89,7 @@ class ComplaintController {
     }
   }
 
-  /**
-   * Cancel complaint
-   */
-  async cancelComplaint(req, res) {
-    const { id: complaintId } = req.params;
-    const { reason } = req.body;
-    const userId = req.user.id;
 
-    const result = await this.complaintService.cancelComplaint(
-      complaintId,
-      userId,
-      reason
-    );
-    res.json({
-      success: true,
-      message: "Complaint cancelled successfully",
-      data: result,
-    });
-  }
 
   /**
    * Send reminder for complaint
@@ -223,6 +212,23 @@ class ComplaintController {
     });
   }
 
+  async getComplaintStatus(req, res) {
+    const { id } = req.params;
+    const token = req.headers.authorization;
+
+    // Re-use core service method to respect visibility rules
+    const complaint = await this.complaintService.getComplaintById(id, null, token);
+
+    res.json({
+      success: true,
+      data: {
+        status: complaint.workflow_status,
+        priority: complaint.priority,
+        updated_at: complaint.updated_at
+      }
+    });
+  }
+
   async transitionStatus(req, res) {
     const complaintId = req.params.id;
     const { status, resolution_notes, admin_notes, feedback } = req.body || {};
@@ -247,10 +253,10 @@ class ComplaintController {
 
     const updated = await this.complaintService.updateComplaintStatus(
       complaintId,
-      status,
-      userRole === "citizen"
-        ? null
-        : resolution_notes || admin_notes || feedback || null,
+      {
+        status,
+        notes: resolution_notes || admin_notes || feedback || null
+      },
       userId
     );
 
@@ -474,13 +480,14 @@ class ComplaintController {
    */
   async markAsFalseComplaint(req, res) {
     const { id } = req.params;
-    const { reason } = req.body;
+    const { reason, notes } = req.body;
     const { user } = req;
 
     const result = await this.complaintService.markAsFalseComplaint(
       id,
       user.id,
-      reason
+      reason,
+      notes
     );
 
     if (!result.success) {
@@ -715,6 +722,19 @@ class ComplaintController {
       data: result,
       message: "Assignment created successfully",
     });
+  }
+
+  async getComplaintHistory(req, res) {
+    const { id } = req.params;
+    const { user } = req;
+
+    // Check permission by fetching complaint with validation
+    // If citizen, userId ensures ownership check. If admin/officer, passed as null (role checks handled by middleware/service logic)
+    const checkUserId = user.role === 'citizen' ? user.id : null;
+    await this.complaintService.getComplaintById(id, checkUserId);
+
+    const history = await this.complaintService.getComplaintHistory(id);
+    res.json({ success: true, data: history });
   }
 }
 

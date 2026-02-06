@@ -229,12 +229,36 @@ class ComplaintRepository {
     const { page = 1, limit = 20, status, type, department, search } = options;
     const offset = (page - 1) * limit;
 
-    let query = this.supabase
+    console.log('[DEBUG-REPO] findAll called with options:', JSON.stringify(options));
+
+    // [FIX] Explicitly create a Service Role client to GUARANTEE RLS bypass.
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    let client;
+    if (serviceKey) {
+      client = createClient(supabaseUrl, serviceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+    } else {
+      client = this.supabase; // Fallback
+    }
+
+    let query = client
       .from("complaints")
-      .select("*")
+      .select("*", { count: "exact" })
       .order("submitted_at", { ascending: false });
     if (status) {
-      query = query.eq("workflow_status", status);
+      if (status === 'pending review') {
+        const activeStatuses = ['submitted', 'assigned', 'verified', 'under_review', 'action_taken', 'in_progress', 'pending_approval'];
+        query = query.in("workflow_status", activeStatuses);
+      } else {
+        query = query.eq("workflow_status", status);
+      }
     }
     if (type) {
       query = query.eq("type", type);
@@ -429,6 +453,47 @@ class ComplaintRepository {
         "[COMPLAINT-REPO] Error creating assignments:",
         error.message
       );
+      throw error;
+    }
+  }
+  async updateStatusAndComment(id, mappingKey, statusData, rawStatus = null) {
+    if (!mappingKey || !statusData) {
+      throw new Error("Mapping key and status data are required");
+    }
+
+    const workflowStatus = rawStatus || mappingKey;
+    try {
+      // 1. Fetch current comment JSON
+      const { data: current, error: fetchError } = await this.supabase
+        .from("complaints")
+        .select("comment")
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const newComment = current && current.comment ? current.comment : {};
+
+      // 2. [TIMELINE] Append/Overwrite new phase data
+      // Structure: { [mappingKey]: { date: ..., comment: ... } }
+      newComment[mappingKey] = statusData;
+
+      // 3. Update record
+      const { data, error } = await this.supabase
+        .from("complaints")
+        .update({
+          workflow_status: workflowStatus,
+          comment: newComment,
+          last_activity_at: new Date().toISOString()
+        })
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+
+      if (error) throw error;
+      return data ? new Complaint(data) : null;
+    } catch (error) {
+      console.error("[COMPLAINT-REPO] Update status and comment error:", error.message);
       throw error;
     }
   }
