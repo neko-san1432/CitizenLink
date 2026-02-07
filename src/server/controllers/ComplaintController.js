@@ -736,6 +736,116 @@ class ComplaintController {
     const history = await this.complaintService.getComplaintHistory(id);
     res.json({ success: true, data: history });
   }
+
+  /**
+   * Get barangay insights for prioritization widget
+   * Returns volume, urgency, and recency scores per barangay
+   */
+  async getBarangayInsights(req, res) {
+    try {
+      // List of Digos City barangays
+      const BARANGAYS = [
+        "Aplaya", "Balabag", "Binaton", "Cogon", "Colorado", "Dawis",
+        "Dulangan", "Goma", "Igpit", "Kiagot", "Lungag", "Mahayahay",
+        "Matti", "Kapatagan (Rizal)", "Ruparan", "San Agustin",
+        "San Jose (Balutakay)", "San Miguel (Odaca)", "San Roque",
+        "Sinawilan", "Soong", "Tiguman", "Tres de Mayo",
+        "Zone 1 (Pob.)", "Zone 2 (Pob.)", "Zone 3 (Pob.)"
+      ];
+
+      const supabase = this.complaintService.complaintRepo.supabase;
+
+      // Fetch all relevant complaints (last 30 days for recency calculations)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: complaints, error } = await supabase
+        .from("complaints")
+        .select("id, location_text, priority, submitted_at, workflow_status")
+        .gte("submitted_at", thirtyDaysAgo.toISOString())
+        .not("workflow_status", "in", "(cancelled,rejected)");
+
+      if (error) throw error;
+
+      // Initialize barangay stats
+      const barangayStats = new Map();
+      BARANGAYS.forEach(name => {
+        barangayStats.set(name, {
+          name,
+          totalComplaints: 0,
+          urgentCount: 0,
+          highCount: 0,
+          recentCount: 0 // Last 7 days
+        });
+      });
+
+      // Calculate date threshold for recency (7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      // Process each complaint
+      complaints?.forEach(complaint => {
+        const locationText = complaint.location_text?.toLowerCase() || "";
+
+        // Find matching barangay
+        for (const barangay of BARANGAYS) {
+          if (locationText.includes(barangay.toLowerCase())) {
+            const stats = barangayStats.get(barangay);
+            stats.totalComplaints++;
+
+            // Count urgent/high priority
+            const priority = complaint.priority?.toLowerCase();
+            if (priority === "urgent") stats.urgentCount++;
+            else if (priority === "high") stats.highCount++;
+
+            // Count recent (last 7 days)
+            if (new Date(complaint.submitted_at) >= sevenDaysAgo) {
+              stats.recentCount++;
+            }
+
+            break; // Match first barangay only
+          }
+        }
+      });
+
+      // Calculate scores and sort by volume
+      const maxVolume = Math.max(...Array.from(barangayStats.values()).map(s => s.totalComplaints), 1);
+
+      const barangays = Array.from(barangayStats.values())
+        .filter(s => s.totalComplaints > 0) // Only show barangays with complaints
+        .map(stats => {
+          const volumeScore = Math.round((stats.totalComplaints / maxVolume) * 100);
+          const urgencyScore = stats.totalComplaints > 0
+            ? Math.round(((stats.urgentCount * 2 + stats.highCount) / stats.totalComplaints) * 100)
+            : 0;
+          const recencyScore = stats.totalComplaints > 0
+            ? Math.round((stats.recentCount / stats.totalComplaints) * 100)
+            : 0;
+
+          return {
+            name: stats.name,
+            totalComplaints: stats.totalComplaints,
+            volumeScore: Math.min(volumeScore, 100),
+            urgencyScore: Math.min(urgencyScore, 100),
+            recencyScore: Math.min(recencyScore, 100)
+          };
+        })
+        .sort((a, b) => b.totalComplaints - a.totalComplaints)
+        .slice(0, 10); // Top 10 barangays
+
+      res.json({
+        success: true,
+        data: { barangays },
+        meta: {
+          period: "30 days",
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("[ComplaintController] getBarangayInsights error:", error.message);
+      res.status(500).json({ success: false, error: "Failed to fetch barangay insights" });
+    }
+  }
 }
 
 module.exports = ComplaintController;

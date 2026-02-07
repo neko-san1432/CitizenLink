@@ -323,7 +323,7 @@ function getMenuItemsForRole(role) {
       },
       {
         url: "/dictionary-manager",
-        icon: "analytics",
+        icon: "dictionary",
         label: "Dictionary Manager",
       },
       { url: "/profile", icon: "myProfile", label: "My Profile" },
@@ -352,7 +352,7 @@ function getMenuItemsForRole(role) {
       },
       {
         url: "/dictionary-manager",
-        icon: "analytics",
+        icon: "dictionary",
         label: "Dictionary Manager",
       },
       { url: "/departments", icon: "departments", label: "Departments" },

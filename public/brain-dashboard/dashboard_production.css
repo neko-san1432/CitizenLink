@@ -5301,7 +5301,7 @@ html:not(.dark) .emergency-header {
 }
 
 html:not(.dark) .emergency-content {
-    background: rgba(255, 255, 255, 0.9);
+    background: transparent; /* Remove white overlay */
 }
 
 html:not(.dark) .emergency-card {
@@ -5311,6 +5311,35 @@ html:not(.dark) .emergency-card {
 
 html:not(.dark) .emergency-card-header {
     background: rgba(239, 68, 68, 0.1);
+}
+
+/* Fix text colors in light mode for emergency cards */
+html:not(.dark) .emergency-card-body {
+    color: #1e293b; /* Dark text for light mode */
+}
+
+html:not(.dark) .emergency-card-body p {
+    color: #374151; /* Dark gray for description */
+}
+
+html:not(.dark) .emergency-card-body small {
+    color: #64748b; /* Medium gray for meta info */
+}
+
+html:not(.dark) .emergency-description {
+    color: #1e293b;
+}
+
+html:not(.dark) .emergency-meta {
+    color: #64748b;
+}
+
+html:not(.dark) .emergency-meta-item i {
+    color: #94a3b8;
+}
+
+html:not(.dark) .emergency-time {
+    color: #64748b;
 }
 
 html:not(.dark) .emergency-placeholder {

@@ -91,6 +91,88 @@
   padding-bottom: var(--space-4);
 }
 
+/* ============ LIGHT MODE ENHANCEMENTS ============ */
+
+/* Panel styling for light mode */
+.rq-panel.panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Table styling */
+.rq-table.table {
+  background: transparent;
+}
+
+.rq-table.table thead {
+  background: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.rq-table.table th {
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+}
+
+.rq-table.table td {
+  color: #334155;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.rq-table.table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+/* Form controls */
+.form-select,
+.form-input {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.form-select:hover,
+.form-input:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.form-select:focus,
+.form-input:focus {
+  border-color: var(--primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* Dashboard header */
+.dashboard-header-section h1 {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.dashboard-header-section p {
+  color: #64748b;
+}
+
+/* Right sidebar panel styling */
+.lg\\:col-span-3 .rq-panel.panel {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.lg\\:col-span-3 .rq-panel.panel h3 {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+/* ============ DARK MODE ============ */
+
 html.dark .rq-panel.panel {
   background: var(--gray-100);
   border-color: var(--gray-200);

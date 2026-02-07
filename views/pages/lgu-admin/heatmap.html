@@ -58,6 +58,7 @@
             top: 70px;
             bottom: 0;
             height: auto;
+            z-index: 10000 !important; /* Ensure sidebar overlaps header on heatmap */
         }
 
         /* ========== MAP AREA (Left side - fills remaining space) ========== */
@@ -577,7 +578,16 @@
         .emergency-content {
             max-height: 280px;
             overflow-y: auto;
+            padding: 0; /* Remove outer padding to eliminate gap */
+        }
+
+        .emergency-content .emergency-placeholder {
+            padding: 20px 8px;
+        }
+
+        .emergency-content .emergency-card {
             padding: 8px;
+            margin: 0;
         }
 
         .emergency-panel.collapsed .emergency-content {
@@ -672,7 +682,7 @@
         }
 
         html:not(.dark) .stat-label {
-            color: #64748b;
+            color: #334155; /* Darker for better visibility */
         }
 
         html:not(.dark) .command-center .cc-label {
@@ -765,7 +775,15 @@
 
         html:not(.dark) .insights-section h3,
         html:not(.dark) .category-section h3 {
-            color: #475569;
+            color: #334155; /* Darker for better visibility */
+        }
+
+        html:not(.dark) .insight-placeholder {
+            color: #475569; /* Darker for better visibility */
+        }
+
+        html:not(.dark) .insight-placeholder i {
+            color: #64748b;
         }
 
         html:not(.dark) .floating-btn {
