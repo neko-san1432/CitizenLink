@@ -1801,3 +1801,316 @@
 [2026-02-06T17:43:58.136Z] [NLP-HITL] Filtered to 0 items to insert (93 duplicates) 
 [2026-02-06T17:43:58.136Z] [NLP-HITL] No items to insert after filtering 
 [2026-02-06T17:43:58.136Z] [NLP-HITL] batchQueueForReview result: {"queued":0,"skipped":93,"errors":[]}
+[2026-02-07T04:04:13.376Z] [LOGIN_DEBUG] User: lgu-admin@gmail.com, Role: lgu, SimpleMode: true 
+[2026-02-07T04:04:13.376Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-07T04:04:21.257Z] [NLP-HITL] batchQueue endpoint called 
+[2026-02-07T04:04:21.257Z] [NLP-HITL] items type: object, isArray: true, length: 100 
+[2026-02-07T04:04:21.257Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:21.257Z] [NLP-HITL] Batch queue received 100 items 
+[2026-02-07T04:04:21.257Z] [NLP-HITL] Valid complaint IDs: 100 
+[2026-02-07T04:04:21.257Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Already in database (any status): 24 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Known keywords in cache: 666 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): 778698c7 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): ba016168 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): d42402a6 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): 00097ffb 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): fdca09c5 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 8027addf 
+[2026-02-07T04:04:21.506Z] [NLP-HITL] Skipped (has known keyword, not Others): 30e42717 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 67ca1259 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): f50e68d3 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 42f7065e 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 4a368813 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): c0862e21 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): f6452363 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 90e034da 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 3dbbd2e7 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 9b626f9c 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 8f23d5d7 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 1ec5d674 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): f0e9904f 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): c821363e 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): b62545ec 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 2a046a28 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): ab20d94d 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 60e12e73 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 2593e2a6 
+[2026-02-07T04:04:21.507Z] [NLP-HITL] Skipped (has known keyword, not Others): 5572c2b0 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 0c7f540e 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 49e814a9 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 42fb85df 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 5b51166b 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 5c14adcb 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): c13197c5 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 7cb20b89 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 75e4a166 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 87bbf8b5 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): adc09821 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 36481bf1 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 9098eea4 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 70a2cf0d 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 57cdccde 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 319d8a4d 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 699fc838 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 49cc84c1 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 0181fcaa 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 9e852596 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 10d75be8 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 1e47bb04 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 7f8986ba 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): c82c3273 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 7e01a552 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 43b5767f 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): 2ebbdc3f 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 8bd5b878 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 5a324493 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): e6e35d0d 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 8c7fe737 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"8c4fd1d9-b7f0-49e9-b9ef-c9ffed63c213","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): dc62bd7c 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ccde583c-bb77-4387-800e-7da014d52e35","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 9455d3d7 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 1a0d8c86 
+[2026-02-07T04:04:21.508Z] [NLP-HITL] Skipped (has known keyword, not Others): a8d87a4a 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"839dab90-49ae-4373-8bc2-09565b4473b5","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): ead5c186 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 60fb8306 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ae02da7f-3c7f-45bb-924a-98ab53a864e4","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"b22753af-baa8-4914-bc26-ea76eeee451c","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 939f743b 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"7bc17463-525f-4831-a685-f57ad4137237","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"db4d6c32-555c-4705-bb19-7805eb866b23","hasText":false}
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 361574b1 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 896bc8eb 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 6d307792 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 533182ab 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): 19e63489 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Filtered to 0 items to insert (93 duplicates) 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] Skipped (has known keyword, not Others): ccae2a51 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] No items to insert after filtering 
+[2026-02-07T04:04:21.509Z] [NLP-HITL] batchQueueForReview result: {"queued":0,"skipped":93,"errors":[]}
+[2026-02-07T04:04:47.429Z] [NLP-HITL] batchQueue endpoint called 
+[2026-02-07T04:04:47.429Z] [NLP-HITL] Batch queue received 100 items 
+[2026-02-07T04:04:47.429Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:47.429Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:47.429Z] [NLP-HITL] items type: object, isArray: true, length: 100 
+[2026-02-07T04:04:47.429Z] [NLP-HITL] Valid complaint IDs: 100 
+[2026-02-07T04:04:47.624Z] [NLP-HITL] Already in database (any status): 24 
+[2026-02-07T04:04:47.624Z] [NLP-HITL] Skipped (has known keyword, not Others): 778698c7 
+[2026-02-07T04:04:47.624Z] [NLP-HITL] Known keywords in cache: 666 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): ba016168 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): fdca09c5 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 30e42717 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): d42402a6 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 00097ffb 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): f50e68d3 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 8027addf 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 4a368813 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 42f7065e 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 90e034da 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): c0862e21 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 67ca1259 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): f6452363 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 8f23d5d7 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): f0e9904f 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 3dbbd2e7 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): b62545ec 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 9b626f9c 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 2a046a28 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 1ec5d674 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 5572c2b0 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): c821363e 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 60e12e73 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 2593e2a6 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): ab20d94d 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 5c14adcb 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 42fb85df 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): c13197c5 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 0c7f540e 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 5b51166b 
+[2026-02-07T04:04:47.625Z] [NLP-HITL] Skipped (has known keyword, not Others): 49e814a9 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 75e4a166 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 9098eea4 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 7cb20b89 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 87bbf8b5 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 70a2cf0d 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 36481bf1 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 57cdccde 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 0181fcaa 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 319d8a4d 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): adc09821 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 699fc838 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 9e852596 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): a8d87a4a 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 49cc84c1 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 7f8986ba 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 10d75be8 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): c82c3273 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 43b5767f 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 1e47bb04 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 7e01a552 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 2ebbdc3f 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 8bd5b878 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 5a324493 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"8c4fd1d9-b7f0-49e9-b9ef-c9ffed63c213","hasText":false}
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): e6e35d0d 
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ccde583c-bb77-4387-800e-7da014d52e35","hasText":false}
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): 8c7fe737 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 1a0d8c86 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"839dab90-49ae-4373-8bc2-09565b4473b5","hasText":false}
+[2026-02-07T04:04:47.626Z] [NLP-HITL] Skipped (has known keyword, not Others): dc62bd7c 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 60fb8306 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 361574b1 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 9455d3d7 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ae02da7f-3c7f-45bb-924a-98ab53a864e4","hasText":false}
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"7bc17463-525f-4831-a685-f57ad4137237","hasText":false}
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"b22753af-baa8-4914-bc26-ea76eeee451c","hasText":false}
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"db4d6c32-555c-4705-bb19-7805eb866b23","hasText":false}
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 896bc8eb 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 939f743b 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 6d307792 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): ead5c186 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 533182ab 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): ccae2a51 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Skipped (has known keyword, not Others): 19e63489 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] Filtered to 0 items to insert (93 duplicates) 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] No items to insert after filtering 
+[2026-02-07T04:04:47.627Z] [NLP-HITL] batchQueueForReview result: {"queued":0,"skipped":93,"errors":[]}
+[2026-02-07T04:04:55.078Z] [NLP-HITL] items type: object, isArray: true, length: 100 
+[2026-02-07T04:04:55.078Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:55.078Z] [NLP-HITL] batchQueue endpoint called 
+[2026-02-07T04:04:55.078Z] [NLP-HITL] Batch queue received 100 items 
+[2026-02-07T04:04:55.078Z] [NLP-HITL] First item sample: {
+  "complaint_id": "14a2c820-245e-4618-964a-3d1368027d92",
+  "text": "fjhgjfdsthgf",
+  "detected_category": "Others",
+  "detected_subcategory": null,
+  "confidence": "05",
+  "method": "FALLBACK",
+  "matched_term": null
+}
+[2026-02-07T04:04:55.078Z] [NLP-HITL] Valid complaint IDs: 100 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Already in database (any status): 24 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Known keywords in cache: 666 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 778698c7 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): ba016168 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): d42402a6 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 00097ffb 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): fdca09c5 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 30e42717 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 8027addf 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 67ca1259 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): f50e68d3 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 4a368813 
+[2026-02-07T04:04:55.266Z] [NLP-HITL] Skipped (has known keyword, not Others): 42f7065e 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): f6452363 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): c0862e21 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 3dbbd2e7 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 8f23d5d7 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 90e034da 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): f0e9904f 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 2a046a28 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 9b626f9c 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): c821363e 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): ab20d94d 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): b62545ec 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 60e12e73 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 2593e2a6 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 1ec5d674 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 5572c2b0 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 0c7f540e 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): c13197c5 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 5c14adcb 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 42fb85df 
+[2026-02-07T04:04:55.267Z] [NLP-HITL] Skipped (has known keyword, not Others): 49e814a9 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 7cb20b89 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 9098eea4 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 5b51166b 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): adc09821 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 36481bf1 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 75e4a166 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 57cdccde 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 70a2cf0d 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 319d8a4d 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 87bbf8b5 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 9e852596 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 0181fcaa 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 699fc838 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 7f8986ba 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 49cc84c1 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 1e47bb04 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 10d75be8 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): c82c3273 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 7e01a552 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): a8d87a4a 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 2ebbdc3f 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 43b5767f 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 8bd5b878 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): 5a324493 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 8c7fe737 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"8c4fd1d9-b7f0-49e9-b9ef-c9ffed63c213","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): dc62bd7c 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ccde583c-bb77-4387-800e-7da014d52e35","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 1a0d8c86 
+[2026-02-07T04:04:55.268Z] [NLP-HITL] Skipped (has known keyword, not Others): e6e35d0d 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 361574b1 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"839dab90-49ae-4373-8bc2-09565b4473b5","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 60fb8306 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"ae02da7f-3c7f-45bb-924a-98ab53a864e4","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): ead5c186 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"b22753af-baa8-4914-bc26-ea76eeee451c","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"db4d6c32-555c-4705-bb19-7805eb866b23","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Invalid item - missing complaint_id or text: {"complaint_id":"7bc17463-525f-4831-a685-f57ad4137237","hasText":false}
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 9455d3d7 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 939f743b 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 896bc8eb 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 6d307792 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 533182ab 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): 19e63489 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Skipped (has known keyword, not Others): ccae2a51 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] Filtered to 0 items to insert (93 duplicates) 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] No items to insert after filtering 
+[2026-02-07T04:04:55.269Z] [NLP-HITL] batchQueueForReview result: {"queued":0,"skipped":93,"errors":[]}
+[2026-02-07T04:04:57.970Z] [NLP-HITL] Cleanup: Checking 23 pending items against 666 keywords 
+[2026-02-07T04:04:57.973Z] [NLP-HITL] Cleanup: No items matched existing keywords 
