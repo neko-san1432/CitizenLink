@@ -1,59 +1,141 @@
 /* Barangay Prioritization Widget Styles */
 
-.barangay-prioritization-widget {
-  width: 100%;
-}
-
-.barangay-prioritization-widget h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary, #333);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-}
-
-.bp-list {
+.bp-widget {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1.25rem;
 }
 
-.bp-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.5);
+.bp-graph-section {
+  background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  border-radius: 10px;
+  padding: 0.875rem;
 }
 
-.dark .bp-item {
-  background-color: rgba(30, 41, 59, 0.5);
+html.dark .bp-graph-section {
+  background: rgba(30, 41, 59, 0.5);
   border-color: rgba(255, 255, 255, 0.05);
 }
 
-.bp-item:hover {
-  transform: translateX(4px);
-  background-color: rgba(255, 255, 255, 0.8);
+.bp-graph-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-600, #475569);
+  margin: 0 0 0.75rem 0;
 }
 
-.dark .bp-item:hover {
-  background-color: rgba(30, 41, 59, 0.8);
+html.dark .bp-graph-title {
+  color: var(--gray-400, #94a3b8);
 }
 
-.bp-name {
+.bp-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bp-bar-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 36px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bp-bar-label {
+  font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--text-primary, #1e293b);
+  color: var(--gray-700, #334155);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.bp-score {
-  font-size: 0.875rem;
+html.dark .bp-bar-label {
+  color: var(--gray-300, #cbd5e1);
+}
+
+.bp-bar-track {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+html.dark .bp-bar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.bp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.bp-bar-value {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--gray-500, #64748b);
+  text-align: right;
+}
+
+html.dark .bp-bar-value {
+  color: var(--gray-400, #94a3b8);
+}
+
+/* Empty State */
+.bp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--gray-400, #94a3b8);
+}
+
+.bp-empty-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+.bp-empty p {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Error State */
+.bp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--gray-500, #64748b);
+}
+
+.bp-error p {
+  font-size: 0.75rem;
+  margin: 0 0 0.75rem 0;
+}
+
+.bp-retry-btn {
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--accent-color, #3b82f6);
-  background: rgba(59, 130, 246, 0.1);
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--primary-500, #3b82f6);
+  background: transparent;
+  color: var(--primary-500, #3b82f6);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bp-retry-btn:hover {
+  background: var(--primary-500, #3b82f6);
+  color: white;
 }

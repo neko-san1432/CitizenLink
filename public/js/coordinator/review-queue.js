@@ -1,6 +1,11 @@
+import BarangayPrioritization from '../components/barangay-prioritization.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     loadReviewQueue(1);
+
+    // Initialize Barangay Prioritization Widget
+    const bpWidget = new BarangayPrioritization('barangay-prioritization-container');
+    bpWidget.loadInsights();
 
     // Add size selector listener
     const limitSelect = document.getElementById('rows-per-page');

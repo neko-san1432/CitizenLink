@@ -226,7 +226,7 @@ function getMenuItemsForRole(role) {
       { url: "/assignments", icon: "assignments", label: "Assignments" },
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
       { url: "/brain-analytics-page", icon: "analytics", label: "Brain Analytics" },
-      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
+      { url: "/dictionary-manager", icon: "dictionary", label: "Dictionary Manager" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ],
     "super-admin": [
@@ -235,7 +235,7 @@ function getMenuItemsForRole(role) {
       { url: "/super-admin/user-manager", icon: "role-changer", label: "User Manager" },
       { url: "/super-admin/link-generator", icon: "link-generator", label: "Link Generator" },
       { url: "/super-admin/server-logs", icon: "server-logs", label: "Server logs" },
-      { url: "/dictionary-manager", icon: "analytics", label: "Dictionary Manager" },
+      { url: "/dictionary-manager", icon: "dictionary", label: "Dictionary Manager" },
       { url: "/departments", icon: "departments", label: "Departments" },
       { url: "/myProfile", icon: "myProfile", label: "My Profile" }
     ]

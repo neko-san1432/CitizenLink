@@ -24,4 +24,10 @@ router.get(
     wrapper(complaintController.getReviewQueue.bind(complaintController))
 );
 
+// Barangay Insights for Prioritization Widget
+router.get(
+    "/barangay-insights",
+    wrapper(complaintController.getBarangayInsights.bind(complaintController))
+);
+
 module.exports = router;
