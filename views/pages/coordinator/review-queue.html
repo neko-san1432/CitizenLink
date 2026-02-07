@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="/css/viewport-fix.css" />
   <link rel="stylesheet" href="/css/pages/coordinator-review-queue-v4.css" />
   <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
+  <link rel="stylesheet" href="/css/components/sliding-panel.css" />
   <style>
     /* COMPACT OVERRIDES */
     .rq-table.table th.rq-th {
@@ -247,6 +248,7 @@
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
     <script type="module" src="../../js/services/toastNotificationService.js"></script>
+    <script type="module" src="../../js/components/sliding-panel.js"></script>
     <!-- CACHE BUSTER v3 -->
     <script type="module" src="../../js/coordinator/review-queue.js?v=6"></script>
 
@@ -257,6 +259,7 @@
         toastNotificationService.stopListening();
       });
     </script>
+    <div id="sliding-panel-container"></div>
 </body>
 
 </html>

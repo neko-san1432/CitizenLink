@@ -1741,9 +1741,7 @@ class ComplaintService {
    */
   async getFalseComplaints(filters = {}) {
     try {
-      const Database = require("../config/database");
-
-      const supabase = Database.getClient();
+      const supabase = this.complaintRepo.supabase;
       let query = supabase
         .from("complaints")
         .select("*")
@@ -1773,8 +1771,7 @@ class ComplaintService {
    */
   async getFalseComplaintStatistics() {
     try {
-      const Database = require("../config/database");
-      const supabase = Database.getClient();
+      const supabase = this.complaintRepo.supabase;
 
       // Get total count of false complaints
       const { count: total, error: countError } = await supabase
@@ -1822,9 +1819,7 @@ class ComplaintService {
    */
   async getComplaintEvidence(complaintId, user) {
     try {
-      const Database = require("../config/database");
-
-      const supabase = Database.getClient();
+      const supabase = this.complaintRepo.supabase;
       // First, verify the user has access to this complaint
       const { data: complaint, error: complaintError } = await supabase
         .from("complaints")
@@ -1927,7 +1922,7 @@ class ComplaintService {
   async confirmResolution(complaintId, citizenId, confirmed, _feedback = null) {
     try {
       // Use repository client (service-role) to avoid RLS issues
-      const { supabase } = this.complaintRepo;
+      const supabase = this.complaintRepo.supabase;
 
       // Bypass table update for now
       const updatedComplaint = {

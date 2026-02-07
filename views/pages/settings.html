@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet" />
+    <title id="settings">Settings - CitizenLink</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/toast.css" />
+    <link rel="stylesheet" href="../css/components/sidebar.css" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" href="../css/components/clock.css" />
+    <link rel="stylesheet" href="../css/header-redesign.css" />
+    <link rel="stylesheet" href="../css/viewport-fix.css" />
+    <link rel="stylesheet" href="../css/pages/profile-revamp.css" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        .settings-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .settings-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .settings-nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .settings-nav-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .settings-nav-item.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .settings-content {
+            padding-bottom: 2rem;
+        }
+
+        .settings-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-box {
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .inline-edit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .info-display-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-nav {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .settings-nav-item {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+        <div id="app" class="collapsible">
+            <div class="profile-page">
+                <div class="profile-header-section glass-panel" style="margin-bottom: 2rem;">
+                    <div class="profile-header-content">
+                        <div class="profile-identity-group">
+                            <div class="profile-avatar-large">
+                                <div id="profile-initial">User</div>
+                            </div>
+                            <div class="profile-main-info">
+                                <h1 class="profile-real-name">Account Settings</h1>
+                                <p class="text-sm text-gray-500">Manage your profile and security</p>
+                            </div>
+                        </div>
+                        <div class="profile-header-actions">
+                            <a href="/profile" class="btn-secondary">
+                                👤 View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-container">
+                    <!-- Sidebar Nav -->
+                    <div class="glass-panel settings-nav">
+                        <div class="settings-nav-item active" data-tab="general">General</div>
+                        <div class="settings-nav-item" data-tab="security">Security</div>
+                        <div class="settings-nav-item" data-tab="address">Address</div>
+                    </div>
+
+                    <!-- Content Area -->
+                    <div class="settings-content">
+                        <!-- General Settings -->
+                        <section id="general" class="settings-section active">
+                            <div class="glass-panel p-6">
+                                <h2 class="text-xl font-bold mb-6">General Information</h2>
+
+                                <div class="form-box">
+                                    <!-- Name Section -->
+                                    <div class="inline-edit-row">
+                                        <div class="info-display-group" id="name-view">
+                                            <span class="info-label">Full Name</span>
+                                            <span class="info-value" id="profile-name-display">Loading...</span>
+                                        </div>
+                                        <button class="btn-text" id="edit-name-btn">Change</button>
+
+                                        <div id="name-edit" style="display: none; width: 100%;">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+                                                <input id="edit-first-name-input" class="input" type="text"
+                                                    placeholder="First Name" />
+                                                <input id="edit-middle-name-input" class="input" type="text"
+                                                    placeholder="Middle Name" />
+                                                <input id="edit-last-name-input" class="input" type="text"
+                                                    placeholder="Last Name" />
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button class="btn-primary btn-sm" id="save-name-btn">Save</button>
+                                                <button class="btn-secondary btn-sm"
+                                                    id="cancel-name-btn">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Email Section -->
+                                    <div class="inline-edit-row">
+                                        <div class="info-display-group">
+                                            <span class="info-label">Email Address</span>
+                                            <span class="info-value" id="profile-email-display">Loading...</span>
+                                        </div>
+                                        <button class="btn-text" id="edit-email-btn">Change</button>
+                                    </div>
+
+                                    <!-- Mobile Section -->
+                                    <div class="inline-edit-row">
+                                        <div class="info-display-group" id="mobile-view">
+                                            <span class="info-label">Mobile Number</span>
+                                            <span class="info-value" id="profile-mobile-display">Loading...</span>
+                                        </div>
+                                        <button class="btn-text" id="edit-mobile-btn">Change</button>
+
+                                        <div id="mobile-edit" style="display: none; width: 100%;">
+                                            <input id="edit-mobile-input" class="input mb-2" type="tel"
+                                                placeholder="Mobile Number" />
+                                            <div class="flex gap-2">
+                                                <button class="btn-primary btn-sm" id="save-mobile-btn">Save</button>
+                                                <button class="btn-secondary btn-sm"
+                                                    id="cancel-mobile-btn">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Security Settings -->
+                        <section id="security" class="settings-section">
+                            <div class="glass-panel p-6">
+                                <h2 class="text-xl font-bold mb-6">Password & Security</h2>
+                                <div class="form-box">
+                                    <form id="change-password-form">
+                                        <div class="form-group">
+                                            <label>Current Password</label>
+                                            <input id="current-password" class="input" type="password"
+                                                autocomplete="current-password" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>New Password</label>
+                                            <input id="new-password" class="input" type="password"
+                                                autocomplete="new-password" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Confirm New Password</label>
+                                            <input id="confirm-new-password" class="input" type="password"
+                                                autocomplete="new-password" required />
+                                        </div>
+                                        <button class="btn-primary" type="submit">Update Password</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Address Settings -->
+                        <section id="address" class="settings-section">
+                            <div class="glass-panel p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-xl font-bold">Address Details</h2>
+                                    <button id="edit-address-btn" class="btn-text">Edit Address</button>
+                                </div>
+
+                                <div id="address-view">
+                                    <div class="address-box p-4 bg-white/30 rounded-lg">
+                                        <p id="address-line-1-display" class="font-medium">—</p>
+                                        <p id="address-line-2-display" class="text-sm text-gray-600"
+                                            style="display: none;">—</p>
+                                        <p class="text-sm">Digos City, Davao del Sur <span
+                                                id="address-postal-display"></span></p>
+                                        <p id="address-barangay-display" class="badge-barangay mt-2">—</p>
+                                    </div>
+                                </div>
+
+                                <div id="address-edit" style="display: none;">
+                                    <div class="form-box">
+                                        <div class="form-group">
+                                            <label>Address Line 1</label>
+                                            <input id="edit-address-line-1" class="input" type="text"
+                                                placeholder="Street/Purok" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Address Line 2 (Optional)</label>
+                                            <input id="edit-address-line-2" class="input" type="text"
+                                                placeholder="Apartment/Suite" />
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="form-group">
+                                                <label>Barangay</label>
+                                                <input id="edit-address-barangay" class="input" type="text"
+                                                    placeholder="Barangay" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Postal Code</label>
+                                                <input id="edit-address-postal" class="input" type="text"
+                                                    placeholder="Postal Code" />
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2 mt-4">
+                                            <button class="btn-primary" id="save-address-btn">Save Changes</button>
+                                            <button class="btn-secondary" id="cancel-address-btn">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Email Change Modal -->
+    <div id="email-change-modal" class="modal-overlay" style="display: none; visibility: hidden">
+        <div class="modal-content" style="max-width: 500px">
+            <div class="modal-header flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Change Email Address</h2>
+                <button id="close-email-modal" class="text-2xl">&times;</button>
+            </div>
+            <form id="email-change-form">
+                <div class="mb-4">
+                    <p class="text-sm text-gray-500">Current email:</p>
+                    <p id="current-email-display" class="font-medium">—</p>
+                </div>
+                <div class="form-group">
+                    <label>New Email Address</label>
+                    <input id="new-email-input" class="input" type="email" required />
+                </div>
+                <div class="form-group">
+                    <label>Verify Identity with Password</label>
+                    <input id="current-password-email" class="input" type="password" required />
+                </div>
+                <div class="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded text-sm text-amber-800">
+                    <strong>Note:</strong> A verification link will be sent to your new email to confirm this change.
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn-primary flex-1">Request Change</button>
+                    <button type="button" id="cancel-email-modal" class="btn-secondary flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="../js/components/header.js"></script>
+    <script type="module" src="../js/components/sidebar.js"></script>
+    <script type="module" src="../js/auth/authChecker.js"></script>
+    <script type="module" src="../js/components/clock.js"></script>
+    <script type="module" src="../js/pages/settings.js"></script>
+</body>
+
+</html>

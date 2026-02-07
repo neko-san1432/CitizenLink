@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet" />
+    <title id="profile">Profile - CitizenLink</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/toast.css" />
+    <link rel="stylesheet" href="../css/components/sidebar.css" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" href="../css/components/clock.css" />
+    <link rel="stylesheet" href="../css/header-redesign.css" />
+    <link rel="stylesheet" href="../css/viewport-fix.css" />
+    <link rel="stylesheet" href="../css/pages/profile-revamp.css" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="header-container"></div>
+        <div id="sidebar" class="collapsible"></div>
+        <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
+        <div id="app" class="collapsible">
+            <div class="profile-page">
+                <!-- Hero Section -->
+                <div class="profile-header-section glass-panel">
+                    <div class="profile-cover-image"></div>
+                    <div class="profile-header-content">
+                        <div class="profile-identity-group">
+                            <div class="profile-avatar-large">
+                                <div id="profile-initial">User</div>
+                                <div class="profile-status-pill">Online</div>
+                            </div>
+                            <div class="profile-main-info">
+                                <div class="profile-name-row">
+                                    <h1 class="profile-real-name" id="profile-name-display">
+                                        Loading...
+                                    </h1>
+                                </div>
+
+                                <div class="profile-role-row">
+                                    <span class="role-badge" id="profile-role">—</span>
+                                    <span class="email-text" id="profile-email-display">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-header-actions">
+                            <a href="/settings" class="btn-secondary" id="edit-profile-btn">
+                                ⚙️ Account Settings
+                            </a>
+                            <a href="/fileComplaint" class="btn-primary" id="action-button" style="display: none">
+                                + New Complaint
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="profile-grid-layout">
+                    <!-- Left Column: Details -->
+                    <div class="profile-left-col">
+                        <!-- Personal Info Card -->
+                        <div class="glass-panel info-card">
+                            <div class="card-header">
+                                <h3>Personal Details</h3>
+                            </div>
+                            <div class="info-list">
+                                <!-- Member Since -->
+                                <div class="info-row">
+                                    <span class="info-label">Member Since</span>
+                                    <span class="info-val" id="member-since">—</span>
+                                </div>
+
+                                <!-- Mobile -->
+                                <div class="info-row">
+                                    <span class="info-label">Mobile</span>
+                                    <span class="info-val" id="profile-mobile-display">—</span>
+                                </div>
+
+                                <!-- Role/Office Specifics -->
+                                <div class="info-row" id="profile-office-item" style="display: none">
+                                    <span class="info-label">Office</span>
+                                    <span class="info-val" id="profile-office">—</span>
+                                </div>
+                                <div class="info-row" id="profile-position-id-item" style="display: none">
+                                    <span class="info-label">Position ID</span>
+                                    <span class="info-val" id="profile-position-id">—</span>
+                                </div>
+
+                                <!-- Address Section -->
+                                <div class="info-divider"></div>
+                                <div class="info-header-row">
+                                    <span class="info-label">Address</span>
+                                </div>
+                                <div id="address-display" class="address-box">
+                                    <span id="address-line-1-display" class="addr-line">—</span>
+                                    <span id="address-line-2-display" class="addr-line" style="display: none">—</span>
+                                    <span class="addr-line">Digos City, Davao del Sur
+                                        <span id="address-postal-display"></span></span>
+                                    <span id="address-barangay-display" class="addr-line badge-barangay">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Complaints/History -->
+                    <div class="profile-right-col">
+                        <div class="glass-panel history-panel">
+                            <div class="panel-header">
+                                <h2 id="content-title">Records & Activity</h2>
+                                <div class="tab-filters">
+                                    <span class="tab active">Complaints</span>
+                                </div>
+                            </div>
+
+                            <div class="complaints-scroll" id="complaints-scroll">
+                                <!-- Complaint Status Chart -->
+                                <div class="chart-section" style="
+                      padding: 1rem 2rem;
+                      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                      display: none;
+                    " id="complaint-stats-container">
+                                    <div style="
+                        height: 200px;
+                        position: relative;
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                      ">
+                                        <canvas id="complaintStatsChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <div id="my-complaints"></div>
+
+                                <!-- Empty State -->
+                                <div id="complaints-empty" class="complaints-empty hidden">
+                                    <div class="empty-icon">📂</div>
+                                    <h3 id="empty-title">No Records Found</h3>
+                                    <p id="empty-message">
+                                        You haven't filed any complaints yet.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="/js/lib/supabase-boot.js"></script>
+    <script type="module" src="../js/components/header.js"></script>
+    <script type="module" src="../js/components/sidebar.js"></script>
+    <script type="module" src="../js/auth/authChecker.js"></script>
+    <script type="module" src="../js/components/clock.js"></script>
+    <script type="module" src="../js/pages/profile.js"></script>
+</body>
+
+</html>

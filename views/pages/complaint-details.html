@@ -34,14 +34,6 @@
     <!-- Main Content -->
     <main class="main-content">
       <div class="container">
-        <!-- Breadcrumb -->
-        <nav class="breadcrumb">
-          <a href="#" id="return-link" class="breadcrumb-link">
-            <i class="icon-arrow-left"></i>
-            <span id="return-text">Back</span>
-          </a>
-        </nav>
-
         <!-- Loading State -->
         <div id="loading" class="loading">
           <div class="spinner"></div>
@@ -59,93 +51,82 @@
 
         <!-- Complaint Details -->
         <div id="complaint-details" class="complaint-details animate-fade-in" style="display: none">
-          <!-- Complaint Header -->
-          <div class="complaint-header glass-panel p-6 rounded-xl mb-6">
-            <div class="complaint-title-section">
-              <div style="
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    margin-bottom: 8px;
-                  ">
-                <!-- Category Badge as Main Header -->
-                <span id="complaint-category-badge" style="
-                      background: #3b82f6;
-                      color: white;
-                      padding: 4px 12px;
-                      border-radius: 20px;
-                      font-weight: 700;
-                      font-size: 0.9rem;
-                      text-transform: uppercase;
-                      letter-spacing: 0.05em;
-                    ">CATEGORY</span>
-
-                <span id="complaint-id" class="complaint-id text-gray-500 font-mono text-sm">#12345</span>
+          <!-- Column 1: Primary Details -->
+          <div class="glass-panel complaint-view-card">
+            <!-- Consolidated Thin Header -->
+            <div class="details-header-card">
+              <div class="complaint-title-section">
+                <a href="#" id="return-link" class="breadcrumb-link"
+                  style="margin-right: 8px; color: #64748b; display: flex; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </a>
+                <span id="complaint-id" class="complaint-id-tag">#12345</span>
+                <span id="complaint-category-badge" class="category-badge-compact">CATEGORY</span>
+                <h1 id="complaint-title" class="complaint-title">Complaint Title</h1>
               </div>
-
-              <h1 id="complaint-title" class="complaint-title text-xl font-semibold text-gray-700"
-                style="margin: 0; line-height: 1.4">
-                Complaint Title
-              </h1>
-
-              <div class="complaint-meta mt-3 flex gap-3 flex-wrap items-center">
-                <span id="complaint-status" class="complaint-status status-pending">Pending</span>
-                <span id="complaint-priority" class="complaint-priority priority-medium">Medium</span>
-                <span id="complaint-date" class="text-sm text-gray-500">
-                  <!-- Date -->
-                </span>
+              <div class="complaint-actions" id="complaint-actions">
+                <!-- Actions -->
               </div>
             </div>
-            <div class="complaint-actions" id="complaint-actions">
-              <!-- Role-specific actions will be populated here -->
+
+            <div class="complaint-meta"
+              style="padding: 0 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span id="complaint-status" class="complaint-status">Pending</span>
+              <span id="complaint-priority" class="complaint-priority">Medium</span>
+              <span id="complaint-date" style="font-size: 0.65rem; color: #64748b; font-weight: 500;"></span>
+            </div>
+
+            <!-- Description -->
+            <div class="content-section" style="background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Description</h3>
+              <p id="complaint-description" class="text-gray-700 leading-relaxed"></p>
+            </div>
+
+            <!-- Complainant -->
+            <div id="complainant-section" class="content-section"
+              style="display: none; background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">👤 Complainant</h3>
+              <div id="complainant-info" class="complainant-info"
+                style="background: transparent; border: none; padding: 0;"></div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="content-section" style="background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Attachments</h3>
+              <div id="complaint-attachments" class="attachments-list"></div>
             </div>
           </div>
 
-          <!-- Status Timeline - Horizontal Stepper -->
-          <div class="status-timeline glass-panel p-6 rounded-xl mb-6">
-            <h3 class="text-lg font-bold mb-4">Status Progress</h3>
-            <div id="timeline-items" class="progress-stepper">
-              <!-- Progress stepper will be populated here -->
+          <!-- Column 2: Location Context -->
+          <div class="glass-panel location-panel">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <h3 class="text-sm font-bold text-gray-800 m-0">Location Context</h3>
+              <button id="view-on-map-btn" class="btn btn-secondary btn-xs"
+                style="font-size: 0.7rem; padding: 2px 8px;">Full Map</button>
+            </div>
+
+            <div id="complaint-map" class="complaint-map" style="flex: 1; min-height: 200px;"></div>
+
+            <div class="content-section"
+              style="margin-top: 8px; background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Address Details</h3>
+              <div id="complaint-location" class="location-info"></div>
             </div>
           </div>
 
-          <!-- Complaint Content -->
-          <div class="complaint-content grid gap-6">
-            <div class="content-section glass-panel p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-2">Description</h3>
-              <p id="complaint-description" class="text-gray-700">
-                Complaint description will be loaded here...
-              </p>
+          <!-- Column 3: Timeline -->
+          <div class="glass-panel status-timeline-panel">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <h3 class="text-sm font-bold text-gray-800 m-0">Status Progress</h3>
+              <div id="timeline-badge"
+                class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase">Active</div>
             </div>
-
-            <div class="content-section glass-panel p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-2">Location</h3>
-              <div id="complaint-location" class="location-info">
-                <!-- Location details will be populated here -->
-              </div>
+            <div id="timeline-items" class="progress-stepper" style="flex: 1; overflow-y: auto; padding-right: 4px;">
+              <!-- Timeline entries -->
             </div>
-
-            <!-- Complainant Information (Only visible to admin, officers, and coordinators) -->
-            <div id="complainant-section" class="content-section glass-panel p-6 rounded-xl" style="display: none">
-              <h3 class="text-lg font-bold mb-2">
-                👤 Complainant Information
-              </h3>
-              <div id="complainant-info" class="complainant-info">
-                <!-- Complainant details will be populated here -->
-              </div>
-            </div>
-
-            <div class="content-section glass-panel p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-2">Attachments</h3>
-              <div id="complaint-attachments" class="attachments-list">
-                <!-- Attachments will be populated here -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Role-specific sections -->
-          <div id="role-specific-content" class="mt-6">
-            <!-- Content will be populated based on user role -->
           </div>
         </div>
       </div>

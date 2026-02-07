@@ -187,7 +187,15 @@ router.get("/dashboard", authenticateUser, (req, res) => {
 
 // General protected pages (simplified URLs)
 router.get("/myProfile", authenticateUser, (req, res) => {
-  res.sendFile(path.join(config.rootDir, "views", "pages", "myProfile.html"));
+  res.redirect("/profile");
+});
+
+router.get("/profile", authenticateUser, (req, res) => {
+  res.sendFile(path.join(config.rootDir, "views", "pages", "profile.html"));
+});
+
+router.get("/settings", authenticateUser, (req, res) => {
+  res.sendFile(path.join(config.rootDir, "views", "pages", "settings.html"));
 });
 
 // Publication page (all authenticated roles)
@@ -214,7 +222,6 @@ router.get("/departments", authenticateUser, (req, res) => {
         "admin",
         "department-structure.html"
       )
-
     );
   } else {
     res.sendFile(
@@ -254,15 +261,6 @@ router.get(
   requireRole(["super-admin"]),
   (req, res) => {
     res.redirect("/super-admin/user-manager");
-  }
-);
-
-router.get(
-  "/settings",
-  authenticateUser,
-  requireRole(["lgu", "super-admin"]),
-  (req, res) => {
-    res.redirect("/dashboard");
   }
 );
 

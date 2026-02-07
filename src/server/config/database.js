@@ -31,8 +31,14 @@ class Database {
       return;
     }
     // Service role key automatically bypasses RLS policies
-    // console.log('[DB] Initializing Supabase client. Service Role Key present:', !!serviceRoleKey);
-    this.supabase = createClient(supabaseUrl, serviceRoleKey);
+    // Disabling session persistence ensures the server client doesn't leak auth state
+    this.supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
     this._initialized = true;
   }
   getClient() {

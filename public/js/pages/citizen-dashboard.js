@@ -177,6 +177,5 @@ window.fileNewComplaint = function () {
 };
 
 window.viewMyProfile = function () {
-  // Assuming profile page exists or just redirect to my complaints
-  window.location.href = "/myProfile";
+  window.location.href = "/profile";
 };

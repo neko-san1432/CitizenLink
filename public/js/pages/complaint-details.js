@@ -1,9 +1,9 @@
-// Complaint Details Page JavaScript
 import showToast from "../components/toast.js";
 
-class ComplaintDetails {
-  constructor() {
-    this.complaintId = null;
+export class ComplaintDetails {
+  constructor(container = null, complaintId = null) {
+    this.container = container;
+    this.complaintId = complaintId;
     this.complaint = null;
     this.userRole = null;
     this.map = null;
@@ -17,10 +17,22 @@ class ComplaintDetails {
     this.init();
     // Cleanup map when page is unloaded
     window.addEventListener("beforeunload", () => {
-      if (this.map) {
-        this.map.remove();
-      }
+      this.cleanup();
     });
+  }
+
+  cleanup() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+
+  getElement(id) {
+    if (this.container) {
+      return this.container.querySelector(`#${id}`);
+    }
+    return document.getElementById(id);
   }
   async init() {
     try {
@@ -41,13 +53,13 @@ class ComplaintDetails {
       }
 
       // Hide complaint details container initially to prevent showing dummy content
-      const detailsContainer = document.getElementById("complaint-details");
+      const detailsContainer = this.getElement("complaint-details");
       if (detailsContainer) {
         detailsContainer.style.display = "none";
       }
 
       // Clear placeholder text immediately to prevent showing dummy content
-      const descriptionEl = document.getElementById("complaint-description");
+      const descriptionEl = this.getElement("complaint-description");
       if (descriptionEl) {
         descriptionEl.textContent = "";
       }
@@ -80,24 +92,36 @@ class ComplaintDetails {
         timelineEl.innerHTML = "";
       }
 
-      // Get complaint ID from URL - try both path parameter and query parameter
-      const pathParts = window.location.pathname.split("/");
-      let complaintId = pathParts[pathParts.length - 1];
-      // If the last part is 'complaint-details', try query parameter
-      if (!complaintId || complaintId === "complaint-details") {
-        const urlParams = new URLSearchParams(window.location.search);
-        complaintId = urlParams.get("id");
+      // Use provided ID or get from URL
+      if (!this.complaintId) {
+        const pathParts = window.location.pathname.split("/");
+        let complaintId = pathParts[pathParts.length - 1];
+        // If the last part is 'complaint-details', try query parameter
+        if (!complaintId || complaintId === "complaint-details" || complaintId === "review") {
+          const urlParams = new URLSearchParams(window.location.search);
+          complaintId = urlParams.get("id");
+        }
+
+        // If it's something like /review/UUID, the last part is the UUID
+        if (!complaintId || complaintId === "complaint-details") {
+          // Check if we are in /review/:id format
+          if (pathParts.includes('review') || pathParts.includes('complaint-details')) {
+            complaintId = pathParts[pathParts.indexOf('review') + 1] || pathParts[pathParts.indexOf('complaint-details') + 1];
+          }
+        }
+
+        if (!complaintId) {
+          throw new Error("Invalid complaint ID");
+        }
+
+        // Validate UUID format (basic check)
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(complaintId)) {
+          throw new Error("Invalid complaint ID format");
+        }
+        this.complaintId = complaintId;
       }
-      if (!complaintId || complaintId === "complaint-details") {
-        throw new Error("Invalid complaint ID");
-      }
-      // Validate UUID format (basic check)
-      const uuidRegex =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(complaintId)) {
-        throw new Error("Invalid complaint ID format");
-      }
-      this.complaintId = complaintId;
       // Get user role
       this.userRole = await this.getUserRole();
       // Load complaint details
@@ -411,7 +435,7 @@ class ComplaintDetails {
     }
   }
   async renderComplaintDetails() {
-    const detailsContainer = document.getElementById("complaint-details");
+    const detailsContainer = this.getElement("complaint-details");
     if (!detailsContainer) return;
     // Return early if complaint is not loaded
     if (!this.complaint) {
@@ -429,12 +453,12 @@ class ComplaintDetails {
       titleEl.textContent = displayTitle;
     }
 
-    document.getElementById(
+    this.getElement(
       "complaint-id"
     ).textContent = `#${this.complaint.id.substring(0, 8)}`;
 
     // Category Badge
-    const categoryBadge = document.getElementById("complaint-category-badge");
+    const categoryBadge = this.getElement("complaint-category-badge");
     if (categoryBadge) {
       // Try to find category name from joined data or heuristic
       let catName = "Complaint";
@@ -447,7 +471,7 @@ class ComplaintDetails {
     }
 
     // Date
-    const dateEl = document.getElementById("complaint-date");
+    const dateEl = this.getElement("complaint-date");
     if (dateEl && this.complaint.submitted_at) {
       const date = new Date(this.complaint.submitted_at);
       dateEl.textContent =
@@ -483,19 +507,19 @@ class ComplaintDetails {
       displayStatus = this.complaint.status || "Unknown";
     }
     const statusClass = this.getStatusClass(displayStatus);
-    document.getElementById("complaint-status").textContent =
+    this.getElement("complaint-status").textContent =
       this.getStatusDisplayText(displayStatus);
-    document.getElementById(
+    this.getElement(
       "complaint-status"
     ).className = `complaint-status ${statusClass}`;
-    document.getElementById("complaint-priority").textContent =
+    this.getElement("complaint-priority").textContent =
       this.complaint.priority || "Medium";
-    document.getElementById(
+    this.getElement(
       "complaint-priority"
     ).className = `complaint-priority priority-${(
       this.complaint.priority || "medium"
     ).toLowerCase()}`;
-    document.getElementById("complaint-description").textContent =
+    this.getElement("complaint-description").textContent =
       this.complaint.descriptive_su || "No description provided";
     // Display assignment progress if available
     this.displayAssignmentProgress();
@@ -528,7 +552,7 @@ class ComplaintDetails {
       this.setupAdminMergeTools();
     }
 
-    // Show the details (ensure grid layout)
+    // Show the details
     detailsContainer.style.display = "grid";
   }
 
@@ -556,7 +580,7 @@ class ComplaintDetails {
   }
 
   showDuplicateAlert(duplicates) {
-    const container = document.getElementById("complaint-details");
+    const container = this.getElement("complaint-details");
 
     // Create Alert Box
     const alertBox = document.createElement("div");
@@ -716,8 +740,8 @@ class ComplaintDetails {
       });
   }
   renderComplainantInfo() {
-    const complainantSection = document.getElementById("complainant-section");
-    const complainantInfo = document.getElementById("complainant-info");
+    const complainantSection = this.getElement("complainant-section");
+    const complainantInfo = this.getElement("complainant-info");
     if (!complainantSection || !complainantInfo) return;
     // Show complainant info only for admin, officers, and complaint coordinator
     const rolesThatCanSeeComplainant = [
@@ -1044,7 +1068,7 @@ class ComplaintDetails {
     }
   }
   renderLocation() {
-    const locationContainer = document.getElementById("complaint-location");
+    const locationContainer = this.getElement("complaint-location");
     if (!locationContainer) return;
 
     // Check if we have valid coordinates
@@ -1077,21 +1101,23 @@ class ComplaintDetails {
           <div class="location-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
             ${canUseBoundaryToggle
             ? `
-              <button id="toggle-boundary-btn" class="btn btn-secondary" type="button">
-                Show Digos City Boundary
+              <button id="toggle-boundary-btn" class="btn btn-secondary btn-xs" type="button" style="font-size: 0.7rem; padding: 2px 8px;">
+                Show Boundary
               </button>
             `
             : ""
           }
-            <button id="show-map-modal-btn" class="btn btn-secondary" type="button">
-              📍 View on Map
-            </button>
           </div>
-          <div id="complaint-map" class="complaint-map" style="margin-top: 10px; border-radius: 8px; overflow: hidden;"></div>
         `
           : ""
         }
       `;
+
+      // Setup Full Map listener if button exists
+      const fullMapBtn = this.getElement("view-on-map-btn") || this.getElement("show-map-modal-btn");
+      if (fullMapBtn) {
+        fullMapBtn.onclick = () => this.showMapModal();
+      }
 
       // Initialize map if coordinates are available
       if (hasCoordinates) {
@@ -1102,7 +1128,7 @@ class ComplaintDetails {
             this.setupBoundaryToggle();
           }
           // Setup map modal button
-          const mapModalBtn = document.getElementById("show-map-modal-btn");
+          const mapModalBtn = this.getElement("show-map-modal-btn");
           if (mapModalBtn) {
             mapModalBtn.addEventListener("click", () => {
               this.showMapModal();
@@ -1803,7 +1829,7 @@ class ComplaintDetails {
     if (routeInfo) routeInfo.style.display = "none";
   }
   renderAttachments() {
-    const attachmentsContainer = document.getElementById(
+    const attachmentsContainer = this.getElement(
       "complaint-attachments"
     );
     if (!attachmentsContainer) return;
@@ -1898,349 +1924,115 @@ class ComplaintDetails {
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   }
   async renderTimeline() {
-    const timelineContainer = document.getElementById("timeline-items");
+    const timelineContainer = this.getElement("timeline-items");
     if (!timelineContainer) return;
 
-    // Use the new 'comment' JSON attribute directly from the complaint object
-    // Structure: { "verified": { "date": "...", "comment": "..." }, ... }
     const commentData = this.complaint.comment || {};
-
-    // Define the standard workflow steps in order
     const steps = [
-      {
-        key: 'submitted',
-        label: 'Submitted',
-        icon: '📝',
-        statuses: ['new', 'submitted', 'pending']
-      },
-      {
-        key: 'verified',
-        label: 'Verified',
-        icon: '✅',
-        statuses: ['assigned', 'verified', 'under_review']
-      },
-      {
-        key: 'action_taken',
-        label: 'Action Taken',
-        icon: '🛠️',
-        statuses: ['pending_approval', 'action_taken', 'in_progress']
-      },
-      {
-        key: 'resolved',
-        label: 'Resolved',
-        icon: '🎉',
-        statuses: ['resolved', 'completed', 'closed']
-      }
+      { key: 'submitted', label: 'Submitted', icon: '📝', statuses: ['new', 'submitted', 'pending'] },
+      { key: 'verified', label: 'Verified', icon: '✅', statuses: ['assigned', 'verified', 'under_review'] },
+      { key: 'action_taken', label: 'Action Taken', icon: '🛠️', statuses: ['pending_approval', 'action_taken', 'in_progress'] },
+      { key: 'resolved', label: 'Resolved', icon: '🎉', statuses: ['resolved', 'completed', 'closed'] }
     ];
 
     const currentStatus = (this.complaint.workflow_status || 'new').toLowerCase();
     const isCancelled = currentStatus === 'cancelled';
     const isRejected = currentStatus === 'rejected';
-
-    // Find the current step index
-    // If cancelled/rejected, we might show a special state, but typically it stops at the last valid step
     let currentStepIndex = steps.findIndex(s => s.statuses.includes(currentStatus));
+    if (currentStepIndex === -1) currentStepIndex = 0;
 
-    // Special handling for rejected/cancelled
-    if (isRejected || isCancelled) {
-      // Find the last completed step or show at the beginning
-      // For UX, it's often better to show it at the current step if it was rejected there
-    }
-
-    // Fallback if status not found
-    if (currentStepIndex === -1) {
-      // If we are in terminal state, we might want to stay at the last known valid step
-      // But for simplicity, let's keep the current logic if it works
-      currentStepIndex = 0;
-    }
-
-    let html = '<div class="timeline-stepper">';
+    let html = '<div class="timeline-stepper-v2">';
 
     steps.forEach((step, index) => {
-      // Determine state: completed, current, or future
       let state = 'future';
-      if (isCancelled && index === 0) {
-        state = 'completed'; // At least submitted
-      } else if (index < currentStepIndex) {
-        state = 'completed';
-      } else if (index === currentStepIndex) {
-        state = 'current';
-      }
+      if (isCancelled && index === 0) state = 'completed';
+      else if (index < currentStepIndex) state = 'completed';
+      else if (index === currentStepIndex) state = 'current';
 
-      // GET COMMENT FROM JSON ATTRIBUTE
-      // The key in the JSON matches the step key (e.g., 'verified')
       const stepData = commentData[step.key];
-
       let commentContent = '';
-      let logDateDisplay = '';
+      let dateDisplay = '';
 
       if (stepData && stepData.comment) {
-        // We have data for this phase
-        const dateStr = stepData.date ? new Date(stepData.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-
-        if (stepData.date) logDateDisplay = `<span class="latest-log-date">${new Date(stepData.date).toLocaleDateString()}</span>`;
-
-        commentContent = `
-            <div class="timeline-log-entry">
-                <div class="log-header">
-                    <span class="log-date">${dateStr}</span>
-                </div>
-                <div class="log-message">"${stepData.comment}"</div>
-            </div>
-          `;
+        const dateObj = new Date(stepData.date);
+        dateDisplay = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        commentContent = `<div class="timeline-comment-v2">"${stepData.comment}"</div>`;
       } else {
-        // Fallback text
-        if (state === 'future' || state === 'current') {
-          commentContent = `<div class="no-comments">No comments yet</div>`;
-        } else { // completed/past
-          commentContent = `<div class="no-comments">No comments available</div>`;
-        }
+        // Hide empty comment boxes to save space
+        commentContent = '';
       }
 
-      // CSS classes
       const isActive = state === 'current';
       const isPast = state === 'completed';
-      const nodeColor = isPast || isActive ? '#10b981' : '#e5e7eb'; // Green for active/done
-      const lineColor = isPast ? '#10b981' : '#e5e7eb';
       const isLast = index === steps.length - 1;
 
       html += `
-        <div class="timeline-item ${state}" data-step="${index}">
-            <div class="timeline-left">
-                <div class="timeline-node" style="background-color: ${nodeColor}">
-                    ${isPast || isActive ? step.icon : ''}
-                </div>
-                ${!isLast ? `<div class="timeline-line" style="background-color: ${lineColor}"></div>` : ''}
+        <div class="timeline-item-v2 ${state}">
+          <div class="timeline-left-v2">
+            <div class="timeline-node-v2 ${state}">${isPast || isActive ? step.icon : ''}</div>
+            ${!isLast ? `<div class="timeline-line-v2 ${isPast ? 'active' : ''}"></div>` : ''}
+          </div>
+          <div class="timeline-content-v2">
+            <div class="timeline-header-v2">
+              <span class="timeline-label-v2">${step.label}</span>
+              <span class="timeline-date-v2">${dateDisplay}</span>
             </div>
-            <div class="timeline-content">
-                <div class="timeline-header" onclick="this.parentElement.classList.toggle('expanded')">
-                    <div class="timeline-title">
-                        <span class="step-name">${step.label}</span>
-                        ${isActive ? '<span class="status-badge current">Current</span>' : ''}
-                        ${logDateDisplay}
-                    </div>
-                    <div class="timeline-toggle">▼</div>
-                </div>
-                <!-- Always expanded by default now, as requested -->
-                <div class="timeline-body expanded">
-                    ${commentContent}
-                </div>
-            </div>
+            ${commentContent}
+          </div>
         </div>
       `;
     });
 
-    // ADD TERMINAL STATUS IF REJECTED OR CANCELLED
     if (isRejected || isCancelled) {
-      const terminalKey = isRejected ? 'rejected' : 'cancelled';
-      const terminalStep = {
-        key: terminalKey,
-        label: isRejected ? 'Rejected' : 'Cancelled',
-        icon: isRejected ? '❌' : '🛑'
-      };
-
-      const terminalData = commentData[terminalKey];
-      const state = 'current'; // Terminal state is the current end point
-
-      let commentContent = '';
-      if (terminalData && terminalData.comment) {
-        const dateStr = terminalData.date ? new Date(terminalData.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        commentContent = `
-          <div class="timeline-log-entry terminal-entry">
-            <div class="log-header">
-              <span class="log-date">${dateStr}</span>
-            </div>
-            <div class="log-message">"${terminalData.comment}"</div>
-          </div>`;
-      }
-
+      const type = isRejected ? 'rejected' : 'cancelled';
       html += `
-        <div class="stepper-step terminal status-${terminalKey}">
-          <div class="stepper-node status-${terminalKey}">
-            <span class="stepper-icon">${terminalStep.icon}</span>
+        <div class="timeline-item-v2 terminal ${type}">
+          <div class="timeline-left-v2">
+            <div class="timeline-node-v2 terminal">${isRejected ? '❌' : '🛑'}</div>
           </div>
-          <div class="stepper-content">
-            <div class="step-label">${terminalStep.label}</div>
-            ${commentContent}
+          <div class="timeline-content-v2">
+            <div class="timeline-header-v2">
+              <span class="timeline-label-v2">${isRejected ? 'Rejected' : 'Cancelled'}</span>
+            </div>
           </div>
-        </div>`;
+        </div>
+      `;
     }
 
     html += '</div>';
 
-    // Add specific styles for this component dynamically if not present
-    if (!document.getElementById('timeline-styles')) {
+    if (!document.getElementById('timeline-v2-styles')) {
       const style = document.createElement('style');
-      style.id = 'timeline-styles';
+      style.id = 'timeline-v2-styles';
       style.textContent = `
-            .timeline-stepper {
-                display: flex;
-                flex-direction: column;
-                gap: 0;
-            }
-            .timeline-item {
-                display: flex;
-                gap: 1rem;
-                position: relative;
-                padding-bottom: 2rem;
-            }
-            .timeline-item:last-child {
-                padding-bottom: 0;
-            }
-            .timeline-left {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                min-width: 40px;
-            }
-            .timeline-node {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 2;
-                color: white;
-                font-size: 0.85rem;
-                transition: all 0.3s ease;
-            }
-            .timeline-line {
-                flex: 1;
-                width: 2px;
-                margin-top: 4px;
-                min-height: 20px;
-            }
-            .timeline-content {
-                flex: 1;
-                background: white;
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                overflow: hidden;
-            }
-            .timeline-header {
-                padding: 1rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                background: #f9fafb;
-                transition: background 0.2s;
-            }
-            .timeline-header:hover {
-                background: #f3f4f6;
-            }
-            .timeline-title {
-                display: flex;
-                flex-direction: column;
-                gap: 0.25rem;
-                font-weight: 600;
-                color: #374151;
-            }
-            .status-badge.current {
-                display: inline-block;
-                color: #f59e0b;
-                font-size: 0.75rem;
-                font-weight: 500;
-            }
-            .latest-log-date {
-                font-size: 0.75rem;
-                color: #6b7280;
-                font-weight: normal;
-            }
-            .timeline-body {
-                display: none;
-                padding: 1rem;
-                border-top: 1px solid #e5e7eb;
-                background: white;
-            }
-            .timeline-content .expanded .timeline-body {
-                display: block;
-            }
-            /* Default expanded only for current step, handled by class */
-            .timeline-body.expanded {
-                display: block;
-            }
-            .timeline-log-entry {
-                margin-bottom: 1rem;
-                padding-bottom: 1rem;
-                border-bottom: 1px solid #f3f4f6;
-            }
-            .timeline-log-entry:last-child {
-                margin-bottom: 0;
-                padding-bottom: 0;
-                border-bottom: none;
-            }
-            .log-header {
-                display: flex;
-                justify-content: space-between;
-                font-size: 0.75rem;
-                color: #6b7280;
-                margin-bottom: 0.25rem;
-            }
-            .log-user {
-                font-weight: 500;
-            }
-            .log-message {
-                color: #1f2937;
-                font-size: 0.9rem;
-            }
-            .log-notes {
-                margin-top: 0.5rem;
-                padding: 0.5rem;
-                background: #fffbeb;
-                border-left: 2px solid #f59e0b;
-                font-size: 0.85rem;
-                color: #92400e;
-                font-style: italic;
-            }
-            .no-comments {
-                color: #9ca3af;
-                font-style: italic;
-                font-size: 0.9rem;
-                text-align: center;
-                padding: 0.5rem;
-            }
-            .timeline-toggle {
-                color: #9ca3af;
-                transform: rotate(0deg);
-                transition: transform 0.2s;
-            }
-            .expanded .timeline-toggle { // This selector might be tricky with click handler
-                // Actually header click toggles parent class
-            }
-            .timeline-content.expanded .timeline-toggle {
-                 transform: rotate(180deg);
-            }
-        `;
+        .timeline-stepper-v2 { display: flex; flex-direction: column; gap: 0; }
+        .timeline-item-v2 { display: flex; gap: 10px; padding-bottom: 12px; }
+        .timeline-item-v2:last-child { padding-bottom: 0; }
+        .timeline-left-v2 { display: flex; flex-direction: column; align-items: center; min-width: 24px; }
+        .timeline-node-v2 { 
+          width: 24px; height: 24px; border-radius: 6px; background: #f1f5f9; 
+          display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.3s ease;
+        }
+        .timeline-item-v2.completed .timeline-node-v2 { background: #dcfce7; }
+        .timeline-item-v2.current .timeline-node-v2 { background: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1.05); }
+        .timeline-line-v2 { width: 2px; flex: 1; background: #f1f5f9; margin: 4px 0; border-radius: 2px; }
+        .timeline-line-v2.active { background: #dcfce7; }
+        .timeline-content-v2 { flex: 1; padding-top: 1px; }
+        .timeline-header-v2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .timeline-label-v2 { font-weight: 700; color: #1e293b; font-size: 0.85rem; }
+        .timeline-date-v2 { font-size: 0.65rem; color: #64748b; font-weight: 500; }
+        .timeline-comment-v2 { 
+          background: rgba(255,255,255,0.4); border-radius: 6px; padding: 6px 10px;
+          color: #475569; font-size: 0.75rem; line-height: 1.3; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .timeline-comment-v2.empty { font-style: italic; color: #94a3b8; }
+        .timeline-item-v2.current .timeline-label-v2 { color: #3b82f6; }
+      `;
       document.head.appendChild(style);
     }
 
-    // Inject logic to handle toggling separately
-    // The onclick in the HTML string manages DOM, but CSS needs correct selectors
-    // Let's refine the toggle behavior in the HTML directly or attach listeners
-
     timelineContainer.innerHTML = html;
-
-    // Re-attach listeners for better control
-    timelineContainer.querySelectorAll('.timeline-header').forEach(header => {
-      header.onclick = (e) => {
-        const content = e.currentTarget.parentElement; // timeline-content
-        // Toggle body
-        const body = content.querySelector('.timeline-body');
-        const toggle = content.querySelector('.timeline-toggle');
-
-        if (body.style.display === 'block' || body.classList.contains('expanded')) {
-          body.style.display = 'none';
-          body.classList.remove('expanded');
-          toggle.style.transform = 'rotate(0deg)';
-        } else {
-          body.style.display = 'block';
-          body.classList.add('expanded');
-          toggle.style.transform = 'rotate(180deg)';
-        }
-      };
-    });
   }
   hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -2268,7 +2060,7 @@ class ComplaintDetails {
   setupReturnButton() {
     const returnLink = document.getElementById("return-link");
     const returnText = document.getElementById("return-text");
-    if (!returnLink || !returnText) return;
+    if (!returnLink) return;
 
     // Check URL parameter first (explicit flag)
     const urlParams = new URLSearchParams(window.location.search);
@@ -2291,13 +2083,13 @@ class ComplaintDetails {
     if (this.userRole === "citizen") {
       if (isFromDashboard) {
         returnLink.href = "/dashboard";
-        returnText.textContent = "Return to Dashboard";
+        if (returnText) returnText.textContent = "Return to Dashboard";
       } else if (isFromProfile || !referrer) {
         returnLink.href = "/myProfile";
-        returnText.textContent = "Return to Your Profile";
+        if (returnText) returnText.textContent = "Return to Your Profile";
       } else {
         returnLink.href = "/myProfile";
-        returnText.textContent = "Return to Your Profile";
+        if (returnText) returnText.textContent = "Return to Your Profile";
       }
       return;
     }
@@ -2308,27 +2100,31 @@ class ComplaintDetails {
         returnLink.href = isFromReviewQueue
           ? "/review-queue"
           : "/dashboard";
-        returnText.textContent = isFromReviewQueue
-          ? "Return to Review Queue"
-          : "Return to Dashboard";
+        if (returnText) {
+          returnText.textContent = isFromReviewQueue
+            ? "Return to Review Queue"
+            : "Return to Dashboard";
+        }
         break;
       case "lgu-admin":
         returnLink.href = isFromAssignments
           ? "/assignments"
           : "/dashboard";
-        returnText.textContent = isFromAssignments
-          ? "Return to Assigned Complaints"
-          : "Return to Dashboard";
+        if (returnText) {
+          returnText.textContent = isFromAssignments
+            ? "Return to Assigned Complaints"
+            : "Return to Dashboard";
+        }
         break;
       case "lgu":
       case "lgu-officer":
         returnLink.href = "/task-assigned";
-        returnText.textContent = "Return to Assigned Tasks";
+        if (returnText) returnText.textContent = "Return to Assigned Tasks";
         break;
       case "citizen":
       default:
         returnLink.href = "/myProfile";
-        returnText.textContent = "Return to Your Profile";
+        if (returnText) returnText.textContent = "Return to Your Profile";
         break;
     }
   }
@@ -2442,10 +2238,10 @@ class ComplaintDetails {
     actionsContainer.innerHTML = filteredActions
       .map(
         (action) => `
-            <button type="button" class="${action.class}" data-action="${action.action}">
-                ${action.text}
-            </button>
-        `
+  <button type="button" class="${action.class}" data-action="${action.action}">
+    ${action.text}
+  </button>
+  `
       )
       .join("");
     // Attach event listeners
@@ -2488,7 +2284,7 @@ class ComplaintDetails {
   }
   async approveComplaint() {
     // Redirect to coordinator review queue with approval action
-    window.location.href = `/coordinator/review-queue?action=approve&id=${this.complaintId}`;
+    window.location.href = `/ coordinator / review - queue ? action = approve & id=${this.complaintId} `;
   }
 
   showReasonModal(title, placeholder, confirmLabel, onConfirm) {
@@ -2501,15 +2297,15 @@ class ComplaintDetails {
     modal.style.cssText = "position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);";
 
     modal.innerHTML = `
-      <div class="modal-content" style="width: 500px; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+  < div class="modal-content" style = "width: 500px; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);" >
         <h2 style="margin-top: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">${title}</h2>
         <textarea id="modal-input" placeholder="${placeholder}" style="width: 100%; height: 100px; margin: 1rem 0; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
             <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
             <button id="modal-confirm" class="btn btn-primary">${confirmLabel}</button>
         </div>
-      </div>
-    `;
+      </div >
+  `;
 
     document.body.appendChild(modal);
 
@@ -2554,7 +2350,7 @@ class ComplaintDetails {
       'Reject Complaint',
       async (reason) => {
         const response = await fetch(
-          `/api/coordinator/review-queue/${this.complaintId}/decide`,
+          `/ api / coordinator / review - queue / ${this.complaintId}/decide`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2816,7 +2612,12 @@ class ComplaintDetails {
     }
   }
 }
-// Initialize when DOM is loaded
+// Initialize when DOM is loaded - only if on the dedicated details page
 document.addEventListener("DOMContentLoaded", () => {
-  new ComplaintDetails();
+  const isDetailsPage = window.location.pathname.includes('/complaint-details') ||
+    window.location.pathname.includes('/review/');
+
+  if (isDetailsPage && !window.location.search.includes('view=panel')) {
+    new ComplaintDetails();
+  }
 });

@@ -283,7 +283,7 @@ function getMenuItemsForRole(role) {
       { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
       { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
+      { url: "/profile", icon: "myProfile", label: "My Profile" },
     ],
     lgu: [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -326,7 +326,7 @@ function getMenuItemsForRole(role) {
         icon: "analytics",
         label: "Dictionary Manager",
       },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
+      { url: "/profile", icon: "myProfile", label: "My Profile" },
     ],
     "super-admin": [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -356,7 +356,7 @@ function getMenuItemsForRole(role) {
         label: "Dictionary Manager",
       },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/myProfile", icon: "myProfile", label: "My Profile" },
+      { url: "/profile", icon: "myProfile", label: "My Profile" },
     ],
   };
 

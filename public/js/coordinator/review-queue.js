@@ -1,4 +1,6 @@
 
+import slidingPanel from '../components/sliding-panel.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     loadReviewQueue(1);
 
@@ -40,7 +42,7 @@ async function loadReviewQueue(page = 1) {
 
         if (complaints.length > 0) {
             tableBody.innerHTML = complaints.map(complaint => `
-                <tr class="cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" onclick="window.location.href='/review/${complaint.id}'">
+                <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${complaint.id}">
                     <td class="px-2 py-3 whitespace-nowrap">
                         <span class="px-2 py-0.5 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wide rounded-full bg-${getPriorityColor(complaint.priority)}-100 text-${getPriorityColor(complaint.priority)}-800 border border-${getPriorityColor(complaint.priority)}-200">
                             ${complaint.priority}
@@ -59,12 +61,28 @@ async function loadReviewQueue(page = 1) {
                         ${new Date(complaint.submitted_at || complaint.created_at).toLocaleDateString()}
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-right">
-                        <a href="/review/${complaint.id}" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button class="btn-review inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-id="${complaint.id}">
                             Review
-                        </a>
+                        </button>
                     </td>
                 </tr>
             `).join('');
+
+            // Attach event listeners to rows and buttons
+            tableBody.querySelectorAll('.complaint-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    const id = row.getAttribute('data-id');
+                    slidingPanel.open(id);
+                });
+            });
+
+            tableBody.querySelectorAll('.btn-review').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent row click
+                    const id = btn.getAttribute('data-id');
+                    slidingPanel.open(id);
+                });
+            });
 
             // [FIX] Render Pagination
             renderPagination(data.page || page, data.totalPages || 1, data.total || 0, complaints.length);
