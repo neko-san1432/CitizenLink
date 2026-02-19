@@ -74,19 +74,7 @@ router.get("/users",
   requireRole(["lgu-hr", "super-admin"]),
   (req, res) => hrController.getUsers(req, res)
 );
-// Pending signup approvals
-router.get("/pending-signups",
-  requireRole(["lgu-hr", "super-admin"]),
-  (req, res) => hrController.getPendingSignups(req, res)
-);
-router.post("/pending-signups/:id/approve",
-  requireRole(["lgu-hr", "super-admin"]),
-  (req, res) => hrController.approvePendingSignup(req, res)
-);
-router.post("/pending-signups/:id/reject",
-  requireRole(["lgu-hr", "super-admin"]),
-  (req, res) => hrController.rejectPendingSignup(req, res)
-);
+// Routes removed per feature cleanup
 router.get("/users/:id",
   requireRole(["lgu-hr", "super-admin"]),
   (req, res) => hrController.getUserDetails(req, res)

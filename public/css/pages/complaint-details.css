@@ -13,12 +13,10 @@ body {
 
 #app {
     padding: 0 !important;
-    margin-top: 56px !important;
-    /* Push down for fixed header */
-    height: calc(100vh - 56px);
+    margin-top: 80px !important;
+    /* Push down for fixed header - Fixed overlap */
+    height: calc(100vh - 80px);
     /* Exact remaining height */
-    /* Matches thinned global header */
-    /* Matches header-redesign.css */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1670,4 +1668,221 @@ html.dark .leaflet-routing-alt td {
 
 html.dark .breadcrumb {
     color: var(--gray-400);
+}
+
+/* Dark Mode Fixes - White Containers */
+:root.dark .glass-panel {
+    background: #1f2937 !important;
+    /* Dark Gray */
+    border-color: #374151;
+}
+
+:root.dark .details-header-card {
+    background: #374151;
+    border-bottom-color: #3b82f6;
+}
+
+:root.dark .complaint-title,
+:root.dark .location-panel h3,
+:root.dark .status-timeline-panel h3,
+:root.dark .detail-value {
+    color: #f3f4f6 !important;
+    /* Off-white text */
+}
+
+:root.dark .content-section,
+:root.dark .assignment-progress,
+:root.dark .confirmation-status {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark .content-section p,
+:root.dark .progress-text,
+:root.dark .timeline-description,
+:root.dark .stepper-label strong {
+    color: #9ca3af !important;
+    /* Light Gray text */
+}
+
+:root.dark .breadcrumb-link {
+    color: #9ca3af !important;
+}
+
+:root.dark .complaint-id-tag {
+    background: #374151;
+    color: #cbd5e1;
+}
+
+:root.dark .status-timeline {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+:root.dark .status-timeline h3 {
+    color: #f3f4f6;
+}
+
+:root.dark .stepper-label-item.active {
+    color: #60a5fa;
+}
+
+/* =========================================
+   Timeline V2 Styles (Moved from JS)
+   ========================================= */
+.timeline-stepper-v2 {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.timeline-item-v2 {
+    display: flex;
+    gap: 10px;
+    padding-bottom: 12px;
+}
+
+.timeline-item-v2:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-left-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 24px;
+}
+
+.timeline-node-v2 {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.timeline-item-v2.completed .timeline-node-v2 {
+    background: #dcfce7;
+}
+
+.timeline-item-v2.current .timeline-node-v2 {
+    background: #3b82f6;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.timeline-line-v2 {
+    width: 2px;
+    flex: 1;
+    background: #f1f5f9;
+    margin: 4px 0;
+    border-radius: 2px;
+}
+
+.timeline-line-v2.active {
+    background: #dcfce7;
+}
+
+.timeline-content-v2 {
+    flex: 1;
+    padding-top: 1px;
+}
+
+.timeline-header-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.timeline-label-v2 {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.85rem;
+}
+
+.timeline-date-v2 {
+    font-size: 0.65rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.timeline-comment-v2 {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #475569;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.timeline-comment-v2.empty {
+    font-style: italic;
+    color: #94a3b8;
+}
+
+.timeline-item-v2.current .timeline-label-v2 {
+    color: #3b82f6;
+}
+
+/* Dark Mode Overrides for Timeline */
+:root.dark .timeline-label-v2 {
+    color: #f3f4f6 !important;
+}
+
+:root.dark .timeline-date-v2 {
+    color: #9ca3af !important;
+}
+
+:root.dark .timeline-comment-v2 {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+    /* Brighter text */
+}
+
+:root.dark .timeline-node-v2 {
+    background: #374151;
+    color: #f3f4f6;
+}
+
+:root.dark .timeline-line-v2 {
+    background: #374151;
+}
+
+:root.dark .timeline-item-v2.completed .timeline-node-v2 {
+    background: #059669;
+    color: white;
+}
+
+:root.dark .timeline-line-v2.active {
+    background: #059669;
+}
+
+/* Additional Dark Mode Fixes for Descriptions & Inputs */
+:root.dark .content-section p,
+:root.dark .detail-value {
+    color: #e5e7eb !important;
+    /* Brighter gray-200 instead of gray-400 */
+}
+
+:root.dark .glass-panel input,
+:root.dark .glass-panel textarea,
+:root.dark .glass-panel select {
+    background: #374151 !important;
+    /* Darker input bg */
+    border-color: #4b5563 !important;
+    color: #f3f4f6 !important;
+    /* White text */
+}
+
+:root.dark .glass-panel input::placeholder,
+:root.dark .glass-panel textarea::placeholder {
+    color: #9ca3af !important;
 }

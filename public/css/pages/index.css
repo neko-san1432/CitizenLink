@@ -5,6 +5,24 @@
 
   --primary-color: #3b82f6;
   --primary-hover: #2563eb;
+
+  /* Light Mode Defaults (System/User Preference) */
+  --bg-dark: #f8fafc;
+  /* actually light bg now */
+  --text-light: #1e293b;
+  /* dark text */
+  --text-dim: #64748b;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-highlight: rgba(0, 0, 0, 0.05);
+
+  --bg-overlay-start: rgba(248, 250, 252, 0.85);
+  --bg-overlay-end: rgba(248, 250, 252, 0.95);
+}
+
+/* Dark Mode Overrides */
+html.dark {
   --bg-dark: #0f172a;
   --text-light: #f8fafc;
   --text-dim: #94a3b8;
@@ -12,6 +30,9 @@
   --glass-bg: rgba(30, 41, 59, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-highlight: rgba(255, 255, 255, 0.05);
+
+  --bg-overlay-start: rgba(15, 23, 42, 0.85);
+  --bg-overlay-end: rgba(15, 23, 42, 0.95);
 }
 
 * {
@@ -21,17 +42,34 @@
 }
 
 html {
-  /* scroll-snap-type: y mandatory; Disabled for JS control */
+  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  height: 100vh;
+  overflow-y: scroll;
 }
 
 body {
   font-family: var(--font-body);
-
   background-color: var(--bg-dark);
   color: var(--text-light);
   overflow-x: hidden;
   line-height: 1.6;
+  height: auto;
+  min-height: 100vh;
+  overflow-y: visible;
+}
+
+/* Hide Scrollbar */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body,
+.app-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 
@@ -44,7 +82,7 @@ body {
   width: 100%;
   height: 100%;
   background:
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)),
+    linear-gradient(to bottom, var(--bg-overlay-start), var(--bg-overlay-end)),
     url('/assets/images/bg-digos.jpg');
   background-size: cover;
   background-position: center;
@@ -165,25 +203,25 @@ body {
 }
 
 /* Hero Section */
+/* Hero Section */
 .hero-section {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* Enable centering */
+  position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
-
-  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: center;
-  padding: 10rem 2rem 4rem;
+  padding: 0 2rem;
   max-width: 1400px;
-  /* Expanded from 1200px to fill space */
   margin: 0 auto;
   gap: 4rem;
   z-index: 1;
-  /* Scroll Snap Strictness */
+  height: 100vh !important;
+  min-height: 100vh !important;
+  padding-top: 0 !important;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -357,7 +395,6 @@ body {
   /* Pushed further right */
   bottom: 20%;
   z-index: 1;
-
 }
 
 
@@ -425,17 +462,20 @@ body {
 /* Features */
 .features-section {
   min-height: 100vh;
-  margin-top: 100vh;
-  padding: 8rem 2rem 8rem;
+  padding: 0 2rem;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
   position: relative;
   z-index: 10;
   background: var(--bg-dark);
-  /* Scroll Snap Strictness */
+  height: 100vh !important;
+  min-height: 100vh !important;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 
@@ -531,14 +571,15 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 4rem 2rem;
+  padding: 0 2rem;
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
   z-index: 10;
   background: var(--bg-dark);
   /* Ensure background covers previous */
-  /* Scroll Snap Strictness */
+  height: 100vh !important;
+  min-height: 100vh !important;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }

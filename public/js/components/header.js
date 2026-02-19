@@ -1,5 +1,6 @@
 import { brandConfig } from "../config/index.js";
 import { initializeNotificationButton } from "./notification.js";
+import themeManager from "../utils/theme.js";
 
 // Header component for easy modification
 
@@ -21,19 +22,11 @@ export function createHeader() {
       </div>
 
       <div class="header-right">
-        <button id="theme-toggle" class="header-action theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-        </button>
+        <div class="theme-container">
+          <button id="theme-btn" class="header-action theme-btn" aria-label="Toggle Theme" title="Toggle Theme">
+             <!-- Icon set by JS -->
+          </button>
+        </div>
 
         <div class="notification-container">
           <button id="notification-btn" class="header-action notification-btn" title="Notifications">
@@ -132,6 +125,18 @@ function initializeGlobalClickHandler() {
         profilePanel.classList.remove("show");
         setTimeout(() => {
           profilePanel.style.display = "none";
+        }, 300);
+      }
+    }
+
+    // Close theme panel if clicking outside
+    const themePanel = document.getElementById("theme-panel");
+    const themeBtn = document.getElementById("theme-btn");
+    if (themePanel && themePanel.classList.contains("show")) {
+      if (!themePanel.contains(e.target) && (!themeBtn || !themeBtn.contains(e.target))) {
+        themePanel.classList.remove("show");
+        setTimeout(() => {
+          themePanel.style.display = "none";
         }, 300);
       }
     }
@@ -278,61 +283,47 @@ function initializeMenuToggle() {
 }
 // Initialize theme toggle
 function initializeThemeToggle() {
-  // console.log removed for security
-  const themeToggleBtn = document.getElementById("theme-toggle");
-  if (!themeToggleBtn) {
-    console.warn("[HEADER] Theme toggle button not found");
-    return;
-  }
-  // Load saved theme
-  const savedTheme = localStorage.getItem("theme") || "light";
-  applyTheme(savedTheme);
-  updateThemeIcon(savedTheme === "dark");
+  const themeBtn = document.getElementById("theme-btn");
+  if (!themeBtn) return;
 
-  themeToggleBtn.addEventListener("click", () => {
-    const rootElement = document.documentElement;
-    const isDark = rootElement.classList.contains("dark");
-    const newTheme = isDark ? "light" : "dark";
-    applyTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    updateThemeIcon(!isDark);
-  });
+  // Import getIcon dynamically if needed, or assume it's available via global or import
+  // We'll use innerHTML for simplicity since we want specific SVG content
 
-  function applyTheme(theme) {
-    const rootElement = document.documentElement;
-    if (theme === "dark") {
-      rootElement.classList.add("dark");
-    } else {
-      rootElement.classList.remove("dark");
-    }
-  }
+  const updateIcon = (theme) => {
+    // If dark, show Sun (to switch to light). If light, show Moon.
+    // OR show current state. Standard is usually "Show what will happen" or "Show current state".
+    // Let's show the CURRENT state icon (Moon = Dark Mode is Active).
 
-  function updateThemeIcon(isDark) {
-    const svg = themeToggleBtn.querySelector("svg");
-    if (!svg) return;
+    // Actually, usually a toggle button shows the icon of the mode you are IN.
+    const isDark = theme === 'dark';
+
+    // Using inline SVG for reliability or importing getIcon if we could. 
+    // Let's stick to the inline SVGs previously used but simplified.
 
     if (isDark) {
-      // Moon icon for dark mode
-      svg.innerHTML = `
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      `;
-      themeToggleBtn.title = "Switch to light mode";
+      // Moon
+      themeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+      themeBtn.title = "Current: Dark Mode";
     } else {
-      // Sun icon for light mode
-      svg.innerHTML = `
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      `;
-      themeToggleBtn.title = "Switch to dark mode";
+      // Sun
+      themeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      themeBtn.title = "Current: Light Mode";
     }
-  }
+  };
+
+  // Initial state
+  updateIcon(themeManager.getStoredTheme());
+
+  // Click Listener: Toggle
+  themeBtn.addEventListener("click", () => {
+    const newTheme = themeManager.toggle();
+    updateIcon(newTheme);
+  });
+
+  // Listen for global changes (e.g. from Sidebar)
+  window.addEventListener("themeChanged", (e) => {
+    updateIcon(e.detail.theme);
+  });
 }
 // Initialize header scroll behavior
 function initializeHeaderScroll() {
@@ -369,6 +360,12 @@ function initializeDropdowns() {
   if (profilePanel && profilePanel.parentNode !== document.body) {
     profilePanel.parentNode.removeChild(profilePanel);
     document.body.appendChild(profilePanel);
+  }
+
+  const themePanel = document.getElementById("theme-panel");
+  if (themePanel && themePanel.parentNode !== document.body) {
+    themePanel.parentNode.removeChild(themePanel);
+    document.body.appendChild(themePanel);
   }
 }
 // Initialize header when DOM is loaded
@@ -426,6 +423,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (profileContainer) {
       profileContainer.style.position = "relative";
+    }
+    const themeContainer = document.querySelector(".theme-container");
+    if (themeContainer) {
+      themeContainer.style.position = "relative";
     }
     // Move dashboard clock into header-right to align with buttons (put it first)
     try {

@@ -119,9 +119,24 @@ const setupMethodSelection = (methodSection, emailFlow) => {
 
   if (backToMethodsBtn && methodSection && emailFlow) {
     backToMethodsBtn.addEventListener("click", () => {
-      resetSignupData();
-      emailFlow.hidden = true;
-      methodSection.hidden = false;
+      // 1. Add fade-out animation
+      emailFlow.classList.add("animate-fade-out");
+
+      // 2. Wait for animation to finish (200ms matches --transition-md)
+      setTimeout(() => {
+        resetSignupData();
+        emailFlow.hidden = true;
+        emailFlow.classList.remove("animate-fade-out");
+
+        // 3. Show method section with fade-in
+        methodSection.hidden = false;
+        methodSection.classList.add("animate-fade-in");
+
+        // Cleanup fade-in class after animation
+        setTimeout(() => {
+          methodSection.classList.remove("animate-fade-in");
+        }, 200);
+      }, 200);
     });
   }
 };
@@ -193,9 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (progressBar) progressBar.setAttribute("aria-valuenow", String(pct));
     }
     if (progressLabel) {
-      progressLabel.textContent = `Step ${current + 1} of ${
-        steps.length
-      } · ${pct}% complete`;
+      progressLabel.textContent = `Step ${current + 1} of ${steps.length
+        } · ${pct}% complete`;
     }
   };
 

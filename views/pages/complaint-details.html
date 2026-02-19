@@ -35,9 +35,36 @@
     <main class="main-content">
       <div class="container">
         <!-- Loading State -->
-        <div id="loading" class="loading">
-          <div class="spinner"></div>
-          <p>Loading complaint details...</p>
+        <!-- Loading State (Skeleton) -->
+        <div id="loading" class="complaint-details" style="display: flex;">
+          <!-- Skeleton Column 1 -->
+          <div class="glass-panel" style="flex: 1; gap: 1rem;">
+            <div class="skeleton" style="height: 60px; border-radius: 10px; width: 100%;"></div>
+            <div style="display: flex; gap: 10px;">
+              <div class="skeleton" style="height: 24px; width: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 24px; width: 80px; border-radius: 12px;"></div>
+            </div>
+            <div class="skeleton" style="height: 120px; border-radius: 8px; width: 100%; margin-top: 10px;"></div>
+            <div class="skeleton" style="height: 40px; width: 40%; border-radius: 8px; margin-top: auto;"></div>
+          </div>
+
+          <!-- Skeleton Column 2 -->
+          <div class="glass-panel" style="flex: 1; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <div class="skeleton" style="height: 20px; width: 120px; border-radius: 4px;"></div>
+              <div class="skeleton" style="height: 20px; width: 60px; border-radius: 4px;"></div>
+            </div>
+            <div class="skeleton" style="flex: 1; min-height: 200px; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 80px; border-radius: 8px;"></div>
+          </div>
+
+          <!-- Skeleton Column 3 -->
+          <div class="glass-panel" style="flex: 0.8; gap: 1rem;">
+            <div class="skeleton" style="height: 24px; width: 140px; border-radius: 4px; margin-bottom: 10px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+          </div>
         </div>
 
         <!-- Error State -->

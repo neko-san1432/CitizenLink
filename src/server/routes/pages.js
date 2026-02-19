@@ -450,23 +450,7 @@ router.get(
   }
 );
 
-// Super Admin access to Pending Signups
-router.get(
-  "/super-admin/pending-signups",
-  authenticateUser,
-  requireRole(["super-admin"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        config.rootDir,
-        "views",
-        "pages",
-        "super-admin",
-        "pending-signups.html"
-      )
-    );
-  }
-);
+// Super Admin server logs route below
 
 // Super Admin Server Logs page
 router.get(

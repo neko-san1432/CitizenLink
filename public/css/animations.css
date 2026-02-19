@@ -9,6 +9,7 @@
 
 /* Disable transitions for reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -23,8 +24,20 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
+  }
+}
+
+/* Fade Out Animation */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
@@ -34,17 +47,20 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+
 @keyframes slideInDown {
   from {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -56,6 +72,7 @@
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -67,6 +84,7 @@
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -75,9 +93,12 @@
 
 /* Bounce Animation */
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -85,9 +106,12 @@
 
 /* Pulse Animation */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -95,12 +119,16 @@
 
 /* Shake Animation */
 @keyframes shake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-5px);
   }
+
   75% {
     transform: translateX(5px);
   }
@@ -112,6 +140,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -123,6 +152,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -133,6 +163,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -144,6 +175,7 @@
     border-top-color: var(--primary-500);
     transform: rotate(0deg);
   }
+
   100% {
     border-top-color: transparent;
     transform: rotate(360deg);
@@ -152,9 +184,12 @@
 
 /* Glow Animation */
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 5px var(--primary-500);
   }
+
   50% {
     box-shadow: 0 0 20px var(--primary-500);
   }
@@ -163,6 +198,10 @@
 /* Utility Animation Classes */
 .animate-fade-in {
   animation: fadeIn var(--transition-md) ease-in-out;
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--transition-md) ease-in-out;
 }
 
 .animate-slide-in-up {
@@ -328,6 +367,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -359,48 +399,152 @@
 }
 
 /* Duration Utilities */
-.duration-75 { transition-duration: 75ms; }
-.duration-100 { transition-duration: 100ms; }
-.duration-150 { transition-duration: 150ms; }
-.duration-200 { transition-duration: 200ms; }
-.duration-300 { transition-duration: 300ms; }
-.duration-500 { transition-duration: 500ms; }
-.duration-700 { transition-duration: 700ms; }
-.duration-1000 { transition-duration: 1000ms; }
+.duration-75 {
+  transition-duration: 75ms;
+}
+
+.duration-100 {
+  transition-duration: 100ms;
+}
+
+.duration-150 {
+  transition-duration: 150ms;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.duration-500 {
+  transition-duration: 500ms;
+}
+
+.duration-700 {
+  transition-duration: 700ms;
+}
+
+.duration-1000 {
+  transition-duration: 1000ms;
+}
 
 /* Timing Functions */
-.ease-linear { transition-timing-function: linear; }
-.ease-in { transition-timing-function: cubic-bezier(0.4, 0, 1, 1); }
-.ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.ease-linear {
+  transition-timing-function: linear;
+}
+
+.ease-in {
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ease-out {
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* Transform Utilities */
-.scale-0 { transform: scale(0); }
-.scale-75 { transform: scale(0.75); }
-.scale-90 { transform: scale(0.9); }
-.scale-95 { transform: scale(0.95); }
-.scale-100 { transform: scale(1); }
-.scale-105 { transform: scale(1.05); }
-.scale-110 { transform: scale(1.1); }
-.scale-125 { transform: scale(1.25); }
-.scale-150 { transform: scale(1.5); }
+.scale-0 {
+  transform: scale(0);
+}
 
-.rotate-0 { transform: rotate(0deg); }
-.rotate-45 { transform: rotate(45deg); }
-.rotate-90 { transform: rotate(90deg); }
-.rotate-180 { transform: rotate(180deg); }
-.-rotate-45 { transform: rotate(-45deg); }
+.scale-75 {
+  transform: scale(0.75);
+}
 
-.translate-x-0 { transform: translateX(0); }
-.translate-x-1 { transform: translateX(4px); }
-.translate-x-2 { transform: translateX(8px); }
-.-translate-x-1 { transform: translateX(-4px); }
+.scale-90 {
+  transform: scale(0.9);
+}
 
-.translate-y-0 { transform: translateY(0); }
-.translate-y-1 { transform: translateY(4px); }
-.translate-y-2 { transform: translateY(8px); }
-.-translate-y-1 { transform: translateY(-4px); }
+.scale-95 {
+  transform: scale(0.95);
+}
 
-.skew-x-0 { transform: skewX(0deg); }
-.skew-x-3 { transform: skewX(3deg); }
-.skew-y-3 { transform: skewY(3deg); }
+.scale-100 {
+  transform: scale(1);
+}
+
+.scale-105 {
+  transform: scale(1.05);
+}
+
+.scale-110 {
+  transform: scale(1.1);
+}
+
+.scale-125 {
+  transform: scale(1.25);
+}
+
+.scale-150 {
+  transform: scale(1.5);
+}
+
+.rotate-0 {
+  transform: rotate(0deg);
+}
+
+.rotate-45 {
+  transform: rotate(45deg);
+}
+
+.rotate-90 {
+  transform: rotate(90deg);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.-rotate-45 {
+  transform: rotate(-45deg);
+}
+
+.translate-x-0 {
+  transform: translateX(0);
+}
+
+.translate-x-1 {
+  transform: translateX(4px);
+}
+
+.translate-x-2 {
+  transform: translateX(8px);
+}
+
+.-translate-x-1 {
+  transform: translateX(-4px);
+}
+
+.translate-y-0 {
+  transform: translateY(0);
+}
+
+.translate-y-1 {
+  transform: translateY(4px);
+}
+
+.translate-y-2 {
+  transform: translateY(8px);
+}
+
+.-translate-y-1 {
+  transform: translateY(-4px);
+}
+
+.skew-x-0 {
+  transform: skewX(0deg);
+}
+
+.skew-x-3 {
+  transform: skewX(3deg);
+}
+
+.skew-y-3 {
+  transform: skewY(3deg);
+}

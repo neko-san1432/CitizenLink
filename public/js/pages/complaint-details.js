@@ -2001,37 +2001,6 @@ export class ComplaintDetails {
 
     html += '</div>';
 
-    if (!document.getElementById('timeline-v2-styles')) {
-      const style = document.createElement('style');
-      style.id = 'timeline-v2-styles';
-      style.textContent = `
-        .timeline-stepper-v2 { display: flex; flex-direction: column; gap: 0; }
-        .timeline-item-v2 { display: flex; gap: 10px; padding-bottom: 12px; }
-        .timeline-item-v2:last-child { padding-bottom: 0; }
-        .timeline-left-v2 { display: flex; flex-direction: column; align-items: center; min-width: 24px; }
-        .timeline-node-v2 { 
-          width: 24px; height: 24px; border-radius: 6px; background: #f1f5f9; 
-          display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.3s ease;
-        }
-        .timeline-item-v2.completed .timeline-node-v2 { background: #dcfce7; }
-        .timeline-item-v2.current .timeline-node-v2 { background: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1.05); }
-        .timeline-line-v2 { width: 2px; flex: 1; background: #f1f5f9; margin: 4px 0; border-radius: 2px; }
-        .timeline-line-v2.active { background: #dcfce7; }
-        .timeline-content-v2 { flex: 1; padding-top: 1px; }
-        .timeline-header-v2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .timeline-label-v2 { font-weight: 700; color: #1e293b; font-size: 0.85rem; }
-        .timeline-date-v2 { font-size: 0.65rem; color: #64748b; font-weight: 500; }
-        .timeline-comment-v2 { 
-          background: rgba(255,255,255,0.4); border-radius: 6px; padding: 6px 10px;
-          color: #475569; font-size: 0.75rem; line-height: 1.3; border: 1px solid rgba(255,255,255,0.2);
-        }
-        .timeline-comment-v2.empty { font-style: italic; color: #94a3b8; }
-        .timeline-item-v2.current .timeline-label-v2 { color: #3b82f6; }
-      `;
-      document.head.appendChild(style);
-    }
-
     timelineContainer.innerHTML = html;
   }
   hexToRgb(hex) {
@@ -2548,16 +2517,27 @@ export class ComplaintDetails {
     }
   }
   showLoading() {
-    const loading = document.getElementById("loading");
-    const details = document.getElementById("complaint-details");
-    const error = document.getElementById("error-state");
-    if (loading) loading.style.display = "block";
-    if (details) details.style.display = "none";
-    if (error) error.style.display = "none";
+    const loader = this.getElement("loading");
+    if (loader) {
+      loader.style.setProperty("display", "flex", "important");
+      loader.classList.remove("hidden");
+    }
+    const details = this.getElement("complaint-details");
+    if (details) {
+      details.style.setProperty("display", "none", "important");
+    }
+    const error = this.getElement("error-state");
+    if (error) {
+      error.style.setProperty("display", "none", "important");
+    }
   }
+
   hideLoading() {
-    const loading = document.getElementById("loading");
-    if (loading) loading.style.display = "none";
+    const loader = this.getElement("loading");
+    if (loader) {
+      loader.style.setProperty("display", "none", "important");
+      loader.classList.add("hidden");
+    }
   }
   cleanupStuckModals() {
     // Remove any stuck modal overlays

@@ -6,6 +6,8 @@
   grid-template-columns: 350px 1fr;
   gap: 1.5rem;
   padding: 1.5rem;
+  padding-top: 5rem;
+  /* Fix Header Overlap */
   overflow: hidden;
   /* Prevent global scroll */
 }
@@ -197,6 +199,7 @@
     /* Fixed height for list on mobile */
   }
 }
+
 /* Settings Page Header Styles */
 .profile-header-section {
   padding: 1.5rem 2rem;
@@ -273,3 +276,62 @@
   transform: translateY(-1px);
 }
 
+
+/* Dark Mode Support */
+:root.dark .profile-page-container {
+  background-color: var(--bg-dark, #111827);
+}
+
+:root.dark .glass-panel {
+  background: rgba(31, 41, 55, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark .profile-name,
+:root.dark .stat-value,
+:root.dark .profile-main-header h2 {
+  color: #f3f4f6;
+  /* White text */
+}
+
+:root.dark .stat-label,
+:root.dark .profile-main-info p,
+:root.dark .profile-main-info h1,
+:root.dark .text-gray-500,
+:root.dark .text-gray-800 {
+  color: #9ca3af;
+}
+
+:root.dark .activity-item .text-gray-800 {
+  color: #f3f4f6 !important;
+}
+
+:root.dark .activity-item {
+  background: #1f2937;
+  /* Dark bg for items */
+  border-color: #374151;
+}
+
+:root.dark .activity-item:hover {
+  background: #374151;
+  border-color: #6366f1;
+}
+
+/* Fix Layout Overlap */
+.profile-page-container {
+  /* Ensure it doesn't go under header if header is fixed */
+  margin-top: 0;
+  padding-top: 2rem;
+  height: calc(100vh - 80px);
+  /* Adjust for header if needed */
+}
+
+/* Adjust Sidebar Glass in Dark Mode */
+:root.dark .stat-item {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root.dark .profile-main-header {
+  background: rgba(31, 41, 55, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}

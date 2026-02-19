@@ -282,7 +282,6 @@ function getMenuItemsForRole(role) {
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
       { url: "/digos-map", icon: "map", label: "Digos City Map" },
-      { url: "/departments", icon: "departments", label: "Departments" },
       {
         label: "You",
         icon: "user",
@@ -345,11 +344,6 @@ function getMenuItemsForRole(role) {
     "super-admin": [
       { url: "/dashboard", icon: "super-admin-dashboard", label: "Dashboard" },
       {
-        url: "/super-admin/pending-signups",
-        icon: "users",
-        label: "Pending Signups",
-      },
-      {
         url: "/super-admin/user-manager",
         icon: "role-changer",
         label: "User Manager",
@@ -369,7 +363,6 @@ function getMenuItemsForRole(role) {
         icon: "dictionary",
         label: "Dictionary Manager",
       },
-      { url: "/departments", icon: "departments", label: "Departments" },
       {
         label: "You",
         icon: "shield",
@@ -422,20 +415,35 @@ function updateToggleSwitch(isDark) {
 function initializeSidebarThemeToggle() {
   const themeToggleBtn = document.getElementById("sidebar-theme-toggle");
   if (themeToggleBtn) {
-    // Initial state
-    const savedTheme = localStorage.getItem("theme") || "light";
-    updateToggleSwitch(savedTheme === "dark");
+    // Import themeManager logic or use window.themeManager if available
+    // For safety, we can rely on DOM state or localStorage, OR better, use the window.themeManager we exposed.
 
+    const updateSidebarState = () => {
+      const stored = localStorage.getItem('theme-preference') || 'light';
+      updateToggleSwitch(stored === 'dark');
+    };
+
+    // Initial
+    updateSidebarState();
+
+    // Click Handler
     themeToggleBtn.addEventListener("click", () => {
-      const isDark = document.documentElement.classList.contains("dark");
-      const newTheme = isDark ? "light" : "dark";
+      // Use global theme manager if available (it should be)
+      if (window.themeManager) {
+        window.themeManager.toggle();
+      } else {
+        // Fallback if themeManager isn't loaded for some reason (unlikely)
+        const isDark = document.documentElement.classList.contains("dark");
+        const newTheme = isDark ? "light" : "dark";
+        if (newTheme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme-preference', newTheme);
+      }
+    });
 
-      applyTheme(newTheme);
-      localStorage.setItem("theme", newTheme);
-      updateToggleSwitch(!isDark);
-
-      // Dispatch event for other components (like header) to update
-      window.dispatchEvent(new Event("themeChanged"));
+    // Sync with global events
+    window.addEventListener("themeChanged", (e) => {
+      updateToggleSwitch(e.detail.theme === 'dark');
     });
   }
 }

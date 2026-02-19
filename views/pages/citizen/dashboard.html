@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
   <link rel="stylesheet" href="/css/pages/dashboard-redesign.css" />
   <link rel="stylesheet" href="/css/viewport-fix.css" />
+  <script type="module" src="/js/utils/theme.js"></script>
 
 </head>
 
@@ -43,34 +44,34 @@
           <!-- Quick Actions -->
           <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
               <button
-                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                class="flex flex-col items-center justify-center p-6 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-all shadow-sm hover:shadow-md group h-full"
                 onclick="window.location.href='/fileComplaint'">
                 <div
-                  class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
-                <h4 class="font-medium text-gray-900">File New Complaint</h4>
-                <p class="text-sm text-gray-500 mt-1">Submit a new report</p>
+                <h4 class="font-semibold text-gray-900 text-lg">File Complaint</h4>
+                <p class="text-sm text-gray-500 mt-2 text-center">Submit a new report</p>
               </button>
 
               <button
-                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                class="flex flex-col items-center justify-center p-6 bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all shadow-sm hover:shadow-md group h-full"
                 onclick="window.location.href='/profile'">
                 <div
-                  class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h4 class="font-medium text-gray-900">My Profile</h4>
-                <p class="text-sm text-gray-500 mt-1">Manage account details</p>
+                <h4 class="font-semibold text-gray-900 text-lg">My Profile</h4>
+                <p class="text-sm text-gray-500 mt-2 text-center">Manage details</p>
               </button>
             </div>
           </div>

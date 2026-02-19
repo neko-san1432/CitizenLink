@@ -87,19 +87,19 @@ function updateActivity(complaints) {
           else if (["resolved", "completed"].includes(status.toLowerCase())) statusClass = "bg-green-100 text-green-800";
 
           return `
-       <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+       <div class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+         <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
            </svg>
          </div>
          <div class="flex-1 min-w-0">
-           <p class="text-sm font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || "Untitled Complaint"}</p>
-           <p class="text-xs text-gray-500 mt-0.5">${new Date(c.submitted_at || c.created_at).toLocaleDateString()}</p>
+           <p class="text-base font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || "Untitled Complaint"}</p>
+           <p class="text-sm text-gray-500 mt-1">${new Date(c.submitted_at || c.created_at).toLocaleDateString()} • <span class="capitalize">${c.category || 'General'}</span></p>
          </div>
-         <div>
-           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
-             ${status}
+         <div class="flex-shrink-0">
+           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusClass.replace('bg-', 'bg-opacity-10 border-')} ${statusClass.replace('bg-', 'text-')}">
+             ${status.toUpperCase()}
            </span>
          </div>
        </div>

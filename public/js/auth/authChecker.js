@@ -197,12 +197,8 @@ export const getUserRole = async (options = {}) => {
 };
 // Check if device is trusted (allows auto-refresh)
 const isDeviceTrusted = () => {
-  try {
-    const trusted = localStorage.getItem("device_trusted");
-    return trusted === "true";
-  } catch {
-    return false;
-  }
+  // Always trust device per user request to extend session duration
+  return true;
 };
 
 // Store device trust preference

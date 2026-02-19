@@ -690,3 +690,10 @@ body {
   margin-top: 1rem !important;
   padding-top: 0.5rem !important;
 }
+/* =========================================
+   FIX: Icon Padding Override
+   ========================================= */
+/* Ensure input text doesn't overlap with icons, overriding compact mode !important */
+.input.has-icon {
+  padding-left: 3rem !important;
+}

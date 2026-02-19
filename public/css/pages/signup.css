@@ -46,12 +46,14 @@
 
 /* Navigation */
 .navbar {
-  position: fixed;
+  position: absolute;
+  /* Changed from fixed to absolute per user request */
   top: 0;
   left: 0;
   right: 0;
   padding: 0 2rem;
-  height: 70px;
+  height: 60px;
+  /* Reduced from 70px */
   z-index: 100;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
@@ -61,7 +63,8 @@
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 900px;
+  /* Reduced from 1200px to fix "distance" issue */
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -78,6 +81,13 @@
   font-size: 1.25rem;
   /* Reduced from 1.5rem to match dashboard */
   letter-spacing: -0.02em;
+  color: var(--text-light) !important;
+  /* Force white text for contrast */
+}
+
+.brand-text {
+  color: var(--text-light) !important;
+  /* Force white text for contrast */
 }
 
 .logo-icon {
@@ -3181,7 +3191,7 @@ body {
   align-items: center;
   gap: 0.4rem;
   padding: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   cursor: pointer;
 }
 
@@ -3192,7 +3202,7 @@ body {
 
 .signup-method-back:hover,
 .signup-method-back:focus-visible {
-  color: var(--primary-900);
+  color: var(--primary-400);
   text-decoration: underline;
 }
 
@@ -3280,11 +3290,18 @@ body {
 }
 
 .signup-step .input,
-.signup-step .phone-input {
-  background: var(--gray-50);
-  border-color: var(--gray-100);
+.signup-step .phone-input,
+.signup-step .phone-input-wrapper {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--glass-border);
   transition: border-color 160ms ease, background 160ms ease,
     box-shadow 160ms ease;
+}
+
+.signup-step .phone-prefix {
+  background: transparent !important;
+  border-right: 1px solid var(--glass-border) !important;
+  color: var(--text-light) !important;
 }
 
 .signup-step .input:focus,
@@ -3470,7 +3487,7 @@ body {
 }
 
 .signup-step {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeInSignup 0.3s ease-out;
 }
 
 /* Step Titles */
@@ -3493,10 +3510,10 @@ body {
   border-top: 1px solid var(--gray-100);
 }
 
-@keyframes fadeIn {
+@keyframes fadeInSignup {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(0);
   }
 
   to {
@@ -3514,6 +3531,8 @@ body {
   transition: all 0.2s;
   cursor: pointer;
 }
+
+
 
 .signup-method-card:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -3821,7 +3840,6 @@ body {
   body:has(#signup-email-flow:not([hidden])) .auth-card,
   html:has(#signup-email-flow:not([hidden])) .auth-card {
     max-width: 720px !important;
-    transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -3841,6 +3859,12 @@ body {
   padding: 0 !important;
 }
 
+/* Global Scrollbar Override for Auth Page */
+html,
+body {
+  overflow: hidden !important;
+}
+
 .auth-card {
   max-height: 95vh;
   height: auto;
@@ -3848,6 +3872,15 @@ body {
   /* Allow internal scrolling if strictly needed, but try to fit */
   transform-origin: center;
   /* Optional: Scale down if screen is too short, can be handled by media queries if needed */
+  transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease, max-height 0.4s ease;
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+}
+
+.auth-card::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* Compact Auth Form Spacing */
@@ -3968,9 +4001,9 @@ body {
     /* Default to half width */
   }
 
-  /* Force "full width" fields to also be half width in this layout to save space */
+  /* Force "full width" fields to be full width */
   .signup-step .form-full {
-    grid-column: span 1 !important;
+    grid-column: 1 / -1 !important;
   }
 
   /* Exceptions that MUST be full width */
@@ -4104,4 +4137,15 @@ button.signup-method-card .method-chevron,
 /* Adjust top padding to restore original spacing since navbar is back to 70px */
 .auth-page {
   /* padding-top: 70px !important;  -- Default is fine */
+}
+
+/* =========================================
+   FIX: Icon Padding Override
+   ========================================= */
+/* Ensure input text doesn't overlap with icons, overriding compact mode !important */
+/* Ensure input text doesn't overlap with icons, overriding compact mode !important */
+.input.has-icon,
+.auth-form .input.has-icon,
+.signup-form .input.has-icon {
+  padding-left: 3rem !important;
 }
